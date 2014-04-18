@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:4243 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58143 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750736AbaDQXeJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 19:34:09 -0400
+	by vger.kernel.org with ESMTP id S1750970AbaDRCjP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2014 22:39:15 -0400
 From: Bing Zhao <bzhao@marvell.com>
-To: John Tobias <john.tobias.ph@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Thu, 17 Apr 2014 16:33:58 -0700
-Subject: RE: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout
- handler
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com> (sfid-20140418_013414_385261_37DD825D)
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
-	<1397710914-10061-2-git-send-email-bzhao@marvell.com>
- <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
-In-Reply-To: <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	"backports@vger.kernel.org" <backports@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 17 Apr 2014 19:39:00 -0700
+Subject: RE: [PATCH] mwifiex: use generic header for if_arp.h
+Message-ID: <477F20668A386D41ADCC57781B1F70430F706866FA@SC-VEXCH1.marvell.com> (sfid-20140418_043919_639395_9778BDCB)
+References: <1397784348-16059-1-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1397784348-16059-1-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9obiwNCg0KPiBIaSBCaW5nLA0KPiANCj4gQXNzdW1pbmcgdGhlIHRpbWVvdXQgaGFwcGVu
-ZWQgZHVlIHRvIGEgZmlybXdhcmUgYnVnLiBEb2VzIHRoZSBmaXJtd2FyZQ0KPiBhYmxlIHRvIHJl
-Y292ZXIgYWZ0ZXIgc2V0dGluZyBhZGFwdGVyLT5jbWRfc2VudCA9IGZhbHNlIGFuZCB0aGUNCj4g
-ZmlybXdhcmUgY291bGQgYWNjZXB0IGEgbmV3IGNvbW1hbmRzIHdpdGhvdXQgbG9ja2luZz8uDQoN
-ClRoYXQgImFkYXB0ZXItPmNtZF9zZW50ID0gZmFsc2UiIHdhcyBob3BpbmcgdGhlIGZpcm13YXJl
-IGlzIHN0aWxsIGFsaXZlIGFuZCBjYW4gcmVzcG9uZCB0byBhIG5ldyBjb21tYW5kLiBUaGUgcmVh
-bGl0eSBpcyB0aGF0IHRoZSB0aW1lb3V0IHVzdWFsbHkgaW5kaWNhdGVzIHRoZSBmaXJtd2FyZSBo
-YXMgYWxyZWFkeSBodW5nLiBTZW5kaW5nIGFub3RoZXIgY29tbWFuZCB3b24ndCByZWNvdmVyIGl0
-IGluIHRoaXMgY2FzZS4NCg0KPiBTZWVtcywgdGhpcyBpcyB0aGUgYnVnIEkgd2FzIGVuY291bnRl
-cmluZyBhbmQgY291bGRuJ3QgYWNjZXNzIHRoZQ0KPiBtbGFuMCBpbnRlcmZhY2UgYW55bW9yZS4u
-Lg0KDQpUaGlzIHBhdGNoIGl0c2VsZiBkb2Vzbid0IHNvbHZlIGFueSBleGlzdGluZyBpc3N1ZS4g
-SXQgaGVscHMga2VlcCB0aGUgc2NlbmUgb2YgdGhlIGluaXRpYWwgdGltZW91dCBmb3IgaW52ZXN0
-aWdhdGlvbi4NCg0KPiANCj4gSXMgdGhlcmUgYSB3YXkgdG8gZm9yY2UgdGhlIGZpcm13YXJlIHRv
-IHJlc2V0IGl0IHdpdGhvdXQgcmVib290aW5nIGl0Py4NCg0KSSBndWVzcyB5b3UgYXJlIHVzaW5n
-IFNESU8gY2hpcC4gSWYgeW91ciBob3N0IGNvbnRyb2xsZXIgc3VwcG9ydHMgTU1DX1BPV0VSX09G
-Ri9VUCwgeW91IGNhbiByZXNldCB0aGUgY2hpcCB3aXRoIHRoaXMgYXBwcm9hY2g6DQoNCiAgICAg
-ICAgbW1jX3JlbW92ZV9ob3N0KGhvc3QpOw0KICAgICAgICAvKiBzb21lIGRlbGF5ICovDQogICAg
-ICAgIG1tY19hZGRfaG9zdChob3N0KTsNCg0KUmVnYXJkcywNCkJpbmcNCg0KPiANCj4gUmVnYXJk
-cywNCj4gDQo+IGpvaG4NCj4gDQo+IA0KPiBPbiBXZWQsIEFwciAxNiwgMjAxNCBhdCAxMDowMSBQ
-TSwgQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogQW1pdGt1
-bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IFdoZW4gY29tbWFuZCB0
-aW1lb3V0IG9jY3VycyBkdWUgdG8gYSBmaXJtd2FyZS9oYXJkd2FyZSBidWcsDQo+ID4gdGhlcmUg
-aXMgbm8gY2hhbmNlIG9mIG5leHQgY29tbWFuZCBiZWluZyBzdWNjZXNzZnVsLiBXZSB3aWxsDQo+
-ID4ga2VlcCBjbWRfc2VudCBmbGFnIG9uIHNvIHRoYXQgbmV4dCBjb21tYW5kIHdvbid0IGJlIHNl
-bnQgdG8NCj4gPiBmaXJtd2FyZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEFtaXRrdW1hciBL
-YXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQmluZyBaaGFv
-IDxiemhhb0BtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bXdpZmlleC9jbWRldnQuYyB8IDIgLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIgZGVsZXRpb25z
-KC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9j
-bWRldnQuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMNCj4gPiBpbmRl
-eCAxMDYyYzkxLi44ZGVlNmM4IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvY21kZXZ0LmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
-L2NtZGV2dC5jDQo+ID4gQEAgLTk1NSw4ICs5NTUsNiBAQCBtd2lmaWV4X2NtZF90aW1lb3V0X2Z1
-bmModW5zaWduZWQgbG9uZyBmdW5jdGlvbl9jb250ZXh0KQ0KPiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIGFkYXB0ZXItPmNtZF93YWl0X3Euc3RhdHVzID0gLUVUSU1FRE9VVDsNCj4gPiAgICAg
-ICAgICAgICAgICAgICAgICAgICB3YWtlX3VwX2ludGVycnVwdGlibGUoJmFkYXB0ZXItPmNtZF93
-YWl0X3Eud2FpdCk7DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgbXdpZmlleF9jYW5jZWxf
-cGVuZGluZ19pb2N0bChhZGFwdGVyKTsNCj4gPiAtICAgICAgICAgICAgICAgICAgICAgICAvKiBy
-ZXNldCBjbWRfc2VudCBmbGFnIHRvIHVuYmxvY2sgbmV3IGNvbW1hbmRzICovDQo+ID4gLSAgICAg
-ICAgICAgICAgICAgICAgICAgYWRhcHRlci0+Y21kX3NlbnQgPSBmYWxzZTsNCj4gPiAgICAgICAg
-ICAgICAgICAgfQ0KPiA+ICAgICAgICAgfQ0KPiA+ICAgICAgICAgaWYgKGFkYXB0ZXItPmh3X3N0
-YXR1cyA9PSBNV0lGSUVYX0hXX1NUQVRVU19JTklUSUFMSVpJTkcpDQo+ID4gLS0NCj4gPiAxLjgu
-Mi4zDQo+ID4NCj4gPiAtLQ0KPiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
-IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4NCj4gPiB0aGUgYm9keSBv
-ZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi Luis,
+
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> Older kernels require both, but if we instead include the general header we
+> get both in-kernel and UAPI stuff. This simplifies the backport.
+> 
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/decl.h   | 2 +-
+>  drivers/net/wireless/mwifiex/sta_rx.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/decl.h
+> b/drivers/net/wireless/mwifiex/decl.h
+> index e7b3e16..51e0f6d 100644
+> --- a/drivers/net/wireless/mwifiex/decl.h
+> +++ b/drivers/net/wireless/mwifiex/decl.h
+> @@ -26,7 +26,7 @@
+>  #include <linux/wait.h>
+>  #include <linux/timer.h>
+>  #include <linux/ieee80211.h>
+> -#include <uapi/linux/if_arp.h>
+> +#include <linux/if_arp.h>
+>  #include <net/mac80211.h>
+> 
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sta_rx.c
+> b/drivers/net/wireless/mwifiex/sta_rx.c
+> index ed26387..ea20fef 100644
+> --- a/drivers/net/wireless/mwifiex/sta_rx.c
+> +++ b/drivers/net/wireless/mwifiex/sta_rx.c
+> @@ -17,7 +17,7 @@
+>   * this warranty disclaimer.
+>   */
+> 
+> -#include <uapi/linux/ipv6.h>
+> +#include <linux/ipv6.h>
+>  #include <net/ndisc.h>
+>  #include "decl.h"
+>  #include "ioctl.h"
+> --
+> 1.9.1
+
