@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:59304 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757162AbaDQGMH convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:44144 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034AbaDRHtM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 02:12:07 -0400
-Received: by mail-wi0-f173.google.com with SMTP id z2so2427833wiv.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 23:12:06 -0700 (PDT)
+	Fri, 18 Apr 2014 03:49:12 -0400
+Received: by mail-pd0-f172.google.com with SMTP id p10so1221305pdj.3
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 00:49:11 -0700 (PDT)
+From: "Zhao\, Gang" <gamerh2o@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH 1/6] p54: replace wiphy_debug() with wiphy_dbg()
+In-Reply-To: <1397754900.3104.5.camel@joe-AO725> (Joe Perches's message of
+	"Thu, 17 Apr 2014 10:15:00 -0700")
+References: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
+	<1397754900.3104.5.camel@joe-AO725>
+Date: Fri, 18 Apr 2014 15:48:57 +0800
+Message-ID: <87ppkf5b86.fsf@gmail.com> (sfid-20140418_094916_122179_A48951D7)
 MIME-Version: 1.0
-In-Reply-To: <1397695357-14028-1-git-send-email-greearb@candelatech.com>
-References: <1397695357-14028-1-git-send-email-greearb@candelatech.com>
-Date: Thu, 17 Apr 2014 08:12:06 +0200
-Message-ID: <CA+BoTQ=Q3s6_9tXq02_3S0=q5qv4U4V1F_qHoN1X1pfWV9CKBA@mail.gmail.com> (sfid-20140417_081218_853197_243CEADC)
-Subject: Re: [PATCH] ath10k: Hold tx-lock while detaching htt.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 April 2014 02:42,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On Thu, 2014-04-17 at 10:15:00 -0700, Joe Perches wrote:
+> On Thu, 2014-04-17 at 21:27 +0800, Zhao, Gang wrote:
+>> Dynamic debug function wiphy_dbg() is more convenient for debugging,
+>> and if user doesn't enable CONFIG_DYNAMIC_DEBUG, it will fall back to
+>> normal static debug, just as what wiphy_debug() does.
 >
-> And check for null pool in the tx path (which would
-> indicate we are detaching).
-
-Shouldn't we just make sure tx is stopped before we try to detach htt?
-Stoping mac80211 queues and synchronize_net() should be sufficient I
-think.
-
-
-> @@ -403,6 +412,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
->                 goto err;
+> Hi.
 >
->         spin_lock_bh(&htt->tx_lock);
-> +
-> +       /* Check if we are detached... */
-> +       if (! htt->tx_pool) {
-> +               spin_unlock_bh(&htt->tx_lock);
+> Your premise is not correct.
+>
+> wiphy_debug will always emit a message.
+>
+> wiphy_dbg will only emit a message when #DEBUG
+> is #defined or CONFIG_DYNAMIC_DEBUG is enabled
+> and the message is specifically enabled by the
+> dynamic_debug control file.
+>
+Yes, you are right. wiphy_debug() will always print a debug level
+message. It's not true to wiphy_dbg().
 
-Setting `res` would be nice to indicate an error. And there's a space after !.
+I still prefer to use wiphy_dbg() to print debug messages, since it's
+"dynamic", and debug messages may not be needed in normal use. 
 
+>> When all the users of wiphy_debug() are gone, wiphy_debug() can be
+>> removed.
+>
+> Not really.
+>
+Surely wiphy_debug() will be reserved, since wiphy_dbg() can't replace
+it.
 
-Michał
+> Please use git format-patch --cover-letter when
+> sending a patch series so that these sorts of
+> replies can be done to the cover letter of the
+> series instead of individually.
+>
+> Using a cover-letter "[PATCH 0/N]" also makes it
+> easier for maintainers to send acknowledgements
+> if applying the entire series.
+
+I will resend the patch set with cover letter(excluding the last
+patch). Thanks for your comments.
