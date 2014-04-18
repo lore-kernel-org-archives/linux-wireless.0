@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34425 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757712AbaDHSZq (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:38578 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808AbaDRUdO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 14:25:46 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so998658eei.33
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 11:25:45 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: Larry.Finger@lwfinger.net, kvalo@adurom.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com, Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH v2 1/4] rtl8180: change module name in rtl818x_pci
-Date: Tue,  8 Apr 2014 20:25:25 +0200
-Message-Id: <1396981525-28078-1-git-send-email-andrea.merello@gmail.com> (sfid-20140408_202553_802995_D20D5C67)
-In-Reply-To: <877g74i8jv.fsf@purkki.adurom.net>
-References: <877g74i8jv.fsf@purkki.adurom.net>
+	Fri, 18 Apr 2014 16:33:14 -0400
+Received: by mail-ie0-f175.google.com with SMTP id to1so1919684ieb.6
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 13:33:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53513BC4.7020502@gmail.com>
+References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>
+	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>
+	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
+	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>
+	<5350B340.9020201@gmail.com>
+	<53512D04.5070808@gmail.com>
+	<CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>
+	<53513BC4.7020502@gmail.com>
+Date: Sat, 19 Apr 2014 00:33:13 +0400
+Message-ID: <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com> (sfid-20140418_223340_662750_77D47C4C)
+Subject: Re: iwlwifi null pointer dereference
+From: Alexander Monakov <amonakov@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net> [ original patch ]
+On Fri, Apr 18, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
+>>> So I definitely want to understand what is happening here before applying the fix.
+>>
+>> Sure, I can help with further investigation.  Would it help if I bisected?
+>>
+>
+> I can't decline such an offer:)
+>
+> Note that the "bad" commit might be in pci too.
+> As a first try, I'd try 3.13.
+> I've made quite a few changes in the ISR for 3.14.
 
-rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
-however in userspace tools (network manager) it still appares
-as "rtl8180".
-This might lead the user to think the wrong driver is in use.
+It bisects to
 
-This patch changes module name to "rtl818x_pci" that should be
-more explanatory.
+commit 2dbc368d7fded35ed221a3751405b15e06eb8925
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Mon Dec 9 11:09:47 2013 +0200
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net> [ original patch ]
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/Makefile b/drivers/net/wireless/rtl818x/rtl8180/Makefile
-index 08b056d..21005bd 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/Makefile
-+++ b/drivers/net/wireless/rtl818x/rtl8180/Makefile
-@@ -1,5 +1,5 @@
--rtl8180-objs		:= dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
-+rtl818x_pci-objs	:= dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
- 
--obj-$(CONFIG_RTL8180)	+= rtl8180.o
-+obj-$(CONFIG_RTL8180)	+= rtl818x_pci.o
- 
- ccflags-y += -Idrivers/net/wireless/rtl818x
--- 
-1.8.3.2
-
+    iwlwifi: pcie: track interrupt mask in SW
