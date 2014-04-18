@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14961 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755238AbaDNWbQ (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:39633 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbaDRNpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 18:31:16 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.15] mwifiex: process event before command response
-Date: Mon, 14 Apr 2014 15:31:05 -0700
-Message-ID: <1397514666-4656-1-git-send-email-bzhao@marvell.com> (sfid-20140415_003121_799353_D3BBE6A2)
+	Fri, 18 Apr 2014 09:45:43 -0400
+Received: by mail-we0-f180.google.com with SMTP id p61so1604483wes.11
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 06:45:42 -0700 (PDT)
+Message-ID: <53512C83.20405@gmail.com> (sfid-20140418_154547_768101_B92AFBD3)
+Date: Fri, 18 Apr 2014 16:45:39 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Dmitry Grebennikov <dmitry.ew@gmail.com>, iwl@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bluetooth support of intel wireless 7260ac adapter
+References: <535108A0.8070501@gmail.com>
+In-Reply-To: <535108A0.8070501@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi,
 
-During extended scan, SCAN report event is always followed by
-command response. Sometimes It is observed that command response
-is processed before SCAN report which leads to a crash, because
-current command node is cleared while handling the response.
-This patch makes sure that driver's main thread gives priority
-to events over command responses.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Maithili Hinge <maithili@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+On 04/18/2014 02:12 PM, Dmitry Grebennikov wrote:
+> Hello,
+> 
+> I bought the intel wireless 7260ac adapter. It has both wifi and bluetooth.
+> iwlwifi module and linux-firmware are installed and wifi works perfect, but the bluetooth adapter isn't recognized completely!
+> Does iwlwifi provide support for bluetooth on this device?
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 77db088..9c771b3 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -292,6 +292,12 @@ process_start:
- 			while ((skb = skb_dequeue(&adapter->usb_rx_data_q)))
- 				mwifiex_handle_rx_packet(adapter, skb);
- 
-+		/* Check for event */
-+		if (adapter->event_received) {
-+			adapter->event_received = false;
-+			mwifiex_process_event(adapter);
-+		}
-+
- 		/* Check for Cmd Resp */
- 		if (adapter->cmd_resp_received) {
- 			adapter->cmd_resp_received = false;
-@@ -304,12 +310,6 @@ process_start:
- 			}
- 		}
- 
--		/* Check for event */
--		if (adapter->event_received) {
--			adapter->event_received = false;
--			mwifiex_process_event(adapter);
--		}
--
- 		/* Check if we need to confirm Sleep Request
- 		   received previously */
- 		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
--- 
-1.8.2.3
+No - iwlwifi is for the wifi function only.
 
+> Or may be it is provided in linux-bluetooth kernel tree?
+
+right.
+One thing you may do is to look at http://www.spinics.net/lists/linux-bluetooth/msg46202.html. I know that the Intel BT maintainer (Tedd Ho-Jeong An) has posted a new firmware that might help you. I know that this firmware hasn't been merged to linux-firmware tree yet.
+The right place to ask is linux-bluetooth mailing list.
+
+> Help me, please.
+> 
+> Thank you!
+> Dmitry Grebennikov
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
