@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:65435 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753727AbaDORI0 (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:36923 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbaDRGUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 13:08:26 -0400
-Message-ID: <1397581703.8212.5.camel@x220> (sfid-20140415_190903_078912_8F069EC8)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	openwrt-devel@lists.openwrt.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	open@hauke-m.de, list@hauke-m.de, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, antonynpavlov@gmail.com,
-	Florian Fainelli <florian@openwrt.org>
-Date: Tue, 15 Apr 2014 19:08:23 +0200
-In-Reply-To: <20140213201421.GJ22203@tuxdriver.com>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	 <1391971686-9517-10-git-send-email-richard@nod.at>
-	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
-	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
-	 <52F8C373.9060108@rempel-privat.de>
-	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
-	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
-	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-	 <20140213201421.GJ22203@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 18 Apr 2014 02:20:08 -0400
+Message-ID: <5350C3E6.2010504@meshcoding.com> (sfid-20140418_082011_378460_0CDD57A4)
+Date: Fri, 18 Apr 2014 08:19:18 +0200
+From: Antonio Quartulli <antonio@meshcoding.com>
+MIME-Version: 1.0
+To: The list for a Better Approach To Mobile Ad-hoc
+	 Networking <b.a.t.m.a.n@lists.open-mesh.org>
+CC: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [B.A.T.M.A.N.] [PATCH 2/7] mac80211: add get_expected_throughput
+ API
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com> <1397484205-20905-2-git-send-email-antonio@meshcoding.com> <CAEFj987Hr4iUuHX-_nJN5AcHBLnAeJhhMX9UbqkGffTT+UQFLQ@mail.gmail.com>
+In-Reply-To: <CAEFj987Hr4iUuHX-_nJN5AcHBLnAeJhhMX9UbqkGffTT+UQFLQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
-> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
-> > John, can you delay the merging of this patch for a few months, I will
-> > try to prepare the necessary patches to add AR231x architecture to the
-> > kernel and send them to linux-mips.
-> 
-> OK -- looking forward to your patches.
-
-So am I. Is there any news on this front?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
 
-Paul Bolle
 
+On 18/04/14 02:56, Yeoh Chun-Yeow wrote:
+> Hi, Antonio
+>=20
+> Do you know whether the calculation of expected throughput in minstrel
+> and minstrel_ht are both the same?
+
+not really the same, but they are similar.
+
+>=20
+> Any explanation on how the expected throughput is calculated?
+
+Just check patch 5 and 6 :)
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+
+--V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJTUMPrAAoJEEKTMo6mOh1VAqgQAIf+XtXmZEHKU3QcFghPdF2P
+oJtDU1P2bZoFnZkOzDRcoA72O4UUsIk6dzPj5LRAyM4PFHyQN7pJtGLWeuLU0E3Z
++TecusWFmhr3CIfDfZ9LDzLg4R/HXoK2S7yYQVm25PgUGo16cGGdgZ+LgFbJUYwJ
+xoBe8tqfVmQ3dXKrpDUCLwrv+w9XFHp1oVfAiciTW+4haw/QTkgfuKxUjf+78Sfy
+t4nki1GonE3iuC9IRCg9x225XFOuATJ37iPxHPDquvD9XjG+9g8DbHjqjjDKLtTz
+pmuYYK0Yo/4GmVcyDpbLlIF7rnsgyGLByLZfTioOXSg3F+QS8m7+plYEgHzU4rjg
+/NoAbByiK/Az7CKF0Ko/mFHguCF2OJo/9ScIsX+1p9AEq+fHaA0E6G08WvzoeXqT
+zXJa8NOrqfvTMuB4ceH9NpPfVOAlCV99SHar8IeaES0QievkZjAUjPstBFxvzhln
+P7RMyn6HE2CawSz/iuzobqByVXaqtrL+mGoQ5d1qOlNlezNmg1VWMkdtEtiRICiQ
+Gn5j7H9IqkhU5UReiGTfwndmSVHcRXDM9TZmr/gtS+ziEfMrIh+f2qJo/Ux3PuTA
+Ff/GoVnORG/9d4MX4upP/fCSIAMM94TNbWx9NCyri0kC6gCnjtYD0emjfEQ3Z4hk
+LJ2WLBjv/v9656zYcWfz
+=HIKa
+-----END PGP SIGNATURE-----
+
+--V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD--
