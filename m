@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:36594 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932685AbaDINRR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 09:17:17 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so1865042eek.20
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:17:16 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 0/4] mac80211/cfg80211: CSA fixes/cleanups
-Date: Wed,  9 Apr 2014 15:10:58 +0200
-Message-Id: <1397049062-24177-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_151731_917906_103647C0)
-In-Reply-To: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:17448 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925AbaDRGMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2014 02:12:48 -0400
+Date: Fri, 18 Apr 2014 08:11:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Qian Li <qian.li@uhasselt.be>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945
+Message-ID: <20140418061135.GA1647@redhat.com> (sfid-20140418_081251_840223_B9A1DD9D)
+References: <CAGAvgFun5q1-qdqzx3nxzpZAXyqY60xycgrF56p6qz5ryAJiwQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGAvgFun5q1-qdqzx3nxzpZAXyqY60xycgrF56p6qz5ryAJiwQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Apr 17, 2014 at 08:11:03PM +0200, Qian Li wrote:
+> I run into some problems while I was using Intel Wireless 3945ABG WNIC to
+> do some routing experiments. I've been using Ubuntu 12.04. The default WNIC
+> driver is iwl3945. I could set essid, IP address, and mode of the NIC. But
+> I can't switch to all the channels. I want the computer to be able to
+> switch to any 5GHZ band channel in the Ad-Hoc mode. But the WNIC could only
+> be switched to certain channels (e.g., 40, 44, 48) after it is set to the
+> Ad-Hoc mode (it can be switched to any channel when it is in the Managed
+> mode). When I tried to switch to other channels (e.g. 42, 46, 100, 124,
+> etc.), I got errors such as "invalid argument".
 
-The patchset fixes CSA tx queue locking and
-introduces interface teardown upon CSA failure
-during finalization.
+Use "iw phy" to check on which channels IBSS is allowed on your device.
+Most likely all 5GHz channels are disallowed.
 
-v2:
- * get rid of idempotency
+For example I have:
 
-v3:
- * fixes (see each commit)
+$ iw phy | grep "no IBSS"
+			* 2467 MHz [12] (15.0 dBm) (passive scanning, no IBSS)
+			* 2472 MHz [13] (15.0 dBm) (passive scanning, no IBSS)
+			* 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
+			* 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
+			* 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
+			* 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
+			* 5260 MHz [52] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5280 MHz [56] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5300 MHz [60] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5320 MHz [64] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5500 MHz [100] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5520 MHz [104] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5540 MHz [108] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5560 MHz [112] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5580 MHz [116] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5600 MHz [120] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5620 MHz [124] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5640 MHz [128] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5660 MHz [132] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5680 MHz [136] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5700 MHz [140] (15.0 dBm) (passive scanning, no IBSS, radar detection)
 
-v4:
- * commit message fixes
- * remove WARN_ON as discussed
-
-Michal Kazior (4):
-  mac80211: fix CSA tx queue locking
-  mac80211: split CSA finalize function
-  cfg80211: export interface stopping function
-  mac80211: disconnect iface if CSA unexpectedly fails
-
- include/net/cfg80211.h     |  15 +++++
- include/net/mac80211.h     |   4 +-
- net/mac80211/cfg.c         | 144 +++++++++++++++++++++++++++++++++------------
- net/mac80211/ieee80211_i.h |   2 +
- net/mac80211/iface.c       |   7 +++
- net/mac80211/mlme.c        |  37 +++++++++---
- net/wireless/ap.c          |   4 +-
- net/wireless/core.c        |  43 +++++++++++---
- net/wireless/core.h        |   7 +++
- net/wireless/mesh.c        |   4 +-
- net/wireless/trace.h       |  15 +++++
- net/wireless/util.c        |   3 +
- 12 files changed, 228 insertions(+), 57 deletions(-)
-
--- 
-1.8.5.3
-
+Stanislaw
