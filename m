@@ -1,181 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:44579 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbaDDLfB (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:35260 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754603AbaDRT2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 07:35:01 -0400
-Received: by mail-we0-f176.google.com with SMTP id x48so3180398wes.7
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:34:59 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/2] ath10k: refactor radar detection code
-Date: Fri,  4 Apr 2014 13:28:46 +0200
-Message-Id: <1396610926-5787-3-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134046_234067_2B5C8256)
-In-Reply-To: <1396610926-5787-1-git-send-email-michal.kazior@tieto.com>
-References: <1396337123-12622-1-git-send-email-michal.kazior@tieto.com>
- <1396610926-5787-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 18 Apr 2014 15:28:33 -0400
+Date: Fri, 18 Apr 2014 19:49:59 +0200
+From: "maxime.ripard" <maxime.ripard@free-electrons.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-sunxi@googlegroups.com,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	netdev <netdev@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	linux-serial@vger.kernel.org
+Subject: Re: [linux-sunxi] Re: [PATCH 7/7] ARM: sun7i: cubietruck: enable
+ bluetooth module
+Message-ID: <20140418174959.GH4132@lukather> (sfid-20140418_212911_038661_C49020F7)
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-8-git-send-email-wens@csie.org>
+ <20140415144215.GG3207@lukather>
+ <CAGb2v643HyvFdhQ0znreB8ENXHWpcx6tFwdeU7VuU8KYWcT4ZA@mail.gmail.com>
+ <20140416094428.GK3207@lukather>
+ <CAGb2v67HzB22a3huRRZyufXkdTFE410MhXqAHyC-MmVo0-GCFA@mail.gmail.com>
+ <534E8102.4070404@redhat.com>
+ <534F862C.8010604@broadcom.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cVp8NMj01v+Em8Se"
+In-Reply-To: <534F862C.8010604@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If 20MHz CAC completed successfully then
-subsequent CAC with wider bandwidth (40Mhz, 80Mhz)
-with identical control frequency did not start
-monitor vdev making it impossible to detect any
-radar pulses during intended CAC.
 
-It also was incorrect to assume ath10k_config() will
-be called after CAC is finished. Theoretically for
-non-HT channels nothing changes between CAC and
-start_ap() (albeit in practice this can be
-different). The incorrect assumption led to CAC
-not being stopped on non-HT chandefs leading to
-all Rx being drooped making it impossible for
-clients to associate.
+--cVp8NMj01v+Em8Se
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-While at it clean up the code a bit.
+On Thu, Apr 17, 2014 at 09:43:40AM +0200, Arend van Spriel wrote:
+> + linux-serial@vger.kernel.org
+>=20
+> On 16/04/14 15:09, Hans de Goede wrote:
+> >Hi,
+> >
+> >On 04/16/2014 12:39 PM, Chen-Yu Tsai wrote:
+> >>Hi,
+> >>
+> >>On Wed, Apr 16, 2014 at 5:44 PM, Maxime Ripard
+> >><maxime.ripard@free-electrons.com> wrote:
+> >>>Hi,
+> >>>
+> >>>Please try to keep me in CC, even though the ML doesn't make it easy..
+> >>
+> >>Sorry about that.
+> >>
+> >>>On Wed, Apr 16, 2014 at 12:06:59AM +0800, Chen-Yu Tsai wrote:
+> >>>>>>@@ -139,4 +152,16 @@
+> >>>>>>       reg_usb2_vbus: usb2-vbus {
+> >>>>>>               status =3D "okay";
+> >>>>>>       };
+> >>>>>>+
+> >>>>>>+     rfkill_bt {
+> >>>>>>+             compatible =3D "rfkill-gpio";
+> >>>>>>+             pinctrl-names =3D "default";
+> >>>>>>+             pinctrl-0 =3D <&bt_pwr_pin_cubietruck>, <&clk_out_a_p=
+ins_a>;
+> >>>>>>+             clocks =3D <&clk_out_a>;
+> >>>>>>+             clock-frequency =3D <32768>;
+> >>>>>>+             gpios =3D <&pio 7 18 0>; /* PH18 */
+> >>>>>>+             gpio-names =3D "reset";
+> >>>>>>+             rfkill-name =3D "bt";
+> >>>>>>+             rfkill-type =3D <2>;
+> >>>>>>+     };
+> >>>>>
+> >>>>>Hmmm, I don't think that's actually right.
+> >>>>>
+> >>>>>If you have such a device, then I'd expect it to be represented as a
+> >>>>>full device in the DT, probably with one part for the WiFi, one part
+> >>>>>for the Bluetooth, and here the definition of the rfkill device that
+> >>>>>controls it.
+> >>>>
+> >>>>The AP6210 is not one device, but 2 separate chips in one module. Each
+> >>>>chip has its own controls and interface. They just so happen to share
+> >>>>the same enclosure. Even 2-in-1 chips by Broadcom have separate contr=
+ols
+> >>>>and interfaces. The WiFi side is most likely connected via SDIO, while
+> >>>>the Bluetooth side is connected to a UART, and optionally I2S for sou=
+nd.
+> >>>
+> >>>It's even easier to represent then.
+> >>>
+> >>>>>But tying parts of the device to the rfkill that controls it, such as
+> >>>>>the clocks, or the frequency it runs at seems just wrong.
+> >>>>
+> >>>>I understand where you're coming from. For devices on buses that requ=
+ire
+> >>>>drivers (such as USB, SDIO) these properties probably should be tied =
+to
+> >>>>the device node.
+> >>>>
+> >>>>For our use case here, which is a bluetooth chip connected on the UAR=
+T,
+> >>>>there is no in kernel representation or driver to tie them to. Same g=
+oes
+> >>>>for UART based GPS chips. They just so happen to require toggling a G=
+PIO,
+> >>>>and maybe enabling a specific clock, to get it running. Afterwards,
+> >>>>accessing it is done solely from userspace. For our Broadcom chips, t=
+he
+> >>>>user has to upload its firmware first, then designate the tty as a Bl=
+uetooth
+> >>>>HCI using hciattach.
+> >>>>
+> >>>>We are using the rfkill device as a on-off switch.
+> >>>
+> >>>I understand your point, but the fact that it's implemented in
+> >>>user-space, or that UART is not a bus (which probably should be), is
+> >>>only a Linux specific story, and how it's implemented in Linux (even
+> >>>if the whole rfkill node is another one, but let's stay on topic).
+> >>
+> >>I gave it some thought last night. You are right. My whole approach
+> >>is wrong. But let's try to make it right.
+> >>
+> >>So considering the fact that it's primarily connected to a UART,
+> >>maybe I should make it a sub-node to the UART node it's actually
+> >>connected to? Something like:
+> >>
+> >>         uart2: serial@01c28800 {
+> >>                 pinctrl-names =3D "default";
+> >>                 pinctrl-0 =3D <&uart2_pins_a>;
+> >>                 status =3D "okay";
+> >>
+> >>                 bt: bt_hci {
+> >>                         compatible =3D "brcm,bcm20710";
+> >>                         /* maybe add some generic compatible */
+> >>                         pinctrl-names =3D "default";
+> >>                         pinctrl-0 =3D <&clk_out_a_pins_a>,
+> >><&bt_pwr_pin_cubietruck>;
+> >>                         clocks =3D <&clk_out_a>;
+> >>                         clock-frequency =3D <32768>;
+> >>                         gpios =3D <&pio 7 18 0>; /* PH18 */
+> >>                 };
+> >>         };
+> >>
+> >>And let the uart core handle power sequencing for sub-nodes.
+> >
+> >Great, I missed this reply when I typed my mail I send a few minutes
+> >ago. I agree that this approach is how thing should be.
+>=20
+> Regarding the device tree hierarchy this seems right, but powering
+> the sub-nodes seems outside the realm of uart core.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * change locking comment style [Kalle]
- * get rid of forward declaration [Kalle]
- * fix vdev_stop / WARN_ON (missing !) [Kalle]
- * change commit message
-   (the original issue found was CAC not being
-    stopped for non-HT channels but this was a
-    side-effect of a mac80211 bug, although the
-    use of hw->conf.radar_enabled in ath10k was
-    also incorrect either way)
+Yet, a lot of devices are connected to an UART: GPS, BT chips, GSM
+modems, even some odd PMICs, so UART acting like a real bus might make
+sense.
 
- drivers/net/wireless/ath/ath10k/core.h |  4 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 54 +++++++++++-----------------------
- 2 files changed, 21 insertions(+), 37 deletions(-)
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8edd6da..5cb9903 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -435,6 +435,10 @@ struct ath10k {
- 	unsigned long dev_flags;
- 	u32 dfs_block_radar_events;
- 
-+	/* protected by conf_mutex */
-+	bool radar_enabled;
-+	int num_started_vdevs;
-+
- 	struct wmi_pdev_set_wmm_params_arg wmm_params;
- 	struct completion install_key_done;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e1f4227..3333b1f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -719,49 +719,18 @@ static int ath10k_stop_cac(struct ath10k *ar)
- 	return 0;
- }
- 
--static const char *ath10k_dfs_state(enum nl80211_dfs_state dfs_state)
-+static void ath10k_recalc_radar_detection(struct ath10k *ar)
- {
--	switch (dfs_state) {
--	case NL80211_DFS_USABLE:
--		return "USABLE";
--	case NL80211_DFS_UNAVAILABLE:
--		return "UNAVAILABLE";
--	case NL80211_DFS_AVAILABLE:
--		return "AVAILABLE";
--	default:
--		WARN_ON(1);
--		return "bug";
--	}
--}
--
--static void ath10k_config_radar_detection(struct ath10k *ar)
--{
--	struct ieee80211_channel *chan = ar->hw->conf.chandef.chan;
--	bool radar = ar->hw->conf.radar_enabled;
--	bool chan_radar = !!(chan->flags & IEEE80211_CHAN_RADAR);
--	enum nl80211_dfs_state dfs_state = chan->dfs_state;
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	ath10k_dbg(ATH10K_DBG_MAC,
--		   "mac radar config update: chan %dMHz radar %d chan radar %d chan state %s\n",
--		   chan->center_freq, radar, chan_radar,
--		   ath10k_dfs_state(dfs_state));
--
--	/*
--	 * It's safe to call it even if CAC is not started.
--	 * This call here guarantees changing channel, etc. will stop CAC.
--	 */
- 	ath10k_stop_cac(ar);
- 
--	if (!radar)
--		return;
--
--	if (!chan_radar)
-+	if (!ar->radar_enabled)
- 		return;
- 
--	if (dfs_state != NL80211_DFS_USABLE)
-+	if (ar->num_started_vdevs > 0)
- 		return;
- 
- 	ret = ath10k_start_cac(ar);
-@@ -832,6 +801,9 @@ static int ath10k_vdev_start(struct ath10k_vif *arvif)
- 		return ret;
- 	}
- 
-+	ar->num_started_vdevs++;
-+	ath10k_recalc_radar_detection(ar);
-+
- 	return ret;
- }
- 
-@@ -858,6 +830,11 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
- 		return ret;
- 	}
- 
-+	if (!WARN_ON(ar->num_started_vdevs == 0)) {
-+		ar->num_started_vdevs--;
-+		ath10k_recalc_radar_detection(ar);
-+	}
-+
- 	return ret;
- }
- 
-@@ -2341,6 +2318,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		goto exit;
- 	}
- 
-+	ar->num_started_vdevs = 0;
- 	ath10k_regd_update(ar);
- 	ret = 0;
- 
-@@ -2490,15 +2468,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
- 		ath10k_dbg(ATH10K_DBG_MAC,
--			   "mac config channel %d mhz flags 0x%x\n",
-+			   "mac config channel %dMHz flags 0x%x radar %d\n",
- 			   conf->chandef.chan->center_freq,
--			   conf->chandef.chan->flags);
-+			   conf->chandef.chan->flags,
-+			   conf->radar_enabled);
- 
- 		spin_lock_bh(&ar->data_lock);
- 		ar->rx_channel = conf->chandef.chan;
- 		spin_unlock_bh(&ar->data_lock);
- 
--		ath10k_config_radar_detection(ar);
-+		ar->radar_enabled = conf->radar_enabled;
-+		ath10k_recalc_radar_detection(ar);
- 
- 		if (!cfg80211_chandef_identical(&ar->chandef, &conf->chandef)) {
- 			ar->chandef = conf->chandef;
--- 
-1.8.5.3
+--cVp8NMj01v+Em8Se
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTUWXGAAoJEBx+YmzsjxAgc2EP/jNfZxEZ9Qr2rjo2mM00O31c
+cgpKfqeIK5dltqGbRH+XsguhSHejHHeUb5D2sIir+Lw1NGKSSSmYo6NkfOR+ZjEq
+Kll61JecGU9wCLxrGfYowzztskzIOWJyObV5So4js0/0vXrTEpDYrsCJyPUNqHLd
+Byc8sAIB3B29Wd9cERxAfKL/4Gr06vZvj6VgNR4L5ib2+m2HzXyskEzvKWvWzBgP
+pa90ilImsxFEU2gwslTt346GodkxI0LYncux6N5vbkSZVnsb24NBjNAdwyegahYt
+epkWdErdDJl1+kVRZ1mnhJm9U57+Luv2a6ctiP/w7cQou6YPItcMyUydTHqgGC1d
+vJ1HtEYSe5i1gQcCvtXUEas7RuCantM15DvbxQQNAww1D2+yGdtOoPHqCb5TvKiK
+a4FN7c8jjDFnaUdUp/lwOYc5IMpelM7UL3d1WSB5whVlXDJHTl/MRs2LvrUnc5hs
+PVW10WKKuh8XD/5MLbcFhG8d1WwJUQJxBnqRcY36yR5ohRq1fmT+NFHDu6eIyANP
+Y1pPu2FxBYEkSQfoicqD+SOz0J/HQkRu+46MOYmk29eY70KZw09dJ0Vyml4f93I1
+ZTWwUBJS41JiZQV2BT6blntiuxF2IPFAh1bQxD2WODvNdDzJyLHtb+A80a8kB3+m
+yAJvn86vDRsJXSty4zJe
+=dAfC
+-----END PGP SIGNATURE-----
+
+--cVp8NMj01v+Em8Se--
