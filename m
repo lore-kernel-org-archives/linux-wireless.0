@@ -1,124 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1080 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753240AbaDPNJV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 09:09:21 -0400
-Message-ID: <534E80B9.5010702@redhat.com> (sfid-20140416_150949_228990_D825A854)
-Date: Wed, 16 Apr 2014 15:08:09 +0200
-From: Hans de Goede <hdegoede@redhat.com>
+Received: from mail-we0-f171.google.com ([74.125.82.171]:64593 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbaDROus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2014 10:50:48 -0400
+Received: by mail-we0-f171.google.com with SMTP id t61so1622960wes.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 07:50:46 -0700 (PDT)
+Message-ID: <53513BC4.7020502@gmail.com> (sfid-20140418_165057_881109_BD76F08C)
+Date: Fri, 18 Apr 2014 17:50:44 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-CC: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [linux-sunxi] Re: [PATCH 7/7] ARM: sun7i: cubietruck: enable
- bluetooth module
-References: <1397544101-18135-1-git-send-email-wens@csie.org> <1397544101-18135-8-git-send-email-wens@csie.org> <20140415144215.GG3207@lukather> <CAGb2v643HyvFdhQ0znreB8ENXHWpcx6tFwdeU7VuU8KYWcT4ZA@mail.gmail.com> <20140416094428.GK3207@lukather>
-In-Reply-To: <20140416094428.GK3207@lukather>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alexander Monakov <amonakov@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi null pointer dereference
+References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>	<5350B340.9020201@gmail.com>	<53512D04.5070808@gmail.com> <CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>
+In-Reply-To: <CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On 04/16/2014 11:44 AM, Maxime Ripard wrote:
-> Hi,
-> 
-> Please try to keep me in CC, even though the ML doesn't make it easy..
-> 
-> On Wed, Apr 16, 2014 at 12:06:59AM +0800, Chen-Yu Tsai wrote:
->>>> @@ -139,4 +152,16 @@
->>>>       reg_usb2_vbus: usb2-vbus {
->>>>               status = "okay";
->>>>       };
->>>> +
->>>> +     rfkill_bt {
->>>> +             compatible = "rfkill-gpio";
->>>> +             pinctrl-names = "default";
->>>> +             pinctrl-0 = <&bt_pwr_pin_cubietruck>, <&clk_out_a_pins_a>;
->>>> +             clocks = <&clk_out_a>;
->>>> +             clock-frequency = <32768>;
->>>> +             gpios = <&pio 7 18 0>; /* PH18 */
->>>> +             gpio-names = "reset";
->>>> +             rfkill-name = "bt";
->>>> +             rfkill-type = <2>;
->>>> +     };
+
+On 04/18/2014 05:34 PM, Alexander Monakov wrote:
+> On Fri, Apr 18, 2014 at 5:47 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>
+>>
+>> On 04/18/2014 08:08 AM, Emmanuel Grumbach wrote:
+>>> Hi,
 >>>
->>> Hmmm, I don't think that's actually right.
+>>> On 04/17/2014 11:56 PM, Alexander Monakov wrote:
+>>>> Emmanuel,
+>>>>
+>>>> I'm curious about the plans w.r.t this fix; is it going to
+>>>> iwlwifi-next.git?  Thanks again.
+>>>>
 >>>
->>> If you have such a device, then I'd expect it to be represented as a
->>> full device in the DT, probably with one part for the WiFi, one part
->>> for the Bluetooth, and here the definition of the rfkill device that
->>> controls it.
+>>> It will go to iwlwifi-fixes.
+>>>
 >>
->> The AP6210 is not one device, but 2 separate chips in one module. Each
->> chip has its own controls and interface. They just so happen to share
->> the same enclosure. Even 2-in-1 chips by Broadcom have separate controls
->> and interfaces. The WiFi side is most likely connected via SDIO, while
->> the Bluetooth side is connected to a UART, and optionally I2S for sound.
+>> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
+>> So I definitely want to understand what is happening here before applying the fix.
 > 
-> It's even easier to represent then.
+> Sure, I can help with further investigation.  Would it help if I bisected?
 > 
->>> But tying parts of the device to the rfkill that controls it, such as
->>> the clocks, or the frequency it runs at seems just wrong.
->>
->> I understand where you're coming from. For devices on buses that require
->> drivers (such as USB, SDIO) these properties probably should be tied to
->> the device node.
->>
->> For our use case here, which is a bluetooth chip connected on the UART,
->> there is no in kernel representation or driver to tie them to. Same goes
->> for UART based GPS chips. They just so happen to require toggling a GPIO,
->> and maybe enabling a specific clock, to get it running. Afterwards,
->> accessing it is done solely from userspace. For our Broadcom chips, the
->> user has to upload its firmware first, then designate the tty as a Bluetooth
->> HCI using hciattach.
->>
->> We are using the rfkill device as a on-off switch.
-> 
-> I understand your point, but the fact that it's implemented in
-> user-space, or that UART is not a bus (which probably should be), is
-> only a Linux specific story, and how it's implemented in Linux (even
-> if the whole rfkill node is another one, but let's stay on topic).
-> 
-> This is a huge abstraction leak.
-> 
-> Let's say you need the I2S stream you mentionned for some
-> reason. Would you tie the audio stream to the rfkill node as well?
-> I'm sorry, but from an hardware description perspective, it makes no
-> sense.
 
-Sorry wens, but I have to agree with Maxime here. What I really would
-like to see is the bluetooth part of the AP6210 be a child node of the
-uart node like how i2c slaves are child nodes of the i2c master node.
+I can't decline such an offer:)
 
-With my distro maintainer had on, I say that even under Linux we will
-need this. Sure we can get things to work from userspace manually,
-by running the necessary commands. But we want things to work automatically,
-so we will need to know about the attached bluetooth device in userspace,
-and the proper way to do that is to put the info in devicetree. I've not
-yet thought about how userspace can then extract and react on this info,
-but for things to work plug and play with a generic distro rootfs we
-will need to eventually have some udev rules doing the firmware loading
-and hciattach. Which starts with being able to identify that the uart
-has a bcm hci bluetooth adapter attached.
-
-Regards,
-
-Hans
+Note that the "bad" commit might be in pci too.
+As a first try, I'd try 3.13.
+I've made quite a few changes in the ISR for 3.14.
