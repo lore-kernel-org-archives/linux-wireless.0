@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:30051 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbaDNOEF (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:57226 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbaDRGU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 10:04:05 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 3/7] mac80211: add new RC API to retrieve expected throughput
-Date: Mon, 14 Apr 2014 16:03:21 +0200
-Message-Id: <1397484205-20905-3-git-send-email-antonio@meshcoding.com> (sfid-20140414_160418_481694_E038FEE2)
-In-Reply-To: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
+	Fri, 18 Apr 2014 02:20:57 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x13so203636wgg.9
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 23:20:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140418061135.GA1647@redhat.com>
+References: <CAGAvgFun5q1-qdqzx3nxzpZAXyqY60xycgrF56p6qz5ryAJiwQ@mail.gmail.com>
+ <20140418061135.GA1647@redhat.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 18 Apr 2014 11:50:35 +0530
+Message-ID: <CABPxzY+P7Z-_pzfe+9S=id0U9UGMAPRmkbbaSwaU5qu9+tQdkw@mail.gmail.com> (sfid-20140418_082100_054307_E04AA463)
+Subject: Re: iwl3945
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Qian Li <qian.li@uhasselt.be>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
-
-In order to make mac80211 export the expected throughput,
-a new API which extracts such information from any mac80211
-SW RC algorithm is needed.
-Therefore add the new get_expected_throughput() member
-to the rate_control_ops structure.
-
-The exported value is expressed in Mbps/100. Such unit has
-been chosen because it is the highest precision that
-MinstrelHT can return.
-
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- include/net/mac80211.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0efe37c..47b891a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4480,6 +4480,9 @@ struct rate_control_ops {
- 	void (*add_sta_debugfs)(void *priv, void *priv_sta,
- 				struct dentry *dir);
- 	void (*remove_sta_debugfs)(void *priv, void *priv_sta);
-+
-+	u32 (*get_expected_throughput)(void *priv, void *priv_sta,
-+				       struct ieee80211_supported_band *sband);
- };
- 
- static inline int rate_supported(struct ieee80211_sta *sta,
--- 
-1.8.3.2
-
+On Fri, Apr 18, 2014 at 11:41 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Apr 17, 2014 at 08:11:03PM +0200, Qian Li wrote:
+>> I run into some problems while I was using Intel Wireless 3945ABG WNIC to
+>> do some routing experiments. I've been using Ubuntu 12.04. The default WNIC
+>> driver is iwl3945. I could set essid, IP address, and mode of the NIC. But
+>> I can't switch to all the channels. I want the computer to be able to
+>> switch to any 5GHZ band channel in the Ad-Hoc mode. But the WNIC could only
+>> be switched to certain channels (e.g., 40, 44, 48) after it is set to the
+>> Ad-Hoc mode (it can be switched to any channel when it is in the Managed
+>> mode). When I tried to switch to other channels (e.g. 42, 46, 100, 124,
+>> etc.), I got errors such as "invalid argument".
+>
+> Use "iw phy" to check on which channels IBSS is allowed on your device.
+> Most likely all 5GHz channels are disallowed.
+>
+> For example I have:
+>
+> $ iw phy | grep "no IBSS"
+>                         * 2467 MHz [12] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 2472 MHz [13] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
+>                         * 5260 MHz [52] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5280 MHz [56] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5300 MHz [60] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5320 MHz [64] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5500 MHz [100] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5520 MHz [104] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5540 MHz [108] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5560 MHz [112] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5580 MHz [116] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5600 MHz [120] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5620 MHz [124] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5640 MHz [128] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5660 MHz [132] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5680 MHz [136] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>                         * 5700 MHz [140] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+>
+I think you are using the defualt WORLD mode hence all 5GHz are
+disabled for IBSS.
+Can you try "iw reg set US" (Provided you have crda running), that
+should enable some of them, if not all?
