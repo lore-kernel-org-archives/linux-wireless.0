@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38404 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239AbaDQAlD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 20:41:03 -0400
-From: greearb@candelatech.com
-To: ath9k-devel@venema.h4ckr.net
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k:  Prevent divide by zero kernel crash.
-Date: Wed, 16 Apr 2014 17:40:40 -0700
-Message-Id: <1397695240-13710-1-git-send-email-greearb@candelatech.com> (sfid-20140417_024139_123476_132880EB)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11858 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751457AbaDRTRd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2014 15:17:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>
+CC: John Tobias <john.tobias.ph@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Date: Fri, 18 Apr 2014 12:16:07 -0700
+Subject: RE: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout
+ handler
+Message-ID: <477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com> (sfid-20140418_211737_673746_7C307DCC)
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+ <1397710914-10061-2-git-send-email-bzhao@marvell.com>
+ <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
+ <20140418044619.GF24166@us.netrek.org>
+In-Reply-To: <20140418044619.GF24166@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi James,
 
-Make sure we cannot ever assign beacon interval to zero.
+> > That "adapter->cmd_sent = false" was hoping the firmware is still
+> > alive and can respond to a new command. The reality is that the
+> > timeout usually indicates the firmware has already hung. Sending
+> > another command won't recover it in this case.
+> 
+> I'm dealing with a firmware hang when more than 13 nodes are in an ad-hoc
+> IBSS, and I've just found out isn't entirely a firmware hang; in that we can see
+> beacons and probe responses from the card, using tcpdump and monitor
+> mode.
+> 
+> I'm interested to know if the "firmware hangs" that you experiment with
+> prevent autonomous RF TX, or if RF TX typically proceeds.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c | 4 ++++
- drivers/net/wireless/ath/ath9k/recv.c   | 3 ++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+It depends. Even if firmware hangs the hardware is still alive.
+So you could see beacons and probe responses from the card if hardware has been programmed before firmware hangs.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 2e8bba0..5391f01 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -443,6 +443,8 @@ static u32 ath9k_mod_tsf64_tu(u64 tsf, u32 div_tu)
- {
- 	u32 tsf_mod, tsf_hi, tsf_lo, mod_hi, mod_lo;
- 
-+	if (WARN_ON_ONCE(div_tu == 0))
-+		div_tu = 100;
- 	tsf_mod = tsf & (BIT(10) - 1);
- 	tsf_hi = tsf >> 32;
- 	tsf_lo = ((u32) tsf) >> 10;
-@@ -667,6 +669,8 @@ static void ath9k_cache_beacon_config(struct ath_softc *sc,
- 		"Caching beacon data for BSS: %pM\n", bss_conf->bssid);
- 
- 	cur_conf->beacon_interval = bss_conf->beacon_int;
-+	if (WARN_ON_ONCE(cur_conf->beacon_interval == 0))
-+		cur_conf->beacon_interval = 100;
- 	cur_conf->dtim_period = bss_conf->dtim_period;
- 	cur_conf->listen_interval = 1;
- 	cur_conf->dtim_count = 1;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b97217d..79c20c7 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -538,7 +538,8 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 		sc->ps_flags &= ~PS_BEACON_SYNC;
- 		ath_dbg(common, PS,
- 			"Reconfigure beacon timers based on synchronized timestamp\n");
--		ath9k_set_beacon(sc);
-+		if (!(WARN_ON_ONCE(sc->cur_beacon_conf.beacon_interval == 0)))
-+			ath9k_set_beacon(sc);
- 	}
- 
- 	if (ath_beacon_dtim_pending_cab(skb)) {
--- 
-1.7.11.7
+> > I guess you are using SDIO chip. If your host controller supports
+> > MMC_POWER_OFF/UP, you can reset the chip with this approach:
+> >
+> >         mmc_remove_host(host);
+> >         /* some delay */
+> >         mmc_add_host(host);
+> 
+> Thanks, adding that to my list of things to try, as I am using SDIO too.
 
+This code (with 20ms delay) is already in latest driver. Your platform and controller may require a longer delay.
+
+Regards,
+Bing
