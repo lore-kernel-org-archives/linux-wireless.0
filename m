@@ -1,122 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm33-vm6.bullet.mail.sg3.yahoo.com ([106.10.151.229]:35186 "EHLO
-	nm33-vm6.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751278AbaDMPFj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 11:05:39 -0400
-Message-ID: <1397401537.30203.YahooMailBasic@web193506.mail.sg3.yahoo.com> (sfid-20140413_170614_686988_6F99D3DE)
-Date: Sun, 13 Apr 2014 23:05:37 +0800 (SGT)
-From: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Subject: Re: [ath9k-devel] Wifi client Bluetooth coexistence; non smooth video streams
-To: =?utf-8?B?6ams5paH5rab?= <xmgwinner@hotmail.com>
-Cc: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1396668507.37072.YahooMailBasic@web193504.mail.sg3.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:57334 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaDSQdw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Apr 2014 12:33:52 -0400
+Received: by mail-pb0-f43.google.com with SMTP id um1so2382016pbc.16
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 09:33:52 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 0/3] fix and improvements
+Date: Sun, 20 Apr 2014 00:32:36 +0800
+Message-Id: <cover.1397924746.git.gamerh2o@gmail.com> (sfid-20140419_183357_983959_27143F8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Mr.马文涛,
-     Thanks for your suggestions. This had an improvement on the video quality.
- Regards
- Sandeep.
---------------------------------------------
-On Sat, 5/4/14, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+I think the first patch should also be applied to 3.15.
 
- Subject: Re: [ath9k-devel] Wifi client Bluetooth coexistence; non smooth video streams
- To: "马文涛" <xmgwinner@hotmail.com>
- Cc: "ath9k-devel" <ath9k-devel@venema.h4ckr.net>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
- Date: Saturday, 5 April, 2014, 8:58 AM
- 
- 
- Hello Mr.马文涛,
-     Thanks for your suggestions....will try and
- let u know the results.
- Regards
- Sandeep.
- 
- --------------------------------------------
- On Fri, 4/4/14, 马文涛 <xmgwinner@hotmail.com>
- wrote:
- 
-  Subject: RE: [ath9k-devel] Wifi client Bluetooth
- coexistence; non smooth video streams
-  To: "sandeep suresh" <sandeep.suresh@yahoo.co.in>
-  Date: Friday, 4 April, 2014, 11:59 PM
-  
-  
-  
-  
-  Hi sandeep,
-  I never used wifi just like you. So I only have
-  some advices for you.1. Video needs more
-  throughput, so 7:3 or 8:2 seams better.2. If you
-  use RTSP to transmit video, I guess you can short the
- switch
-  time to reduce the delay. Just try to set period to
-  100ms or less for test. I think it will be
-  better. 
-  
-  
-  > Date: Fri, 4 Apr 2014 09:55:40 +0800
-  > From: sandeep.suresh@yahoo.co.in
-  > To: adrian@freebsd.org;
- ath9k-devel@lists.ath9k.org;
-  linux-wireless@vger.kernel.org
-  > Subject: [ath9k-devel] Wifi client Bluetooth
-  coexistence;    non smooth video streams
-  > 
-  > Dear all,
-  >    Please help if any one have encountered
- simillar
-  problems or other guidance on this, Please.
-  > 
-  > The following is my set-up:
-  > Linksys Access point. Cisco 802.11g camera connected
- as
-  a wifi client to Linksys. I have a development board in
-  which i have AR9287 as the Wifi chipset associated as wifi
-  client to linksys. The development board has Bluetooth
-  dongle for streaming audio etc. The development board has
- a
-  LCD display and I stream the video stream from camera at
- 640
-  x 480 resolution, MPEG-4, 10fps (also tried with 15, 30
-  fps).
-  > 
-  > Software: For the Wifi client on the development
- board,
-  I am using the ath9k driver with btcoex_enable=1.
-  > 2-wire coexistence. I am allowing 40% of the time for
-  Bluetooth an 60% of the time for WiFi. The period is
- around
-  200ms.
-  > 
-  > Observations: 
-  > 1. The video streams are not smooth. There will be a
-  small pause of a second or two between frames and hence we
-  do not see smooth transitions.
-  > 2. Sometimes it looks like, the streams are bufferred
-  and played back at a rapid pace. So, one can see like a
- fast
-  forward play of video streams on the board.
-  > 3. Disabling coexistence does not have these
-  observations.
-  > Please help.
-  > Regards
-  > Sandeep.
-  > _______________________________________________
-  > ath9k-devel mailing list
-  > ath9k-devel@lists.ath9k.org
-  > https://lists.ath9k.org/mailman/listinfo/ath9k-devel
-      
-         
-           
-   
-  
- _______________________________________________
- ath9k-devel mailing list
- ath9k-devel@lists.ath9k.org
- https://lists.ath9k.org/mailman/listinfo/ath9k-devel
- 
+Zhao, Gang (3):
+  cfg80211: fix incorrect checking of return value
+  cfg80211/mac80211: rename cfg80211_chandef_dfs_required()
+  cfg80211: change variable name
+
+ include/net/cfg80211.h |   6 +--
+ net/mac80211/ibss.c    |  40 ++++++++---------
+ net/mac80211/mesh.c    |  16 +++----
+ net/wireless/chan.c    |  32 +++++++------
+ net/wireless/mesh.c    |  22 ++++-----
+ net/wireless/nl80211.c | 120 ++++++++++++++++++++++++-------------------------
+ net/wireless/trace.h   |   2 +-
+ 7 files changed, 118 insertions(+), 120 deletions(-)
+
+-- 
+1.9.0
+
