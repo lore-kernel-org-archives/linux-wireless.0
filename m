@@ -1,85 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:39553 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583AbaDPJ5P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 05:57:15 -0400
+Received: from mout3.freenet.de ([195.4.92.93]:33345 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751191AbaDSM5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Apr 2014 08:57:03 -0400
+Message-ID: <53526F53.3090009@maya.org> (sfid-20140419_145742_902049_C5A88D67)
+Date: Sat, 19 Apr 2014 14:42:59 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
- <1397544101-18135-2-git-send-email-wens@csie.org> <20140415142024.GD3207@lukather>
- <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com> <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 16 Apr 2014 17:56:54 +0800
-Message-ID: <CAGb2v65PF=i3pL58JycJLyp-TjsEeVxO-uDuZ6xrEob5oJLj5g@mail.gmail.com> (sfid-20140416_115749_789240_80468D13)
-Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
- based lookup
-To: Alexandre Courbot <gnurou@gmail.com>
-Cc: Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Content-Type: text/plain; charset=UTF-8
+To: Michael Hirsch <hirsch@teufel.de>, linux-wireless@vger.kernel.org
+Subject: Re: Connection drop while running iperf on ARM based platform
+References: <534CFC45.90101@teufel.de>
+In-Reply-To: <534CFC45.90101@teufel.de>
+Content-Type: multipart/mixed;
+ boundary="------------090607090002030409020507"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------090607090002030409020507
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 16, 2014 at 3:06 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
-> On Wed, Apr 16, 2014 at 3:12 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
->> On Tue, Apr 15, 2014 at 11:20 PM, Maxime Ripard
->> <maxime.ripard@free-electrons.com> wrote:
->>> Hi Chen-Yu,
->>>
->>> On Tue, Apr 15, 2014 at 02:41:35PM +0800, Chen-Yu Tsai wrote:
->>>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
->>>> phandles by name only, through gpios/gpio-names, and not by index.
->>>
->>> IIRC, gpios only uses the *-gpios properties, and not gpios/gpio-names
->>> pattern seen on various other things.
->>>
->>> Is it some new property you introduce? If so, please add it to the
->>> documentation.
->>>
->>> Now, I'm not sure that having two distinct representations of GPIOs in
->>> the DT is a good thing. Yes, it's looking odd compared to other
->>> similar bindings, but it's what we have to deal with.
->>
->> Mmmm I *think* I somehow remember a discussion about this topic
->> recently, but I cannot find it. Maybe Chen-yu could point us to the
->> conclusion of this discussion and the rationale for (re)implementing
->> named GPIOs this way?
->
-> Aha, here maybe:
->
-> https://lkml.org/lkml/2014/1/21/164
+Michael Hirsch wrote:
+> Hi all,
+> 
+> I have an issue using a with RT5572 chipset (TP-Link N600) on a Armada
+> based embedded system.
 
-They're also mentioned in:
+The actual rt2800usb module unfortunately is broken (and nobody seems to
+be working on them any more.) They are considered to be ready :-) [1].
 
-https://lkml.org/lkml/2014/2/25/581
+Xose Vazquez Perez wrote in [1]: "because the goal already was reached".
+Well, if the goal was to kick out the far better working vendor drivers
+- it is really reached. But it was obviously never the goal to achieve
+the same (or even better) quality.
 
-> However I don't see a clear conclusion that we should implement that
-> scheme. Not that I am strongly against it, but I'd like to see a
-> practical purpose for it.
-
-Again no clear conclusion on this. I wrote this as it was one possible
-way out of the index-based GPIO stuff.
-
-Hopefully others will chime in and we can decide whether this is what
-we want or not.
+Besides that, rt2800usb isn't considered for chips other than rt2x00 [2].
 
 
-Cheers
-ChenYu
+Therefore:
+Don't use it. Try rt5572sta (DPO_RT5572_LinuxSTA_2.6.1.3_20121022) from
+mediatek.com. You may add these patches:
+
+
+For 64bit (most probably not needed for arm):
+http://thread.gmane.org/gmane.linux.network/313147
+
+
+for EAP-TLS:
+http://thread.gmane.org/gmane.linux.drivers.rt2x00.user/1249/focus=1474
+Apply it with
+patch -R -p1 --dry-run <1474-001.bin
+
+
+If your kernel uses CONFIG_UIDGID_STRICT_TYPE_CHECKS:
+http://article.gmane.org/gmane.linux.drivers.rt2x00.user/2450
+(With kernel 3.14, you have to modify the patch, because 3.14 removed
+CONFIG_UIDGID_STRICT_TYPE_CHECKS).
+
+
+Maybe you have to add the usb device id to
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/common/rtusb_dev_id.c
+
+
+> Running the same wifi module on a x86 Laptop with 3.14 kernel works better.
+
+Anyway, most probably not good at all. That's at least my finding for
+rt3572 and rt3573, which both work _much_ better and completely stable
+with high throughput even w/ bad radio conditions as sta with the vendor
+driver.
+
+> There is also drops to 0 at running iperf, but it seems to be able to
+> recover. Also on a x86 laptops is see the TX Status timeout messages (if
+> it's enabled in the kernel config). I followed the discussion a bit
+> about those messages and can't say whether these messages have anything
+> todo with shown issue (no packets received)
+> 
+> Any suggestion where I could start searching? For me it looks like a
+> rate-control issue, but that's speculation.
+
+Additionally, USB handling compared to vendor driver is suboptimal.
+rt2800usb needs far to much system resources to "work".
+
+
+Regards,
+Andreas
+
+
+[1]
+http://news.gmane.org/find-root.php?group=gmane.linux.drivers.rt2x00.user&article=2441
+[2] http://permalink.gmane.org/gmane.linux.drivers.rt2x00.user/2468
+
+
+--------------090607090002030409020507
+Content-Type: text/x-patch;
+ name="rt5572sta_kuid_t.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rt5572sta_kuid_t.diff"
+
+--- os/linux/rt_linux.c.orig	2012-10-22 05:52:59.000000000 +0200
++++ os/linux/rt_linux.c	2013-12-28 19:13:28.677118438 +0100
+@@ -34,6 +34,10 @@
+ #include "rt_os_util.h"
+ #include <linux/rtnetlink.h>
+ 
++#ifdef CONFIG_UIDGID_STRICT_TYPE_CHECKS
++#include <linux/uidgid.h>
++#endif
++
+ #if defined(CONFIG_RA_HW_NAT) || defined(CONFIG_RA_HW_NAT_MODULE)
+ #include "../../../../../../net/nat/hw_nat/ra_nat.h"
+ #include "../../../../../../net/nat/hw_nat/frame_engine.h"
+@@ -1138,9 +1142,15 @@
+ 		pOSFSInfo->fsgid = current->fsgid;
+ 		current->fsuid = current->fsgid = 0;
+ #else
++#ifdef CONFIG_UIDGID_STRICT_TYPE_CHECKS
++		struct user_namespace *to = current_user_ns();
++		pOSFSInfo->fsuid = from_kuid_munged(to, current_fsuid());
++		pOSFSInfo->fsgid = from_kgid_munged(to, current_fsgid());
++#else
+ 		pOSFSInfo->fsuid = current_fsuid();
+ 		pOSFSInfo->fsgid = current_fsgid();
+ #endif
++#endif
+ 		pOSFSInfo->fs = get_fs();
+ 		set_fs(KERNEL_DS);
+ 	} else {
+
+
+
+
+--------------090607090002030409020507--
