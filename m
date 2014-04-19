@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42565 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932583AbaDVOoW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 10:44:22 -0400
-Message-ID: <1398177842.4211.7.camel@jlt4.sipsolutions.net> (sfid-20140422_164432_162963_C9D5711A)
-Subject: Re: [PATCH 02/12] mac80211: remove config option check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 22 Apr 2014 16:44:02 +0200
-In-Reply-To: <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065456_045112_6B8FCF8F)
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-	 <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com>
-	 (sfid-20140421_065456_045112_6B8FCF8F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cantor2.suse.de ([195.135.220.15]:33394 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043AbaDSKwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Apr 2014 06:52:51 -0400
+Date: Sat, 19 Apr 2014 12:52:47 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH] NFC: nfcmrvl: Auto-select core module
+Message-ID: <20140419125247.40671230@endymion.delvare> (sfid-20140419_125259_528847_B7D95C39)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
-> Sanity check and error handling code shouldn't be put into
-> CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
-> used to control whether to print debug messages.
+As I understand it, the core nfcmrvl module is useless without the
+USB access module. So hide NFC_MRVL and select it automatically if
+NFC_MRVL_USB is selected.
 
-It's in the hotpath though, so we don't always want it, it's mostly for
-development that this matters.
+This avoids presenting NFC_MRVL when NFC_MRVL_USB can't be selected.
 
-I don't think I want to apply this patch.
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/nfcmrvl/Kconfig |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-johannes
+--- linux-3.15-rc1.orig/drivers/nfc/nfcmrvl/Kconfig	2014-03-31 05:40:15.000000000 +0200
++++ linux-3.15-rc1/drivers/nfc/nfcmrvl/Kconfig	2014-04-18 21:10:14.493649773 +0200
+@@ -1,18 +1,15 @@
+ config NFC_MRVL
+-	tristate "Marvell NFC driver support"
+-	depends on NFC_NCI
++	tristate
+ 	help
+ 	  The core driver to support Marvell NFC devices.
+ 
+ 	  This driver is required if you want to support
+ 	  Marvell NFC device 8897.
+ 
+-	  Say Y here to compile Marvell NFC driver into the kernel or
+-	  say M to compile it as module.
+-
+ config NFC_MRVL_USB
+-	tristate "Marvell NFC-over-USB driver"
+-	depends on NFC_MRVL && USB
++	tristate  "Marvell Avastar 88W8897 device support (USB)"
++	depends on NFC_NCI && USB
++	select NFC_MRVL
+ 	help
+ 	  Marvell NFC-over-USB driver.
+ 
 
 
+-- 
+Jean Delvare
+SUSE L3 Support
