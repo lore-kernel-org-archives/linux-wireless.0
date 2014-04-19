@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47145 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbaDQKol (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:50210 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754603AbaDSVKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 06:44:41 -0400
-Date: Thu, 17 Apr 2014 13:44:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: eyal@wizery.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: iwlwifi: mvm: rs: use correct max expected throughput figures
-Message-ID: <20140417104439.GA9658@mwanda> (sfid-20140417_124445_274778_EBD7A79E)
+	Sat, 19 Apr 2014 17:10:14 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so2620346eek.12
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 14:10:12 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH][next] b43: G-PHY: fix random mistakes to match specs
+Date: Sat, 19 Apr 2014 23:10:05 +0200
+Message-Id: <1397941805-1695-1-git-send-email-zajec5@gmail.com> (sfid-20140419_231100_038459_9498FD03)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Eyal Shapira,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+That are pretty minor changes, but I have them queued for years, so I
+guess it's finally time to do some cleaning.
+---
+ drivers/net/wireless/b43/phy_g.c | 6 +++---
+ drivers/net/wireless/b43/wa.c    | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-The patch 198266a3c110: "iwlwifi: mvm: rs: use correct max expected
-throughput figures" from Mar 31, 2014, leads to the following static
-checker warning:
+diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
+index 12f467b..8f5c14b 100644
+--- a/drivers/net/wireless/b43/phy_g.c
++++ b/drivers/net/wireless/b43/phy_g.c
+@@ -1587,6 +1587,7 @@ static void b43_phy_initb5(struct b43_wldev *dev)
+ 	b43_write16(dev, 0x03E4, (b43_read16(dev, 0x03E4) & 0xFFC0) | 0x0004);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/Init/B6 */
+ static void b43_phy_initb6(struct b43_wldev *dev)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+@@ -1670,7 +1671,7 @@ static void b43_phy_initb6(struct b43_wldev *dev)
+ 		b43_radio_write16(dev, 0x50, 0x20);
+ 	}
+ 	if (phy->radio_rev <= 2) {
+-		b43_radio_write16(dev, 0x7C, 0x20);
++		b43_radio_write16(dev, 0x50, 0x20);
+ 		b43_radio_write16(dev, 0x5A, 0x70);
+ 		b43_radio_write16(dev, 0x5B, 0x7B);
+ 		b43_radio_write16(dev, 0x5C, 0xB0);
+@@ -1686,9 +1687,8 @@ static void b43_phy_initb6(struct b43_wldev *dev)
+ 		b43_phy_write(dev, 0x2A, 0x8AC0);
+ 	b43_phy_write(dev, 0x0038, 0x0668);
+ 	b43_set_txpower_g(dev, &gphy->bbatt, &gphy->rfatt, gphy->tx_control);
+-	if (phy->radio_rev <= 5) {
++	if (phy->radio_rev == 4 || phy->radio_rev == 5)
+ 		b43_phy_maskset(dev, 0x5D, 0xFF80, 0x0003);
+-	}
+ 	if (phy->radio_rev <= 2)
+ 		b43_radio_write16(dev, 0x005D, 0x000D);
+ 
+diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
+index 9b1a038..c218c08 100644
+--- a/drivers/net/wireless/b43/wa.c
++++ b/drivers/net/wireless/b43/wa.c
+@@ -441,7 +441,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
+ 
+ static void b43_wa_tr_ltov(struct b43_wldev *dev) /* TR Lookup Table Original Values */
+ {
+-	b43_gtab_write(dev, B43_GTAB_ORIGTR, 0, 0xC480);
++	b43_gtab_write(dev, B43_GTAB_ORIGTR, 0, 0x7654);
+ }
+ 
+ static void b43_wa_cpll_nonpilot(struct b43_wldev *dev)
+-- 
+1.8.4.5
 
-	drivers/net/wireless/iwlwifi/mvm/rs.c:2433 iwl_mvm_rs_rate_init()
-	warn: was expecting a 64 bit value instead of '(2)'
-
-drivers/net/wireless/iwlwifi/mvm/rs.c
-  2427                  /* active_siso_rate mask includes 9 MBits (bit 5),
-  2428                   * and CCK (bits 0-3), supp_rates[] does not;
-  2429                   * shift to convert format, force 9 MBits off.
-  2430                   */
-  2431                  lq_sta->active_siso_rate = ht_cap->mcs.rx_mask[0] << 1;
-  2432                  lq_sta->active_siso_rate |= ht_cap->mcs.rx_mask[0] & 0x1;
-  2433                  lq_sta->active_siso_rate &= ~((u16)0x2);
-
-Your patch changes this from being a u16 to being a unsigned long and
-triggers this static checker warning.  The code still works fine because
-the u16 cast is a no-op which ends up being processed as
-"~((type promote to int)(u16)0x2)".  The negative bit gets pushed out to
-64 bits giving "0xfffffffffffffffd" which we want.  But it's still a
-confusing left over remnant.
-
-Also this struct has another definition where it is still a u16 in the
-drivers/net/wireless/iwlwifi/dvm/ driver.
-
-  2434                  lq_sta->active_siso_rate <<= IWL_FIRST_OFDM_RATE;
-  2435  
-  2436                  /* Same here */
-  2437                  lq_sta->active_mimo2_rate = ht_cap->mcs.rx_mask[1] << 1;
-  2438                  lq_sta->active_mimo2_rate |= ht_cap->mcs.rx_mask[1] & 0x1;
-  2439                  lq_sta->active_mimo2_rate &= ~((u16)0x2);
-                                                        ^^^^^^^
-Same here.
-
-  2440                  lq_sta->active_mimo2_rate <<= IWL_FIRST_OFDM_RATE;
-  2441  
-  2442                  lq_sta->is_vht = false;
-  2443          } else {
-
-regards,
-dan carpenter
