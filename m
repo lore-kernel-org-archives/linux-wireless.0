@@ -1,85 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:37373 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933885AbaDIVJw (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:53769 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbaDSAnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 17:09:52 -0400
+	Fri, 18 Apr 2014 20:43:01 -0400
+Received: by mail-la0-f52.google.com with SMTP id ec20so1737484lab.25
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 17:42:57 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 9 Apr 2014 17:09:51 -0400
-Message-ID: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com> (sfid-20140409_231021_700118_5CDF1BA3)
-Subject: Oops in acpi_gpiochip_add on MacBookPro with Linux v3.14-12042-g69cd9eba3886
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-gpio@vger.kernel.org,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20140419003410.GB14606@us.netrek.org>
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+	<1397710914-10061-2-git-send-email-bzhao@marvell.com>
+	<CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
+	<20140418044619.GF24166@us.netrek.org>
+	<477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com>
+	<20140419003410.GB14606@us.netrek.org>
+Date: Fri, 18 Apr 2014 17:42:57 -0700
+Message-ID: <CACUGKYOPSnxWohpXL_FTs2Gyf9VKdLChkdqYx2hmApR+cTVcMw@mail.gmail.com> (sfid-20140419_024342_589237_F0EB7BE4)
+Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
+From: John Tobias <john.tobias.ph@gmail.com>
+To: James Cameron <quozl@laptop.org>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Chris Ball <cjb@laptop.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Hi James,
 
-With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
-module on the MacBookPro 10,2 I have here.  This works fine with Linux
-v3.14-7333-g59ecc26004e7.  There have been no changes between those
-two versions to bcma itself, but the GPIO merge did go in that window.
- I can attempt to do a bisect tomorrow, but looking over some of the
-GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
-hoping someone here has an idea on what the issue might be and has
-some possible things for me to test for fixes.
+May I know what processor are you using?.
 
-I've transcribed the oops below by hand from a pic I took of the oops
-because it doesn't wind up in the logs.  The pic itself can be
-accessed here:
+Thanks,
 
-https://drive.google.com/file/d/0B03YtBX8ablKdC10NTdmQnBidVk/
+john
 
-josh
-
-bcma: bus0: Found chip with id 0x4331, rev 0x02, and package 0x09
-bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x25,
-class 0x0)
-bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev
-0x1D, class 0x0)
-bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x13, class 0x0)
-BUG: unable to handle kernel NULL pointer dereference at 00000000000003d8
-IP: [<ffffffff81400765>] acpi_gpiochip_add+0x15/0x1c0
-PGD 0
-Oops: 0000 [#1] SMP
-Modules linked in: snd_pcm(+) sdhci_pci(+) i2c_i801 bcma(+) sdhci mmc_core....
-CPU: 1 PID: 636 Comm: systemd-udevd Not tainted 3.15.0-0.rc0.git10.1.fc21.x86_64
-Hardware name: Apple Inc. MacBookPro10,2/Mac-AFD8A9D944EA4843, BIOS
-MBP102.88Z.01...
-task: ffff880.....
-RIP: 0010:[<ffffffff81400765>] [<ffffffff81400765>] acpi_gpiochip_add+0x15/0x1c0
-....
-Call Trace:
-gpiochip_add
-bcma_gpio_init
-bcma_bus_register
-bcma_host_pci_probe
-local_pci_probe
-? pci_match_device
-pci_device_probe
-driver_probe_device
-__driver_attach
-? __driver_attach
-bus_for_each_dev
-driver_attach
-bus_add_driver
-? bcma_bus_early_register
-driver_register
-? bcma_bus_early_register
-__pci_register_driver
-bcma_host_pci_init
-bcma_modinit
-do_one_initcall
-? set_memory_nx
-load_module
-? store_uevent
-? kernel_read
-SyS_finit_module
-system_call_fastpath
+On Fri, Apr 18, 2014 at 5:34 PM, James Cameron <quozl@laptop.org> wrote:
+> On Fri, Apr 18, 2014 at 12:16:07PM -0700, Bing Zhao wrote:
+>> Hi James,
+>>
+>> > > That "adapter->cmd_sent = false" was hoping the firmware is
+>> > > still alive and can respond to a new command. The reality is
+>> > > that the timeout usually indicates the firmware has already
+>> > > hung. Sending another command won't recover it in this case.
+>> >
+>> > I'm dealing with a firmware hang when more than 13 nodes are in an
+>> > ad-hoc IBSS, and I've just found out isn't entirely a firmware
+>> > hang; in that we can see beacons and probe responses from the
+>> > card, using tcpdump and monitor mode.
+>> >
+>> > I'm interested to know if the "firmware hangs" that you experiment
+>> > with prevent autonomous RF TX, or if RF TX typically proceeds.
+>>
+>> It depends. Even if firmware hangs the hardware is still alive.
+>> So you could see beacons and probe responses from the card if
+>> hardware has been programmed before firmware hangs.
+>
+> Thanks.  I neglected to mention the time period; beacons and probe
+> responses are seen for many minutes after the timeout report by the
+> driver, and I have not yet tested for how long this lasts.  The probe
+> responses are in reply to new probe requests.  It makes me think the
+> card is working fine, apart from not communicating with the host.
+>
+> HOST_INSTATUS_REG, RD_BITMAP_{U,L} are all zero when read at the
+> timeout.
+>
+> I am reliably reproducing this particular problem.
+>
+>> > > I guess you are using SDIO chip. If your host controller
+>> > > supports MMC_POWER_OFF/UP, you can reset the chip with this
+>> > > approach:
+>> > >
+>> > >         mmc_remove_host(host);
+>> > >         /* some delay */
+>> > >         mmc_add_host(host);
+>> >
+>> > Thanks, adding that to my list of things to try, as I am using
+>> > SDIO too.
+>>
+>> This code (with 20ms delay) is already in latest driver. Your
+>> platform and controller may require a longer delay.
+>
+> Thanks.  This is the patch I found:
+>
+>         mwifiex: add support for SDIO card reset
+>
+> and it isn't in our tree yet.
+>
+> Yes, we may need to test the delay required.  We have a host GPIO
+> that drives power to the card.  We have discharge clamps on that path
+> as well.  mmc_* is configured through device-tree to use the GPIO,
+> which we use for suspend and resume.  We have power-delay-ms
+> properties but they aren't used.
+>
+> I've been testing the patch with 3000ms delay, and additional output:
+>
+>         pr_err("Resetting card (3000ms) ...\n");
+>         mmc_remove_host(reset_host);
+>         pr_err("removed host\n");
+>         mdelay(3000);
+>         pr_err("delayed\n");
+>         mmc_add_host(reset_host);
+>         pr_err("added host\n");
+>
+> If the host joins an IBSS with 10 peers, and three more peers added,
+> the wireless LED stays on, and:
+>
+> [  105.023274] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id (1397865681.433582) = 0xa4, act = 0x0
+> [  105.033735] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+> [  105.039533] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+> [  105.045235] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+> [  105.045245] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+> [  105.055866] mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+> [  105.061148] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 2
+> [  105.066868] mwifiex_sdio mmc0:0001:1: last_event_index = 3
+> [  105.072320] mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
+> [  105.077944] mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
+> [  105.083408] mwifiex_sdio: Resetting card (3000ms) ...
+> [  105.083408] mwifiex_sdio mmc0:0001:1: curr_cmd is still in processing
+> [  105.098195] mwifiex_sdio mmc0:0001:1: cmd timeout
+>
+> This is mmc_remove_host not returning.  I've no idea why yet.  +CC cjb.
+>
+> If the host joins an IBSS with with 13 peers, the wireless LED goes
+> off, and:
+>
+> [   83.603038] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id (1397865805.48239) = 0x10, act = 0x1
+> [   83.613425] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+> [   83.613425] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+> [   83.624911] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+> [   83.624918] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+> [   83.635542] mwifiex_sdio mmc0:0001:1: last_cmd_index = 2
+> [   83.640833] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 1
+> [   83.646542] mwifiex_sdio mmc0:0001:1: last_event_index = 2
+> [   83.652002] mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
+> [   83.657612] mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
+> [   83.663071] mwifiex_sdio: Resetting card (3000ms) ...
+> [   83.668157] mwifiex_sdio mmc0:0001:1: curr_cmd is still in processing
+> [   83.677902] mwifiex_sdio mmc0:0001:1: failed to get signal information
+> [   83.684925] mwifiex_sdio mmc0:0001:1: PREP_CMD: card is removed
+> [   83.713537] mmc0: card 0001 removed
+> [   83.713537] mwifiex_sdio: removed host
+> [   87.660599] mwifiex_sdio: delayed
+> [   87.703045] mwifiex_sdio: added host
+> [   87.740247] mmc0: new high speed SDIO card at address 0001
+> [   97.911584] mwifiex_sdio mmc0:0001:1: FW failed to be active in time
+>
+> But bringing the card back to life has failed.  It seems to depend on
+> what command was outstanding; get RSSI vs MAC multicast address.
+>
+> Is there another patch needed?  I looked through all the patches but
+> none seemed to relate to this.
+>
+> What about forcing a reset instead of using power?  We have a host
+> GPIO tied to the reset input on the card.
+>
+> --
+> James Cameron
+> http://quozl.linux.org.au/
