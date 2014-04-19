@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:64359 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109AbaDHHDQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 03:03:16 -0400
-Received: by mail-wi0-f173.google.com with SMTP id z2so6433187wiv.12
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 00:03:15 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:33039 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043AbaDSKGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Apr 2014 06:06:54 -0400
+Date: Sat, 19 Apr 2014 12:06:49 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH]  NFC: pn544: Auto-select core module
+Message-ID: <20140419120649.47a343cd@endymion.delvare> (sfid-20140419_120734_474356_495A3B02)
 MIME-Version: 1.0
-In-Reply-To: <87ob0cmhwp.fsf@kamboji.qca.qualcomm.com>
-References: <1396610305-5229-1-git-send-email-michal.kazior@tieto.com>
-	<87y4zgmifa.fsf@kamboji.qca.qualcomm.com>
-	<87ob0cmhwp.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 8 Apr 2014 09:03:15 +0200
-Message-ID: <CA+BoTQkWjr9pxTN0AgqDXLzXqTjJ1a=Zepss5UdDw7tpOQLOAw@mail.gmail.com> (sfid-20140408_090321_446004_B9151EA9)
-Subject: Re: [PATCH] ath10k: refactor monitor code
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 April 2014 08:53, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> It was possible to create/delete/start/stop
->>> monitor vdev from a few places that were not
->>> exclusively protected against each other. This
->>> resulted in monitor vdev being stopped/removed by
->>> one call origin while another one was expecting it
->>> to continue running.
->>>
->>> For example if CAC was started and interface's
->>> promiscuous mode was toggled monitor vdev was
->>> removed from the driver meaning no radar would be
->>> detected. In additional a warning would be printed
->>> upon CAC completion complaining it tried to stop
->>> non-running monitor vdev.
->>>
->>> The patch simplifies monitor code by removing
->>> IEEE80211_HW_WANT_MONITOR_VIF (which wasn't really
->>> ever needed) and improves state tracking. It also
->>> unifies prints.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> Thanks, applied.
->
-> Actually there were two checkpatch warnings which I had missed:
->
-> drivers/net/wireless/ath/ath10k/mac.c:2587: WARNING: line over 80 characters
-> drivers/net/wireless/ath/ath10k/mac.c:2852: WARNING: line over 80 characters
->
-> I amended it like this:
->
+As I understand it, the core nfc_pn544 module is useless without
+either the I2C or the MEI access module. So hide NFC_PN544 and
+select it automatically if either NFC_PN544_I2C or NFC_PN544_MEI is
+selected.
 
-[...]
+This avoids presenting NFC_PN544 when neither NFC_PN544_I2C nor
+NFC_PN544_MEI can be selected.
 
-Sorry for the trouble and thanks!
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn544/Kconfig |   18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
+
+--- linux-3.15-rc1.orig/drivers/nfc/pn544/Kconfig	2014-04-18 19:18:55.998723014 +0200
++++ linux-3.15-rc1/drivers/nfc/pn544/Kconfig	2014-04-18 19:19:16.195149146 +0200
+@@ -1,20 +1,15 @@
+ config NFC_PN544
+-	tristate "NXP PN544 NFC driver"
+-	depends on NFC_HCI
++	tristate
+ 	select CRC_CCITT
+-	default n
+ 	---help---
+ 	  NXP PN544 core driver.
+ 	  This is a driver based on the HCI NFC kernel layers and
+ 	  will thus not work with NXP libnfc library.
+ 
+-	  To compile this driver as a module, choose m here. The module will
+-	  be called pn544.
+-	  Say N if unsure.
+-
+ config NFC_PN544_I2C
+-	tristate "NFC PN544 i2c support"
+-	depends on NFC_PN544 && I2C && NFC_SHDLC
++	tristate "NXP PN544 device support (I2C)"
++	depends on NFC_HCI && I2C && NFC_SHDLC
++	select NFC_PN544
+ 	---help---
+ 	  This module adds support for the NXP pn544 i2c interface.
+ 	  Select this if your platform is using the i2c bus.
+@@ -23,8 +18,9 @@ config NFC_PN544_I2C
+ 	  Say N if unsure.
+ 
+ config NFC_PN544_MEI
+-	tristate "NFC PN544 MEI support"
+-	depends on NFC_PN544 && NFC_MEI_PHY
++	tristate "NXP PN544 device support (MEI)"
++	depends on NFC_HCI && NFC_MEI_PHY
++	select NFC_PN544
+ 	---help---
+ 	  This module adds support for the mei interface of adapters using
+ 	  NXP pn544 chipsets.  Select this if your pn544 chipset
 
 
-Michał
+-- 
+Jean Delvare
+SUSE L3 Support
