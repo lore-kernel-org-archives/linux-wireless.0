@@ -1,85 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:58244 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755031AbaDGJG5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 05:06:57 -0400
-Received: by mail-we0-f171.google.com with SMTP id t61so6436870wes.16
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2014 02:06:56 -0700 (PDT)
+Received: from bues.ch ([80.190.117.144]:38533 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751004AbaDTWhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2014 18:37:09 -0400
+Date: Mon, 21 Apr 2014 00:36:51 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [wireless-next][PATCH 1/2] b43: ssb: refuse to support more
+ than IEEE 802.11 core
+Message-ID: <20140421003651.594f14c0@wiggum> (sfid-20140421_003752_027534_38F2F02E)
+In-Reply-To: <CACna6rwjEP8qZ+SWQEOREmr=4wBJSgeNY_mG5GQpOWem7Jgrgw@mail.gmail.com>
+References: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
+	<20140420205452.79a95330@wiggum>
+	<CACna6rwjEP8qZ+SWQEOREmr=4wBJSgeNY_mG5GQpOWem7Jgrgw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <533EC686.40505@candelatech.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-	<533EC686.40505@candelatech.com>
-Date: Mon, 7 Apr 2014 11:06:55 +0200
-Message-ID: <CA+BoTQknr=Rh6izDWpsDTQM-8i=NJQA1nJomCcugD81pRPeXBw@mail.gmail.com> (sfid-20140407_110701_508599_F2873C59)
-Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/dFn4sBEf8+D7yznyTBJvMi+"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 April 2014 16:49, Ben Greear <greearb@candelatech.com> wrote:
-> On 04/04/2014 04:37 AM, Michal Kazior wrote:
->>
->> Hi,
->>
->> After digging around I've found what seems to be
->> the problem with WMI Tx credit starvation and
->> inability to properly flush Tx in ath10k_flush().
->>
->> Long story short: if a client that was asleep (as
->> per what firmware thinks) goes out of range (or
->> just stops responding) then Tx rots in FW/HW
->> queues for a few seconds before it's discarded.
->> For WMI Tx credits this means management frames
->> eat up Tx credits for a few seconds (causing other
->> WMI commands to timeout and return -EAGAIN/-11).
->> For HTT Tx this means NullFunc frames would get
->> stuck for a few seconds before completion was
->> received.
->>
->> @Ben: Can you check if this helps you? I tested
->> this briefly and at least [1/4] seems fixes the
->> WMI Tx starvation. I'm hoping patches 2-4 help
->> with your ath10k_flush() failures which I haven't
->> been successfull in reproducing (but have observed
->> improvement with purging some frames out of FW/HW
->> queues).
->
->
-> I'm out of office for a bit, but will test this as
-> soon as I'm back.
->
-> Thanks for looking into this!
->
-> In general, would it make more sense to have a few more tx credits
-> available to mitigate the slow-to-be-processed buffers?
+--Sig_/dFn4sBEf8+D7yznyTBJvMi+
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Sure, we can disregard firmware telling us we have only 2 credits and
-submit commands as we see fit. We can probably even get away with it
-as long as we don't submit more than 2 WMI_MGMT_TX_CMDID commands
-because it seems this is the only resource consuming command (requires
-firmware to copy frame, keep it allocated and mapped for HW until
-released on air). Beacons are already sent by reference. But I don't
-think this is the solution.
+On Sun, 20 Apr 2014 21:29:01 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-The problem is there's no tx completion indication for
-WMI_MGMT_TX_CMDID and you can't rely on tx credits replenishment for
-that because (as per my observation) you have to submit an even number
-of WMI_MGMT_TX_CMDID to get tx credits replenished. This means there's
-no way of doing an educated timeout/flushing. This also means you can
-get stuck with 2 credits and 2 frames being stuck in FW if destination
-peer is unresponsive for up to 10 seconds.
+> Do you think it's OK to push this small patchset and continue cleaning
+> process later? I'm afraid it may take a lot of time to clean in
+> completely and patchset would be huge. That's why I wanted to handle
+> it with small steps.
 
-Once you get stuck you can get a cascade of errors because WMI
-commands time out after 3 seconds and if you're running AP you stop
-beaconing because you can't even submit WMI_BCN_TX_CMDID.
+Yes absolutely. The changes are huge and small steps are appreciated.
+Try moving variables one group at a time. Not one huge patch that moves eve=
+rything.
+Nobody would be able to review that.
 
-Another way would be to prolong WMI command timeout to ~11 seconds...
-at least for the "tx credits being stuck" problem.
+--=20
+Michael.
 
+----
+Please use PGP/GPG encryption.
+Key-ID: F532BE1D908D8B0E
+--------
 
-Michał
+--Sig_/dFn4sBEf8+D7yznyTBJvMi+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTVEwGAAoJEPUyvh2QjYsOV6kP/32m9fCISuXRTxI1CN0Aer5a
+SxBn/oXbldXKENzmQxFLa/gQ/FT9h89pyUnV4k8uycBrObhio/BKTHaOYGx7pwy9
+ef2gMJw97cI+3q4MFYrcp3tPcRcUyo6xpe5Ntl5aE5PgAqtxEhZgxAN8E9k8yuHE
+9eCv816qMmcxcpla9tBYPpGRfOexQCr5pRGl4W2qjv1NsTXCX4JxMaWEftP4tV6E
+KQXOufNg52fdipxWD8mGGj/NBYEHNZnoQm4bPbJ5i7WXkBAjOJNLbiq5MfRGf0a3
+idyiMrBJRT168jZY+pXU7Pn9Z7VeZZvRFt8JKbcFqpIIo7HSGV6u9hx3iMxe+piu
+DHP8/nabUvWR0I/06J1bkH1NsGvWogDnNuw9RH+tRYqlyzNM8AfYiKLO77/7wPnu
+c0zUZjcyw6eOeTVUJArSZmRBv10SRx0SGop0L/CyvBTBHt4T7St3dN/NlaRM4hS8
+zokVLuMavkxBUZZtZOT5HpxzdR7NlS4eyCiOCXhggtryucR00+7470xaGL8wr8AH
+3vjziy4wbJPvEgZM7m9yZo+as6KC9X/MbbN8zWfYW8Bf7y4c7rLciFi88SpQftEC
+0oiv+65yFGdar47nwnucM6JtfmY3UVyxXQUsL47dBzTL3V9Y1gx5KZxa+3GVAqMS
+ohFAYT7s43OYg6Ihmc8j
+=PDCr
+-----END PGP SIGNATURE-----
+
+--Sig_/dFn4sBEf8+D7yznyTBJvMi+--
