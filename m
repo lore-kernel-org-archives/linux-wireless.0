@@ -1,98 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:57851 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750889AbaDII6O (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:36734 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751044AbaDTGGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 04:58:14 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so1587472eek.23
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 01:58:13 -0700 (PDT)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH v2 1/2] mac80211: add option to generate CCMP IVs only for mgmt frames
-Date: Wed,  9 Apr 2014 10:57:36 +0200
-Message-Id: <1397033857-2523-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140409_105821_050813_E4AEA081)
+	Sun, 20 Apr 2014 02:06:17 -0400
+Received: by mail-wi0-f178.google.com with SMTP id bs8so836862wib.5
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 23:06:15 -0700 (PDT)
+Message-ID: <535363D5.4070708@gmail.com> (sfid-20140420_080651_369630_3388EB10)
+Date: Sun, 20 Apr 2014 09:06:13 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Alexander Monakov <amonakov@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi null pointer dereference
+References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>	<5350B340.9020201@gmail.com>	<53512D04.5070808@gmail.com>	<CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>	<53513BC4.7020502@gmail.com> <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com>
+In-Reply-To: <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some chips can encrypt managment frames in HW, but
-require generated IV in the frame. Add a key flag
-that allows us to achieve this.
+Hi,
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
 
-v2: fix missed prefix
+On 04/18/2014 11:33 PM, Alexander Monakov wrote:
+> On Fri, Apr 18, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
+>>>> So I definitely want to understand what is happening here before applying the fix.
+>>>
+>>> Sure, I can help with further investigation.  Would it help if I bisected?
+>>>
+>>
+>> I can't decline such an offer:)
+>>
+>> Note that the "bad" commit might be in pci too.
+>> As a first try, I'd try 3.13.
+>> I've made quite a few changes in the ISR for 3.14.
+> 
+> It bisects to
+> 
+> commit 2dbc368d7fded35ed221a3751405b15e06eb8925
+> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Date:   Mon Dec 9 11:09:47 2013 +0200
+> 
+>     iwlwifi: pcie: track interrupt mask in SW
+> 
 
- include/net/mac80211.h |   16 ++++++++++------
- net/mac80211/tx.c      |    5 +++--
- net/mac80211/wpa.c     |    7 +++++--
- 3 files changed, 18 insertions(+), 10 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2de7ff4..77689ca 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1202,14 +1202,18 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
-  *	fall back to software crypto. Note that this flag deals only with
-  *	RX, if your crypto engine can't deal with TX you can also set the
-  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
-+ * @IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX: This flag should be set by the
-+ *	driver for a CCMP key to indicate that is requires IV generation
-+ *	only for managment frames (MFP).
-  */
- enum ieee80211_key_flags {
--	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
--	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
--	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
--	IEEE80211_KEY_FLAG_SW_MGMT_TX	= 1<<4,
--	IEEE80211_KEY_FLAG_PUT_IV_SPACE = 1<<5,
--	IEEE80211_KEY_FLAG_RX_MGMT	= 1<<6,
-+	IEEE80211_KEY_FLAG_GENERATE_IV		= 1<<1,
-+	IEEE80211_KEY_FLAG_GENERATE_MMIC	= 1<<2,
-+	IEEE80211_KEY_FLAG_PAIRWISE		= 1<<3,
-+	IEEE80211_KEY_FLAG_SW_MGMT_TX		= 1<<4,
-+	IEEE80211_KEY_FLAG_PUT_IV_SPACE		= 1<<5,
-+	IEEE80211_KEY_FLAG_RX_MGMT		= 1<<6,
-+	IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX	= 1<<7,
- };
- 
- /**
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 19d36d4..8a49272 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -625,8 +625,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 				tx->key = NULL;
- 			else
- 				skip_hw = (tx->key->conf.flags &
--					   IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
--					ieee80211_is_mgmt(hdr->frame_control);
-+				   (IEEE80211_KEY_FLAG_SW_MGMT_TX |
-+				    IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX)) &&
-+				    ieee80211_is_mgmt(hdr->frame_control);
- 			break;
- 		case WLAN_CIPHER_SUITE_AES_CMAC:
- 			if (!ieee80211_is_mgmt(hdr->frame_control))
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index b8600e3..2ef2e40 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -450,8 +450,11 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 
- 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
- 
--	/* hwaccel - with software CCMP header */
--	if (info->control.hw_key)
-+	/* hwaccel - with software CCMP header or the HW needs
-+	 * generated the IV
-+	 */
-+	if (info->control.hw_key ||
-+	    (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX))
- 		return 0;
- 
- 	pos += IEEE80211_CCMP_HDR_LEN;
--- 
-1.7.9.5
-
+Yeah - ok.
+Thank you for this information.
+I'll check again later.
