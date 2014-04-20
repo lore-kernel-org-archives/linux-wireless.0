@@ -1,84 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42449 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756153AbaDVPZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 11:25:08 -0400
-Date: Tue, 22 Apr 2014 17:25:05 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-wireless@vger.kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH] NFC: microread: Platform data header file clean-ups
-Message-ID: <20140422172505.25e3dacf@endymion.delvare> (sfid-20140422_172513_517773_06E0E979)
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:56985 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbaDTDjU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Apr 2014 23:39:20 -0400
+Received: by mail-pd0-f173.google.com with SMTP id z10so2629225pdj.32
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 20:39:19 -0700 (PDT)
+From: "Zhao\, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/3] fix and improvements
+References: <cover.1397924746.git.gamerh2o@gmail.com>
+Date: Sun, 20 Apr 2014 11:39:06 +0800
+In-Reply-To: <cover.1397924746.git.gamerh2o@gmail.com> (Gang Zhao's message of
+	"Sun, 20 Apr 2014 00:32:36 +0800")
+Message-ID: <87bnvwsm91.fsf@gmail.com> (sfid-20140420_053924_421054_93759668)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several clean-ups related to include/linux/platform_data/microread.h:
-* Fix device name in comment.
-* Don't include <linux/i2c.h> as it isn't needed.
-* Include this header file from drivers/nfc/microread/i2c.c as that
-  file uses struct microread_nfc_platform_data.
-* Add this header file to the NFC entry in MAINTAINERS.
+On Sun, 2014-04-20 at 00:32:36 +0800, Zhao, Gang wrote:
+> I think the first patch should also be applied to 3.15.
+>
+> Zhao, Gang (3):
+>   cfg80211: fix incorrect checking of return value
+>   cfg80211/mac80211: rename cfg80211_chandef_dfs_required()
+>   cfg80211: change variable name
+>
+I found that the incorrect checking of return value problem had already
+been fixed in mac80211-next 2beb6dab2d79 ("cfg80211/mac80211: refactor
+cfg80211_chandef_dfs_required()"). But not on mac80211 tree.
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
----
-That being said, the header file in question only declares struct
-microread_nfc_platform_data, which is only used in
-drivers/nfc/microread/i2c.c, and that piece of code doesn't access a
-single field of the structure. So I am wondering if this struct and
-header file are needed at all in the first place?
+I think the fix may worth going to mac80211 and also
+stable-3.14. Johannes, you can decide whether to apply this patch or it
+needs to be modified, since if it's applied, it will surely cause
+conflict in future time.
 
- MAINTAINERS                             |    1 +
- drivers/nfc/microread/i2c.c             |    1 +
- include/linux/platform_data/microread.h |    4 +---
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
---- linux-3.15-rc2.orig/include/linux/platform_data/microread.h	2014-03-31 05:40:15.000000000 +0200
-+++ linux-3.15-rc2/include/linux/platform_data/microread.h	2014-04-22 17:12:06.702561202 +0200
-@@ -1,5 +1,5 @@
- /*
-- * Driver include for the PN544 NFC chip.
-+ * Driver include for the Inside Secure microread NFC chip.
-  *
-  * Copyright (C) 2011 Tieto Poland
-  * Copyright (C) 2012 Intel Corporation. All rights reserved.
-@@ -21,8 +21,6 @@
- #ifndef _MICROREAD_H
- #define _MICROREAD_H
- 
--#include <linux/i2c.h>
--
- #define MICROREAD_DRIVER_NAME	"microread"
- 
- /* board config platform data for microread */
---- linux-3.15-rc2.orig/MAINTAINERS	2014-04-22 14:51:09.025285048 +0200
-+++ linux-3.15-rc2/MAINTAINERS	2014-04-22 17:12:33.909132651 +0200
-@@ -6204,6 +6204,7 @@ F:	include/net/nfc/
- F:	include/uapi/linux/nfc.h
- F:	drivers/nfc/
- F:	include/linux/platform_data/pn544.h
-+F:	include/linux/platform_data/microread.h
- F:	Documentation/devicetree/bindings/net/nfc/
- 
- NFS, SUNRPC, AND LOCKD CLIENTS
---- linux-3.15-rc2.orig/drivers/nfc/microread/i2c.c	2014-04-22 16:56:23.385837875 +0200
-+++ linux-3.15-rc2/drivers/nfc/microread/i2c.c	2014-04-22 17:14:06.962088154 +0200
-@@ -26,6 +26,7 @@
- #include <linux/gpio.h>
- 
- #include <linux/nfc.h>
-+#include <linux/platform_data/microread.h>
- #include <net/nfc/hci.h>
- #include <net/nfc/llc.h>
- 
-
-
--- 
-Jean Delvare
-SUSE L3 Support
+The following two improvement patches should be ignored, since I found
+they need to be rebased to be applied on mac80211-next.
