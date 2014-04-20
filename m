@@ -1,254 +1,300 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:52547 "EHLO
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:62051 "EHLO
 	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932824AbaDIKze (ORCPT
+	with ESMTP id S1755311AbaDTLGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:34 -0400
-Received: by mail-ee0-f42.google.com with SMTP id d17so1743133eek.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:32 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 3/5] ath10k: rework peer accounting
-Date: Wed,  9 Apr 2014 12:48:49 +0200
-Message-Id: <1397040531-6224-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125540_586190_5FC7DBCD)
-In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
- <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 20 Apr 2014 07:06:19 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d17so2948354eek.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 04:06:17 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 7/9] b43: N-PHY: add init & calib values for radio 0x2056 rev 11
+Date: Sun, 20 Apr 2014 13:05:49 +0200
+Message-Id: <1397991951-13478-8-git-send-email-zajec5@gmail.com> (sfid-20140420_130659_292079_469855B0)
+In-Reply-To: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
+References: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was troublesome to iterate over peers and
-perform sleepable calls. This will be necessary
-for some upcomming changes to tx flushing.
+They were extracted from MMIO dumps of 14e4:4353 and wl 6.30.223.141.
 
-Make peer allocation and initial setup
-protected by both ar->conf_mutex and
-ar->data_lock. This way it's possible to iterate
-over peers with conf_mutex and call sleepable
-functions.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  5 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 69 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/txrx.c | 29 +++++++-------
- 3 files changed, 81 insertions(+), 22 deletions(-)
+This will yield few "line over 80 characters" warnings, but it's only for some
+tables, not a real code.
+---
+ drivers/net/wireless/b43/radio_2056.c | 246 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 246 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8edd6da..61e325a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -199,9 +199,14 @@ struct ath10k_dfs_stats {
- #define ATH10K_MAX_NUM_PEER_IDS (1 << 11) /* htt rx_desc limit */
- 
- struct ath10k_peer {
-+	/* protected by conf_mutex + data_lock */
- 	struct list_head list;
-+
-+	/* protected by conf_mutex */
- 	int vdev_id;
- 	u8 addr[ETH_ALEN];
-+
-+	/* protected by data_lock */
- 	DECLARE_BITMAP(peer_ids, ATH10K_MAX_NUM_PEER_IDS);
- 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
+index b4fd934..d252c52 100644
+--- a/drivers/net/wireless/b43/radio_2056.c
++++ b/drivers/net/wireless/b43/radio_2056.c
+@@ -2972,6 +2972,51 @@ static const struct b2056_inittab_entry b2056_inittab_rev8_rx[] = {
+ 	[B2056_RX_STATUS_HPC_RC]	= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
  };
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5cfbf88..adb5da1 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -318,28 +318,61 @@ static u8 ath10k_parse_mpdudensity(u8 mpdudensity)
  
- static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- {
-+	struct ath10k_peer *peer;
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	peer = ath10k_peer_find(ar, vdev_id, addr);
-+	if (peer) {
-+		ath10k_warn("peer %pM on vdev %i already exists\n",
-+			    addr, vdev_id);
-+		return -EINVAL;
-+	}
++static const struct b2056_inittab_entry b2056_inittab_radio_rev11_syn[] = {
++	[B2056_SYN_PLL_PFD]		= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
++	[B2056_SYN_PLL_CP2]		= { .ghz5 = 0x003f, .ghz2 = 0x003f, UPLOAD, },
++	[B2056_SYN_PLL_LOOPFILTER1]	= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
++	[B2056_SYN_PLL_LOOPFILTER2]	= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
++	[B2056_SYN_PLL_LOOPFILTER4]	= { .ghz5 = 0x002b, .ghz2 = 0x002b, UPLOAD, },
++	[B2056_SYN_PLL_VCO2]		= { .ghz5 = 0x00f7, .ghz2 = 0x00f7, UPLOAD, },
++	[B2056_SYN_PLL_VCOCAL12]	= { .ghz5 = 0x0007, .ghz2 = 0x0007, UPLOAD, },
++	[B2056_SYN_LOGENBUF2]		= { .ghz5 = 0x008f, .ghz2 = 0x008f, UPLOAD, },
++};
 +
-+	peer = kzalloc(sizeof(*peer), GFP_KERNEL);
-+	if (!peer) {
-+		ath10k_warn("failed to allocate peer %pM on vdev %i: not enough memory\n",
-+			    addr, vdev_id);
-+		return -ENOMEM;
-+	}
++static const struct b2056_inittab_entry b2056_inittab_radio_rev11_tx[] = {
++	[B2056_TX_PA_SPARE2]		= { .ghz5 = 0x00ee, .ghz2 = 0x00ee, UPLOAD, },
++	[B2056_TX_INTPAA_IAUX_STAT]	= { .ghz5 = 0x0050, .ghz2 = 0x0050, UPLOAD, },
++	[B2056_TX_INTPAA_IMAIN_STAT]	= { .ghz5 = 0x0050, .ghz2 = 0x0050, UPLOAD, },
++	[B2056_TX_INTPAA_PASLOPE]	= { .ghz5 = 0x00f0, .ghz2 = 0x00f0, UPLOAD, },
++	[B2056_TX_INTPAG_PASLOPE]	= { .ghz5 = 0x00f0, .ghz2 = 0x00f0, UPLOAD, },
++	[B2056_TX_PADA_IDAC]		= { .ghz5 = 0x00ff, .ghz2 = 0x00ff, UPLOAD, },
++	[B2056_TX_PADA_SLOPE]		= { .ghz5 = 0x0070, .ghz2 = 0x0070, UPLOAD, },
++	[B2056_TX_PADG_SLOPE]		= { .ghz5 = 0x0070, .ghz2 = 0x0070, UPLOAD, },
++	[B2056_TX_PGAA_IDAC]		= { .ghz5 = 0x00ff, .ghz2 = 0x00ff, UPLOAD, },
++	[B2056_TX_PGAA_SLOPE]		= { .ghz5 = 0x0077, .ghz2 = 0x0077, UPLOAD, },
++	[B2056_TX_PGAG_SLOPE]		= { .ghz5 = 0x0077, .ghz2 = 0x0077, UPLOAD, },
++	[B2056_TX_GMBB_IDAC]		= { .ghz5 = 0x0000, .ghz2 = 0x0000, UPLOAD, },
++	[B2056_TX_TXSPARE1]		= { .ghz5 = 0x0030, .ghz2 = 0x0030, UPLOAD, },
++};
 +
-+	peer->vdev_id = vdev_id;
-+	memcpy(peer->addr, addr, ETH_ALEN);
++static const struct b2056_inittab_entry b2056_inittab_radio_rev11_rx[] = {
++	[B2056_RX_BIASPOLE_LNAA1_IDAC]	= { .ghz5 = 0x0017, .ghz2 = 0x0017, UPLOAD, },
++	[B2056_RX_LNAA2_IDAC]		= { .ghz5 = 0x00ff, .ghz2 = 0x00ff, UPLOAD, },
++	[B2056_RX_BIASPOLE_LNAG1_IDAC]	= { .ghz5 = 0x0017, .ghz2 = 0x0017, UPLOAD, },
++	[B2056_RX_LNAG2_IDAC]		= { .ghz5 = 0x00f0, .ghz2 = 0x00f0, UPLOAD, },
++	[B2056_RX_MIXA_VCM]		= { .ghz5 = 0x0055, .ghz2 = 0x0055, UPLOAD, },
++	[B2056_RX_MIXA_LOB_BIAS]	= { .ghz5 = 0x0088, .ghz2 = 0x0088, UPLOAD, },
++	[B2056_RX_MIXA_BIAS_AUX]	= { .ghz5 = 0x0007, .ghz2 = 0x0007, UPLOAD, },
++	[B2056_RX_MIXG_VCM]		= { .ghz5 = 0x0055, .ghz2 = 0x0055, UPLOAD, },
++	[B2056_RX_TIA_IOPAMP]		= { .ghz5 = 0x0026, .ghz2 = 0x0026, UPLOAD, },
++	[B2056_RX_TIA_QOPAMP]		= { .ghz5 = 0x0026, .ghz2 = 0x0026, UPLOAD, },
++	[B2056_RX_TIA_IMISC]		= { .ghz5 = 0x000f, .ghz2 = 0x000f, UPLOAD, },
++	[B2056_RX_TIA_QMISC]		= { .ghz5 = 0x000f, .ghz2 = 0x000f, UPLOAD, },
++	[B2056_RX_RXLPF_OUTVCM]		= { .ghz5 = 0x0004, .ghz2 = 0x0004, UPLOAD, },
++	[B2056_RX_VGA_BIAS_DCCANCEL]	= { .ghz5 = 0x0000, .ghz2 = 0x0000, UPLOAD, },
++	[B2056_RX_RXSPARE3]		= { .ghz5 = 0x0005, .ghz2 = 0x0005, UPLOAD, },
++};
 +
-+	spin_lock_bh(&ar->data_lock);
-+	list_add(&peer->list, &ar->peers);
-+	spin_unlock_bh(&ar->data_lock);
+ #define INITTABSPTS(prefix) \
+ 	.syn		= prefix##_syn,			\
+ 	.syn_length	= ARRAY_SIZE(prefix##_syn),	\
+@@ -9011,6 +9056,207 @@ static const struct b43_nphy_channeltab_entry_rev3 b43_nphy_channeltab_rev8[] =
+   },
+ };
+ 
++static const struct b43_nphy_channeltab_entry_rev3 b43_nphy_channeltab_radio_rev11[] = {
++	{
++		.freq			= 5180,
++		RADIOREGS3(0xb6, 0x01, 0x01, 0x02, 0x06, 0x05, 0x05, 0x02,
++			   0x0c, 0x01, 0x02, 0x02, 0x02, 0x8f, 0x0f, 0x00,
++			   0xff, 0xf9, 0x00, 0x06, 0x00, 0x77, 0x00, 0x0e,
++			   0x00, 0x6f, 0x00, 0xf9, 0x00, 0x06, 0x00, 0x77,
++			   0x00, 0x0e, 0x00, 0x6f, 0x00),
++		PHYREGS(0x081c, 0x0818, 0x0814, 0x01f9, 0x01fa, 0x01fb),
++	},
++	{
++		.freq			= 5200,
++		RADIOREGS3(0xaf, 0x01, 0x01, 0x02, 0x08, 0x05, 0x05, 0x02,
++			   0x0c, 0x01, 0x02, 0x02, 0x02, 0x8f, 0x0f, 0x00,
++			   0xff, 0xf9, 0x00, 0x05, 0x00, 0x77, 0x00, 0x0d,
++			   0x00, 0x6f, 0x00, 0xf9, 0x00, 0x05, 0x00, 0x77,
++			   0x00, 0x0d, 0x00, 0x6f, 0x00),
++		PHYREGS(0x0824, 0x0820, 0x081c, 0x01f7, 0x01f8, 0x01f9),
++	},
++	{
++		.freq			= 5220,
++		RADIOREGS3(0xa7, 0x01, 0x01, 0x02, 0x0a, 0x05, 0x05, 0x02,
++			   0x0c, 0x01, 0x02, 0x02, 0x02, 0x8e, 0x0f, 0x00,
++			   0xfe, 0xd8, 0x00, 0x05, 0x00, 0x77, 0x00, 0x0d,
++			   0x00, 0x6f, 0x00, 0xd8, 0x00, 0x05, 0x00, 0x77,
++			   0x00, 0x0d, 0x00, 0x6f, 0x00),
++		PHYREGS(0x082c, 0x0828, 0x0824, 0x01f5, 0x01f6, 0x01f7),
++	},
++	{
++		.freq			= 5745,
++		RADIOREGS3(0xfe, 0x00, 0x02, 0x04, 0x7d, 0x05, 0x05, 0x02,
++			   0x15, 0x01, 0x05, 0x05, 0x05, 0x87, 0x05, 0x00,
++			   0x20, 0x30, 0x00, 0x00, 0x00, 0x77, 0x00, 0x06,
++			   0x00, 0x6d, 0x00, 0x30, 0x00, 0x00, 0x00, 0x77,
++			   0x00, 0x06, 0x00, 0x6d, 0x00),
++		PHYREGS(0x08fe, 0x08fa, 0x08f6, 0x01c8, 0x01c8, 0x01c9),
++	},
++	{
++		.freq			= 5765,
++		RADIOREGS3(0xf8, 0x00, 0x02, 0x04, 0x81, 0x05, 0x05, 0x02,
++			   0x15, 0x01, 0x05, 0x05, 0x05, 0x86, 0x05, 0x00,
++			   0x10, 0x10, 0x00, 0x00, 0x00, 0x77, 0x00, 0x05,
++			   0x00, 0x6c, 0x00, 0x10, 0x00, 0x00, 0x00, 0x77,
++			   0x00, 0x05, 0x00, 0x6c, 0x00),
++		PHYREGS(0x0906, 0x0902, 0x08fe, 0x01c6, 0x01c7, 0x01c8),
++	},
++	{
++		.freq			= 5785,
++		RADIOREGS3(0xf2, 0x00, 0x02, 0x04, 0x85, 0x05, 0x05, 0x02,
++			   0x15, 0x01, 0x06, 0x06, 0x06, 0x86, 0x04, 0x00,
++			   0x00, 0x10, 0x00, 0x00, 0x00, 0x77, 0x00, 0x05,
++			   0x00, 0x6b, 0x00, 0x10, 0x00, 0x00, 0x00, 0x77,
++			   0x00, 0x05, 0x00, 0x6b, 0x00),
++		PHYREGS(0x090e, 0x090a, 0x0906, 0x01c4, 0x01c5, 0x01c6),
++	},
++	{
++		.freq			= 5805,
++		RADIOREGS3(0xed, 0x00, 0x02, 0x04, 0x89, 0x05, 0x05, 0x02,
++			   0x15, 0x01, 0x06, 0x06, 0x06, 0x86, 0x04, 0x00,
++			   0x00, 0x00, 0x00, 0x00, 0x00, 0x77, 0x00, 0x05,
++			   0x00, 0x6a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x77,
++			   0x00, 0x05, 0x00, 0x6a, 0x00),
++		PHYREGS(0x0916, 0x0912, 0x090e, 0x01c3, 0x01c4, 0x01c4),
++	},
++	{
++		.freq			= 5825,
++		RADIOREGS3(0xed, 0x00, 0x02, 0x04, 0x8d, 0x05, 0x05, 0x02,
++			   0x15, 0x01, 0x06, 0x06, 0x06, 0x86, 0x04, 0x00,
++			   0x00, 0x00, 0x00, 0x00, 0x00, 0x77, 0x00, 0x05,
++			   0x00, 0x69, 0x00, 0x00, 0x00, 0x00, 0x00, 0x77,
++			   0x00, 0x05, 0x00, 0x69, 0x00),
++		PHYREGS(0x091e, 0x091a, 0x0916, 0x01c1, 0x01c2, 0x01c3),
++	},
++	{
++		.freq			= 2412,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x6c, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x04, 0x04, 0x04, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x78, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0b, 0x00, 0x0a, 0x00, 0x89, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0b, 0x00, 0x0a),
++		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
++	},
++	{
++		.freq			= 2417,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x71, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x78, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0b, 0x00, 0x0a, 0x00, 0x89, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0b, 0x00, 0x0a),
++		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
++	},
++	{
++		.freq			= 2422,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x76, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x67, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0b, 0x00, 0x0a, 0x00, 0x89, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0b, 0x00, 0x0a),
++		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
++	},
++	{
++		.freq			= 2427,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x7b, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x57, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x0a, 0x00, 0x78, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x0a),
++		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
++	},
++	{
++		.freq			= 2432,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x80, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x56, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x0a, 0x00, 0x77, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x0a),
++		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
++	},
++	{
++		.freq			= 2437,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x85, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x46, 0x00, 0x03, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x0a, 0x00, 0x76, 0x00, 0x03, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x0a),
++		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
++	},
++	{
++		.freq			= 2442,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x8a, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x05, 0x05, 0x05, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x45, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x0a, 0x00, 0x66, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x0a),
++		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
++	},
++	{
++		.freq			= 2447,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x8f, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x06, 0x06, 0x06, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x34, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x09, 0x00, 0x55, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x09),
++		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
++	},
++	{
++		.freq			= 2452,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x94, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x06, 0x06, 0x06, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x23, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x09, 0x00, 0x45, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x09),
++		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
++	},
++	{
++		.freq			= 2457,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x99, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x06, 0x06, 0x06, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x12, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x0a, 0x00, 0x09, 0x00, 0x34, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x0a, 0x00, 0x09),
++		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
++	},
++	{
++		.freq			= 2462,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0x9e, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x06, 0x06, 0x06, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x02, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x09, 0x00, 0x09, 0x00, 0x33, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x09, 0x00, 0x09),
++		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
++	},
++	{
++		.freq			= 2467,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0xa3, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x06, 0x06, 0x06, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x09, 0x00, 0x09, 0x00, 0x22, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x09, 0x00, 0x09),
++		PHYREGS(0x03df, 0x03db, 0x03d7, 0x0422, 0x0427, 0x042b),
++	},
++	{
++		.freq			= 2472,
++		RADIOREGS3(0x00, 0x01, 0x03, 0x09, 0xa8, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x07, 0x07, 0x07, 0x8f, 0x30, 0x00,
++			   0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x09, 0x00, 0x09, 0x00, 0x11, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x09, 0x00, 0x09),
++		PHYREGS(0x03e1, 0x03dd, 0x03d9, 0x0420, 0x0424, 0x0429),
++	},
++	{
++		.freq			= 2484,
++		RADIOREGS3(0xff, 0x01, 0x03, 0x09, 0xb4, 0x06, 0x06, 0x04,
++			   0x2b, 0x01, 0x07, 0x07, 0x07, 0x8f, 0x20, 0x00,
++			   0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x70, 0x00,
++			   0x09, 0x00, 0x09, 0x00, 0x00, 0x00, 0x02, 0x00,
++			   0x70, 0x00, 0x09, 0x00, 0x09),
++		PHYREGS(0x03e6, 0x03e2, 0x03de, 0x041b, 0x041f, 0x0424),
++	},
++};
 +
- 	ret = ath10k_wmi_peer_create(ar, vdev_id, addr);
- 	if (ret) {
- 		ath10k_warn("failed to create wmi peer %pM on vdev %i: %i\n",
- 			    addr, vdev_id, ret);
--		return ret;
-+		goto err_free;
- 	}
- 
- 	ret = ath10k_wait_for_peer_created(ar, vdev_id, addr);
- 	if (ret) {
- 		ath10k_warn("failed to wait for created wmi peer %pM on vdev %i: %i\n",
- 			    addr, vdev_id, ret);
--		return ret;
-+		goto err_free;
- 	}
- 	spin_lock_bh(&ar->data_lock);
- 	ar->num_peers++;
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	return 0;
-+
-+err_free:
-+	spin_lock_bh(&ar->data_lock);
-+	list_del(&peer->list);
-+	/* very unlikely, but check anyway */
-+	if (!bitmap_empty(peer->peer_ids, ATH10K_MAX_NUM_PEER_IDS))
-+		ath10k_warn("removing peer %pM on vdev %i still being mapped in firmware\n",
-+			    addr, vdev_id);
-+	spin_unlock_bh(&ar->data_lock);
-+	kfree(peer);
-+	return ret;
- }
- 
- static int ath10k_mac_set_kickout(struct ath10k_vif *arvif)
-@@ -416,22 +449,46 @@ static int ath10k_mac_set_frag(struct ath10k_vif *arvif, u32 value)
- 
- static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- {
-+	struct ath10k_peer *peer;
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	peer = ath10k_peer_find(ar, vdev_id, addr);
-+	if (!peer) {
-+		ath10k_warn("failed to lookup peer %pM on vdev %i\n",
-+			    addr, vdev_id);
-+		return -ENOENT;
-+	}
-+
- 	ret = ath10k_wmi_peer_delete(ar, vdev_id, addr);
--	if (ret)
--		return ret;
-+	if (ret) {
-+		ath10k_warn("failed to request wmi peer %pM on vdev %i removal: %d\n",
-+			    addr, vdev_id, ret);
-+		goto out;
-+	}
- 
- 	ret = ath10k_wait_for_peer_deleted(ar, vdev_id, addr);
--	if (ret)
--		return ret;
-+	if (ret) {
-+		ath10k_warn("failed to wait for wmi peer %pM on vdev %i removal: %d\n",
-+			    addr, vdev_id, ret);
-+		goto out;
-+	}
- 
- 	spin_lock_bh(&ar->data_lock);
- 	ar->num_peers--;
- 	spin_unlock_bh(&ar->data_lock);
- 
-+out:
-+	spin_lock_bh(&ar->data_lock);
-+	list_del(&peer->list);
-+	if (!bitmap_empty(peer->peer_ids, ATH10K_MAX_NUM_PEER_IDS))
-+		ath10k_warn("removing peer %pM on vdev %i still being mapped in firmware\n",
-+			    addr, vdev_id);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	kfree(peer);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 82669a7..d802569 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -100,13 +100,13 @@ exit:
- 		wake_up(&htt->empty_tx_wq);
- }
- 
-+/* hold conf_mutex for simple iteration, or conf_mutex+data_lock for
-+ * modifications */
- struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 				     const u8 *addr)
- {
- 	struct ath10k_peer *peer;
- 
--	lockdep_assert_held(&ar->data_lock);
--
- 	list_for_each_entry(peer, &ar->peers, list) {
- 		if (peer->vdev_id != vdev_id)
- 			continue;
-@@ -139,10 +139,14 @@ static int ath10k_wait_for_peer_common(struct ath10k *ar, int vdev_id,
- 	int ret;
- 
- 	ret = wait_event_timeout(ar->peer_mapping_wq, ({
--			bool mapped;
-+			struct ath10k_peer *peer;
-+			bool mapped = false;
- 
- 			spin_lock_bh(&ar->data_lock);
--			mapped = !!ath10k_peer_find(ar, vdev_id, addr);
-+			peer = ath10k_peer_find(ar, vdev_id, addr);
-+			if (peer)
-+				mapped = !bitmap_empty(peer->peer_ids,
-+						       ATH10K_MAX_NUM_PEER_IDS);
- 			spin_unlock_bh(&ar->data_lock);
- 
- 			mapped == expect_mapped;
-@@ -173,20 +177,16 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
- 	spin_lock_bh(&ar->data_lock);
- 	peer = ath10k_peer_find(ar, ev->vdev_id, ev->addr);
- 	if (!peer) {
--		peer = kzalloc(sizeof(*peer), GFP_ATOMIC);
--		if (!peer)
--			goto exit;
--
--		peer->vdev_id = ev->vdev_id;
--		memcpy(peer->addr, ev->addr, ETH_ALEN);
--		list_add(&peer->list, &ar->peers);
--		wake_up(&ar->peer_mapping_wq);
-+		ath10k_warn("failed to map peer %pM on vdev %i: no such entry\n",
-+			    ev->addr, ev->vdev_id);
-+		goto exit;
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_HTT, "htt peer map vdev %d peer %pM id %d\n",
- 		   ev->vdev_id, ev->addr, ev->peer_id);
- 
- 	set_bit(ev->peer_id, peer->peer_ids);
-+	wake_up(&ar->peer_mapping_wq);
- exit:
- 	spin_unlock_bh(&ar->data_lock);
- }
-@@ -210,11 +210,8 @@ void ath10k_peer_unmap_event(struct ath10k_htt *htt,
- 
- 	clear_bit(ev->peer_id, peer->peer_ids);
- 
--	if (bitmap_empty(peer->peer_ids, ATH10K_MAX_NUM_PEER_IDS)) {
--		list_del(&peer->list);
--		kfree(peer);
-+	if (bitmap_empty(peer->peer_ids, ATH10K_MAX_NUM_PEER_IDS))
- 		wake_up(&ar->peer_mapping_wq);
--	}
- 
- exit:
- 	spin_unlock_bh(&ar->data_lock);
+ static void b2056_upload_inittab(struct b43_wldev *dev, bool ghz5,
+ 				 bool ignore_uploadflag, u16 routing,
+ 				 const struct b2056_inittab_entry *e,
 -- 
-1.8.5.3
+1.8.4.5
 
