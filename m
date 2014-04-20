@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:34873 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235AbaDIB26 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 21:28:58 -0400
-Received: by mail-pd0-f171.google.com with SMTP id r10so1756852pdi.30
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:58 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 5/8] cfg80211: remove unnecessary include clauses (cfg80211.h)
-Date: Wed,  9 Apr 2014 09:28:10 +0800
-Message-Id: <15e55cfd7a1dfa9e65bc2fe3210da5e71d922f34.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032904_286597_4040567D)
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+Received: from bues.ch ([80.190.117.144]:38506 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755276AbaDTTZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2014 15:25:29 -0400
+Date: Sun, 20 Apr 2014 20:54:52 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [wireless-next][PATCH 1/2] b43: ssb: refuse to support more
+ than IEEE 802.11 core
+Message-ID: <20140420205452.79a95330@wiggum> (sfid-20140420_212549_930179_F2DBA3F5)
+In-Reply-To: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
+References: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/uEd9FgBpXKy4YsByt0CnZzv"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<linux/if_ether.h> is included by <linux/ieee80211.h>;
-<linux/skbuff.h> is included by <linux/if_ether.h>;
-<linux/bug.h> and <linux/net.h> is included by <linux/skbuff.h>.
+--Sig_/uEd9FgBpXKy4YsByt0CnZzv
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-So just remove them.
+On Sun, 20 Apr 2014 20:30:58 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- include/net/cfg80211.h | 4 ----
- 1 file changed, 4 deletions(-)
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
+ain.c
+> index 69fc3d6..cf84cf2 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -5486,39 +5486,42 @@ int b43_ssb_probe(struct ssb_device *sdev, const =
+struct ssb_device_id *id)
+>  	struct b43_bus_dev *dev;
+>  	struct b43_wl *wl;
+>  	int err;
+> -	int first =3D 0;
+> =20
+>  	dev =3D b43_bus_dev_ssb_init(sdev);
+>  	if (!dev)
+>  		return -ENOMEM;
+> =20
+>  	wl =3D ssb_get_devtypedata(sdev);
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fb8afce..6e32623 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -13,13 +13,9 @@
- #include <linux/netdevice.h>
- #include <linux/debugfs.h>
- #include <linux/list.h>
--#include <linux/bug.h>
- #include <linux/netlink.h>
--#include <linux/skbuff.h>
- #include <linux/nl80211.h>
--#include <linux/if_ether.h>
- #include <linux/ieee80211.h>
--#include <linux/net.h>
- #include <net/regulatory.h>
- 
- /**
--- 
-1.9.0
 
+The whole "struct b43_wl" and "ssb_get_devtypedata" was to support multiple
+cores of the same type in a single driver instance (=3D b43 multicore).
+With multicore support being removed, everything in b43_wl could be merged =
+into b43_wldev.
+Also the use of ssb_get_devtypedata could probably be removed, too.
+
+This will simplify a lot of the b43 startup and shutdown code.
+
+
+--=20
+Michael.
+
+----
+Please use PGP/GPG encryption.
+Key-ID: F532BE1D908D8B0E
+--------
+
+--Sig_/uEd9FgBpXKy4YsByt0CnZzv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTVBf8AAoJEPUyvh2QjYsO/SUQAN49zE17A7h5ILKghgxt8zh7
+sPjSOover5It4t9t3iMxwEkyOwABcGtv//QMvGZKEhKB0opxmGM7q3BYVMlMgrdG
+hASM+a6bRLqUD41Z+BGhVOouNR+eTkDJV7miFfKXRtZ7cYGD3x//xkkpXfHQeOTa
+K5OuVjwg6HYpr28yXvD08BJBGyG7cZD+z8cg7qphjCnw9YveW+H+Oq8irYk38h8j
+ntg5/ncTrWMit6Cy5zV41vqRGGsUNxHY7XCt24JIaefIGBYBhmDpkMlc6vMZOYu2
+x+DBXnabyZKfFEDfufOlsluxI6cVpZufp5g+fJ/KRxQFiJu84Rl6kuD5IUtEQVKr
+xMZqAvg29LBQYkt2uN+YBXKC2b9aaxKPPEftA1qFkPNkI1aiVBlIx9mzpmn8ypAW
+Nt6xc5Wl/sQrKAXbSNvd+Puzr5I0dDxF46MNU9x87Bew4ZhNtApDtJre9waKNGTl
+enjRjnLWWn30WD01lyWyFsNjO0+KqR8f3R/G+kqDfxHHisfZcA7swHceJRi/qHWc
+439h0n/ogur8W/haxcG2EeTpWxqMpQ3utlcCxXH9zd2O07l6fik6/xktdmoxo+L+
+kQwdVtZMtW/AadLt+VAeiCuzg85YuU4uW+tUKnSH2xjHVdDZIX5SP5MUIdPYUObJ
+eLZU6/7l7YlaDL7mFWhz
+=I7Lk
+-----END PGP SIGNATURE-----
+
+--Sig_/uEd9FgBpXKy4YsByt0CnZzv--
