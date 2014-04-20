@@ -1,93 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43408 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751855AbaDAR4h (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:35767 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755201AbaDTOkV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 13:56:37 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
-Date: Tue,  1 Apr 2014 10:55:40 -0700
-Message-Id: <1396374940-21453-1-git-send-email-greearb@candelatech.com> (sfid-20140401_195644_857582_E33E0750)
+	Sun, 20 Apr 2014 10:40:21 -0400
+Received: by mail-ob0-f180.google.com with SMTP id wm4so3359301obc.25
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 07:40:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com>
+References: <CAEnUK=Oi6FL48o_L-Ax6U=qVNWg8YbXRYTa_G1sJGj_H0HvCMg@mail.gmail.com>
+	<CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
+	<CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com>
+Date: Sun, 20 Apr 2014 16:40:20 +0200
+Message-ID: <CABikg9xyB5_Lhzadax-PdHw_1WPGqPYdASYxVgtxDw+GXzhJbA@mail.gmail.com> (sfid-20140420_164035_251971_1C0AF555)
+Subject: Re: RTL8192CU chip strange works
+From: Sergei Antonov <saproj@gmail.com>
+To: =?UTF-8?B?0JDRgNGC0LXQvCDQodC10YDQs9C40LXQvdC60L4=?=
+	<imtaurin@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 17 April 2014 17:47, Артем Сергиенко <imtaurin@gmail.com> wrote:
+> Hello! I bought a device TP-Link wn8200nd with Realtek RTL8192CU chip.
+>
+> I have troubles to connect it to the my Asus RT-N16 under Linux (Gentoo).
+>
+> It connecting to WiFi spot in my phones. But it can't connect to Asus
+> RT-N16 in Linux. It connects to Asus RT-N16 only under Windows.
+> I used drivers from various Linux kernels and used drivers from your
+> official site, but there is no success. I absolutely can't understand
+> what's happening. Why in Linux I can connect to some devices but I
+> can't connect to my home router. (Router works fine for 3 years)
+> Every time connection asks me a password, I enter it, but in minute or
+> less it wants me to enter password one more time. (I even change
+> password to very easy, password is right)
+>
+> I read a lot off information about it, and I know many people which
+> have similar problems.
+>
+> Please help me. I think all troubles in the driver. I can send you all
+> information that you need.
 
-It can be nice to update the firmware's stats while
-debugging other bits of the driver, so add helper method
-to do this.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/debug.c | 26 +++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/debug.h |  2 ++
- 2 files changed, 19 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f562ac5..5813286 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -283,6 +283,21 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
- 	complete(&ar->debug.event_stats_compl);
- }
- 
-+int ath10k_refresh_peer_stats(struct ath10k *ar)
-+{
-+	int ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
-+	if (ret) {
-+		ath10k_warn("could not request stats (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
-+	if (ret <= 0)
-+		return ret;
-+
-+	return 0;
-+}
-+
- static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 				    size_t count, loff_t *ppos)
- {
-@@ -291,7 +306,6 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 	char *buf = NULL;
- 	unsigned int len = 0, buf_len = 8000;
- 	ssize_t ret_cnt = 0;
--	long left;
- 	int i;
- 	int ret;
- 
-@@ -306,14 +320,8 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
- 	if (!buf)
- 		goto exit;
- 
--	ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
--	if (ret) {
--		ath10k_warn("could not request stats (%d)\n", ret);
--		goto exit;
--	}
--
--	left = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
--	if (left <= 0)
-+	ret = ath10k_refresh_peer_stats(ar);
-+	if (ret)
- 		goto exit;
- 
- 	spin_lock_bh(&ar->data_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 12573fa..e5d1391 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -135,4 +135,6 @@ struct dbglog_hdr_s {
- 
- void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
- 
-+int ath10k_refresh_peer_stats(struct ath10k *ar);
-+
- #endif /* _DEBUG_H_ */
--- 
-1.7.11.7
-
+Some possibly useful information:
+1. wpa_supplicant's verbose logs. On my computer it is normally
+started with -B to run in background, and when I want to investigate
+an issue I run it without -B and with -dd to get a verbose log in the
+console.
+2. What version of rtlwifi firmware is loaded? Look it up in dmesg.
+Other relevant strings from dmesg may be helpful too.
