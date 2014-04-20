@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48589 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933553AbaDVSAS (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:34964 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755187AbaDTLGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 14:00:18 -0400
-Date: Tue, 22 Apr 2014 13:59:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Colin King <colin.king@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8188ee: initialize packet_beacon
-Message-ID: <20140422175919.GC16193@tuxdriver.com> (sfid-20140422_200123_167921_8F30A97D)
-References: <1398098324-5193-1-git-send-email-colin.king@canonical.com>
- <53555240.70806@lwfinger.net>
+	Sun, 20 Apr 2014 07:06:05 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d17so2925182eek.15
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 04:06:03 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/9][wireless-next] b43: update N-PHY code
+Date: Sun, 20 Apr 2014 13:05:42 +0200
+Message-Id: <1397991951-13478-1-git-send-email-zajec5@gmail.com> (sfid-20140420_130643_860413_F0EAE990)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53555240.70806@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 21, 2014 at 12:15:44PM -0500, Larry Finger wrote:
-> On 04/21/2014 11:38 AM, Colin King wrote:
-> >From: Colin Ian King <colin.king@canonical.com>
-> >
-> >static code analysis from cppcheck reports:
-> >
-> >[drivers/net/wireless/rtlwifi/rtl8188ee/trx.c:322]:
-> >   (error) Uninitialized variable: packet_beacon
-> >
-> >packet_beacon is not initialized and hence packet_beacon
-> >contains garbage from the stack, so set it to false.
-> >
-> >Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> >---
-> >  drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> This change should have a "Cc: Stable <stable@vger.kernel.org> [3.10+] notation.
-> 
-> Other than that, Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> John: Is it possible for you to add stable, or do you want Colin to resubmit.
+John,
 
-Got it, thanks...
+This patchset contains
+1) Fixes for some mistakes noticed while comparing MMIO dumps
+2) Preparing code for some newer hw support
+3) Calibration fixes
+
+It was tested for obvious regressions (in a simple home environment) using:
+1) BCM4321
+2) BCM4322
+3) BCM43224
+(connectivity to PSK2 and performance with iperf was tested).
+
+I believe BCM43224 behaves a bit more stable, I expect this patchset to
+improve situation with BCM43222 a bit as well.
+
+Rafał Miłecki (9):
+  b43: N-PHY: drop second noise variance table
+  b43: N-PHY: rev3+: complete workarounds
+  b43: N-PHY: random updates and typo fixes all around
+  b43: N-PHY: implement reading support for radio 0x2057
+  b43: N-PHY: implement RF control INTC for revs 7+
+  b43: N-PHY: prepare for rev 7+ RSSI calibration
+  b43: N-PHY: add init & calib values for radio 0x2056 rev 11
+  b43: N-PHY: fix selection of init & calib values
+  b43: N-PHY: enable forgotten write of hw power adjust table
+
+ drivers/net/wireless/b43/phy_n.c       | 272 ++++++++++++++++++---
+ drivers/net/wireless/b43/radio_2056.c  | 418 +++++++++++++++++++++++++++------
+ drivers/net/wireless/b43/tables_nphy.c |  72 +-----
+ drivers/net/wireless/b43/tables_nphy.h |   3 +-
+ 4 files changed, 592 insertions(+), 173 deletions(-)
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.5
+
