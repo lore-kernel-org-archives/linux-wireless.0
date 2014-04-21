@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:4311 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750971AbaDQSre (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56588 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbaDUQiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 14:47:34 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/5] mwifiex: increase tx/rx AMPDU window sizes for STA 11n mode
-Date: Thu, 17 Apr 2014 11:47:01 -0700
-Message-ID: <1397760423-11455-3-git-send-email-bzhao@marvell.com> (sfid-20140417_204755_795487_61A8FD8A)
-In-Reply-To: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Apr 2014 12:38:52 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8188ee: initialize packet_beacon
+Date: Mon, 21 Apr 2014 17:38:44 +0100
+Message-Id: <1398098324-5193-1-git-send-email-colin.king@canonical.com> (sfid-20140421_183922_734517_4C820DA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-This will help to aggregate more packets which yields better
-throughput results.
+static code analysis from cppcheck reports:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+[drivers/net/wireless/rtlwifi/rtl8188ee/trx.c:322]:
+  (error) Uninitialized variable: packet_beacon
+
+packet_beacon is not initialized and hence packet_beacon
+contains garbage from the stack, so set it to false.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/mwifiex/decl.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index e7b3e16..b8e15ee 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -42,8 +42,8 @@
- #define MWIFIEX_MAX_TX_BASTREAM_SUPPORTED	2
- #define MWIFIEX_MAX_RX_BASTREAM_SUPPORTED	16
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+index 06ef47c..5b4c225 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+@@ -293,7 +293,7 @@ static void _rtl88ee_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 	u8 *psaddr;
+ 	__le16 fc;
+ 	u16 type, ufc;
+-	bool match_bssid, packet_toself, packet_beacon, addr;
++	bool match_bssid, packet_toself, packet_beacon = false, addr;
  
--#define MWIFIEX_STA_AMPDU_DEF_TXWINSIZE        16
--#define MWIFIEX_STA_AMPDU_DEF_RXWINSIZE        32
-+#define MWIFIEX_STA_AMPDU_DEF_TXWINSIZE        64
-+#define MWIFIEX_STA_AMPDU_DEF_RXWINSIZE        64
- #define MWIFIEX_UAP_AMPDU_DEF_TXWINSIZE        32
- #define MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE        16
- #define MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE   32
+ 	tmp_buf = skb->data + pstatus->rx_drvinfo_size + pstatus->rx_bufshift;
+ 
 -- 
-1.8.2.3
+1.9.1
 
