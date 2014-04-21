@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:50812 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932247AbaDIJVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 05:21:46 -0400
-Message-ID: <1397035298.4418.60.camel@dubbel> (sfid-20140409_112149_305317_78B98A0B)
-From: Luca Coelho <luca@coelho.fi>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, kaloz@openwrt.org
-Date: Wed, 09 Apr 2014 12:21:38 +0300
-In-Reply-To: <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
-References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
-	 <1396988949.4418.46.camel@dubbel>
-	 <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: wl1271: tx stuck in firmware
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34433 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbaDUEzT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2014 00:55:19 -0400
+Received: by mail-pa0-f54.google.com with SMTP id lf10so3330026pab.41
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:55:19 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 09/12] cfg80211: change return value of notifier function
+Date: Mon, 21 Apr 2014 12:53:04 +0800
+Message-Id: <a2f03499a7cc33a86a7454e9824bf803f75d1916.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065559_680852_283E514A)
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 11:14 +0200, Yegor Yefremov wrote:
-> On Tue, Apr 8, 2014 at 10:29 PM, Luca Coelho <luca@coelho.fi> wrote:
-> > On Tue, 2014-04-08 at 17:28 +0200, Yegor Yefremov wrote:
-> >> Any idea, what could be wrong?
-> >
-> > First of all, try a clean kernel.
-> 
-> It is not simple to get a clean kernel. "Official" support for
-> am335x-evmsk WLAN was added first in the upcoming 3.15 kernel. I've
-> tried the merge window version (3.14.0-12041-g75ff24f-dirty) and get
-> following issue:
-> 
-> # calibrator wlan0 plt power_mode on
-> wlcore: power up
-> wlcore: ERROR timeout waiting for the hardware to complete initialization
-> wlcore: ERROR timeout waiting for the hardware to complete initialization
-> wlcore: ERROR timeout waiting for the hardware to complete initialization
-> wlcore: ERROR firmware boot in PLT mode failed despite 3 retries
-> command failed: Input/output error (-5)
+Return NOTIFY_DONE if we don't care this time's notification, return
+NOTIFY_OK if we successfully handled this time's notification. That's
+the formal way to do it.
 
-Okay, the main question here is, did you make any changes in the
-wlcore/wl12xx code? As I said, the TX watchdog should *not* be
-initialized in PLT mode.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/wireless/core.c    | 4 +++-
+ net/wireless/nl80211.c | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Maybe you could add some prints in the driver to see when the watchdog
-timer is set up? Try to add a printk in every place where
-wl12xx_rearm_tx_watchdog_locked() is called to see where it is being
-armed.
-
-
-> If I use the "normal" firmware, i.e. ifconfig wlan0 up, it gets loaded
-> and I can search for the stations. But PLT doesn't want to boot. Do
-> you still have a board, where you could try the latest
-> kernel/firmware?
-
-I do have a board, but I *really* don't have the time to set it up and
-everything.  Sorry about that...
-
---
-Cheers,
-Luca.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8045ef9..7ceb5dd 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1004,9 +1004,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		if (rfkill_blocked(rdev->rfkill))
+ 			return notifier_from_errno(-ERFKILL);
+ 		break;
++	default:
++		return NOTIFY_DONE;
+ 	}
+ 
+-	return NOTIFY_DONE;
++	return NOTIFY_OK;
+ }
+ 
+ static struct notifier_block cfg80211_netdev_notifier = {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6550e20..fce423a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11672,7 +11672,7 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 
+ 	rcu_read_unlock();
+ 
+-	return NOTIFY_DONE;
++	return NOTIFY_OK;
+ }
+ 
+ static struct notifier_block nl80211_netlink_notifier = {
+-- 
+1.9.0
 
