@@ -1,151 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:38154 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753913AbaDRSaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 14:30:30 -0400
-Message-ID: <53516A9F.9070309@allmail.net> (sfid-20140418_203038_747834_C91CE560)
-Date: Fri, 18 Apr 2014 20:10:39 +0200
-From: Michael Maier <m1278468@allmail.net>
-MIME-Version: 1.0
-To: netdev@vger.kernel.org,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel crash in bridge module: unable to handle kernel paging
- request
-References: <20140417110002.790f7ae1@dualc.maya.org>
-In-Reply-To: <20140417110002.790f7ae1@dualc.maya.org>
-Content-Type: multipart/mixed;
- boundary="------------050604090800020408050903"
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:47980 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbaDUEyy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2014 00:54:54 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so3333948pab.36
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:54:53 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 02/12] mac80211: remove config option check
+Date: Mon, 21 Apr 2014 12:52:57 +0800
+Message-Id: <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065458_432824_49A38723)
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050604090800020408050903
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Sanity check and error handling code shouldn't be put into
+CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
+used to control whether to print debug messages.
 
-Michael Maier wrote:
-> Hello!
-> 
-> I'm using the following configuration on CentOS 6.5 w/ lt-kernel
-> (3.10.37) - or any other kernel version.
-> 
-> brctl addbr br0
-> brctl addif br0 eth0
-> 
-> ip li add vxlan0 type vxlan id 1 group 239.1.1.1 ttl 1 dev ra0
-> 
-> brctl addif br0 vxlan0
-> 
-> This is one end of a vxlan tunnel via WLAN.
-> 
-> At the moment the first package arrives the bridge, the 64 bit-kernel
-> crashes (32 bit kernel works perfectly). What could be the reason for
-> the crash w/ 64 bit kernel? Btw: there isn't any problem even w/ 64
-> bit kernel as long as the bridge code isn't involved.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/tx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-The rt5572sta driver (DPO_RT5572_LinuxSTA_2.6.1.3_20121022) isn't
-completely 64 bit stable. The attached patch makes rt5572sta working
-with 64bit kernels even when used with a bridge like mentioned above.
-
-The patch is derived from
-https://github.com/ashaffer/rt3573sta/commit/2654eaee416f238a6651465c88a804ee251afe74
-- there it was applied to rt3573 driver from Ralink / Mediatek.
-
-I applied and tested it for rt5572sta (which is the newer one and
-supports a lot more chips, amongst others rt3573) and kernel 3.13.6 / 64
-bit. I suppose it to work with 3.10.x, too.
-
-
-I detected, that bridging does not work with 3.14.x - but there is no
-crash - it just doesn't work (packages came in in eth0, go through the
-bridge and vxlan, are remotely answered, but the sent response can only
-be seen in the vxlan and br0 device - but it can't be seen in eth0 -
-strange).
-
-
-
-Michael
-
---------------050604090800020408050903
-Content-Type: text/x-patch;
- name="ralink-64bit-1.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="ralink-64bit-1.diff"
-
-diff --git a/include/os/rt_linux.h b/include/os/rt_linux.h
-index 1612e34..c3a7792 100644
---- a/include/os/rt_linux.h
-+++ b/include/os/rt_linux.h
-@@ -858,9 +858,14 @@ void linux_pci_unmap_single(void *handle, ra_dma_addr_t dma_addr, size_t size, i
- 		
- #define GET_OS_PKT_DATATAIL(_pkt) \
- 		(RTPKT_TO_OSPKT(_pkt)->tail)
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+#define SET_OS_PKT_DATATAIL(_pkt, _start, _len)	\
-+		((RTPKT_TO_OSPKT(_pkt))->tail) = (PUCHAR)(RTPKT_TO_OSPKT(_pkt)->data-(RTPKT_TO_OSPKT(_pkt)->head) + (_len))
-+#else
- #define SET_OS_PKT_DATATAIL(_pkt, _start, _len)	\
- 		((RTPKT_TO_OSPKT(_pkt))->tail) = (PUCHAR)((_start) + (_len))
--		
-+#endif
-+
- #define GET_OS_PKT_HEAD(_pkt) \
- 		(RTPKT_TO_OSPKT(_pkt)->head)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 48650da..59715da 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1205,13 +1205,11 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		int q = info->hw_queue;
  
-diff --git a/os/linux/rt_linux.c b/os/linux/rt_linux.c
-index f5b5e19..817bca8 100644
---- a/os/linux/rt_linux.c
-+++ b/os/linux/rt_linux.c
-@@ -505,9 +505,15 @@ PNDIS_PACKET duplicate_pkt(
- 		MEM_DBG_PKT_ALLOC_INC(skb);
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		if (WARN_ON_ONCE(q >= local->hw.queues)) {
+ 			__skb_unlink(skb, skbs);
+ 			ieee80211_free_txskb(&local->hw, skb);
+ 			continue;
+ 		}
+-#endif
  
- 		skb_reserve(skb, 2);
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+		NdisMoveMemory(skb->data+skb->tail, pHeader802_3, HdrLen);
-+		skb_put(skb, HdrLen);
-+		NdisMoveMemory(skb->data+skb->tail, pData, DataSize);
-+#else
- 		NdisMoveMemory(skb->tail, pHeader802_3, HdrLen);
- 		skb_put(skb, HdrLen);
- 		NdisMoveMemory(skb->tail, pData, DataSize);
-+#endif
- 		skb_put(skb, DataSize);
- 		skb->dev = pNetDev;	/*get_netdev_from_bssid(pAd, FromWhichBSSID); */
- 		pPacket = OSPKT_TO_RTPKT(skb);
-@@ -705,7 +711,11 @@ void wlan_802_11_to_802_3_packet(
- 	pOSPkt->dev = pNetDev;
- 	pOSPkt->data = pData;
- 	pOSPkt->len = DataSize;
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+	pOSPkt->tail = (pOSPkt->data-pOSPkt->head)+pOSPkt->len;
-+#else
- 	pOSPkt->tail = pOSPkt->data + pOSPkt->len;
-+#endif
- 
- 	/* */
- 	/* copy 802.3 header */
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 		if (local->queue_stop_reasons[q] ||
+-- 
+1.9.0
 
---------------050604090800020408050903
-Content-Type: text/x-patch;
- name="ralink-64bit-2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="ralink-64bit-2.diff"
-
-diff --git a/include/os/rt_linux.h b/include/os/rt_linux.h
-index c3a7792..f5975a1 100644
---- a/include/os/rt_linux.h
-+++ b/include/os/rt_linux.h
-@@ -860,7 +860,7 @@ void linux_pci_unmap_single(void *handle, ra_dma_addr_t dma_addr, size_t size, i
- 		(RTPKT_TO_OSPKT(_pkt)->tail)
- #ifdef NET_SKBUFF_DATA_USES_OFFSET
- #define SET_OS_PKT_DATATAIL(_pkt, _start, _len)	\
--		((RTPKT_TO_OSPKT(_pkt))->tail) = (PUCHAR)(RTPKT_TO_OSPKT(_pkt)->data-(RTPKT_TO_OSPKT(_pkt)->head) + (_len))
-+		((RTPKT_TO_OSPKT(_pkt))->tail) = (ULONG)RTPKT_TO_OSPKT(_pkt)->data - (ULONG)(RTPKT_TO_OSPKT(_pkt)->head) + (_len)
- #else
- #define SET_OS_PKT_DATATAIL(_pkt, _start, _len)	\
- 		((RTPKT_TO_OSPKT(_pkt))->tail) = (PUCHAR)((_start) + (_len))
-
---------------050604090800020408050903--
