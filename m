@@ -1,49 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:38186 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754486AbaDKUQO (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:38395 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbaDUIyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2014 16:16:14 -0400
-Date: Fri, 11 Apr 2014 22:16:11 +0200
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1423252643.20140411221611@eikelenboom.it> (sfid-20140411_221628_160050_DBC82323)
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, <collen@cozybit.com>
-Subject: Re: [RFC/RFT] cfg80211: reg: track crda request
-In-Reply-To: <1397247226.4643.8.camel@jlt4.sipsolutions.net>
-References: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com> <2710039777.20140411192110@eikelenboom.it> <CAFED-jkPtXU8moGrb4XiriU-c7WokgSiXq6g0jCLOhk3dJnoLg@mail.gmail.com> <294574679.20140411220931@eikelenboom.it> <1397247226.4643.8.camel@jlt4.sipsolutions.net>
+	Mon, 21 Apr 2014 04:54:43 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so3502175eei.14
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 01:54:42 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [wireless-next][PATCH V2 2/2] b43: remove list of IEEE 802.11 devices
+Date: Mon, 21 Apr 2014 10:54:29 +0200
+Message-Id: <1398070469-23307-1-git-send-email-zajec5@gmail.com> (sfid-20140421_105507_656747_6610748E)
+In-Reply-To: <1398018659-17263-2-git-send-email-zajec5@gmail.com>
+References: <1398018659-17263-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is the first step to remove leftover code.
 
-Friday, April 11, 2014, 10:13:46 PM, you wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+As Michael noticed there is much more to remove (e.g. struct b43_wl).
+Change commit message to speciify what exactly we remove at this point.
+No code changes to V1
+---
+ drivers/net/wireless/b43/b43.h  |  4 ----
+ drivers/net/wireless/b43/main.c | 52 +++++++++++++++--------------------------
+ 2 files changed, 19 insertions(+), 37 deletions(-)
 
-> On Fri, 2014-04-11 at 22:09 +0200, Sander Eikelenboom wrote:
-
->> I would first like to know if Johannes likes this solution or not.
-
-> Heh, I guess that's only fair.
-
->> With previous patches from Luis they were blocked after testing and debugging, so let him 
->> first speak out if he likes the approach or not.
-
-> I think this looks fine. My main complaint with Luis's patches (besides
-> reportedly breaking some other use cases) was that he was piggy-backing
-> on some completely unrelated thing to try to recover something. Here we
-> have an explicit delayed work struct so that seems fine.
-
-> And I really like the part where Janusz moves the delayed_work setting
-> where it belongs - the CRDA call function :)
-
-Ok i will duplicate the testing tomorrow somewhat more careful and report back 
-tomorrow. 
-
-> johannes
-
-
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 54376fd..4113b69 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -915,10 +915,6 @@ struct b43_wl {
+ 	char rng_name[30 + 1];
+ #endif /* CONFIG_B43_HWRNG */
+ 
+-	/* List of all wireless devices on this chip */
+-	struct list_head devlist;
+-	u8 nr_devs;
+-
+ 	bool radiotap_enabled;
+ 	bool radio_enabled;
+ 
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index cf84cf2..07024c6 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3735,40 +3735,35 @@ static int b43_switch_band(struct b43_wl *wl, struct ieee80211_channel *chan)
+ {
+ 	struct b43_wldev *up_dev = NULL;
+ 	struct b43_wldev *down_dev;
+-	struct b43_wldev *d;
+ 	int err;
+ 	bool uninitialized_var(gmode);
+ 	int prev_status;
+ 
+ 	/* Find a device and PHY which supports the band. */
+-	list_for_each_entry(d, &wl->devlist, list) {
+-		switch (chan->band) {
+-		case IEEE80211_BAND_5GHZ:
+-			if (d->phy.supports_5ghz) {
+-				up_dev = d;
+-				gmode = false;
+-			}
+-			break;
+-		case IEEE80211_BAND_2GHZ:
+-			if (d->phy.supports_2ghz) {
+-				up_dev = d;
+-				gmode = true;
+-			}
+-			break;
+-		default:
+-			B43_WARN_ON(1);
+-			return -EINVAL;
++	switch (chan->band) {
++	case IEEE80211_BAND_5GHZ:
++		if (wl->current_dev->phy.supports_5ghz) {
++			up_dev = wl->current_dev;
++			gmode = false;
+ 		}
+-		if (up_dev)
+-			break;
++		break;
++	case IEEE80211_BAND_2GHZ:
++		if (wl->current_dev->phy.supports_2ghz) {
++			up_dev = wl->current_dev;
++			gmode = true;
++		}
++		break;
++	default:
++		B43_WARN_ON(1);
++		return -EINVAL;
+ 	}
++
+ 	if (!up_dev) {
+ 		b43err(wl, "Could not find a device for %s-GHz band operation\n",
+ 		       band_to_string(chan->band));
+ 		return -ENODEV;
+ 	}
+-	if ((up_dev == wl->current_dev) &&
+-	    (!!wl->current_dev->phy.gmode == !!gmode)) {
++	if (!!wl->current_dev->phy.gmode == !!gmode) {
+ 		/* This device is already running. */
+ 		return 0;
+ 	}
+@@ -5270,7 +5265,6 @@ static void b43_one_core_detach(struct b43_bus_dev *dev)
+ 	b43_debugfs_remove_device(wldev);
+ 	b43_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
+-	wl->nr_devs--;
+ 	b43_bus_set_wldev(dev, NULL);
+ 	kfree(wldev);
+ }
+@@ -5295,8 +5289,6 @@ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl)
+ 	if (err)
+ 		goto err_kfree_wldev;
+ 
+-	list_add(&wldev->list, &wl->devlist);
+-	wl->nr_devs++;
+ 	b43_bus_set_wldev(dev, wldev);
+ 	b43_debugfs_add_device(wldev);
+ 
+@@ -5386,7 +5378,6 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 	wl->hw = hw;
+ 	mutex_init(&wl->mutex);
+ 	spin_lock_init(&wl->hardirq_lock);
+-	INIT_LIST_HEAD(&wl->devlist);
+ 	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
+ 	INIT_WORK(&wl->txpower_adjust_work, b43_phy_txpower_adjust_work);
+ 	INIT_WORK(&wl->tx_work, b43_tx_work);
+@@ -5549,13 +5540,8 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 	/* Unregister HW RNG driver */
+ 	b43_rng_exit(wl);
+ 
+-	if (list_empty(&wl->devlist)) {
+-		b43_leds_unregister(wl);
+-		/* Last core on the chip unregistered.
+-		 * We can destroy common struct b43_wl.
+-		 */
+-		b43_wireless_exit(dev, wl);
+-	}
++	b43_leds_unregister(wl);
++	b43_wireless_exit(dev, wl);
+ }
+ 
+ static struct ssb_driver b43_ssb_driver = {
+-- 
+1.8.4.5
 
