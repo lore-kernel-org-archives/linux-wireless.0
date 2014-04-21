@@ -1,40 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:41790 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932996AbaDJDBt (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:58190 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbaDUEy7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 23:01:49 -0400
-Received: by mail-ob0-f176.google.com with SMTP id wp18so3689981obc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 20:01:49 -0700 (PDT)
-Message-ID: <5346099B.7090309@lwfinger.net> (sfid-20140410_050203_445571_65FE7436)
-Date: Wed, 09 Apr 2014 22:01:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Abdulla Alwabel <abdulla.wabel@gmail.com>,
-	stefan.krueger@vodafone.de
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8192ee Driver
-References: <CAL8CZPaJ+vOAEKZBAU4PKJvj4FYsPFYo2hc+NUKuaMo8Tdej6g@mail.gmail.com>
-In-Reply-To: <CAL8CZPaJ+vOAEKZBAU4PKJvj4FYsPFYo2hc+NUKuaMo8Tdej6g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 21 Apr 2014 00:54:59 -0400
+Received: by mail-pa0-f43.google.com with SMTP id bj1so3353566pad.30
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:54:58 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 03/12] mac80211: minor changes of ieee80211_reconfig()
+Date: Mon, 21 Apr 2014 12:52:58 +0800
+Message-Id: <d8410804796e01fe8b4c62aeaca97b791154f585.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065501_795742_F4BBA48E)
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2014 09:41 PM, Abdulla Alwabel wrote:
-> Hi Larry,
-> I found a message from you in a mailing list saying you received code for driver
-> rtl8192ee. I've a lenovo laptop that has this chip and I couldn't find a stable
-> driver. Would you please help me by telling where can I find the code ?
+Try to update chanctx only if local->use_chanctx is true.
 
-Abdulla and Stefan,
+P2P_DEVICE doesn't support ieee80211_bss_info_change_notify() for now,
+so it's not needed to set changed flags for P2P_DEVICE.
 
-My announcement was a bit premature. I am currently merging that driver with the 
-rest of the rtlwifi family. I hope to have it working by next week. I will send 
-kernel patches to everyone that has requested a copy.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/util.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
-When those are ready, they will be patches that apply to the latest kernel 
-(3.14). I hope that will not be a problem for either of you.
-
-Larry
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5a6cc33..ae38592 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1565,17 +1565,17 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		list_for_each_entry(ctx, &local->chanctx_list, list)
+ 			WARN_ON(drv_add_chanctx(local, ctx));
+ 		mutex_unlock(&local->chanctx_mtx);
+-	}
+ 
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-		ieee80211_assign_chanctx(local, sdata);
+-	}
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (!ieee80211_sdata_running(sdata))
++				continue;
++			ieee80211_assign_chanctx(local, sdata);
++		}
+ 
+-	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata && ieee80211_sdata_running(sdata))
+-		ieee80211_assign_chanctx(local, sdata);
++		sdata = rtnl_dereference(local->monitor_sdata);
++		if (sdata && ieee80211_sdata_running(sdata))
++			ieee80211_assign_chanctx(local, sdata);
++	}
+ 
+ 	/* add STAs back */
+ 	mutex_lock(&local->sta_mtx);
+@@ -1671,13 +1671,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			}
+ 			break;
+ 		case NL80211_IFTYPE_WDS:
+-			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 		case NL80211_IFTYPE_MONITOR:
+-			/* ignore virtual */
+-			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+-			changed = BSS_CHANGED_IDLE;
++			/* nothing to do */
+ 			break;
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
+-- 
+1.9.0
 
