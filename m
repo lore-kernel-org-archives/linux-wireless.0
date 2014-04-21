@@ -1,65 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:33372 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756040AbaDHJYS convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:38372 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751573AbaDUEzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 05:24:18 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x13so648910wgg.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 02:24:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1396946168.5936.0.camel@jlt4.sipsolutions.net>
-References: <1396609363-24539-1-git-send-email-michal.kazior@tieto.com>
-	<1396946168.5936.0.camel@jlt4.sipsolutions.net>
-Date: Tue, 8 Apr 2014 11:24:16 +0200
-Message-ID: <CA+BoTQ=H-zYoK5q4j8rKFU-XVXx=ydwjYiWh8ZoFGOCr9LyrVQ@mail.gmail.com> (sfid-20140408_112422_399693_44076B6E)
-Subject: Re: [PATCH] mac80211: fix radar_enabled propagation
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 21 Apr 2014 00:55:04 -0400
+Received: by mail-pa0-f47.google.com with SMTP id lj1so3347656pab.34
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:55:03 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 04/12] mac80211: return bool instead of numbers in yes/no function
+Date: Mon, 21 Apr 2014 12:52:59 +0800
+Message-Id: <4159b979438a7c3bdda39245684fb170932ab873.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065508_041952_7DAD04AD)
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
+References: <cover.1398055853.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 April 2014 10:36, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-04-04 at 13:02 +0200, Michal Kazior wrote:
->> If chandef had non-HT width it was possible for
->> radar_enabled update to not be propagated properly
->> through drv_config(). This happened because
->> ieee80211_hw_conf_chan() would never see different
->> local->hw.conf.chandef and local->_oper_chandef.
->>
->> This wasn't a problem with HT chandefs because
->> _oper_chandef width is reset to non-HT in
->> ieee80211_free_chanctx() making
->> ieee80211_hw_conf_chan() to kick in.
->>
->> This problem led (at least) ath10k to not start
->> CAC if prior CAC was cancelled and both CACs were
->> requested for identical non-HT chandefs.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->>  net/mac80211/chan.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
->> index 122033d..b472daa 100644
->> --- a/net/mac80211/chan.c
->> +++ b/net/mac80211/chan.c
->> @@ -269,7 +269,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
->>
->>       if (!local->use_chanctx) {
->>               local->_oper_chandef = *chandef;
->> -             ieee80211_hw_config(local, 0);
->> +             ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
->
-> I'm not convinced that this is the right way to do this - couldn't
-> ieee80211_hw_conf_chan() detect the radar detection requirement change?
+And some code style changes in the function, and correct a typo in
+comment.
 
-I agree but on the other hand propagating local->mtx locking
-requirement for using local->radar_detect_enabled in
-ieee80211_hw_conf_chan() (and thus ieee80211_hw_config()) is probably
-going to be a cascade of pain.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/rx.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c86a4d6..87c28f8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -54,24 +54,25 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ 	return skb;
+ }
+ 
+-static inline int should_drop_frame(struct sk_buff *skb, int present_fcs_len)
++static inline bool should_drop_frame(struct sk_buff *skb, int present_fcs_len)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+-	struct ieee80211_hdr *hdr;
+-
+-	hdr = (void *)(skb->data);
++	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
+ 			    RX_FLAG_FAILED_PLCP_CRC |
+ 			    RX_FLAG_AMPDU_IS_ZEROLEN))
+-		return 1;
++		return true;
++
+ 	if (unlikely(skb->len < 16 + present_fcs_len))
+-		return 1;
++		return true;
++
+ 	if (ieee80211_is_ctl(hdr->frame_control) &&
+ 	    !ieee80211_is_pspoll(hdr->frame_control) &&
+ 	    !ieee80211_is_back_req(hdr->frame_control))
+-		return 1;
+-	return 0;
++		return true;
++
++	return false;
+ }
+ 
+ static int
+@@ -3190,7 +3191,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+ }
+ 
+ /*
+- * This is the actual Rx frames handler. as it blongs to Rx path it must
++ * This is the actual Rx frames handler. as it belongs to Rx path it must
+  * be called with rcu_read_lock protection.
+  */
+ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+-- 
+1.9.0
 
-Michał
