@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50356 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890AbaDDOHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 10:07:35 -0400
-Date: Fri, 4 Apr 2014 16:06:15 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-Cc: Richard Genoud <richard.genoud@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
-Message-ID: <20140404140614.GA2147@redhat.com> (sfid-20140404_160754_221921_47FF66F6)
-References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com>
- <20140403173701.75c1f497@north>
- <20140404081908.GB1448@redhat.com>
- <20140404110106.6d249615@north>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:56727 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756632AbaDVRYV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 13:24:21 -0400
+Received: by mail-la0-f51.google.com with SMTP id pv20so4672452lab.10
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 10:24:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140404110106.6d249615@north>
+In-Reply-To: <1398180129.4211.22.camel@jlt4.sipsolutions.net>
+References: <1397645621-32447-1-git-send-email-janusz.dziedzic@tieto.com> <1398180129.4211.22.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 22 Apr 2014 10:24:00 -0700
+Message-ID: <CAB=NE6U5=rt+VS4dhrLb-oLun_fw2qSbEQhLYdFnAhUYep791g@mail.gmail.com> (sfid-20140422_192427_870771_0F05D4DA)
+Subject: Re: [PATCH] cfg80211: reg: track crda request
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 04, 2014 at 11:01:06AM +0200, Jakub Kiciński wrote:
-> On Fri, 4 Apr 2014 10:19:09 +0200, Stanislaw Gruszka wrote:
-> > On Thu, Apr 03, 2014 at 05:37:01PM +0200, Jakub Kiciński wrote:
-> > > On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
-> > > > rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
-> > > > that calls rt2x00usb_vendor_request() which is already looping up to
-> > > > REGISTER_BUSY_COUNT times.
-> > > > 
-> > > > So this loop is not needed.
-> > > 
-> > > Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
-> > > to succeed, rt2x00usb_register_read_lock() busy-waits for the register
-> > > field itself to become 0.
-> > 
-> > Yeah, but still we are looping REGISTER_BUSY_COUNT*REGISTER_BUSY_COUNT
-> > what seems to be far too long.
-> 
-> Yes, the busy waiting itself takes roughly 1s (100*100*100us) and then
-> there are transfer times, so it might be too long indeed.  Vendor driver
-> waits only 10 * 5ms in RTUSB_VendorRequest() so
-
-We use "timeout" argument which is set to 500ms , so perhaps that
-could be the reason why Richard sees "infinite" loop i.e.
-100*100*(500ms + 100us)
-
-> rt2x00usb_vendor_request() seems like a better place to cut down the
-> number of loops.
+On Tue, Apr 22, 2014 at 8:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-04-16 at 12:53 +0200, Janusz Dziedzic wrote:
+>> Track CRDA request and handle timeout when no answer
+>> from CRDA. This could happen when crda is not available
+>> yet (not mounted fs), eg. during OS startup and cfg80211
+>> built-in to the kernel.
+>> Before we could stuck when processing last request
+>> without ability to process current and any further
+>> regulatory requests.
 >
-> Alternatively we could make rt2x00usb_regbusy_read() check the retval
-> from rt2x00usb_vendor_request() and exit early?
+> Hmm, this doesn't apply now on top of the patches Luis sent. Was this
+> the patch that was meant alternatively?
 
-Make sense, but I think we should review the area and make some more
-changes to fine tune the timeout of USB reg reading functions.
+Sorry I failed to pick this up amongst the threads, this one is a
+replacement for the my real original 2nd and 3rd patch (2nd in
+yesterday's series, but I hadn't redone the 3rd patch from the
+original series) but I rather we treat things linearly and see if we
+can split this up a bit, as I see this is an evolution of the work
+from my original 2nd patch. I'll work on this and send out something
+shortly.
 
-Stanislaw 
+  Luis
