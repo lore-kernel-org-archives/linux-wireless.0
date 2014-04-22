@@ -1,114 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:42982 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbaDZOgE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50819 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757175AbaDVUPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2014 10:36:04 -0400
-From: Masanari Iida <standby24x7@gmail.com>
-To: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	quozl@laptop.org, Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH/V2] staging: rtl8192e: Fix typo in rtl8192e
-Date: Sat, 26 Apr 2014 23:35:50 +0900
-Message-Id: <1398522950-31439-1-git-send-email-standby24x7@gmail.com> (sfid-20140426_163615_699002_EB66A9F4)
-In-Reply-To: <20140424214908.GE12124@us.netrek.org>
-References: <20140424214908.GE12124@us.netrek.org>
+	Tue, 22 Apr 2014 16:15:18 -0400
+Date: Tue, 22 Apr 2014 16:07:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2014-04-13
+Message-ID: <20140422200732.GE16193@tuxdriver.com> (sfid-20140422_233028_817090_338FFF39)
+References: <534AE330.2020805@gmail.com>
+ <534AE499.6020009@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <534AE499.6020009@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix spelling typo in comments within rtl8192e.
+On Sun, Apr 13, 2014 at 10:25:13PM +0300, Emmanuel Grumbach wrote:
+> 
+> 
+> On 04/13/2014 10:19 PM, Emmanuel Grumbach wrote:
+> > Hi John,
+> > 
+> > This is for 3.16.
+> > 
+> > I have here a bunch of unrelated things. I disabled support for -7.ucode which means that I can removed a lot of code. Eliad has a brand new feature: we reduce the Tx power when the link allows - this reduces our power consumption. The regular changes in power and scan area. One interesting thing though is the patches from Johannes, we have now GRO which allows to increase our throughput in TCP Rx. The main advantage is that it reduces the number of TCP Acks - these TCP Acks are completely useless when we are using A-MPDU since the first packet of the A-MPDU generates a TCP Ack which is made obsolete by the next packets.
+> > 
+> > Same footer as previous pull request, I won't be available this week, so let's hope I am not causing any problem here.
+> > 
+> > Thanks!
+> > 
+> > The following changes since commit a31267c30880ebdc73e6815f58c69a665052fab8:
+> > 
+> >   rtl8187: fix use after free on failure path in rtl8187_probe() (2014-03-31 13:47:41 -0400)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git master
+> > 
+> > for you to fetch changes up to 3cd5279b021de6501a8012dd856d7a78ee58ead9:
+> > 
+> Apparently I can't get the rid of my tradition to fixup something after the mail goes out...
+> 
+> I dropped 2 patches that I queued up for 3.15 in my next pull request - new HEAD: e03bbb62cfdf539ae8110b297493c685f9d12774
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-Reviewed-by: James Cameron <quozl@laptop.org>
 
----
- drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c | 2 +-
- drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c    | 2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_wx.c        | 2 +-
- drivers/staging/rtl8192e/rtl819x_TSProc.c         | 2 +-
- drivers/staging/rtl8192e/rtllib_rx.c              | 2 +-
- drivers/staging/rtl8192e/rtllib_softmac.c         | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+Pulled today...
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-index 5f10e40..79d86b9 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-@@ -373,7 +373,7 @@ u32 cmpk_message_handle_rx(struct net_device *dev,
- 		default:
- 
- 			RT_TRACE(COMP_CMDPKT, "---->cmpk_message_handle_rx():"
--				 "unknow CMD Element\n");
-+				 "unknown CMD Element\n");
- 			return 1;
- 		}
- 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-index 5d6d304..b4bfafe 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-@@ -1555,7 +1555,7 @@ static bool SetRFPowerState8190(struct net_device *dev,
- 
- 		default:
- 			bResult = false;
--			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknow state"
-+			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknown state"
- 				 " to set: 0x%X!!!\n", eRFPowerState);
- 			break;
- 		}
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-index 498995d..091dfe7 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-@@ -1213,7 +1213,7 @@ static iw_handler r8192_wx_handlers[] = {
- };
- 
- /*
-- * the following rule need to be follwing,
-+ * the followed rules need to be following,
-  * Odd : get (world access),
-  * even : set (root access)
-  * */
-diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-index 29608e5..52b2977 100644
---- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
-+++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-@@ -79,7 +79,7 @@ static void RxPktPendingTimeout(unsigned long data)
- 
- 		if (index > REORDER_WIN_SIZE) {
- 			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
--				     " Rx Reorer struct buffer full!!\n");
-+				     " Rx Reorder struct buffer full!!\n");
- 			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
- 					       flags);
- 			return;
-diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-index 6c8a8e1..7413816 100644
---- a/drivers/staging/rtl8192e/rtllib_rx.c
-+++ b/drivers/staging/rtl8192e/rtllib_rx.c
-@@ -712,7 +712,7 @@ static void RxReorderIndicatePacket(struct rtllib_device *ieee,
- 
- 		if (index > REORDER_WIN_SIZE) {
- 			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
--				     " Rx Reorer struct buffer full!!\n");
-+				     " Rx Reorder struct buffer full!!\n");
- 			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
- 					       flags);
- 			return;
-diff --git a/drivers/staging/rtl8192e/rtllib_softmac.c b/drivers/staging/rtl8192e/rtllib_softmac.c
-index 4bf72bc..d65cba4 100644
---- a/drivers/staging/rtl8192e/rtllib_softmac.c
-+++ b/drivers/staging/rtl8192e/rtllib_softmac.c
-@@ -543,7 +543,7 @@ void rtllib_softmac_scan_syncro(struct rtllib_device *ieee, u8 is_mesh)
- 				goto out; /* scan completed */
- 		} while (!ieee->active_channel_map[ch]);
- 
--		/* this fuction can be called in two situations
-+		/* this function can be called in two situations
- 		 * 1- We have switched to ad-hoc mode and we are
- 		 *    performing a complete syncro scan before conclude
- 		 *    there are no interesting cell and to create a
 -- 
-2.0.0.rc1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
