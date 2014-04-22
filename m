@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:63755 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756173AbaDPMd0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42527 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756085AbaDVOjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 08:33:26 -0400
-Received: by mail-ig0-f173.google.com with SMTP id hl10so949412igb.12
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 05:33:25 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, larrymaxwell@agilemesh.com,
-	Bob Copeland <me@bobcopeland.com>,
-	Bob Copeland <bob@cozybit.com>
-Subject: [PATCH] mac80211: fixup radiotap tx flags for RTS/CTS
-Date: Wed, 16 Apr 2014 08:32:41 -0400
-Message-Id: <1397651561-29820-1-git-send-email-me@bobcopeland.com> (sfid-20140416_143330_146904_AAB621C9)
+	Tue, 22 Apr 2014 10:39:10 -0400
+Message-ID: <1398177530.4211.3.camel@jlt4.sipsolutions.net> (sfid-20140422_163914_195235_F523DC21)
+Subject: Re: [PATCH] mac80211: avoid handling of SMPS for mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Tue, 22 Apr 2014 16:38:50 +0200
+In-Reply-To: <1398161965-1427-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140422_121953_155991_188FCDCE)
+References: <1398161965-1427-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20140422_121953_155991_188FCDCE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using RTS/CTS, the CTS-to-Self bit in radiotap TX flags is
-getting set instead of the RTS bit.  Set the correct one.
+On Tue, 2014-04-22 at 18:19 +0800, Chun-Yeow Yeoh wrote:
+> The patch "mac80211: implement SMPS for AP" has caused kernel
+> oops at mesh STA if the peer mesh STA operates in sleep mode
+> and then becomes active mode. It can be easily reproduced by
+> setting the following commands at peer mesh STA:
+> 
+> iw mesh0 station set aa:bb:cc:dd:ee:ff mesh_power_mode deep
+> iw mesh0 station set aa:bb:cc:dd:ee:ff mesh_power_mode active
+> 
+> Kernel oops will happen at mesh STA aa:bb:cc:dd:ee:ff.
+> 
+> Fix this by avoiding SMPS for mesh mode.
 
-Reported-by: Larry Maxwell <larrymaxwell@agilemesh.com>
-Signed-off-by: Bob Copeland <bob@cozybit.com>
----
- net/mac80211/status.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Applied, thanks.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index e6e574a..ea432ca 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -314,10 +314,9 @@ ieee80211_add_tx_radiotap_header(struct ieee80211_local *local,
- 	    !is_multicast_ether_addr(hdr->addr1))
- 		txflags |= IEEE80211_RADIOTAP_F_TX_FAIL;
- 
--	if ((info->status.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
--	    (info->status.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
-+	if (info->status.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
- 		txflags |= IEEE80211_RADIOTAP_F_TX_CTS;
--	else if (info->status.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
-+	if (info->status.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
- 		txflags |= IEEE80211_RADIOTAP_F_TX_RTS;
- 
- 	put_unaligned_le16(txflags, pos);
--- 
-1.9.1
+johannes
 
