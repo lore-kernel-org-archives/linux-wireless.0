@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:43998 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235AbaDIB2x (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:54299 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbaDVGlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 21:28:53 -0400
-Received: by mail-pa0-f42.google.com with SMTP id fb1so1814895pad.29
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:53 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 3/8] mac80211: fix possible compile warning in michael.h
-Date: Wed,  9 Apr 2014 09:28:08 +0800
-Message-Id: <0c2fa5b7a8724d0ee405afd05f393af95e65116c.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032857_074294_E7D7A9C5)
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+	Tue, 22 Apr 2014 02:41:16 -0400
+Message-ID: <53560E9A.6020105@redpinesignals.com> (sfid-20140422_084121_292965_6E54AEC6)
+Date: Tue, 22 Apr 2014 12:09:22 +0530
+From: Sowjanya <sowjanya.t@redpinesignals.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: John Tobias <john.tobias.ph@gmail.com>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Testing WMM
+References: <CACUGKYPP9s1cSJEpuBfQxT9=xLY57t0-kLZ8D=X2gaVcXbC2Nw@mail.gmail.com> <53553C69.8090307@candelatech.com>
+In-Reply-To: <53553C69.8090307@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The warning doesn't show up due to duplicate including, but it's worth
-fixing it.
+  Hello John,
 
-net/mac80211//michael.h:22:4: warning: ‘struct ieee80211_hdr’ declared inside parameter list [enabled by default]
-    const u8 *data, size_t data_len, u8 *mic);
-    ^
-net/mac80211//michael.h:22:4: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
+     You can use Ixia chariot to send traffic (RTP/UDP/TCP type) for 
+different access categories.
+Also you can use iperf to send traffic with different tos.
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/michael.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks
+Sowjanya.
 
-diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
-index 3b848da..b259547 100644
---- a/net/mac80211/michael.h
-+++ b/net/mac80211/michael.h
-@@ -10,7 +10,7 @@
- #ifndef MICHAEL_H
- #define MICHAEL_H
- 
--#include <linux/types.h>
-+#include <linux/ieee80211.h>
- 
- #define MICHAEL_MIC_LEN 8
- 
--- 
-1.9.0
+On 04/21/2014 09:12 PM, Ben Greear wrote:
+> On 04/18/2014 04:51 PM, John Tobias wrote:
+>> Hello Guys,
+>>
+>> I would like to test the following WMM features of the wifi driver.
+>>
+>> wmm_ac_vo
+>> wmm_ac_vi
+>> wmm_ac_be
+>> wmm_ac_bk
+>>
+>> What tools did you use to test it?.
+> Use user-space app that can set IP ToS.  The OS/driver should put the
+> packets in the appropriate wmm queue.  Ensure that higher priority traffic
+> actually gets higher priority when over-driving each queue.
+>
+> Thanks,
+> Ben
+>
+>> Regards,
+>>
+>> john
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
 
