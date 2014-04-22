@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:33057 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247AbaDIKHl (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:57610 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbaDVX2E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:07:41 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so1658705eek.41
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:07:39 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: AP-related fixes
-Date: Wed,  9 Apr 2014 12:01:21 +0200
-Message-Id: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_120751_716981_53E0B58B)
+	Tue, 22 Apr 2014 19:28:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Vgvyf-WYwE-9+RjY3RA7kYuX6P=onrgJE6rLwt4c7Y5Q@mail.gmail.com>
+References: <20140419031554.253c98c3@xenia.leun.net> <20140419213254.0b4c4b6a@xenia.leun.net>
+ <CAB=NE6Vgvyf-WYwE-9+RjY3RA7kYuX6P=onrgJE6rLwt4c7Y5Q@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 22 Apr 2014 16:27:42 -0700
+Message-ID: <CAB=NE6VAy==e17dF1aXbmBAwdDSSo4R+8D2wjyEBj33eZFtQxw@mail.gmail.com> (sfid-20140423_012809_407079_9C0B8E4E)
+Subject: Re: 3.14 Regression, kernel panic when suspend, looks ath9k /
+ wireless related
+To: Michael Leun <lkml20140418@newton.leun.net>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k mailing list <ath9k-devel@venema.h4ckr.net>,
+	Mihir Shete <smihir@qti.qualcomm.com>,
+	Henri Bahini <hbahini@qca.qualcomm.com>,
+	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+A patch has been sent to stable that fixes this, the patch is already
+upstream fortunately.
 
-This is a bunch of fixes I've found while
-investigating tx credit issues.
-
-I've only experienced problem fixed by 4/4
-firsthand. Other patches are preemptive fixes :-)
-
-
-Michal Kazior (4):
-  ath10k: make sure to not leak beacon dma mapping
-  ath10k: make sure to not use invalid beacon pointer
-  ath10k: prevent beacon memory leak
-  ath10k: fix firmware recovery with ap interface
-
- drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  3 +++
- 2 files changed, 19 insertions(+)
-
--- 
-1.8.5.3
-
+  Luis
