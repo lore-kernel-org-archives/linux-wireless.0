@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46057 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752529AbaD1IWv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 04:22:51 -0400
-Date: Mon, 28 Apr 2014 11:22:46 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] mac80211_hwsim: Advertise support for AP mode channel
- width changes
-Message-ID: <20140428082246.GA15478@jouni.qca.qualcomm.com> (sfid-20140428_102257_085384_91256420)
+Received: from cantor2.suse.de ([195.135.220.15]:42531 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750959AbaDVP3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 11:29:55 -0400
+Date: Tue, 22 Apr 2014 17:29:52 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH] NFC: microread: Delete dead code in
+ microread_i2c_irq_thread_fn
+Message-ID: <20140422172952.03dfa721@endymion.delvare> (sfid-20140422_173008_333237_36972041)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 takes care of all the needed steps for hwsim, so indicate
-support for this capability.
+Fix the following warning (with W=1):
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+drivers/nfc/microread/i2c.c: In function "microread_i2c_irq_thread_fn":
+drivers/nfc/microread/i2c.c:215:21: warning: variable "client" set but not used [-Wunused-but-set-variable]
+  struct i2c_client *client;
+                     ^
+
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/nfc/microread/i2c.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 9d7a52f..a23c8d6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2056,6 +2056,7 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 			    WIPHY_FLAG_AP_UAPSD |
- 			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
-+	hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
+--- linux-3.15-rc2.orig/drivers/nfc/microread/i2c.c	2014-04-22 17:14:06.962088154 +0200
++++ linux-3.15-rc2/drivers/nfc/microread/i2c.c	2014-04-22 17:25:54.467845993 +0200
+@@ -212,7 +212,6 @@ flush:
+ static irqreturn_t microread_i2c_irq_thread_fn(int irq, void *phy_id)
+ {
+ 	struct microread_i2c_phy *phy = phy_id;
+-	struct i2c_client *client;
+ 	struct sk_buff *skb = NULL;
+ 	int r;
  
- 	/* ask mac80211 to reserve space for magic */
- 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
--- 
-1.7.9.5
+@@ -221,8 +220,6 @@ static irqreturn_t microread_i2c_irq_thr
+ 		return IRQ_NONE;
+ 	}
+ 
+-	client = phy->i2c_dev;
+-
+ 	if (phy->hard_fault != 0)
+ 		return IRQ_HANDLED;
+ 
 
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Jean Delvare
+SUSE L3 Support
