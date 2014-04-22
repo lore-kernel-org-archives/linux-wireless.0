@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37176 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbaDDJ6i (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:44351 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083AbaDVAK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 05:58:38 -0400
-Message-ID: <533E8242.8080203@gmail.com> (sfid-20140404_115905_322662_67935888)
-Date: Fri, 04 Apr 2014 11:58:26 +0200
-From: Richard Genoud <richard.genoud@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: Endless loop on hub port power down
-References: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com> <20140404080453.GA1448@redhat.com>
-In-Reply-To: <20140404080453.GA1448@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 Apr 2014 20:10:28 -0400
+Received: by mail-ee0-f49.google.com with SMTP id c41so3953541eek.22
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 17:10:27 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Pavel Machek <pavel@ucw.cz>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 3/4] wl1251: fix mixed up args for join
+Date: Tue, 22 Apr 2014 03:09:54 +0300
+Message-Id: <1398125395-5579-4-git-send-email-notasas@gmail.com> (sfid-20140422_021038_155370_54AADAB4)
+In-Reply-To: <1398125395-5579-1-git-send-email-notasas@gmail.com>
+References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/04/2014 10:04, Stanislaw Gruszka wrote:
-> On Thu, Apr 03, 2014 at 04:48:56PM +0200, Richard Genoud wrote:
->> I've met an endless (or at least very long) loop if I power down the usb
->> port on witch a usb wifi key is plugged.
->> (Ok, it's not very smart to power down a usb port when a usb key is in
->> used... but still, I think that should not lead to an endless loop).
->>
->> I have a lot of:
->> ieee80211 phy1: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71
->>
->> (-71==-EPROTO)
->>
->> How to reproduce:
->> - plug an usb wifi key
->> - ip link set wlan0 up
->> - hub-ctrl -b usb_bus -d usb_device -P usb_port -p 0
->>
->> hub-ctrl source: https://github.com/codazoda/hub-ctrl.c/blob/master/hub-ctrl.c
->>
->> The following patch prevents the endless loop, but I'm really not sure
->> that The Right Way To Do It (R)
-> 
-> If device disappear, we should get -ENODEV status, why we get -EPROTO ?
+The join arguments are mixed up, passing beacon_interval instead of
+channel and channel instead of beacon_interval. Fix them.
 
-I trace it down, and the EPROTO status comes from ctx.status (returned from usb_start_wait_urb() in drivers/usb/core/message.c)
-And, in my case, the ctx.status is set to EPROTO in qtd_copy_status() ( drivers/usb/host/ehci-q.c )
-in the code:
-} else if (token & QTD_STS_XACT) {
-	/* timeout, bad CRC, wrong PID, etc */
-	ehci_dbg(ehci, "devpath %s ep%d%s 3strikes\n",
-		urb->dev->devpath,
-		usb_pipeendpoint(urb->pipe),
-		usb_pipein(urb->pipe) ? "in" : "out");
-	status = -EPROTO;
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-enabling this log, I get:
-atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
-atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
-atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
-atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
-ieee80211 phy0: rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed -71
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index f557eb5..4e782f1 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1226,8 +1226,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 
+-		ret = wl1251_join(wl, wl->bss_type, wl->beacon_int,
+-				  wl->channel, wl->dtim_period);
++		ret = wl1251_join(wl, wl->bss_type, wl->channel,
++				  wl->beacon_int, wl->dtim_period);
+ 
+ 		if (ret < 0)
+ 			goto out_sleep;
+-- 
+1.7.9.5
 
