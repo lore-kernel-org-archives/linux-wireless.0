@@ -1,104 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:53851 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbaDQWxA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42565 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932583AbaDVOoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 18:53:00 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: backports@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] rel-html add v3.15 and hostapd-2.1 to list of supported projects
-Date: Thu, 17 Apr 2014 15:52:51 -0700
-Message-Id: <1397775171-3698-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140418_005317_933502_9A0109A1)
+	Tue, 22 Apr 2014 10:44:22 -0400
+Message-ID: <1398177842.4211.7.camel@jlt4.sipsolutions.net> (sfid-20140422_164432_162963_C9D5711A)
+Subject: Re: [PATCH 02/12] mac80211: remove config option check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 22 Apr 2014 16:44:02 +0200
+In-Reply-To: <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065456_045112_6B8FCF8F)
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+	 <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com>
+	 (sfid-20140421_065456_045112_6B8FCF8F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quite a few software projects rel-html supports relies on
-the kernel release numbers, so we update those to match the
-latest kernel. The Linux kernel now dropped quite a few EOL
-kernels, and hostapd gets a new hostapd-2.1 release.
+On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
+> Sanity check and error handling code shouldn't be put into
+> CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
+> used to control whether to print debug messages.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- projects/backports.cfg | 1 +
- projects/crda.cfg      | 1 +
- projects/hostapd.cfg   | 1 +
- projects/iw.cfg        | 1 +
- rel-html.cfg           | 5 +----
- 5 files changed, 5 insertions(+), 4 deletions(-)
+It's in the hotpath though, so we don't always want it, it's mostly for
+development that this matters.
 
-diff --git a/projects/backports.cfg b/projects/backports.cfg
-index eed900a..afe52e9 100644
---- a/projects/backports.cfg
-+++ b/projects/backports.cfg
-@@ -2,6 +2,7 @@
- rel_html_proj		= backports
- rel_html_proj_aliases	= compat-drivers
- supported =
-+	3.15
- 	3.14
- 	3.13
- 	3.12
-diff --git a/projects/crda.cfg b/projects/crda.cfg
-index 33c2c66..116de9b 100644
---- a/projects/crda.cfg
-+++ b/projects/crda.cfg
-@@ -3,6 +3,7 @@ rel_html_proj           = crda
- supported =
- 	3.13
- 	3.14
-+	3.15
- rel_html_url_releases	= http://kernel.org/pub/software/network/crda/
- rel_license 		= copyleft-next
- ignore_changelogs	= True
-diff --git a/projects/hostapd.cfg b/projects/hostapd.cfg
-index c2f0c68..0e1841e 100644
---- a/projects/hostapd.cfg
-+++ b/projects/hostapd.cfg
-@@ -3,6 +3,7 @@ rel_html_proj           = hostapd
- supported =
- 	1.1
- 	2.0
-+	2.1
- rel_html_url_releases	= http://hostap.epitest.fi/releases/
- rel_license 		= BSD
- ignore_signatures	= True
-diff --git a/projects/iw.cfg b/projects/iw.cfg
-index 23f2944..85713d6 100644
---- a/projects/iw.cfg
-+++ b/projects/iw.cfg
-@@ -7,6 +7,7 @@ supported =
- 	3.12
- 	3.13
- 	3.14
-+	3.15
- rel_html_testing_ver	= latest
- rel_html_url_releases	= https://www.kernel.org/pub/software/network/iw/
- rel_license 		= ISC
-diff --git a/rel-html.cfg b/rel-html.cfg
-index a4baa15..4213798 100644
---- a/rel-html.cfg
-+++ b/rel-html.cfg
-@@ -1,17 +1,14 @@
- [project]
- rel_html_proj           = linux
- supported =
-+		3.15
- 		3.14
- 		3.13
- 		3.12
- 		3.10
- 		3.4
- 		3.2
--		2.6.34
- 		2.6.32
--eol =
--		3.11
--		3.0
- rel_html_url_releases	= http://www.kernel.org/pub/linux/kernel/v3.0/testing
- 			  http://www.kernel.org/pub/linux/kernel/v3.0
- 			  http://www.kernel.org/pub/linux/kernel/v2.6
--- 
-1.9.1
+I don't think I want to apply this patch.
+
+johannes
+
 
