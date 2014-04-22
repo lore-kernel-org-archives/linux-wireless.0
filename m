@@ -1,72 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([74.45.170.26]:42008 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932715AbaD3NiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 09:38:01 -0400
-Message-ID: <5360FCB2.6000605@canonical.com> (sfid-20140430_153805_427060_E20B634B)
-Date: Wed, 30 Apr 2014 07:37:54 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Sven Eckelmann <sven@narfation.org>
-CC: Nicolas Vaquero <nicovaq92@hotmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	kernel-team <kernel-team@lists.ubuntu.com>
-Subject: Re: Kernel source
-References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <535FC896.1080604@lwfinger.net>
-In-Reply-To: <535FC896.1080604@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:42583 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346AbaDVOpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 10:45:07 -0400
+Message-ID: <1398177888.4211.8.camel@jlt4.sipsolutions.net> (sfid-20140422_164510_226602_129F99D1)
+Subject: Re: [PATCH 01/12] mac80211: unify debug function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 22 Apr 2014 16:44:48 +0200
+In-Reply-To: <45c72e6eaa809929a39e4ea4c253877e761f0aa3.1398055853.git.gamerh2o@gmail.com> (sfid-20140421_065453_516195_D11151D8)
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+	 <45c72e6eaa809929a39e4ea4c253877e761f0aa3.1398055853.git.gamerh2o@gmail.com>
+	 (sfid-20140421_065453_516195_D11151D8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/29/2014 09:43 AM, Larry Finger wrote:
-> On 04/29/2014 02:42 AM, Sven Eckelmann wrote:
->> On Monday 28 April 2014 10:44:01 Larry Finger wrote:
->> [...]
->>> Is there a link to the 3.8.0-37 source? I could not find it on the
->>> Ubuntu
->>> web pile. With it, I should be able to fix his problem as long as I can
->>> duplicate it.
->>
->> Which exact versions? 3.8.0-36.52~precise1 and 3.8.0-37.53~precise1?
->> There were
->> a lot of backports which you can find all here:
->> https://launchpad.net/ubuntu/+source/linux-lts-raring/+publishinghistory
->>
->> You can just click on the version number at the right to find the
->> *.tar.gz,
->> *.diff.gz and *.dsc.
->>
->> You can download and create a source directory using
->>
->> dget
->> https://launchpad.net/ubuntu/precise/+source/linux-lts-raring/3.8.0-36.52~precise1/+files/linux-lts-raring_3.8.0-36.52~precise1.dsc
->>
->> or
->> dget
->> https://launchpad.net/ubuntu/precise/+source/linux-lts-raring/3.8.0-37.53~precise1/+files/linux-lts-raring_3.8.0-37.53~precise1.dsc
->>
->
-> Sven,
->
-> Thanks for the info. I wanted version 3.8.0-37.53~precise1, but given
-> that the code is available as the original source and the diff, I also
-> grabbed the diff file for 3.8.0-36.52~precise1. My test kernel is
-> building now.
->
-> Larry
->
->
+On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
+> Both wiphy_debug() and wiphy_dbg() are used in mac80211. Change
+> wiphy_debug() to wiphy_dbg() so all the debug messages can be
+> dynamically controled whether to be generated or not.
 
-Larry - you can also get the source from our git repository:
+But this means these messages go away by default now, why would we want
+that?
 
-git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git
+johannes
 
-You can get the most recent source for that version from the 
-lts-backport-raring branch, or use the tag Ubuntu-lts-3.8.0-37.53
-
-Thanks for looking into this. Let me know if I can help.
-
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
