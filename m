@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:34101 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755544AbaDMTVR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:21:17 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so7269889wgg.13
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:16 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 45/47] iwlwifi: mvm: replace leading spaces by tabs
-Date: Sun, 13 Apr 2014 22:20:00 +0300
-Message-Id: <1397416802-32403-45-git-send-email-egrumbach@gmail.com> (sfid-20140413_213517_741365_B1379B27)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+Received: from stator.leun.net ([85.214.203.199]:35499 "EHLO stator.leun.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933273AbaDVRbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 13:31:11 -0400
+Date: Tue, 22 Apr 2014 19:30:29 +0200
+From: Michael Leun <lkml20140418@newton.leun.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
+Message-ID: <20140422193029.2d81fac5@xenia.leun.net> (sfid-20140422_193119_207470_FCD75F3E)
+In-Reply-To: <CAB=NE6W64b5VS5pTnxrcRRkRdje6h_hQcGmF9jUiXO55b+nHRw@mail.gmail.com>
+References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
+	<20140422180003.6438dbb7@xenia.leun.net>
+	<CAB=NE6URp2S9rhVr2cqT+4VOj50m+q0o1rVRehCZvcUtNwTVVw@mail.gmail.com>
+	<20140422184824.74973bb3@xenia.leun.net>
+	<CAB=NE6W64b5VS5pTnxrcRRkRdje6h_hQcGmF9jUiXO55b+nHRw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 22 Apr 2014 10:04:19 -0700
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
 
-Somehow I added spaces instead of tabs to a few lines in
-debugfs.c.
+> On Tue, Apr 22, 2014 at 9:48 AM, Michael Leun
+> <lkml20140418@newton.leun.net> wrote:
+> > 1611                    if (wiphy->regulatory_flags &
+> > REGULATORY_COUNTRY_IE_IGNORE) 1612
+> > return REG_REQ_IGNORE;
+> 
+> Interesting -- same line as your regression test had found, wiphy->
+> must be NULL. Digging deeper, you can discard that patch now, we can
+> rule out the reprocessing of the request.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index c152188..f462c9b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -1106,9 +1106,9 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
- 
- static const struct file_operations iwl_dbgfs_fw_error_dump_ops = {
--        .open = iwl_dbgfs_fw_error_dump_open,
--        .read = iwl_dbgfs_fw_error_dump_read,
--        .release = iwl_dbgfs_fw_error_dump_release,
-+	.open = iwl_dbgfs_fw_error_dump_open,
-+	.read = iwl_dbgfs_fw_error_dump_read,
-+	.release = iwl_dbgfs_fw_error_dump_release,
- };
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+OK, but if this adds any useful information: Meanwhile I applied the
+2nd patch you posted ontop test-ariks-patch-for-314.patch (with some
+fuzz), and that did change something:
+
+Does not wait until I try to hibernate to bang, it barfs already during
+boot and that seems to look different. Didnt have a chance to copy that
+yet, but could, if useful.
+
 -- 
-1.8.3.2
+MfG,
+
+Michael Leun
 
