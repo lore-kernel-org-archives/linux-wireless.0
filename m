@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:40909 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbaD1GQc convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:50547 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756653AbaDVPAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 02:16:32 -0400
-Received: by mail-wi0-f178.google.com with SMTP id bs8so5079196wib.17
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 23:16:30 -0700 (PDT)
+	Tue, 22 Apr 2014 11:00:18 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wp4so5834155obc.35
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 08:00:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1398439255.4152.10.camel@jlt4.sipsolutions.net>
-References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-	<1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
-	<1398439255.4152.10.camel@jlt4.sipsolutions.net>
-Date: Mon, 28 Apr 2014 08:16:30 +0200
-Message-ID: <CA+BoTQ=UmtPX73bf84gNJ9m9o0dJPV9LzgpORM765UaOrJ5WPA@mail.gmail.com> (sfid-20140428_081815_941469_91E5E171)
-Subject: Re: [PATCH v4 00/13] cfg80211/mac80211: implement multi-vif chanctx reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
+In-Reply-To: <1397544101-18135-3-git-send-email-wens@csie.org>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	<1397544101-18135-3-git-send-email-wens@csie.org>
+Date: Tue, 22 Apr 2014 17:00:17 +0200
+Message-ID: <CACRpkdZ+3dnhoj1TS4KSVUP8iFHsjjwop-FG2Nf07YtH6aSO_Q@mail.gmail.com> (sfid-20140422_170148_331165_D75FF01D)
+Subject: Re: [PATCH 2/7] gpiolib: Support purely name based gpiod lookup in
+ device trees
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 April 2014 17:20, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
+On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
+
+> This patch enables gpio-names based gpiod lookup in device tree usage,
+> which ignores the index passed to gpiod_get_index. If this fails, fall
+> back to the original function-index ("con_id"-gpios) based lookup scheme,
+> for backward compatibility and any drivers needing more than one GPIO
+> for any function.
 >
->> The patchset incrementally improves chanctx
->> reservations in order to support multi-vif
->> reservations and in-place multi-vif reservations
->> (typically for single-channel hardware, but
->> multi-channel benefits from this too).
->
-> I've applied the first 12 patches, i.e. all but patch 13. As far as
-> patch 13 is concerned, I (a) need more time to review it, and (b) would
-> like to understand better how you intend to use it.
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
-Sure.
+This looks a bit scary and I cannot claim to realize the entire semantic
+effect of this patch, but if it's the way to go then OK.
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
+Shall I just apply this to the GPIO tree or are you carrying it along with
+the other stuff?
 
-> I also don't really like the "stub" thing. :)
-
-I agree that it's not the most beautiful thing to have but I wanted to
-make my intention clear how conflicting channel reservation/switching
-is going to be handled (AP and CSA channel switching patches come
-later). I can remove the stub and just introduce the hook in one of
-the channel switching patches or I can change the comment to something
-more meaningful if that makes any more sense to you.
-
-
-> Maybe it would also make sense to insert the "recalc" refactoring
-> somewhere around here?
-
-Do you mean Zhao Gang's recalc refactoring patches? Patch 13 stills
-interacts with some recalc code and might produce minor conflicts.
-
-
-Michał
+Yours,
+Linus Walleij
