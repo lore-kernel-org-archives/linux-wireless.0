@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:53823 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbaDDLoP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 07:44:15 -0400
-Received: by mail-we0-f176.google.com with SMTP id x48so3225275wes.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:14 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFT 3/4] ath10k: wait for mgmt tx when flushing too
-Date: Fri,  4 Apr 2014 13:37:43 +0200
-Message-Id: <1396611464-5940-4-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134424_473926_ECBFEB08)
-In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+Received: from cantor2.suse.de ([195.135.220.15]:48156 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758237AbaDVUpy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 16:45:54 -0400
+Date: Tue, 22 Apr 2014 22:45:52 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Michael Leun <lkml20140418@newton.leun.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	arik@wizery.com, linux@eikelenboom.it
+Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
+Message-ID: <20140422204552.GR27882@wotan.suse.de> (sfid-20140422_224606_904925_CB27910D)
+References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com> <20140422180003.6438dbb7@xenia.leun.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140422180003.6438dbb7@xenia.leun.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 10.1 firmware uses WMI to Tx management frames
-but ath10k_flush() didn't care. This could lead to
-some frames not being sent.
+On Tue, Apr 22, 2014 at 06:00:03PM +0200, Michael Leun wrote:
+> On Mon, 21 Apr 2014 20:39:33 -0700
+> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
+> 
+> 
+> 
+> > that'd be appreciated as an alternative. I'm also very curious to hear
+> > no one else would have run into the same regression as you have.
+> 
+> I only see this on an Acer PTZ1825 with an ath9k wireless card, but
+> that machine was not sold with that wlan card, so other people with the
+> same model won't neccesarily see the same issue.
 
-Although there are no Tx completions for WMI
-mangement frames it's still better to at least
-wait for ath10k queue to be drained.
+OK I see the issue and its clear now how this could have
+gone through, the wiphy comes from the country IE and it
+could have gone disappearing during suspend / hotplug, so
+we do need to check for it again.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9af3ed5..47b3574 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3766,19 +3766,27 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f054137..4f375b6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1602,7 +1602,8 @@ __reg_process_hint_country_ie(struct wiphy *wiphy,
+ 			return REG_REQ_IGNORE;
+ 		return REG_REQ_ALREADY_SET;
+ 	} else {
+-		if (wiphy->regulatory_flags & REGULATORY_COUNTRY_IE_IGNORE)
++		if (wiphy &&
++		    wiphy->regulatory_flags & REGULATORY_COUNTRY_IE_IGNORE)
+ 			return REG_REQ_IGNORE;
+ 	}
  
- 	mutex_lock(&ar->conf_mutex);
- 
--	if (ar->state == ATH10K_STATE_WEDGED)
-+	if (ar->state == ATH10K_STATE_WEDGED) {
-+		ret = -EBUSY;
- 		goto skip;
-+	}
- 
- 	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
--			bool empty;
-+			bool htt_empty, wmi_empty;
-+			unsigned long flags;
- 
- 			spin_lock_bh(&ar->htt.tx_lock);
--			empty = (ar->htt.num_pending_tx == 0);
-+			htt_empty = (ar->htt.num_pending_tx == 0);
- 			spin_unlock_bh(&ar->htt.tx_lock);
- 
-+			spin_lock_irqsave(&ar->wmi_mgmt_tx_queue.lock, flags);
-+			wmi_empty = skb_queue_len(&ar->wmi_mgmt_tx_queue) == 0;
-+			spin_unlock_irqrestore(&ar->wmi_mgmt_tx_queue.lock,
-+					       flags);
-+
- 			skip = (ar->state == ATH10K_STATE_WEDGED);
- 
--			(empty || skip);
-+			((htt_empty && wmi_empty) || skip);
- 		}), ATH10K_FLUSH_TIMEOUT_HZ);
- 
- 	if (ret <= 0 || skip)
-@@ -3787,6 +3795,11 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 
- skip:
- 	mutex_unlock(&ar->conf_mutex);
-+
-+	/* empty mgmt tx queue doesn't mean mgmt tx is flushed because the last
-+	 * frame still may be processed by a worker */
-+	if (ret > 0)
-+		cancel_work_sync(&ar->wmi_mgmt_tx_work);
- }
- 
- /* TODO: Implement this function properly
--- 
-1.8.5.3
-
