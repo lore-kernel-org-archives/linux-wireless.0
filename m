@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:56859 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbaD1DrA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2014 23:47:00 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wp4so6714954obc.34
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 20:47:00 -0700 (PDT)
-Message-ID: <535DCF32.4010005@lwfinger.net> (sfid-20140428_054706_012575_3C82B66E)
-Date: Sun, 27 Apr 2014 22:46:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Nicolas Vaquero <nicovaq92@hotmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG-FATAL ERROR] WiFi Realtek 8192 ---> Ubuntu 12.04 LTS
-References: <BLU0-SMTP336B542CBA1B1F927CDFEAAA9450@phx.gbl> <535C27C9.7010309@lwfinger.net> <BLU0-SMTP40653E3FC4814958115DAE8A9470@phx.gbl>
-In-Reply-To: <BLU0-SMTP40653E3FC4814958115DAE8A9470@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from stator.leun.net ([85.214.203.199]:35560 "EHLO stator.leun.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753268AbaDVVcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2014 17:32:35 -0400
+Date: Tue, 22 Apr 2014 23:32:13 +0200
+From: Michael Leun <lkml20140418@newton.leun.net>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	arik@wizery.com, linux@eikelenboom.it
+Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
+Message-ID: <20140422233213.780405d1@xenia.leun.net> (sfid-20140422_233243_343404_16B9F757)
+In-Reply-To: <20140422204552.GR27882@wotan.suse.de>
+References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
+	<20140422180003.6438dbb7@xenia.leun.net>
+	<20140422204552.GR27882@wotan.suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/2014 10:20 PM, Nicolas Vaquero wrote:
-> 01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE
-> 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-
-Please do not drop the mailing list from the reply. Always use "reply-to-all", 
-unless you are posting some information that is sensitive, or if there is a very 
-large attachment.
-
-What distro are you using? I have no idea what kernel 3.8.0-36 means.
-
-Larry
+On Tue, 22 Apr 2014 22:45:52 +0200
+"Luis R. Rodriguez" <mcgrof@suse.com> wrote:
 
 
+> > I only see this on an Acer PTZ1825 with an ath9k wireless card, but
+> > that machine was not sold with that wlan card, so other people with
+> > the same model won't neccesarily see the same issue.
+> 
+> OK I see the issue and its clear now how this could have
+> gone through, the wiphy comes from the country IE and it
+> could have gone disappearing during suspend / hotplug, so
+> we do need to check for it again.
+[...]
+> -		if (wiphy->regulatory_flags &
+> REGULATORY_COUNTRY_IE_IGNORE)
+> +		if (wiphy &&
+> +		    wiphy->regulatory_flags &
+> REGULATORY_COUNTRY_IE_IGNORE) return REG_REQ_IGNORE;
+
+Yup, thats it. I can hear it whisper "put me into stable".
+
+Thanks!
+
+-- 
+MfG,
+
+Michael Leun
 
