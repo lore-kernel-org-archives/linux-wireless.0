@@ -1,53 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39431 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759165AbaD3QPM (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40258 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932335AbaDVSDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 12:15:12 -0400
-Date: Wed, 30 Apr 2014 12:01:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-04-28
-Message-ID: <20140430160153.GG3635@tuxdriver.com> (sfid-20140430_181516_837998_77320DC1)
-References: <1398702630.4132.9.camel@jlt4.sipsolutions.net>
+	Tue, 22 Apr 2014 14:03:52 -0400
+Message-ID: <5356AEF0.1000208@candelatech.com> (sfid-20140422_200406_426272_5C64EF46)
+Date: Tue, 22 Apr 2014 11:03:28 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1398702630.4132.9.camel@jlt4.sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Felix Fietkau <nbd@openwrt.org>, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k:  Prevent divide by zero kernel crash.
+References: <1397695240-13710-1-git-send-email-greearb@candelatech.com> <534F870E.80209@openwrt.org> <20140422175322.GA16193@tuxdriver.com>
+In-Reply-To: <20140422175322.GA16193@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 06:30:30PM +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> Somehow it seems I got behind and should have sent this to you earlier,
-> but here it is now ...
-> 
-> In this round we have a large number of small features and improvements
-> from people too numerous to list here. The only really bit thing is
-> Michał and Luca's CSA work (including changing how interface combination
-> verification is done).
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> The following changes since commit cd6362befe4cc7bf589a5236d2a780af2d47bcc9:
-> 
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-04-02 20:53:45 -0700)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to f55ee0834247c88cb6981cb11eb1870392878371:
-> 
->   mac80211_hwsim: Advertise support for AP mode channel width changes (2014-04-28 18:11:59 +0200)
+On 04/22/2014 10:53 AM, John W. Linville wrote:
+> Please consider Felix's comments while refactoring this for the
+> current code structure...
 
-Pulling now...
+I'm low on time, but will resend a patch when I get a chance.
+
+If someone else wants to send in the updated patch that is fine by me.
+
+Thanks,
+Ben
+
+> 
+> John
+> 
+> On Thu, Apr 17, 2014 at 09:47:26AM +0200, Felix Fietkau wrote:
+>> On 2014-04-17 02:40, greearb@candelatech.com wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> Make sure we cannot ever assign beacon interval to zero.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/beacon.c | 4 ++++
+>>>  drivers/net/wireless/ath/ath9k/recv.c   | 3 ++-
+>>>  2 files changed, 6 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+>>> index 2e8bba0..5391f01 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/beacon.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+>>> @@ -443,6 +443,8 @@ static u32 ath9k_mod_tsf64_tu(u64 tsf, u32 div_tu)
+>>>  {
+>>>  	u32 tsf_mod, tsf_hi, tsf_lo, mod_hi, mod_lo;
+>>>  
+>>> +	if (WARN_ON_ONCE(div_tu == 0))
+>>> +		div_tu = 100;
+>>>  	tsf_mod = tsf & (BIT(10) - 1);
+>>>  	tsf_hi = tsf >> 32;
+>>>  	tsf_lo = ((u32) tsf) >> 10;
+>> Why add this warning here if you already have the additions below? We
+>> don't need multiple layers of defensive checks for the same thing.
+>>
+>>> @@ -667,6 +669,8 @@ static void ath9k_cache_beacon_config(struct ath_softc *sc,
+>>>  		"Caching beacon data for BSS: %pM\n", bss_conf->bssid);
+>>>  
+>>>  	cur_conf->beacon_interval = bss_conf->beacon_int;
+>>> +	if (WARN_ON_ONCE(cur_conf->beacon_interval == 0))
+>>> +		cur_conf->beacon_interval = 100;
+>>>  	cur_conf->dtim_period = bss_conf->dtim_period;
+>>>  	cur_conf->listen_interval = 1;
+>>>  	cur_conf->dtim_count = 1;
+>>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>>> index b97217d..79c20c7 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>>> @@ -538,7 +538,8 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+>>>  		sc->ps_flags &= ~PS_BEACON_SYNC;
+>>>  		ath_dbg(common, PS,
+>>>  			"Reconfigure beacon timers based on synchronized timestamp\n");
+>>> -		ath9k_set_beacon(sc);
+>>> +		if (!(WARN_ON_ONCE(sc->cur_beacon_conf.beacon_interval == 0)))
+>>> +			ath9k_set_beacon(sc);
+>>>  	}
+>>>  
+>>>  	if (ath_beacon_dtim_pending_cab(skb)) {
+>>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
