@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:40030 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbaDDQQK (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:48891 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752031AbaDVKTu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 12:16:10 -0400
-Received: by mail-wi0-f176.google.com with SMTP id r20so1605525wiv.15
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 09:16:09 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	andrea.merello@gmail.com
-Subject: [PATCH 1/4] rtl8180: change module name in rtl818Xpci
-Date: Fri,  4 Apr 2014 18:15:42 +0200
-Message-Id: <1396628142-14351-1-git-send-email-andrea.merello@gmail.com> (sfid-20140404_181615_172347_9B09D73B)
+	Tue, 22 Apr 2014 06:19:50 -0400
+Received: by mail-pa0-f54.google.com with SMTP id lf10so4826331pab.27
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 03:19:50 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: avoid handling of SMPS for mesh
+Date: Tue, 22 Apr 2014 18:19:25 +0800
+Message-Id: <1398161965-1427-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140422_121955_906962_3A7E7AD7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+The patch "mac80211: implement SMPS for AP" has caused kernel
+oops at mesh STA if the peer mesh STA operates in sleep mode
+and then becomes active mode. It can be easily reproduced by
+setting the following commands at peer mesh STA:
 
-rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
-however in userspace tools (network manager) it still appares
-as "rtl8180".
-This might lead the user to think the wrong driver is in use.
+iw mesh0 station set aa:bb:cc:dd:ee:ff mesh_power_mode deep
+iw mesh0 station set aa:bb:cc:dd:ee:ff mesh_power_mode active
 
-This patch changes module name to "rtl818Xpci" that should be
-more explanatory.
+Kernel oops will happen at mesh STA aa:bb:cc:dd:ee:ff.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Fix this by avoiding SMPS for mesh mode.
+
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/sta_info.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/Makefile b/drivers/net/wireless/rtl818x/rtl8180/Makefile
-index 08b056d..c74849d 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/Makefile
-+++ b/drivers/net/wireless/rtl818x/rtl8180/Makefile
-@@ -1,5 +1,5 @@
--rtl8180-objs		:= dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
-+rtl818Xpci-objs		:= dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 137a192..847d92f 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1148,7 +1148,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	atomic_dec(&ps->num_sta_ps);
  
--obj-$(CONFIG_RTL8180)	+= rtl8180.o
-+obj-$(CONFIG_RTL8180)	+= rtl818Xpci.o
- 
- ccflags-y += -Idrivers/net/wireless/rtl818x
+ 	/* This station just woke up and isn't aware of our SMPS state */
+-	if (!ieee80211_smps_is_restrictive(sta->known_smps_mode,
++	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
++	    !ieee80211_smps_is_restrictive(sta->known_smps_mode,
+ 					   sdata->smps_mode) &&
+ 	    sta->known_smps_mode != sdata->bss->req_smps &&
+ 	    sta_info_tx_streams(sta) != 1) {
 -- 
-1.8.3.2
+1.9.2
 
