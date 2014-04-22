@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24977 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750922AbaDGHBX convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:60700 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612AbaDVDjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 03:01:23 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Jonathan McDowell <noodles@earth.li>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: Intel 7260 not working in 802.11n mode
-Date: Mon, 7 Apr 2014 07:00:49 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com> (sfid-20140407_090137_244063_081C0A0E)
-References: <20140407003648.GA19740@earth.li>
-	<CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
- <20140407064556.GN24850@earth.li>
-In-Reply-To: <20140407064556.GN24850@earth.li>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 21 Apr 2014 23:39:53 -0400
+Received: by mail-pd0-f176.google.com with SMTP id r10so4368660pdi.35
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 20:39:53 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, lkml20140418@newton.leun.net,
+	arik@wizery.com, linux@eikelenboom.it,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH 2/2] cfg80211: fix processing world regdomain when non modular
+Date: Mon, 21 Apr 2014 20:39:35 -0700
+Message-Id: <1398137975-14275-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20140422_054000_236315_8D306BAF)
+In-Reply-To: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, Apr 07, 2014 at 08:00:19AM +0300, Emmanuel Grumbach wrote:
-> > On Mon, Apr 7, 2014 at 3:36 AM, Jonathan McDowell <noodles@earth.li>
-> wrote:
-> > >
-> > > I have an Intel 7260 that fails to associate correctly in 802.11n mode.
-> > > Unfortunately I don't have any access to the AP in question, but I
-> > > believe it is an ASUS based device. This is on the 5GHz band; there is
-> > > some odd configuration with the router that results in the driver
-> > > refusing to associate on the 2.4GHz setup with the following error:
-> > >
-> > > [  507.495986] iwlwifi 0000:02:00.0: AP 30:00:da:b1:da:d0 beacon interval is
-> 7, refusing due to firmware bug!
-> >
-> > Ok - this is an interesting settings.
-> > I'll check with our firmware team what can be done here, but beacon
-> > interval=7 is really insane. I can't find what the spec defines as
-> > legal values right now.
-> 
-> I wouldn't rule out the person who configured the AP having made a
-> mistake; the MAC address is a custom one so they may have tweaked other
-> settings too. However my phone (running Android) can connect to the
-> 2.4GHz AP just fine and I think the other users of the AP are running
-> Macs without problems.
-> 
-> > > On the 5GHz band the driver attempts to associate, but never seems to
-> > > actually fully associate to the point of getting an IP. If I pass the
-> > > 11n_disable=1 parameter to the driver then things work fine.
-> > >
-> > This is surprising - can you share your logs?
-> 
-> The log below is without the 11n_disable flag set - if it helps I can
-> provide the log of when it works too.
-> 
-> > > I've put a debug log of the failure to associate (kernel 3.14 but this
-> > > has happened with all the version I've tried) up at:
-> > >
-> > > http://the.earth.li/~noodles/iwlwifi-fail.log
-> > >
-> >
-> > I can't access: Access forbidden.
-> 
-> Sorry, fixed.
-> 
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Your log seems healthy - you associate at Apr  6 17:17:20 and disassociate at Apr  6 17:18:05 - was that intentional?
+This allows processing of the last regulatory request when
+we determine its still pending. Without this if a regulatory
+request failed to get processed by userspace we wouldn't
+be able to re-process it later. An example situation that can
+lead to an unprocessed last_request is enabling cfg80211 to
+be built-in to the kernel, not enabling CFG80211_INTERNAL_REGDB
+and the CRDA binary not being available at the time the udev
+rule that kicks of CRDA triggers.
 
-Also - your AP seems to behave badly with uAPSD - can you try to set power_scheme=1 as a module parameter to iwlmvm module?
+In such a situation we want to let some cfg80211 triggers
+eventually kick CRDA for us again. Without this if the first
+cycle attempt to kick off CRDA failed we'd be stuck without
+the ability to change process any further regulatory domains.
 
+cfg80211 will trigger re-processing of the regulatory queue
+whenever schedule_work(&reg_work) is called, currently this
+happens when:
 
+  * suspend / resume
+  * disconnect
+  * a beacon hint gets triggered (non DFS 5 GHz AP found)
+  * a regulatory request gets added to the queue
+
+We don't have any specific opportunistic late boot triggers
+to address a late mount of where CRDA resides though, adding
+that should be done separately through another patch.
+Without an opportunistic fix then this fix relies at least
+one of the triggeres above to happen.
+
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 081c571..625c41e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1912,7 +1912,7 @@ static void reg_process_pending_hints(void)
+ 
+ 	/* When last_request->processed becomes true this will be rescheduled */
+ 	if (lr && !lr->processed) {
+-		REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
++		reg_process_hint(lr);
+ 		return;
+ 	}
+ 
+-- 
+1.9.0
 
