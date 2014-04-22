@@ -1,89 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:59663 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933353AbaDJFKg convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933680AbaDVSAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 01:10:36 -0400
-Received: by mail-we0-f173.google.com with SMTP id w61so3392319wes.18
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 22:10:35 -0700 (PDT)
+	Tue, 22 Apr 2014 14:00:19 -0400
+Date: Tue, 22 Apr 2014 13:53:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: greearb@candelatech.com, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k:  Prevent divide by zero kernel crash.
+Message-ID: <20140422175322.GA16193@tuxdriver.com> (sfid-20140422_200039_192642_709DF2BC)
+References: <1397695240-13710-1-git-send-email-greearb@candelatech.com>
+ <534F870E.80209@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <5345DE8F.2060808@candelatech.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-	<1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-	<5345BFA8.7040500@candelatech.com>
-	<5345DE8F.2060808@candelatech.com>
-Date: Thu, 10 Apr 2014 07:10:34 +0200
-Message-ID: <CA+BoTQnorw7Z8ve9pvGY-RgZP2N+RWNd14Xa_yxM3q1+7ryNfw@mail.gmail.com> (sfid-20140410_071043_142120_701E2F69)
-Subject: Re: [RFTv2 0/5] ath10k: ath10k: fix flushing and tx stalls
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <534F870E.80209@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 April 2014 01:58, Ben Greear <greearb@candelatech.com> wrote:
-> On 04/09/2014 02:46 PM, Ben Greear wrote:
->> Here's another log snippet with these 5 patches (and lots more
->> mostly non ath10k patches of my own) applied:
->
-> And another one, this time with more debugging enabled.
-> The 0x7110XXXX numbers indicate the command-id (the XXXX part
-> is the cmd id).
->
-> After this below, I see a debug-log message come from
-> the firmware, and then nothing else.  I had added a sort
-> of keep-alive message in the firmware, and I do not see that
-> in my logs, so probably firmware is wedged in such a way that
-> it cannot or will not send packets to the host at this point.
->
-> I had chased this sort of problem previously, and ended up
-> with a hack to reset firmware when the flush failed twice.
-> I backed that out when applying your patches, but I guess
-> it is still needed.
+Please consider Felix's comments while refactoring this for the
+current code structure...
 
-Then this looks like a different issue from what I've been trying to
-fix actually.
+John
 
-In my case when acting as AP it's possible to get WMI mgmt tx frames
-stuck in FW queues when sleeping client stops responding for about 10
-seconds. If you use up all tx credits (the multitude of 2 that there
-are :-) beaconing stops and everything just fails.
+On Thu, Apr 17, 2014 at 09:47:26AM +0200, Felix Fietkau wrote:
+> On 2014-04-17 02:40, greearb@candelatech.com wrote:
+> > From: Ben Greear <greearb@candelatech.com>
+> > 
+> > Make sure we cannot ever assign beacon interval to zero.
+> > 
+> > Signed-off-by: Ben Greear <greearb@candelatech.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/beacon.c | 4 ++++
+> >  drivers/net/wireless/ath/ath9k/recv.c   | 3 ++-
+> >  2 files changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> > index 2e8bba0..5391f01 100644
+> > --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> > +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> > @@ -443,6 +443,8 @@ static u32 ath9k_mod_tsf64_tu(u64 tsf, u32 div_tu)
+> >  {
+> >  	u32 tsf_mod, tsf_hi, tsf_lo, mod_hi, mod_lo;
+> >  
+> > +	if (WARN_ON_ONCE(div_tu == 0))
+> > +		div_tu = 100;
+> >  	tsf_mod = tsf & (BIT(10) - 1);
+> >  	tsf_hi = tsf >> 32;
+> >  	tsf_lo = ((u32) tsf) >> 10;
+> Why add this warning here if you already have the additions below? We
+> don't need multiple layers of defensive checks for the same thing.
+> 
+> > @@ -667,6 +669,8 @@ static void ath9k_cache_beacon_config(struct ath_softc *sc,
+> >  		"Caching beacon data for BSS: %pM\n", bss_conf->bssid);
+> >  
+> >  	cur_conf->beacon_interval = bss_conf->beacon_int;
+> > +	if (WARN_ON_ONCE(cur_conf->beacon_interval == 0))
+> > +		cur_conf->beacon_interval = 100;
+> >  	cur_conf->dtim_period = bss_conf->dtim_period;
+> >  	cur_conf->listen_interval = 1;
+> >  	cur_conf->dtim_count = 1;
+> > diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> > index b97217d..79c20c7 100644
+> > --- a/drivers/net/wireless/ath/ath9k/recv.c
+> > +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> > @@ -538,7 +538,8 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+> >  		sc->ps_flags &= ~PS_BEACON_SYNC;
+> >  		ath_dbg(common, PS,
+> >  			"Reconfigure beacon timers based on synchronized timestamp\n");
+> > -		ath9k_set_beacon(sc);
+> > +		if (!(WARN_ON_ONCE(sc->cur_beacon_conf.beacon_interval == 0)))
+> > +			ath9k_set_beacon(sc);
+> >  	}
+> >  
+> >  	if (ath_beacon_dtim_pending_cab(skb)) {
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-
-> ath10k: ep 2 got 1 credits tot 2
-> ath10k: mac vdev 20 start 04:f0:21:03:38:99
-> ath10k: mac vdev 20 start center_freq 5180 phymode 11ac-vht80
-
-> ath10k: ep 2 used 1 credits, remaining 1 dbg 1896910867 (0x71109013)
-
-I suppose this print is located in ath10k_htc_send()?
-
-
-> ath10k: ep 2 got 1 credits tot 2
-> sta219: send auth to 04:f0:21:03:38:99 (try 1/3) at: 1397086238.721985
-> ath10k: ep 2 used 1 credits, remaining 1 dbg 1896910888 (0x71109028)
-> ath10k: mac flushing peer 04:f0:21:03:38:99 on vdev 20 mgmt tid for unicast mgmt (204 msecs)
-> ath10k: ep 2 used 1 credits, remaining 0 dbg 1896910878 (0x7110901e)
-> ath10k: Creating vdev id: 22  map: 12582912
-> ath10k: mac vdev create 22 (add interface) type 2 subtype 0
-> sta219: send auth to 04:f0:21:03:38:99 (try 2/3) at: 1397086239.28088
-> [firmware logging msg]
-> ath10k: failed to create WMI vdev 22: -11
-
-Hmm.. If I read this correctly it means that MGMT_TX and
-PEER_FLUSH_TIDS commands are both stuck in firmware. This most likely
-means firmware stops processing everything altogether. Having HTC
-debug prints from ath10k_htc_notify_tx_completion() could provide more
-insight perhaps. I suspect MGMT_TX is the trigger in all cases.
-
-I'm still suspicious of your firmware changes. You connect multiple
-stations to the exact same AP. Is peer mapping working correctly? Are
-tid queues mapped correctly in all cases? Perhaps there's some kind of
-inconsistency that leads to this mess? I think firmware wasn't
-originally designed to support your usecase. Or maybe firmware just
-breaks when you try to run a hundred or so of vdevs :-D
-
-
-Michał
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
