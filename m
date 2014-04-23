@@ -1,136 +1,393 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:56903 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933343AbaDINf7 (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:20907 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756783AbaDWIHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 09:35:59 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so1913295eek.12
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:58 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 07/13] mac80211: improve find_chanctx() for reservations
-Date: Wed,  9 Apr 2014 15:29:28 +0200
-Message-Id: <1397050174-26121-8-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153607_385940_200DCB79)
-In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
-References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
- <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 23 Apr 2014 04:07:38 -0400
+From: Seungwon Jeon <tgih.jun@samsung.com>
+To: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: 'Chris Ball' <chris@printf.net>,
+	'Ulf Hansson' <ulf.hansson@linaro.org>,
+	'Jaehoon Chung' <jh80.chung@samsung.com>,
+	'Jackey Shen' <jackey.shen@amd.com>,
+	'Alim Akhtar' <alim.akhtar@samsung.com>,
+	'Fariya Fatima' <fariyaf@gmail.com>,
+	"'John W. Linville'" <linville@tuxdriver.com>
+References: <1383653403-10049-1-git-send-email-ulf.hansson@linaro.org>
+ <006701cf2a58$c628e050$527aa0f0$%jun@samsung.com>
+In-reply-to: 
+Subject: [PATCH 1/6] mmc: drop the speed mode of card's state
+Date: Wed, 23 Apr 2014 17:07:35 +0900
+Message-id: <000a01cf5ecb$15fedcf0$41fc96d0$%jun@samsung.com> (sfid-20140423_100804_567779_BF1DD143)
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows new vifs to be assigned to a chanctx
-as long as chanctx's reservation chandefs (if any)
-and chanctx's current chandef (implied by assigned
-vifs at the time, if any) and the new vif chandef
-are all compatible.
+Timing mode identifier has same role and can take the place
+of speed mode. This change removes all related speed mode.
 
-This implies it is impossible to assign a new vif
-to an in-place reservation chanctx.
-
-This gives no advantages for single-channel
-hardware. It makes sense for multi-channel
-hardware only.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+Tested-by: Jaehoon Chung <jh80.chung@samsung.com>
+Acked-by: Jaehoon Chung <jh80.chung@samsung.com>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Chris Ball <chris@printf.net>
 ---
-v2:
- * remove redundant calls to _chandef() [Eliad]
- * dont use rcu_access_pointer() [Eliad]
+ drivers/mmc/core/bus.c                  |    8 ++++----
+ drivers/mmc/core/core.c                 |    3 +--
+ drivers/mmc/core/mmc.c                  |   11 +++--------
+ drivers/mmc/core/sd.c                   |   16 +++-------------
+ drivers/mmc/core/sd.h                   |    1 -
+ drivers/mmc/core/sdio.c                 |    8 ++------
+ drivers/net/wireless/rsi/rsi_91x_sdio.c |    4 +---
+ include/linux/mmc/card.h                |   23 ++++++-----------------
+ include/linux/mmc/host.h                |   23 +++++++++++++++++++++++
+ 9 files changed, 43 insertions(+), 54 deletions(-)
 
-v3:
- * fix commit message so it makes more sense [Johannes]
-
- net/mac80211/chan.c | 56 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 29 insertions(+), 27 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 79eac96..0dfb04a 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -28,6 +28,29 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
- 	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
- }
- 
-+static const struct cfg80211_chan_def *
-+ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx,
-+				   const struct cfg80211_chan_def *compat)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	list_for_each_entry(sdata, &ctx->reserved_vifs,
-+			    reserved_chanctx_list) {
-+		if (!compat)
-+			compat = &sdata->reserved_chandef;
-+
-+		compat = cfg80211_chandef_compatible(&sdata->reserved_chandef,
-+						     compat);
-+		if (!compat)
-+			break;
-+	}
-+
-+	return compat;
-+}
-+
- static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
- {
- 	switch (sta->bandwidth) {
-@@ -187,27 +210,6 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
+index 8246448..f37e9d6 100644
+--- a/drivers/mmc/core/bus.c
++++ b/drivers/mmc/core/bus.c
+@@ -341,16 +341,16 @@ int mmc_add_card(struct mmc_card *card)
+ 	if (mmc_host_is_spi(card->host)) {
+ 		pr_info("%s: new %s%s%s card on SPI\n",
+ 			mmc_hostname(card->host),
+-			mmc_card_highspeed(card) ? "high speed " : "",
+-			mmc_card_ddr_mode(card) ? "DDR " : "",
++			mmc_card_hs(card) ? "high speed " : "",
++			mmc_card_ddr52(card) ? "DDR " : "",
+ 			type);
+ 	} else {
+ 		pr_info("%s: new %s%s%s%s%s card at address %04x\n",
+ 			mmc_hostname(card->host),
+ 			mmc_card_uhs(card) ? "ultra high speed " :
+-			(mmc_card_highspeed(card) ? "high speed " : ""),
++			(mmc_card_hs(card) ? "high speed " : ""),
+ 			(mmc_card_hs200(card) ? "HS200 " : ""),
+-			mmc_card_ddr_mode(card) ? "DDR " : "",
++			mmc_card_ddr52(card) ? "DDR " : "",
+ 			uhs_bus_speed_mode, type, card->rca);
  	}
+ 
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 79ba3a5..4b058ae 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -2187,7 +2187,7 @@ int mmc_set_blocklen(struct mmc_card *card, unsigned int blocklen)
+ {
+ 	struct mmc_command cmd = {0};
+ 
+-	if (mmc_card_blockaddr(card) || mmc_card_ddr_mode(card))
++	if (mmc_card_blockaddr(card) || mmc_card_ddr52(card))
+ 		return 0;
+ 
+ 	cmd.opcode = MMC_SET_BLOCKLEN;
+@@ -2267,7 +2267,6 @@ static int mmc_do_hw_reset(struct mmc_host *host, int check)
+ 		}
+ 	}
+ 
+-	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_DDR);
+ 	if (mmc_host_is_spi(host)) {
+ 		host->ios.chip_select = MMC_CS_HIGH;
+ 		host->ios.bus_mode = MMC_BUSMODE_PUSHPULL;
+diff --git a/drivers/mmc/core/mmc.c b/drivers/mmc/core/mmc.c
+index fbcf93d..3122052 100644
+--- a/drivers/mmc/core/mmc.c
++++ b/drivers/mmc/core/mmc.c
+@@ -1083,11 +1083,9 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
+ 		} else {
+ 			if (card->ext_csd.hs_max_dtr > 52000000 &&
+ 			    host->caps2 & MMC_CAP2_HS200) {
+-				mmc_card_set_hs200(card);
+ 				mmc_set_timing(card->host,
+ 					       MMC_TIMING_MMC_HS200);
+ 			} else {
+-				mmc_card_set_highspeed(card);
+ 				mmc_set_timing(card->host, MMC_TIMING_MMC_HS);
+ 			}
+ 		}
+@@ -1098,10 +1096,10 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
+ 	 */
+ 	max_dtr = (unsigned int)-1;
+ 
+-	if (mmc_card_highspeed(card) || mmc_card_hs200(card)) {
++	if (mmc_card_hs(card) || mmc_card_hs200(card)) {
+ 		if (max_dtr > card->ext_csd.hs_max_dtr)
+ 			max_dtr = card->ext_csd.hs_max_dtr;
+-		if (mmc_card_highspeed(card) && (max_dtr > 52000000))
++		if (mmc_card_hs(card) && (max_dtr > 52000000))
+ 			max_dtr = 52000000;
+ 	} else if (max_dtr > card->csd.max_dtr) {
+ 		max_dtr = card->csd.max_dtr;
+@@ -1112,7 +1110,7 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
+ 	/*
+ 	 * Indicate DDR mode (if supported).
+ 	 */
+-	if (mmc_card_highspeed(card)) {
++	if (mmc_card_hs(card)) {
+ 		if ((card->ext_csd.card_type & EXT_CSD_CARD_TYPE_DDR_1_8V)
+ 			&& (host->caps & MMC_CAP_1_8V_DDR))
+ 				ddr = MMC_1_8V_DDR_MODE;
+@@ -1255,7 +1253,6 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
+ 				if (err)
+ 					goto err;
+ 			}
+-			mmc_card_set_ddr_mode(card);
+ 			mmc_set_timing(card->host, MMC_TIMING_MMC_DDR52);
+ 			mmc_set_bus_width(card->host, bus_width);
+ 		}
+@@ -1499,7 +1496,6 @@ static int _mmc_suspend(struct mmc_host *host, bool is_suspend)
+ 		err = mmc_sleep(host);
+ 	else if (!mmc_host_is_spi(host))
+ 		err = mmc_deselect_cards(host);
+-	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_200);
+ 
+ 	if (!err) {
+ 		mmc_power_off(host);
+@@ -1629,7 +1625,6 @@ static int mmc_power_restore(struct mmc_host *host)
+ {
+ 	int ret;
+ 
+-	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_200);
+ 	mmc_claim_host(host);
+ 	ret = mmc_init_card(host, host->card->ocr, host->card);
+ 	mmc_release_host(host);
+diff --git a/drivers/mmc/core/sd.c b/drivers/mmc/core/sd.c
+index aef5157..0c44510 100644
+--- a/drivers/mmc/core/sd.c
++++ b/drivers/mmc/core/sd.c
+@@ -887,7 +887,7 @@ unsigned mmc_sd_get_max_clock(struct mmc_card *card)
+ {
+ 	unsigned max_dtr = (unsigned int)-1;
+ 
+-	if (mmc_card_highspeed(card)) {
++	if (mmc_card_hs(card)) {
+ 		if (max_dtr > card->sw_caps.hs_max_dtr)
+ 			max_dtr = card->sw_caps.hs_max_dtr;
+ 	} else if (max_dtr > card->csd.max_dtr) {
+@@ -897,12 +897,6 @@ unsigned mmc_sd_get_max_clock(struct mmc_card *card)
+ 	return max_dtr;
  }
  
--static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
--					  struct ieee80211_chanctx *ctx)
+-void mmc_sd_go_highspeed(struct mmc_card *card)
 -{
--	struct ieee80211_sub_if_data *sdata;
--	bool ret = false;
--
--	lockdep_assert_held(&local->chanctx_mtx);
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--		if (sdata->reserved_chanctx == ctx) {
--			ret = true;
--			break;
--		}
--	}
--
--	rcu_read_unlock();
--	return ret;
+-	mmc_card_set_highspeed(card);
+-	mmc_set_timing(card->host, MMC_TIMING_SD_HS);
 -}
 -
- static struct ieee80211_chanctx *
- ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       const struct cfg80211_chan_def *chandef,
-@@ -223,18 +225,18 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		const struct cfg80211_chan_def *compat;
+ /*
+  * Handle the detection and initialisation of a card.
+  *
+@@ -977,16 +971,13 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
+ 		err = mmc_sd_init_uhs_card(card);
+ 		if (err)
+ 			goto free_card;
+-
+-		/* Card is an ultra-high-speed card */
+-		mmc_card_set_uhs(card);
+ 	} else {
+ 		/*
+ 		 * Attempt to change to high-speed (if supported)
+ 		 */
+ 		err = mmc_sd_switch_hs(card);
+ 		if (err > 0)
+-			mmc_sd_go_highspeed(card);
++			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
+ 		else if (err)
+ 			goto free_card;
  
--		/* We don't support chanctx reservation for multiple
--		 * vifs yet, so don't allow reserved chanctxs to be
--		 * reused.
--		 */
--		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
--		    ieee80211_chanctx_is_reserved(local, ctx))
-+		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 			continue;
+@@ -1081,7 +1072,7 @@ static int _mmc_sd_suspend(struct mmc_host *host)
  
- 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
- 		if (!compat)
- 			continue;
- 
-+		compat = ieee80211_chanctx_reserved_chandef(local, ctx,
-+							    compat);
-+		if (!compat)
-+			continue;
+ 	if (!mmc_host_is_spi(host))
+ 		err = mmc_deselect_cards(host);
+-	host->card->state &= ~MMC_STATE_HIGHSPEED;
 +
- 		ieee80211_change_chanctx(local, ctx, compat);
+ 	if (!err) {
+ 		mmc_power_off(host);
+ 		mmc_card_set_suspended(host->card);
+@@ -1190,7 +1181,6 @@ static int mmc_sd_power_restore(struct mmc_host *host)
+ {
+ 	int ret;
  
- 		return ctx;
+-	host->card->state &= ~MMC_STATE_HIGHSPEED;
+ 	mmc_claim_host(host);
+ 	ret = mmc_sd_init_card(host, host->card->ocr, host->card);
+ 	mmc_release_host(host);
+diff --git a/drivers/mmc/core/sd.h b/drivers/mmc/core/sd.h
+index 4b34b24..aab824a 100644
+--- a/drivers/mmc/core/sd.h
++++ b/drivers/mmc/core/sd.h
+@@ -12,6 +12,5 @@ int mmc_sd_setup_card(struct mmc_host *host, struct mmc_card *card,
+ 	bool reinit);
+ unsigned mmc_sd_get_max_clock(struct mmc_card *card);
+ int mmc_sd_switch_hs(struct mmc_card *card);
+-void mmc_sd_go_highspeed(struct mmc_card *card);
+ 
+ #endif
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index 9933e42..e636d9e 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -363,7 +363,7 @@ static unsigned mmc_sdio_get_max_clock(struct mmc_card *card)
+ {
+ 	unsigned max_dtr;
+ 
+-	if (mmc_card_highspeed(card)) {
++	if (mmc_card_hs(card)) {
+ 		/*
+ 		 * The SDIO specification doesn't mention how
+ 		 * the CIS transfer speed register relates to
+@@ -733,7 +733,6 @@ try_again:
+ 		mmc_set_clock(host, card->cis.max_dtr);
+ 
+ 		if (card->cccr.high_speed) {
+-			mmc_card_set_highspeed(card);
+ 			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
+ 		}
+ 
+@@ -792,16 +791,13 @@ try_again:
+ 		err = mmc_sdio_init_uhs_card(card);
+ 		if (err)
+ 			goto remove;
+-
+-		/* Card is an ultra-high-speed card */
+-		mmc_card_set_uhs(card);
+ 	} else {
+ 		/*
+ 		 * Switch to high-speed (if supported).
+ 		 */
+ 		err = sdio_enable_hs(card);
+ 		if (err > 0)
+-			mmc_sd_go_highspeed(card);
++			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
+ 		else if (err)
+ 			goto remove;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 2e39d38..46e7af4 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -285,7 +285,6 @@ static void rsi_reset_card(struct sdio_func *pfunction)
+ 		if (err) {
+ 			rsi_dbg(ERR_ZONE, "%s: CCCR speed reg read failed: %d\n",
+ 				__func__, err);
+-			card->state &= ~MMC_STATE_HIGHSPEED;
+ 		} else {
+ 			err = rsi_cmd52writebyte(card,
+ 						 SDIO_CCCR_SPEED,
+@@ -296,14 +295,13 @@ static void rsi_reset_card(struct sdio_func *pfunction)
+ 					__func__, err);
+ 				return;
+ 			}
+-			mmc_card_set_highspeed(card);
+ 			host->ios.timing = MMC_TIMING_SD_HS;
+ 			host->ops->set_ios(host, &host->ios);
+ 		}
+ 	}
+ 
+ 	/* Set clock */
+-	if (mmc_card_highspeed(card))
++	if (mmc_card_hs(card))
+ 		clock = 50000000;
+ 	else
+ 		clock = card->cis.max_dtr;
+diff --git a/include/linux/mmc/card.h b/include/linux/mmc/card.h
+index aa7e57f..aadeaf1 100644
+--- a/include/linux/mmc/card.h
++++ b/include/linux/mmc/card.h
+@@ -194,6 +194,7 @@ struct sdio_cis {
+ };
+ 
+ struct mmc_host;
++struct mmc_ios;
+ struct sdio_func;
+ struct sdio_func_tuple;
+ 
+@@ -250,15 +251,11 @@ struct mmc_card {
+ 	unsigned int		state;		/* (our) card state */
+ #define MMC_STATE_PRESENT	(1<<0)		/* present in sysfs */
+ #define MMC_STATE_READONLY	(1<<1)		/* card is read-only */
+-#define MMC_STATE_HIGHSPEED	(1<<2)		/* card is in high speed mode */
+-#define MMC_STATE_BLOCKADDR	(1<<3)		/* card uses block-addressing */
+-#define MMC_STATE_HIGHSPEED_DDR (1<<4)		/* card is in high speed mode */
+-#define MMC_STATE_ULTRAHIGHSPEED (1<<5)		/* card is in ultra high speed mode */
+-#define MMC_CARD_SDXC		(1<<6)		/* card is SDXC */
+-#define MMC_CARD_REMOVED	(1<<7)		/* card has been removed */
+-#define MMC_STATE_HIGHSPEED_200	(1<<8)		/* card is in HS200 mode */
+-#define MMC_STATE_DOING_BKOPS	(1<<10)		/* card is doing BKOPS */
+-#define MMC_STATE_SUSPENDED	(1<<11)		/* card is suspended */
++#define MMC_STATE_BLOCKADDR	(1<<2)		/* card uses block-addressing */
++#define MMC_CARD_SDXC		(1<<3)		/* card is SDXC */
++#define MMC_CARD_REMOVED	(1<<4)		/* card has been removed */
++#define MMC_STATE_DOING_BKOPS	(1<<5)		/* card is doing BKOPS */
++#define MMC_STATE_SUSPENDED	(1<<6)		/* card is suspended */
+ 	unsigned int		quirks; 	/* card quirks */
+ #define MMC_QUIRK_LENIENT_FN0	(1<<0)		/* allow SDIO FN0 writes outside of the VS CCCR range */
+ #define MMC_QUIRK_BLKSZ_FOR_BYTE_MODE (1<<1)	/* use func->cur_blksize */
+@@ -418,11 +415,7 @@ static inline void __maybe_unused remove_quirk(struct mmc_card *card, int data)
+ 
+ #define mmc_card_present(c)	((c)->state & MMC_STATE_PRESENT)
+ #define mmc_card_readonly(c)	((c)->state & MMC_STATE_READONLY)
+-#define mmc_card_highspeed(c)	((c)->state & MMC_STATE_HIGHSPEED)
+-#define mmc_card_hs200(c)	((c)->state & MMC_STATE_HIGHSPEED_200)
+ #define mmc_card_blockaddr(c)	((c)->state & MMC_STATE_BLOCKADDR)
+-#define mmc_card_ddr_mode(c)	((c)->state & MMC_STATE_HIGHSPEED_DDR)
+-#define mmc_card_uhs(c)		((c)->state & MMC_STATE_ULTRAHIGHSPEED)
+ #define mmc_card_ext_capacity(c) ((c)->state & MMC_CARD_SDXC)
+ #define mmc_card_removed(c)	((c) && ((c)->state & MMC_CARD_REMOVED))
+ #define mmc_card_doing_bkops(c)	((c)->state & MMC_STATE_DOING_BKOPS)
+@@ -430,11 +423,7 @@ static inline void __maybe_unused remove_quirk(struct mmc_card *card, int data)
+ 
+ #define mmc_card_set_present(c)	((c)->state |= MMC_STATE_PRESENT)
+ #define mmc_card_set_readonly(c) ((c)->state |= MMC_STATE_READONLY)
+-#define mmc_card_set_highspeed(c) ((c)->state |= MMC_STATE_HIGHSPEED)
+-#define mmc_card_set_hs200(c)	((c)->state |= MMC_STATE_HIGHSPEED_200)
+ #define mmc_card_set_blockaddr(c) ((c)->state |= MMC_STATE_BLOCKADDR)
+-#define mmc_card_set_ddr_mode(c) ((c)->state |= MMC_STATE_HIGHSPEED_DDR)
+-#define mmc_card_set_uhs(c) ((c)->state |= MMC_STATE_ULTRAHIGHSPEED)
+ #define mmc_card_set_ext_capacity(c) ((c)->state |= MMC_CARD_SDXC)
+ #define mmc_card_set_removed(c) ((c)->state |= MMC_CARD_REMOVED)
+ #define mmc_card_set_doing_bkops(c)	((c)->state |= MMC_STATE_DOING_BKOPS)
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index 0cf705c..a438537 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -17,6 +17,7 @@
+ #include <linux/fault-inject.h>
+ 
+ #include <linux/mmc/core.h>
++#include <linux/mmc/card.h>
+ #include <linux/mmc/pm.h>
+ 
+ struct mmc_ios {
+@@ -478,4 +479,26 @@ static inline unsigned int mmc_host_clk_rate(struct mmc_host *host)
+ 	return host->ios.clock;
+ }
+ #endif
++
++static inline int mmc_card_hs(struct mmc_card *card)
++{
++	return card->host->ios.timing == MMC_TIMING_SD_HS ||
++		card->host->ios.timing == MMC_TIMING_MMC_HS;
++}
++
++static inline int mmc_card_uhs(struct mmc_card *card)
++{
++	return card->host->ios.timing >= MMC_TIMING_UHS_SDR12 &&
++		card->host->ios.timing <= MMC_TIMING_UHS_DDR50;
++}
++
++static inline bool mmc_card_hs200(struct mmc_card *card)
++{
++	return card->host->ios.timing == MMC_TIMING_MMC_HS200;
++}
++
++static inline bool mmc_card_ddr52(struct mmc_card *card)
++{
++	return card->host->ios.timing == MMC_TIMING_MMC_DDR52;
++}
+ #endif /* LINUX_MMC_HOST_H */
 -- 
-1.8.5.3
+1.7.0.4
+
 
