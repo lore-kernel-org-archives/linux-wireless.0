@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.pawisda.de ([213.157.4.156]:38684 "EHLO mail.pawisda.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933342AbaDIUFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 16:05:42 -0400
-Message-ID: <5345A814.8090301@sp.consulting.lsexperts.de> (sfid-20140409_220546_166816_4383C826)
-Date: Wed, 09 Apr 2014 22:05:40 +0200
-From: Stefan Pietsch <stefan.pietsch@lsexperts.de>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53951 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751017AbaDWVlM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Apr 2014 17:41:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix adapter pointer dereference
+Date: Wed, 23 Apr 2014 14:40:53 -0700
+Message-ID: <1398289253-21398-1-git-send-email-bzhao@marvell.com> (sfid-20140423_234516_174870_81DC5685)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: Invalid RXON when trying to join IBSS network
-References: <534464F9.1080805@sp.consulting.lsexperts.de>	 (sfid-20140408_233636_176148_44D5A66B) <1397029645.4964.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1397029645.4964.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09.04.2014 09:47, Johannes Berg wrote:
-> On Tue, 2014-04-08 at 23:07 +0200, Stefan Pietsch wrote:
->> Dear list,
->>
->> trying to join an IBSS network gives me these kernel messages:
->>
->>
->>
->> [  383.857059] iwlwifi 0000:03:00.0: mac/bssid mcast!
-> 
-> How did you manage to get a multicast address as the BSSID?
-> 
-> johannes
+drivers/net/wireless/mwifiex/pcie.c:2252 mwifiex_pcie_fw_dump_work()
+error: we previously assumed 'adapter' could be null (see line 2251)
 
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I changed the BSSID on the remote station.
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 51989b3..249fdbd 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -2248,7 +2248,7 @@ static void mwifiex_pcie_fw_dump_work(struct work_struct *work)
+ 	};
+ 
+ 	if (!adapter) {
+-		dev_err(adapter->dev, "Could not dump firmwware info\n");
++		pr_err("adapter is null. Could not dump firmware info\n");
+ 		return;
+ 	}
+ 
+-- 
+1.8.2.3
 
-This seems to make no difference:
-
-
-
-[  489.184233] wlan0: Trigger new scan to find an IBSS to join
-[  489.320584] wlan0: Selected IBSS BSSID 55:44:33:22:11:00 based on
-configured SSID
-[  489.381485] iwlwifi 0000:03:00.0: mac/bssid mcast!
-[  489.381492] ------------[ cut here ]------------
-[  489.381516] WARNING: CPU: 2 PID: 206 at
-/build/linux-l673CV/linux-3.13.7/drivers/net/wireless/iwlwifi/dvm/rxon.c:843
-iwlagn_commit_rxon+0x551/0xbb0 [iwldvm]()
-[  489.381519] Invalid RXON (0x10), channel 1
-
-
-
-Regards,
-Stefan
