@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37859 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756889AbaDBCIQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 22:08:16 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so10792598pbb.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 19:08:16 -0700 (PDT)
-From: Fariya Fatima <fariyaf@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH 1/6] rsi: Potential null pointer derefernce issue fixed.
-Date: Wed,  2 Apr 2014 07:38:00 +0530
-Message-Id: <1396404485-3989-2-git-send-email-fariyaf@gmail.com> (sfid-20140402_040820_315721_29CF95A3)
-In-Reply-To: <1396404485-3989-1-git-send-email-fariyaf@gmail.com>
-References: <1396404485-3989-1-git-send-email-fariyaf@gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31825 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1422633AbaDWU4B convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Apr 2014 16:56:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Jan Moskyto Matejka <mq@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Wed, 23 Apr 2014 13:55:52 -0700
+Subject: RE: [PATCH][linux-next] wireless: fixed bad dev_info integer type
+ warning
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70A2A9C3@SC-VEXCH1.marvell.com> (sfid-20140423_225641_331867_F1A34871)
+References: <1398258039-20512-1-git-send-email-mq@suse.cz>
+In-Reply-To: <1398258039-20512-1-git-send-email-mq@suse.cz>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+Hi Jan,
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c |   35 ++++++++++++---------------
- 1 files changed, 16 insertions(+), 19 deletions(-)
+Thanks for the patch.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index 7e4ef45..c466246 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -289,32 +289,29 @@ int rsi_init_dbgfs(struct rsi_hw *adapter)
- 	const struct rsi_dbg_files *files;
- 
- 	dev_dbgfs = kzalloc(sizeof(*dev_dbgfs), GFP_KERNEL);
-+	if (!dev_dbgfs)
-+		return -ENOMEM;
-+
- 	adapter->dfsentry = dev_dbgfs;
- 
- 	snprintf(devdir, sizeof(devdir), "%s",
- 		 wiphy_name(adapter->hw->wiphy));
--	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
- 
--	if (IS_ERR(dev_dbgfs->subdir)) {
--		if (dev_dbgfs->subdir == ERR_PTR(-ENODEV))
--			rsi_dbg(ERR_ZONE,
--				"%s:Debugfs has not been mounted\n", __func__);
--		else
--			rsi_dbg(ERR_ZONE, "debugfs:%s not created\n", devdir);
-+	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
- 
--		adapter->dfsentry = NULL;
-+	if (!dev_dbgfs->subdir) {
- 		kfree(dev_dbgfs);
--		return (int)PTR_ERR(dev_dbgfs->subdir);
--	} else {
--		for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
--			files = &dev_debugfs_files[ii];
--			dev_dbgfs->rsi_files[ii] =
--			debugfs_create_file(files->name,
--					    files->perms,
--					    dev_dbgfs->subdir,
--					    common,
--					    &files->fops);
--		}
-+		return -ENOMEM;
-+	}
-+
-+	for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
-+		files = &dev_debugfs_files[ii];
-+		dev_dbgfs->rsi_files[ii] =
-+		debugfs_create_file(files->name,
-+				    files->perms,
-+				    dev_dbgfs->subdir,
-+				    common,
-+				    &files->fops);
- 	}
- 	return 0;
- }
--- 
-1.7.5.4
+> The pointer difference (ptrdiff_t) should be formatted by %tx, not %lx.
+> 
+> Signed-off-by: Jan Moskyto Matejka <mq@suse.cz>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Regards,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/pcie.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index 9c1f427..e04141a 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -2321,7 +2321,7 @@ static void mwifiex_pcie_fw_dump_work(struct work_struct *work)
+>  			if (stat != RDWR_STATUS_DONE)
+>  				continue;
+> 
+> -			dev_info(adapter->dev, "%s done: size=0x%lx\n",
+> +			dev_info(adapter->dev, "%s done: size=0x%tx\n",
+>  				 entry->mem_name, dbg_ptr - entry->mem_ptr);
+>  			memset(filename, 0, sizeof(filename));
+>  			memcpy(filename, name_prefix, strlen(name_prefix));
+> --
+> 1.8.4.5
 
