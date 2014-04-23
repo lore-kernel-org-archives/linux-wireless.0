@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40489 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755335AbaD1Pqo (ORCPT
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:57606 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034AbaDWBtd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 11:46:44 -0400
-Message-ID: <1398699982.4132.1.camel@jlt4.sipsolutions.net> (sfid-20140428_174647_065920_FAF317DA)
-Subject: Re: [PATCH 2/3] mac80211: Support dynamic AP mode channel width
- changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 28 Apr 2014 17:46:22 +0200
-In-Reply-To: <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com> (sfid-20140428_105724_959492_6ACA3997)
-References: <20140428082225.GA15459@jouni.qca.qualcomm.com>
-	 <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com>
-	 (sfid-20140428_105724_959492_6ACA3997)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 Apr 2014 21:49:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-2-git-send-email-wens@csie.org> <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Wed, 23 Apr 2014 10:49:12 +0900
+Message-ID: <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com> (sfid-20140423_035041_047969_BB0D3B3B)
+Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
+ based lookup
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-28 at 10:57 +0200, Michal Kazior wrote:
+On Wed, Apr 23, 2014 at 12:02 AM, Linus Walleij
+<linus.walleij@linaro.org> wrote:
+> On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
+>
+>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
+>> phandles by name only, through gpios/gpio-names, and not by index.
+>>
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>
+> Like Alexandre I have no strong opinion on this alternative scheme.
 
-> > +static int ieee80211_set_ap_channel(struct wiphy *wiphy,
-> > +                                   struct net_device *dev,
-> > +                                   struct cfg80211_chan_def *chandef)
-> > +{
-> > +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> > +       int ret;
-> > +       u32 changed = 0;
-> > +
-> 
-> Shouldn't interface combinations be verified here? What if there was a
-> bandwidth upgrade (after a downgrade) but in the meantime a vif with a
-> to-be incompatible chandef was brought up?
+Yeah this new lookup scheme probably does no harm, but I think it
+should be a little bit more motivated as it is, after all, introducing
+more potential confusion for DT users.
 
-Yeah that seems like a potential issue.
+It does not look like this new lookup scheme is necessary to Chen-Yu's
+patchset and that he could as well have used the current one. Right
+now there is only one way to define GPIOs - if we introduce a second
+one, then which one should new DT users choose? Which one looks
+better? I can already endless fights taking place over this.
 
-> I think the existing usage
-> of ieee80211_vif_change_bandwidth() in ieee80211_config_bw() already
-> suffers from this problem or am I missing something?
+Does this new lookup help with some of the existing problems we have
+like ACPI/DT lookup compatibility?
 
-That sounds like you're arguing it should be fixed in a separate patch
-to ieee80211_vif_change_bandwidth()? :)
+I just need to be given one practical reason to give my ack.
 
-johannes
-
+Alex.
