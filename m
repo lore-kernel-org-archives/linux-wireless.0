@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38087 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933342AbaDIOI4 (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:11352 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756624AbaDWIHI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 10:08:56 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
-Date: Wed, 9 Apr 2014 17:08:49 +0300
-Message-ID: <2146187.nt2BTDzSlP@lx-vladimir> (sfid-20140409_161021_674592_E5296C12)
-In-Reply-To: <1396973691.5212.3.camel@joe-AO722>
-References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1396946179-11677-2-git-send-email-qca_vkondrat@qca.qualcomm.com> <1396973691.5212.3.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 23 Apr 2014 04:07:08 -0400
+From: Seungwon Jeon <tgih.jun@samsung.com>
+To: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: 'Chris Ball' <chris@printf.net>,
+	'Ulf Hansson' <ulf.hansson@linaro.org>,
+	'Jaehoon Chung' <jh80.chung@samsung.com>,
+	'Jackey Shen' <jackey.shen@amd.com>,
+	'Alim Akhtar' <alim.akhtar@samsung.com>,
+	'Fariya Fatima' <fariyaf@gmail.com>,
+	"'John W. Linville'" <linville@tuxdriver.com>
+References: <1383653403-10049-1-git-send-email-ulf.hansson@linaro.org>
+ <006701cf2a58$c628e050$527aa0f0$%jun@samsung.com>
+In-reply-to: 
+Subject: [PATCH 0/6] update selection of bus speed mode for eMMC
+Date: Wed, 23 Apr 2014 17:07:06 +0900
+Message-id: <000901cf5ecb$04a26f80$0de74e80$%jun@samsung.com> (sfid-20140423_100736_558395_0DEA9810)
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
-> On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
-> > Convert Makefile -> Kbuild,
-> > to make off-kernel development easier and less intrusive.
-> 
-> No drivers/net directory uses Kbuild.
-> 
-> Why should this?
+This series contains the change for selection of bus speed mode.
+Previous implementation is complicated and some sequence is duplicated.
+And specially, HS400 mode eMMC5.0 is introduced this time.
+This patch-set has been tested in Exynos SoC.
 
-because it makes it easier to do off-kernel development, and then
-move things to the proper location within the kernel without
-conflicting changes in the Makefile.
-As I understand, Kbuild is better choice because it is really not
-standalone "Makefile", it is intended to be included by the real
-Makefile. Thus, distinct name is better.
-Are there any reasons why not using Kbuild? I did not found
-guidelines when use Kbuild and when not.
+Note: 
+	As RS9113 wireless driver has been introduced newly in Linux-3.15-rc1, we meet some dependency with this patch-set
+         which has been in the works all the while.
+	Thus, related modification is applied through " mmc: drop the speed mode of card's state" 
+---
+Changes in v6:
+	(6/6) Included "mmc: core: add DT bindings for eMMC HS400 1.8/1.2V" into this patch-set
+	
+Changes in v5:
+	(5/5) Added callback operation for HS400 target operation frequency
+	       instead of specific timing identifier.
+	(2/5) Removed using union declaration.
 
-> 
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/wil6210/Kbuild   | 18 ++++++++++++++++++
-> >  drivers/net/wireless/ath/wil6210/Makefile | 18 ------------------
-> 
-> If you send renaming patches, please use
-> git format-patch -M
+Changes in v4:
+	(5/5)Reverting to HS mode is included in mmc_select_hs400() using __mmc_switch().
 
-Sure I will. Thanks for mentioning this.
+Changes in v3:
+ 	Removed the function to check DDR type(mmc_snoop_ddr).
+ 	Rebased with the latest branch.
 
-Thanks, Vladimir
+Seungwon Jeon (6):
+  mmc: drop the speed mode of card's state
+  mmc: identify available device type to select
+  mmc: step power class after final selection of bus mode
+  mmc: rework selection of bus speed mode
+  mmc: add support for HS400 mode of eMMC5.0
+  mmc: add DT bindings for eMMC HS400 1.8/1.2V
 
+ Documentation/devicetree/bindings/mmc/mmc.txt |    2 +
+ drivers/mmc/core/bus.c                        |    9 +-
+ drivers/mmc/core/core.c                       |    3 +-
+ drivers/mmc/core/debugfs.c                    |    5 +-
+ drivers/mmc/core/host.c                       |    4 +
+ drivers/mmc/core/mmc.c                        |  666 +++++++++++++++----------
+ drivers/mmc/core/sd.c                         |   16 +-
+ drivers/mmc/core/sd.h                         |    1 -
+ drivers/mmc/core/sdio.c                       |    8 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c       |    4 +-
+ include/linux/mmc/card.h                      |   27 +-
+ include/linux/mmc/host.h                      |   43 ++-
+ include/linux/mmc/mmc.h                       |   23 +-
+ 13 files changed, 487 insertions(+), 324 deletions(-)
+
+Thanks,
+sw-j
 
