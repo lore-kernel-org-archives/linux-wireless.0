@@ -1,36 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:38332 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932737AbaDVREl (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:44684 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbaDXTYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 13:04:41 -0400
-Received: by mail-lb0-f176.google.com with SMTP id 10so4524725lbg.21
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 10:04:39 -0700 (PDT)
+	Thu, 24 Apr 2014 15:24:39 -0400
+Received: by mail-lb0-f172.google.com with SMTP id p9so1133920lbv.17
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 12:24:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140422184824.74973bb3@xenia.leun.net>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
- <20140422180003.6438dbb7@xenia.leun.net> <CAB=NE6URp2S9rhVr2cqT+4VOj50m+q0o1rVRehCZvcUtNwTVVw@mail.gmail.com>
- <20140422184824.74973bb3@xenia.leun.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 22 Apr 2014 10:04:19 -0700
-Message-ID: <CAB=NE6W64b5VS5pTnxrcRRkRdje6h_hQcGmF9jUiXO55b+nHRw@mail.gmail.com> (sfid-20140422_190447_527068_763B230C)
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-To: Michael Leun <lkml20140418@newton.leun.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+In-Reply-To: <CAB=NE6VNHBrk+HWGLZxNOBFXsGv6XLQus8zTx-AP2Ye6jbgnPA@mail.gmail.com>
+References: <1397645621-32447-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6VNHBrk+HWGLZxNOBFXsGv6XLQus8zTx-AP2Ye6jbgnPA@mail.gmail.com>
+Date: Thu, 24 Apr 2014 21:24:37 +0200
+Message-ID: <CALhHN=oYVjMqQG8XyHuWik14R6hGUSbt986YLXqH361gio6CjQ@mail.gmail.com> (sfid-20140424_212950_716943_9772F1A1)
+Subject: Re: [PATCH] cfg80211: reg: track crda request
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arik@wizery.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 22, 2014 at 9:48 AM, Michael Leun
-<lkml20140418@newton.leun.net> wrote:
-> 1611                    if (wiphy->regulatory_flags & REGULATORY_COUNTRY_IE_IGNORE)
-> 1612                            return REG_REQ_IGNORE;
+On 22 April 2014 19:33, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Wed, Apr 16, 2014 at 3:53 AM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>>
+>>  static void reg_timeout_work(struct work_struct *work)
+>>  {
+>> -       REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
+>> +       struct regulatory_request *lr;
+>> +
+>>         rtnl_lock();
+>> -       restore_regulatory_settings(true);
+>> +
+>> +       lr = get_last_request();
+>> +       REG_DBG_PRINT("Timeout while waiting for CRDA to reply %s request, restoring regulatory settings\n",
+>> +                     reg_initiator_name(lr->initiator));
+>> +
+>> +       switch (lr->initiator) {
+>> +       case NL80211_REGDOM_SET_BY_CORE:
+>> +       case NL80211_REGDOM_SET_BY_DRIVER:
+>> +               /* Call CRDA again for last request */
+>> +               reg_process_hint(lr);
+>> +               break;
+>> +       case NL80211_REGDOM_SET_BY_USER:
+>> +               restore_regulatory_settings(true);
+>> +               break;
+>> +       case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+>> +               restore_regulatory_settings(false);
+>> +               break;
+>> +       default:
+>> +               WARN_ON(1);
+>> +               break;
+>> +       }
+>>         rtnl_unlock();
+>>  }
+>
+> Janusz,
+>
+> As is, we don't ever bail out and could end up triggering CRDA to be
+> called every ~3 seconds with this patch. This is why I had added the
+> opportunistic triggers, which are technically still in place today but
+> there are only a few entries for those to kick off: beacon hints on 5
+> GHz for cards that enable beacon hints. I don't think its a good idea
+> we have a a recurring timer trigger for this. I think we need to
+> consider a time at which we should give up on CRDA being present and
+> instead rely on userspace to let us know its ready (ideally userspace
+> would do something with inotify on the path) so we can kick the queue
+> again.
+>
 
-Interesting -- same line as your regression test had found, wiphy->
-must be NULL. Digging deeper, you can discard that patch now, we can
-rule out the reprocessing of the request.
+I think about such counter/limitation before.
+But next I remove such counter.
+In case we don't have CRDA nor using INTERNAL_REGD - this mean we
+don't have correct regulatory configuration.
+Why then should we stop warning about this?
 
- Luis
+In case we will have counter eg. 10 x 3 seconds, we can't be sure if that is:
+- not mounted fs (fsck other ...) case
+- there isn't any CRDA in the system (quite possible when using openwrt) case
+- when have a lot of messages in dmesg you will not know there is not
+CRDA in the system
+
+In case of recurring timer when you will check dmes you will be sure
+there isn't any CRDA binary - and there will be clear message about
+this.
+Because of that I didn't add this counter.
+
+BR
+Janusz
