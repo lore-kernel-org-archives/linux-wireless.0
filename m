@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965238AbaDJIJu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65051 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbaDXGVl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 04:09:50 -0400
-Message-ID: <1397117376.4757.8.camel@jlt4.sipsolutions.net> (sfid-20140410_101002_161191_C432D9CB)
-Subject: Re: [PATCH 1/8] cfg80211: fix possible compile warning in
- wext-compat.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 10 Apr 2014 10:09:36 +0200
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032851_199422_DE76A6CA)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 (sfid-20140409_032851_199422_DE76A6CA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 Apr 2014 02:21:41 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 0/3] ath10k: improve recovery speed
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+	<1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 24 Apr 2014 09:21:32 +0300
+In-Reply-To: <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 14 Apr 2014 09:22:23 +0200")
+Message-ID: <871twnnt77.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_082144_978302_F3D9BFFA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 09:28 +0800, Zhao, Gang wrote:
-> Function cfg80211_wext_freq() is declared in wext-compat.h, but its
-> parameter struct wiphy's declaration is not included there. Actually
-> the parameter is not used in this function, so change it to normal
-> net_device.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I applied this, but the netdev argument is also unused so I just removed
-it entirely.
+> Hi,
+>
+> Patch 1/3 is just a cleanup I wanted to keep
+> separate from 2/3 which actually improves recovery
+> speed.
+>
+> With this I'm able to recover from a `hard`
+> simualtion crash in ~3 seconds instead of ~10.
+>
+> This should decrease the chance of CQM kicking in
+> on connected clients (due to beacon loss) when
+> ath10k is acting as AP.
+>
+> v2:
+>  * add a comment in the code
+>
+>
+> Michal Kazior (3):
+>   ath10k: differentiate between target init failures
+>   ath10k: don't wait for device init if it crashed
+>   ath10k: skip suspending when recovering
 
-johannes
+Thanks, all patches applied.
 
+-- 
+Kalle Valo
