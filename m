@@ -1,138 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:46108 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983AbaDMTUO (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:40994 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753316AbaDXVtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:14 -0400
-Received: by mail-we0-f170.google.com with SMTP id w61so7355901wes.29
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:13 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/47] iwlwifi: mvm: fix the number of channels in family 8000
-Date: Sun, 13 Apr 2014 22:19:17 +0300
-Message-Id: <1397416802-32403-2-git-send-email-egrumbach@gmail.com> (sfid-20140413_212020_903011_7A3CB80D)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+	Thu, 24 Apr 2014 17:49:22 -0400
+Date: Fri, 25 Apr 2014 07:49:08 +1000
+From: James Cameron <quozl@laptop.org>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] staging: rtl8192e: Fix typo in rtl8192e
+Message-ID: <20140424214908.GE12124@us.netrek.org> (sfid-20140424_234930_323715_9D017A92)
+References: <1398358121-26805-1-git-send-email-standby24x7@gmail.com>
+ <1398358121-26805-2-git-send-email-standby24x7@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398358121-26805-2-git-send-email-standby24x7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Fri, Apr 25, 2014 at 01:48:41AM +0900, Masanari Iida wrote:
+> Fix spelling typo in comments within rtl8192e.
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> ---
+>  drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c | 2 +-
+>  drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c    | 2 +-
+>  drivers/staging/rtl8192e/rtl8192e/rtl_wx.c        | 2 +-
+>  drivers/staging/rtl8192e/rtl819x_TSProc.c         | 2 +-
+>  drivers/staging/rtl8192e/rtllib_rx.c              | 2 +-
+>  drivers/staging/rtl8192e/rtllib_softmac.c         | 2 +-
+>  6 files changed, 6 insertions(+), 6 deletions(-)
+> 
 
-Number of channels changed from 40 to 50
+...
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c   | 25 ++++++++++++++-----------
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  8 ++++++--
- 2 files changed, 20 insertions(+), 13 deletions(-)
+> diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+> index 498995d..59494f5 100644
+> --- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+> +++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+> @@ -1213,7 +1213,7 @@ static iw_handler r8192_wx_handlers[] = {
+>  };
+>  
+>  /*
+> - * the following rule need to be follwing,
+> + * the following rule need to be following,
+>   * Odd : get (world access),
+>   * even : set (root access)
+>   * */
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 6be30c6..4049c0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -134,12 +134,13 @@ static const u8 iwl_nvm_channels_family_8000[] = {
- 	149, 153, 157, 161, 165, 169, 173, 177, 181
- };
- 
--#define IWL_NUM_CHANNELS	ARRAY_SIZE(iwl_nvm_channels)
-+#define IWL_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
- #define IWL_NUM_CHANNELS_FAMILY_8000	ARRAY_SIZE(iwl_nvm_channels_family_8000)
--#define NUM_2GHZ_CHANNELS	14
--#define FIRST_2GHZ_HT_MINUS	5
--#define LAST_2GHZ_HT_PLUS	9
--#define LAST_5GHZ_HT		161
-+#define NUM_2GHZ_CHANNELS		14
-+#define NUM_2GHZ_CHANNELS_FAMILY_8000	13
-+#define FIRST_2GHZ_HT_MINUS		5
-+#define LAST_2GHZ_HT_PLUS		9
-+#define LAST_5GHZ_HT			161
- 
- #define DEFAULT_MAX_TX_POWER 16
- 
-@@ -202,21 +203,23 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 	struct ieee80211_channel *channel;
- 	u16 ch_flags;
- 	bool is_5ghz;
--	int num_of_ch;
-+	int num_of_ch, num_2ghz_channels;
- 	const u8 *nvm_chan;
- 
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
- 		num_of_ch = IWL_NUM_CHANNELS;
- 		nvm_chan = &iwl_nvm_channels[0];
-+		num_2ghz_channels = NUM_2GHZ_CHANNELS;
- 	} else {
- 		num_of_ch = IWL_NUM_CHANNELS_FAMILY_8000;
- 		nvm_chan = &iwl_nvm_channels_family_8000[0];
-+		num_2ghz_channels = NUM_2GHZ_CHANNELS_FAMILY_8000;
- 	}
- 
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
- 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
- 
--		if (ch_idx >= NUM_2GHZ_CHANNELS &&
-+		if (ch_idx >= num_2ghz_channels &&
- 		    !data->sku_cap_band_52GHz_enable)
- 			ch_flags &= ~NVM_CHANNEL_VALID;
- 
-@@ -225,7 +228,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 					 "Ch. %d Flags %x [%sGHz] - No traffic\n",
- 					 nvm_chan[ch_idx],
- 					 ch_flags,
--					 (ch_idx >= NUM_2GHZ_CHANNELS) ?
-+					 (ch_idx >= num_2ghz_channels) ?
- 					 "5.2" : "2.4");
- 			continue;
- 		}
-@@ -234,7 +237,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		n_channels++;
- 
- 		channel->hw_value = nvm_chan[ch_idx];
--		channel->band = (ch_idx < NUM_2GHZ_CHANNELS) ?
-+		channel->band = (ch_idx < num_2ghz_channels) ?
- 				IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
- 		channel->center_freq =
- 			ieee80211_channel_to_frequency(
-@@ -242,7 +245,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 
- 		/* TODO: Need to be dependent to the NVM */
- 		channel->flags = IEEE80211_CHAN_NO_HT40;
--		if (ch_idx < NUM_2GHZ_CHANNELS &&
-+		if (ch_idx < num_2ghz_channels &&
- 		    (ch_flags & NVM_CHANNEL_40MHZ)) {
- 			if (nvm_chan[ch_idx] <= LAST_2GHZ_HT_PLUS)
- 				channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
-@@ -250,7 +253,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 				channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
- 		} else if (nvm_chan[ch_idx] <= LAST_5GHZ_HT &&
- 			   (ch_flags & NVM_CHANNEL_40MHZ)) {
--			if ((ch_idx - NUM_2GHZ_CHANNELS) % 2 == 0)
-+			if ((ch_idx - num_2ghz_channels) % 2 == 0)
- 				channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
- 			else
- 				channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index 9426905..02856e0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -169,8 +169,12 @@ enum iwl_scan_type {
- 	SCAN_TYPE_DISCOVERY_FORCED	= 6,
- }; /* SCAN_ACTIVITY_TYPE_E_VER_1 */
- 
--/* Maximal number of channels to scan */
--#define MAX_NUM_SCAN_CHANNELS 0x24
-+/**
-+ * Maximal number of channels to scan
-+ * it should be equal to:
-+ * max(IWL_NUM_CHANNELS, IWL_NUM_CHANNELS_FAMILY_8000)
-+ */
-+#define MAX_NUM_SCAN_CHANNELS 50
- 
- /**
-  * struct iwl_scan_cmd - scan request command
+The change is good, and a better change might be "s/rule/rules" and
+"s/following/followed".
+
+On the other hand, no other driver mentions this implementation detail
+of IW_IS_SET in declaration of iw_priv_args, so perhaps the whole
+comment block should be removed.
+
+Either way;
+
+Reviewed-by: James Cameron <quozl@laptop.org>
+
+p.s. nice to see you again.
+
 -- 
-1.8.3.2
-
+James Cameron
+http://quozl.linux.org.au/
