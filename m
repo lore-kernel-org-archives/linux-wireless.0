@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:51732 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933461AbaDJHA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 03:00:59 -0400
-Message-ID: <1397113251.4418.78.camel@dubbel> (sfid-20140410_090104_900730_515EDE5B)
-From: Luca Coelho <luca@coelho.fi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com,
-	yegorslists@googlemail.com
-Date: Thu, 10 Apr 2014 10:00:51 +0300
-In-Reply-To: <1397112633-24486-1-git-send-email-luca@coelho.fi>
-References: <1397112633-24486-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] wlcore: ignore dummy packet events in PLT mode
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:40056 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbaDXMEk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 08:04:40 -0400
+Received: by mail-lb0-f178.google.com with SMTP id s7so1943987lbd.9
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 05:04:38 -0700 (PDT)
+Message-ID: <5358FDD6.9070508@cogentembedded.com> (sfid-20140424_140501_635177_E635587E)
+Date: Thu, 24 Apr 2014 16:04:38 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] Revert "rtlwifi: rtl8188ee: enable MSI interrupts
+ mode"
+References: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
+In-Reply-To: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-04-10 at 09:50 +0300, Luca Coelho wrote:
-> From: Luciano Coelho <luca@coelho.fi>
-> 
-> Sometimes the firmware sends a dummy packet event while we are in PLT
-> mode.  This doesn't make sense, it's a firmware bug.  Fix this by
-> ignoring dummy packet events when we're PLT mode.
-> 
-> Reported-by: Yegor Yefremov <yegorslists@googlemail.com>
-> Reported-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Luciano Coelho <luca@coelho.fi>
-> ---
->  drivers/net/wireless/ti/wlcore/event.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-> index 1f9a360..8d5174c 100644
-> --- a/drivers/net/wireless/ti/wlcore/event.c
-> +++ b/drivers/net/wireless/ti/wlcore/event.c
-> @@ -158,6 +158,11 @@ EXPORT_SYMBOL_GPL(wlcore_event_channel_switch);
->  
->  void wlcore_event_dummy_packet(struct wl1271 *wl)
->  {
-> +	if (wl->plt) {
-> +		wl1271_info(DEBUG_EVENT, "Got DUMMY_PACKET event in PLT mode.  FW bug, ignoring.");
+Hello.
 
-Gack! I changed wl1271_debug to wl1271_info and forgot to compile.  This
-doesn't compile.  v2 coming in a sec.
+On 24-04-2014 7:08, Adam Lee wrote:
 
---
-Luca.
+> This reverts commit 2a54eb5e1476426ee639bbfbe179b52342a0d82c.
+
+> 94010fa0dd07e8b904e7c6b6589f15573008ab15 introduced MSI interrupts mode
+
+    Please also specify that commit's summary line in parens.
+
+> support, which seemed safe enough with RTL8188EE and RTL8723BE as
+> RealTek's testing results, but some users reported their RTL8188EE
+> modules could not connect to any wireless network after the MSI mode was
+> enabled by Ubuntu 14.04.
+
+> So, let's fallback to pin-based mode until rtlwifi's MSI support get
+> good compatibility.
+
+> BugLink: https://bugs.launchpad.net/bugs/1310512
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+
+WBR, Sergei
+
 
