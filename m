@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43646 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964832AbaDJIWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 04:22:50 -0400
-Message-ID: <534654D7.4080904@suse.cz> (sfid-20140410_102302_776335_018CE328)
-Date: Thu, 10 Apr 2014 10:22:47 +0200
-From: Michal Marek <mmarek@suse.cz>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:39870 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753867AbaDXIxZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 04:53:25 -0400
+Received: by mail-we0-f175.google.com with SMTP id q58so1907119wes.20
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 01:53:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
-References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>	 <1396946179-11677-2-git-send-email-qca_vkondrat@qca.qualcomm.com>	 <1396973691.5212.3.camel@joe-AO722> <2146187.nt2BTDzSlP@lx-vladimir> <1397059601.14321.19.camel@joe-AO722>
-In-Reply-To: <1397059601.14321.19.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAEFj986fsmUD2kvEN=vjHK32cunyFO+8bH-y7ZoWZAMkcunJ2w@mail.gmail.com>
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQkBCGyKYDaOMgdCi4Yw+SXeuRS+t0rGE8o=8+x2q5N74w@mail.gmail.com>
+	<CAEFj986fsmUD2kvEN=vjHK32cunyFO+8bH-y7ZoWZAMkcunJ2w@mail.gmail.com>
+Date: Thu, 24 Apr 2014 10:53:24 +0200
+Message-ID: <CA+BoTQ=uvkjK-BYJL3gympEiraZupLdh67XzMjuGviQ4iaVuiw@mail.gmail.com> (sfid-20140424_131004_086842_E180125F)
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-04-09 18:06, Joe Perches wrote:
-> (adding Michal Marek)
-> 
-> On Wed, 2014-04-09 at 17:08 +0300, Vladimir Kondratiev wrote:
->> On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
->>> On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
->>>> Convert Makefile -> Kbuild,
->>>> to make off-kernel development easier and less intrusive.
->>> No drivers/net directory uses Kbuild.
->>> Why should this?
->>
->> because it makes it easier to do off-kernel development, and then
->> move things to the proper location within the kernel without
->> conflicting changes in the Makefile.
+On 24 April 2014 10:50, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>> I think Monitor operation should be performed on a best effort basis.
+>> This means monitor_start/stop should be attempted once number of
+>> non-monitor vdevs changes.
+>
+> I am too clear about this. Do you mean that actually we can have
+> monitor mode on non-monitor vdevs in firmware 636?
 
-You can create a GNUmakefile for this purpose, it takes precedence over
-Makefile.
+No. What I mean is we should attempt to start monitor vdev once at
+least 1 non-monitor vdev is present and stop monitor vdev is last
+non-monitor vdev is about to be stopped on 636.
 
 
->> As I understand, Kbuild is better choice because it is really not
->> standalone "Makefile", it is intended to be included by the real
->> Makefile. Thus, distinct name is better.
->> Are there any reasons why not using Kbuild? I did not found
->> guidelines when use Kbuild and when not.
-
-Kbuild is a slightly better choice because it better describes the
-content, but I don't think its needed to rename existing Makefiles just
-because of that. Kbuild is needed in the toplevel directory or in
-arch/*/, where Makefile has a different special meaning. The out of tree
-build use case can be solved by a GNUmakefile.
-
-Michal
+Michał
