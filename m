@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:65051 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbaDXGVl (ORCPT
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:54949 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754359AbaDXKOU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 02:21:41 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 0/3] ath10k: improve recovery speed
-References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
-	<1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 24 Apr 2014 09:21:32 +0300
-In-Reply-To: <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 14 Apr 2014 09:22:23 +0200")
-Message-ID: <871twnnt77.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_082144_978302_F3D9BFFA)
+	Thu, 24 Apr 2014 06:14:20 -0400
+Received: by mail-ve0-f174.google.com with SMTP id oz11so2586895veb.5
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 03:14:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <874n1jm54z.fsf@kamboji.qca.qualcomm.com>
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
+	<878uqvm7yz.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com>
+	<874n1jm54z.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 24 Apr 2014 18:14:19 +0800
+Message-ID: <CAEFj986mx-9UsV=PapWYmJf_vgkxAZowq9CbtguVHpKw-Er8cg@mail.gmail.com> (sfid-20140424_121437_525470_3C5D9E98)
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+>
+> Yeah, maybe should change the documentation to recommend using 10.1
+> branch for AP, STA and monitor modes? And recommended main branch only
+> for Ad-Hoc and P2P?
+>
+Eventually, we need a single firmware that can support all the modes,
+including mesh.
 
-> Hi,
->
-> Patch 1/3 is just a cleanup I wanted to keep
-> separate from 2/3 which actually improves recovery
-> speed.
->
-> With this I'm able to recover from a `hard`
-> simualtion crash in ~3 seconds instead of ~10.
->
-> This should decrease the chance of CQM kicking in
-> on connected clients (due to beacon loss) when
-> ath10k is acting as AP.
->
-> v2:
->  * add a comment in the code
->
->
-> Michal Kazior (3):
->   ath10k: differentiate between target init failures
->   ath10k: don't wait for device init if it crashed
->   ath10k: skip suspending when recovering
+For the 10.1, it cited " STA specific features might not work". Can
+someone comment what working and what not working?
 
-Thanks, all patches applied.
-
--- 
-Kalle Valo
+----
+Chun-Yeow
