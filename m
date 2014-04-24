@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34938 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030371AbaDJMdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 08:33:18 -0400
-Date: Thu, 10 Apr 2014 15:40:45 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Josh Boyer <jwboyer@fedoraproject.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-gpio@vger.kernel.org,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux
- v3.14-12042-g69cd9eba3886
-Message-ID: <20140410124045.GX19349@intel.com> (sfid-20140410_143322_969020_118CABB8)
-References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
- <CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
- <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
+Received: from zimbra.real-time.com ([63.170.91.9]:60020 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbaDXGL6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 02:11:58 -0400
+Date: Thu, 24 Apr 2014 16:11:37 +1000
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: John Tobias <john.tobias.ph@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Chris Ball <cjb@laptop.org>
+Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
+Message-ID: <20140424061137.GN1947@us.netrek.org> (sfid-20140424_081751_403311_87CF15DF)
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+ <1397710914-10061-2-git-send-email-bzhao@marvell.com>
+ <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
+ <20140418044619.GF24166@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com>
+ <20140419003410.GB14606@us.netrek.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140419003410.GB14606@us.netrek.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 08:22:12AM -0400, Josh Boyer wrote:
-> On Thu, Apr 10, 2014 at 2:50 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> > 2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
-> >> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
-> >> module on the MacBookPro 10,2 I have here.  This works fine with Linux
-> >> v3.14-7333-g59ecc26004e7.  There have been no changes between those
-> >> two versions to bcma itself, but the GPIO merge did go in that window.
-> >>  I can attempt to do a bisect tomorrow, but looking over some of the
-> >> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
-> >> hoping someone here has an idea on what the issue might be and has
-> >> some possible things for me to test for fixes.
-> >
-> > Bug report: https://lkml.org/lkml/2014/3/24/262
-> > Patch: https://lkml.org/lkml/2014/3/24/293
-> > Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
-> > (all links are for the same thread).
-> >
-> > Now you simply have to find above patch in some git tree :) Not sure
-> > if it's already in Linus's one.
+On Sat, Apr 19, 2014 at 10:34:10AM +1000, James Cameron wrote:
+> On Fri, Apr 18, 2014 at 12:16:07PM -0700, Bing Zhao wrote:
+> > Hi James,
+> > 
+> > > > That "adapter->cmd_sent = false" was hoping the firmware is
+> > > > still alive and can respond to a new command. The reality is
+> > > > that the timeout usually indicates the firmware has already
+> > > > hung. Sending another command won't recover it in this case.
+> > > 
+> > > I'm dealing with a firmware hang when more than 13 nodes are in
+> > > an ad-hoc IBSS, and I've just found out isn't entirely a
+> > > firmware hang; in that we can see beacons and probe responses
+> > > from the card, using tcpdump and monitor mode.
+> > > 
+> > > I'm interested to know if the "firmware hangs" that you
+> > > experiment with prevent autonomous RF TX, or if RF TX typically
+> > > proceeds.
+> > 
+> > It depends. Even if firmware hangs the hardware is still alive.
+> > So you could see beacons and probe responses from the card if
+> > hardware has been programmed before firmware hangs.
 > 
-> Ah, wonderful.  I now wish I would have found those in my searching
-> before doing the bisect.  Oh well.  For what it's worth, my bisect
-> landed on the same commit.
-> 
-> The fix isn't in Linus' tree or linux-next.  I'm guessing Mika is
-> either still on vacation, or hasn't sent out the formal fix yet.
+> Thanks.  I neglected to mention the time period; beacons and probe
+> responses are seen for many minutes after the timeout report by the
+> driver, and I have not yet tested for how long this lasts.  The
+> probe responses are in reply to new probe requests.  It makes me
+> think the card is working fine, apart from not communicating with
+> the host.
 
-No, not on vacation anymore (unfortunately). I did send the formal patch
-already:
+Downgrading wireless firmware to 14.66.9.p80 has fixed this problem.
 
-https://lkml.org/lkml/2014/3/31/135
-
-but it isn't merged to Linus' GPIO tree yet.
+-- 
+James Cameron
+http://quozl.linux.org.au/
