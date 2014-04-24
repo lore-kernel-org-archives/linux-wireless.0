@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm35-vm9.bullet.mail.ir2.yahoo.com ([212.82.97.132]:40292 "EHLO
-	nm35-vm9.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755174AbaDHATN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 20:19:13 -0400
-Message-ID: <1396915964.55973.YahooMailBasic@web172301.mail.ir2.yahoo.com> (sfid-20140408_021916_808392_FF0EF97A)
-Date: Tue, 8 Apr 2014 01:12:44 +0100 (BST)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_probe()
-To: larry.finger@lwfinger.net, khoroshilov@ispras.ru,
-	herton@canonical.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
+Received: from mail-we0-f173.google.com ([74.125.82.173]:43050 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170AbaDXJEY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 05:04:24 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so1966584wes.32
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 02:04:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1398329415.4154.1.camel@jlt4.sipsolutions.net>
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQkBCGyKYDaOMgdCi4Yw+SXeuRS+t0rGE8o=8+x2q5N74w@mail.gmail.com>
+	<1398329415.4154.1.camel@jlt4.sipsolutions.net>
+Date: Thu, 24 Apr 2014 11:04:22 +0200
+Message-ID: <CA+BoTQkutgixefexBRcTcDBrWpXCy0YFzdDuoY1PdHc3J1Hejw@mail.gmail.com> (sfid-20140424_110437_935817_F4858E11)
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------------------------------
-On Sun, Mar 30, 2014 10:31 PM BST Larry Finger wrote:
+On 24 April 2014 10:50, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-04-24 at 10:44 +0200, Michal Kazior wrote:
+>
+>> I think Monitor operation should be performed on a best effort basis.
+>> This means monitor_start/stop should be attempted once number of
+>> non-monitor vdevs changes.
+>>
+>> We should probably introduce a ath10k_recalc_monitor() for that purpose.
+>
+> Doesn't mac80211 do that for you?
+>
+> See IEEE80211_HW_WANT_MONITOR_VIF.
 
->On 03/28/2014 03:26 PM, Alexey Khoroshilov wrote:
-> If allocation of io_dmabuf fails, rtl8187_probe() calls usb_put_dev(udev)
-> while usb_get_dev(udev) is not called yet. As a result refcnt is decremented
-> incorrectly and usb_dev can be used after memory deallocation.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-> ---
->
->Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->
->Thanks,
->
->Larry
+This is not sufficient in this case.
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-
-Hin-Tak
-
->
->†††drivers/net/wireless/rtl818x/rtl8187/dev.c | 4 ++--
->†††1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> index fd78df813a85..d7f540a9dc9b 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> @@ -1636,10 +1636,10 @@ static int rtl8187_probe(struct usb_interface *intf,
->
->† † err_free_dmabuf:
->†††††† kfree(priv->io_dmabuf);
-> - err_free_dev:
-> -††† ieee80211_free_hw(dev);
->†††††† usb_set_intfdata(intf, NULL);
->†††††† usb_put_dev(udev);
-> + err_free_dev:
-> +††† ieee80211_free_hw(dev);
->†††††† return err;
->†††}
->
->
->
+E.g. If you add a disconnected 4addr sta interface to bridge the
+interface enters promisc mode. This attempts to start monitor vdev in
+ath10k before sta vdev is started internally. We could probably make
+it start earlier (in add_interface) but there still remains a problem
+when you stop last non-monitor interface (monitor vif will be created
+_after_ last non-monitor is removed which is too late).
 
 
+Micha≈Ç
