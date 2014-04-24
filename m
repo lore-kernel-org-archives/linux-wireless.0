@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342AbaDYPo3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 11:44:29 -0400
-Message-ID: <1398440262.4152.21.camel@jlt4.sipsolutions.net> (sfid-20140425_174440_265736_90704DDB)
-Subject: Re: [PATCH 03/12] mac80211: minor changes of ieee80211_reconfig()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 25 Apr 2014 17:37:42 +0200
-In-Reply-To: <87k3agjxky.fsf@gmail.com> (sfid-20140423_094828_517020_2623E34C)
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-	 <d8410804796e01fe8b4c62aeaca97b791154f585.1398055854.git.gamerh2o@gmail.com>
-	 <1398178044.4211.9.camel@jlt4.sipsolutions.net> <87k3agjxky.fsf@gmail.com>
-	 (sfid-20140423_094828_517020_2623E34C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:35948 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752715AbaDXJJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 05:09:02 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	<1397760423-11455-2-git-send-email-bzhao@marvell.com>
+Date: Thu, 24 Apr 2014 12:08:59 +0300
+In-Reply-To: <1397760423-11455-2-git-send-email-bzhao@marvell.com> (Bing
+	Zhao's message of "Thu, 17 Apr 2014 11:47:00 -0700")
+Message-ID: <87a9bb5c2c.fsf@purkki.adurom.net> (sfid-20140424_110914_269696_96A2565A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-23 at 15:48 +0800, Zhao, Gang wrote:
-> On Tue, 2014-04-22 at 16:47:24 +0200, Johannes Berg wrote:
-> > On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
-> >> Try to update chanctx only if local->use_chanctx is true.
-> >
-> > I'm not convinced this part is correct, since the internal channel
-> > context handling also has an effect when the driver doesn't use it.
-> 
-> Actually ieee80211_assign_chanctx() checks if local->use_chanctx is
-> true, so this patch doesn't change the logic. I should mentioned it in
-> the commit log.
+Bing Zhao <bzhao@marvell.com> writes:
 
-Oh, you're right. Please also split the patch into two.
+> From: Amitkumar Karwar <akarwar@marvell.com>
+>
+> Firmware dump feature is added for PCIe based chipsets.
+> Separate file will be created at /var/log/fw_dump_*
+> for each memory segment.
+>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 
-johannes
+Sorry for commenting so late, I was on holidays and then got lagged
+behind with email.
 
+> +			memset(filename, 0, sizeof(filename));
+> +			memcpy(filename, name_prefix, strlen(name_prefix));
+> +			strcat(filename, entry->mem_name);
+> +			do_gettimeofday(&t);
+> +			entry->file_mem = filp_open(filename, O_CREAT | O_RDWR,
+> +						    0644);
+> +			if (IS_ERR(entry->file_mem)) {
+> +				dev_info(adapter->dev,
+> +					 "Create %s file failed at %s, opening another dir /tmp\n",
+> +					 entry->mem_name, filename);
+> +				memset(filename, 0, sizeof(filename));
+> +				sprintf(filename, "%s%s", "/tmp/fw_dump_",
+> +					entry->mem_name);
+> +				entry->file_mem =
+> +					filp_open(filename,
+> +						  O_CREAT | O_RDWR, 0644);
+> +			}
+> +			if (!IS_ERR(entry->file_mem)) {
+> +				dev_info(adapter->dev,
+> +					 "Start to save the output : %u.%06u, please wait...\n",
+> +					 (u32)t.tv_sec, (u32)t.tv_usec);
+
+Like I said in my previous email, IMHO a wireless driver should not save
+any files to the filesystem. For example, I don't see any other uses of
+filp_open() in drivers/net. Ugly hacks like this belong to staging
+drivers, not to proper upstream drivers.
+
+-- 
+Kalle Valo
