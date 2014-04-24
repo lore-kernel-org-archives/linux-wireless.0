@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:33251 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752760AbaDNJwD (ORCPT
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:49577 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598AbaDXJTL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 05:52:03 -0400
-Received: by mail-pd0-f179.google.com with SMTP id w10so7892574pde.38
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:52:02 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 4/6] mac80211: return bool instead of numbers in yes/no function
-Date: Mon, 14 Apr 2014 17:51:33 +0800
-Message-Id: <7e0cef80705e85eff58298ba03580dc3742335d8.1397469036.git.gamerh2o@gmail.com> (sfid-20140414_115356_662898_890ACAB7)
-In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+	Thu, 24 Apr 2014 05:19:11 -0400
+Received: by mail-yh0-f44.google.com with SMTP id f10so1966707yha.31
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 02:19:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <878uqvm7yz.fsf@kamboji.qca.qualcomm.com>
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
+	<878uqvm7yz.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 24 Apr 2014 17:19:10 +0800
+Message-ID: <CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com> (sfid-20140424_111920_683676_2E15DB2C)
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And some code style changes in the function, and correct a typo in
-comment.
+On Thu, Apr 24, 2014 at 4:45 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+>
+>>>> +     if (ar->fw_version_build == 636) {
+>>>
+>>> Checking for firmware version in ath10k is a big no. For a functinality
+>>> change like this you should add a new feature flag to enum
+>>> ath10k_fw_features (and I need to then recreate the firmware image).
+>>>
+>> Should we just use the ATH10K_FW_FEATURE_WMI_10X?
+>
+> That's a bit dangerous if in the future there's a new firmware which
+> doesn't have ATH10K_FW_FEATURE_WMI_10X but still doesn't support stand
+> alone monitor mode.
+>
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/rx.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+Then, we may need to introduce the new feature flag.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c86a4d6..87c28f8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -54,24 +54,25 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
- 	return skb;
- }
- 
--static inline int should_drop_frame(struct sk_buff *skb, int present_fcs_len)
-+static inline bool should_drop_frame(struct sk_buff *skb, int present_fcs_len)
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
--	struct ieee80211_hdr *hdr;
--
--	hdr = (void *)(skb->data);
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
- 
- 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
- 			    RX_FLAG_FAILED_PLCP_CRC |
- 			    RX_FLAG_AMPDU_IS_ZEROLEN))
--		return 1;
-+		return true;
-+
- 	if (unlikely(skb->len < 16 + present_fcs_len))
--		return 1;
-+		return true;
-+
- 	if (ieee80211_is_ctl(hdr->frame_control) &&
- 	    !ieee80211_is_pspoll(hdr->frame_control) &&
- 	    !ieee80211_is_back_req(hdr->frame_control))
--		return 1;
--	return 0;
-+		return true;
-+
-+	return false;
- }
- 
- static int
-@@ -3190,7 +3191,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- }
- 
- /*
-- * This is the actual Rx frames handler. as it blongs to Rx path it must
-+ * This is the actual Rx frames handler. as it belongs to Rx path it must
-  * be called with rcu_read_lock protection.
-  */
- static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
--- 
-1.9.0
+But then I just wondering if the firmware 636 claimed to support STA
+mode "well" but then not allowed to be bridged. This may cause
+confusion to end user which is the best firmware for STA mode. FYI, AP
+firmware has no such issue if using as STA mode and put into
+promiscuous mode.
 
+----
+Chun-Yeow
