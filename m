@@ -1,100 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:45996 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934714AbaDJIur convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 04:50:47 -0400
-Received: by mail-wg0-f51.google.com with SMTP id k14so3597666wgh.34
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 01:50:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53462B92.7010408@candelatech.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-	<1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-	<5345BFA8.7040500@candelatech.com>
-	<5345DE8F.2060808@candelatech.com>
-	<CA+BoTQnorw7Z8ve9pvGY-RgZP2N+RWNd14Xa_yxM3q1+7ryNfw@mail.gmail.com>
-	<53462B92.7010408@candelatech.com>
-Date: Thu, 10 Apr 2014 10:50:46 +0200
-Message-ID: <CA+BoTQ=kNdXRfnq+7ju2Bf7S_TfWPfchvRZ=PePdR4Y4_5mwuQ@mail.gmail.com> (sfid-20140410_105054_568939_C22C2073)
-Subject: Re: [RFTv2 0/5] ath10k: ath10k: fix flushing and tx stalls
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:55887 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753900AbaDXQaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 12:30:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1WdMXD-0001LC-MN
+	for linux-wireless@vger.kernel.org; Thu, 24 Apr 2014 18:30:03 +0200
+Received: from 46-126-92-137.dynamic.hispeed.ch ([46.126.92.137])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 18:30:03 +0200
+Received: from belegdol by 46-126-92-137.dynamic.hispeed.ch with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 18:30:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Julian Sikorski <belegdol@gmail.com>
+Subject: Re: Low 5 GHz performance of Intel Advanced-N 6230
+Date: Thu, 24 Apr 2014 18:24:00 +0200
+Message-ID: <ljbdr0$c27$1@ger.gmane.org> (sfid-20140424_183018_299864_F03B960E)
+References: <5358AADD.3010702@gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5358AADD.3010702@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 April 2014 07:26, Ben Greear <greearb@candelatech.com> wrote:
-> On 04/09/2014 10:10 PM, Michal Kazior wrote:
->> On 10 April 2014 01:58, Ben Greear <greearb@candelatech.com> wrote:
->>> ath10k: ep 2 got 1 credits tot 2
->>> sta219: send auth to 04:f0:21:03:38:99 (try 1/3) at: 1397086238.721985
->>> ath10k: ep 2 used 1 credits, remaining 1 dbg 1896910888 (0x71109028)
->>> ath10k: mac flushing peer 04:f0:21:03:38:99 on vdev 20 mgmt tid for
->>> unicast mgmt (204 msecs)
->>> ath10k: ep 2 used 1 credits, remaining 0 dbg 1896910878 (0x7110901e)
->>> ath10k: Creating vdev id: 22  map: 12582912
->>> ath10k: mac vdev create 22 (add interface) type 2 subtype 0
->>> sta219: send auth to 04:f0:21:03:38:99 (try 2/3) at: 1397086239.28088
->>> [firmware logging msg]
->>> ath10k: failed to create WMI vdev 22: -11
->>
->>
->> Hmm.. If I read this correctly it means that MGMT_TX and
->> PEER_FLUSH_TIDS commands are both stuck in firmware. This most likely
->> means firmware stops processing everything altogether. Having HTC
->> debug prints from ath10k_htc_notify_tx_completion() could provide more
->> insight perhaps. I suspect MGMT_TX is the trigger in all cases.
->>
->> I'm still suspicious of your firmware changes. You connect multiple
->> stations to the exact same AP. Is peer mapping working correctly? Are
->> tid queues mapped correctly in all cases? Perhaps there's some kind of
->> inconsistency that leads to this mess? I think firmware wasn't
->> originally designed to support your usecase. Or maybe firmware just
->> breaks when you try to run a hundred or so of vdevs :-D
->
->
-> I have at least attempted to rectify all of that, but indeed this
-> particular lockup seems like a firmware issue.  I personally suspect
-> that I just find many bugs 32 times faster than simpler systems will :P
->
-> The firmware has it's own sort of tx-to-host-credits logic, so if it runs
-> out of space it might not be able to send any messages back to
-> the host.  I've crawled through a lot of that code and didn't
-> see any obvious ways to leak buffers, but it's far from simple
-> code, so I could still be wrong.
+W dniu 24.04.2014 08:10, Julian Sikorski pisze:
+> Dear all,
+> 
+> I have been moderately recently hit by a performance drop of Intel
+> Advanced-N 6230 card. I unfortunately do not have the "before" numbers,
+> but I have noticed this since I was able to stream bluray rips over nfs
+> to a wired Raspberry Pi a while ago and now I cannot. This has lead me
+> to begin investigating the issue.
+> In the end I have used iperf3, testing speeds between RPi and laptop,
+> with laptop running both Windows and Linux. iperf3 on RPi was always the
+> same, on the laptop it was self-compiled iperf3 git master (on Windows I
+> used Cygwin). Please see the observed speeds below:
+> - Windows: upload to RPi 93 Mbit/s, download from RPi 54 Mbit/s
+> - Fedora: upload to RPi 26 Mbit/s, download from RPi 48 Mbit/s
+> 
+> This is all on Fedora 20 x86_64. Please find attached the journalctl log
+> for the last boot. Please let me know if more information is needed - I
+> would love to get my network speeds back up to the level where I can
+> watch bluray rips again. Thank you for your support in advance.
+> 
+> Best regards,
+> Julian
+> 
+Hello again,
 
-I don't think that's the problem here.
+I have narrowed this down to have regressed between 3.13.6-200.fc20 and
+3.13.7-200. Using pointers from Josh Boyer of #fedora-devel, I have
+managed to restore the previous performance by loading iwlwifi with
+11n_disable=8. I am now at 3.14.1-200 with that option enabled and the
+network is fast as it used to be.
+Is such a major performance hit expected from this change? Here is the
+commit in question:
+https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?h=linux-3.13.y&id=45e5cb4f43d33e72ff5f98c80b081eb42e4e4182
 
-Firmware seems to generate traffic to host while tx credits aren't
-replenished (I've looked in traces you've send in the other email)
-including wmi mgmt rx. From the traces it also looks like htc tx
-completion is done for flush command suggesting it has been probably
-processed by hif layer and maybe htc layer but there are no tx credits
-replenished. There's even a ton of htt tx completion indications
-although it seems new htt tx commands are never completed (in the
-traces). This could suggest htt service is dead as well as wmi or it
-just queues frames on a paused queue.
+Best regards,
+Julian
 
-Tx credits for wmi should be replenished right away for all wmi
-commands except mgmt tx and bcn tx (as they cannot be immediately
-done). If tx credits are not replenished for flush command (which is
-the case) it might not have reached the target wmi service at all.
->From what I understand this could happen if endpoint is paused but
-this probably shouldn't happen as this is for wmi data path
-synchronization apparently which is a legacy thing and should be hit.
-Maybe there's a different way for wmi service to stop responding or to
-prevent it from receiving and processing commands?
-
-
-> Maybe I could add a small scratch area in firmware memory and place debug
-> info there and read it from host over the PCI bus like when we
-> dump the crash info...  This time of night I really hate firmware :P
-
-Sounds reasonable to debug and pinpoint the cause of this problem.
-Perhaps some counters to check if certain code paths are hit when you
-expect them to be?
-
-
-Michał
