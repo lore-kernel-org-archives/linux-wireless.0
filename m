@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:49092 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751301AbaDPT6b convert rfc822-to-8bit (ORCPT
+Received: from mail-yh0-f43.google.com ([209.85.213.43]:38069 "EHLO
+	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757235AbaDXOxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 15:58:31 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Jonathan McDowell <noodles@earth.li>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: Intel 7260 not working in 802.11n mode
-Date: Wed, 16 Apr 2014 19:58:01 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com> (sfid-20140416_215835_676357_99012E1A)
-References: <20140407003648.GA19740@earth.li>
- <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
- <20140407064556.GN24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
- <20140407152312.GO24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
- <20140416061043.GZ24850@earth.li>
-In-Reply-To: <20140416061043.GZ24850@earth.li>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 24 Apr 2014 10:53:34 -0400
+Date: Thu, 24 Apr 2014 11:53:29 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2014-04-24
+Message-ID: <20140424145329.GD7832@joana> (sfid-20140424_165355_316720_D0D77CC6)
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, Apr 13, 2014 at 11:07:10AM +0000, Grumbach, Emmanuel wrote:
-> > > > Your log seems healthy - you associate at Apr  6 17:17:20 and
-> > > > disassociate at Apr  6 17:18:05 - was that intentional?
-> > >
-> > > All I did was load the module with the debug parameter set, let
-> > > Network Manager do its thing and wait for the connection to fail,
-> > > then unload the module. NM is reporting that the DHCP times out - log at:
-> > >
-> > > http://the.earth.li/~noodles/iwlfail-nm.log
-> > >
-> > > I'd be blaming Network Manager or some other piece of configuration
-> > > if it wasn't for the fact that disabling 11n makes things work.
-> > >
-> > I really can't see anything bad in this log.
-> > Can you run tracing?
-> >
-> > sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e
-> > cfg80211
-> >
-> > this will create a trace.dat file which I'd like to look at.
-> 
-> http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
-> 
-> and for completeness, with disable_11n=1:
-> 
-> http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
-> 
-> In both cases I started the trace, flipped the hardware wifi disable switch, let
-> Network Manager do its thing.
-> 
 
-Thanks for this. I am on vacation right now and won't be able to look at this straight away.
-Please don't remove the files from your web server.
-Also - if you can open a bug on bugzilla.kernel.org - this would be best.
-Cc ilw@linux.intel.com to your bug. Thanks!
+--/9DWx/yDrRhgMJTb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi John,
+
+Some fixes for 3.15. There is a revert for the intel driver, a new device id,
+and two important SSP fixes from Johan.
+Also we've noticed that your wireless.git tree is not up to date, so this pull
+was rebased on top of net.git. If you pull from this you'll will be pulling
+net/master from yesterday as well.
+
+Please pull or let me know of any concerns you have. Thanks!
+
+	Gustavo
+
+---
+The following changes since commit 6a51b5e4d59e00051e65e836520912cd7c717be1:
+
+  hisax/icc: add missing semicolon after label (2014-04-22 21:22:47 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+
+for you to fetch changes up to b66a81831359495b3768ace72452209cdf5d6614:
+
+  Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-24 12:43:33 +0300)
+
+----------------------------------------------------------------
+Johan Hedberg (2):
+      Bluetooth: Fix triggering BR/EDR L2CAP Connect too early
+      Bluetooth: Fix redundant encryption request for reauthentication
+
+Marcel Holtmann (1):
+      Revert "Bluetooth: Enable autosuspend for Intel Bluetooth device"
+
+Mohammed Habibulla (1):
+      Bluetooth: Add support for Lite-on [04ca:3007]
+
+ drivers/bluetooth/ath3k.c | 2 ++
+ drivers/bluetooth/btusb.c | 5 ++---
+ net/bluetooth/hci_conn.c  | 9 ++++++---
+ net/bluetooth/hci_event.c | 6 ++++++
+ 4 files changed, 16 insertions(+), 6 deletions(-)
+
+
+--/9DWx/yDrRhgMJTb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJTWSVpAAoJEPs3PUX4s20oLWQP/1hhfe6EZ45Sec94NIsSYB5K
+EZYvvOX4sKj3VhTT/dzKIBZDp7aLHyBZGB4HRBezKe0KqiNFV3eVU9Um1BsWxCgH
+u5S/PgS1yj2BOSgCJAy2dZPYqQii8KEUugIocRMzqs6ZtolbnaucQexSy65af4hY
+MVyHPUCRgtYi9tMDu/JTyi3b+LDzYgztYG5mgLzuw3zz2SaGc9bLdJIQ4aPyaIge
+rwzoLxPJKxfF+7xIObhVccMK150AjwapsN9/oV+FGDmP83zxXxGoBOFGf8lorQbh
+2C4Ol0zqJj8pob3cQxExwZjmVX9LG0vm/wqeNW9E3wKfelhkwdf4cF25kvfvnPAl
+pjhhjp7ssbEBnPhxwKqJIEb6VuAaZPMYuV+62g9gcU3wq2LCSSRI1s31LgEiNBbh
+7HedJ12UD4Q6BqHzrSf4Mc3Bhli1jz1HL4wwZy2DxqhAu7mlRxHVjkg+iupeSp6l
+jJDjbWdzF3WH/E+lhJCI9mgGQb97X1ZwzCjLJxO2/QXDs2RlQU6+bSjbDbUDec9+
+0mrRNbfJgzdezuHBFWQEX0UkKG6E6mliXmJ+GH9OJDHA+VTIyMtm7vjowe68jMZW
+a1Iq52ijBMKlo1goMlkVR8K3KE0PpWNSSh0TdoYzrYWzBo8uM80uasyuNDvyhdqc
+Ab1PYbsWaogXz91HHxYG
+=TAG1
+-----END PGP SIGNATURE-----
+
+--/9DWx/yDrRhgMJTb--
