@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33971 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbaDYBpR (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:37533 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbaDXGZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 21:45:17 -0400
-Date: Thu, 24 Apr 2014 21:40:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH] mwifiex: fix adapter pointer dereference
-Message-ID: <20140425014022.GB3410@tuxdriver.com> (sfid-20140425_034616_014415_0875FB0B)
-References: <1398289253-21398-1-git-send-email-bzhao@marvell.com>
+	Thu, 24 Apr 2014 02:25:40 -0400
+Message-ID: <5358AE62.6050509@lwfinger.net> (sfid-20140424_082550_661244_B58C0513)
+Date: Thu, 24 Apr 2014 01:25:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398289253-21398-1-git-send-email-bzhao@marvell.com>
+To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] Revert "rtlwifi: rtl8188ee: enable MSI interrupts
+ mode"
+References: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
+In-Reply-To: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I reverted the patch in question already.  If you rewrite it, please
-be sure to account for this fix as appropriate.
+On 04/23/2014 10:08 PM, Adam Lee wrote:
+> This reverts commit 2a54eb5e1476426ee639bbfbe179b52342a0d82c.
+>
+> 94010fa0dd07e8b904e7c6b6589f15573008ab15 introduced MSI interrupts mode
+> support, which seemed safe enough with RTL8188EE and RTL8723BE as
+> RealTek's testing results, but some users reported their RTL8188EE
+> modules could not connect to any wireless network after the MSI mode was
+> enabled by Ubuntu 14.04.
+>
+> So, let's fallback to pin-based mode until rtlwifi's MSI support get
+> good compatibility.
+>
+> BugLink: https://bugs.launchpad.net/bugs/1310512
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
 
-Thanks,
+ACK for both of these patches. I thought I had tested these patches when they 
+first came through, but obviously I did not. I do not know which Realtek 
+engineers you consulted, but they failed to supply you with the MSI handler. The 
+Realsil group that actually does the coding for the PCI-based devices have 
+supplied such a routine along with the driver for the RTL8192EE devices. With 
+the handler, MSI does work. After I integrate that handler into rtlwifi, I will 
+resubmit the patches turning on MSI for rtl8188ee and rtl8723ae.
 
-John
+Larry
 
-On Wed, Apr 23, 2014 at 02:40:53PM -0700, Bing Zhao wrote:
-> drivers/net/wireless/mwifiex/pcie.c:2252 mwifiex_pcie_fw_dump_work()
-> error: we previously assumed 'adapter' could be null (see line 2251)
-> 
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 > ---
->  drivers/net/wireless/mwifiex/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index 51989b3..249fdbd 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -2248,7 +2248,7 @@ static void mwifiex_pcie_fw_dump_work(struct work_struct *work)
->  	};
->  
->  	if (!adapter) {
-> -		dev_err(adapter->dev, "Could not dump firmwware info\n");
-> +		pr_err("adapter is null. Could not dump firmware info\n");
->  		return;
->  	}
->  
-> -- 
-> 1.8.2.3
-> 
-> 
+>   drivers/net/wireless/rtlwifi/rtl8188ee/sw.c | 1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> index 1b4101b..347af1e 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> @@ -93,7 +93,6 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+>   	u8 tid;
+>
+>   	rtl8188ee_bt_reg_init(hw);
+> -	rtlpci->msi_support = true;
+>
+>   	rtlpriv->dm.dm_initialgain_enable = 1;
+>   	rtlpriv->dm.dm_flag = 0;
+>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
