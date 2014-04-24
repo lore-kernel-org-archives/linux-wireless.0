@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:64084 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbaDVDBC (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17486 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140AbaDXIpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 23:01:02 -0400
-Received: by mail-la0-f45.google.com with SMTP id hr17so3844636lab.32
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 20:01:00 -0700 (PDT)
+	Thu, 24 Apr 2014 04:45:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
+Date: Thu, 24 Apr 2014 11:45:24 +0300
+In-Reply-To: <CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
+	(Yeoh Chun-Yeow's message of "Thu, 24 Apr 2014 16:40:24 +0800")
+Message-ID: <878uqvm7yz.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_104542_428786_A5817656)
 MIME-Version: 1.0
-In-Reply-To: <19510493295.20140417140740@eikelenboom.it>
-References: <1397646587-11078-1-git-send-email-arik@wizery.com> <19510493295.20140417140740@eikelenboom.it>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Apr 2014 20:00:40 -0700
-Message-ID: <CAB=NE6XYT6V0YnzhcFS_xpT5vhgY65GmYxkrDk6L1hP_G6Hr6g@mail.gmail.com> (sfid-20140422_050106_172822_B331903F)
-Subject: Re: [PATCH] cfg80211: avoid freeing last_request while in flight
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arik@wizery.com>, Colleen T <colleen@cozybit.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 5:07 AM, Sander Eikelenboom
-<linux@eikelenboom.it> wrote:
-> Hi Johannes,
->
-> Could you put whatever (combination of) patches you see fit into you -next
-> tree .. so i can retest what will hopefully go upstream in the next mergewindow.
-> I think that will also increase further testcoverage (and if something else
-> arise it gives time to fix it before the next mergewindow). It would be nice
-> if it would make it this time around ...
+Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
 
-Sander, it'll probably be a while before the series you need gets
-merged given the history I see on regression tests now on mac8021-nest
-but I'll shortly send two respinned patches you can apply on top of
-mac80211-next today if you'd like to test.
+>>> +     if (ar->fw_version_build == 636) {
+>>
+>> Checking for firmware version in ath10k is a big no. For a functinality
+>> change like this you should add a new feature flag to enum
+>> ath10k_fw_features (and I need to then recreate the firmware image).
+>>
+> Should we just use the ATH10K_FW_FEATURE_WMI_10X?
 
-  Luis
+That's a bit dangerous if in the future there's a new firmware which
+doesn't have ATH10K_FW_FEATURE_WMI_10X but still doesn't support stand
+alone monitor mode.
+
+-- 
+Kalle Valo
