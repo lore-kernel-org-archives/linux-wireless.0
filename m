@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50202 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927AbaDVXTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 19:19:15 -0400
-Date: Wed, 23 Apr 2014 01:19:13 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Michael Leun <lkml20140418@newton.leun.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	arik@wizery.com, linux@eikelenboom.it
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-Message-ID: <20140422231913.GU27882@wotan.suse.de> (sfid-20140423_011919_605410_191572CE)
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com> <20140422180003.6438dbb7@xenia.leun.net> <20140422204552.GR27882@wotan.suse.de> <20140422233213.780405d1@xenia.leun.net> <20140422215012.GS27882@wotan.suse.de> <20140423005309.5c2d093e@xenia.leun.net>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:45001 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbaDXXDs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 19:03:48 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so1864322wib.11
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 16:03:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140423005309.5c2d093e@xenia.leun.net>
+From: Pierre Bourdon <delroth@gmail.com>
+Date: Fri, 25 Apr 2014 01:03:26 +0200
+Message-ID: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com> (sfid-20140425_010418_489005_A49FE239)
+Subject: Odd network behaviors with an Intel Wireless 7260
+To: linux-wireless@vger.kernel.org
+Cc: Ryan Houdek <sonicadvance1@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2014 at 12:53:09AM +0200, Michael Leun wrote:
-> On Tue, 22 Apr 2014 23:50:12 +0200
-> "Luis R. Rodriguez" <mcgrof@suse.com> wrote:
-> 
-> > On Tue, Apr 22, 2014 at 11:32:13PM +0200, Michael Leun wrote:
-> > > On Tue, 22 Apr 2014 22:45:52 +0200
-> > > "Luis R. Rodriguez" <mcgrof@suse.com> wrote:
-> > > 
-> > > 
-> > > > > I only see this on an Acer PTZ1825 with an ath9k wireless card,
-> > > > > but that machine was not sold with that wlan card, so other
-> > > > > people with the same model won't neccesarily see the same issue.
-> > > > 
-> > > > OK I see the issue and its clear now how this could have
-> > > > gone through, the wiphy comes from the country IE and it
-> > > > could have gone disappearing during suspend / hotplug, so
-> > > > we do need to check for it again.
-> > > [...]
-> > > > -		if (wiphy->regulatory_flags &
-> > > > REGULATORY_COUNTRY_IE_IGNORE)
-> > > > +		if (wiphy &&
-> > > > +		    wiphy->regulatory_flags &
-> > > > REGULATORY_COUNTRY_IE_IGNORE) return REG_REQ_IGNORE;
-> > > 
-> > > Yup, thats it. I can hear it whisper "put me into stable".
-> > 
-> > I was a bit perplexed that this was not picked up before, so I hunted
-> > a bit and found a fix that was applied to the mac80211-next upstream
-> > development tree but not propagated to stable. Can you remove that
-> > pach, just git checkout -f and try this one instead? It applies
-> > cleanly and since its upstream on Linus' tree already we should be
-> > able to get this to Greg faster if you confirm it fixes your issue.
-> > So all we need is a Tested-by.
-> > 
-> >   Luis
-> > 
-> > commit 772f0389338cfcf96da1c178046dc7e1649ab554
-> > Author: Ilan Peer <ilan.peer@intel.com>
-> 
-> 
-> Yes, this also fixes it.
+Hi linux-wireless folks,
 
-OK thanks, will poke stable, and thanks for the report.
+I have been getting some weird network behaviors with my Intel
+Wireless 7260 adapter that I cannot explain by anything else than a
+driver/firmware bug. I'm out of ideas on how to debug this issue.
 
-  Luis
+My network configuration is fairly basic: IPv4 over 802.11n,
+AP/default gateway is 192.168.0.1, my Intel 7260 STA is 192.168.0.2.
+Several AP/gateway hardware and software have been tested and have
+shown the same problem.
+
+On 192.168.0.2 I am constantly running some ICMP pings to 192.168.0.1
+and 8.8.8.8. Randomly, the pings from 192.168.0.2 to 8.8.8.8 start
+failing (responses never received) while the pings to 192.168.0.1
+continue to succeed without any trouble. When tcpdumping on the
+gateway, I see the pings to 8.8.8.8 being successfully forwarded and
+responses being sent back to the STA (so this is not a routing issue
+on the gateway - and again, I've tested several combinations of hw/sw
+on the gateway).
+
+Another example: my TCP sessions on the Intel 7260 STA to the internet
+will start randomly freezing, but my TCP sessions going through
+tunnels on another LAN host (let's say, 192.168.0.3) to the internet
+will work fine.
+
+After 30s-1min30 the problem fixes itself and packets start being
+received by the STA again.
+
+I only see this from the Intel 7260 host and not from any other WLAN
+device connected to the AP, which is another strong evidence that the
+issue is on the STA side.
+
+I've shared this with some other people using an Intel 7260 adapter on
+Linux and found someone having a similar issue. I'm not sure how
+widespread it is and could not find an existing bug report.
+
+What are the next steps to get useful debugging information out of
+this issue? I unfortunately do not have the required hardware to do
+monitor-mode sniffing of what's happening at the L2 level.
+
+Thanks,
+
+-- 
+Pierre "delroth" Bourdon <delroth@gmail.com>
+Software Engineer @ Zürich, Switzerland
+http://code.delroth.net/
