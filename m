@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:45879 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752719AbaDCPqx convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4239 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbaDXGXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2014 11:46:53 -0400
+	Thu, 24 Apr 2014 02:23:42 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 0/4] ath10k: AP-related fixes
+References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+	<1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 24 Apr 2014 09:23:32 +0300
+In-Reply-To: <1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 14 Apr 2014 09:20:06 +0200")
+Message-ID: <87wqefmejf.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_082346_814927_13CE2AD2)
 MIME-Version: 1.0
-In-Reply-To: <20140403173701.75c1f497@north>
-References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com> <20140403173701.75c1f497@north>
-From: Richard Genoud <richard.genoud@gmail.com>
-Date: Thu, 3 Apr 2014 17:46:30 +0200
-Message-ID: <CACQ1gAg8N+Y1=dvkZcA_KyLudfSB_ueL1+LS4F=2F2TE_JwtGA@mail.gmail.com> (sfid-20140403_174722_770645_BF5506E4)
-Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
-To: =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-04-03 17:37 GMT+02:00 Jakub Kiciński <moorray3@wp.pl>:
-> On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
->> rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
->> that calls rt2x00usb_vendor_request() which is already looping up to
->> REGISTER_BUSY_COUNT times.
->>
->> So this loop is not needed.
->
-> Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
-> to succeed, rt2x00usb_register_read_lock() busy-waits for the register
-> field itself to become 0.
->
-> Also, how would this be a BUG?
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Ok, you're right.
-Just forget about this patch...
+> Hi,
+>
+> This is a bunch of fixes I've found while
+> investigating tx credit issues.
+>
+> I've only experienced problem fixed by 4/4
+> firsthand. Other patches are preemptive fixes :-)
+>
+> v2:
+>  * minor tweaks
+>
+> Michal Kazior (4):
+>   ath10k: make sure to not leak beacon dma mapping
+>   ath10k: make sure to not use invalid beacon pointer
+>   ath10k: prevent beacon memory leak
+>   ath10k: fix firmware recovery with ap interface
 
-Richard
+Thanks, all patches applied.
+
+-- 
+Kalle Valo
