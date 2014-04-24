@@ -1,116 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:46498 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142AbaDVDjs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41401 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbaDXJqp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 23:39:48 -0400
-Received: by mail-pa0-f51.google.com with SMTP id kq14so4436303pab.38
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 20:39:48 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, lkml20140418@newton.leun.net,
-	arik@wizery.com, linux@eikelenboom.it,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH 1/2] cfg80211: avoid freeing last_request while in flight
-Date: Mon, 21 Apr 2014 20:39:34 -0700
-Message-Id: <1398137975-14275-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20140422_053952_446153_60B99368)
-In-Reply-To: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 24 Apr 2014 05:46:45 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
+	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
+	<878uqvm7yz.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com>
+Date: Thu, 24 Apr 2014 12:46:36 +0300
+In-Reply-To: <CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com>
+	(Yeoh Chun-Yeow's message of "Thu, 24 Apr 2014 17:19:10 +0800")
+Message-ID: <874n1jm54z.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_114727_624293_B9215CFD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
 
-Avoid freeing the last request while it is being processed. This can
-happen in some cases if reg_work is kicked for some reason while the
-currently pending request is in flight.
+> On Thu, Apr 24, 2014 at 4:45 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+>>
+>>>>> +     if (ar->fw_version_build == 636) {
+>>>>
+>>>> Checking for firmware version in ath10k is a big no. For a functinality
+>>>> change like this you should add a new feature flag to enum
+>>>> ath10k_fw_features (and I need to then recreate the firmware image).
+>>>>
+>>> Should we just use the ATH10K_FW_FEATURE_WMI_10X?
+>>
+>> That's a bit dangerous if in the future there's a new firmware which
+>> doesn't have ATH10K_FW_FEATURE_WMI_10X but still doesn't support stand
+>> alone monitor mode.
+>
+> Then, we may need to introduce the new feature flag.
 
-Cc: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- net/wireless/reg.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+And that will create other problems. It's better to bite the bullet now
+than trying to postpone it. Besides, adding the feature flag is trivial.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9d32633..081c571 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -263,8 +263,16 @@ static char user_alpha2[2];
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--static void reg_free_request(struct regulatory_request *lr)
-+static void reg_free_request(struct regulatory_request *request)
- {
-+	if (request != get_last_request())
-+		kfree(request);
-+}
-+
-+static void reg_free_last_request(void)
-+{
-+	struct regulatory_request *lr = get_last_request();
-+
- 	if (lr != &core_request_world && lr)
- 		kfree_rcu(lr, rcu_head);
- }
-@@ -277,7 +285,7 @@ static void reg_update_last_request(struct regulatory_request *request)
- 	if (lr == request)
- 		return;
- 
--	reg_free_request(lr);
-+	reg_free_last_request();
- 	rcu_assign_pointer(last_request, request);
- }
- 
-@@ -1661,7 +1669,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 	if (treatment == REG_REQ_IGNORE ||
- 	    treatment == REG_REQ_ALREADY_SET ||
- 	    treatment == REG_REQ_USER_HINT_HANDLED) {
--		kfree(user_request);
-+		reg_free_request(user_request);
- 		return treatment;
- 	}
- 
-@@ -1722,14 +1730,14 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 		break;
- 	case REG_REQ_IGNORE:
- 	case REG_REQ_USER_HINT_HANDLED:
--		kfree(driver_request);
-+		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		regd = reg_copy_regd(get_cfg80211_regdom());
- 		if (IS_ERR(regd)) {
--			kfree(driver_request);
-+			reg_free_request(driver_request);
- 			return REG_REQ_IGNORE;
- 		}
- 		rcu_assign_pointer(wiphy->regd, regd);
-@@ -1824,10 +1832,10 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_USER_HINT_HANDLED:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
--		kfree(country_ie_request);
-+		reg_free_request(country_ie_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
--		kfree(country_ie_request);
-+		reg_free_request(country_ie_request);
- 		/*
- 		 * This doesn't happen yet, not sure we
- 		 * ever want to support it for this case.
-@@ -1888,7 +1896,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	return;
- 
- out_free:
--	kfree(reg_request);
-+	reg_free_request(reg_request);
- }
- 
- /*
+> But then I just wondering if the firmware 636 claimed to support STA
+> mode "well" but then not allowed to be bridged. This may cause
+> confusion to end user which is the best firmware for STA mode. FYI, AP
+> firmware has no such issue if using as STA mode and put into
+> promiscuous mode.
+
+Yeah, maybe should change the documentation to recommend using 10.1
+branch for AP, STA and monitor modes? And recommended main branch only
+for Ad-Hoc and P2P?
+
 -- 
-1.9.0
-
+Kalle Valo
