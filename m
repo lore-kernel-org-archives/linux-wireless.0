@@ -1,65 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8190 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755968AbaD1PrI (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:45433 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaDXMKZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 11:47:08 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath9k_hw: fix worse EVM for 11b rates
-Date: Mon, 28 Apr 2014 21:17:08 +0530
-Message-ID: <1398700028-28410-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140428_174728_444315_32DF7A26)
-In-Reply-To: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Thu, 24 Apr 2014 08:10:25 -0400
+Received: by mail-lb0-f169.google.com with SMTP id n15so1967214lbi.28
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 05:10:24 -0700 (PDT)
+Message-ID: <5358FF2F.5030505@cogentembedded.com> (sfid-20140424_141039_725766_0E60579D)
+Date: Thu, 24 Apr 2014 16:10:23 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/2] rtlwifi: rtl8723be: disable MSI interrupts mode
+References: <1398308924-15312-1-git-send-email-adam.lee@canonical.com> <1398308924-15312-2-git-send-email-adam.lee@canonical.com>
+In-Reply-To: <1398308924-15312-2-git-send-email-adam.lee@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adjust FIR filter co-efficients to improve EVM for 11b rates.
+On 24-04-2014 7:08, Adam Lee wrote:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 6 +++---
- drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+> 94010fa0dd07e8b904e7c6b6589f15573008ab15 introduced MSI interrupts mode
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-index 9cf7cca..b995ffe 100644
---- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-@@ -348,9 +348,9 @@ static const u32 ar9340_1p0_baseband_core[][2] = {
- 	{0x0000a370, 0x00000000},
- 	{0x0000a390, 0x00000001},
- 	{0x0000a394, 0x00000444},
--	{0x0000a398, 0x00000000},
--	{0x0000a39c, 0x210d0401},
--	{0x0000a3a0, 0xab9a7144},
-+	{0x0000a398, 0x001f0e0f},
-+	{0x0000a39c, 0x0075393f},
-+	{0x0000a3a0, 0xb79f6427},
- 	{0x0000a3a4, 0x00000000},
- 	{0x0000a3a8, 0xaaaaaaaa},
- 	{0x0000a3ac, 0x3c466478},
-diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-index 3c9113d..8e5c3b9 100644
---- a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-@@ -257,9 +257,9 @@ static const u32 qca953x_1p0_baseband_core[][2] = {
- 	{0x0000a370, 0x00000000},
- 	{0x0000a390, 0x00000001},
- 	{0x0000a394, 0x00000444},
--	{0x0000a398, 0x1f020503},
--	{0x0000a39c, 0x29180c03},
--	{0x0000a3a0, 0x9a8b6844},
-+	{0x0000a398, 0x001f0e0f},
-+	{0x0000a39c, 0x0075393f},
-+	{0x0000a3a0, 0xb79f6427},
- 	{0x0000a3a4, 0x000000ff},
- 	{0x0000a3a8, 0x6a6a6a6a},
- 	{0x0000a3ac, 0x6a6a6a6a},
--- 
-1.9.2
+    Please also specify that commit's summary line in parens.
+
+> support, which seemed safe enough with RTL8188EE and RTL8723BE as
+> RealTek's testing results, but some users reported their RTL8188EE
+> modules could not connect to any wireless network after the MSI mode was
+> enabled by Ubuntu 14.04.
+
+> So, let's fallback to pin-based mode until rtlwifi's MSI support get
+> good compatibility.
+
+> BugLink: https://bugs.launchpad.net/bugs/1310512
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+
+WBR, Sergei
 
