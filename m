@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:36057 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756258AbaDVPCi (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:41592 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605AbaDXUsR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 11:02:38 -0400
-Received: by mail-oa0-f49.google.com with SMTP id o6so5657079oag.8
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 08:02:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1397544101-18135-2-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
-	<1397544101-18135-2-git-send-email-wens@csie.org>
-Date: Tue, 22 Apr 2014 17:02:38 +0200
-Message-ID: <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com> (sfid-20140422_170349_153496_16DE82A1)
-Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
- based lookup
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Thu, 24 Apr 2014 16:48:17 -0400
+Date: Fri, 25 Apr 2014 06:48:01 +1000
+From: James Cameron <quozl@laptop.org>
+To: John Tobias <john.tobias.ph@gmail.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Content-Type: text/plain; charset=UTF-8
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Chris Ball <cjb@laptop.org>
+Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
+Message-ID: <20140424204801.GA12124@us.netrek.org> (sfid-20140424_224824_559154_FCEF23DA)
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+ <1397710914-10061-2-git-send-email-bzhao@marvell.com>
+ <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
+ <20140418044619.GF24166@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com>
+ <20140419003410.GB14606@us.netrek.org>
+ <20140424061137.GN1947@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70A2AB63@SC-VEXCH1.marvell.com>
+ <CACUGKYMGVZyRHv7m90+3VJ3dAb6n0jvi=XHUYLUQh+1UAJgNQA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACUGKYMGVZyRHv7m90+3VJ3dAb6n0jvi=XHUYLUQh+1UAJgNQA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
+On Thu, Apr 24, 2014 at 09:45:37AM -0700, John Tobias wrote:
+> How did you know that by downgrading the firmware the problem has
+> been solved?. Did you see a scenario or flow in the driver that both
+> occurred when using the two different firmware but able to work on
+> the p80?.
 
-> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
-> phandles by name only, through gpios/gpio-names, and not by index.
->
-> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+I knew it had been solved because the problem stopped happening,
+whereas before it would always happen.
 
-Like Alexandre I have no strong opinion on this alternative scheme.
+No, there was nothing in the driver changed, and nothing I could see
+in the driver had any effect on the problem.
 
-However if I shall apply this patch I want ACKs from the DT maintainers
-with them expressing that they want things to look like this going
-forward.
+> The reason why I am asking is because sometimes the bug/s did not
+> occur often.
 
-Otherwise the set is stalled right here.
+We are probably facing different problems.  For the problem I am
+working, it always happens, all I have to do is boot 14 or more
+laptops.  The sequence is:
 
-Yours,
-Linus Walleij
+- the automatic starting or joining of an ad-hoc network, by the Sugar
+  learning software,
+
+- a stream of 13 adhoc station connect events from the card, one for
+  each station in the network,
+
+- at about the point that the 14th beacon is seen on RF, the card
+  firmware hangs,
+
+- a command is sent by the host (e.g. to get RSSI to update the
+  display),
+
+- no interrupt occurs, and so the mwifiex driver reports a command
+  timeout.
+
+http://dev.laptop.org/ticket/12763 has some of the details.
+
+I have an instrumented kernel that reports the adhoc station connect
+and disconnect events, and counts the number of stations that the card
+knows about.
+
+There's some sort of timer used by the card to issue the adhoc station
+disconnect event; when no beacons from the station have been heard for
+a few seconds.  So increasing the beacon interval to 10000 TU also
+avoided the problem.
+
+I doubt your problem is caused by firmware, but you could test for it.
+
+-- 
+James Cameron
+http://quozl.linux.org.au/
