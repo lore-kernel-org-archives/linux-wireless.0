@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:61649 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755321AbaDTLGX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56381 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbaDYPVJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 07:06:23 -0400
-Received: by mail-ee0-f42.google.com with SMTP id d17so2948387eek.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 04:06:22 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 9/9] b43: N-PHY: enable forgotten write of hw power adjust table
-Date: Sun, 20 Apr 2014 13:05:51 +0200
-Message-Id: <1397991951-13478-10-git-send-email-zajec5@gmail.com> (sfid-20140420_130706_675846_C5C9830C)
-In-Reply-To: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
-References: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Apr 2014 11:21:09 -0400
+Message-ID: <1398439255.4152.10.camel@jlt4.sipsolutions.net> (sfid-20140425_172116_888806_3F22FE0E)
+Subject: Re: [PATCH v4 00/13] cfg80211/mac80211: implement multi-vif chanctx
+ reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Fri, 25 Apr 2014 17:20:55 +0200
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153551_014007_D6D68CDC)
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	 <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140409_153551_014007_D6D68CDC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've implemented table calculation, but forgot to enable writing it in
-power setup function.
-By the way document table layout.
+Hi,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+> The patchset incrementally improves chanctx
+> reservations in order to support multi-vif
+> reservations and in-place multi-vif reservations
+> (typically for single-channel hardware, but
+> multi-channel benefits from this too).
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 291b38c..482b312 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3400,6 +3400,20 @@ static void b43_nphy_tx_prepare_adjusted_power_table(struct b43_wldev *dev)
- 	u8 idx, delta;
- 	u8 i, stf_mode;
- 
-+	/* Array adj_pwr_tbl corresponds to the hardware table. It consists of
-+	 * 21 groups, each containing 4 entries.
-+	 *
-+	 * First group has entries for CCK modulation.
-+	 * The rest of groups has 1 entry per modulation (SISO, CDD, STBC, SDM).
-+	 *
-+	 * Group 0 is for CCK
-+	 * Groups 1..4 use BPSK (group per coding rate)
-+	 * Groups 5..8 use QPSK (group per coding rate)
-+	 * Groups 9..12 use 16-QAM (group per coding rate)
-+	 * Groups 13..16 use 64-QAM (group per coding rate)
-+	 * Groups 17..20 are unknown
-+	 */
-+
- 	for (i = 0; i < 4; i++)
- 		nphy->adj_pwr_tbl[i] = nphy->tx_power_offset[i];
- 
-@@ -3598,10 +3612,8 @@ static void b43_nphy_tx_power_ctl_setup(struct b43_wldev *dev)
- 	}
- 
- 	b43_nphy_tx_prepare_adjusted_power_table(dev);
--	/*
- 	b43_ntab_write_bulk(dev, B43_NTAB16(26, 64), 84, nphy->adj_pwr_tbl);
- 	b43_ntab_write_bulk(dev, B43_NTAB16(27, 64), 84, nphy->adj_pwr_tbl);
--	*/
- 
- 	if (nphy->hang_avoid)
- 		b43_nphy_stay_in_carrier_search(dev, false);
--- 
-1.8.4.5
+I've applied the first 12 patches, i.e. all but patch 13. As far as
+patch 13 is concerned, I (a) need more time to review it, and (b) would
+like to understand better how you intend to use it.
+
+I also don't really like the "stub" thing. :)
+
+Maybe it would also make sense to insert the "recalc" refactoring
+somewhere around here?
+
+johannes
 
