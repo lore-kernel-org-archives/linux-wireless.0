@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:58327 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235AbaDIB24 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56497 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752508AbaDYPpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 21:28:56 -0400
-Received: by mail-pb0-f49.google.com with SMTP id jt11so1802509pbb.36
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:55 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 4/8] mac80211: fix possible compile warning in debugfs_netdev.h
-Date: Wed,  9 Apr 2014 09:28:09 +0800
-Message-Id: <9709360a8341770ec487d9033bfa17fdebbb4bf0.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032900_490103_D8892A6C)
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Apr 2014 11:45:19 -0400
+Message-ID: <1398440696.4152.26.camel@jlt4.sipsolutions.net> (sfid-20140425_174529_304899_094CE35C)
+Subject: Re: [PATCH 2/7] mac80211: add get_expected_throughput API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Fri, 25 Apr 2014 17:44:56 +0200
+In-Reply-To: <1397484205-20905-2-git-send-email-antonio@meshcoding.com>
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
+	 <1397484205-20905-2-git-send-email-antonio@meshcoding.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The warning doesn't show up due to duplicate including, but it's worth
-fixing it.
+On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
 
-net/mac80211//debugfs_netdev.h:7:42: warning: ‘struct ieee80211_sub_if_data’ declared inside parameter list [enabled by default]
- void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
-                                          ^
-net/mac80211//debugfs_netdev.h:7:42: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
+> +	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/debugfs_netdev.h | 2 ++
- 1 file changed, 2 insertions(+)
+This isn't nice - it forces drivers to conjure up a value.
 
-diff --git a/net/mac80211/debugfs_netdev.h b/net/mac80211/debugfs_netdev.h
-index 79025e7..9f5501a 100644
---- a/net/mac80211/debugfs_netdev.h
-+++ b/net/mac80211/debugfs_netdev.h
-@@ -3,6 +3,8 @@
- #ifndef __IEEE80211_DEBUGFS_NETDEV_H
- #define __IEEE80211_DEBUGFS_NETDEV_H
- 
-+#include "ieee80211_i.h"
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata);
--- 
-1.9.0
+You should probably at least allow returning 0 for "no idea" or
+something.
+
+johannes
+
 
