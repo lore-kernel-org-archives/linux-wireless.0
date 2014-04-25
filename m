@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52079 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307AbaDEGRp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34232 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776AbaDYCVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2014 02:17:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
-References: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
-	<8738hwrxso.fsf@kamboji.qca.qualcomm.com>
-	<533C256B.9090209@candelatech.com>
-Date: Sat, 5 Apr 2014 09:17:39 +0300
-In-Reply-To: <533C256B.9090209@candelatech.com> (Ben Greear's message of "Wed,
-	02 Apr 2014 07:57:47 -0700")
-Message-ID: <87bnwgpaf0.fsf@kamboji.qca.qualcomm.com> (sfid-20140405_081819_302669_42C137E9)
+	Thu, 24 Apr 2014 22:21:30 -0400
+Date: Thu, 24 Apr 2014 22:21:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "Gustavo F. Padovan" <gustavo@padovan.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2014-04-24
+Message-ID: <20140425020421.GD3410@tuxdriver.com> (sfid-20140425_042149_427405_35E68E89)
+References: <20140424145329.GD7832@joana>
+ <20140425014446.GC3410@tuxdriver.com>
+ <C9BCBE06-78C4-41C6-9B70-BFB2C6AFDF7A@holtmann.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <C9BCBE06-78C4-41C6-9B70-BFB2C6AFDF7A@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+On Thu, Apr 24, 2014 at 06:51:13PM -0700, Marcel Holtmann wrote:
+> Hi John,
+> 
+> > This tag has a lot of stuff in it not in the wireless tree.
+> > Please only send me pull requests that only include patches related
+> > to Bluetooth.
+> > 
+> >> Some fixes for 3.15. There is a revert for the intel driver, a new device id,
+> >> and two important SSP fixes from Johan.
+> >> Also we've noticed that your wireless.git tree is not up to date, so this pull
+> >> was rebased on top of net.git. If you pull from this you'll will be pulling
+> >> net/master from yesterday as well.
+> 
+> as Gustavo explained, this is against net.git since wireless.git has not yet been rebased.
+> 
+> Regards
+> 
+> Marcel
 
-> On 04/02/2014 12:32 AM, Kalle Valo wrote:
->> greearb@candelatech.com writes:
->>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> It can be nice to update the firmware's stats while
->>> debugging other bits of the driver, so add helper method
->>> to do this.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>
->> [...]
->>
->>> --- a/drivers/net/wireless/ath/ath10k/debug.h
->>> +++ b/drivers/net/wireless/ath/ath10k/debug.h
->>> @@ -135,4 +135,6 @@ struct dbglog_hdr_s {
->>>
->>>   void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
->>>
->>> +int ath10k_refresh_peer_stats(struct ath10k *ar);
->>
->> I don't see anyone calling this. How are you planning to use it?
->
-> The RFC patch that debugs tx-hang calls it..nice to see he firmware's
-> buffer reap stats and such before/after trying to flush the buffers.
->
-> I figure it will be useful for other such uses as well, now that stats
-> actually work.
+wireless.git is where it is going to be.  It is based from a few dozen
+commits before -rc1, which was what Dave had as the base of his tree
+when I started merging post -rc1 fixes into wireless.git.
 
-Ok, I'll drop this patch for now. You can resend when we have callers
-for this.
+I'm sorry if this is inconvenient, but among other things this keeps
+net.git and linux.git stuff from getting into wireless-testing.git
+prematurely.
 
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
