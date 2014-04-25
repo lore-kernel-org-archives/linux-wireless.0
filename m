@@ -1,54 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48600 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33966 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933690AbaDVSAX (ORCPT
+	with ESMTP id S1750820AbaDYBpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 14:00:23 -0400
-Date: Tue, 22 Apr 2014 13:57:44 -0400
+	Thu, 24 Apr 2014 21:45:17 -0400
+Date: Thu, 24 Apr 2014 21:44:47 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: Remove myself as maintainer.
-Message-ID: <20140422175744.GB16193@tuxdriver.com> (sfid-20140422_200042_122487_2B67BF7F)
-References: <5352B6EF.1090208@gmail.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2014-04-24
+Message-ID: <20140425014446.GC3410@tuxdriver.com> (sfid-20140425_034615_303046_7BD23675)
+References: <20140424145329.GD7832@joana>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5352B6EF.1090208@gmail.com>
+In-Reply-To: <20140424145329.GD7832@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 19, 2014 at 07:48:31PM +0200, Gertjan van Wingerde wrote:
-> Let's formalize what must have been blatantly clear from my level
-> of activity is the past year(s).
-> I simply do not have time for this anymore.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  MAINTAINERS | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 6dc67b1..a80a586 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7277,7 +7277,6 @@ F:        drivers/video/aty/aty128fb.c
->  RALINK RT2X00 WIRELESS LAN DRIVER
->  P:     rt2x00 project
->  M:     Ivo van Doorn <IvDoorn@gmail.com>
-> -M:     Gertjan van Wingerde <gwingerde@gmail.com>
->  M:     Helmut Schaa <helmut.schaa@googlemail.com>
->  L:     linux-wireless@vger.kernel.org
->  L:     users@rt2x00.serialmonkey.com (moderated for non-subscribers)
-
-Clearly you were loved!  :-)
-
-Thanks for the service, and for making this official.
+This tag has a lot of stuff in it not in the wireless tree.
+Please only send me pull requests that only include patches related
+to Bluetooth.
 
 John
+
+On Thu, Apr 24, 2014 at 11:53:29AM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> Some fixes for 3.15. There is a revert for the intel driver, a new device id,
+> and two important SSP fixes from Johan.
+> Also we've noticed that your wireless.git tree is not up to date, so this pull
+> was rebased on top of net.git. If you pull from this you'll will be pulling
+> net/master from yesterday as well.
+> 
+> Please pull or let me know of any concerns you have. Thanks!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 6a51b5e4d59e00051e65e836520912cd7c717be1:
+> 
+>   hisax/icc: add missing semicolon after label (2014-04-22 21:22:47 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+> 
+> for you to fetch changes up to b66a81831359495b3768ace72452209cdf5d6614:
+> 
+>   Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-24 12:43:33 +0300)
+> 
+> ----------------------------------------------------------------
+> Johan Hedberg (2):
+>       Bluetooth: Fix triggering BR/EDR L2CAP Connect too early
+>       Bluetooth: Fix redundant encryption request for reauthentication
+> 
+> Marcel Holtmann (1):
+>       Revert "Bluetooth: Enable autosuspend for Intel Bluetooth device"
+> 
+> Mohammed Habibulla (1):
+>       Bluetooth: Add support for Lite-on [04ca:3007]
+> 
+>  drivers/bluetooth/ath3k.c | 2 ++
+>  drivers/bluetooth/btusb.c | 5 ++---
+>  net/bluetooth/hci_conn.c  | 9 ++++++---
+>  net/bluetooth/hci_event.c | 6 ++++++
+>  4 files changed, 16 insertions(+), 6 deletions(-)
+> 
+
+
+
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
