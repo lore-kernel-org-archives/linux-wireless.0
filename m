@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:61424 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932927AbaDVRjQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280AbaDYPof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 13:39:16 -0400
-Received: by mail-la0-f44.google.com with SMTP id b8so1041716lan.17
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 10:39:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140422193029.2d81fac5@xenia.leun.net>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
- <20140422180003.6438dbb7@xenia.leun.net> <CAB=NE6URp2S9rhVr2cqT+4VOj50m+q0o1rVRehCZvcUtNwTVVw@mail.gmail.com>
- <20140422184824.74973bb3@xenia.leun.net> <CAB=NE6W64b5VS5pTnxrcRRkRdje6h_hQcGmF9jUiXO55b+nHRw@mail.gmail.com>
- <20140422193029.2d81fac5@xenia.leun.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 22 Apr 2014 10:38:54 -0700
-Message-ID: <CAB=NE6UCS3ZSE3CQ_98vBHQqZRR31PwF61_G+UZ-mEp=WqEDeQ@mail.gmail.com> (sfid-20140422_193929_095419_67EB10FC)
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-To: Michael Leun <lkml20140418@newton.leun.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arik@wizery.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Apr 2014 11:44:35 -0400
+Message-ID: <1398439491.4152.13.camel@jlt4.sipsolutions.net> (sfid-20140425_174533_183476_7A1A9FE0)
+Subject: Re: [PATCH] regulatory: don't rule out some valid rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 25 Apr 2014 17:24:51 +0200
+In-Reply-To: <1397394958-6827-1-git-send-email-eliad@wizery.com> (sfid-20140413_151604_220848_6C7D5666)
+References: <1397394958-6827-1-git-send-email-eliad@wizery.com>
+	 (sfid-20140413_151604_220848_6C7D5666)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 22, 2014 at 10:30 AM, Michael Leun
-<lkml20140418@newton.leun.net> wrote:
-> On Tue, 22 Apr 2014 10:04:19 -0700
-> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
->
->> On Tue, Apr 22, 2014 at 9:48 AM, Michael Leun
->> <lkml20140418@newton.leun.net> wrote:
->> > 1611                    if (wiphy->regulatory_flags &
->> > REGULATORY_COUNTRY_IE_IGNORE) 1612
->> > return REG_REQ_IGNORE;
->>
->> Interesting -- same line as your regression test had found, wiphy->
->> must be NULL. Digging deeper, you can discard that patch now, we can
->> rule out the reprocessing of the request.
->
->
-> OK, but if this adds any useful information: Meanwhile I applied the
-> 2nd patch you posted ontop test-ariks-patch-for-314.patch (with some
-> fuzz), and that did change something:
->
-> Does not wait until I try to hibernate to bang, it barfs already during
-> boot and that seems to look different. Didnt have a chance to copy that
-> yet, but could, if useful.
+On Sun, 2014-04-13 at 16:15 +0300, Eliad Peller wrote:
+> commit 6d87df6 ("regdb: allow 40 MHz on world roaming
+> channels 12/13") in wireless-regdb did the following
+> change:
+> 
+> -        # Channel 12 - 13. No HT40 channel fits here
+> -        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
+> +        # Channel 12 - 13.
+> +        (2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+> 
+> in order to allow HT40+ on lower channels (such as 9).
+> 
+> However, the current regulatory rules verification forbids
+> such rules, as 2482 - 2457 < 40.
 
-Yeah we don't want that 2nd patch, your issue seems like a race on the
- wiphy during suspend, which is very surprising, specially that no one
-else would have picked up on this before. I'll go build v3.14.1 and
-reproduce with rtcwake -m mem -s 30.
+For better or worse, this is how the rules verification was defined. I
+don't like this definition either and think the whole "max bandwidth"
+thing was done badly in the original implementation, but this is
+userspace API.
 
-  Luis
+To bust this limit would mean to change the rule interpretation quite
+significantly, I don't think we can do that without more analysis on why
+it's safe or won't matter for the regdb.
+
+However, we have the NL80211_RRF_AUTO_BW flag now, which presumably
+could also be somehow set for the rule here to solve this issue?
+
+johannes
+
