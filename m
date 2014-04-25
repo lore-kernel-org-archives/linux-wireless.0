@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:26183 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbaD1OD4 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:56501 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbaDYHrE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 10:03:56 -0400
-Message-ID: <535EAD21.5090808@redpinesignals.com> (sfid-20140428_160359_676329_D5DED46B)
-Date: Tue, 29 Apr 2014 01:03:53 +0530
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+	Fri, 25 Apr 2014 03:47:04 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hm4so2283994wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 00:47:02 -0700 (PDT)
+Message-ID: <535A12F3.8020003@gmail.com> (sfid-20140425_094711_103003_A108A165)
+Date: Fri, 25 Apr 2014 10:46:59 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] rsi: Changing opcode for sta mode according to changes
- in firmware
-Content-Type: text/plain; charset=ISO-8859-1
+To: Julian Sikorski <belegdol@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Low 5 GHz performance of Intel Advanced-N 6230
+References: <5358AADD.3010702@gmail.com> <ljbdr0$c27$1@ger.gmane.org>
+In-Reply-To: <ljbdr0$c27$1@ger.gmane.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
----
+On 04/24/2014 07:24 PM, Julian Sikorski wrote:
+> W dniu 24.04.2014 08:10, Julian Sikorski pisze:
+>> Dear all,
+>>
+>> I have been moderately recently hit by a performance drop of Intel
+>> Advanced-N 6230 card. I unfortunately do not have the "before" numbers,
+>> but I have noticed this since I was able to stream bluray rips over nfs
+>> to a wired Raspberry Pi a while ago and now I cannot. This has lead me
+>> to begin investigating the issue.
+>> In the end I have used iperf3, testing speeds between RPi and laptop,
+>> with laptop running both Windows and Linux. iperf3 on RPi was always the
+>> same, on the laptop it was self-compiled iperf3 git master (on Windows I
+>> used Cygwin). Please see the observed speeds below:
+>> - Windows: upload to RPi 93 Mbit/s, download from RPi 54 Mbit/s
+>> - Fedora: upload to RPi 26 Mbit/s, download from RPi 48 Mbit/s
+>>
+>> This is all on Fedora 20 x86_64. Please find attached the journalctl log
+>> for the last boot. Please let me know if more information is needed - I
+>> would love to get my network speeds back up to the level where I can
+>> watch bluray rips again. Thank you for your support in advance.
+>>
+>> Best regards,
+>> Julian
+>>
+> Hello again,
+> 
+> I have narrowed this down to have regressed between 3.13.6-200.fc20 and
+> 3.13.7-200. Using pointers from Josh Boyer of #fedora-devel, I have
+> managed to restore the previous performance by loading iwlwifi with
+> 11n_disable=8. I am now at 3.14.1-200 with that option enabled and the
+> network is fast as it used to be.
+> Is such a major performance hit expected from this change? Here is the
+> commit in question:
+> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?h=linux-3.13.y&id=45e5cb4f43d33e72ff5f98c80b081eb42e4e4182
+> 
 
-rsi_91x_mgmt.c |    4 ++--
-rsi_mgmt.h     |    1 +
-2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff -uprN a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c
---- a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c	2014-04-28 08:14:27.000000000 +0545
-+++ b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c	2014-04-29 13:22:35.540968735 +0545
-@@ -1083,7 +1083,7 @@ void rsi_inform_bss_status(struct rsi_co
- {
- 	if (status) {
- 		rsi_hal_send_sta_notify_frame(common,
--					      NL80211_IFTYPE_STATION,
-+					      RSI_IFTYPE_STATION,
- 					      STA_CONNECTED,
- 					      bssid,
- 					      qos_enable,
-@@ -1092,7 +1092,7 @@ void rsi_inform_bss_status(struct rsi_co
- 			rsi_send_auto_rate_request(common);
- 	} else {
- 		rsi_hal_send_sta_notify_frame(common,
--					      NL80211_IFTYPE_STATION,
-+					      RSI_IFTYPE_STATION,
- 					      STA_DISCONNECTED,
- 					      bssid,
- 					      qos_enable,
-diff -uprN a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h
---- a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h	2014-04-28 08:14:27.000000000 +0545
-+++ b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h	2014-04-29 13:21:27.252822454 +0545
-@@ -73,6 +73,7 @@
- #define RX_BA_INDICATION                1
- #define RSI_TBL_SZ                      40
- #define MAX_RETRIES                     8
-+#define RSI_IFTYPE_STATION		 0
- 
- #define STD_RATE_MCS7                   0x07
- #define STD_RATE_MCS6                   0x06
-
-
-
-
-
-
+Right - I disabled TX APMDU in this patch. This feature gives a big boost in TX performance, but lots of people experienced bugs that disappeared when this feature was disabled. This bug is in the firmware. Since the most common use case is to browse the internet which is more Rx than Tx, I decided to disabled this feature by default and allow people to enabled it using the module parameter.
