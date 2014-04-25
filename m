@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:36923 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbaDRGUI (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56507 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633AbaDYPq2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 02:20:08 -0400
-Message-ID: <5350C3E6.2010504@meshcoding.com> (sfid-20140418_082011_378460_0CDD57A4)
-Date: Fri, 18 Apr 2014 08:19:18 +0200
-From: Antonio Quartulli <antonio@meshcoding.com>
-MIME-Version: 1.0
-To: The list for a Better Approach To Mobile Ad-hoc
-	 Networking <b.a.t.m.a.n@lists.open-mesh.org>
-CC: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [B.A.T.M.A.N.] [PATCH 2/7] mac80211: add get_expected_throughput
- API
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com> <1397484205-20905-2-git-send-email-antonio@meshcoding.com> <CAEFj987Hr4iUuHX-_nJN5AcHBLnAeJhhMX9UbqkGffTT+UQFLQ@mail.gmail.com>
-In-Reply-To: <CAEFj987Hr4iUuHX-_nJN5AcHBLnAeJhhMX9UbqkGffTT+UQFLQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD"
+	Fri, 25 Apr 2014 11:46:28 -0400
+Message-ID: <1398440774.4152.28.camel@jlt4.sipsolutions.net> (sfid-20140425_174634_555747_BC446F54)
+Subject: Re: [PATCH 5/7] mac80211: minstrel - implement
+ get_expected_throughput() API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Fri, 25 Apr 2014 17:46:14 +0200
+In-Reply-To: <1397484205-20905-5-git-send-email-antonio@meshcoding.com>
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
+	 <1397484205-20905-5-git-send-email-antonio@meshcoding.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+> 
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> ---
+>  net/mac80211/rc80211_minstrel.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+> index 26fd94f..cd40bc0 100644
+> --- a/net/mac80211/rc80211_minstrel.c
+> +++ b/net/mac80211/rc80211_minstrel.c
+> @@ -657,6 +657,18 @@ minstrel_free(void *priv)
+>  	kfree(priv);
+>  }
+>  
+> +static u32
+> +minstrel_get_expected_throughput(void *priv, void *priv_sta,
+> +				 struct ieee80211_supported_band *sband)
+> +{
+> +	struct minstrel_sta_info *mi = priv_sta;
+> +	int idx = mi->max_tp_rate[0];
+> +	u32 bitrate, ret;
+> +
+> +	bitrate = sband->bitrates[mi->r[idx].rix].bitrate;
+> +	return bitrate * MINSTREL_TRUNC(mi->r[idx].probability * 1000) / 100;
 
+/100? didn't you say minstrel already used your units?
 
+johannes
 
-On 18/04/14 02:56, Yeoh Chun-Yeow wrote:
-> Hi, Antonio
->=20
-> Do you know whether the calculation of expected throughput in minstrel
-> and minstrel_ht are both the same?
-
-not really the same, but they are similar.
-
->=20
-> Any explanation on how the expected throughput is calculated?
-
-Just check patch 5 and 6 :)
-
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-
---V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJTUMPrAAoJEEKTMo6mOh1VAqgQAIf+XtXmZEHKU3QcFghPdF2P
-oJtDU1P2bZoFnZkOzDRcoA72O4UUsIk6dzPj5LRAyM4PFHyQN7pJtGLWeuLU0E3Z
-+TecusWFmhr3CIfDfZ9LDzLg4R/HXoK2S7yYQVm25PgUGo16cGGdgZ+LgFbJUYwJ
-xoBe8tqfVmQ3dXKrpDUCLwrv+w9XFHp1oVfAiciTW+4haw/QTkgfuKxUjf+78Sfy
-t4nki1GonE3iuC9IRCg9x225XFOuATJ37iPxHPDquvD9XjG+9g8DbHjqjjDKLtTz
-pmuYYK0Yo/4GmVcyDpbLlIF7rnsgyGLByLZfTioOXSg3F+QS8m7+plYEgHzU4rjg
-/NoAbByiK/Az7CKF0Ko/mFHguCF2OJo/9ScIsX+1p9AEq+fHaA0E6G08WvzoeXqT
-zXJa8NOrqfvTMuB4ceH9NpPfVOAlCV99SHar8IeaES0QievkZjAUjPstBFxvzhln
-P7RMyn6HE2CawSz/iuzobqByVXaqtrL+mGoQ5d1qOlNlezNmg1VWMkdtEtiRICiQ
-Gn5j7H9IqkhU5UReiGTfwndmSVHcRXDM9TZmr/gtS+ziEfMrIh+f2qJo/Ux3PuTA
-Ff/GoVnORG/9d4MX4upP/fCSIAMM94TNbWx9NCyri0kC6gCnjtYD0emjfEQ3Z4hk
-LJ2WLBjv/v9656zYcWfz
-=HIKa
------END PGP SIGNATURE-----
-
---V4VlwfQsN8CaicGxEMfmejLdCxHCdWfXD--
