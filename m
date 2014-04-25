@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:58889 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758178AbaDIKNV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:13:21 -0400
-Received: by mail-ee0-f44.google.com with SMTP id e49so1670983eek.17
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:13:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/3] ath10k: improve recovery speed
-Date: Wed,  9 Apr 2014 12:07:05 +0200
-Message-Id: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_121325_165231_B93D56C6)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19779 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750820AbaDYDfn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2014 23:35:43 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Date: Thu, 24 Apr 2014 20:35:34 -0700
+Subject: RE: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com> (sfid-20140425_053549_713612_80638BD2)
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+ <1397760423-11455-2-git-send-email-bzhao@marvell.com>
+ <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
+In-Reply-To: <20140425013756.GA3410@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-Patch 1/3 is just a cleanup I wanted to keep
-separate from 2/3 which actually improves recovery
-speed.
+> > Sorry for commenting so late, I was on holidays and then got lagged
+> > behind with email.
 
-With this I'm able to recover from a `hard`
-simualtion crash in ~3 seconds instead of ~10.
+Hi Kalle,
 
-This should decrease the chance of CQM kicking in
-on connected clients (due to beacon loss) when
-ath10k is acting as AP.
+Thanks for your comments.
+
+> > Like I said in my previous email, IMHO a wireless driver should not save
+> > any files to the filesystem. For example, I don't see any other uses of
+> > filp_open() in drivers/net. Ugly hacks like this belong to staging
+> > drivers, not to proper upstream drivers.
+> 
+> I'm sorry for letting this slip through.  I must have had too much rum or something...
+> 
+> I'm reverting this patch in wireless-next -- drivers should not be
+> making filesystem calls like that.  Even if you can argue for doing
+> so somehow, where the file would go would be a policy decision that
+> should not be encoded in the driver.
+
+Hi John,
+
+Sorry about the hassle. We will find a proper way to implement this.
+
+Thanks,
+Bing
 
 
-Michal Kazior (3):
-  ath10k: differentiate between target init failures
-  ath10k: don't wait for device init if it crashed
-  ath10k: skip suspending when recovering
 
- drivers/net/wireless/ath/ath10k/core.c |  6 ++++--
- drivers/net/wireless/ath/ath10k/pci.c  | 17 ++++++++++++++++-
- 2 files changed, 20 insertions(+), 3 deletions(-)
-
--- 
-1.8.5.3
 
