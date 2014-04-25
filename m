@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:35948 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752715AbaDXJJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 05:09:02 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	<1397760423-11455-2-git-send-email-bzhao@marvell.com>
-Date: Thu, 24 Apr 2014 12:08:59 +0300
-In-Reply-To: <1397760423-11455-2-git-send-email-bzhao@marvell.com> (Bing
-	Zhao's message of "Thu, 17 Apr 2014 11:47:00 -0700")
-Message-ID: <87a9bb5c2c.fsf@purkki.adurom.net> (sfid-20140424_110914_269696_96A2565A)
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:47312 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbaDYTPq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Apr 2014 15:15:46 -0400
+Received: by mail-qg0-f50.google.com with SMTP id 63so4435836qgz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 12:15:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140425225334.646d5bb22f458e0054b965c3@lnv.dyndns-server.com>
+References: <20140425225334.646d5bb22f458e0054b965c3@lnv.dyndns-server.com>
+Date: Fri, 25 Apr 2014 20:15:45 +0100
+Message-ID: <CAFtRNNyvGcUH0JqhvmNw46b5YFeKKfLmTwfitwapLKBNpgjW7A@mail.gmail.com> (sfid-20140425_211554_747301_0F26F2B4)
+Subject: Re: [PATCH] ath5k: Fix AR5K_PHY_TXPOWER_RATE_MAX register value setting.
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Nickolay Ledovskikh <nledovskikh@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Reyk Floeter <reyk@openbsd.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bing Zhao <bzhao@marvell.com> writes:
-
-> From: Amitkumar Karwar <akarwar@marvell.com>
+2014-04-25 19:53 GMT+01:00 Nickolay Ledovskikh <nledovskikh@gmail.com>:
+> I was reading ath5k power setting code and
+> noticed typing error in ath5k_hw_txpower function.
+> Invalid value was written to AR5K_PHY_TXPOWER_RATE_MAX
+> register.
 >
-> Firmware dump feature is added for PCIe based chipsets.
-> Separate file will be created at /var/log/fw_dump_*
-> for each memory segment.
+> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 1a2973b..f383b25 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -3709,8 +3709,8 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>                         AR5K_REG_MS(AR5K_TUNE_MAX_TXPOWER, AR5K_TPC_CHIRP),
+>                         AR5K_TPC);
+>         } else {
+> -               ath5k_hw_reg_write(ah, AR5K_PHY_TXPOWER_RATE_MAX |
+> -                       AR5K_TUNE_MAX_TXPOWER, AR5K_PHY_TXPOWER_RATE_MAX);
+> +               ath5k_hw_reg_write(ah, AR5K_TUNE_MAX_TXPOWER,
+> +                       AR5K_PHY_TXPOWER_RATE_MAX);
+>         }
 >
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+>         return 0;
+> --
+> Best regards, Nikolay Ledovskikh.
 
-Sorry for commenting so late, I was on holidays and then got lagged
-behind with email.
-
-> +			memset(filename, 0, sizeof(filename));
-> +			memcpy(filename, name_prefix, strlen(name_prefix));
-> +			strcat(filename, entry->mem_name);
-> +			do_gettimeofday(&t);
-> +			entry->file_mem = filp_open(filename, O_CREAT | O_RDWR,
-> +						    0644);
-> +			if (IS_ERR(entry->file_mem)) {
-> +				dev_info(adapter->dev,
-> +					 "Create %s file failed at %s, opening another dir /tmp\n",
-> +					 entry->mem_name, filename);
-> +				memset(filename, 0, sizeof(filename));
-> +				sprintf(filename, "%s%s", "/tmp/fw_dump_",
-> +					entry->mem_name);
-> +				entry->file_mem =
-> +					filp_open(filename,
-> +						  O_CREAT | O_RDWR, 0644);
-> +			}
-> +			if (!IS_ERR(entry->file_mem)) {
-> +				dev_info(adapter->dev,
-> +					 "Start to save the output : %u.%06u, please wait...\n",
-> +					 (u32)t.tv_sec, (u32)t.tv_usec);
-
-Like I said in my previous email, IMHO a wireless driver should not save
-any files to the filesystem. For example, I don't see any other uses of
-filp_open() in drivers/net. Ugly hacks like this belong to staging
-drivers, not to proper upstream drivers.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-Kalle Valo
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
