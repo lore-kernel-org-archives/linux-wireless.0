@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:37106 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754408AbaDOOoR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145AbaDYPob (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 10:44:17 -0400
-Received: by mail-oa0-f54.google.com with SMTP id n16so11024187oag.27
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Apr 2014 07:44:16 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Bob Copeland <me@bobcopeland.com>,
-	Bob Copeland <bob@cozybit.com>
-Subject: [PATCH 3/3] mac80211: mesh: always use the latest target_sn
-Date: Tue, 15 Apr 2014 10:43:08 -0400
-Message-Id: <1397572988-3181-3-git-send-email-me@bobcopeland.com> (sfid-20140415_164424_923794_30F285E5)
-In-Reply-To: <1397572988-3181-1-git-send-email-me@bobcopeland.com>
-References: <1397572988-3181-1-git-send-email-me@bobcopeland.com>
+	Fri, 25 Apr 2014 11:44:31 -0400
+Message-ID: <1398440002.4152.18.camel@jlt4.sipsolutions.net> (sfid-20140425_174557_280695_0880A997)
+Subject: Re: [PATCH 08/12] cfg80211: change function name
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 25 Apr 2014 17:33:22 +0200
+In-Reply-To: <d399a064105f6250cf64d1147452e8f53b09a43d.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065519_411477_80F48DB3)
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+	 <d399a064105f6250cf64d1147452e8f53b09a43d.1398055854.git.gamerh2o@gmail.com>
+	 (sfid-20140421_065519_411477_80F48DB3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a path target responds to a path request, its response
-always contains the most up-to-date information; accordingly,
-it should use the latest target_sn, regardless of
-net_traversal_jiffies().  Otherwise, only the first path
-response is considered when constructing a path, as it will
-have the highest target_sn of all replies during that period.
+On Mon, 2014-04-21 at 12:53 +0800, Zhao, Gang wrote:
+> Name wiphy_to_rdev is more accurate to describe what the function
+> does, i.e., return a pointer pointing to struct
+> cfg80211_registered_device.
 
-Signed-off-by: Bob Copeland <bob@cozybit.com>
----
- net/mac80211/mesh_hwmp.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Applied.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 03ff5ea..94758b9 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -544,9 +544,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		if (time_after(jiffies, ifmsh->last_sn_update +
- 					net_traversal_jiffies(sdata)) ||
- 		    time_before(jiffies, ifmsh->last_sn_update)) {
--			target_sn = ++ifmsh->sn;
-+			++ifmsh->sn;
- 			ifmsh->last_sn_update = jiffies;
- 		}
-+		target_sn = ifmsh->sn;
- 	} else if (is_broadcast_ether_addr(target_addr) &&
- 		   (target_flags & IEEE80211_PREQ_TO_FLAG)) {
- 		rcu_read_lock();
--- 
-1.9.1
+johannes
 
