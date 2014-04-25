@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:46335 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759070AbaDJUBg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752231AbaDYPoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 16:01:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140410195402.GA17308@kroah.com>
-References: <20140410203146.767149e7@spike>
-	<CAJUuVQ5KW3v0DgwotDMow=rBvxoZKfYYD2misXbsMD6c1UaShw@mail.gmail.com>
-	<20140410195402.GA17308@kroah.com>
-Date: Thu, 10 Apr 2014 16:01:35 -0400
-Message-ID: <CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com> (sfid-20140410_220206_541908_6FCA22AE)
-Subject: Re: [PATCH resend] rsi: Fix a potential memory leak in rsi_set_channel()
-From: Andev <debiandev@gmail.com>
-To: Greg Kroah-Hartman <greg@kroah.com>
-Cc: Christian Engelmayer <cengelma@gmx.at>, linville@tuxdriver.com,
-	fariyaf@gmail.com, dan.carpenter@oracle.com, joe@perches.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Apr 2014 11:44:32 -0400
+Message-ID: <1398439846.4152.15.camel@jlt4.sipsolutions.net> (sfid-20140425_174447_406615_6007E63A)
+Subject: Re: [PATCH 04/12] mac80211: return bool instead of numbers in
+ yes/no function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 25 Apr 2014 17:30:46 +0200
+In-Reply-To: <4159b979438a7c3bdda39245684fb170932ab873.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065505_758967_91E60374)
+References: <cover.1398055853.git.gamerh2o@gmail.com>
+	 <4159b979438a7c3bdda39245684fb170932ab873.1398055854.git.gamerh2o@gmail.com>
+	 (sfid-20140421_065505_758967_91E60374)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 3:54 PM, Greg Kroah-Hartman <greg@kroah.com> wrote:
-> On Thu, Apr 10, 2014 at 03:46:12PM -0400, Andev wrote:
->> Adding Greg KH,
->
-> Why do I care about this?
->
+On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
+> And some code style changes in the function, and correct a typo in
+> comment.
 
-I am not sure if this needs to be applied to stable too. Should I have
-cc'ed stable@?
+Applied, thanks.
 
--- 
-Pratapa Rudra
+johannes
+
