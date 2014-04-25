@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:42033 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbaDXIO1 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:34964 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbaDYHv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 04:14:27 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kx10so1674776pab.39
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 01:14:26 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
-Date: Thu, 24 Apr 2014 16:14:10 +0800
-Message-Id: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140424_101440_974856_22E98245)
+	Fri, 25 Apr 2014 03:51:26 -0400
+Received: by mail-wi0-f180.google.com with SMTP id q5so2247657wiv.1
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 00:51:24 -0700 (PDT)
+Message-ID: <535A13FA.4070405@gmail.com> (sfid-20140425_095129_798461_02A236D4)
+Date: Fri, 25 Apr 2014 10:51:22 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Pierre Bourdon <delroth@gmail.com>, linux-wireless@vger.kernel.org
+CC: Ryan Houdek <sonicadvance1@gmail.com>
+Subject: Re: Odd network behaviors with an Intel Wireless 7260
+References: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
+In-Reply-To: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware 999.999.0.636 does not allow stand alone monitor
-mode. This means that bridging the STA mode and put it into
-promiscuous mode will also cause the firmware to crash. Avoid
-this.
+Hi,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e2c01dc..f640328 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -647,10 +647,15 @@ static int ath10k_monitor_vdev_delete(struct ath10k *ar)
- 
- static int ath10k_monitor_start(struct ath10k *ar)
- {
--	int ret;
-+	int ret = -1;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	if (ar->fw_version_build == 636) {
-+		ath10k_warn("stand alone monitor mode is not supported\n");
-+		return ret;
-+	}
-+
- 	if (!ath10k_monitor_is_enabled(ar)) {
- 		ath10k_warn("trying to start monitor with no references\n");
- 		return 0;
--- 
-1.9.2
+On 04/25/2014 02:03 AM, Pierre Bourdon wrote:
+> Hi linux-wireless folks,
+> 
+> I have been getting some weird network behaviors with my Intel
+> Wireless 7260 adapter that I cannot explain by anything else than a
+> driver/firmware bug. I'm out of ideas on how to debug this issue.
+> 
+> My network configuration is fairly basic: IPv4 over 802.11n,
+> AP/default gateway is 192.168.0.1, my Intel 7260 STA is 192.168.0.2.
+> Several AP/gateway hardware and software have been tested and have
+> shown the same problem.
+> 
+> On 192.168.0.2 I am constantly running some ICMP pings to 192.168.0.1
+> and 8.8.8.8. Randomly, the pings from 192.168.0.2 to 8.8.8.8 start
+> failing (responses never received) while the pings to 192.168.0.1
+> continue to succeed without any trouble. When tcpdumping on the
+> gateway, I see the pings to 8.8.8.8 being successfully forwarded and
+> responses being sent back to the STA (so this is not a routing issue
+> on the gateway - and again, I've tested several combinations of hw/sw
+> on the gateway).
+> 
+> Another example: my TCP sessions on the Intel 7260 STA to the internet
+> will start randomly freezing, but my TCP sessions going through
+> tunnels on another LAN host (let's say, 192.168.0.3) to the internet
+> will work fine.
+> 
+> After 30s-1min30 the problem fixes itself and packets start being
+> received by the STA again.
+> 
+> I only see this from the Intel 7260 host and not from any other WLAN
+> device connected to the AP, which is another strong evidence that the
+> issue is on the STA side.
+> 
+> I've shared this with some other people using an Intel 7260 adapter on
+> Linux and found someone having a similar issue. I'm not sure how
+> widespread it is and could not find an existing bug report.
+> 
+> What are the next steps to get useful debugging information out of
+> this issue? I unfortunately do not have the required hardware to do
+> monitor-mode sniffing of what's happening at the L2 level.
+> 
 
+Thank you very much for this very detailed report.
+1) can you try with power save disabled?
+   sudo iw wlan0 set power_save off
+2) if 1) helps, can you try https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=a82dda6cd492b8c88952be6f6527f3656f7ac585.
+
+Thanks
