@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:34628 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932329AbaDXQpk (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39235 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751716AbaDZU7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 12:45:40 -0400
-Received: by mail-lb0-f172.google.com with SMTP id p9so994214lbv.3
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 09:45:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70A2AB63@SC-VEXCH1.marvell.com>
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
-	<1397710914-10061-2-git-send-email-bzhao@marvell.com>
-	<CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
-	<20140418044619.GF24166@us.netrek.org>
-	<477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com>
-	<20140419003410.GB14606@us.netrek.org>
-	<20140424061137.GN1947@us.netrek.org>
-	<477F20668A386D41ADCC57781B1F70430F70A2AB63@SC-VEXCH1.marvell.com>
-Date: Thu, 24 Apr 2014 09:45:37 -0700
-Message-ID: <CACUGKYMGVZyRHv7m90+3VJ3dAb6n0jvi=XHUYLUQh+1UAJgNQA@mail.gmail.com> (sfid-20140424_184605_875022_DDA715D8)
-Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
-From: John Tobias <john.tobias.ph@gmail.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "quozl@laptop.org" <quozl@laptop.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Chris Ball <cjb@laptop.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 26 Apr 2014 16:59:17 -0400
+Message-ID: <1398545944.7767.226.camel@deadeye.wl.decadent.org.uk> (sfid-20140426_231015_694927_D3A6BCE9)
+Subject: [PATCH] rtl8192cu: Fix unbalanced irq enable in error path of
+ rtl92cu_hw_init()
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>
+Date: Sat, 26 Apr 2014 21:59:04 +0100
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-YufWzz+q9HgJhj8aHdbR"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
 
-How did you know that by downgrading the firmware the problem has been
-solved?. Did you see a scenario or flow in the driver that both
-occurred when using the two different firmware but able to work on the
-p80?.
+--=-YufWzz+q9HgJhj8aHdbR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The reason why I am asking is because sometimes the bug/s did not occur often.
+Fixes: a53268be0cb9 ('rtlwifi: rtl8192cu: Fix too long disable of IRQs')
+Cc: stable@vger.kernel.org
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wire=
+less/rtlwifi/rtl8192cu/hw.c
+index 68b5c7e..07cb06d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1001,7 +1001,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+ 	err =3D _rtl92cu_init_mac(hw);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "init mac failed!\n");
+-		return err;
++		goto exit;
+ 	}
+ 	err =3D rtl92c_download_fw(hw);
+ 	if (err) {
 
-john
+--=20
+Ben Hutchings
+The most exhausting thing in life is being insincere. - Anne Morrow Lindber=
+g
 
+--=-YufWzz+q9HgJhj8aHdbR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-On Thu, Apr 24, 2014 at 12:28 AM, Bing Zhao <bzhao@marvell.com> wrote:
-> Hi James,
->
->> > > > I'm interested to know if the "firmware hangs" that you experiment
->> > > > with prevent autonomous RF TX, or if RF TX typically proceeds.
->> > >
->> > > It depends. Even if firmware hangs the hardware is still alive.
->> > > So you could see beacons and probe responses from the card if
->> > > hardware has been programmed before firmware hangs.
->> >
->> > Thanks.  I neglected to mention the time period; beacons and probe
->> > responses are seen for many minutes after the timeout report by the
->> > driver, and I have not yet tested for how long this lasts.  The probe
->> > responses are in reply to new probe requests.  It makes me think the
->> > card is working fine, apart from not communicating with the host.
->>
->> Downgrading wireless firmware to 14.66.9.p80 has fixed this problem.
->
-> Wow! It means that p96 firmware had introduced the problem.
->
-> Thanks,
-> Bing
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAU1weGOe/yOyVhhEJAQr78A//fhmopCnsyt30Xr6y0wwBi3mG0PWWdO4e
+ejGBdzzjXdJxdAlIh+Vf0otUBezY/x20KRuJBF3wZI3zPVrXXgbQJUEOybKjP0v1
+DC6vOAsk1qnB/4KpqGyNC726cd61GhpEMsaxS+eMEJsDl/GX1R2X2YYjjJ45Ut3w
+T0Cn0uwP2ivjV9BKp8aB9ST4crOu0garcT/UK450lK2GrOgYDSPNfL4dpW+YKJrg
+RjYUm+FM3DDpe+hFTFjYk7vlDaQjBdMd0sQcBEz25p9/8e9XjSxT9NoINTtMsoaO
+1YdbiAvgxnHluHLn5ILCMrcQNhSHvnF82/N9e7ptRty+icKaG6Y0biW52sb8r7J/
+VE8NdhYBnHzss3uV58EkaQRevdtaAf/N/I7Nlbt0rsh9AjbC+ZDHpTZyAleJw5kK
+cVflnX/RZYT1xn98oxOHKBKx5dI5uiy2X5Q+if4/otbLnxwbMRKJWDC8rhq9X1MQ
+WsELcu8/OQrQ+tdAdIf9j9mP24GIUahiqeydGqzoZ7amcwrRI9Vl0Sh+0tJNIJag
+a6mjOH7YhQtEEOPR5tpIgdeEh28EkOnm6VGvxudJzKfj3bUKcWlbIJ2dCD4H9q+m
+VPNPR/SDdpvvFvdzHAnky47tOFTYoOCz3R2Zb0G8AKnBykN9hFucjDv2H1RgE9nr
+4dG+U/XguM8=
+=RI8d
+-----END PGP SIGNATURE-----
+
+--=-YufWzz+q9HgJhj8aHdbR--
