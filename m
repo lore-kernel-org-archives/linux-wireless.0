@@ -1,192 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:42717 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbaDDLoN (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:41120 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbaDZBn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 07:44:13 -0400
-Received: by mail-we0-f171.google.com with SMTP id t61so3328110wes.30
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:12 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFT 1/4] ath10k: fix wmi-htc tx credit starvation
-Date: Fri,  4 Apr 2014 13:37:41 +0200
-Message-Id: <1396611464-5940-2-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134420_422838_9B5D3488)
-In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 25 Apr 2014 21:43:56 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so3699184pab.8
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 18:43:55 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/2] mac80211: beautify the code
+Date: Sat, 26 Apr 2014 09:43:40 +0800
+Message-Id: <2c511530891bb91f1898a9ae09fed1628043192c.1398476191.git.gamerh2o@gmail.com> (sfid-20140426_034359_786976_7056D980)
+In-Reply-To: <1398440262.4152.21.camel@jlt4.sipsolutions.net>
+References: <1398440262.4152.21.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each WMI management Tx consumes 1 HTC Tx credit
-and doesn't replenish it until the frame is
-actually transmitted out of firmware's Tx queues.
+ieee80211_assign_chanctx() checks if local->use_chanctx is true, so
+the two code block related to ieee80211_assign_chanctx() can be moved
+into above if clause, emphasize that these code are executed only if
+local->use_chanctx is true.
 
-If associated client was asleep and has gone out
-of range then unicast frames won't be released for
-FW/HW queues for a while (10 seconds per
-observation). This means that if more management
-frames are queued then HTC Tx credits are drained
-to 0 and no other commands can be submitted
-including beacons and peer removal.
-
-This could in turn result in clients disconnecting
-due to their beacon loss and may trigger spurious
-sta kickouts because wmi peer removal command may
-never reach firmware during disassociation.
-
-This could happen, e.g. when disconnecting client
-that has gone away while asleep.
-
-As a workaround flush unicast management frames
-that can possibly be buffered.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 80 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  5 ---
- drivers/net/wireless/ath/ath10k/wmi.h |  3 ++
- 3 files changed, 83 insertions(+), 5 deletions(-)
+ net/mac80211/util.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58ec5a7..25362ef 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2076,9 +2076,56 @@ void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar)
- 	}
- }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7a376f8..cafbae7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1565,17 +1565,17 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		list_for_each_entry(ctx, &local->chanctx_list, list)
+ 			WARN_ON(drv_add_chanctx(local, ctx));
+ 		mutex_unlock(&local->chanctx_mtx);
+-	}
  
-+static void ath10k_mgmt_tx_flush(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ath10k_vif *arvif = NULL, *arvif_iter;
-+	u8 *da = ieee80211_get_DA(hdr);
-+	u8 vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
-+	int ret;
-+
-+	if (!is_unicast_ether_addr(da))
-+		return;
-+
-+	if (!ieee80211_is_disassoc(hdr->frame_control) &&
-+	    !ieee80211_is_deauth(hdr->frame_control) &&
-+	    !ieee80211_is_action(hdr->frame_control))
-+		return;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	list_for_each_entry(arvif_iter, &ar->arvifs, list) {
-+		if (arvif_iter->vdev_id == vdev_id) {
-+			arvif = arvif_iter;
-+			break;
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-		ieee80211_assign_chanctx(local, sdata);
+-	}
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (!ieee80211_sdata_running(sdata))
++				continue;
++			ieee80211_assign_chanctx(local, sdata);
 +		}
+ 
+-	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata && ieee80211_sdata_running(sdata))
+-		ieee80211_assign_chanctx(local, sdata);
++		sdata = rtnl_dereference(local->monitor_sdata);
++		if (sdata && ieee80211_sdata_running(sdata))
++			ieee80211_assign_chanctx(local, sdata);
 +	}
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	if (!arvif)
-+		return;
-+
-+	ath10k_dbg(ATH10K_DBG_MAC,
-+		   "mac flushing peer %pM on vdev %i mgmt tid for unicast mgmt\n",
-+		   da, vdev_id);
-+
-+	/*
-+	 * Wait 2 beacon intervals before flushing so stations that are
-+	 * asleep but are actually still in range have a chance to see
-+	 * updated PVB, wake up and fetch the frame.
-+	 */
-+	msleep(2 * arvif->beacon_interval * 1024 / 1000);
-+
-+	ret = ath10k_wmi_peer_flush(ar, vdev_id, da,
-+				    WMI_PEER_TID_MGMT_MASK);
-+	if (ret)
-+		ath10k_warn("failed to flush peer %pM mgmt tid: %d\n",
-+			    da, ret);
-+}
-+
- void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- {
- 	struct ath10k *ar = container_of(work, struct ath10k, wmi_mgmt_tx_work);
-+	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	int ret;
  
-@@ -2092,7 +2139,40 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- 			ath10k_warn("failed to transmit management frame via WMI: %d\n",
- 				    ret);
- 			ieee80211_free_txskb(ar->hw, skb);
-+			continue;
- 		}
-+
-+		/*
-+		 * Each WMI management Tx consumes 1 HTC Tx credit and doesn't
-+		 * replenish it until the frame is actually transmitted out of
-+		 * firmware's Tx queues.
-+		 *
-+		 * If associated client was asleep and has gone out of range
-+		 * then unicast frames won't be released for FW/HW queues for a
-+		 * while (10 seconds per observation). This means that if more
-+		 * management frames are queued then HTC Tx credits are drained
-+		 * to 0 and no other commands can be submitted including
-+		 * beacons and peer removal.
-+		 *
-+		 * This could in turn result in clients disconnecting due to
-+		 * their beacon loss and may trigger spurious sta kickouts
-+		 * because wmi peer removal command may never reach firmware
-+		 * during disassociation.
-+		 *
-+		 * This could happen, e.g. when disconnecting client that has
-+		 * gone away while asleep.
-+		 *
-+		 * As a workaround flush unicast management frames that can
-+		 * possibly be buffered.
-+		 *
-+		 * Note: This is a deficiency in design of WMI_MGMT_TX command.
-+		 */
-+		ath10k_mgmt_tx_flush(ar, skb);
-+
-+		/* there's no way to get ACK so just assume it's acked */
-+		info = IEEE80211_SKB_CB(skb);
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+		ieee80211_tx_status(ar->hw, skb);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d4b48ef..3b270a4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -637,7 +637,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_mgmt_tx_cmd *cmd;
- 	struct ieee80211_hdr *hdr;
- 	struct sk_buff *wmi_skb;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int len;
- 	u16 fc;
- 
-@@ -673,10 +672,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	if (ret)
- 		return ret;
- 
--	/* TODO: report tx status to mac80211 - temporary just ACK */
--	info->flags |= IEEE80211_TX_STAT_ACK;
--	ieee80211_tx_status_irqsafe(ar->hw, skb);
--
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index ae83822..90fe2e9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3844,6 +3844,9 @@ struct wmi_peer_delete_cmd {
- 	struct wmi_mac_addr peer_macaddr;
- } __packed;
- 
-+#define WMI_PEER_TID_MGMT 17
-+#define WMI_PEER_TID_MGMT_MASK BIT(WMI_PEER_TID_MGMT)
-+
- struct wmi_peer_flush_tids_cmd {
- 	__le32 vdev_id;
- 	struct wmi_mac_addr peer_macaddr;
+ 	/* add STAs back */
+ 	mutex_lock(&local->sta_mtx);
 -- 
-1.8.5.3
+1.9.0
 
