@@ -1,62 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:62050 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933447AbaD2MCH (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:42982 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbaDZOgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2014 08:02:07 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so101996wgh.7
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 05:02:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>
-References: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>
-Date: Tue, 29 Apr 2014 05:02:04 -0700
-Message-ID: <CAJ+vNU2xBLMML6RA+4BxosYg4ZFK7==z2pLKmU38Ho1BpozuOg@mail.gmail.com> (sfid-20140429_140753_433622_1ED370D8)
-Subject: Re: [PATCH 1/2] ath9k: fix possible hang on flush
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>, ath9k-devel@lists.ath9k.org,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 26 Apr 2014 10:36:04 -0400
+From: Masanari Iida <standby24x7@gmail.com>
+To: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	quozl@laptop.org, Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH/V2] staging: rtl8192e: Fix typo in rtl8192e
+Date: Sat, 26 Apr 2014 23:35:50 +0900
+Message-Id: <1398522950-31439-1-git-send-email-standby24x7@gmail.com> (sfid-20140426_163615_699002_EB66A9F4)
+In-Reply-To: <20140424214908.GE12124@us.netrek.org>
+References: <20140424214908.GE12124@us.netrek.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 21, 2014 at 4:14 PM, Tim Harvey <tharvey@gateworks.com> wrote:
-> If a flush is requested, make sure to clear the descriptor once we've
-> processed it.
->
-> This resolves a hang that will occur if all RX descriptors are full when a
-> flush is requested.
->
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> ---
->  drivers/net/wireless/ath/ath9k/recv.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 6c9accd..e77a253 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1113,14 +1113,13 @@ requeue_drop_frag:
->                 }
->  requeue:
->                 list_add_tail(&bf->list, &sc->rx.rxbuf);
-> -               if (flush)
-> -                       continue;
->
->                 if (edma) {
->                         ath_rx_edma_buf_link(sc, qtype);
->                 } else {
->                         ath_rx_buf_relink(sc, bf);
-> -                       ath9k_hw_rxena(ah);
-> +                       if (!flush)
-> +                               ath9k_hw_rxena(ah);
->                 }
->         } while (1);
->
-> --
-> 1.8.3.2
->
+Fix spelling typo in comments within rtl8192e.
 
-+cc ath9k-devel@lists.ath9k.org
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Reviewed-by: James Cameron <quozl@laptop.org>
 
-Tim
+---
+ drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c | 2 +-
+ drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c    | 2 +-
+ drivers/staging/rtl8192e/rtl8192e/rtl_wx.c        | 2 +-
+ drivers/staging/rtl8192e/rtl819x_TSProc.c         | 2 +-
+ drivers/staging/rtl8192e/rtllib_rx.c              | 2 +-
+ drivers/staging/rtl8192e/rtllib_softmac.c         | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
+index 5f10e40..79d86b9 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
+@@ -373,7 +373,7 @@ u32 cmpk_message_handle_rx(struct net_device *dev,
+ 		default:
+ 
+ 			RT_TRACE(COMP_CMDPKT, "---->cmpk_message_handle_rx():"
+-				 "unknow CMD Element\n");
++				 "unknown CMD Element\n");
+ 			return 1;
+ 		}
+ 
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
+index 5d6d304..b4bfafe 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
+@@ -1555,7 +1555,7 @@ static bool SetRFPowerState8190(struct net_device *dev,
+ 
+ 		default:
+ 			bResult = false;
+-			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknow state"
++			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknown state"
+ 				 " to set: 0x%X!!!\n", eRFPowerState);
+ 			break;
+ 		}
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+index 498995d..091dfe7 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+@@ -1213,7 +1213,7 @@ static iw_handler r8192_wx_handlers[] = {
+ };
+ 
+ /*
+- * the following rule need to be follwing,
++ * the followed rules need to be following,
+  * Odd : get (world access),
+  * even : set (root access)
+  * */
+diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+index 29608e5..52b2977 100644
+--- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
++++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+@@ -79,7 +79,7 @@ static void RxPktPendingTimeout(unsigned long data)
+ 
+ 		if (index > REORDER_WIN_SIZE) {
+ 			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
+-				     " Rx Reorer struct buffer full!!\n");
++				     " Rx Reorder struct buffer full!!\n");
+ 			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
+ 					       flags);
+ 			return;
+diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
+index 6c8a8e1..7413816 100644
+--- a/drivers/staging/rtl8192e/rtllib_rx.c
++++ b/drivers/staging/rtl8192e/rtllib_rx.c
+@@ -712,7 +712,7 @@ static void RxReorderIndicatePacket(struct rtllib_device *ieee,
+ 
+ 		if (index > REORDER_WIN_SIZE) {
+ 			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
+-				     " Rx Reorer struct buffer full!!\n");
++				     " Rx Reorder struct buffer full!!\n");
+ 			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
+ 					       flags);
+ 			return;
+diff --git a/drivers/staging/rtl8192e/rtllib_softmac.c b/drivers/staging/rtl8192e/rtllib_softmac.c
+index 4bf72bc..d65cba4 100644
+--- a/drivers/staging/rtl8192e/rtllib_softmac.c
++++ b/drivers/staging/rtl8192e/rtllib_softmac.c
+@@ -543,7 +543,7 @@ void rtllib_softmac_scan_syncro(struct rtllib_device *ieee, u8 is_mesh)
+ 				goto out; /* scan completed */
+ 		} while (!ieee->active_channel_map[ch]);
+ 
+-		/* this fuction can be called in two situations
++		/* this function can be called in two situations
+ 		 * 1- We have switched to ad-hoc mode and we are
+ 		 *    performing a complete syncro scan before conclude
+ 		 *    there are no interesting cell and to create a
+-- 
+2.0.0.rc1
+
