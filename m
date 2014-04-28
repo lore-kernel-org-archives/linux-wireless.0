@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:61355 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbaDVDjH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46057 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752529AbaD1IWv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 23:39:07 -0400
+	Mon, 28 Apr 2014 04:22:51 -0400
+Date: Mon, 28 Apr 2014 11:22:46 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] mac80211_hwsim: Advertise support for AP mode channel
+ width changes
+Message-ID: <20140428082246.GA15478@jouni.qca.qualcomm.com> (sfid-20140428_102257_085384_91256420)
 MIME-Version: 1.0
-In-Reply-To: <20140419213254.0b4c4b6a@xenia.leun.net>
-References: <20140419031554.253c98c3@xenia.leun.net> <20140419213254.0b4c4b6a@xenia.leun.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Apr 2014 20:38:45 -0700
-Message-ID: <CAB=NE6Vgvyf-WYwE-9+RjY3RA7kYuX6P=onrgJE6rLwt4c7Y5Q@mail.gmail.com> (sfid-20140422_053929_332387_BE01F0D1)
-Subject: Re: 3.14 Regression, kernel panic when suspend, looks ath9k /
- wireless related
-To: Michael Leun <lkml20140418@newton.leun.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k mailing list <ath9k-devel@venema.h4ckr.net>,
-	Mihir Shete <smihir@qti.qualcomm.com>,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 19, 2014 at 12:32 PM, Michael Leun
-<lkml20140418@newton.leun.net> wrote:
-> 2a901468c221e778af52603e006a53
+mac80211 takes care of all the needed steps for hwsim, so indicate
+support for this capability.
 
-Odd -- its unclear how you ended up with this bisect given that
-REGULATORY_COUNTRY_IE_IGNORE is not set for any driver currently. To
-see this you can try:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-mcgrof@ergon ~/linux-stable (git::linux-3.14.y)$ git grep
-REGULATORY_COUNTRY_IE_IGNORE drivers/net/wireless/
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 9d7a52f..a23c8d6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2056,6 +2056,7 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 			    WIPHY_FLAG_AP_UAPSD |
+ 			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
++	hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
+ 
+ 	/* ask mac80211 to reserve space for magic */
+ 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
+-- 
+1.7.9.5
 
-That said, I'm happy to revert this as no driver is using it anyway.
-Folks who care for it can help fix this when they get the Fisher Price
-(TM) driver upstream. I however don't think however this is the issue
-though, this may be a timing issue and by reverting this commit you
-just so happen to not get it triggered. I'll Cc you on some series of
-fixes and if you can test one of those patches on top of v3.14.1
-that'd be appreciated as an alternative. I'm also very curious to hear
-no one else would have run into the same regression as you have.
 
-  Luis
+-- 
+Jouni Malinen                                            PGP id EFC895FA
