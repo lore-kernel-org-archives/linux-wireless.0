@@ -1,65 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:57344 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932417AbaDVLyx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33759 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755968AbaD1PrA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 07:54:53 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so4549277eek.4
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2014 04:54:52 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: use b43_software_rfkill helper
-Date: Tue, 22 Apr 2014 13:54:36 +0200
-Message-Id: <1398167677-9207-2-git-send-email-zajec5@gmail.com> (sfid-20140422_135507_711525_4A4A61E9)
-In-Reply-To: <1398167677-9207-1-git-send-email-zajec5@gmail.com>
-References: <1398167677-9207-1-git-send-email-zajec5@gmail.com>
+	Mon, 28 Apr 2014 11:47:00 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath9k_hw: update ar9300 initvals
+Date: Mon, 28 Apr 2014 21:17:07 +0530
+Message-ID: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140428_174727_525627_2C1ECCC4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes dealing with pointers directly and allows tracking radio
-state with radio_on variable.
+ * rfsat gainchange hysteresis of rf_gain stuck with large
+   interference present.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/b43/phy_common.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h     | 2 +-
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index dbaa518..3e45989 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -96,7 +96,7 @@ int b43_phy_init(struct b43_wldev *dev)
- 
- 	phy->channel = ops->get_default_chan(dev);
- 
--	ops->software_rfkill(dev, false);
-+	b43_software_rfkill(dev, false);
- 	err = ops->init(dev);
- 	if (err) {
- 		b43err(dev->wl, "PHY init failed\n");
-@@ -116,7 +116,7 @@ err_phy_exit:
- 	if (ops->exit)
- 		ops->exit(dev);
- err_block_rf:
--	ops->software_rfkill(dev, true);
-+	b43_software_rfkill(dev, true);
- 
- 	return err;
- }
-@@ -125,7 +125,7 @@ void b43_phy_exit(struct b43_wldev *dev)
- {
- 	const struct b43_phy_operations *ops = dev->phy.ops;
- 
--	ops->software_rfkill(dev, true);
-+	b43_software_rfkill(dev, true);
- 	if (ops->exit)
- 		ops->exit(dev);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 0a6163e..c38399b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -410,7 +410,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x00009e30, 0x06336f77},
+ 	{0x00009e34, 0x6af6532f},
+ 	{0x00009e38, 0x0cc80c00},
+-	{0x00009e40, 0x0d261820},
++	{0x00009e40, 0x0d261800},
+ 	{0x00009e4c, 0x00001004},
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0x00000000},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+index f76139b..2c42ff0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+@@ -592,7 +592,7 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
+ 	{0x00009e30, 0x06336f77},
+ 	{0x00009e34, 0x6af6532f},
+ 	{0x00009e38, 0x0cc80c00},
+-	{0x00009e40, 0x0d261820},
++	{0x00009e40, 0x0d261800},
+ 	{0x00009e4c, 0x00001004},
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009fc0, 0x803e4788},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
+index 0ac8be9..2154efc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
+@@ -231,7 +231,7 @@ static const u32 ar9331_1p2_baseband_core[][2] = {
+ 	{0x00009e30, 0x06336f77},
+ 	{0x00009e34, 0x6af6532f},
+ 	{0x00009e38, 0x0cc80c00},
+-	{0x00009e40, 0x0d261820},
++	{0x00009e40, 0x0d261800},
+ 	{0x00009e4c, 0x00001004},
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009fc0, 0x803e4788},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index a01f0ed..9cf7cca 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -318,7 +318,7 @@ static const u32 ar9340_1p0_baseband_core[][2] = {
+ 	{0x00009e30, 0x06336f77},
+ 	{0x00009e34, 0x6af6532f},
+ 	{0x00009e38, 0x0cc80c00},
+-	{0x00009e40, 0x0d261820},
++	{0x00009e40, 0x0d261800},
+ 	{0x00009e4c, 0x00001004},
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0x00000000},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index e6aec2c..a5ca652 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -90,7 +90,7 @@ static const u32 ar9580_1p0_baseband_core[][2] = {
+ 	{0x00009e30, 0x06336f77},
+ 	{0x00009e34, 0x6af6532f},
+ 	{0x00009e38, 0x0cc80c00},
+-	{0x00009e40, 0x0d261820},
++	{0x00009e40, 0x0d261800},
+ 	{0x00009e4c, 0x00001004},
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0x00000000},
 -- 
-1.8.4.5
+1.9.2
 
