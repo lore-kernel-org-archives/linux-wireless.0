@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:54238 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755372AbaDPKiw (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:26183 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbaD1OD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 06:38:52 -0400
-Received: by mail-pd0-f175.google.com with SMTP id x10so10587109pdj.20
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 03:38:52 -0700 (PDT)
+	Mon, 28 Apr 2014 10:03:56 -0400
+Message-ID: <535EAD21.5090808@redpinesignals.com> (sfid-20140428_160359_676329_D5DED46B)
+Date: Tue, 29 Apr 2014 01:03:53 +0530
+From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 MIME-Version: 1.0
-In-Reply-To: <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
- <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
- <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
- <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
- <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
- <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
- <CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
- <CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
- <CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
- <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
- <CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com> <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 16 Apr 2014 13:38:37 +0300
-Message-ID: <CA+XVXfdxZqLVe3_wT3pY-rdY_7KXz_iXFd7Z8JCfXrDwpP8ciQ@mail.gmail.com> (sfid-20140416_123859_407803_D7E63C07)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-To: Colleen T <colleen@cozybit.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/1] rsi: Changing opcode for sta mode according to changes
+ in firmware
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for testing Colleen!
 
-I'll respin the patch on top of wireless-testing.
+From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 
-Arik
+Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+---
 
-On Mon, Apr 14, 2014 at 10:27 PM, Colleen T <colleen@cozybit.com> wrote:
-> Hello,
->
-> Applying Arik's patch on top of Luis' resolves our problem.
->
-> You also get my:
->
-> Tested-by: Colleen Twitty <colleen@cozybit.com>
->
-> Thanks,
-> -Colleen
->
-> On Sun, Apr 13, 2014 at 5:50 AM, Eliad Peller <eliad@wizery.com> wrote:
->> On Wed, Apr 9, 2014 at 7:33 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>>
->>> Seems I might have found the culprit - reg_todo is called while the
->>> request to CRDA is in flight and the patch in question causes the
->>> already-in-process user-request to be handled again. Since it's the
->>> same regdomain as the last request (it's the last request itself), we
->>> get this:
->>>
->>> treatment = __reg_process_hint_user(user_request);
->>> if (treatment == REG_REQ_IGNORE ||
->>>    treatment == REG_REQ_ALREADY_SET) {
->>> kfree(user_request); <------
->>> return treatment;
->>> }
->>>
->>> Can you try adding the attached patch? It just replaced relevant
->>> kfree-s with a function that avoids freeing the last request.
->>>
->> i encountered a similar panic, and this patch seems to fix it.
->> so you get my:
->>
->> Tested-by: Eliad Peller <eliad@wizery.com>
->>
->> Eliad.
+rsi_91x_mgmt.c |    4 ++--
+rsi_mgmt.h     |    1 +
+2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff -uprN a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+--- a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c	2014-04-28 08:14:27.000000000 +0545
++++ b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_91x_mgmt.c	2014-04-29 13:22:35.540968735 +0545
+@@ -1083,7 +1083,7 @@ void rsi_inform_bss_status(struct rsi_co
+ {
+ 	if (status) {
+ 		rsi_hal_send_sta_notify_frame(common,
+-					      NL80211_IFTYPE_STATION,
++					      RSI_IFTYPE_STATION,
+ 					      STA_CONNECTED,
+ 					      bssid,
+ 					      qos_enable,
+@@ -1092,7 +1092,7 @@ void rsi_inform_bss_status(struct rsi_co
+ 			rsi_send_auto_rate_request(common);
+ 	} else {
+ 		rsi_hal_send_sta_notify_frame(common,
+-					      NL80211_IFTYPE_STATION,
++					      RSI_IFTYPE_STATION,
+ 					      STA_DISCONNECTED,
+ 					      bssid,
+ 					      qos_enable,
+diff -uprN a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h
+--- a/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h	2014-04-28 08:14:27.000000000 +0545
++++ b/linux-3.15-rc3/drivers/net/wireless/rsi/rsi_mgmt.h	2014-04-29 13:21:27.252822454 +0545
+@@ -73,6 +73,7 @@
+ #define RX_BA_INDICATION                1
+ #define RSI_TBL_SZ                      40
+ #define MAX_RETRIES                     8
++#define RSI_IFTYPE_STATION		 0
+ 
+ #define STD_RATE_MCS7                   0x07
+ #define STD_RATE_MCS6                   0x06
+
+
+
+
+
+
