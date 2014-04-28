@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16511 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbaDGGbs (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8190 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755968AbaD1PrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 02:31:48 -0400
-Date: Mon, 7 Apr 2014 09:31:21 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Faris de Haan <farisdehaan@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] Staging: rtl8188eu: overflow in update_sta_support_rate()
-Message-ID: <20140407063121.GB11581@mwanda> (sfid-20140407_083159_329553_D9350A78)
+	Mon, 28 Apr 2014 11:47:08 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath9k_hw: fix worse EVM for 11b rates
+Date: Mon, 28 Apr 2014 21:17:08 +0530
+Message-ID: <1398700028-28410-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140428_174728_444315_32DF7A26)
+In-Reply-To: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ->SupportedRates[] array has NDIS_802_11_LENGTH_RATES_EX (16)
-elements.  Since "ie_len" comes from then network and can go up to 255
-then it means we should add a range check to prevent memory corruption.
+Adjust FIR filter co-efficients to improve EVM for 11b rates.
 
-Fixes: d6846af679e0 ('staging: r8188eu: Add files for new driver - part 7')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 6 +++---
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_wlan_util.c b/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
-index 3dd9059..6c9e9a1 100644
---- a/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
-@@ -1599,13 +1599,18 @@ int update_sta_support_rate(struct adapter *padapter, u8 *pvar_ie, uint var_ie_l
- 	pIE = (struct ndis_802_11_var_ie *)rtw_get_ie(pvar_ie, _SUPPORTEDRATES_IE_, &ie_len, var_ie_len);
- 	if (pIE == NULL)
- 		return _FAIL;
-+	if (ie_len > NDIS_802_11_LENGTH_RATES_EX)
-+		return _FAIL;
- 
- 	memcpy(pmlmeinfo->FW_sta_info[cam_idx].SupportedRates, pIE->data, ie_len);
- 	supportRateNum = ie_len;
- 
- 	pIE = (struct ndis_802_11_var_ie *)rtw_get_ie(pvar_ie, _EXT_SUPPORTEDRATES_IE_, &ie_len, var_ie_len);
--	if (pIE)
-+	if (pIE) {
-+		if (supportRateNum + ie_len > NDIS_802_11_LENGTH_RATES_EX)
-+			return _FAIL;
- 		memcpy((pmlmeinfo->FW_sta_info[cam_idx].SupportedRates + supportRateNum), pIE->data, ie_len);
-+	}
- 
- 	return _SUCCESS;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index 9cf7cca..b995ffe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -348,9 +348,9 @@ static const u32 ar9340_1p0_baseband_core[][2] = {
+ 	{0x0000a370, 0x00000000},
+ 	{0x0000a390, 0x00000001},
+ 	{0x0000a394, 0x00000444},
+-	{0x0000a398, 0x00000000},
+-	{0x0000a39c, 0x210d0401},
+-	{0x0000a3a0, 0xab9a7144},
++	{0x0000a398, 0x001f0e0f},
++	{0x0000a39c, 0x0075393f},
++	{0x0000a3a0, 0xb79f6427},
+ 	{0x0000a3a4, 0x00000000},
+ 	{0x0000a3a8, 0xaaaaaaaa},
+ 	{0x0000a3ac, 0x3c466478},
+diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+index 3c9113d..8e5c3b9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+@@ -257,9 +257,9 @@ static const u32 qca953x_1p0_baseband_core[][2] = {
+ 	{0x0000a370, 0x00000000},
+ 	{0x0000a390, 0x00000001},
+ 	{0x0000a394, 0x00000444},
+-	{0x0000a398, 0x1f020503},
+-	{0x0000a39c, 0x29180c03},
+-	{0x0000a3a0, 0x9a8b6844},
++	{0x0000a398, 0x001f0e0f},
++	{0x0000a39c, 0x0075393f},
++	{0x0000a3a0, 0xb79f6427},
+ 	{0x0000a3a4, 0x000000ff},
+ 	{0x0000a3a8, 0x6a6a6a6a},
+ 	{0x0000a3ac, 0x6a6a6a6a},
+-- 
+1.9.2
+
