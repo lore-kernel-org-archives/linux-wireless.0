@@ -1,74 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:56475 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964907AbaDIRvm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 13:51:42 -0400
-Received: by mail-we0-f178.google.com with SMTP id u56so2778670wes.23
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 10:51:40 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <20140409170815.GA17551@kroah.com>
-References: <53450089.9050008@gmail.com> <20140409170815.GA17551@kroah.com>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Wed, 9 Apr 2014 19:51:20 +0200
-Message-ID: <CAN8YU5M3h_og084bcdgqOGLoQqtrcxbxpPpAR6DBmYGz6pBG-w@mail.gmail.com> (sfid-20140409_195146_479536_75735E9A)
-Subject: Re: staging/rtl8187se should be removed
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	driverdev-devel@linuxdriverproject.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:37296 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932358AbaD1QcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Apr 2014 12:32:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.15] ath9k: remove tid->paused flag
+Date: Mon, 28 Apr 2014 18:32:12 +0200
+Message-Id: <1398702732-77789-1-git-send-email-nbd@openwrt.org> (sfid-20140428_183228_311486_17B63379)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I honestly can't estimate how many rtl8187se users will be gained by
-this driver once it will appears in mainline (considering that most
-users will probably run kernels from distributions, that updates
-fairly slower than vanilla) and how much new use-cases this driver
-will suddenly encounter... Assuming they are not so few, If I had to
-decide, I would vote for keeping the staging driver in parallel to
-rtl8180 driver for a bit..
-In this way we keep a fallback alternative if someone faces any regression..
+There are some corner cases where the driver could get stuck with a full
+tid queue that is paused, leading to a software tx queue hang.
 
-Rtl8180 driver should be enough for most users (and I hope most of
-them will prefer it for a number of reasons, first of all the fact
-that the staging driver here sometimes oopsed), but it is still
-possible that someone will prefer to stick with staging for a while
-(in my plan I will try to do some other features improvement to
-rtl8180, and maybe rtl8187, drivers that indeed are present in staging
-code).
+Since the tx queueing rework, pausing per-tid queues on aggregation
+session setup is no longer necessary. The driver will assign sequence
+numbers to buffered frames when a new session is established, in order
+to get the correct starting sequence number.
 
-AFAIK Linux have kept some alternate ethernet driver (intel e100? am I
-right ?) and even two firewire stack for long time.. Maybe for staging
-stuff we can strongly shorten time, but without totally clamping to
-zero :)
+mac80211 prevents new frames from entering the queue during setup.
 
-... But about this kind of kernel decisions, I guess other people here
-are by far more experienced than me.. This is just my personal humble
-opinion.. Probably I already wasted too much words with it :)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
+ drivers/net/wireless/ath/ath9k/xmit.c  | 14 +-------------
+ 2 files changed, 1 insertion(+), 14 deletions(-)
 
-BTW since the staging driver has been the only (AFAIK) source of
-information about rtl8187se HW publicly available, I would like to put
-a note in the rtl8180 driver main file, that indicates the latest
-linux version in which the staging code could be found, as reference
-for who may try to improve/debug rtl8180 driver -se support in future.
-Please notify me when the staging code will be killed, and I will post
-a patch for that comment note update.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 05935f6..33a2ae7 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -254,7 +254,6 @@ struct ath_atx_tid {
+ 
+ 	s8 bar_index;
+ 	bool sched;
+-	bool paused;
+ 	bool active;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 87cbec4..66acb2c 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -107,9 +107,6 @@ static void ath_tx_queue_tid(struct ath_txq *txq, struct ath_atx_tid *tid)
+ {
+ 	struct ath_atx_ac *ac = tid->ac;
+ 
+-	if (tid->paused)
+-		return;
+-
+ 	if (tid->sched)
+ 		return;
+ 
+@@ -1407,7 +1404,6 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	ath_tx_tid_change_state(sc, txtid);
+ 
+ 	txtid->active = true;
+-	txtid->paused = true;
+ 	*ssn = txtid->seq_start = txtid->seq_next;
+ 	txtid->bar_index = -1;
+ 
+@@ -1427,7 +1423,6 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 
+ 	ath_txq_lock(sc, txq);
+ 	txtid->active = false;
+-	txtid->paused = false;
+ 	ath_tx_flush_tid(sc, txtid);
+ 	ath_tx_tid_change_state(sc, txtid);
+ 	ath_txq_unlock_complete(sc, txq);
+@@ -1487,7 +1482,7 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
+ 		ath_txq_lock(sc, txq);
+ 		ac->clear_ps_filter = true;
+ 
+-		if (!tid->paused && ath_tid_has_buffered(tid)) {
++		if (ath_tid_has_buffered(tid)) {
+ 			ath_tx_queue_tid(txq, tid);
+ 			ath_txq_schedule(sc, txq);
+ 		}
+@@ -1510,7 +1505,6 @@ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	ath_txq_lock(sc, txq);
+ 
+ 	tid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
+-	tid->paused = false;
+ 
+ 	if (ath_tid_has_buffered(tid)) {
+ 		ath_tx_queue_tid(txq, tid);
+@@ -1544,8 +1538,6 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ 			continue;
+ 
+ 		tid = ATH_AN_2_TID(an, i);
+-		if (tid->paused)
+-			continue;
+ 
+ 		ath_txq_lock(sc, tid->ac->txq);
+ 		while (nframes > 0) {
+@@ -1844,9 +1836,6 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 			list_del(&tid->list);
+ 			tid->sched = false;
+ 
+-			if (tid->paused)
+-				continue;
+-
+ 			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
+ 				sent = true;
+ 
+@@ -2698,7 +2687,6 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+ 		tid->baw_size  = WME_MAX_BA;
+ 		tid->baw_head  = tid->baw_tail = 0;
+ 		tid->sched     = false;
+-		tid->paused    = false;
+ 		tid->active	   = false;
+ 		__skb_queue_head_init(&tid->buf_q);
+ 		__skb_queue_head_init(&tid->retry_q);
+-- 
+1.8.5.2 (Apple Git-48)
 
-Andrea
-
-On Wed, Apr 9, 2014 at 7:08 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Apr 09, 2014 at 10:10:49AM +0200, Xose Vazquez Perez wrote:
->> hi,
->>
->> Support for RTL8187SE devices(0x8199) was added to
->> rtl8180 recently. See 1eba648f998ef9c31b8cf062754a4a7b4ab9001f
->
-> Very nice, so, any objection to me deleting the staging driver now?
->
-> thanks,
->
-> greg k-h
