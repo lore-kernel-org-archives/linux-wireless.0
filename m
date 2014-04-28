@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:59967 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbaDGP2z (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755335AbaD1Pqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 11:28:55 -0400
-Received: from smtp02.msg.oleane.net (smtp02.mail.priv [172.17.20.111])
-	by smtp-out05.msg.oleane.net with ESMTP id s37CPQQ2022207
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Apr 2014 14:25:26 +0200
-From: "voncken" <cedric.voncke@acksys.fr>
-To: "'Janusz Dziedzic'" <janusz.dziedzic@gmail.com>,
-	"Cedric VONCKEN" <cedric.voncken@acksys.fr>
-Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319017342EF@sbs2003.acksys.local> <CAFED-j=nyEnfg7n=OF0oA_Geh11DR_XYNPTLeb603jKNNUxv0g@mail.gmail.com>
-In-Reply-To: <CAFED-j=nyEnfg7n=OF0oA_Geh11DR_XYNPTLeb603jKNNUxv0g@mail.gmail.com>
-Subject: RE: [MAC80211] Radar detection management issue
-Date: Mon, 7 Apr 2014 14:04:51 +0200
-Message-ID: <00dc01cf5259$94fd02d0$bef70870$@acksys.fr> (sfid-20140407_172859_440388_D365D3DF)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+	Mon, 28 Apr 2014 11:46:44 -0400
+Message-ID: <1398699982.4132.1.camel@jlt4.sipsolutions.net> (sfid-20140428_174647_065920_FAF317DA)
+Subject: Re: [PATCH 2/3] mac80211: Support dynamic AP mode channel width
+ changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 28 Apr 2014 17:46:22 +0200
+In-Reply-To: <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com> (sfid-20140428_105724_959492_6ACA3997)
+References: <20140428082225.GA15459@jouni.qca.qualcomm.com>
+	 <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com>
+	 (sfid-20140428_105724_959492_6ACA3997)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
-> >         I don't know how fix this issue. For the moment I disable the
-> > channel when the NL80211_RRF_DFS is set (in map_regdom_flags).
-> >
+On Mon, 2014-04-28 at 10:57 +0200, Michal Kazior wrote:
+
+> > +static int ieee80211_set_ap_channel(struct wiphy *wiphy,
+> > +                                   struct net_device *dev,
+> > +                                   struct cfg80211_chan_def *chandef)
+> > +{
+> > +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> > +       int ret;
+> > +       u32 changed = 0;
+> > +
 > 
-> This seems like a bug in ath9k (init.c) driver, when register interface
-> combinations.
-> Seems RADAR combination should be registered only in case when
-> ATH9K_DFS_CERTIFIED is set.
-	
-	Thanks for the answer. 
+> Shouldn't interface combinations be verified here? What if there was a
+> bandwidth upgrade (after a downgrade) but in the meantime a vif with a
+> to-be incompatible chandef was brought up?
 
-	The ATH9K_HW_CAP_DFS is set in hw.c only  if the function
-ath9k_hw_dfs_tested return true.
+Yeah that seems like a potential issue.
 
-	In the ath9k/init.c, the function ath9k_set_hw_capab do not set any
-flags in hw->flags relevant to DFS.
+> I think the existing usage
+> of ieee80211_vif_change_bandwidth() in ieee80211_config_bw() already
+> suffers from this problem or am I missing something?
 
-	I'm looking for a similar line
-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_DFS)
-      	hw->flags |= IEEE80211_HW_xxxx;
-	
-	But I don't found. 
+That sounds like you're arguing it should be fixed in a separate patch
+to ieee80211_vif_change_bandwidth()? :)
 
-	I'm looking in net/mac80211.h the IEEE80211 flag relevant to DFS (to
-add the test in ath9k init), but I don't found it.
-
-	It seem the mac80211 do not know the hardware capability to detect
-radar.
-
-	Cedric.
-> 
-> BR
-> Janusz
+johannes
 
