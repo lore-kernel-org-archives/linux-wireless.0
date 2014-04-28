@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:59542 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbaDYJ5B convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:56859 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553AbaD1DrA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 05:57:01 -0400
-Received: by mail-ob0-f177.google.com with SMTP id wp18so3894005obc.36
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 02:57:01 -0700 (PDT)
+	Sun, 27 Apr 2014 23:47:00 -0400
+Received: by mail-ob0-f175.google.com with SMTP id wp4so6714954obc.34
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 20:47:00 -0700 (PDT)
+Message-ID: <535DCF32.4010005@lwfinger.net> (sfid-20140428_054706_012575_3C82B66E)
+Date: Sun, 27 Apr 2014 22:46:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <535A2FC2.4080508@gmail.com>
-References: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
- <535A13FA.4070405@gmail.com> <CA+V6dmjcYxTjYyjk7kd2-=ijXyqvWL=8bV1YQ0ejeSAK62qapw@mail.gmail.com>
- <535A2FC2.4080508@gmail.com>
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Fri, 25 Apr 2014 11:56:40 +0200
-Message-ID: <CA+V6dmiRHjviCjv7+1i8+EVfYEo47SodYUDQPBrX9rdBAx6h2A@mail.gmail.com> (sfid-20140425_115709_543143_CE30D7BE)
-Subject: Re: Odd network behaviors with an Intel Wireless 7260
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ryan Houdek <sonicadvance1@gmail.com>, tilkax@gmail.com
-Content-Type: text/plain; charset=UTF-8
+To: Nicolas Vaquero <nicovaq92@hotmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG-FATAL ERROR] WiFi Realtek 8192 ---> Ubuntu 12.04 LTS
+References: <BLU0-SMTP336B542CBA1B1F927CDFEAAA9450@phx.gbl> <535C27C9.7010309@lwfinger.net> <BLU0-SMTP40653E3FC4814958115DAE8A9470@phx.gbl>
+In-Reply-To: <BLU0-SMTP40653E3FC4814958115DAE8A9470@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 25, 2014 at 11:49 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Hmm... What kernel are you using?
-> IIRC 22.1.7.0 doesn't have uAPSD support - so if it the problem exists with this firmware, then we should look for something else.
+On 04/27/2014 10:20 PM, Nicolas Vaquero wrote:
+> 01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE
+> 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
 
-Currently using Linux 3.13.8 and firmware 22.24.8.0. I don't remember
-precisely what fw versions I tried before and I cannot really try
-several mitigations at once so let's wait and see if disabling
-power_save changes anything.
+Please do not drop the mailing list from the reply. Always use "reply-to-all", 
+unless you are posting some information that is sensitive, or if there is a very 
+large attachment.
 
--- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
+What distro are you using? I have no idea what kernel 3.8.0-36 means.
+
+Larry
+
+
+
