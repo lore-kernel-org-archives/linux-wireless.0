@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42766 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756574AbaDBHdA (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:61454 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbaD1Ovc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 03:33:00 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
-References: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
-Date: Wed, 2 Apr 2014 10:32:55 +0300
-In-Reply-To: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Tue, 1 Apr 2014 10:55:40
-	-0700")
-Message-ID: <8738hwrxso.fsf@kamboji.qca.qualcomm.com> (sfid-20140402_093305_154384_34CFC69E)
+	Mon, 28 Apr 2014 10:51:32 -0400
+Received: by mail-oa0-f44.google.com with SMTP id n16so7359472oag.31
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2014 07:51:31 -0700 (PDT)
+Received: from larrylap2.site (cpe-69-76-245-152.kc.res.rr.com. [69.76.245.152])
+        by mx.google.com with ESMTPSA id su13sm74402618oeb.9.2014.04.28.07.51.30
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Mon, 28 Apr 2014 07:51:30 -0700 (PDT)
+Message-ID: <535E6AF2.1000608@lwfinger.net> (sfid-20140428_165136_341338_68DEC83C)
+Date: Mon, 28 Apr 2014 09:51:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Driver for RTL8192EE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+There are apparently a lot of Lenovo T440s laptops in the wild. In fact, I have 
+had enough requests for the patches to add driver r8192ee to the staging tree, 
+that I am making it available on my FTP site.
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> It can be nice to update the firmware's stats while
-> debugging other bits of the driver, so add helper method
-> to do this.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+To obtain this driver, download the following two files:
 
-[...]
+http://www.lwfinger.com/realtek_drivers/0001-staging-r8192ee-Add-new-driver.patch
+http://www.lwfinger.com/realtek_drivers/0002-staging-r8192ee-Add-new-driver.patch
 
-> --- a/drivers/net/wireless/ath/ath10k/debug.h
-> +++ b/drivers/net/wireless/ath/ath10k/debug.h
-> @@ -135,4 +135,6 @@ struct dbglog_hdr_s {
->  
->  void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
->  
-> +int ath10k_refresh_peer_stats(struct ath10k *ar);
+Use these two files, in turn, to modify the standard 3.14.X or 3.15.0-rcX code 
+for this device. Then build a custom kernel for your computer.
 
-I don't see anyone calling this. How are you planning to use it?
+I am presently testing a modified version of this code that uses the standard 
+rtlwifi structure, and hope to have it ready for submission in time for kernel 3.16.
 
--- 
-Kalle Valo
+Larry
