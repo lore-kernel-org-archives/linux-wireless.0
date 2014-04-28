@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36246 "EHLO
-	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaDOHWc (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:40909 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbaD1GQc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 03:22:32 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 7/7] ARM: sun7i: cubietruck: enable bluetooth module
-Date: Tue, 15 Apr 2014 14:41:41 +0800
-Message-Id: <1397544101-18135-8-git-send-email-wens@csie.org> (sfid-20140415_092304_743706_45B82BE0)
-In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	Mon, 28 Apr 2014 02:16:32 -0400
+Received: by mail-wi0-f178.google.com with SMTP id bs8so5079196wib.17
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 23:16:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1398439255.4152.10.camel@jlt4.sipsolutions.net>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	<1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+	<1398439255.4152.10.camel@jlt4.sipsolutions.net>
+Date: Mon, 28 Apr 2014 08:16:30 +0200
+Message-ID: <CA+BoTQ=UmtPX73bf84gNJ9m9o0dJPV9LzgpORM765UaOrJ5WPA@mail.gmail.com> (sfid-20140428_081815_941469_91E5E171)
+Subject: Re: [PATCH v4 00/13] cfg80211/mac80211: implement multi-vif chanctx reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CubieTruck has an AMPAK AP6210 WiFi+Bluetooth module. The Bluetooth
-part is a BCM20710 device connected to UART2 in the A20 SoC.
+On 25 April 2014 17:20, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>> The patchset incrementally improves chanctx
+>> reservations in order to support multi-vif
+>> reservations and in-place multi-vif reservations
+>> (typically for single-channel hardware, but
+>> multi-channel benefits from this too).
+>
+> I've applied the first 12 patches, i.e. all but patch 13. As far as
+> patch 13 is concerned, I (a) need more time to review it, and (b) would
+> like to understand better how you intend to use it.
 
-The IC requires a 32.768 KHz low power clock input for proper
-auto-detection of the main clock, and an enable signal via GPIO.
+Sure.
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
 
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-index cb25d3c..767c8e1 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-@@ -61,6 +61,13 @@
- 				allwinner,drive = <0>;
- 				allwinner,pull = <0>;
- 			};
-+
-+			bt_pwr_pin_cubietruck: bt_pwr_pin@0 {
-+				allwinner,pins = "PH18";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
- 		};
- 
- 		uart0: serial@01c28000 {
-@@ -69,6 +76,12 @@
- 			status = "okay";
- 		};
- 
-+		uart2: serial@01c28800 {
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&uart2_pins_a>;
-+			status = "okay";
-+		};
-+
- 		i2c0: i2c@01c2ac00 {
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&i2c0_pins_a>;
-@@ -139,4 +152,16 @@
- 	reg_usb2_vbus: usb2-vbus {
- 		status = "okay";
- 	};
-+
-+	rfkill_bt {
-+		compatible = "rfkill-gpio";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&bt_pwr_pin_cubietruck>, <&clk_out_a_pins_a>;
-+		clocks = <&clk_out_a>;
-+		clock-frequency = <32768>;
-+		gpios = <&pio 7 18 0>; /* PH18 */
-+		gpio-names = "reset";
-+		rfkill-name = "bt";
-+		rfkill-type = <2>;
-+	};
- };
--- 
-1.9.1
+> I also don't really like the "stub" thing. :)
 
+I agree that it's not the most beautiful thing to have but I wanted to
+make my intention clear how conflicting channel reservation/switching
+is going to be handled (AP and CSA channel switching patches come
+later). I can remove the stub and just introduce the hook in one of
+the channel switching patches or I can change the comment to something
+more meaningful if that makes any more sense to you.
+
+
+> Maybe it would also make sense to insert the "recalc" refactoring
+> somewhere around here?
+
+Do you mean Zhao Gang's recalc refactoring patches? Patch 13 stills
+interacts with some recalc code and might produce minor conflicts.
+
+
+Michał
