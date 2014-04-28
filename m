@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48336 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751260AbaDAOEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 10:04:20 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
+Received: from mail-ve0-f179.google.com ([209.85.128.179]:47534 "EHLO
+	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932277AbaD1QTz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Apr 2014 12:19:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-2-git-send-email-wens@csie.org> <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
+ <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 29 Apr 2014 00:19:34 +0800
+Message-ID: <CAGb2v64rs4UYMbQ--i=pcuuORVneozDpucCeHQKE4Qn7+qSCdA@mail.gmail.com> (sfid-20140428_182051_070752_56BC2FFF)
+Subject: Re: [linux-sunxi] Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement
+ device tree gpio-names based lookup
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv3 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
-Date: Tue,  1 Apr 2014 17:02:51 +0300
-Message-Id: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160757_928637_A13C9BAB)
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Apr 23, 2014 at 9:49 AM, Alexandre Courbot <gnurou@gmail.com> wrote:
+> On Wed, Apr 23, 2014 at 12:02 AM, Linus Walleij
+> <linus.walleij@linaro.org> wrote:
+>> On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
+>>
+>>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
+>>> phandles by name only, through gpios/gpio-names, and not by index.
+>>>
+>>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>>
+>> Like Alexandre I have no strong opinion on this alternative scheme.
+>
+> Yeah this new lookup scheme probably does no harm, but I think it
+> should be a little bit more motivated as it is, after all, introducing
+> more potential confusion for DT users.
+>
+> It does not look like this new lookup scheme is necessary to Chen-Yu's
+> patchset and that he could as well have used the current one. Right
+> now there is only one way to define GPIOs - if we introduce a second
+> one, then which one should new DT users choose? Which one looks
+> better? I can already endless fights taking place over this.
 
-I hope this one is OK with everyone.
+I will pull out the two patches.
 
-Changes since v2:
-- Instead of changing the driver to use only indexed gpios, just
-  hard-coding the names.
+> Does this new lookup help with some of the existing problems we have
+> like ACPI/DT lookup compatibility?
 
-Changes since v1:
-- Removed the gpio entries from arch/arm/mach-tegra/board-paz00.c
+I hope they will be compatible with ACPI named gpios, whenever support
+for ACPI named properties extension lands. But that really depends on
+the ACPI implementation. For now I think it's best that I just hold on
+to these. We can revisit the discussion later if needed.
+
+> I just need to be given one practical reason to give my ack.
 
 
-Heikki Krogerus (5):
-  ARM: tegra: remove obsolete gpio entries
-  net: rfkill: gpio: remove unused and obsolete platform parameters
-  net: rfkill: gpio: add ACPI ID for GPS module on Lenovo Miix2
-  net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
-  net: rfkill: gpio: hard-code the gpio names
-
- arch/arm/mach-tegra/board-paz00.c |  4 +---
- include/linux/rfkill-gpio.h       | 10 ----------
- net/rfkill/rfkill-gpio.c          | 40 +++++++++------------------------------
- 3 files changed, 10 insertions(+), 44 deletions(-)
-
--- 
-1.9.1
-
+Thanks
+ChenYu
