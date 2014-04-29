@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56507 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbaDYPq2 (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:48245 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933447AbaD2MEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 11:46:28 -0400
-Message-ID: <1398440774.4152.28.camel@jlt4.sipsolutions.net> (sfid-20140425_174634_555747_BC446F54)
-Subject: Re: [PATCH 5/7] mac80211: minstrel - implement
- get_expected_throughput() API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Fri, 25 Apr 2014 17:46:14 +0200
-In-Reply-To: <1397484205-20905-5-git-send-email-antonio@meshcoding.com>
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
-	 <1397484205-20905-5-git-send-email-antonio@meshcoding.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 Apr 2014 08:04:30 -0400
+Received: by mail-wg0-f50.google.com with SMTP id k14so98443wgh.33
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 05:04:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <535631B7.7050208@openwrt.org>
+References: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>
+	<1398122097-23544-2-git-send-email-tharvey@gateworks.com>
+	<535631B7.7050208@openwrt.org>
+Date: Tue, 29 Apr 2014 05:04:28 -0700
+Message-ID: <CAJ+vNU1mdgtZuT8NeQmZDJ25cufohqZyvcG4y2EM8tjpfntG7w@mail.gmail.com> (sfid-20140429_140754_055457_4F4DD387)
+Subject: Re: [PATCH 2/2] ath9k: add a recv budget
+From: Tim Harvey <tharvey@gateworks.com>
+To: linux-wireless@vger.kernel.org
+Cc: John Linville <linville@tuxdriver.com>,
+	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@openwrt.org>,
+	Ben Greear <greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
-> 
-> Cc: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->  net/mac80211/rc80211_minstrel.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-> index 26fd94f..cd40bc0 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -657,6 +657,18 @@ minstrel_free(void *priv)
->  	kfree(priv);
->  }
->  
-> +static u32
-> +minstrel_get_expected_throughput(void *priv, void *priv_sta,
-> +				 struct ieee80211_supported_band *sband)
-> +{
-> +	struct minstrel_sta_info *mi = priv_sta;
-> +	int idx = mi->max_tp_rate[0];
-> +	u32 bitrate, ret;
-> +
-> +	bitrate = sband->bitrates[mi->r[idx].rix].bitrate;
-> +	return bitrate * MINSTREL_TRUNC(mi->r[idx].probability * 1000) / 100;
+On Tue, Apr 22, 2014 at 2:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2014-04-22 01:14, Tim Harvey wrote:
+>> Implement a recv budget so that in cases of high traffic we still allow other
+>> taskets to get processed.
+>>
+>> Without this, we can encounter a host of issues during high wireless traffic
+>> reception depending on system load including rcu stall's detected (ARM),
+>> soft lockups, failure to service critical tasks such as watchdog resets,
+>> and triggering of the tx stuck tasklet.
+>>
+>> The same thing was proposed previously by Ben:
+>>  http://www.spinics.net/lists/linux-wireless/msg112891.html
+>>
+>> The only difference here is that I make sure only processed packets are counted
+>> in the budget by checking at the end of the rx loop.
+>>
+>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> For both patches:
+> Acked-by: Felix Fietkau <nbd@openwrt.org>
+>
 
-/100? didn't you say minstrel already used your units?
++cc ath9k-devel@lists.ath9k.org
++cc Ben Greear
 
-johannes
+Any other ack's or comments on these? These address some fairly
+long-standing bugs.
 
+Tim
