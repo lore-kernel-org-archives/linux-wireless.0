@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:40056 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaDXMEk (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:62050 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933447AbaD2MCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 08:04:40 -0400
-Received: by mail-lb0-f178.google.com with SMTP id s7so1943987lbd.9
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 05:04:38 -0700 (PDT)
-Message-ID: <5358FDD6.9070508@cogentembedded.com> (sfid-20140424_140501_635177_E635587E)
-Date: Thu, 24 Apr 2014 16:04:38 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Tue, 29 Apr 2014 08:02:07 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so101996wgh.7
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 05:02:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] Revert "rtlwifi: rtl8188ee: enable MSI interrupts
- mode"
-References: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
-In-Reply-To: <1398308924-15312-1-git-send-email-adam.lee@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>
+References: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>
+Date: Tue, 29 Apr 2014 05:02:04 -0700
+Message-ID: <CAJ+vNU2xBLMML6RA+4BxosYg4ZFK7==z2pLKmU38Ho1BpozuOg@mail.gmail.com> (sfid-20140429_140753_433622_1ED370D8)
+Subject: Re: [PATCH 1/2] ath9k: fix possible hang on flush
+From: Tim Harvey <tharvey@gateworks.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>, ath9k-devel@lists.ath9k.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Mon, Apr 21, 2014 at 4:14 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+> If a flush is requested, make sure to clear the descriptor once we've
+> processed it.
+>
+> This resolves a hang that will occur if all RX descriptors are full when a
+> flush is requested.
+>
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/recv.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 6c9accd..e77a253 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -1113,14 +1113,13 @@ requeue_drop_frag:
+>                 }
+>  requeue:
+>                 list_add_tail(&bf->list, &sc->rx.rxbuf);
+> -               if (flush)
+> -                       continue;
+>
+>                 if (edma) {
+>                         ath_rx_edma_buf_link(sc, qtype);
+>                 } else {
+>                         ath_rx_buf_relink(sc, bf);
+> -                       ath9k_hw_rxena(ah);
+> +                       if (!flush)
+> +                               ath9k_hw_rxena(ah);
+>                 }
+>         } while (1);
+>
+> --
+> 1.8.3.2
+>
 
-On 24-04-2014 7:08, Adam Lee wrote:
++cc ath9k-devel@lists.ath9k.org
 
-> This reverts commit 2a54eb5e1476426ee639bbfbe179b52342a0d82c.
-
-> 94010fa0dd07e8b904e7c6b6589f15573008ab15 introduced MSI interrupts mode
-
-    Please also specify that commit's summary line in parens.
-
-> support, which seemed safe enough with RTL8188EE and RTL8723BE as
-> RealTek's testing results, but some users reported their RTL8188EE
-> modules could not connect to any wireless network after the MSI mode was
-> enabled by Ubuntu 14.04.
-
-> So, let's fallback to pin-based mode until rtlwifi's MSI support get
-> good compatibility.
-
-> BugLink: https://bugs.launchpad.net/bugs/1310512
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
-
-WBR, Sergei
-
-
+Tim
