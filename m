@@ -1,87 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:43433 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbaDVAK0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758051AbaD2P7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 20:10:26 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so4070591eek.9
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 17:10:24 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 1/4] Revert "wl1251: enforce changed hw encryption support on monitor state change"
-Date: Tue, 22 Apr 2014 03:09:52 +0300
-Message-Id: <1398125395-5579-2-git-send-email-notasas@gmail.com> (sfid-20140422_021031_775183_D5E2B831)
-In-Reply-To: <1398125395-5579-1-git-send-email-notasas@gmail.com>
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
+	Tue, 29 Apr 2014 11:59:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] cfg80211: remove BUG_ON usage
+Date: Tue, 29 Apr 2014 17:59:39 +0200
+Message-Id: <1398787180-6494-1-git-send-email-johannes@sipsolutions.net> (sfid-20140429_175956_612097_DDAB5305)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit b90a1165a72fabdc260abaa9eeadcbfd29e267eb.
+From: Johannes Berg <johannes.berg@intel.com>
 
-That commit (or rather, hack) triggers a scary WARN in IBSS (ad-hoc) mode.
-Steps to reproduce:
-    ifconfig wlan0 down
-    iwconfig wlan0 mode ad-hoc
-    ifconfig wlan0 up
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 905 at kernel/workqueue.c:1400 __queue_work+0x21c/0x2f4()
-Modules linked in: wl1251_sdio wl1251 mac80211 cfg80211
-CPU: 0 PID: 905 Comm: ifconfig Not tainted 3.15.0-rc2#233
-[<c0015f38>] (unwind_backtrace) from [<c0012938>]
-[<c0012938>] (show_stack) from [<c05d4034>]
-[<c05d4034>] (dump_stack) from [<c0043984>]
-[<c0043984>] (warn_slowpath_common) from [<c00439c0>]
-[<c00439c0>] (warn_slowpath_null) from [<c005b6c8>]
-[<c005b6c8>] (__queue_work) from [<c005b820>]
-[<c005b820>] (queue_work_on) from [<bf134ac0>]
-[<bf134ac0>] (wl1251_op_config [wl1251])
-[<bf099a70>] (ieee80211_hw_config [mac80211])
-...
-This happens because ieee80211_connection_loss() is not expected to be
-called in IBSS mode (mac80211 ends up queuing uninitialized work
-in that case).
+These really can't trigger unless somebody messes up the code,
+but don't make debugging it needlessly complicated, WARN and
+return instead of BUG_ON().
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |   13 -------------
- 1 file changed, 13 deletions(-)
+ net/wireless/core.c | 2 +-
+ net/wireless/sme.c  | 6 ++++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 757e257..c22e225 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -687,16 +687,6 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl->power_level = conf->power_level;
- 	}
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index b3ff3697239a..f509da4d9be9 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -690,7 +690,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	rtnl_lock();
+ 	rdev->wiphy.registered = false;
  
--	/*
--	 * Tell stack that connection is lost because hw encryption isn't
--	 * supported in monitor mode.
--	 * This requires temporary enabling of the hw connection monitor flag
--	 */
--	if ((changed & IEEE80211_CONF_CHANGE_MONITOR) && wl->vif) {
--		wl->hw->flags |= IEEE80211_HW_CONNECTION_MONITOR;
--		ieee80211_connection_loss(wl->vif);
--	}
--
- out_sleep:
- 	wl1251_ps_elp_sleep(wl);
+-	BUG_ON(!list_empty(&rdev->wdev_list));
++	WARN_ON(!list_empty(&rdev->wdev_list));
  
-@@ -1129,9 +1119,6 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
--		/* Disable temporary enabled hw connection monitor flag */
--		wl->hw->flags &= ~IEEE80211_HW_CONNECTION_MONITOR;
--
- 		if (bss_conf->assoc) {
- 			wl->beacon_int = bss_conf->beacon_int;
- 
+ 	/*
+ 	 * First remove the hardware from everywhere, this makes
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index e2923a3f2e5c..4bc21a2b1989 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -149,7 +149,8 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 	case CFG80211_CONN_SCAN_AGAIN:
+ 		return cfg80211_conn_scan(wdev);
+ 	case CFG80211_CONN_AUTHENTICATE_NEXT:
+-		BUG_ON(!rdev->ops->auth);
++		if (WARN_ON(!rdev->ops->auth))
++			return -EOPNOTSUPP;
+ 		wdev->conn->state = CFG80211_CONN_AUTHENTICATING;
+ 		return cfg80211_mlme_auth(rdev, wdev->netdev,
+ 					  params->channel, params->auth_type,
+@@ -161,7 +162,8 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 	case CFG80211_CONN_AUTH_FAILED:
+ 		return -ENOTCONN;
+ 	case CFG80211_CONN_ASSOCIATE_NEXT:
+-		BUG_ON(!rdev->ops->assoc);
++		if (WARN_ON(!rdev->ops->assoc))
++			return -EOPNOTSUPP;
+ 		wdev->conn->state = CFG80211_CONN_ASSOCIATING;
+ 		if (wdev->conn->prev_bssid_valid)
+ 			req.prev_bssid = wdev->conn->prev_bssid;
 -- 
-1.7.9.5
+1.9.0
 
