@@ -1,141 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:44733 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbaDMTUz (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:56081 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbaD2Nhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:55 -0400
-Received: by mail-we0-f173.google.com with SMTP id w61so7202584wes.4
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:54 -0700 (PDT)
+	Tue, 29 Apr 2014 09:37:31 -0400
+Received: by mail-wi0-f178.google.com with SMTP id bs8so441701wib.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 06:37:30 -0700 (PDT)
+Message-ID: <535FA906.6060905@gmail.com> (sfid-20140429_153735_220496_86115DA0)
+Date: Tue, 29 Apr 2014 16:28:38 +0300
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/47] iwlwifi: remove IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT flag
-Date: Sun, 13 Apr 2014 22:19:45 +0300
-Message-Id: <1397416802-32403-30-git-send-email-egrumbach@gmail.com> (sfid-20140413_213514_794685_D3870B71)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+MIME-Version: 1.0
+To: ben@decadent.org.uk
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: pull request: new firmware for Intel 7260 / 3160 / 7265 - 22.212.9.0
+References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
+In-Reply-To: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="jkL3QSJtqPI4nqhXRNsSR5lnh01e3gOPk"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--jkL3QSJtqPI4nqhXRNsSR5lnh01e3gOPk
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-All the supported firmwares have this flag set.
+Hi Ben,
 
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h          |  1 -
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |  3 +--
- drivers/net/wireless/iwlwifi/mvm/fw.c          |  6 ------
- drivers/net/wireless/iwlwifi/mvm/mvm.h         |  2 --
- drivers/net/wireless/iwlwifi/mvm/power.c       | 20 --------------------
- 5 files changed, 1 insertion(+), 31 deletions(-)
+You haven't pulled my tree yet, but I can't hold this any longer, so here=
+ you go. This pull request includes the previous one obviously.
+I have here a new firmware for a new device: 7265, and an upgrade of the =
+firmware for 7260 / 3160 / 7265 supported in 3.14.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 9cb4ad9..c9a3ca6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -107,7 +107,6 @@ enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_MFP			= BIT(2),
- 	IWL_UCODE_TLV_FLAGS_P2P			= BIT(3),
- 	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
--	IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT	= BIT(6),
- 	IWL_UCODE_TLV_FLAGS_SHORT_BL		= BIT(7),
- 	IWL_UCODE_TLV_FLAGS_RX_ENERGY_API	= BIT(8),
- 	IWL_UCODE_TLV_FLAGS_TIME_EVENT_API_V2	= BIT(9),
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index 9b59e1d..d372ca6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -592,8 +592,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		return;
- 	}
- 
--	if ((mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT) &&
--	    iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
-+	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
- 	    ((vif->type == NL80211_IFTYPE_STATION && !vif->p2p) ||
- 	     (vif->type == NL80211_IFTYPE_STATION && vif->p2p &&
- 	      mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BSS_P2P_PS_DCM)))
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 7ce2006..e7a2639 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -468,12 +468,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	/* Initialize tx backoffs to the minimal possible */
- 	iwl_mvm_tt_tx_backoff(mvm, 0);
- 
--	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)) {
--		ret = iwl_power_legacy_set_cam_mode(mvm);
--		if (ret)
--			goto error;
--	}
--
- 	ret = iwl_mvm_power_update_device(mvm);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 9f2ecf2..a0fb7b1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -877,8 +877,6 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm,
- int rs_pretty_print_rate(char *buf, const u32 rate);
- 
- /* power management */
--int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm);
--
- int iwl_mvm_power_update_device(struct iwl_mvm *mvm);
- int iwl_mvm_power_update_mac(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index a1ce8d2..ab92a63 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -437,9 +437,6 @@ int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
- 		.flags = cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK),
- 	};
- 
--	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT))
--		return 0;
--
- 	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD))
- 		return 0;
- 
-@@ -646,9 +643,6 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT))
--		return 0;
--
- 	iwl_mvm_power_set_pm(mvm, &vifs);
- 
- 	/* disable PS if CAM */
-@@ -698,10 +692,6 @@ int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
- 	struct iwl_mac_power_cmd cmd = {};
- 	int pos = 0;
- 
--	if (WARN_ON(!(mvm->fw->ucode_capa.flags &
--		      IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)))
--		return 0;
--
- 	mutex_lock(&mvm->mutex);
- 	memcpy(&cmd, &mvmvif->mac_pwr_cmd, sizeof(cmd));
- 	mutex_unlock(&mvm->mutex);
-@@ -941,13 +931,3 @@ int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
- 
- 	return iwl_mvm_enable_beacon_filter(mvm, vif, flags);
- }
--
--int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm)
--{
--	struct iwl_powertable_cmd cmd = {
--		.keep_alive_seconds = POWER_KEEP_ALIVE_PERIOD_SEC,
--	};
--
--	return iwl_mvm_send_cmd_pdu(mvm, POWER_TABLE_CMD, CMD_SYNC,
--				    sizeof(cmd), &cmd);
--}
--- 
-1.8.3.2
+Thanks!
 
+The following changes since commit dec41bce44e0dff6a2c3358a958fadf22bf588=
+58:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/=
+egrumbach/linux-firmware (2014-03-16 18:12:54 +0000)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.=
+git master
+
+for you to fetch changes up to 7a67dbf9c087ef64b3d3fc9ce448c2efdb2e365f:
+
+  iwlwifi: add new firmware for 3160 / 7260 / 7265 (2014-04-29 13:05:28 +=
+0300)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: add firmware for 7265
+      iwlwifi: add new firmware for 3160 / 7260 / 7265
+
+ LICENCE.iwlwifi_firmware |   2 +-
+ WHENCE                   |  14 +++++++++++++-
+ iwlwifi-3160-9.ucode     | Bin 0 -> 666256 bytes
+ iwlwifi-7260-9.ucode     | Bin 0 -> 678904 bytes
+ iwlwifi-7265-8.ucode     | Bin 0 -> 690452 bytes
+ iwlwifi-7265-9.ucode     | Bin 0 -> 691320 bytes
+ 6 files changed, 14 insertions(+), 2 deletions(-)
+ create mode 100644 iwlwifi-3160-9.ucode
+ create mode 100644 iwlwifi-7260-9.ucode
+ create mode 100644 iwlwifi-7265-8.ucode
+ create mode 100644 iwlwifi-7265-9.ucode
+
+diff --git a/LICENCE.iwlwifi_firmware b/LICENCE.iwlwifi_firmware
+index 01c32a0..b168a60 100644
+--- a/LICENCE.iwlwifi_firmware
++++ b/LICENCE.iwlwifi_firmware
+@@ -1,4 +1,4 @@
+-Copyright (c) 2006-2013, Intel Corporation.
++Copyright (c) 2006-2014, Intel Corporation.
+ All rights reserved.
+
+ Redistribution.  Redistribution and use in binary form, without
+diff --git a/WHENCE b/WHENCE
+index ca0f30b..2b6cc75 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -812,15 +812,27 @@ Version: 22.1.7.0
+ File: iwlwifi-7260-8.ucode
+ Version: 22.24.8.0
+
++File: iwlwifi-7260-9.ucode
++Version: 22.212.9.0
++
+ File: iwlwifi-3160-7.ucode
+ Version: 22.1.7.0
+
+ File: iwlwifi-3160-8.ucode
+ Version: 22.24.8.0
+
++File: iwlwifi-3160-9.ucode
++Version: 22.212.9.0
++
++File: iwlwifi-7265-8.ucode
++Version: 22.24.8.0
++
++File: iwlwifi-7265-9.ucode
++Version: 22.212.9.0
++
+ Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
+
+-Also available from http://wireless.kernel.org/en/users/Drivers/iwlwifi/=
+?n=3DDownloads
++Also available from http://wireless.kernel.org/en/users/Drivers/iwlwifi#=
+Firmware
+
+ ------------------------------------------------------------------------=
+--
+
+diff --git a/iwlwifi-3160-9.ucode b/iwlwifi-3160-9.ucode
+new file mode 100644
+index 0000000..243fe52
+Binary files /dev/null and b/iwlwifi-3160-9.ucode differ
+diff --git a/iwlwifi-7260-9.ucode b/iwlwifi-7260-9.ucode
+new file mode 100644
+index 0000000..bc71b06
+Binary files /dev/null and b/iwlwifi-7260-9.ucode differ
+diff --git a/iwlwifi-7265-8.ucode b/iwlwifi-7265-8.ucode
+new file mode 100644
+index 0000000..3b69247
+Binary files /dev/null and b/iwlwifi-7265-8.ucode differ
+diff --git a/iwlwifi-7265-9.ucode b/iwlwifi-7265-9.ucode
+new file mode 100644
+index 0000000..baa8473
+Binary files /dev/null and b/iwlwifi-7265-9.ucode differ
+
+
+--jkL3QSJtqPI4nqhXRNsSR5lnh01e3gOPk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTX6q+AAoJEC0Llv5uNjIBLg0QAJoXDIGCSzfp6zGm9u69SYNS
+EEhTxd/kAWoMmxlRLus9IjZoo7VTyjEJeZrWy7hb7Y0pKpCu5zdfnQU0nfmoIpM4
+882qSmXsZGcnwVLB+5/vC1BG9PCCqHjwDMWKfhiZtfco8vvlVfCHxDGMsKEU/INR
+N61fX4cuXJ3bQGD2+fBHrdENsMOJvoRNJYQZ4lP/2kGP3gpw4ueYWA9xUJJauZBq
+kRN7lAOADnbhbUie/7LETBbqx8TTIBfNJzAZ4Xvbvqi3P0+KJPraqorb7wubCSRY
+hfQ97W64xVBJpCMbLfI2tu6HInCZE41JW1CF+nTERH5r9be8KqW5h2GNLY/qTmGF
+6XCDcCcwTV50IxBFN9jjEaNrUosjiOW8RYaeZt9EFEfrG4vDUTgDh2aPW/xEoFY3
+tu6pcjA+2VEWYNt/kHSuCvRmwEtoHn1yd9DaWOdtopmQ87ypLQFMbUcwIVVHMbCo
+A9yXlvNbfhVekMpAin03OGO189sRdfcJh0ePs4awCXQvj1Z3PKdg64/AQ2qoyrtH
+kmKq/Kl+DuQY95KvOXe6BP1Vge0uA4oBnsfZE1SWy0wErdGKERK6rmaadwQBXOzq
+6LxXEaqV7LFpa+Q4YmzsGd1kN5+J+//lHZQZu1GIz0hf5rrrn5MCQKcW7yOL5w6l
+U5QupZA1HpVURWiqm2kE
+=6oaE
+-----END PGP SIGNATURE-----
+
+--jkL3QSJtqPI4nqhXRNsSR5lnh01e3gOPk--
