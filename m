@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:44128 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932216AbaDBNcH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 09:32:07 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 2/4] cfg80211: Take the BW restrictions into account when checking the channel
-Date: Wed,  2 Apr 2014 15:31:53 +0200
-Message-Id: <1396445515-5808-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140402_153357_508238_3904D5C1)
-In-Reply-To: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+Received: from nbd.name ([46.4.11.11]:49715 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932982AbaD2MZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Apr 2014 08:25:25 -0400
+Message-ID: <535F9A28.9070809@openwrt.org> (sfid-20140429_142529_002364_3A487C3C)
+Date: Tue, 29 Apr 2014 14:25:12 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Tim Harvey <tharvey@gateworks.com>, linux-wireless@vger.kernel.org
+CC: John Linville <linville@tuxdriver.com>,
+	ath9k-devel@lists.ath9k.org, Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH 2/2] ath9k: add a recv budget
+References: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>	<1398122097-23544-2-git-send-email-tharvey@gateworks.com>	<535631B7.7050208@openwrt.org> <CAJ+vNU1mdgtZuT8NeQmZDJ25cufohqZyvcG4y2EM8tjpfntG7w@mail.gmail.com>
+In-Reply-To: <CAJ+vNU1mdgtZuT8NeQmZDJ25cufohqZyvcG4y2EM8tjpfntG7w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since there are frequency bands restricting maximum channel
-bandwidth to 5MHz or 10MHz, check the particular bandwidth
-flags in cfg80211_chandef_usable() to comply with the restrictions.
+On 2014-04-29 14:04, Tim Harvey wrote:
+> On Tue, Apr 22, 2014 at 2:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2014-04-22 01:14, Tim Harvey wrote:
+>>> Implement a recv budget so that in cases of high traffic we still allow other
+>>> taskets to get processed.
+>>>
+>>> Without this, we can encounter a host of issues during high wireless traffic
+>>> reception depending on system load including rcu stall's detected (ARM),
+>>> soft lockups, failure to service critical tasks such as watchdog resets,
+>>> and triggering of the tx stuck tasklet.
+>>>
+>>> The same thing was proposed previously by Ben:
+>>>  http://www.spinics.net/lists/linux-wireless/msg112891.html
+>>>
+>>> The only difference here is that I make sure only processed packets are counted
+>>> in the budget by checking at the end of the rx loop.
+>>>
+>>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>> For both patches:
+>> Acked-by: Felix Fietkau <nbd@openwrt.org>
+>>
+> 
+> +cc ath9k-devel@lists.ath9k.org
+> +cc Ben Greear
+> 
+> Any other ack's or comments on these? These address some fairly
+> long-standing bugs.
+No need for further ack's or comments, since the change has been picked
+up by John already.
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
----
- net/wireless/chan.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 78559b5..87e1576 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -531,12 +531,14 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		width = 5;
- 		break;
- 	case NL80211_CHAN_WIDTH_10:
-+		prohibited_flags |= IEEE80211_CHAN_NO_10MHZ;
- 		width = 10;
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
- 		if (!ht_cap->ht_supported)
- 			return false;
- 	case NL80211_CHAN_WIDTH_20_NOHT:
-+		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
- 		width = 20;
- 		break;
- 	case NL80211_CHAN_WIDTH_40:
--- 
-1.9.1
-
+- Felix
