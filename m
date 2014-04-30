@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stator.leun.net ([85.214.203.199]:35535 "EHLO stator.leun.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756385AbaDVUBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 16:01:11 -0400
-Date: Tue, 22 Apr 2014 21:48:24 +0200
-From: Michael Leun <lkml20140418@newton.leun.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arik@wizery.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-Message-ID: <20140422214824.6b4e531c@xenia.leun.net> (sfid-20140422_220118_808429_A88D7F96)
-In-Reply-To: <CAB=NE6UCS3ZSE3CQ_98vBHQqZRR31PwF61_G+UZ-mEp=WqEDeQ@mail.gmail.com>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
-	<20140422180003.6438dbb7@xenia.leun.net>
-	<CAB=NE6URp2S9rhVr2cqT+4VOj50m+q0o1rVRehCZvcUtNwTVVw@mail.gmail.com>
-	<20140422184824.74973bb3@xenia.leun.net>
-	<CAB=NE6W64b5VS5pTnxrcRRkRdje6h_hQcGmF9jUiXO55b+nHRw@mail.gmail.com>
-	<20140422193029.2d81fac5@xenia.leun.net>
-	<CAB=NE6UCS3ZSE3CQ_98vBHQqZRR31PwF61_G+UZ-mEp=WqEDeQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20494 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758909AbaD3QO4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2014 12:14:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	<1397760423-11455-2-git-send-email-bzhao@marvell.com>
+	<87a9bb5c2c.fsf@purkki.adurom.net>
+	<20140425013756.GA3410@tuxdriver.com>
+	<477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
+	<1398413370.4152.0.camel@jlt4.sipsolutions.net>
+	<8738gvp8md.fsf@qca.qualcomm.com>
+	<1398846593.5408.0.camel@jlt4.sipsolutions.net>
+	<20140430132246.GB3635@tuxdriver.com>
+Date: Wed, 30 Apr 2014 19:14:55 +0300
+In-Reply-To: <20140430132246.GB3635@tuxdriver.com> (John W. Linville's message
+	of "Wed, 30 Apr 2014 09:22:47 -0400")
+Message-ID: <87y4ymn69s.fsf@qca.qualcomm.com> (sfid-20140430_181459_996809_1F2D3D99)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 22 Apr 2014 10:38:54 -0700
-"Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
+"John W. Linville" <linville@tuxdriver.com> writes:
 
+> On Wed, Apr 30, 2014 at 10:29:53AM +0200, Johannes Berg wrote:
+>> On Wed, 2014-04-30 at 10:41 +0300, Kalle Valo wrote:
+>> > Johannes Berg <johannes@sipsolutions.net> writes:
+>> > 
+>> > > On Thu, 2014-04-24 at 20:35 -0700, Bing Zhao wrote:
+>> > >
+>> > >> Sorry about the hassle. We will find a proper way to implement this.
+>> > >
+>> > > FWIW, a pretty simple way is to trigger a uevent or so and have a
+>> > > debugfs file that all the info can be read out from in userspace.
+>> > 
+>> > I think we need a similar feature in ath10k as well. Should we have a
+>> > generic interface this, would that make any sense?
+>> 
+>> We have it in iwlwifi as well - we were considering a generic uevent but
+>> beyond that I don't think there's much that could be done?
+>
+> There is an ethtool op for that, no?
 
-> Yeah we don't want that 2nd patch, your issue seems like a race on the
->  wiphy during suspend, which is very surprising, specially that no one
-> else would have picked up on this before. I'll go build v3.14.1 and
-> reproduce with rtcwake -m mem -s 30.
+Do you mean this one:
 
-Suspend is only one thing that reliably triggers this. I've also seen
-the machine to barf during normal operation, but only since 3.14.
+ * @get_dump_flag: Get dump flag indicating current dump length, version,
+ * 		   and flag of the device.
+ * @get_dump_data: Get dump data.
+ * @set_dump: Set dump specific flags to the device.
 
-Hope you can reproduce, if not I maybe have to think about how to crank
-up some remote access for you...
+	int	(*get_dump_flag)(struct net_device *, struct ethtool_dump *);
+	int	(*get_dump_data)(struct net_device *,
+				 struct ethtool_dump *, void *);
+	int	(*set_dump)(struct net_device *, struct ethtool_dump *);
+
+Yeah, maybe we could use that in wireless as well.
 
 -- 
-MfG,
-
-Michael Leun
-
+Kalle Valo
