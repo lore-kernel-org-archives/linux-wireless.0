@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48498 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751429AbaDQFCP (ORCPT
+Received: from mail-ve0-f179.google.com ([209.85.128.179]:37297 "EHLO
+	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbaD3C7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 01:02:15 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
-Date: Wed, 16 Apr 2014 22:01:54 -0700
-Message-ID: <1397710914-10061-2-git-send-email-bzhao@marvell.com> (sfid-20140417_070713_408345_4407DB6E)
-In-Reply-To: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+	Tue, 29 Apr 2014 22:59:19 -0400
+Received: by mail-ve0-f179.google.com with SMTP id db12so1429625veb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 19:59:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Tue, 29 Apr 2014 19:59:18 -0700
+Message-ID: <CAFjWW+Yt5RxZStkyfMgW9j0SV7RX_ZKC4JT9B-8_WbYNmP7RFg@mail.gmail.com> (sfid-20140430_045922_615196_A121FD27)
+Subject: Unable to Compile 3.14-1
+From: Aaron Hamilton <aaron@logicdatasystems.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+In trying to compile backports-3.14-1 with a 2.6.39.4 kernel, I get
+the following compilation errors:
 
-When command timeout occurs due to a firmware/hardware bug,
-there is no chance of next command being successful. We will
-keep cmd_sent flag on so that next command won't be sent to
-firmware.
+backport-include/linux/compat.h:18: error: expected ';', ',' or ')'
+before '*' token
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c | 2 --
- 1 file changed, 2 deletions(-)
+If I comment out line 18 in compat.h which just reads "extern int
+compat_put_timespec(const struct timespec*, void __user *)", then I
+get past that error.
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 1062c91..8dee6c8 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -955,8 +955,6 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 			adapter->cmd_wait_q.status = -ETIMEDOUT;
- 			wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 			mwifiex_cancel_pending_ioctl(adapter);
--			/* reset cmd_sent flag to unblock new commands */
--			adapter->cmd_sent = false;
- 		}
- 	}
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
--- 
-1.8.2.3
+Next, things get stuck on compat/crypto-ccm.c on lines 250 and 255,
+stating "too few arguments to function 'scatterwalk_map'" and "too few
+arguments to function 'scatterwalk_unmap'". Both of these function
+calls pass only one argument, yet my kernel headers define the
+functions with two parameters.
 
+I also checked for further references in compat code, but couldn't
+find any declarations that map this function properly to one take a
+single argument.
