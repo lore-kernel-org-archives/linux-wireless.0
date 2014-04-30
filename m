@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56226 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaDYOrK (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28292 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933694AbaD3QN5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 10:47:10 -0400
-Message-ID: <1398437216.4152.7.camel@jlt4.sipsolutions.net> (sfid-20140425_164718_713823_B9649C88)
-Subject: Re: [PATCH] cfg80211: Fix GO Concurrent relaxation on UNII-3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Fri, 25 Apr 2014 16:46:56 +0200
-In-Reply-To: <1398234178-24685-1-git-send-email-ilan.peer@intel.com> (sfid-20140423_092926_556077_B4B8B67A)
-References: <1398234178-24685-1-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140423_092926_556077_B4B8B67A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 30 Apr 2014 12:13:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bing Zhao <bzhao@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	<1397760423-11455-2-git-send-email-bzhao@marvell.com>
+	<87a9bb5c2c.fsf@purkki.adurom.net>
+	<20140425013756.GA3410@tuxdriver.com>
+	<477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
+	<1398413370.4152.0.camel@jlt4.sipsolutions.net>
+	<8738gvp8md.fsf@qca.qualcomm.com>
+	<1398846593.5408.0.camel@jlt4.sipsolutions.net>
+Date: Wed, 30 Apr 2014 19:13:56 +0300
+In-Reply-To: <1398846593.5408.0.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Wed, 30 Apr 2014 10:29:53 +0200")
+Message-ID: <8738guokvv.fsf@qca.qualcomm.com> (sfid-20140430_181401_174730_F4A868EE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-23 at 09:22 +0300, Ilan Peer wrote:
-> At some locations, channels 149-165 are considered a single
-> bundle, while at some other locations, e.g., Indonesia, channels
-> 149-161 are considered a single bundle, while channel 165 belongs
-> to a different bundle. This means that:
-> 
-> 1. A station interface connection to an AP on channel 165 allows
->    the instantiation of a P2P GO on channels 149-165.
-> 2. A station interface connection to an AP on channels 149-161
->    does NOT allow the instantiation of a P2P GO on channel 165.
-> 
-> Fix this.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I'll apply this, but I'm not a big fan of it. Please work with Luis to
-get some information into the regulatory database.
+> On Wed, 2014-04-30 at 10:41 +0300, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > On Thu, 2014-04-24 at 20:35 -0700, Bing Zhao wrote:
+>> >
+>> >> Sorry about the hassle. We will find a proper way to implement this.
+>> >
+>> > FWIW, a pretty simple way is to trigger a uevent or so and have a
+>> > debugfs file that all the info can be read out from in userspace.
+>> 
+>> I think we need a similar feature in ath10k as well. Should we have a
+>> generic interface this, would that make any sense?
+>
+> We have it in iwlwifi as well - we were considering a generic uevent but
+> beyond that I don't think there's much that could be done?
 
-Luis pointed this out originally [1] when you were adding the UNII-1/2/3
-things to the kernel that he didn't think they'd be universally
-applicable, but you said they were ... I guess Luis also thought it was
-true though, and it doesn't seem to be (which seems to be because of the
-80MHz thing with channel 165 I guess)
+I was thinking that it would be nice to avoid rewriting a separate user
+space dumping tool for each driver and instead have a comman way to
+retrieve the blobs from the driver.
 
-johannes
-
-[1] http://mid.gmane.org/CAB=NE6VQXQPRK9_Q-Nh+ripRa
-+PdCd=4_EZvPxeghBjc32ejyQ@mail.gmail.com
-
-
+-- 
+Kalle Valo
