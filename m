@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:41120 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbaDZBn4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 21:43:56 -0400
-Received: by mail-pa0-f49.google.com with SMTP id lj1so3699184pab.8
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 18:43:55 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/2] mac80211: beautify the code
-Date: Sat, 26 Apr 2014 09:43:40 +0800
-Message-Id: <2c511530891bb91f1898a9ae09fed1628043192c.1398476191.git.gamerh2o@gmail.com> (sfid-20140426_034359_786976_7056D980)
-In-Reply-To: <1398440262.4152.21.camel@jlt4.sipsolutions.net>
-References: <1398440262.4152.21.camel@jlt4.sipsolutions.net>
+Received: from mail.tpi.com ([74.45.170.26]:42008 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932715AbaD3NiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2014 09:38:01 -0400
+Message-ID: <5360FCB2.6000605@canonical.com> (sfid-20140430_153805_427060_E20B634B)
+Date: Wed, 30 Apr 2014 07:37:54 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Sven Eckelmann <sven@narfation.org>
+CC: Nicolas Vaquero <nicovaq92@hotmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	kernel-team <kernel-team@lists.ubuntu.com>
+Subject: Re: Kernel source
+References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <535FC896.1080604@lwfinger.net>
+In-Reply-To: <535FC896.1080604@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_assign_chanctx() checks if local->use_chanctx is true, so
-the two code block related to ieee80211_assign_chanctx() can be moved
-into above if clause, emphasize that these code are executed only if
-local->use_chanctx is true.
+On 04/29/2014 09:43 AM, Larry Finger wrote:
+> On 04/29/2014 02:42 AM, Sven Eckelmann wrote:
+>> On Monday 28 April 2014 10:44:01 Larry Finger wrote:
+>> [...]
+>>> Is there a link to the 3.8.0-37 source? I could not find it on the
+>>> Ubuntu
+>>> web pile. With it, I should be able to fix his problem as long as I can
+>>> duplicate it.
+>>
+>> Which exact versions? 3.8.0-36.52~precise1 and 3.8.0-37.53~precise1?
+>> There were
+>> a lot of backports which you can find all here:
+>> https://launchpad.net/ubuntu/+source/linux-lts-raring/+publishinghistory
+>>
+>> You can just click on the version number at the right to find the
+>> *.tar.gz,
+>> *.diff.gz and *.dsc.
+>>
+>> You can download and create a source directory using
+>>
+>> dget
+>> https://launchpad.net/ubuntu/precise/+source/linux-lts-raring/3.8.0-36.52~precise1/+files/linux-lts-raring_3.8.0-36.52~precise1.dsc
+>>
+>> or
+>> dget
+>> https://launchpad.net/ubuntu/precise/+source/linux-lts-raring/3.8.0-37.53~precise1/+files/linux-lts-raring_3.8.0-37.53~precise1.dsc
+>>
+>
+> Sven,
+>
+> Thanks for the info. I wanted version 3.8.0-37.53~precise1, but given
+> that the code is available as the original source and the diff, I also
+> grabbed the diff file for 3.8.0-36.52~precise1. My test kernel is
+> building now.
+>
+> Larry
+>
+>
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/util.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Larry - you can also get the source from our git repository:
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7a376f8..cafbae7 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1565,17 +1565,17 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		list_for_each_entry(ctx, &local->chanctx_list, list)
- 			WARN_ON(drv_add_chanctx(local, ctx));
- 		mutex_unlock(&local->chanctx_mtx);
--	}
- 
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--		ieee80211_assign_chanctx(local, sdata);
--	}
-+		list_for_each_entry(sdata, &local->interfaces, list) {
-+			if (!ieee80211_sdata_running(sdata))
-+				continue;
-+			ieee80211_assign_chanctx(local, sdata);
-+		}
- 
--	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata && ieee80211_sdata_running(sdata))
--		ieee80211_assign_chanctx(local, sdata);
-+		sdata = rtnl_dereference(local->monitor_sdata);
-+		if (sdata && ieee80211_sdata_running(sdata))
-+			ieee80211_assign_chanctx(local, sdata);
-+	}
- 
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
+git://kernel.ubuntu.com/ubuntu/ubuntu-precise.git
+
+You can get the most recent source for that version from the 
+lts-backport-raring branch, or use the tag Ubuntu-lts-3.8.0-37.53
+
+Thanks for looking into this. Let me know if I can help.
+
+rtg
 -- 
-1.9.0
-
+Tim Gardner tim.gardner@canonical.com
