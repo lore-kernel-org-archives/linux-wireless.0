@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:53034 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbaDNH0k (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:37812 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759024AbaD3UdF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 03:26:40 -0400
-Received: by mail-ee0-f49.google.com with SMTP id c41so6212126eek.36
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 00:26:39 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Wed, 30 Apr 2014 16:33:05 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so2207327wes.4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2014 13:33:04 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 4/4] ath10k: fix firmware recovery with ap interface
-Date: Mon, 14 Apr 2014 09:20:10 +0200
-Message-Id: <1397460010-19153-5-git-send-email-michal.kazior@tieto.com> (sfid-20140414_092644_971242_DA825C77)
-In-Reply-To: <1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
-References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
- <1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/4] staging: vt6656: nsDMA_tx_packet Move pContext later
+Date: Wed, 30 Apr 2014 21:31:14 +0100
+Message-Id: <1398889875-3312-3-git-send-email-tvboxspy@gmail.com> (sfid-20140430_223310_981271_BE234977)
+In-Reply-To: <1398889875-3312-1-git-send-email-tvboxspy@gmail.com>
+References: <1398889875-3312-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacon data wasn't properly cleared during early
-phase of recovery. This in turn caused firmware to
-crash because the beacon data was submitted before
-vdevs were fully re-configured. Ultimately the
-device was considered wedged and nothing worked
-until driver was reloaded.
+call s_vGetFreeContext later in function skiping large
+chunk of code.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/staging/vt6656/rxtx.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 22e8239..e2c01dc 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2291,6 +2291,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
-  */
- void ath10k_halt(struct ath10k *ar)
- {
-+	struct ath10k_vif *arvif;
-+
- 	lockdep_assert_held(&ar->conf_mutex);
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 4977f72..6bef0e3 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -2175,14 +2175,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+         }
+     }
  
- 	if (ath10k_monitor_is_enabled(ar)) {
-@@ -2313,6 +2315,17 @@ void ath10k_halt(struct ath10k *ar)
- 		ar->scan.in_progress = false;
- 		ieee80211_scan_completed(ar->hw, true);
- 	}
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (!arvif->beacon)
-+			continue;
-+
-+		dma_unmap_single(arvif->ar->dev,
-+				 ATH10K_SKB_CB(arvif->beacon)->paddr,
-+				 arvif->beacon->len, DMA_TO_DEVICE);
-+		dev_kfree_skb_any(arvif->beacon);
-+		arvif->beacon = NULL;
+-	pContext = s_vGetFreeContext(pDevice);
+-
+-    if (pContext == NULL) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
+-        dev_kfree_skb_irq(skb);
+-        return STATUS_RESOURCES;
+-    }
+-
+     memcpy(pDevice->sTxEthHeader.h_dest, (u8 *)(skb->data), ETH_HLEN);
+ 
+ //mike add:station mode check eapol-key challenge--->
+@@ -2405,7 +2397,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+             if (pTransmitKey == NULL) {
+                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"return no tx key\n");
+-		pContext->bBoolInUse = false;
+                 dev_kfree_skb_irq(skb);
+                 pStats->tx_dropped++;
+                 return STATUS_FAILURE;
+@@ -2413,6 +2404,13 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+         }
+     }
+ 
++	pContext = s_vGetFreeContext(pDevice);
++	if (!pContext) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
++		dev_kfree_skb_irq(skb);
++		return STATUS_RESOURCES;
 +	}
- 	spin_unlock_bh(&ar->data_lock);
- }
++
+ 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
  
+     fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
 -- 
-1.8.5.3
+1.9.1
 
