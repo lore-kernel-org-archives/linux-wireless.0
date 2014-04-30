@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:52042 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752345AbaDEGjv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2014 02:39:51 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andrea Merello <andrea.merello@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: Re: [PATCH 1/4] rtl8180: change module name in rtl818Xpci
-References: <1396628142-14351-1-git-send-email-andrea.merello@gmail.com>
-	<87bnwgif9n.fsf@purkki.adurom.net> <533FA159.4030300@lwfinger.net>
-Date: Sat, 05 Apr 2014 09:39:48 +0300
-In-Reply-To: <533FA159.4030300@lwfinger.net> (Larry Finger's message of "Sat,
-	05 Apr 2014 01:23:21 -0500")
-Message-ID: <877g74i8jv.fsf@purkki.adurom.net> (sfid-20140405_084032_018270_065FCE47)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34054 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759127AbaD3M6Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2014 08:58:24 -0400
+Received: by mail-wi0-f170.google.com with SMTP id f8so846313wiw.5
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2014 05:58:23 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: free sme on connection failures
+Date: Wed, 30 Apr 2014 15:58:13 +0300
+Message-Id: <1398862693-19264-1-git-send-email-eliad@wizery.com> (sfid-20140430_145842_109351_1022E417)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+cfg80211 is notified about connection failures by
+__cfg80211_connect_result() call. However, this
+function currently does not free cfg80211 sme.
 
-> On 04/04/2014 11:14 PM, Kalle Valo wrote:
->> Andrea Merello <andrea.merello@gmail.com> writes:
->>
->>> From: Larry Finger <Larry.Finger@lwfinger.net>
->>>
->>> rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
->>> however in userspace tools (network manager) it still appares
->>> as "rtl8180".
->>> This might lead the user to think the wrong driver is in use.
->>>
->>> This patch changes module name to "rtl818Xpci" that should be
->>> more explanatory.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
->>
->> [...]
->>
->>> -obj-$(CONFIG_RTL8180)	+= rtl8180.o
->>> +obj-$(CONFIG_RTL8180)	+= rtl818Xpci.o
->>
->> Aren't module names usually all lower case?
->
-> I do not feel strongly about this, but when I viewed the driver name
-> in the KDE applet for NetworkManager, the lower-case x sort of got
-> lost, whereas the upper-case one stood out. That was the reason for
-> the way I wrote the patch the way I did. In a terminal, the lc value
-> looks OK. 
+This results in hanging connection attempts in some cases
 
-I think it's confusing to use upper case letter in middle of a module
-name. There's no way to remember that when you are typing it :)
+e.g. when mac80211 authentication attempt is denied,
+we have this function call:
+ieee80211_rx_mgmt_auth() -> cfg80211_rx_mlme_mgmt() ->
+cfg80211_process_auth() -> cfg80211_sme_rx_auth() ->
+__cfg80211_connect_result()
 
-I checked the ubuntu kernel 3.2.0-60-generic I had installed in this
-machine. Out of 3311 kernel modules only 50 had upper case letters and
-none of them were in drivers/net.
+but cfg80211_sme_free() is never get called.
 
-> Perhaps I should have made it rtl818x_pci.
+Fixes: ceca7b712 ("cfg80211: separate internal SME implementation")
+Cc: stable@vger.kernel.org (3.10+)
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+---
+ net/wireless/sme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That would be much more user friendly and also consistent with other
-wireless drivers.
-
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 4bc21a2..1f05cfc 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -236,7 +236,6 @@ void cfg80211_conn_work(struct work_struct *work)
+ 					NULL, 0, NULL, 0,
+ 					WLAN_STATUS_UNSPECIFIED_FAILURE,
+ 					false, NULL);
+-			cfg80211_sme_free(wdev);
+ 		}
+ 		wdev_unlock(wdev);
+ 	}
+@@ -649,6 +648,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			cfg80211_unhold_bss(bss_from_pub(bss));
+ 			cfg80211_put_bss(wdev->wiphy, bss);
+ 		}
++		cfg80211_sme_free(wdev);
+ 		return;
+ 	}
+ 
 -- 
-Kalle Valo
+1.8.5.2.229.g4448466.dirty
+
