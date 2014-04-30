@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:46013 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbaDBEAU (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:38840 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933454AbaD3NOg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 00:00:20 -0400
-Received: by mail-pb0-f45.google.com with SMTP id uo5so10856198pbc.4
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:20 -0700 (PDT)
-From: Fariya Fatima <fariyaf@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH 4/6] rsi: Fixed issue relating to return value.
-Date: Wed,  2 Apr 2014 09:29:53 +0530
-Message-Id: <1396411195-5051-5-git-send-email-fariyaf@gmail.com> (sfid-20140402_060029_753256_3A447446)
-In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
-References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+	Wed, 30 Apr 2014 09:14:36 -0400
+Received: by mail-we0-f175.google.com with SMTP id q58so1666754wes.34
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2014 06:14:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] mac80211: fix nested rtnl locking on ieee80211_reconfig
+Date: Wed, 30 Apr 2014 16:14:24 +0300
+Message-Id: <1398863664-20193-2-git-send-email-eliad@wizery.com> (sfid-20140430_151439_063701_814B4A39)
+In-Reply-To: <1398863664-20193-1-git-send-email-eliad@wizery.com>
+References: <1398863664-20193-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+ieee80211_reconfig already holds rtnl, so calling
+cfg80211_sched_scan_stopped results in deadlock.
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
+Use the rtnl-version of this function instead.
+
+Fixes: d43c6b6 ("mac80211: reschedule sched scan after HW restart")
+Cc: stable@vger.kernel.org (3.14+)
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ net/mac80211/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index f1cb99c..20d11cc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -247,7 +247,7 @@ static int rsi_process_pkt(struct rsi_common *common)
- 	if (!common->rx_data_pkt) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
- 			__func__);
--		return -1;
-+		return -ENOMEM;
- 	}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ad05875..c08bd4a 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1777,7 +1777,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	mutex_unlock(&local->mtx);
  
- 	status = rsi_sdio_host_intf_read_pkt(adapter,
-@@ -260,12 +260,10 @@ static int rsi_process_pkt(struct rsi_common *common)
- 	}
+ 	if (sched_scan_stopped)
+-		cfg80211_sched_scan_stopped(local->hw.wiphy);
++		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
  
- 	status = rsi_read_pkt(common, rcv_pkt_len);
--	kfree(common->rx_data_pkt);
--	return status;
- 
- fail:
- 	kfree(common->rx_data_pkt);
--	return -1;
-+	return status;
- }
- 
- /**
+ 	/*
+ 	 * If this is for hw restart things are still running.
 -- 
-1.7.5.4
+1.8.5.2.229.g4448466.dirty
 
