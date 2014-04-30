@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:55887 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753900AbaDXQaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 12:30:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1WdMXD-0001LC-MN
-	for linux-wireless@vger.kernel.org; Thu, 24 Apr 2014 18:30:03 +0200
-Received: from 46-126-92-137.dynamic.hispeed.ch ([46.126.92.137])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 18:30:03 +0200
-Received: from belegdol by 46-126-92-137.dynamic.hispeed.ch with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 18:30:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Julian Sikorski <belegdol@gmail.com>
-Subject: Re: Low 5 GHz performance of Intel Advanced-N 6230
-Date: Thu, 24 Apr 2014 18:24:00 +0200
-Message-ID: <ljbdr0$c27$1@ger.gmane.org> (sfid-20140424_183018_299864_F03B960E)
-References: <5358AADD.3010702@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <5358AADD.3010702@gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39431 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759165AbaD3QPM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2014 12:15:12 -0400
+Date: Wed, 30 Apr 2014 12:01:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2014-04-28
+Message-ID: <20140430160153.GG3635@tuxdriver.com> (sfid-20140430_181516_837998_77320DC1)
+References: <1398702630.4132.9.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1398702630.4132.9.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 24.04.2014 08:10, Julian Sikorski pisze:
-> Dear all,
+On Mon, Apr 28, 2014 at 06:30:30PM +0200, Johannes Berg wrote:
+> Hi John,
 > 
-> I have been moderately recently hit by a performance drop of Intel
-> Advanced-N 6230 card. I unfortunately do not have the "before" numbers,
-> but I have noticed this since I was able to stream bluray rips over nfs
-> to a wired Raspberry Pi a while ago and now I cannot. This has lead me
-> to begin investigating the issue.
-> In the end I have used iperf3, testing speeds between RPi and laptop,
-> with laptop running both Windows and Linux. iperf3 on RPi was always the
-> same, on the laptop it was self-compiled iperf3 git master (on Windows I
-> used Cygwin). Please see the observed speeds below:
-> - Windows: upload to RPi 93 Mbit/s, download from RPi 54 Mbit/s
-> - Fedora: upload to RPi 26 Mbit/s, download from RPi 48 Mbit/s
+> Somehow it seems I got behind and should have sent this to you earlier,
+> but here it is now ...
 > 
-> This is all on Fedora 20 x86_64. Please find attached the journalctl log
-> for the last boot. Please let me know if more information is needed - I
-> would love to get my network speeds back up to the level where I can
-> watch bluray rips again. Thank you for your support in advance.
+> In this round we have a large number of small features and improvements
+> from people too numerous to list here. The only really bit thing is
+> Michał and Luca's CSA work (including changing how interface combination
+> verification is done).
 > 
-> Best regards,
-> Julian
+> Let me know if there's any problem.
 > 
-Hello again,
+> johannes
+> 
+> 
+> The following changes since commit cd6362befe4cc7bf589a5236d2a780af2d47bcc9:
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-04-02 20:53:45 -0700)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to f55ee0834247c88cb6981cb11eb1870392878371:
+> 
+>   mac80211_hwsim: Advertise support for AP mode channel width changes (2014-04-28 18:11:59 +0200)
 
-I have narrowed this down to have regressed between 3.13.6-200.fc20 and
-3.13.7-200. Using pointers from Josh Boyer of #fedora-devel, I have
-managed to restore the previous performance by loading iwlwifi with
-11n_disable=8. I am now at 3.14.1-200 with that option enabled and the
-network is fast as it used to be.
-Is such a major performance hit expected from this change? Here is the
-commit in question:
-https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?h=linux-3.13.y&id=45e5cb4f43d33e72ff5f98c80b081eb42e4e4182
+Pulling now...
 
-Best regards,
-Julian
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
