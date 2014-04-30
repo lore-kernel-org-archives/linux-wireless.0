@@ -1,126 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:40555 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbaDQMHp (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:57106 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759024AbaD3UdD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 08:07:45 -0400
-Date: Thu, 17 Apr 2014 14:07:40 +0200
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <19510493295.20140417140740@eikelenboom.it> (sfid-20140417_140750_823488_0F069CEE)
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	<colleen@cozybit.com>, <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH] cfg80211: avoid freeing last_request while in flight
-In-Reply-To: <1397646587-11078-1-git-send-email-arik@wizery.com>
-References: <1397646587-11078-1-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 30 Apr 2014 16:33:03 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so2207278wes.4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2014 13:33:02 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/4] staging: vt6656: desh.h Remove unused macros and structures.
+Date: Wed, 30 Apr 2014 21:31:13 +0100
+Message-Id: <1398889875-3312-2-git-send-email-tvboxspy@gmail.com> (sfid-20140430_223309_312555_BC3EDBB8)
+In-Reply-To: <1398889875-3312-1-git-send-email-tvboxspy@gmail.com>
+References: <1398889875-3312-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+All are dead and of no use.
 
-Could you put whatever (combination of) patches you see fit into you -next 
-tree .. so i can retest what will hopefully go upstream in the next mergewindow.
-I think that will also increase further testcoverage (and if something else 
-arise it gives time to fix it before the next mergewindow). It would be nice
-if it would make it this time around ...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/desc.h | 55 -------------------------------------------
+ 1 file changed, 55 deletions(-)
 
---
-Sander
-
-
-Wednesday, April 16, 2014, 1:09:47 PM, you wrote:
-
-> Avoid freeing the last request while it is being processed. This can
-> happen in some cases if reg_work is kicked for some reason while the
-> currently pending request is in flight.
-
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> This is to be applied on top of
-> "cfg80211: fix processing world regdomain when non modular"
-
->  net/wireless/reg.c | 24 ++++++++++++++++--------
->  1 file changed, 16 insertions(+), 8 deletions(-)
-
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index f59aaac..5ec04dc 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -240,8 +240,16 @@ static char user_alpha2[2];
->  module_param(ieee80211_regdom, charp, 0444);
->  MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
->  
-> -static void reg_free_request(struct regulatory_request *lr)
-> +static void reg_free_request(struct regulatory_request *request)
->  {
-> +       if (request != get_last_request())
-> +               kfree(request);
-> +}
-> +
-> +static void reg_free_last_request(void)
-> +{
-> +       struct regulatory_request *lr = get_last_request();
-> +
->         if (lr != &core_request_world && lr)
->                 kfree_rcu(lr, rcu_head);
->  }
-> @@ -254,7 +262,7 @@ static void reg_update_last_request(struct regulatory_request *request)
->         if (lr == request)
->                 return;
->  
-> -       reg_free_request(lr);
-> +       reg_free_last_request();
->         rcu_assign_pointer(last_request, request);
->  }
->  
-> @@ -1616,7 +1624,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
->         treatment = __reg_process_hint_user(user_request);
->         if (treatment == REG_REQ_IGNORE ||
->             treatment == REG_REQ_ALREADY_SET) {
-> -               kfree(user_request);
-> +               reg_free_request(user_request);
->                 return treatment;
->         }
->  
-> @@ -1676,14 +1684,14 @@ reg_process_hint_driver(struct wiphy *wiphy,
->         case REG_REQ_OK:
->                 break;
->         case REG_REQ_IGNORE:
-> -               kfree(driver_request);
-> +               reg_free_request(driver_request);
->                 return treatment;
->         case REG_REQ_INTERSECT:
->                 /* fall through */
->         case REG_REQ_ALREADY_SET:
->                 regd = reg_copy_regd(get_cfg80211_regdom());
->                 if (IS_ERR(regd)) {
-> -                       kfree(driver_request);
-> +                       reg_free_request(driver_request);
->                         return REG_REQ_IGNORE;
->                 }
->                 rcu_assign_pointer(wiphy->regd, regd);
-> @@ -1777,10 +1785,10 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
->         case REG_REQ_IGNORE:
->                 /* fall through */
->         case REG_REQ_ALREADY_SET:
-> -               kfree(country_ie_request);
-> +               reg_free_request(country_ie_request);
->                 return treatment;
->         case REG_REQ_INTERSECT:
-> -               kfree(country_ie_request);
-> +               reg_free_request(country_ie_request);
->                 /*
->                  * This doesn't happen yet, not sure we
->                  * ever want to support it for this case.
-> @@ -1841,7 +1849,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
->         return;
->  
->  out_free:
-> -       kfree(reg_request);
-> +       reg_free_request(reg_request);
->  }
->  
->  /*
+diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
+index 7c6dd5f..171315a 100644
+--- a/drivers/staging/vt6656/desc.h
++++ b/drivers/staging/vt6656/desc.h
+@@ -91,15 +91,6 @@
+ #define TSR_ACKDATA         0x02
+ #define TSR_VALID           0x01
+ 
+-#define CB_PROTOCOL_RESERVED_SECTION    16
+-
+-/*
+- * if retries exceed 15 times, TX will abort, and
+- * if TX fifo underflow, TX will fail
+- * we should try to resend it
+- */
+-#define CB_MAX_TX_ABORT_RETRY   3
+-
+ #define FIFOCTL_AUTO_FB_1   0x1000
+ #define FIFOCTL_AUTO_FB_0   0x0800
+ #define FIFOCTL_GRPACK      0x0400
+@@ -126,50 +117,4 @@
+ #define FRAGCTL_STAFRAG     0x0001
+ #define FRAGCTL_NONFRAG     0x0000
+ 
+-#define TYPE_TXDMA0     0
+-#define TYPE_AC0DMA     1
+-#define TYPE_ATIMDMA    2
+-#define TYPE_SYNCDMA    3
+-#define TYPE_MAXTD      2
+-
+-#define TYPE_BEACONDMA  4
+-
+-#define TYPE_RXDMA0     0
+-#define TYPE_RXDMA1     1
+-#define TYPE_MAXRD      2
+-
+-/* TD_INFO flags control bit */
+-#define TD_FLAGS_NETIF_SKB 0x01 /* check if need release skb */
+-#define TD_FLAGS_PRIV_SKB  0x02 /* check if called from private skb(hostap) */
+-#define TD_FLAGS_PS_RETRY  0x04 /* check if PS STA frame re-transmit */
+-
+-/*
+- * TX FIFO header
+- */
+-typedef struct tagSBEACONCtl {
+-	u32 BufReady:1;
+-	u32 TSF:15;
+-	u32 BufLen:11;
+-	u32 Reserved:5;
+-} __attribute__ ((__packed__))
+-SBEACONCtl;
+-
+-typedef struct tagSSecretKey {
+-	u32 dwLowDword;
+-    u8    byHighByte;
+-} __attribute__ ((__packed__))
+-SSecretKey;
+-
+-typedef struct tagSKeyEntry {
+-    u8  abyAddrHi[2];
+-    u16  wKCTL;
+-    u8  abyAddrLo[4];
+-	u32 dwKey0[4];
+-	u32 dwKey1[4];
+-	u32 dwKey2[4];
+-	u32 dwKey3[4];
+-	u32 dwKey4[4];
+-} __attribute__ ((__packed__))
+-SKeyEntry;
+-
+ #endif /* __DESC_H__ */
+-- 
+1.9.1
 
