@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from the.earth.li ([46.43.34.31]:43238 "EHLO the.earth.li"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:54899 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754596AbaDGBF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Apr 2014 21:05:26 -0400
-Date: Mon, 7 Apr 2014 01:36:48 +0100
-From: Jonathan McDowell <noodles@earth.li>
-To: linux-wireless@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Intel 7260 not working in 802.11n mode
-Message-ID: <20140407003648.GA19740@earth.li> (sfid-20140407_030559_667802_2137A372)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1758976AbaD3PME (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2014 11:12:04 -0400
+From: Ashish Patro <patro@cs.wisc.edu>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux@rempel-privat.de,
+	Ashish Patro <patro@cs.wisc.edu>
+Subject: [PATCH 0/3] Refactoring spectral scan code and adding spectral scan support for ath9k_htc
+Date: Wed, 30 Apr 2014 10:11:20 -0500
+Message-Id: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu> (sfid-20140430_171208_811299_60686D49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+These patches move the common components of spectral scan funcationality to common-spectral.c.
 
-I have an Intel 7260 that fails to associate correctly in 802.11n mode.
-Unfortunately I don't have any access to the AP in question, but I
-believe it is an ASUS based device. This is on the 5GHz band; there is
-some odd configuration with the router that results in the driver
-refusing to associate on the 2.4GHz setup with the following error:
+Also added spectral scan support to ath9k_htc using the same mechanism to collect spectral scan data as used by ath9k driver.
 
-[  507.495986] iwlwifi 0000:02:00.0: AP 30:00:da:b1:da:d0 beacon interval is 7, refusing due to firmware bug!
+This work was done at the Wisconsin Wireless and NetworkinG Systems (WiNGS) Lab at the University of Wisconsin Madison.
 
-On the 5GHz band the driver attempts to associate, but never seems to
-actually fully associate to the point of getting an IP. If I pass the
-11n_disable=1 parameter to the driver then things work fine.
+I've also worked with Oleksij Rempel (linux@rempel-privat.de) to get these patches tested and verified with a AR9271 chipset device.
 
-I've put a debug log of the failure to associate (kernel 3.14 but this
-has happened with all the version I've tried) up at:
+Ashish Patro (3):
+  Moving the ath9k specific spectral functions to ath9k.h from
+    spectral.h. Renamed spectral.h to common-spectral.h
+  Refactoring the ath9k driver to move common spectral functions to
+    common-spectral.c
+  Update spectral scan calls to support both ath9k and ath9k_htc.
+    Adding spectral scan functionality to ath9k_htc driver. Tested
+    using a AR9271 WiFi card.
 
-http://the.earth.li/~noodles/iwlwifi-fail.log
-
-If there is more information I should be providing please let me know.
-I'm sure it's related to the AP in question as I've had successful 11n
-associations with other setups, but it's annoying to have to explicitly
-disable 11n when in this location and then not in others.
-
-J.
+ drivers/net/wireless/ath/ath9k/Makefile           |    3 +-
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c       |   11 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h            |    9 +-
+ drivers/net/wireless/ath/ath9k/common-spectral.c  |  213 +++++++++++++
+ drivers/net/wireless/ath/ath9k/common-spectral.h  |  199 ++++++++++++
+ drivers/net/wireless/ath/ath9k/htc.h              |   13 +
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c    |    3 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c     |    8 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c     |   75 +++++
+ drivers/net/wireless/ath/ath9k/htc_drv_spectral.c |  353 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c     |   17 +
+ drivers/net/wireless/ath/ath9k/recv.c             |    7 +-
+ drivers/net/wireless/ath/ath9k/spectral.c         |  187 -----------
+ drivers/net/wireless/ath/ath9k/spectral.h         |  212 ------------
+ 14 files changed, 905 insertions(+), 405 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.h
+ create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_spectral.c
+ delete mode 100644 drivers/net/wireless/ath/ath9k/spectral.h
 
 -- 
-"evilwm - we sold our souls to the window manager" --
-http://www.6809.org.uk/evilwm/
+1.7.5.4
+
