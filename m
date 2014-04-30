@@ -1,393 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:20907 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756783AbaDWIHi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39234 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758965AbaD3QAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2014 04:07:38 -0400
-From: Seungwon Jeon <tgih.jun@samsung.com>
-To: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: 'Chris Ball' <chris@printf.net>,
-	'Ulf Hansson' <ulf.hansson@linaro.org>,
-	'Jaehoon Chung' <jh80.chung@samsung.com>,
-	'Jackey Shen' <jackey.shen@amd.com>,
-	'Alim Akhtar' <alim.akhtar@samsung.com>,
-	'Fariya Fatima' <fariyaf@gmail.com>,
-	"'John W. Linville'" <linville@tuxdriver.com>
-References: <1383653403-10049-1-git-send-email-ulf.hansson@linaro.org>
- <006701cf2a58$c628e050$527aa0f0$%jun@samsung.com>
-In-reply-to: 
-Subject: [PATCH 1/6] mmc: drop the speed mode of card's state
-Date: Wed, 23 Apr 2014 17:07:35 +0900
-Message-id: <000a01cf5ecb$15fedcf0$41fc96d0$%jun@samsung.com> (sfid-20140423_100804_567779_BF1DD143)
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+	Wed, 30 Apr 2014 12:00:14 -0400
+Date: Wed, 30 Apr 2014 11:58:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-04-24
+Message-ID: <20140430155851.GF3635@tuxdriver.com> (sfid-20140430_180043_942041_FAEFFFB9)
+References: <20140424152709.GE7832@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140424152709.GE7832@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Timing mode identifier has same role and can take the place
-of speed mode. This change removes all related speed mode.
+On Thu, Apr 24, 2014 at 12:27:09PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> Here goes some patches for the -next release. There is nothing really special
+> for this pull request, just a bunch of refactors, fixes and clean ups. 
+> 
+> Please pull, or let me know of any problems! Thanks.
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit e8b1ab9e6d30394e0df3e4f60bf56c4dc9bf0863:
+> 
+>   Bluetooth: Fix returning peer address in pending connect state (2014-03-26 09:31:33 -0700)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to 22e70786413ed05950207eda7be420c280b776d7:
+> 
+>   Bluetooth: Remove hci_h4 unused defines (2014-04-24 11:55:26 -0300)
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Tested-by: Jaehoon Chung <jh80.chung@samsung.com>
-Acked-by: Jaehoon Chung <jh80.chung@samsung.com>
-Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
-Signed-off-by: Chris Ball <chris@printf.net>
----
- drivers/mmc/core/bus.c                  |    8 ++++----
- drivers/mmc/core/core.c                 |    3 +--
- drivers/mmc/core/mmc.c                  |   11 +++--------
- drivers/mmc/core/sd.c                   |   16 +++-------------
- drivers/mmc/core/sd.h                   |    1 -
- drivers/mmc/core/sdio.c                 |    8 ++------
- drivers/net/wireless/rsi/rsi_91x_sdio.c |    4 +---
- include/linux/mmc/card.h                |   23 ++++++-----------------
- include/linux/mmc/host.h                |   23 +++++++++++++++++++++++
- 9 files changed, 43 insertions(+), 54 deletions(-)
+Pulling now...
 
-diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
-index 8246448..f37e9d6 100644
---- a/drivers/mmc/core/bus.c
-+++ b/drivers/mmc/core/bus.c
-@@ -341,16 +341,16 @@ int mmc_add_card(struct mmc_card *card)
- 	if (mmc_host_is_spi(card->host)) {
- 		pr_info("%s: new %s%s%s card on SPI\n",
- 			mmc_hostname(card->host),
--			mmc_card_highspeed(card) ? "high speed " : "",
--			mmc_card_ddr_mode(card) ? "DDR " : "",
-+			mmc_card_hs(card) ? "high speed " : "",
-+			mmc_card_ddr52(card) ? "DDR " : "",
- 			type);
- 	} else {
- 		pr_info("%s: new %s%s%s%s%s card at address %04x\n",
- 			mmc_hostname(card->host),
- 			mmc_card_uhs(card) ? "ultra high speed " :
--			(mmc_card_highspeed(card) ? "high speed " : ""),
-+			(mmc_card_hs(card) ? "high speed " : ""),
- 			(mmc_card_hs200(card) ? "HS200 " : ""),
--			mmc_card_ddr_mode(card) ? "DDR " : "",
-+			mmc_card_ddr52(card) ? "DDR " : "",
- 			uhs_bus_speed_mode, type, card->rca);
- 	}
- 
-diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-index 79ba3a5..4b058ae 100644
---- a/drivers/mmc/core/core.c
-+++ b/drivers/mmc/core/core.c
-@@ -2187,7 +2187,7 @@ int mmc_set_blocklen(struct mmc_card *card, unsigned int blocklen)
- {
- 	struct mmc_command cmd = {0};
- 
--	if (mmc_card_blockaddr(card) || mmc_card_ddr_mode(card))
-+	if (mmc_card_blockaddr(card) || mmc_card_ddr52(card))
- 		return 0;
- 
- 	cmd.opcode = MMC_SET_BLOCKLEN;
-@@ -2267,7 +2267,6 @@ static int mmc_do_hw_reset(struct mmc_host *host, int check)
- 		}
- 	}
- 
--	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_DDR);
- 	if (mmc_host_is_spi(host)) {
- 		host->ios.chip_select = MMC_CS_HIGH;
- 		host->ios.bus_mode = MMC_BUSMODE_PUSHPULL;
-diff --git a/drivers/mmc/core/mmc.c b/drivers/mmc/core/mmc.c
-index fbcf93d..3122052 100644
---- a/drivers/mmc/core/mmc.c
-+++ b/drivers/mmc/core/mmc.c
-@@ -1083,11 +1083,9 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
- 		} else {
- 			if (card->ext_csd.hs_max_dtr > 52000000 &&
- 			    host->caps2 & MMC_CAP2_HS200) {
--				mmc_card_set_hs200(card);
- 				mmc_set_timing(card->host,
- 					       MMC_TIMING_MMC_HS200);
- 			} else {
--				mmc_card_set_highspeed(card);
- 				mmc_set_timing(card->host, MMC_TIMING_MMC_HS);
- 			}
- 		}
-@@ -1098,10 +1096,10 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
- 	 */
- 	max_dtr = (unsigned int)-1;
- 
--	if (mmc_card_highspeed(card) || mmc_card_hs200(card)) {
-+	if (mmc_card_hs(card) || mmc_card_hs200(card)) {
- 		if (max_dtr > card->ext_csd.hs_max_dtr)
- 			max_dtr = card->ext_csd.hs_max_dtr;
--		if (mmc_card_highspeed(card) && (max_dtr > 52000000))
-+		if (mmc_card_hs(card) && (max_dtr > 52000000))
- 			max_dtr = 52000000;
- 	} else if (max_dtr > card->csd.max_dtr) {
- 		max_dtr = card->csd.max_dtr;
-@@ -1112,7 +1110,7 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
- 	/*
- 	 * Indicate DDR mode (if supported).
- 	 */
--	if (mmc_card_highspeed(card)) {
-+	if (mmc_card_hs(card)) {
- 		if ((card->ext_csd.card_type & EXT_CSD_CARD_TYPE_DDR_1_8V)
- 			&& (host->caps & MMC_CAP_1_8V_DDR))
- 				ddr = MMC_1_8V_DDR_MODE;
-@@ -1255,7 +1253,6 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
- 				if (err)
- 					goto err;
- 			}
--			mmc_card_set_ddr_mode(card);
- 			mmc_set_timing(card->host, MMC_TIMING_MMC_DDR52);
- 			mmc_set_bus_width(card->host, bus_width);
- 		}
-@@ -1499,7 +1496,6 @@ static int _mmc_suspend(struct mmc_host *host, bool is_suspend)
- 		err = mmc_sleep(host);
- 	else if (!mmc_host_is_spi(host))
- 		err = mmc_deselect_cards(host);
--	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_200);
- 
- 	if (!err) {
- 		mmc_power_off(host);
-@@ -1629,7 +1625,6 @@ static int mmc_power_restore(struct mmc_host *host)
- {
- 	int ret;
- 
--	host->card->state &= ~(MMC_STATE_HIGHSPEED | MMC_STATE_HIGHSPEED_200);
- 	mmc_claim_host(host);
- 	ret = mmc_init_card(host, host->card->ocr, host->card);
- 	mmc_release_host(host);
-diff --git a/drivers/mmc/core/sd.c b/drivers/mmc/core/sd.c
-index aef5157..0c44510 100644
---- a/drivers/mmc/core/sd.c
-+++ b/drivers/mmc/core/sd.c
-@@ -887,7 +887,7 @@ unsigned mmc_sd_get_max_clock(struct mmc_card *card)
- {
- 	unsigned max_dtr = (unsigned int)-1;
- 
--	if (mmc_card_highspeed(card)) {
-+	if (mmc_card_hs(card)) {
- 		if (max_dtr > card->sw_caps.hs_max_dtr)
- 			max_dtr = card->sw_caps.hs_max_dtr;
- 	} else if (max_dtr > card->csd.max_dtr) {
-@@ -897,12 +897,6 @@ unsigned mmc_sd_get_max_clock(struct mmc_card *card)
- 	return max_dtr;
- }
- 
--void mmc_sd_go_highspeed(struct mmc_card *card)
--{
--	mmc_card_set_highspeed(card);
--	mmc_set_timing(card->host, MMC_TIMING_SD_HS);
--}
--
- /*
-  * Handle the detection and initialisation of a card.
-  *
-@@ -977,16 +971,13 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
- 		err = mmc_sd_init_uhs_card(card);
- 		if (err)
- 			goto free_card;
--
--		/* Card is an ultra-high-speed card */
--		mmc_card_set_uhs(card);
- 	} else {
- 		/*
- 		 * Attempt to change to high-speed (if supported)
- 		 */
- 		err = mmc_sd_switch_hs(card);
- 		if (err > 0)
--			mmc_sd_go_highspeed(card);
-+			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
- 		else if (err)
- 			goto free_card;
- 
-@@ -1081,7 +1072,7 @@ static int _mmc_sd_suspend(struct mmc_host *host)
- 
- 	if (!mmc_host_is_spi(host))
- 		err = mmc_deselect_cards(host);
--	host->card->state &= ~MMC_STATE_HIGHSPEED;
-+
- 	if (!err) {
- 		mmc_power_off(host);
- 		mmc_card_set_suspended(host->card);
-@@ -1190,7 +1181,6 @@ static int mmc_sd_power_restore(struct mmc_host *host)
- {
- 	int ret;
- 
--	host->card->state &= ~MMC_STATE_HIGHSPEED;
- 	mmc_claim_host(host);
- 	ret = mmc_sd_init_card(host, host->card->ocr, host->card);
- 	mmc_release_host(host);
-diff --git a/drivers/mmc/core/sd.h b/drivers/mmc/core/sd.h
-index 4b34b24..aab824a 100644
---- a/drivers/mmc/core/sd.h
-+++ b/drivers/mmc/core/sd.h
-@@ -12,6 +12,5 @@ int mmc_sd_setup_card(struct mmc_host *host, struct mmc_card *card,
- 	bool reinit);
- unsigned mmc_sd_get_max_clock(struct mmc_card *card);
- int mmc_sd_switch_hs(struct mmc_card *card);
--void mmc_sd_go_highspeed(struct mmc_card *card);
- 
- #endif
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 9933e42..e636d9e 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -363,7 +363,7 @@ static unsigned mmc_sdio_get_max_clock(struct mmc_card *card)
- {
- 	unsigned max_dtr;
- 
--	if (mmc_card_highspeed(card)) {
-+	if (mmc_card_hs(card)) {
- 		/*
- 		 * The SDIO specification doesn't mention how
- 		 * the CIS transfer speed register relates to
-@@ -733,7 +733,6 @@ try_again:
- 		mmc_set_clock(host, card->cis.max_dtr);
- 
- 		if (card->cccr.high_speed) {
--			mmc_card_set_highspeed(card);
- 			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
- 		}
- 
-@@ -792,16 +791,13 @@ try_again:
- 		err = mmc_sdio_init_uhs_card(card);
- 		if (err)
- 			goto remove;
--
--		/* Card is an ultra-high-speed card */
--		mmc_card_set_uhs(card);
- 	} else {
- 		/*
- 		 * Switch to high-speed (if supported).
- 		 */
- 		err = sdio_enable_hs(card);
- 		if (err > 0)
--			mmc_sd_go_highspeed(card);
-+			mmc_set_timing(card->host, MMC_TIMING_SD_HS);
- 		else if (err)
- 			goto remove;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 2e39d38..46e7af4 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -285,7 +285,6 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 		if (err) {
- 			rsi_dbg(ERR_ZONE, "%s: CCCR speed reg read failed: %d\n",
- 				__func__, err);
--			card->state &= ~MMC_STATE_HIGHSPEED;
- 		} else {
- 			err = rsi_cmd52writebyte(card,
- 						 SDIO_CCCR_SPEED,
-@@ -296,14 +295,13 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 					__func__, err);
- 				return;
- 			}
--			mmc_card_set_highspeed(card);
- 			host->ios.timing = MMC_TIMING_SD_HS;
- 			host->ops->set_ios(host, &host->ios);
- 		}
- 	}
- 
- 	/* Set clock */
--	if (mmc_card_highspeed(card))
-+	if (mmc_card_hs(card))
- 		clock = 50000000;
- 	else
- 		clock = card->cis.max_dtr;
-diff --git a/include/linux/mmc/card.h b/include/linux/mmc/card.h
-index aa7e57f..aadeaf1 100644
---- a/include/linux/mmc/card.h
-+++ b/include/linux/mmc/card.h
-@@ -194,6 +194,7 @@ struct sdio_cis {
- };
- 
- struct mmc_host;
-+struct mmc_ios;
- struct sdio_func;
- struct sdio_func_tuple;
- 
-@@ -250,15 +251,11 @@ struct mmc_card {
- 	unsigned int		state;		/* (our) card state */
- #define MMC_STATE_PRESENT	(1<<0)		/* present in sysfs */
- #define MMC_STATE_READONLY	(1<<1)		/* card is read-only */
--#define MMC_STATE_HIGHSPEED	(1<<2)		/* card is in high speed mode */
--#define MMC_STATE_BLOCKADDR	(1<<3)		/* card uses block-addressing */
--#define MMC_STATE_HIGHSPEED_DDR (1<<4)		/* card is in high speed mode */
--#define MMC_STATE_ULTRAHIGHSPEED (1<<5)		/* card is in ultra high speed mode */
--#define MMC_CARD_SDXC		(1<<6)		/* card is SDXC */
--#define MMC_CARD_REMOVED	(1<<7)		/* card has been removed */
--#define MMC_STATE_HIGHSPEED_200	(1<<8)		/* card is in HS200 mode */
--#define MMC_STATE_DOING_BKOPS	(1<<10)		/* card is doing BKOPS */
--#define MMC_STATE_SUSPENDED	(1<<11)		/* card is suspended */
-+#define MMC_STATE_BLOCKADDR	(1<<2)		/* card uses block-addressing */
-+#define MMC_CARD_SDXC		(1<<3)		/* card is SDXC */
-+#define MMC_CARD_REMOVED	(1<<4)		/* card has been removed */
-+#define MMC_STATE_DOING_BKOPS	(1<<5)		/* card is doing BKOPS */
-+#define MMC_STATE_SUSPENDED	(1<<6)		/* card is suspended */
- 	unsigned int		quirks; 	/* card quirks */
- #define MMC_QUIRK_LENIENT_FN0	(1<<0)		/* allow SDIO FN0 writes outside of the VS CCCR range */
- #define MMC_QUIRK_BLKSZ_FOR_BYTE_MODE (1<<1)	/* use func->cur_blksize */
-@@ -418,11 +415,7 @@ static inline void __maybe_unused remove_quirk(struct mmc_card *card, int data)
- 
- #define mmc_card_present(c)	((c)->state & MMC_STATE_PRESENT)
- #define mmc_card_readonly(c)	((c)->state & MMC_STATE_READONLY)
--#define mmc_card_highspeed(c)	((c)->state & MMC_STATE_HIGHSPEED)
--#define mmc_card_hs200(c)	((c)->state & MMC_STATE_HIGHSPEED_200)
- #define mmc_card_blockaddr(c)	((c)->state & MMC_STATE_BLOCKADDR)
--#define mmc_card_ddr_mode(c)	((c)->state & MMC_STATE_HIGHSPEED_DDR)
--#define mmc_card_uhs(c)		((c)->state & MMC_STATE_ULTRAHIGHSPEED)
- #define mmc_card_ext_capacity(c) ((c)->state & MMC_CARD_SDXC)
- #define mmc_card_removed(c)	((c) && ((c)->state & MMC_CARD_REMOVED))
- #define mmc_card_doing_bkops(c)	((c)->state & MMC_STATE_DOING_BKOPS)
-@@ -430,11 +423,7 @@ static inline void __maybe_unused remove_quirk(struct mmc_card *card, int data)
- 
- #define mmc_card_set_present(c)	((c)->state |= MMC_STATE_PRESENT)
- #define mmc_card_set_readonly(c) ((c)->state |= MMC_STATE_READONLY)
--#define mmc_card_set_highspeed(c) ((c)->state |= MMC_STATE_HIGHSPEED)
--#define mmc_card_set_hs200(c)	((c)->state |= MMC_STATE_HIGHSPEED_200)
- #define mmc_card_set_blockaddr(c) ((c)->state |= MMC_STATE_BLOCKADDR)
--#define mmc_card_set_ddr_mode(c) ((c)->state |= MMC_STATE_HIGHSPEED_DDR)
--#define mmc_card_set_uhs(c) ((c)->state |= MMC_STATE_ULTRAHIGHSPEED)
- #define mmc_card_set_ext_capacity(c) ((c)->state |= MMC_CARD_SDXC)
- #define mmc_card_set_removed(c) ((c)->state |= MMC_CARD_REMOVED)
- #define mmc_card_set_doing_bkops(c)	((c)->state |= MMC_STATE_DOING_BKOPS)
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index 0cf705c..a438537 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -17,6 +17,7 @@
- #include <linux/fault-inject.h>
- 
- #include <linux/mmc/core.h>
-+#include <linux/mmc/card.h>
- #include <linux/mmc/pm.h>
- 
- struct mmc_ios {
-@@ -478,4 +479,26 @@ static inline unsigned int mmc_host_clk_rate(struct mmc_host *host)
- 	return host->ios.clock;
- }
- #endif
-+
-+static inline int mmc_card_hs(struct mmc_card *card)
-+{
-+	return card->host->ios.timing == MMC_TIMING_SD_HS ||
-+		card->host->ios.timing == MMC_TIMING_MMC_HS;
-+}
-+
-+static inline int mmc_card_uhs(struct mmc_card *card)
-+{
-+	return card->host->ios.timing >= MMC_TIMING_UHS_SDR12 &&
-+		card->host->ios.timing <= MMC_TIMING_UHS_DDR50;
-+}
-+
-+static inline bool mmc_card_hs200(struct mmc_card *card)
-+{
-+	return card->host->ios.timing == MMC_TIMING_MMC_HS200;
-+}
-+
-+static inline bool mmc_card_ddr52(struct mmc_card *card)
-+{
-+	return card->host->ios.timing == MMC_TIMING_MMC_DDR52;
-+}
- #endif /* LINUX_MMC_HOST_H */
 -- 
-1.7.0.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
