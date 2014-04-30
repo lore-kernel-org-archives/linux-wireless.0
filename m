@@ -1,114 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:44352 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932772AbaDII6R (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:50127 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933648AbaD3OjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 04:58:17 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so1581218eek.39
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 01:58:15 -0700 (PDT)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH v2 2/2] ath10k: Fix pmf for action frames
-Date: Wed,  9 Apr 2014 10:57:37 +0200
-Message-Id: <1397033857-2523-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140409_105824_437854_7F129592)
-In-Reply-To: <1397033857-2523-1-git-send-email-marek.kwaczynski@tieto.com>
-References: <1397033857-2523-1-git-send-email-marek.kwaczynski@tieto.com>
+	Wed, 30 Apr 2014 10:39:20 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wo20so2079603obc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2014 07:39:19 -0700 (PDT)
+Message-ID: <53610B15.4000607@lwfinger.net> (sfid-20140430_163923_807852_98092836)
+Date: Wed, 30 Apr 2014 09:39:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Sven Eckelmann <sven@narfation.org>
+CC: Tim Gardner <rtg.canonical@gmail.com>,
+	Nicolas Vaquero <nicovaq92@hotmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel source
+References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox>
+In-Reply-To: <3262959.TlL8alHHte@bentobox>
+Content-Type: multipart/mixed;
+ boundary="------------050902080908090507050407"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sending and receiveing protected managment frames.
-Lack of protected flag for received protected action frames
-causes report these frames as unprotected robust action frames.
-If the driver in AP mode sent frame with protected flag and
-CCMP header using IEEE80211_KEY_FLAG_SW_MGMT_TX flag,
-the FW encrypted frames once again. From user side all
-received SA Query Requests and Responses were skipped and
-all protected action frames were sent as malformed packets.
+This is a multi-part message in MIME format.
+--------------050902080908090507050407
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
+Sven and Tim,
 
-v2: fix missed prefix
+Attached is a one-line fix for the problem that shows up between 3.8.0-36 and 
+3.8.0-37. It is just a bare patch file, but feel free to add any explanatory 
+text to make it a proper commit.
 
- drivers/net/wireless/ath/ath10k/mac.c |    5 ++++-
- drivers/net/wireless/ath/ath10k/wmi.c |   24 ++++++++++++++++++++----
- 2 files changed, 24 insertions(+), 5 deletions(-)
+I have no real understanding as to why this line of code does not cause any 
+problems with later kernel versions, but it does here. In addition, I have not 
+had any reports of problems with other users. That makes me suspect some kind of 
+bad interaction with the user-space network control components in 12.04.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58ec5a7..0c66c18 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -54,7 +54,10 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		arg.key_cipher = WMI_CIPHER_AES_CCM;
--		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
-+		if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX;
-+		else
-+			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		arg.key_cipher = WMI_CIPHER_TKIP;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d4b48ef..6d8a097 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -639,6 +639,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	struct sk_buff *wmi_skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int len;
-+	u32 buf_len = skb->len;
- 	u16 fc;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -648,6 +649,15 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 		return -EINVAL;
- 
- 	len = sizeof(cmd->hdr) + skb->len;
-+
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		len += IEEE80211_CCMP_MIC_LEN;
-+		buf_len += IEEE80211_CCMP_MIC_LEN;
-+	}
-+
- 	len = round_up(len, 4);
- 
- 	wmi_skb = ath10k_wmi_alloc_skb(len);
-@@ -659,7 +669,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
- 	cmd->hdr.tx_rate = 0;
- 	cmd->hdr.tx_power = 0;
--	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
-+	cmd->hdr.buf_len = __cpu_to_le32(buf_len);
- 
- 	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
- 	memcpy(cmd->buf, skb->data, skb->len);
-@@ -957,10 +967,16 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	 * frames with Protected Bit set. */
- 	if (ieee80211_has_protected(hdr->frame_control) &&
- 	    !ieee80211_is_auth(hdr->frame_control)) {
--		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
--				RX_FLAG_MMIC_STRIPPED;
--		hdr->frame_control = __cpu_to_le16(fc &
-+		status->flag |= RX_FLAG_DECRYPTED;
-+
-+		if (!ieee80211_is_action(hdr->frame_control) &&
-+		    !ieee80211_is_deauth(hdr->frame_control) &&
-+		    !ieee80211_is_disassoc(hdr->frame_control)) {
-+			status->flag |= RX_FLAG_IV_STRIPPED |
-+					RX_FLAG_MMIC_STRIPPED;
-+			hdr->frame_control = __cpu_to_le16(fc &
- 					~IEEE80211_FCTL_PROTECTED);
-+		}
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_MGMT,
--- 
-1.7.9.5
+Would it be helpful for Nicolas to prepare a bug report at Ubuntu?
 
+Larry
+
+
+
+--------------050902080908090507050407
+Content-Type: text/plain; charset=UTF-8;
+ name="fix_ubuntu_crash"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="fix_ubuntu_crash"
+
+SW5kZXg6IGxpbnV4LTMuOC4zNy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL2NvcmUu
+Ywo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0zLjguMzcub3JpZy9kcml2ZXJzL25ldC93aXJl
+bGVzcy9ydGx3aWZpL2NvcmUuYworKysgbGludXgtMy44LjM3L2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3J0bHdpZmkvY29yZS5jCkBAIC0xODcsNyArMTg3LDYgQEAgc3RhdGljIGludCBydGxf
+b3BfYWRkX2ludGVyZmFjZShzdHJ1Y3QgaQogCQkJCQlydGxwcml2LT5jZmctPm1hcHMKIAkJ
+CQkJW1JUTF9JQlNTX0lOVF9NQVNLU10pOwogCQl9Ci0JCW1hYy0+bGlua19zdGF0ZSA9IE1B
+QzgwMjExX0xJTktFRDsKIAkJYnJlYWs7CiAJY2FzZSBOTDgwMjExX0lGVFlQRV9BREhPQzoK
+IAkJUlRfVFJBQ0UocnRscHJpdiwgQ09NUF9NQUM4MDIxMSwgREJHX0xPVUQsCgo=
+--------------050902080908090507050407--
