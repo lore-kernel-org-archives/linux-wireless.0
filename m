@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:38261 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752407AbaEGTxn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:43 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x12so1531754wgg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:42 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/23] iwlwifi: mvm: rs: don't allow TPC when power save is disabled
-Date: Wed,  7 May 2014 22:52:43 +0300
-Message-Id: <1399492380-12050-6-git-send-email-egrumbach@gmail.com> (sfid-20140507_215439_335410_8C5A1070)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+Received: from mail.tpi.com ([74.45.170.26]:49091 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751782AbaEANIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2014 09:08:52 -0400
+Message-ID: <5362475C.8040308@canonical.com> (sfid-20140501_150855_637742_EB71F83C)
+Date: Thu, 01 May 2014 07:08:44 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+MIME-Version: 1.0
+To: Nicolas Vaquero <nicovaq92@hotmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Sven Eckelmann <sven@narfation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel source
+References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <53610B15.4000607@lwfinger.net> <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
+In-Reply-To: <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+It looks like there is already a bug report in progress for this:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1289429
 
-Currently we were checking only if the driver power_scheme is set
-to CAM. TPC shouldn't be enabled also when disabling powersave on the
-interface (e.g. iw wlan0 set power_save off)
-which may occur even if power_scheme wasn't set to CAM.
+I'll attach the patch and have Joe build a test kernel.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+rtg
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index a7ad532..32ac66b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -1750,16 +1750,21 @@ static void rs_get_adjacent_txp(struct iwl_mvm *mvm, int index,
- 		*stronger = TPC_INVALID;
- }
- 
--static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct rs_rate *rate,
--			   enum ieee80211_band band)
-+static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			   struct rs_rate *rate, enum ieee80211_band band)
- {
- 	int index = rate->index;
-+	bool cam = (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM);
-+	bool sta_ps_disabled = (vif->type == NL80211_IFTYPE_STATION &&
-+				!vif->bss_conf.ps);
- 
-+	IWL_DEBUG_RATE(mvm, "cam: %d sta_ps_disabled %d\n",
-+		       cam, sta_ps_disabled);
- 	/*
- 	 * allow tpc only if power management is enabled, or bt coex
- 	 * activity grade allows it and we are on 2.4Ghz.
- 	 */
--	if (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM &&
-+	if ((cam || sta_ps_disabled) &&
- 	    !iwl_mvm_bt_coex_is_tpc_allowed(mvm, band))
- 		return false;
- 
-@@ -1876,7 +1881,7 @@ static bool rs_tpc_perform(struct iwl_mvm *mvm,
- 		band = chanctx_conf->def.chan->band;
- 	rcu_read_unlock();
- 
--	if (!rs_tpc_allowed(mvm, rate, band)) {
-+	if (!rs_tpc_allowed(mvm, vif, rate, band)) {
- 		IWL_DEBUG_RATE(mvm,
- 			       "tpc is not allowed. remove txp restrictions");
- 		lq_sta->lq.reduced_tpc = TPC_NO_REDUCTION;
+On 04/30/2014 11:50 AM, Nicolas Vaquero wrote:
+> If you want, I can reinstall Ubuntu 12.04 and update it to the lastest
+> Kernel version from Update Manager.
+> Teach me how to make a Bug Report and I'll send it to you.
+> (Sorry for my English, maybe your eyes are bleeding)
+> 
+> Nicolas
+> 
+> El 30/04/14 11:39, Larry Finger escribió:
+>> Sven and Tim,
+>>
+>> Attached is a one-line fix for the problem that shows up between
+>> 3.8.0-36 and 3.8.0-37. It is just a bare patch file, but feel free to
+>> add any explanatory text to make it a proper commit.
+>>
+>> I have no real understanding as to why this line of code does not
+>> cause any problems with later kernel versions, but it does here. In
+>> addition, I have not had any reports of problems with other users.
+>> That makes me suspect some kind of bad interaction with the user-space
+>> network control components in 12.04.
+>>
+>> Would it be helpful for Nicolas to prepare a bug report at Ubuntu?
+>>
+>> Larry
+>>
+>>
+> 
 -- 
-1.8.3.2
-
+Tim Gardner tim.gardner@canonical.com
