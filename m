@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37415 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753863AbaEOU2E (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:39729 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbaEAHzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 16:28:04 -0400
-Date: Thu, 15 May 2014 13:31:22 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/13] staging: vt6656: lock changes: Remove spin locks
-Message-ID: <20140515203122.GA13651@kroah.com> (sfid-20140515_222808_826677_FB4394AC)
-References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 1 May 2014 03:55:39 -0400
+Received: by mail-pd0-f171.google.com with SMTP id r10so2832030pdi.16
+        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 00:55:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+In-Reply-To: <1398928648-5052-1-git-send-email-arik@wizery.com>
+References: <1398928648-5052-1-git-send-email-arik@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 1 May 2014 10:55:23 +0300
+Message-ID: <CA+XVXfe9yihH1wV2K-ROYcvP-v-Rb0UeTOo0TbtAAgGJU64J9Q@mail.gmail.com> (sfid-20140501_095619_164673_B6F8FC20)
+Subject: Re: [PATCH 1/2] mac80211: set an external flag for TDLS stations
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 03, 2014 at 03:17:22PM +0100, Malcolm Priestley wrote:
-> Remove atomic paths to usbpipe.c PIPEnsControlOut and PIPEnsControlIn
-> 
-> Remove from
-> PIPEnsControlOut
-> PIPEnsControlIn
-> BSSvSecondCallBack
-> FIRMWAREbDownload
-> vt6656_hostap_ioctl
-> iwctl_siwmode
-> iwctl_siwencode
-> iwctl_siwpower
-> iwctl_siwencodeext
-> KeyvInitTable
-> device_init_registers
-> device_open
-> device_close
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+On Thu, May 1, 2014 at 10:17 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>
+> expose a new tdls flag for the public ieee80211_sta struct. This is used
+> in some rate control decisions.
+>
+> Change-Id: Ida05ae03feecb53d00d2d3947c0d314526a8a88d
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
 > ---
-> Note: All patches of these series must be applied.
 
-Which makes this series fail :(
+Sorry for the change-id crap in both patches :)
 
-Can you please resend the patches from you that I haven't applied, after
-refreshing them against my tree?
-
-thanks,
-
-greg k-h
+Arik
