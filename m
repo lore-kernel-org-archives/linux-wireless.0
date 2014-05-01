@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63019 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932626AbaESTeb (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:50679 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754214AbaEAPBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 15:34:31 -0400
-Received: by mail-we0-f174.google.com with SMTP id k48so6095988wev.33
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:29 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/20] staging: vt6656: BBvSetAntennaMode remove camel case.
-Date: Mon, 19 May 2014 20:33:04 +0100
-Message-Id: <1400527992-3061-12-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213435_539261_37A03ADC)
-In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
-References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 1 May 2014 11:01:40 -0400
+Received: by mail-oa0-f42.google.com with SMTP id i7so3715047oag.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 08:01:39 -0700 (PDT)
+Message-ID: <536261D1.9070505@lwfinger.net> (sfid-20140501_170208_803490_B12DEB9A)
+Date: Thu, 01 May 2014 10:01:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Tim Gardner <tim.gardner@canonical.com>,
+	Nicolas Vaquero <nicovaq92@hotmail.com>
+CC: Sven Eckelmann <sven@narfation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel source
+References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <53610B15.4000607@lwfinger.net> <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl> <5362475C.8040308@canonical.com>
+In-Reply-To: <5362475C.8040308@canonical.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-changes
-pDevice -> priv
-byAntennaMode -> antenna_mode
+On 05/01/2014 08:08 AM, Tim Gardner wrote:
+> It looks like there is already a bug report in progress for this:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1289429
+>
+> I'll attach the patch and have Joe build a test kernel.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Tim,
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 5e2ffab..03ecde8 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -859,31 +859,31 @@ void BBvCalculateParameter(struct vnt_private *priv, u32 frame_length,
-  *
-  * Parameters:
-  *  In:
-- *      pDevice          - Device Structure
-- *      byAntennaMode    - Antenna Mode
-+ *	priv		- Device Structure
-+ *	antenna_mode	- Antenna Mode
-  *  Out:
-  *      none
-  *
-  * Return Value: none
-  *
-  */
--void BBvSetAntennaMode(struct vnt_private *pDevice, u8 byAntennaMode)
-+void BBvSetAntennaMode(struct vnt_private *priv, u8 antenna_mode)
- {
--	switch (byAntennaMode) {
-+	switch (antenna_mode) {
- 	case ANT_TXA:
- 	case ANT_TXB:
- 		break;
- 	case ANT_RXA:
--		pDevice->byBBRxConf &= 0xFC;
-+		priv->byBBRxConf &= 0xFC;
- 		break;
- 	case ANT_RXB:
--		pDevice->byBBRxConf &= 0xFE;
--		pDevice->byBBRxConf |= 0x02;
-+		priv->byBBRxConf &= 0xFE;
-+		priv->byBBRxConf |= 0x02;
- 		break;
- 	}
- 
--	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_SET_ANTMD,
--		(u16)byAntennaMode, 0, 0, NULL);
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_SET_ANTMD,
-+		(u16)antenna_mode, 0, 0, NULL);
- }
- 
- /*
--- 
-1.9.1
+I agree that #1289429 is this bug. It seems that the problem also happens for 
+3.5.0-48-generic. If that is being supported, it also needs this patch.
+
+Larry
+
 
