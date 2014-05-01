@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:53054 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbaETSsd (ORCPT
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:53399 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264AbaEAMbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 14:48:33 -0400
-Received: by mail-la0-f46.google.com with SMTP id ec20so752527lab.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 11:48:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1400610273.4474.6.camel@jlt4.sipsolutions.net>
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
- <20140520142453.GB13981@tuxdriver.com> <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
- <20140520180832.GD13981@tuxdriver.com> <1400610273.4474.6.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 20 May 2014 11:48:11 -0700
-Message-ID: <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com> (sfid-20140520_204836_984391_02EA35C2)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
+	Thu, 1 May 2014 08:31:33 -0400
+Received: by mail-ob0-f179.google.com with SMTP id vb8so3520329obc.24
+        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 05:31:32 -0700 (PDT)
+Date: Thu, 1 May 2014 07:31:27 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Nicolas Vaquero <nicovaq92@hotmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Sven Eckelmann <sven@narfation.org>,
+	Tim Gardner <rtg.canonical@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Kernel source
+Message-ID: <20140501123127.GA47034@ubuntu-hedt> (sfid-20140501_143141_365200_B0741B66)
+References: <535E7741.1030607@lwfinger.net>
+ <3262959.TlL8alHHte@bentobox>
+ <53610B15.4000607@lwfinger.net>
+ <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 11:24 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2014-05-20 at 14:08 -0400, John W. Linville wrote:
->
->> > I can add support for version 19 and 20 in one crda. I am not sure
->> > this is the best option.
->> > BTW what about versions < 19? How do we handle this this days?
->>
->> What about older CRDA with newer wireless-regdb?  Do we need to worry about that?
->
-> I think we should, but if we can't then at least can we cut to an
-> extensible format?
+On Wed, Apr 30, 2014 at 02:50:46PM -0300, Nicolas Vaquero wrote:
+> If you want, I can reinstall Ubuntu 12.04 and update it to the
+> lastest Kernel version from Update Manager.
+> Teach me how to make a Bug Report and I'll send it to you.
+> (Sorry for my English, maybe your eyes are bleeding)
 
-Janusz,
+To file the bug report against the kernel in Ubuntu, open a terminal and
+run 'ubuntu-bug linux'. This will guide you through the process of
+filing the bug.
 
-this is in short part of the work I expect to be dealt with as part of
-the change. What I think we should strive for since we have control
-over the format, is have extensions which upkeep old CRDA versions
-working, and only if new CRDA is present would we use the new
-attributes. Please see if this is possible.
+Thanks,
+Seth
 
-  Luis
+> 
+> Nicolas
+> 
+> El 30/04/14 11:39, Larry Finger escribió:
+> >Sven and Tim,
+> >
+> >Attached is a one-line fix for the problem that shows up between
+> >3.8.0-36 and 3.8.0-37. It is just a bare patch file, but feel free
+> >to add any explanatory text to make it a proper commit.
+> >
+> >I have no real understanding as to why this line of code does not
+> >cause any problems with later kernel versions, but it does here.
+> >In addition, I have not had any reports of problems with other
+> >users. That makes me suspect some kind of bad interaction with the
+> >user-space network control components in 12.04.
+> >
+> >Would it be helpful for Nicolas to prepare a bug report at Ubuntu?
+> >
+> >Larry
+> >
+> >
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
