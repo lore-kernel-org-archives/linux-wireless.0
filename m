@@ -1,88 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:23098 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750920AbaEGFDK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 01:03:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/3] mwifiex: configure inactivity timeout for TDLS link
-Date: Tue, 6 May 2014 22:02:43 -0700
-Message-ID: <1399438965-12221-1-git-send-email-bzhao@marvell.com> (sfid-20140507_070314_871862_E3422557)
+Received: from mail.tpi.com ([74.45.170.26]:47489 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751721AbaEAPMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2014 11:12:21 -0400
+Message-ID: <5362644D.9070805@canonical.com> (sfid-20140501_171224_053643_081D99EC)
+Date: Thu, 01 May 2014 09:12:13 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Nicolas Vaquero <nicovaq92@hotmail.com>
+CC: Sven Eckelmann <sven@narfation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel source
+References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <53610B15.4000607@lwfinger.net> <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl> <5362475C.8040308@canonical.com> <536261D1.9070505@lwfinger.net>
+In-Reply-To: <536261D1.9070505@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 05/01/2014 09:01 AM, Larry Finger wrote:
+> On 05/01/2014 08:08 AM, Tim Gardner wrote:
+>> It looks like there is already a bug report in progress for this:
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1289429
+>>
+>> I'll attach the patch and have Joe build a test kernel.
+> 
+> Tim,
+> 
+> I agree that #1289429 is this bug. It seems that the problem also
+> happens for 3.5.0-48-generic. If that is being supported, it also needs
+> this patch.
+> 
+> Larry
+> 
+> 
 
-This patch adds configuration timeout for TDLS link. This is
-configuered at the time of TDLS link configuration. If TDLS link
-is inactive for more than timeout, FW will tear this link.
+Noted in the bug report. Thanks.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h      | 8 ++++++++
- drivers/net/wireless/mwifiex/sta_cmd.c | 7 +++++++
- 2 files changed, 15 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index b485dc1..28994ab 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -169,6 +169,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_GWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 146)
- #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
- #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
-+#define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
- #define TLV_TYPE_FW_API_REV         (PROPRIETARY_TLV_BASE_ID + 199)
- 
- #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
-@@ -708,6 +709,13 @@ struct mwifiex_ie_types_vendor_param_set {
- 	u8 ie[MWIFIEX_MAX_VSIE_LEN];
- };
- 
-+#define MWIFIEX_TDLS_IDLE_TIMEOUT	60
-+
-+struct mwifiex_ie_types_tdls_idle_timeout {
-+	struct mwifiex_ie_types_header header;
-+	__le16 value;
-+} __packed;
-+
- struct mwifiex_ie_types_rsn_param_set {
- 	struct mwifiex_ie_types_header header;
- 	u8 rsn_ie[1];
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index e3cac14..88202ce 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -1546,6 +1546,7 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
- 	struct mwifiex_ie_types_extcap *extcap;
- 	struct mwifiex_ie_types_vhtcap *vht_capab;
- 	struct mwifiex_ie_types_aid *aid;
-+	struct mwifiex_ie_types_tdls_idle_timeout *timeout;
- 	u8 *pos, qos_info;
- 	u16 config_len = 0;
- 	struct station_parameters *params = priv->sta_params;
-@@ -1643,6 +1644,12 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
- 			config_len += sizeof(struct mwifiex_ie_types_aid);
- 		}
- 
-+		timeout = (void *)(pos + config_len);
-+		timeout->header.type = cpu_to_le16(TLV_TYPE_TDLS_IDLE_TIMEOUT);
-+		timeout->header.len = cpu_to_le16(sizeof(timeout->value));
-+		timeout->value = cpu_to_le16(MWIFIEX_TDLS_IDLE_TIMEOUT);
-+		config_len += sizeof(struct mwifiex_ie_types_tdls_idle_timeout);
-+
- 		break;
- 	default:
- 		dev_err(priv->adapter->dev, "Unknown TDLS operation\n");
+rtg
 -- 
-1.8.2.3
-
+Tim Gardner tim.gardner@canonical.com
