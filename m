@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51516 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbaEWSFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 14:05:31 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: reduce packet loss notifications under load
-Date: Fri, 23 May 2014 20:05:28 +0200
-Message-Id: <1400868328-78595-1-git-send-email-nbd@openwrt.org> (sfid-20140523_200631_656271_4606F067)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45366 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753724AbaEALhZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2014 07:37:25 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath9k: Advertise support for AP mode channel width changes
+Date: Thu, 1 May 2014 17:07:43 +0530
+Message-ID: <1398944263-32280-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140501_133729_573142_536612AE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During strong signal fluctuations under high throughput, few consecutive
-failed A-MPDU transmissions can easily trigger packet loss notification,
-and thus (in AP mode) client disconnection.
+This will enable AP mode to change channel width dynamically
+based on 20/40 intolerance report sent by associated client.
 
-Reduce the number of false positives by checking the A-MPDU status flag
-and treating a failed A-MPDU as a single packet.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/mac80211/status.c | 25 +++++++++++++++++++------
- 1 file changed, 19 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 60cb7a6..ba29ebc 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -541,6 +541,23 @@ static void ieee80211_tx_latency_end_msrmnt(struct ieee80211_local *local,
-  */
- #define STA_LOST_PKT_THRESHOLD	50
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 4243509..c99e50f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -714,7 +714,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
  
-+static void ieee80211_lost_packet(struct sta_info *sta, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	/* This packet was aggregated but doesn't carry status info */
-+	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
-+	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
-+		return;
-+
-+	if (++sta->lost_packets < STA_LOST_PKT_THRESHOLD)
-+		return;
-+
-+	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
-+				    sta->lost_packets, GFP_ATOMIC);
-+	sta->lost_packets = 0;
-+}
-+
- void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct sk_buff *skb2;
-@@ -680,12 +697,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			if (info->flags & IEEE80211_TX_STAT_ACK) {
- 				if (sta->lost_packets)
- 					sta->lost_packets = 0;
--			} else if (++sta->lost_packets >= STA_LOST_PKT_THRESHOLD) {
--				cfg80211_cqm_pktloss_notify(sta->sdata->dev,
--							    sta->sta.addr,
--							    sta->lost_packets,
--							    GFP_ATOMIC);
--				sta->lost_packets = 0;
-+			} else {
-+				ieee80211_lost_packet(sta, skb);
- 			}
- 		}
+-	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
++	hw->wiphy->features |= (NL80211_FEATURE_ACTIVE_MONITOR |
++				NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE);
  
+ 	if (!config_enabled(CONFIG_ATH9K_TX99)) {
+ 		hw->wiphy->interface_modes =
 -- 
-1.8.5.2 (Apple Git-48)
+1.9.2
 
