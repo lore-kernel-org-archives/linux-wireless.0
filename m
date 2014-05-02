@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48387 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757320AbaE2RPJ (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:54982 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbaEBOkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 13:15:09 -0400
-Date: Thu, 29 May 2014 13:04:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-05-26
-Message-ID: <20140529170414.GC3542@tuxdriver.com> (sfid-20140529_191536_749887_BFB9FECF)
-References: <20140526214122.GA2034@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140526214122.GA2034@joana>
+	Fri, 2 May 2014 10:40:21 -0400
+From: Masanari Iida <standby24x7@gmail.com>
+To: luciano.coelho@intel.com, johannes.berg@intel.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] cfg80211/mac80211: Fix warning on make xmldocs caused by cfg80211.h
+Date: Fri,  2 May 2014 23:39:57 +0900
+Message-Id: <1399041597-27409-2-git-send-email-standby24x7@gmail.com> (sfid-20140502_164036_772172_A38817A4)
+In-Reply-To: <1399041597-27409-1-git-send-email-standby24x7@gmail.com>
+References: <1399041597-27409-1-git-send-email-standby24x7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 06:41:22PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> Some more patches for 3.16. There is nothing really special here, just a
-> bunch of clean ups, fixes plus some small improvements. Please pull.
-> 
-> Thanks!
-> 
-> 	Gustavo
-> 
-> ---
-> 
-> The following changes since commit 22e70786413ed05950207eda7be420c280b776d7:
-> 
->   Bluetooth: Remove hci_h4 unused defines (2014-04-24 11:55:26 -0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to d7b2545023ecfde94d3ea9c03c5480ac18da96c9:
-> 
->   Bluetooth: Clearly distinguish mgmt LTK type from authenticated property (2014-05-23 11:24:04 -0700)
+Following error messages caused by wrong description.
 
-Pulling now...
+Warning(include/net/cfg80211.h:461): No description found
+for parameter 'nl80211_iftype'
 
+Change "iftype" to "nl80211_iftype" fix the errors.
+
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ include/net/cfg80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7eae46c..695c562 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -452,7 +452,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+  * cfg80211_chandef_dfs_required - checks if radar detection is required
+  * @wiphy: the wiphy to validate against
+  * @chandef: the channel definition to check
+- * @iftype: the interface type as specified in &enum nl80211_iftype
++ * @nl80211_iftype: the interface type as specified in &enum nl80211_iftype
+  * Returns:
+  *	1 if radar detection is required, 0 if it is not, < 0 on error
+  */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.0.0.rc1.15.g7e76a2f
+
