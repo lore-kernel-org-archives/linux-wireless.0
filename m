@@ -1,85 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:45935 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbaEZNAF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 09:00:05 -0400
-Received: by mail-wi0-f178.google.com with SMTP id cc10so4298160wib.11
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 06:00:01 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/11] staging: vt6656: MACvSetKeyEntry remove camel case.
-Date: Mon, 26 May 2014 13:58:59 +0100
-Message-Id: <1401109148-3593-2-git-send-email-tvboxspy@gmail.com> (sfid-20140526_150011_219824_757378B9)
-In-Reply-To: <1401109148-3593-1-git-send-email-tvboxspy@gmail.com>
-References: <1401109148-3593-1-git-send-email-tvboxspy@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:39206 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751505AbaEBNlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2014 09:41:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: michal.kazior@tieto.com
+Date: Fri,  2 May 2014 16:40:31 +0300
+Message-Id: <1399038031-23206-4-git-send-email-luca@coelho.fi> (sfid-20140502_154120_292582_14CDCE1F)
+In-Reply-To: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 4/4] cfg80211/nl80211: allow any interface to send channel switch notifications
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-wKeyCtl -> key_ctl
-uEntryIdx -> entry_idx
-uKeyIdx -> key_idx
-pbyAddr -> addr
-wOffset -> offset
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+For multi-vif channel switches, we want to send
+NL80211_CMD_CH_SWITCH_NOTIFY to the userspace to let it decide whether
+other interfaces need to be moved as well.  This is needed when we run
+out of available channels or when we want a P2P GO interface to follow
+the channel of a station, for example.
+
+Modify the code so that all interfaces can send CSA notifications.
+Additionally, send notifications for STA CSA as well.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/mac.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ include/uapi/linux/nl80211.h | 4 +++-
+ net/mac80211/mlme.c          | 1 +
+ net/wireless/nl80211.c       | 6 ------
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index a030c59..573ea4f 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -122,21 +122,21 @@ void MACvDisableKeyEntry(struct vnt_private *priv, u8 entry_idx)
-  * Return Value: none
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d7c5b61..635267d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -636,7 +636,9 @@
+  * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
+  *	independently of the userspace SME, send this event indicating
+  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ and the
+- *	attributes determining channel width.
++ *	attributes determining channel width.  This indication may also be
++ *	sent when a remotely-initiated switch (eg. when a STA receives a CSA
++ *	from the remote AP) is completed;
   *
-  */
--void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
--	u32 uKeyIdx, u8 *pbyAddr, u8 *key)
-+void MACvSetKeyEntry(struct vnt_private *priv, u16 key_ctl, u32 entry_idx,
-+	u32 key_idx, u8 *addr, u8 *key)
- {
- 	struct vnt_mac_set_key set_key;
--	u16 wOffset;
-+	u16 offset;
+  * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
+  *	has been started on an interface, regardless of the initiator
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index beff8c8..59c59da 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -984,6 +984,7 @@ static void ieee80211_chswitch_work(struct work_struct *work)
  
--	if (pDevice->byLocalID <= MAC_REVISION_A1)
--		if (pDevice->vnt_mgmt.byCSSPK == KEY_CTL_CCMP)
-+	if (priv->byLocalID <= MAC_REVISION_A1)
-+		if (priv->vnt_mgmt.byCSSPK == KEY_CTL_CCMP)
- 			return;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
  
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
-+	offset = MISCFIFO_KEYETRY0;
-+	offset += (entry_idx * MISCFIFO_KEYENTRYSIZE);
++	cfg80211_ch_switch_notify(sdata->dev, &sdata->reserved_chandef);
+  out:
+ 	sdata->vif.csa_active = false;
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 804c3c9..aea60bb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11252,12 +11252,6 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
  
--	set_key.u.write.key_ctl = cpu_to_le16(wKeyCtl);
--	memcpy(set_key.u.write.addr, pbyAddr, ETH_ALEN);
-+	set_key.u.write.key_ctl = cpu_to_le16(key_ctl);
-+	memcpy(set_key.u.write.addr, addr, ETH_ALEN);
+ 	trace_cfg80211_ch_switch_notify(dev, chandef);
  
- 	/* swap over swap[0] and swap[1] to get correct write order */
- 	swap(set_key.u.swap[0], set_key.u.swap[1]);
-@@ -145,10 +145,10 @@ void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 		"offset %d key ctl %d set key %24ph\n",
--				wOffset, wKeyCtl, (u8 *)&set_key);
-+				offset, key_ctl, (u8 *)&set_key);
- 
--	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_SETKEY, wOffset,
--		(u16)uKeyIdx, sizeof(struct vnt_mac_set_key), (u8 *)&set_key);
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_SETKEY, offset,
-+		(u16)key_idx, sizeof(struct vnt_mac_set_key), (u8 *)&set_key);
- }
- 
- void MACvRegBitsOff(struct vnt_private *priv, u8 reg_ofs, u8 bits)
+-	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
+-		    wdev->iftype != NL80211_IFTYPE_ADHOC &&
+-		    wdev->iftype != NL80211_IFTYPE_MESH_POINT))
+-		return;
+-
+ 	wdev->chandef = *chandef;
+ 	wdev->preset_chandef = *chandef;
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
 -- 
-1.9.1
+1.9.2
 
