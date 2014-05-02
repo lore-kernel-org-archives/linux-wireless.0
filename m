@@ -1,58 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:63027 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752038AbaEKIFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2014 04:05:07 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 00/10] ath9k & ath9k_htc: remove some debugfs code dups
-Date: Sun, 11 May 2014 10:04:30 +0200
-Message-Id: <1399795480-7459-1-git-send-email-linux@rempel-privat.de> (sfid-20140511_100524_696980_49DD7D4D)
+Received: from dedo.coelho.fi ([88.198.205.34]:39201 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751643AbaEBNlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2014 09:41:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: michal.kazior@tieto.com
+Date: Fri,  2 May 2014 16:40:30 +0300
+Message-Id: <1399038031-23206-3-git-send-email-luca@coelho.fi> (sfid-20140502_154123_085093_CB3C856E)
+In-Reply-To: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 3/4] mac80211: send channel switch failed notifications
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-some debugfs related parts in this drivers are identical or almost identical.
-This patch set remove most obvious parts.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Module sizes before patch set:
-ath9k_htc		 81196
-ath9k			125783
-ath9k_common		  8185
+Send a channel switch failed notification to userspace when an ongoing
+channel swith fails.
 
-Module sizes after patch set:
-ath9k_htc		 63361
-ath9k			121433
-ath9k_common		 13145
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c   | 30 +++++++++++++++++++++++-------
+ net/mac80211/iface.c |  6 +++++-
+ net/mac80211/mlme.c  |  9 ++++++++-
+ 3 files changed, 36 insertions(+), 9 deletions(-)
 
-Oleksij Rempel (10):
-  ath9k-common: create common-debug and move modal_eeprom to cmn
-  ath9k_htc: use ath9k_cmn_debug_modal_eeprom
-  ath9k: move base_eeprom debug code to ath9k_cmn_debug_base_eeprom
-  ath9k_htc: use ath9k_cmn_debug_base_eeprom
-  ath9k: reorder or remove some includes
-  ath9k & ath9k_htc: move ath_rx_stats to cmn
-  ath9k: move recv to ath9k_cmn_debug_recv
-  ath9k_htc: use ath9k_cmn_debug_recv
-  ath9k: move phy_err to ath9k_cmn_debug_phy_err
-  ath9k_htc: use ath9k_cmn_debug_phy_err
-
- drivers/net/wireless/ath/ath9k/Makefile        |   3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h         |   2 +-
- drivers/net/wireless/ath/ath9k/common-debug.c  | 253 +++++++++++
- drivers/net/wireless/ath/ath9k/common-debug.h  |  72 ++++
- drivers/net/wireless/ath/ath9k/common.h        |   1 +
- drivers/net/wireless/ath/ath9k/debug.c         | 214 +---------
- drivers/net/wireless/ath/ath9k/debug.h         |  44 --
- drivers/net/wireless/ath/ath9k/htc.h           |  17 +-
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 555 ++-----------------------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   3 +-
- drivers/net/wireless/ath/ath9k/hw.c            |   1 -
- 11 files changed, 377 insertions(+), 788 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.c
- create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.h
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 53a2cfe..f8958e0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1101,9 +1101,13 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
+ 
+ 	/* abort any running channel switch */
+-	sdata->vif.csa_active = false;
+-	kfree(sdata->u.ap.next_beacon);
+-	sdata->u.ap.next_beacon = NULL;
++	if (sdata->vif.csa_active) {
++		cfg80211_ch_switch_failed_notify(sdata->dev,
++						 &sdata->csa_chandef);
++		sdata->vif.csa_active = false;
++		kfree(sdata->u.ap.next_beacon);
++		sdata->u.ap.next_beacon = NULL;
++	}
+ 
+ 	/* turn off carrier for this interface and dependent VLANs */
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+@@ -3030,8 +3034,11 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+ 	mutex_unlock(&local->mtx);
+-	if (WARN_ON(err < 0))
++	if (WARN_ON(err < 0)) {
++		cfg80211_ch_switch_failed_notify(sdata->dev,
++						 &sdata->csa_chandef);
+ 		return;
++	}
+ 
+ 	if (!local->use_chanctx) {
+ 		local->_oper_chandef = sdata->csa_chandef;
+@@ -3045,21 +3052,30 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 		kfree(sdata->u.ap.next_beacon);
+ 		sdata->u.ap.next_beacon = NULL;
+ 
+-		if (err < 0)
++		if (err < 0) {
++			cfg80211_ch_switch_failed_notify(sdata->dev,
++							 &sdata->csa_chandef);
+ 			return;
++		}
+ 		changed |= err;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		err = ieee80211_ibss_finish_csa(sdata);
+-		if (err < 0)
++		if (err < 0) {
++			cfg80211_ch_switch_failed_notify(sdata->dev,
++							 &sdata->csa_chandef);
+ 			return;
++		}
+ 		changed |= err;
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		err = ieee80211_mesh_finish_csa(sdata);
+-		if (err < 0)
++		if (err < 0) {
++			cfg80211_ch_switch_failed_notify(sdata->dev,
++							 &sdata->csa_chandef);
+ 			return;
++		}
+ 		changed |= err;
+ 		break;
+ #endif
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 7fff3dc..578f6e6 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -838,7 +838,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	cancel_work_sync(&sdata->recalc_smps);
+ 	sdata_lock(sdata);
+-	sdata->vif.csa_active = false;
++	if (sdata->vif.csa_active) {
++		sdata->vif.csa_active = false;
++		cfg80211_ch_switch_failed_notify(sdata->dev,
++						 &sdata->csa_chandef);
++	}
+ 	sdata_unlock(sdata);
+ 	cancel_work_sync(&sdata->csa_finalize_work);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 139005d..beff8c8 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -958,6 +958,8 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 			   "vif channel switch failed, disconnecting\n");
+ 		ieee80211_queue_work(&sdata->local->hw,
+ 				     &ifmgd->csa_connection_drop_work);
++		cfg80211_ch_switch_failed_notify(sdata->dev,
++						 &sdata->csa_chandef);
+ 		goto out;
+ 	}
+ 
+@@ -2060,7 +2062,12 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+ 			       true, frame_buf);
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
+-	sdata->vif.csa_active = false;
++
++	if (sdata->vif.csa_active) {
++			cfg80211_ch_switch_failed_notify(sdata->dev,
++							 &sdata->csa_chandef);
++			sdata->vif.csa_active = false;
++	}
+ 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
 -- 
-1.9.1
+1.9.2
 
