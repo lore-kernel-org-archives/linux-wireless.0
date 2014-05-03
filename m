@@ -1,110 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:44125 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751662AbaE1KfE (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:35622 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbaECOUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 06:35:04 -0400
-Date: Wed, 28 May 2014 12:33:51 +0200
-From: Maxime Ripard <maxime.ripard@free-electrons.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Subject: Re: [PATCH 03/11] pinctrl: sunxi: Move setting of mux to irq type
- from unmask to set_type
-Message-ID: <20140528103351.GQ4730@lukather> (sfid-20140528_123509_932990_099EEC2B)
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
- <1401090486-4414-4-git-send-email-hdegoede@redhat.com>
- <CACRpkdZcGJTXfcxN_sogm+hYHM56d_VxtuZqth0t-c2mgAJ0vA@mail.gmail.com>
- <20140528093653.GN4730@lukather>
- <5385B1B8.8070803@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0UhZIN3Sa23/ILEd"
-In-Reply-To: <5385B1B8.8070803@redhat.com>
+	Sat, 3 May 2014 10:20:07 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi5so2708016wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:20:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/13] staging: vt6656: Remove PIPEnsControlOutAsyn/CONTROLnsRequestOutAsyn
+Date: Sat,  3 May 2014 15:17:34 +0100
+Message-Id: <1399126654-2663-13-git-send-email-tvboxspy@gmail.com> (sfid-20140503_162016_457802_C0E9F452)
+In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This now the sames as PIPEnsControlOut.
 
---0UhZIN3Sa23/ILEd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Replace with PIPEnsControlOut/CONTROLnsRequestOut.
 
-On Wed, May 28, 2014 at 11:51:52AM +0200, Hans de Goede wrote:
-> Hi,
->=20
-> On 05/28/2014 11:36 AM, Maxime Ripard wrote:
-> > On Tue, May 27, 2014 at 04:18:29PM +0200, Linus Walleij wrote:
-> >> On Mon, May 26, 2014 at 9:47 AM, Hans de Goede <hdegoede@redhat.com> w=
-rote:
-> >>
-> >>> With level triggered interrupt mask / unmask will get called for each
-> >>> interrupt, doing the somewhat expensive mux setting on each unmask th=
-us is
-> >>> not a good idea. Instead move it to the set_type callback, which is t=
-ypically
-> >>> done only once for each irq.
-> >>>
-> >>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> >>
-> >> Yes move it out of mask/unmask but no, not into set_type().
-> >>
-> >> Can you not use the irqchip startup()/shutdown() callbacks
-> >> instead?
-> >=20
-> > I think we can use irq_request_resources then
-> > https://lkml.org/lkml/2014/3/12/307
->=20
-> Sounds good, I'll modify the patch to move it here before posting a v2 of
-> this series. Note v2 likely won't happen till this weekend, -ENOTIME.
->=20
-> > We could even merge the gpio_to_irq code into it.
->=20
-> Erm, no we need that as a separate function for the gpio_chip's to_irq
-> callback.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/control.h  |  3 ---
+ drivers/staging/vt6656/firmware.c |  2 +-
+ drivers/staging/vt6656/mac.c      |  2 +-
+ drivers/staging/vt6656/usbpipe.c  | 38 --------------------------------------
+ drivers/staging/vt6656/usbpipe.h  |  2 --
+ 5 files changed, 2 insertions(+), 45 deletions(-)
 
-Linus sent a patch stating otherwise a few weeks ago, and was
-suggesting moving it to irq_startup.
+diff --git a/drivers/staging/vt6656/control.h b/drivers/staging/vt6656/control.h
+index 9da9b96..4658910 100644
+--- a/drivers/staging/vt6656/control.h
++++ b/drivers/staging/vt6656/control.h
+@@ -36,9 +36,6 @@
+ #define CONTROLnsRequestOut(Device, Request, Value, Index, Length, Buffer) \
+ 	PIPEnsControlOut(Device, Request, Value, Index, Length, Buffer)
+ 
+-#define CONTROLnsRequestOutAsyn(Device, Request, Value, Index, Length, Buffer) \
+-	PIPEnsControlOutAsyn(Device, Request, Value, Index, Length, Buffer)
+-
+ #define CONTROLnsRequestIn(Device, Request, Value, Index, Length, Buffer) \
+ 	PIPEnsControlIn(Device, Request, Value, Index, Length, Buffer)
+ 
+diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
+index 7a4a972..e03f1f9 100644
+--- a/drivers/staging/vt6656/firmware.c
++++ b/drivers/staging/vt6656/firmware.c
+@@ -71,7 +71,7 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
+ 		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
+ 		memcpy(pBuffer, fw->data + ii, wLength);
+ 
+-		NdisStatus = CONTROLnsRequestOutAsyn(pDevice,
++		NdisStatus = CONTROLnsRequestOut(pDevice,
+ 						0,
+ 						0x1200+ii,
+ 						0x0000,
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 3ce19dd..8bd3ab0 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -75,7 +75,7 @@ void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
+  */
+ void MACbShutdown(struct vnt_private *pDevice)
+ {
+-    CONTROLnsRequestOutAsyn(pDevice,
++	CONTROLnsRequestOut(pDevice,
+                         MESSAGE_TYPE_MACSHUTDOWN,
+                         0,
+                         0,
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 9946bfd..433edca 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -64,44 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+ 
+-int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+-	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
+-{
+-	int ntStatus;
+-
+-    if (pDevice->Flags & fMP_DISCONNECTED)
+-        return STATUS_FAILURE;
+-
+-    if (in_interrupt()) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
+-        return STATUS_FAILURE;
+-    }
+-
+-	mutex_lock(&pDevice->usb_lock);
+-
+-    ntStatus = usb_control_msg(
+-                            pDevice->usb,
+-                            usb_sndctrlpipe(pDevice->usb , 0),
+-                            byRequest,
+-                            0x40, // RequestType
+-                            wValue,
+-                            wIndex,
+-			    (void *) pbyBuffer,
+-                            wLength,
+-                            HZ
+-                          );
+-    if (ntStatus >= 0) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe ntStatus= %d\n", ntStatus);
+-        ntStatus = 0;
+-    } else {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe fail, ntStatus= %d\n", ntStatus);
+-    }
+-
+-	mutex_unlock(&pDevice->usb_lock);
+-
+-    return ntStatus;
+-}
+-
+ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
+ {
+diff --git a/drivers/staging/vt6656/usbpipe.h b/drivers/staging/vt6656/usbpipe.h
+index f537703..42ad4f7 100644
+--- a/drivers/staging/vt6656/usbpipe.h
++++ b/drivers/staging/vt6656/usbpipe.h
+@@ -34,8 +34,6 @@
+ 
+ int PIPEnsControlOut(struct vnt_private *, u8 byRequest, u16 wValue,
+ 		u16 wIndex, u16 wLength, u8 *pbyBuffer);
+-int PIPEnsControlOutAsyn(struct vnt_private *, u8 byRequest,
+-	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer);
+ int PIPEnsControlIn(struct vnt_private *, u8 byRequest, u16 wValue,
+ 	u16 wIndex, u16 wLength,  u8 *pbyBuffer);
+ 
+-- 
+1.9.1
 
-https://lkml.org/lkml/2014/5/9/50
-
-Maxime
-
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---0UhZIN3Sa23/ILEd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJThbuPAAoJEBx+YmzsjxAglxgP/0k/zqqXxIaurdLrYu3NWmZI
-SFMbcggtnBu9z8xL4xviBmGOplDfJHMMvodkf8BOkr8n+RyW0HZFB5kKEpguC8LQ
-/v4x3GL1sQMbQx5qWmJTcFkCCrUZOEcwZl8ulKOEzkBqDRn2awOu2bR2KkF75PZt
-LkSxmn+fEkleURuu3RtiXNNcov5rNS0DNFTkgxHP1Z/ZP6ddcknJKtj0YJvdniWJ
-G8hhPS/ssAHXkUAkukmUflxyCETwJQRyKCkXp8QLs0hY/EhRSdaolzoGL7VGTLIq
-i5BgBhqgUz/m1JSLlP3RcGXLj4S50/dPfzSUOHvB1pN32k227Vt+PyjMoVkV5RSF
-v8k3QwmF8QP8CqF519PMIGJHFKV9xsl3VYlyu8O63dm5Kavjh74PpB8umQL59aiA
-gl5Agvcu84GRO+IvujdCe6hdxb2kzV0k0RZVR2iP1QHIYeR3IW29Cj1GliF8Eh4D
-nB1BKHztRrX/xgWixd8C+p5CPx7p7puTfhsbTePTatkPhv1CCL83NBfftsH2x7iY
-wFpsb0Z02jzAxeIt3J4ActH4c/2TmLFMvtB8x8LDfYd64UDM/nGBRhJceskiWOKO
-+rR5Sw3+SeKtBLvQVgAx65DEvMt8k1upZRZtw5cecDDpo7qUZK/AaaFNjs7hyqyD
-9qROitLKhNzKUjaEHneb
-=b4iU
------END PGP SIGNATURE-----
-
---0UhZIN3Sa23/ILEd--
