@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29828 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754615AbaE1JKN (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:49748 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbaECOT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 05:10:13 -0400
-Date: Wed, 28 May 2014 12:09:26 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/9] wireless-regdb: Add Afghanistan (AF) regulatory rules
-Message-ID: <20140528090926.GA14400@jouni.qca.qualcomm.com> (sfid-20140528_111018_806019_B1830503)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 3 May 2014 10:19:58 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so2159069wgh.4
+        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:19:57 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/13] staging: vt6656: lock changes: vRunCommand nsDMA_tx_packet
+Date: Sat,  3 May 2014 15:17:28 +0100
+Message-Id: <1399126654-2663-7-git-send-email-tvboxspy@gmail.com> (sfid-20140503_162003_648751_32F3EC59)
+In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts and correspondence with
-Telecom agency (TRA)
+vRunCommand is nolonger atomic add lock for nsDMA_tx_packet.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- db.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/staging/vt6656/wcmd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index be552d0..6435c54 100644
---- a/db.txt
-+++ b/db.txt
-@@ -28,6 +28,12 @@ country AE: DFS-FCC
- 	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index d51cc90..66d59d5 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -279,6 +279,7 @@ void vRunCommand(struct work_struct *work)
+ 	int ii;
+ 	u8 byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+ 	u8 byData;
++	unsigned long flags;
  
-+country AF: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
+ 	if (pDevice->Flags & fMP_DISCONNECTED)
+ 		return;
+@@ -667,9 +668,13 @@ void vRunCommand(struct work_struct *work)
+ 					pDevice->bMoreData = true;
+ 				}
+ 
++				spin_lock_irqsave(&pDevice->lock, flags);
 +
- country AL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20.00)
+ 				if (nsDMA_tx_packet(pDevice, skb) != 0)
+ 					DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Multicast ps tx fail\n");
+ 
++				spin_unlock_irqrestore(&pDevice->lock, flags);
++
+ 				pMgmt->sNodeDBTable[0].wEnQueueCnt--;
+ 			}
+ 		}
+@@ -690,9 +695,13 @@ void vRunCommand(struct work_struct *work)
+ 						pDevice->bMoreData = true;
+ 					}
+ 
++					spin_lock_irqsave(&pDevice->lock, flags);
++
+ 					if (nsDMA_tx_packet(pDevice, skb) != 0)
+ 						DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "sta ps tx fail\n");
+ 
++					spin_unlock_irqrestore(&pDevice->lock, flags);
++
+ 					pMgmt->sNodeDBTable[ii].wEnQueueCnt--;
+ 					// check if sta ps enable, wait next pspoll
+ 					// if sta ps disable, send all pending buffers.
 -- 
 1.9.1
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
