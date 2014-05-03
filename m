@@ -1,47 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:45939 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385AbaEGPwY (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:36706 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbaECOTx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 11:52:24 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so900518eei.14
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 08:52:23 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH 2/4] rtl8180: report mac80211 short preamble RX flag
-Date: Wed,  7 May 2014 17:52:16 +0200
-Message-Id: <1399477936-26317-1-git-send-email-andrea.merello@gmail.com> (sfid-20140507_175232_073494_CFE1915D)
+	Sat, 3 May 2014 10:19:53 -0400
+Received: by mail-we0-f171.google.com with SMTP id w62so4895186wes.30
+        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:19:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/13] staging: vt6656: lock changes: csMgmt_xmit.
+Date: Sat,  3 May 2014 15:17:25 +0100
+Message-Id: <1399126654-2663-4-git-send-email-tvboxspy@gmail.com> (sfid-20140503_161957_358858_BC56DBB7)
+In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch make it possible to mac80211 to know whether a frame
-has been received with short preamble.
+csMgmt_xmit is nolonger atomically called but part of must be.
 
-It simply checks for the "splcp" flag in the RX status
-descriptor, and eventually set RX_FLAG_SHORTPRE in mac80211
-rx status structure.
+Reorder the function so that RFbSetPower is called first.
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Add new lock spinlock for the remainder of the function.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/vt6656/rxtx.c | 50 +++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 50d69b1..8d07df2 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -284,6 +284,8 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 			rx_status.band = dev->conf.chandef.chan->band;
- 			rx_status.mactime = tsft;
- 			rx_status.flag |= RX_FLAG_MACTIME_START;
-+			if (flags & RTL818X_RX_DESC_FLAG_SPLCP)
-+				rx_status.flag |= RX_FLAG_SHORTPRE;
- 			if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
- 				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 0280ed2..185b1ea 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1386,13 +1386,32 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 	u16 wTxBufSize;
+ 	u32 cbMacHdLen;
+ 	u16 wCurrentRate = RATE_1M;
++	unsigned long flags;
+ 
+-	pContext = s_vGetFreeContext(pDevice);
++	if (pDevice->byBBType == BB_TYPE_11A) {
++		wCurrentRate = RATE_6M;
++		byPktType = PK_TYPE_11A;
++	} else {
++		wCurrentRate = RATE_1M;
++		byPktType = PK_TYPE_11B;
++	}
+ 
+-    if (NULL == pContext) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ManagementSend TX...NO CONTEXT!\n");
+-        return CMD_STATUS_RESOURCES;
+-    }
++	if (pMgmt->eScanState != WMAC_NO_SCANNING)
++		RFbSetPower(pDevice, wCurrentRate, pDevice->byCurrentCh);
++	else
++		RFbSetPower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
++
++	pDevice->wCurrentRate = wCurrentRate;
++
++	spin_lock_irqsave(&pDevice->lock, flags);
++
++	pContext = s_vGetFreeContext(pDevice);
++	if (!pContext) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++			"ManagementSend TX...NO CONTEXT!\n");
++		spin_unlock_irqrestore(&pDevice->lock, flags);
++		return CMD_STATUS_RESOURCES;
++	}
+ 
+ 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
+     cbFrameBodySize = pPacket->cbPayloadLen;
+@@ -1400,24 +1419,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 	pbyTxBufferAddr = (u8 *)&pTxBufHead->adwTxKey[0];
+ 	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
+ 
+-    if (pDevice->byBBType == BB_TYPE_11A) {
+-        wCurrentRate = RATE_6M;
+-        byPktType = PK_TYPE_11A;
+-    } else {
+-        wCurrentRate = RATE_1M;
+-        byPktType = PK_TYPE_11B;
+-    }
+-
+-    // SetPower will cause error power TX state for OFDM Date packet in TX buffer.
+-    // 2004.11.11 Kyle -- Using OFDM power to tx MngPkt will decrease the connection capability.
+-    //                    And cmd timer will wait data pkt TX finish before scanning so it's OK
+-    //                    to set power here.
+-    if (pMgmt->eScanState != WMAC_NO_SCANNING) {
+-        RFbSetPower(pDevice, wCurrentRate, pDevice->byCurrentCh);
+-    } else {
+-        RFbSetPower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
+-    }
+-    pDevice->wCurrentRate = wCurrentRate;
+ 
+     //Set packet type
+     if (byPktType == PK_TYPE_11A) {//0000 0000 0000 0000
+@@ -1628,6 +1629,9 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+     }
+ 
+     PIPEnsSendBulkOut(pDevice,pContext);
++
++	spin_unlock_irqrestore(&pDevice->lock, flags);
++
+     return CMD_STATUS_PENDING;
+ }
  
 -- 
-1.8.3.2
+1.9.1
 
