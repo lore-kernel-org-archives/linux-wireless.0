@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:50329 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbaENMaq (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:50268 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218AbaECOTy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 08:30:46 -0400
-Received: by mail-qc0-f176.google.com with SMTP id r5so2576855qcx.21
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 05:30:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140514122357.11052.qmail@ns.horizon.com>
-References: <CAPDyKFo9xZ-z6eM0zG2A+=Bwj0EVyGxm=m28Lh9cHPSB+8qq1w@mail.gmail.com>
-	<20140514122357.11052.qmail@ns.horizon.com>
-Date: Wed, 14 May 2014 14:30:45 +0200
-Message-ID: <CAPDyKFqu4ZcJVZH+9-9ett1fAo5T8ff+F+hf-j95cJuRPzGi5A@mail.gmail.com> (sfid-20140514_143104_022279_7EA0CFF5)
-Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: George Spelvin <linux@horizon.com>
-Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>, luca@coelho.fi,
-	Pavel Machek <pavel@ucw.cz>, Tony Lindgren <tony@atomide.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 3 May 2014 10:19:54 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hm4so3636652wib.4
+        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:19:53 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/13] staging: vt6656: lock changes: vDMA0_tx_80211
+Date: Sat,  3 May 2014 15:17:26 +0100
+Message-Id: <1399126654-2663-5-git-send-email-tvboxspy@gmail.com> (sfid-20140503_161959_240355_E9A06F2E)
+In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 May 2014 14:23, George Spelvin <linux@horizon.com> wrote:
-> Ulf Hansson wrote:
->> Feel free to take this through the wireless tree as well. I assumes
->> it's that same patchset as the other spi related fixes?
->
-> I'd like to answer, but I'm not sure which "other spi related fixes"
-> you're referring to.  If you mean patches 1 and 3 of this series, then
-> obviously.  If you mean something else then probably not.
->
-> [PATCH 1/3] lib/crc7: Shift crc7() output left 1 bit
-> [PATCH 3/3] drivers/net/wireless/ti/wl*/spi.c: Simplify CRC computation
->
+vDMA0_tx_80211 is atomically called.
 
-Sorry for being unclear. It's those above I referred to.
+RFbSetPower can not be called atomically.
 
-Kind regards
-Ulf Hansson
+If wCurrentRate is different to pDevice->wCurrentRate call
+bScheduleCommand WLAN_CMD_SETPOWER.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 185b1ea..ff77f20 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1784,11 +1784,11 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
+     // 2004.11.11 Kyle -- Using OFDM power to tx MngPkt will decrease the connection capability.
+     //                    And cmd timer will wait data pkt TX finish before scanning so it's OK
+     //                    to set power here.
+-    if (pMgmt->eScanState != WMAC_NO_SCANNING) {
+-        RFbSetPower(pDevice, wCurrentRate, pDevice->byCurrentCh);
+-    } else {
+-        RFbSetPower(pDevice, wCurrentRate, pMgmt->uCurrChannel);
+-    }
++	if (wCurrentRate != pDevice->wCurrentRate) {
++		pDevice->wCurrentRate = wCurrentRate;
++
++		bScheduleCommand(pDevice, WLAN_CMD_SETPOWER, NULL);
++	}
+ 
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"vDMA0_tx_80211: p80211Header->sA3.wFrameCtl = %x \n", p80211Header->sA3.wFrameCtl);
+ 
+-- 
+1.9.1
+
