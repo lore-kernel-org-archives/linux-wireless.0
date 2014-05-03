@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:56514 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbaEBGPt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 02:15:49 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so2263944wgg.18
-        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 23:15:43 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:44411 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750972AbaECVJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2014 17:09:16 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] staging: rtl8723au: fix some confusing indenting
+References: <20140503201919.GB32753@mwanda>
+Date: Sat, 03 May 2014 23:09:07 +0200
+In-Reply-To: <20140503201919.GB32753@mwanda> (Dan Carpenter's message of "Sat,
+	3 May 2014 23:19:19 +0300")
+Message-ID: <wrfjvbtmpo24.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140503_230941_596432_2CC08DD2)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJxWtKtJNDVcxA2tt6jFYDQvJ7hpFbwLQ4JHB0CmGihMw@mail.gmail.com>
-References: <53620550.3050001@broadcom.com> <CABPxzYJxWtKtJNDVcxA2tt6jFYDQvJ7hpFbwLQ4JHB0CmGihMw@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 2 May 2014 11:45:23 +0530
-Message-ID: <CABPxzYKn6Dqk3Jrm2bw2OANtZ=t1QTLG6qb760WB5rwpnB4Wig@mail.gmail.com> (sfid-20140502_081553_058489_96AEF7C8)
-Subject: Re: net/wireless/chan.c: prohibited_flags wrongly set
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 1, 2014 at 9:36 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
+Dan Carpenter <dan.carpenter@oracle.com> writes:
+> The break and the "unknown++" are at the same indent level so my static
+> checker complains.  The if statement should be indented more.
 >
->
-> On May 1, 2014 2:01 PM, "Arend van Spriel" <arend@broadcom.com> wrote:
-> >
-> > Hi Johannes,
-> >
-> > I was debugging issue with hostapd failing on setting channel when I came across this piece of code in chan.c:545:cfg80211_chandef_usable():
-> >
-> >         if (width > 20)
-> >                 prohibited_flags |= IEEE80211_CHAN_NO_OFDM;
-> >
-> >         /* 5 and 10 MHz are only defined for the OFDM PHY */
-> >         if (width < 20)
-> >                 prohibited_flags |= IEEE80211_CHAN_NO_OFDM;
-> >
-> > I suspect the first if statement to be wrong, but what should it be?
->
-> Looks ok to me. Basically it says that only 20MHz has a possibility of both OFDM and DSSS.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Adding the list.
+Urgh yes, that should be cleaned up!
+
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> index eb7b98e..4ad80e7 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> @@ -1235,8 +1235,8 @@ static int rtw_validate_frame_ies(const u8 *start, uint len)
+>  		case WLAN_EID_ERP_INFO:
+>  		case WLAN_EID_EXT_SUPP_RATES:
+>  		case WLAN_EID_VENDOR_SPECIFIC:
+> -		if (rtw_validate_vendor_specific_ies(pos, elen))
+> -			unknown++;
+> +			if (rtw_validate_vendor_specific_ies(pos, elen))
+> +				unknown++;
+>  			break;
+>  		case WLAN_EID_RSN:
+>  		case WLAN_EID_PWR_CAPABILITY:
