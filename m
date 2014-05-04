@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:41319 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174AbaEOM4H (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:34206 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbaEDMA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 08:56:07 -0400
-Received: by mail-ee0-f43.google.com with SMTP id d17so642984eek.30
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 05:56:06 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, apenwarr@gmail.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/3] ath10k: pci fixes 2014-05-15
-Date: Thu, 15 May 2014 14:48:56 +0200
-Message-Id: <1400158139-13836-1-git-send-email-michal.kazior@tieto.com> (sfid-20140515_145612_055828_0F20CD26)
+	Sun, 4 May 2014 08:00:29 -0400
+Received: by mail-lb0-f180.google.com with SMTP id p9so244587lbv.39
+        for <linux-wireless@vger.kernel.org>; Sun, 04 May 2014 05:00:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <zarafa.53660170.0441.6aa863343df6b74b@srv1.localhost>
+References: <zarafa.53660170.0441.6aa863343df6b74b@srv1.localhost>
+Date: Sun, 4 May 2014 05:00:28 -0700
+Message-ID: <CANUX_P14UWZ8DcbwQSJ+pSm-rBR6ReWUeBzeFwfg1bcfHa4RFw@mail.gmail.com> (sfid-20140504_140119_736717_2B624E90)
+Subject: Re: Issue with monitor mode - iwlwifi - 7260 rev 73 - Microcode SW error
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stefan Bauer <stefan.bauer@cubewerk.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, May 4, 2014 at 1:59 AM, Stefan Bauer <stefan.bauer@cubewerk.de> wrote:
+> Dear Developers,
+>
+> after putting the card into monitor mode with airmon-ng start wlan0 i see instantly a Microcode SW error.
+> From time to time, i can also produce a kernel oops.
+>
+> Hardware is a IBM/Lenovo S440 Laptop with
+> Intel 7260 rev73 wlan card
+> Kernel is 3.13.10-1
+> Lenovo-Laptop-Bios is latest from lenovo webpage
+> IWLWIFI Firmware is 22.24.8
+>
 
-Patches 1 and 2 were made as a result of analysing
-`ath10k firmware crash after 4 hours of heavy TCP
-traffic` bug reported by Avery.
+Ok - this is surely a firmware bug.
+Would you be able to open a bugzilla.kernel.org ticket for that?
+I an open it for you if needed.
+If you do open a ticket, please CC ilw@linux.intel.com to the bug.
 
-Patch 3 fixes a bug reported by Avery that was
-apparently related to missing memory barriers on
-his ARM test system. @Avery, can you take a look
-or test it, please? I was never able to reproduce
-this but it just seems like the right thing to do.
-Or you can simply post your patch and I'll drop
-mine then.
-
-Note: this is based on ath-next-test branch.
-
-
-Michal Kazior (3):
-  ath10k: protect src_ring state with ce_lock in tx_sg()
-  ath10k: revert incomplete scatter-gather pci tx
-  ath10k: add explicit memory barrier for ring index update
-
- drivers/net/wireless/ath/ath10k/ce.c  | 29 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/ce.h  |  2 ++
- drivers/net/wireless/ath/ath10k/pci.c | 27 ++++++++++++++++++---------
- 3 files changed, 49 insertions(+), 9 deletions(-)
-
--- 
-1.8.5.3
-
+Thank you.
