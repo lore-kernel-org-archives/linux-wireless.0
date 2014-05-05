@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63635 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759817AbaEMNKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 09:10:10 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Gottlieb, Matti" <matti.gottlieb@intel.com>
-Subject: RE: [PATCH] mac80211: add TX frame consecutive loss statistics
-Date: Tue, 13 May 2014 13:10:06 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DF2E29@HASMSX103.ger.corp.intel.com> (sfid-20140513_151015_574121_5AA0F807)
-References: <1399798043-20891-1-git-send-email-emmanuel.grumbach@intel.com>
- <1399986467.4137.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1399986467.4137.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.152]:39910 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659AbaEEJXx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2014 05:23:53 -0400
+Message-ID: <1399281820.22235.4.camel@jlt4.sipsolutions.net> (sfid-20140505_112404_517852_A81215ED)
+Subject: Re: [PATCH 3.15] cfg80211: allow restricting supported dfs regions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 05 May 2014 11:23:40 +0200
+In-Reply-To: <536757DA.1010205@openwrt.org>
+References: <1399150555-36041-1-git-send-email-nbd@openwrt.org>
+	 <1399275222.22235.2.camel@jlt4.sipsolutions.net>
+	 <536757DA.1010205@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gU3VuLCAyMDE0LTA1LTExIGF0IDExOjQ3ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFj
-aCB3cm90ZToNCj4gPiBGcm9tOiBNYXR0aSBHb3R0bGllYiA8bWF0dGkuZ290dGxpZWJAaW50ZWwu
-Y29tPg0KPiA+DQo+ID4gTWVhc3VyZSBUWCBmcmFtZXMgY29uc2VjdXRpdmUgbG9zcyBzdGF0aXN0
-aWNzIHBlciBzdGF0aW9uL1RJRC4NCj4gPiBUaGVzZSBNZWFzdXJlbWVudHMgYXJlIGRpc2FibGVk
-IGJ5IGRlZmF1bHQgYW5kIGNhbiBiZSBlbmFibGVkIHZpYQ0KPiA+IGRlYnVnZnMuDQo+IA0KPiBJ
-J20gZ3Vlc3NpbmcgdGhhdCB3ZSdyZSB0aGUgb25seSB1c2VyIG9mIHRoaXMsIGFuZCB3ZSdyZSBl
-dmFsdWF0aW5nIG1vdmluZyB0bw0KPiB0cmFjaW5nLiBBcyBzdWNoLCBJJ20gbm90IGdvaW5nIHRv
-IGFwcGx5IHRoaXMgYW5kIGhvcGUgdGhhdCB3ZSdsbCBiZSBhYmxlIHRvIHVzZQ0KPiB0cmFjaW5n
-ICh3aXRoIHNvbWUgYWRkZWQgdHJhY2Vwb2ludHMpIGluc3RlYWQgLSBtYXliZSBldmVuIHJlbW92
-aW5nIHRoZQ0KPiBvdGhlciBjb2RlIHRoYXQgd2UgYWxyZWFkeSBoYXZlIGhlcmUuDQo+IA0KDQpJ
-IGFtIGFsbCBmb3IgaXQgOikNCg==
+On Mon, 2014-05-05 at 11:20 +0200, Felix Fietkau wrote:
+
+> >> Add a bitmap in the interface combinations, indicating which DFS regions
+> >> are supported by the detector.
+> > 
+> > Does that make sense? It seems unlikely to me that it would be interface
+> > combination specific?
+> Having it there made about as much sense to me as having the supportede
+> channel width there :)
+> Got any better suggestions?
+
+Not really, it does make sense to group them, though the only real
+reason to do it there originally was to prohibit multi-channel usage
+with radar detection, so that made sense ... I have no real problem
+doing this here as well.
+
+> > I think it's already questionable to put this in after -rc4, in
+> > particular with the userspace advertising part. Can we do anything
+> > else? 
+> I mostly pushed it for 3.15, because right now you can already enable
+> DFS and it will bring it up on a FCC regdomain and it will appear to be
+> working (but probably just not recognize any radars).
+> 
+> However, now that I look at the description of the options that you have
+> to enable, it should be clear enough that this is not guaranteed to be
+> functional yet, so I guess it can wait for 3.16.
+
+Ok.
+
+johannes
+
