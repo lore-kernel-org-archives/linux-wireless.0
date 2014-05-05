@@ -1,144 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:44219 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754867AbaEORF2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:28 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so3788869wgh.14
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:27 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from nbd.name ([46.4.11.11]:40358 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755592AbaEEJsv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2014 05:48:51 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/24] iwlwifi: mvm: BT Coex - send channel inhibition before association
-Date: Thu, 15 May 2014 20:04:38 +0300
-Message-Id: <1400173481-9047-21-git-send-email-egrumbach@gmail.com> (sfid-20140515_190557_359911_E6603373)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2] cfg80211: allow restricting supported dfs regions
+Date: Mon,  5 May 2014 11:48:40 +0200
+Message-Id: <1399283320-66468-1-git-send-email-nbd@openwrt.org> (sfid-20140505_114854_617418_6C67DD94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+At the moment, the ath9k/ath10k DFS module only supports detecting ETSI
+radar patterns.
+Add a bitmap in the interface combinations, indicating which DFS regions
+are supported by the detector. If unset, support for all regions is
+assumed.
 
-The firmware needs to know on what channel we run before we
-set the association bit in the MAC context. Change a bit the
-flow to achieve this.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c     | 47 +++++++++++------------------
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
- 2 files changed, 18 insertions(+), 31 deletions(-)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/nl80211.c       |  6 ++++--
+ net/wireless/util.c          | 14 ++++++++++++++
+ 4 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 3833f2c..cbad3ef 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -801,23 +801,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7eae46c..28e3a15 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2638,6 +2638,7 @@ struct ieee80211_iface_limit {
+  *	between infrastructure and AP types must match. This is required
+  *	only in special cases.
+  * @radar_detect_widths: bitmap of channel widths supported for radar detection
++ * @radar_detect_regions: bitmap of regions supported for radar detection
+  *
+  * With this structure the driver can describe which interface
+  * combinations it supports concurrently.
+@@ -2695,6 +2696,7 @@ struct ieee80211_iface_combination {
+ 	u8 n_limits;
+ 	bool beacon_int_infra_match;
+ 	u8 radar_detect_widths;
++	u8 radar_detect_regions;
+ };
  
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
-+		/* Count BSSes vifs */
-+		data->num_bss_ifaces++;
- 		/* default smps_mode for BSS / P2P client is AUTOMATIC */
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
--		data->num_bss_ifaces++;
--
--		/*
--		 * Count unassoc BSSes, relax SMSP constraints
--		 * and disable reduced Tx Power
--		 */
--		if (!vif->bss_conf.assoc) {
--			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
--					    smps_mode);
--			if (iwl_mvm_bt_coex_reduced_txp(mvm,
--							mvmvif->ap_sta_id,
--							false))
--				IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--			return;
--		}
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		/* default smps_mode for AP / GO is OFF */
-@@ -843,6 +830,7 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		/* ... relax constraints and disable rssi events */
- 		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
- 				    smps_mode);
-+		data->reduced_tx_power = false;
- 		if (vif->type == NL80211_IFTYPE_STATION)
- 			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
- 		return;
-@@ -855,6 +843,11 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		smps_mode = vif->type == NL80211_IFTYPE_AP ?
- 				IEEE80211_SMPS_OFF :
- 				IEEE80211_SMPS_DYNAMIC;
+ struct ieee80211_txrx_stypes {
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 406010d..b65095a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3688,6 +3688,8 @@ enum nl80211_iface_limit_attrs {
+  *	different channels may be used within this group.
+  * @NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS: u32 attribute containing the bitmap
+  *	of supported channel widths for radar detection.
++ * @NL80211_IFACE_COMB_RADAR_DETECT_REGIONS: u32 attribute containing the bitmap
++ *	of supported regulatory regions for radar detection.
+  * @NUM_NL80211_IFACE_COMB: number of attributes
+  * @MAX_NL80211_IFACE_COMB: highest attribute number
+  *
+@@ -3721,6 +3723,7 @@ enum nl80211_if_combination_attrs {
+ 	NL80211_IFACE_COMB_STA_AP_BI_MATCH,
+ 	NL80211_IFACE_COMB_NUM_CHANNELS,
+ 	NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
++	NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
+ 
+ 	/* keep last */
+ 	NUM_NL80211_IFACE_COMB,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0f1b18f2..c083383 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -970,8 +970,10 @@ static int nl80211_put_iface_combinations(struct wiphy *wiphy,
+ 				c->max_interfaces))
+ 			goto nla_put_failure;
+ 		if (large &&
+-		    nla_put_u32(msg, NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
+-				c->radar_detect_widths))
++		    (nla_put_u32(msg, NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
++				c->radar_detect_widths) ||
++		     nla_put_u32(msg, NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
++				c->radar_detect_regions)))
+ 			goto nla_put_failure;
+ 
+ 		nla_nest_end(msg, nl_combi);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 7c47fa0..301598f 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1271,10 +1271,20 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 					    void *data),
+ 			       void *data)
+ {
++	const struct ieee80211_regdomain *regdom;
++	enum nl80211_dfs_regions region = 0;
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+ 	u32 used_iftypes = 0;
+ 
++	if (radar_detect) {
++		rcu_read_lock();
++		regdom = rcu_dereference(cfg80211_regdomain);
++		if (regdom)
++			region = regdom->dfs_region;
++		rcu_read_unlock();
++	}
 +
-+	/* relax SMPS contraints for next association */
-+	if (!vif->bss_conf.assoc)
-+		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+ 		num_interfaces += iftype_num[iftype];
+ 		if (iftype_num[iftype] > 0 &&
+@@ -1315,6 +1325,10 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 		if (radar_detect != (c->radar_detect_widths & radar_detect))
+ 			goto cont;
+ 
++		if (radar_detect && c->radar_detect_regions &&
++		    !(c->radar_detect_regions & BIT(region)))
++			goto cont;
 +
- 	IWL_DEBUG_COEX(data->mvm,
- 		       "mac %d: bt_status %d bt_activity_grading %d smps_req %d\n",
- 		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
-@@ -901,26 +894,21 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		/* if secondary is not NULL, it might be a GO */
- 		data->secondary = chanctx_conf;
- 
--	/* don't reduce the Tx power if in loose scheme */
-+	/*
-+	 * don't reduce the Tx power if one of these is true:
-+	 *  we are in LOOSE
-+	 *  single share antenna product
-+	 *  BT is active
-+	 *  we are associated
-+	 */
- 	if (iwl_get_coex_type(mvm, vif) == BT_COEX_LOOSE_LUT ||
--	    mvm->cfg->bt_shared_single_ant) {
-+	    mvm->cfg->bt_shared_single_ant || !vif->bss_conf.assoc ||
-+	    !data->notif->bt_status) {
- 		data->reduced_tx_power = false;
- 		iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
- 		return;
- 	}
- 
--	/* reduced Txpower only if BT is on, so ...*/
--	if (!data->notif->bt_status) {
--		/* ... cancel reduced Tx power ... */
--		if (iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, false))
--			IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--		data->reduced_tx_power = false;
--
--		/* ... and there is no need to get reports on RSSI any more. */
--		iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
--		return;
--	}
--
- 	/* try to get the avg rssi from fw */
- 	ave_rssi = mvmvif->bf_data.ave_beacon_signal;
- 
-@@ -1037,7 +1025,6 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
- 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
- }
- 
--/* upon association, the fw will send in BT Coex notification */
- int iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
- 			     struct iwl_rx_cmd_buffer *rxb,
- 			     struct iwl_device_cmd *dev_cmd)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 137228b..22a445f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2186,10 +2186,10 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
- 		return;
- 
- 	mutex_lock(&mvm->mutex);
-+	iwl_mvm_bt_coex_vif_change(mvm);
- 	iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->min_def,
- 				 ctx->rx_chains_static,
- 				 ctx->rx_chains_dynamic);
--	iwl_mvm_bt_coex_vif_change(mvm);
- 	mutex_unlock(&mvm->mutex);
- }
- 
+ 		/* Finally check that all iftypes that we're currently
+ 		 * using are actually part of this combination. If they
+ 		 * aren't then we can't use this combination and have
 -- 
-1.8.3.2
+1.8.5.2 (Apple Git-48)
 
