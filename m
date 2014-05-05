@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53583 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbaESP6X (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40850 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932574AbaEEM7S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 11:58:23 -0400
-Message-ID: <537A2A1E.2040402@candelatech.com> (sfid-20140519_175844_180441_289916C6)
-Date: Mon, 19 May 2014 08:58:22 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211/mac80211: Add support for Proxy ARP
-References: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com> <53751630.2030501@candelatech.com> <E3DE377D7E4999489B304A8FF33FC0D103A211C0@nasanexd01g.na.qualcomm.com>
-In-Reply-To: <E3DE377D7E4999489B304A8FF33FC0D103A211C0@nasanexd01g.na.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 5 May 2014 08:59:18 -0400
+Message-ID: <1399294750.22235.11.camel@jlt4.sipsolutions.net> (sfid-20140505_145922_589553_8EF42EF9)
+Subject: Re: [PATCH] cfg80211: free sme on connection failures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 05 May 2014 14:59:10 +0200
+In-Reply-To: <1398862693-19264-1-git-send-email-eliad@wizery.com> (sfid-20140430_145824_430540_863BD337)
+References: <1398862693-19264-1-git-send-email-eliad@wizery.com>
+	 (sfid-20140430_145824_430540_863BD337)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2014 04:04 PM, Park, Kyeyoon wrote:
-> Hi Ben,
+On Wed, 2014-04-30 at 15:58 +0300, Eliad Peller wrote:
+> cfg80211 is notified about connection failures by
+> __cfg80211_connect_result() call. However, this
+> function currently does not free cfg80211 sme.
 > 
->>> +#define STA_IPV4_HASH_SIZE 32
->>> +#define STA_IPV4_HASH(ipv4) (((u8 *)&ipv4)[3] & 0x1F)
->>
->> This should be a better hash I think.  Use an existing hash
->> method or at least mix in the higher bits manually?
+> This results in hanging connection attempts in some cases
 > 
-> I assume that there is an existing IP address hash function
-> somewhere in the TCP/IP stack. I have a hard time finding
-> an externally available API that does this for me. Could you
-> point me to it?
+> e.g. when mac80211 authentication attempt is denied,
+> we have this function call:
+> ieee80211_rx_mgmt_auth() -> cfg80211_rx_mlme_mgmt() ->
+> cfg80211_process_auth() -> cfg80211_sme_rx_auth() ->
+> __cfg80211_connect_result()
+> 
+> but cfg80211_sme_free() is never get called.
 
-Maybe jhash_1word?
+Applied.
 
-Thanks,
-Ben
-
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
