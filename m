@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:48370 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587AbaEORFU (ORCPT
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:64360 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754777AbaEEICD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:20 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so3703138wgg.6
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:18 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/24] iwlwifi: mvm: BT Coex - fix boost register / LUT values
-Date: Thu, 15 May 2014 20:04:33 +0300
-Message-Id: <1400173481-9047-16-git-send-email-egrumbach@gmail.com> (sfid-20140515_190531_051817_0A9AF2F0)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+	Mon, 5 May 2014 04:02:03 -0400
+Received: by mail-qa0-f52.google.com with SMTP id cm18so5853767qab.11
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 01:02:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <000a01cf5ecb$15fedcf0$41fc96d0$%jun@samsung.com>
+References: <1383653403-10049-1-git-send-email-ulf.hansson@linaro.org>
+	<006701cf2a58$c628e050$527aa0f0$%jun@samsung.com>
+	<000a01cf5ecb$15fedcf0$41fc96d0$%jun@samsung.com>
+Date: Mon, 5 May 2014 10:02:02 +0200
+Message-ID: <CAPDyKFo7p-TtEdPeepc=ng7OERZ191+vB5VUgX0YymJ=fy15BA@mail.gmail.com> (sfid-20140505_100210_167416_0ED0D14E)
+Subject: Re: [PATCH 1/6] mmc: drop the speed mode of card's state
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-mmc <linux-mmc@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Chris Ball <chris@printf.net>,
+	Jaehoon Chung <jh80.chung@samsung.com>,
+	Jackey Shen <jackey.shen@amd.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Seungwon Jeon <tgih.jun@samsung.com>,
+	Fariya Fatima <fariyaf@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 23 April 2014 10:07, Seungwon Jeon <tgih.jun@samsung.com> wrote:
+> Timing mode identifier has same role and can take the place
+> of speed mode. This change removes all related speed mode.
+>
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> Tested-by: Jaehoon Chung <jh80.chung@samsung.com>
+> Acked-by: Jaehoon Chung <jh80.chung@samsung.com>
+> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+> Signed-off-by: Chris Ball <chris@printf.net>
+> ---
+>  drivers/mmc/core/bus.c                  |    8 ++++----
+>  drivers/mmc/core/core.c                 |    3 +--
+>  drivers/mmc/core/mmc.c                  |   11 +++--------
+>  drivers/mmc/core/sd.c                   |   16 +++-------------
+>  drivers/mmc/core/sd.h                   |    1 -
+>  drivers/mmc/core/sdio.c                 |    8 ++------
+>  drivers/net/wireless/rsi/rsi_91x_sdio.c |    4 +---
+>  include/linux/mmc/card.h                |   23 ++++++-----------------
+>  include/linux/mmc/host.h                |   23 +++++++++++++++++++++++
+>  9 files changed, 43 insertions(+), 54 deletions(-)
 
-These values are used to give preference to WiFi according
-to a certain pattern.
+Hi John,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+We would like to queue this patch through Chris' mmc tree for 3.16.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 2b87a77..3833f2c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -124,10 +124,10 @@ const u32 iwl_bt_cts_kill_msk[BT_KILL_MSK_MAX] = {
- };
- 
- static const __le32 iwl_bt_prio_boost[BT_COEX_BOOST_SIZE] = {
--	cpu_to_le32(0xf0f0f0f0),
--	cpu_to_le32(0xc0c0c0c0),
--	cpu_to_le32(0xfcfcfcfc),
--	cpu_to_le32(0xff00ff00),
-+	cpu_to_le32(0xf0f0f0f0), /* 50% */
-+	cpu_to_le32(0xc0c0c0c0), /* 25% */
-+	cpu_to_le32(0xfcfcfcfc), /* 75% */
-+	cpu_to_le32(0xfefefefe), /* 87.5% */
- };
- 
- static const __le32 iwl_single_shared_ant[BT_COEX_MAX_LUT][BT_COEX_LUT_SIZE] = {
-@@ -300,8 +300,8 @@ static const __le64 iwl_ci_mask[][3] = {
- };
- 
- static const __le32 iwl_bt_mprio_lut[BT_COEX_MULTI_PRIO_LUT_SIZE] = {
--	cpu_to_le32(0x22002200),
--	cpu_to_le32(0x33113311),
-+	cpu_to_le32(0x28412201),
-+	cpu_to_le32(0x11118451),
- };
- 
- struct corunning_block_luts {
--- 
-1.8.3.2
+Since it touches the rsi wireless driver, could you please have a look
+and let's us know if you have any concerns.
 
+Kind regards
+Ulf Hansson
