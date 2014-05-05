@@ -1,144 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ems.wolfvision.net ([213.33.91.163]:56667 "EHLO
-	ems.wolfvision.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777AbaE0Pwv convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40768 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932635AbaEEM6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 11:52:51 -0400
-From: Matthias Fend <Matthias.Fend@wolfvision.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: AW: rt2x00: Ralink RT5572 very high peak current consumption
-Date: Tue, 27 May 2014 15:44:01 +0000
-Message-ID: <CC2A85E271C1FB479D9C17305347F69A44E4A7@WOLFSERVER19.wolfvision-at.intra> (sfid-20140527_175303_285905_B5D8F746)
-References: <CC2A85E271C1FB479D9C17305347F69A4479A6@WOLFSERVER19.wolfvision-at.intra>
- <CC2A85E271C1FB479D9C17305347F69A44D336@WOLFSERVER19.wolfvision-at.intra>
- <20140527151201.GA6131@redhat.com>
-In-Reply-To: <20140527151201.GA6131@redhat.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	Mon, 5 May 2014 08:58:03 -0400
+Message-ID: <1399294659.22235.9.camel@jlt4.sipsolutions.net> (sfid-20140505_145820_382931_1ECE9807)
+Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Date: Mon, 05 May 2014 14:57:39 +0200
+In-Reply-To: <87y4ymn69s.fsf@qca.qualcomm.com>
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
+	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
+	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
+	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
+	 <8738gvp8md.fsf@qca.qualcomm.com>
+	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
+	 <20140430132246.GB3635@tuxdriver.com> <87y4ymn69s.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Wed, 2014-04-30 at 19:14 +0300, Kalle Valo wrote:
 
-> -----Ursprüngliche Nachricht-----
-> Von: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-> Gesendet: Dienstag, 27. Mai 2014 17:12
-> An: Matthias Fend
-> Cc: linux-wireless@vger.kernel.org
-> Betreff: Re: rt2x00: Ralink RT5572 very high peak current consumption
+> >> We have it in iwlwifi as well - we were considering a generic uevent but
+> >> beyond that I don't think there's much that could be done?
+> >
+> > There is an ethtool op for that, no?
 > 
-> On Mon, May 26, 2014 at 03:37:36PM +0000, Matthias Fend wrote:
-> > Hello,
-> >
-> > Here are some updates concerning my current issues.
-> >
-> > > -----Ursprüngliche Nachricht-----
-> > > Von: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> > > owner@vger.kernel.org] Im Auftrag von Matthias Fend
-> > > Gesendet: Freitag, 23. Mai 2014 14:25
-> > > An: linux-wireless@vger.kernel.org
-> > > Betreff: rt2x00: Ralink RT5572 very high peak current consumption
-> > >
-> > > Hello Ralink experts,
-> > >
-> > > I recognized spurious problems with Ralink RT5572 USB-dongles when
-> > > using this dongles as access point in 5G band.
-> > > The problems may appear as short usb disconnect-connect events or
-> > > failed vendor request messages at different offsets with different
-> > > error codes or will not appear for days ;) During error research I
-> > > noticed that, most likely during the beacon send time (100ms
-> > > interval), there are very high peak currents in the supply of the USB-
-> dongle.
-> > >
-> > > I tried it with two different dongles, the base current for all
-> > > three is in the range of  ~200mA:
-> > > Buffalo WI-U2-300D: Peak ~1A
-> > > TP-Link TL-WDN3200: Peak ~1.2mA
-> > >
-> > > We could reproduce this issue on two different machines (x86 and
-> > > arm), did test with kernel versions 3.10.19, 3.13.0 and 3.14.4 tried
-> > > hostapd-2.0 and
-> > > hostapd-2.1 and loaded chip firmware version V0.29, V0.33 and V0.35.
-> > >
-> > > As a comparison I also created an 5G access point setup with a
-> > > windows7 machine - all with the latest drivers from the manufacturer
-> webpage.
-> > > Buffalo WI-U2-300D: Peak 330mA
-> > > TP-Link TL-WDN3200: Peak 330mA
-> > > Which seems more legit than the values from the linux setups.
-> > >
-> > > The access point functionality itself worked with every tested
-> > > combination, but there is definitively something wrong.
-> > > I also started to grab the usb communication of the windows driver
-> > > to see if there is an obvious difference in some of the written registers.
-> > > But this kind of reverse engineering is not as easy since the
-> > > windows driver does not write the same registers as the linux
-> > > drivers but write some others - and of course I have no
-> datasheet/register description.
-> > >
-> > > Until now the only interesting thing I found out is that the linux
-> > > driver writes
-> > > 0x00000082 to the TXOP_HLDR_ET (0x1608) register whereas the
-> windows
-> > > driver uses a value of 0x0000000a. Changing this register during
-> > > runtime in a linux system reduces the current peaks to 50 percent of their
-> previous value.
-> > > But there is still something else wrong.
-> > >
-> > > So, in my despair I try to get help in any form (hints,
-> > > datasheets/manuals, ideas, experience, ...).
-> >
-> > I found out that the discovered high current peaks are somehow related to
-> invalidated beacons.
-> > Usually I can see 1 block with a normal tx-condition current followed by 7
-> additional blocks with high current peaks.
-> > For a test I copied the beacon data from HW_BEACON_BASE0 to
-> > HW_BEACON_BASE2 and then the first and the third beacon block have
-> > normal current values while the others still generate high current
-> > peaks
-> >
-> > It seems that setting all five words of the TXWI at the beacon base does not
-> complete disable the generation of this beacon.
-> > If I modify the TXIW_W0 of the disabled beacons to 0x40000000 (set
-> TXWI_W0_PHYMODE as in the really used beacon) then the current
-> consumption does not exceed the usual value. But it seems that there is still
-> a short activity for this beacon which, in my opinion, should not be the case.
-> >
-> > So, currently I'm wondering about two things:
-> > -)How do I completely turn off unused beacons (from the measurements
-> with the windows setup I know that this should be somehow possible)?
+> Do you mean this one:
 > 
-> Perhaps this could be MULTI_BCN_NUM value in MAC_BSSID_DW1 register.
-> Try below patch. If it would help we will need to change way we clear/setup
-> beacons on multiple BSSes, because seems that HW send MULTI_BCN_NUM
-> beacons from first registers.
+>  * @get_dump_flag: Get dump flag indicating current dump length, version,
+>  * 		   and flag of the device.
+>  * @get_dump_data: Get dump data.
+>  * @set_dump: Set dump specific flags to the device.
+> 
+> 	int	(*get_dump_flag)(struct net_device *, struct ethtool_dump *);
+> 	int	(*get_dump_data)(struct net_device *,
+> 				 struct ethtool_dump *, void *);
+> 	int	(*set_dump)(struct net_device *, struct ethtool_dump *);
+> 
+> Yeah, maybe we could use that in wireless as well.
 
-You just made my day! This was exactly the setting I was looking for.
-And yes, it seems that clearing the TXWI at the beacon location is not enough to completely disable beacon sending.
-Together with the already mentioned change in TXOP_HLDR_ET (use 0x0A instead of 0x82) it's looking identical to the windows setup.
+What was the intended use case for this though? Neither the header file
+nor the ethtool documentation seem particularly clear, other than saying
+"firmware dump" - we'll want to include driver data as well though?
 
-Thanks a lot,
- ~Matthias
+johannes
 
-> 
-> Stanislaw
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
-> b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index c17fcf2..2e799d5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1556,7 +1556,7 @@ void rt2800_config_intf(struct rt2x00_dev
-> *rt2x00dev, struct rt2x00_intf *intf,
->  		if (!is_zero_ether_addr((const u8 *)conf->bssid)) {
->  			reg = le32_to_cpu(conf->bssid[1]);
->  			rt2x00_set_field32(&reg,
-> MAC_BSSID_DW1_BSS_ID_MASK, 3);
-> -			rt2x00_set_field32(&reg,
-> MAC_BSSID_DW1_BSS_BCN_NUM, 7);
-> +			rt2x00_set_field32(&reg,
-> MAC_BSSID_DW1_BSS_BCN_NUM, 0);
->  			conf->bssid[1] = cpu_to_le32(reg);
->  		}
-> 
