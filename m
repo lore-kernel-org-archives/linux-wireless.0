@@ -1,130 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:52316 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933462AbaE3P2g (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41113 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932429AbaEENsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:36 -0400
-Received: by mail-wi0-f175.google.com with SMTP id f8so1347865wiw.2
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:35 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/12] staging: vt6656: rename CARDvSetRSPINF to vnt_set_rspinf
-Date: Fri, 30 May 2014 16:27:46 +0100
-Message-Id: <1401463671-4705-7-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172928_096022_27D84151)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 5 May 2014 09:48:41 -0400
+Message-ID: <1399297696.22235.15.camel@jlt4.sipsolutions.net> (sfid-20140505_154854_425575_375F22ED)
+Subject: pull-request: mac80211 2014-05-05
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 05 May 2014 15:48:16 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-07ZJCtQH14fKTwgS9jZ8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop card and rename to vnt_set_rspinf
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c     | 6 +++---
- drivers/staging/vt6656/card.h     | 2 +-
- drivers/staging/vt6656/datarate.c | 2 +-
- drivers/staging/vt6656/wmgr.c     | 8 ++++----
- 4 files changed, 9 insertions(+), 9 deletions(-)
+--=-07ZJCtQH14fKTwgS9jZ8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 7542b0d..cf46aa8 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -20,7 +20,7 @@
-  * Purpose: Provide functions to setup NIC operation mode
-  * Functions:
-  *      s_vSafeResetTx - Rest Tx
-- *      CARDvSetRSPINF - Set RSPINF
-+ *      vnt_set_rspinf - Set RSPINF
-  *      vnt_update_ifs - Update slotTime,SIFS,DIFS, and EIFS
-  *      vnt_update_top_rates - Update BasicTopRate
-  *      CARDbAddBasicRate - Add to BasicRateSet
-@@ -291,7 +291,7 @@ static void vnt_calculate_ofdm_rate(u16 rate, u8 bb_type,
-  *
-  */
- 
--void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
-+void vnt_set_rspinf(struct vnt_private *priv, u8 bb_type)
- {
- 	struct vnt_phy_field phy[4];
- 	u8 tx_rate[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; /* For OFDM */
-@@ -846,7 +846,7 @@ void CARDvSetBSSMode(struct vnt_private *priv)
- 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
- 
- 	vnt_update_ifs(priv);
--	CARDvSetRSPINF(priv, (u8)priv->byBBType);
-+	vnt_set_rspinf(priv, (u8)priv->byBBType);
- 
- 	if (priv->byBBType == BB_TYPE_11A) {
- 		if (priv->byRFType == RF_AIROHA7230) {
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index f2afda4..b52a8c2 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -46,7 +46,7 @@ typedef enum _CARD_PHY_TYPE {
- struct vnt_private;
- 
- void vnt_set_channel(struct vnt_private *, u32);
--void CARDvSetRSPINF(struct vnt_private *, u8);
-+void vnt_set_rspinf(struct vnt_private *, u8);
- void vnt_update_ifs(struct vnt_private *);
- void vnt_update_top_rates(struct vnt_private *);
- void CARDbAddBasicRate(struct vnt_private *, u16);
-diff --git a/drivers/staging/vt6656/datarate.c b/drivers/staging/vt6656/datarate.c
-index 8032d6b..e4a3ac2 100644
---- a/drivers/staging/vt6656/datarate.c
-+++ b/drivers/staging/vt6656/datarate.c
-@@ -222,7 +222,7 @@ void RATEvParseMaxRate(struct vnt_private *pDevice,
- 	else
- 		*pwMaxBasicRate = pDevice->byTopOFDMBasicRate;
- 	if (wOldBasicRate != pDevice->wBasicRate)
--		CARDvSetRSPINF((void *)pDevice, pDevice->byBBType);
-+		vnt_set_rspinf(pDevice, pDevice->byBBType);
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Exit ParseMaxRate\n");
- }
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index c1151b9..4751242 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -1705,7 +1705,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
-                     pDevice->byPreambleType = 0;
-                 }
-                 if (pDevice->byPreambleType != byOldPreambleType)
--                    CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
-+			vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
-             //
-             // Basic Rate Set may change dynamically
-             //
-@@ -1930,7 +1930,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
-                         pDevice->byPreambleType = 0;
-                     }
-                     if (pDevice->byPreambleType != byOldPreambleType)
--                        CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
-+			vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
- 
-                      // MACvRegBitsOff(pDevice->PortOffset, MAC_REG_RCR, RCR_BSSID);
-                      // set highest basic rate
-@@ -2379,7 +2379,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-                 pDevice->byPreambleType = 0;
-             }
-             // Change PreambleType must set RSPINF again
--            CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
-+	    vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
- 
-             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Join ESS\n");
- 
-@@ -2510,7 +2510,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-                 pDevice->byPreambleType = 0;
-             }
-             // Change PreambleType must set RSPINF again
--            CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
-+	    vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
- 
-             // Prepare beacon
- 		bMgrPrepareBeaconToSend((void *) pDevice, pMgmt);
--- 
-1.9.1
+John,
+
+I've been collecting more fixes, but not that much showed up :-)
+
+Here are a few small fixes for the current cycle: radiotap TX flags were
+wrong (fix by Bob), Chun-Yeow fixes an SMPS issue with mesh interfaces,
+Eliad fixes a locking bug and a cfg80211 state problem and finally
+Henning sent me a fix for IBSS rate information.
+
+Please let me know if there are any issues.
+
+Thanks,
+johannes
+
+The following changes since commit 764152ff66f4a8be1f9d7981e542ffdaa5bd7aff=
+:
+
+  mac80211: exclude AP_VLAN interfaces from tx power calculation (2014-04-1=
+1 09:37:41 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git HEAD
+
+for you to fetch changes up to e669ba2d06c6195662601956454ac959892f0762:
+
+  mac80211: fix nested rtnl locking on ieee80211_reconfig (2014-05-05 15:14=
+:58 +0200)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      mac80211: fixup radiotap tx flags for RTS/CTS
+
+Chun-Yeow Yeoh (1):
+      mac80211: avoid handling of SMPS for mesh
+
+Eliad Peller (3):
+      cfg80211: free sme on connection failures
+      cfg80211: add cfg80211_sched_scan_stopped_rtnl
+      mac80211: fix nested rtnl locking on ieee80211_reconfig
+
+Henning Rogge (1):
+      mac80211: Fix mac80211 station info rx bitrate for IBSS mode
+
+ include/net/cfg80211.h  | 12 ++++++++++++
+ net/mac80211/rx.c       |  3 ++-
+ net/mac80211/sta_info.c |  3 ++-
+ net/mac80211/status.c   |  5 ++---
+ net/mac80211/util.c     |  2 +-
+ net/wireless/scan.c     | 12 ++++++++++--
+ net/wireless/sme.c      |  2 +-
+ 7 files changed, 30 insertions(+), 9 deletions(-)
+
+
+--=-07ZJCtQH14fKTwgS9jZ8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIbBAABCAAGBQJTZ5agAAoJEDBSmw7B7bqrP1MP9iF6U3MUNZnUMCfZzTa9JDuy
+y3b2CGaqbhACuekg5cnBxV8QR06UYT1liQzQbn6Tpi5kcnxONAaeD05XBx3ellNI
+DA7Mt7MyUBBSdWR4mfTg0K8dCDhRI3aF9BOPKJxoTDoQYFcuYSZur4unP5vbTVxj
+VNeRZyj3b99SVM70tMVyEp5opL2ILdWp0jM05NoGKw90XDf9XjznLz7zwAWwNTe5
+Q6RJD2c0R692gduvBGc8SNhf4d8p4/Dn0SYEBQ1FQinwSBxWczZyy/PWFxVM5RBs
+DFcxQdIPFGk6uBC3m0C8i3Ij/ywfXssPfqddVUtEAC7ZW3IWMnSBME4UIOs5dYnp
+Cn2insHY7C0RaqJb5v7HDx96H9qg/3eXQAXD9zZybFkT6kH0ikdvMlHsrFKxc4Iy
+URl6cq5myel6QaO7B6omVDq9p5yexy6+GgtlRT/qP6Gehm85kPz/6EHBFK9ss8r5
+bmiQj84LfSoyyt4UTqD3Kqv3GkzR4mlyVND3ynaoNnRecSTQJEStrG6AX+3QIvmQ
+vrWZIYK6TSMThgMKlnWTZRVl5XkGpkLhLaHJ2GJgusPoOcHHT1r/0jGr+xPBC+03
++6lYT29mZTzL2OO/jY1bfPiAi7YJR8+6E98znTb92J9Z0VgiDyzMd1JdjUaFaBlB
+pxvi0lCalmtI0JP3/wM=
+=HNxC
+-----END PGP SIGNATURE-----
+
+--=-07ZJCtQH14fKTwgS9jZ8--
 
