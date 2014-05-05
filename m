@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:32776 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932693AbaEMKcR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 06:32:17 -0400
-Received: by mail-ee0-f54.google.com with SMTP id b57so259375eek.13
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 03:32:16 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 1/2] ath: add DFS FCC pattern detector
-Date: Tue, 13 May 2014 12:32:05 +0200
-Message-Id: <1399977126-8343-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140513_123246_567249_54F38B5F)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60899 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932538AbaEEOTz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2014 10:19:55 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Date: Mon, 5 May 2014 07:19:44 -0700
+Subject: RE: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF59511A1FC9324@SC-VEXCH1.marvell.com> (sfid-20140505_161958_361110_5EB19FA1)
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
+	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
+	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
+	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
+	 <8738gvp8md.fsf@qca.qualcomm.com>
+	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
+	 <20140430132246.GB3635@tuxdriver.com> <87y4ymn69s.fsf@qca.qualcomm.com>
+ <1399294659.22235.9.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1399294659.22235.9.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add initial values for DFS FCC pattern detector.
+Hi Johannes,
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/dfs_pattern_detector.c |   25 ++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+> >
+> > 	int	(*get_dump_flag)(struct net_device *, struct ethtool_dump *);
+> > 	int	(*get_dump_data)(struct net_device *,
+> > 				 struct ethtool_dump *, void *);
+> > 	int	(*set_dump)(struct net_device *, struct ethtool_dump *);
+> >
+> > Yeah, maybe we could use that in wireless as well.
+> 
+> What was the intended use case for this though?
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index a1a69c5..6269f4e 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -73,9 +73,32 @@ static const struct radar_types etsi_radar_types_v15 = {
- 	.radar_types		= etsi_radar_ref_types_v15,
- };
+In mwifiex, we are interested in providing separate firmware dump file to user for each memory segment. Ex. ITCM, DTCM, SQRAM etc.
+
+It looks simpler with ethtool ops instead of creating multiple debugfs files.
  
--/* for now, we support ETSI radar types, FCC and JP are TODO */
-+#define FCC_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB)	\
-+{								\
-+	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
-+	PMIN - PRI_TOLERANCE,					\
-+	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
-+	PPB_THRESH(PPB), PRI_TOLERANCE,				\
-+}
-+
-+static const struct radar_detector_specs fcc_radar_ref_types[] = {
-+	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
-+	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
-+	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
-+	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
-+	FCC_PATTERN(4, 50, 100, 1000, 2000, 20, 1),
-+	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
-+};
-+
-+static const struct radar_types fcc_radar_types = {
-+	.region			= NL80211_DFS_FCC,
-+	.num_radar_types	= ARRAY_SIZE(fcc_radar_ref_types),
-+	.radar_types		= fcc_radar_ref_types,
-+};
-+
- static const struct radar_types *dfs_domains[] = {
- 	&etsi_radar_types_v15,
-+	&fcc_radar_types,
- };
- 
- /**
--- 
-1.7.9.5
+1) User can set index for required memory segment.
 
+#ethtool --set-dump wlan0 3
+
+2) Get the details
+
+#ethtool --get-dump wlan0
+flag: 3, version:xyz, length:13450
+
+3) Dump the info in ITCM.log file
+
+#ethtool --get-dump wlan0 data ITCM.log
+
+
+Common uevent through cfg80211 API to notify firmware dump is over would be useful for us.
+
+Thanks,
+Amitkumar Karwar
