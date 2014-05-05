@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51871 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750712AbaEIMgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 08:36:00 -0400
+Received: from s3.sipsolutions.net ([144.76.43.152]:40819 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932193AbaEEM65 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2014 08:58:57 -0400
+Message-ID: <1399294719.22235.10.camel@jlt4.sipsolutions.net> (sfid-20140505_145900_876872_D41FE32C)
+Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] mac80211: fix vif name tracing
-Date: Fri,  9 May 2014 14:35:50 +0200
-Message-Id: <1399638950-14932-1-git-send-email-johannes@sipsolutions.net> (sfid-20140509_143604_429218_22253CD4)
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Date: Mon, 05 May 2014 14:58:39 +0200
+In-Reply-To: <8738guokvv.fsf@qca.qualcomm.com>
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
+	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
+	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
+	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
+	 <8738gvp8md.fsf@qca.qualcomm.com>
+	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
+	 <8738guokvv.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Wed, 2014-04-30 at 19:13 +0300, Kalle Valo wrote:
 
-If sdata doesn't have a valid dev (e.g. in case of monitor
-vif), the vif_name field was initialized with (a length of)
-some short string, but later was set to a different,
-potentially larger one.
+> I was thinking that it would be nice to avoid rewriting a separate user
+> space dumping tool for each driver and instead have a comman way to
+> retrieve the blobs from the driver.
 
-This resulted in out-of-bounds write, which usually
-appeared as garbage in the trace log.
+Ours is pretty much just "cat /path/to/some/debugfs/file > wherever",
+but indeed it would make sense to have a common uevent and dump
+mechanism.
 
-Simply trace sdata->name, as it should always have the
-correct name for both cases.
+The ethtool dump thing seems reasonable to me, who wants to implement
+it? The generic uevent should probably be some cfg80211 API then I
+guess?
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/trace.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index a0b0aea76525..cec5b60487a4 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -21,10 +21,10 @@
- 
- #define VIF_ENTRY	__field(enum nl80211_iftype, vif_type) __field(void *, sdata)	\
- 			__field(bool, p2p)						\
--			__string(vif_name, sdata->dev ? sdata->dev->name : "<nodev>")
-+			__string(vif_name, sdata->name)
- #define VIF_ASSIGN	__entry->vif_type = sdata->vif.type; __entry->sdata = sdata;	\
- 			__entry->p2p = sdata->vif.p2p;					\
--			__assign_str(vif_name, sdata->dev ? sdata->dev->name : sdata->name)
-+			__assign_str(vif_name, sdata->name)
- #define VIF_PR_FMT	" vif:%s(%d%s)"
- #define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type, __entry->p2p ? "/p2p" : ""
- 
--- 
-2.0.0.rc0
+johannes
 
