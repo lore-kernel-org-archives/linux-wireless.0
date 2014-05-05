@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:57002 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933501AbaE3P2m (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:48365 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755027AbaEEIeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:42 -0400
-Received: by mail-we0-f172.google.com with SMTP id k48so2217340wev.17
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:41 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 11/12] staging: vt6656: rename CARDqGetTSFOffset to vnt_get_tsf_offset
-Date: Fri, 30 May 2014 16:27:50 +0100
-Message-Id: <1401463671-4705-11-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172855_119124_DB724EBB)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 5 May 2014 04:34:14 -0400
+Received: by mail-pa0-f51.google.com with SMTP id kq14so2044502pab.24
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 01:34:14 -0700 (PDT)
+From: Adam Lee <adam.lee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] rtlwifi: rtl8723be: add msi module parameter
+Date: Mon,  5 May 2014 16:33:38 +0800
+Message-Id: <1399278818-19152-3-git-send-email-adam.lee@canonical.com> (sfid-20140505_103420_289048_9C54465A)
+In-Reply-To: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
+References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drop card and rename to vnt_get_tsf_offset
+The msi module parameter offers an option to enable or disable MSI
+interrupts mode, for debugging and workaround(in case) convenience.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Adam Lee <adam.lee@canonical.com>
 ---
- drivers/staging/vt6656/card.c | 6 +++---
- drivers/staging/vt6656/card.h | 2 +-
- drivers/staging/vt6656/wmgr.c | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 27ed88b..3b51eae 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -28,7 +28,7 @@
-  *      vnt_ofdm_min_rate - Check if any OFDM rate is in BasicRateSet
-  *      CARDvSetLoopbackMode - Set Loopback mode
-  *      CARDbSoftwareReset - Sortware reset NIC
-- *      CARDqGetTSFOffset - Calculate TSFOffset
-+ *      vnt_get_tsf_offset - Calculate TSFOffset
-  *      CARDbGetCurrentTSF - Read Current NIC TSF counter
-  *      CARDqGetNextTBTT - Calculate Next Beacon TSF counter
-  *      CARDvSetFirstNextTBTT - Set NIC Beacon time
-@@ -552,7 +552,7 @@ u8 vnt_get_pkt_type(struct vnt_private *priv)
-  * Return Value: TSF Offset value
-  *
-  */
--u64 CARDqGetTSFOffset(u8 rx_rate, u64 tsf1, u64 tsf2)
-+u64 vnt_get_tsf_offset(u8 rx_rate, u64 tsf1, u64 tsf2)
- {
- 	u64 tsf_offset = 0;
- 	u16 rx_bcn_offset = 0;
-@@ -587,7 +587,7 @@ void CARDvAdjustTSF(struct vnt_private *priv, u8 rx_rate,
- 	u64 tsf_offset = 0;
- 	u8 data[8];
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+index a072136..ff12bf4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+@@ -92,7 +92,7 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
  
--	tsf_offset = CARDqGetTSFOffset(rx_rate, time_stamp, local_tsf);
-+	tsf_offset = vnt_get_tsf_offset(rx_rate, time_stamp, local_tsf);
+ 	rtl8723be_bt_reg_init(hw);
+-	rtlpci->msi_support = false;
++	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
+ 	rtlpriv->btcoexist.btc_ops = rtl_btc_get_ops_pointer();
  
- 	data[0] = (u8)tsf_offset;
- 	data[1] = (u8)(tsf_offset >> 8);
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index 7a844c3..ffd6552 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -59,7 +59,7 @@ void CARDvSetFirstNextTBTT(struct vnt_private *pDevice, u16 wBeaconInterval);
- void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
- 			 u16 wBeaconInterval);
- u64 CARDqGetNextTBTT(u64 qwTSF, u16 wBeaconInterval);
--u64 CARDqGetTSFOffset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
-+u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
- int CARDbRadioPowerOff(struct vnt_private *pDevice);
- int CARDbRadioPowerOn(struct vnt_private *pDevice);
- u8 vnt_get_pkt_type(struct vnt_private *);
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 652e8b6..9381d6f 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -1750,10 +1750,10 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
- 		bTSFOffsetPostive = false;
+ 	rtlpriv->dm.dm_initialgain_enable = 1;
+@@ -253,6 +253,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
++	.msi_support = false,
+ 	.debug = DBG_EMERG,
+ };
  
-     if (bTSFOffsetPostive) {
--        qwTSFOffset = CARDqGetTSFOffset(pRxPacket->byRxRate, (qwTimestamp), (qwLocalTSF));
-+	qwTSFOffset = vnt_get_tsf_offset(pRxPacket->byRxRate, (qwTimestamp), (qwLocalTSF));
-     }
-     else {
--        qwTSFOffset = CARDqGetTSFOffset(pRxPacket->byRxRate, (qwLocalTSF), (qwTimestamp));
-+	qwTSFOffset = vnt_get_tsf_offset(pRxPacket->byRxRate, (qwLocalTSF), (qwTimestamp));
-     }
+@@ -365,9 +366,11 @@ module_param_named(debug, rtl8723be_mod_params.debug, int, 0444);
+ module_param_named(ips, rtl8723be_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
++module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
+ MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
+ MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
+ MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
++MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
  
- 	if (qwTSFOffset > TRIVIAL_SYNC_DIFFERENCE)
+ static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
 -- 
-1.9.1
+2.0.0.rc0
 
