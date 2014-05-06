@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55925 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753893AbaEDXdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2014 19:33:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH] ath9k_hw: get QCA953x WMAC revision via platform_data
-Date: Mon,  5 May 2014 01:33:01 +0200
-Message-Id: <1399246381-51997-1-git-send-email-nbd@openwrt.org> (sfid-20140505_013333_906514_680BE0D1)
+Received: from s3.sipsolutions.net ([144.76.43.152]:45615 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756852AbaEFOmj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2014 10:42:39 -0400
+Message-ID: <1399387345.4218.44.camel@jlt4.sipsolutions.net> (sfid-20140506_164245_485780_3891C1DE)
+Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Tue, 06 May 2014 16:42:25 +0200
+In-Reply-To: <1397051137-26201-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155154_888951_7A1A150A)
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140409_155154_888951_7A1A150A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SREV register in the WMAC register space does not contain the chip
-revision, so it needs to be passed in from the kernel.
+On Wed, 2014-04-09 at 15:45 +0200, Michal Kazior wrote:
+> Channel switch finalization is now 2-step. First
+> step is when driver calls csa_finish(), the other
+> is when reservation is actually finalized (which
+> be defered for in-place reservation).
 
-With an updated kernel, this fixes tx gain table selection.
+"which be defered"? should that be "can be"?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c | 2 ++
- 1 file changed, 2 insertions(+)
+> +	if (sdata->reserved_chanctx) {
+> +		/*
+> +		 * with multi-vif csa driver may call ieee80211_csa_finish()
+> +		 * many times while waiting for other interfaces to use their
+> +		 * reservations
+> +		 */
+> +		if (sdata->reserved_ready)
+> +			return 0;
+> +
+> +		err = ieee80211_vif_use_reserved_context(sdata);
+> +		if (err)
+> +			return err;
+> +
+> +		return 0;
+>  	}
+>  
+> +	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
+> +					&sdata->csa_chandef))
+> +		return -EINVAL;
+> +
+>  	sdata->vif.csa_active = false;
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c8a9dfa..dffefee 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -246,6 +246,8 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 		return;
- 	case AR9300_DEVID_AR953X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
-+		if (ah->get_mac_revision)
-+			ah->hw_version.macRev = ah->get_mac_revision();
- 		return;
- 	}
- 
--- 
-1.8.5.2 (Apple Git-48)
+Should csa_active really stay true in the reserved_chanctx case?
+Wouldn't that leave it beaconing, with potentially suddenly negative
+(due to underflow) CSA counter, or something?
+
+johannes
 
