@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:34986 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932447AbaEGJlg convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56022 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbaEFTAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 05:41:36 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so728502wes.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 02:41:35 -0700 (PDT)
+	Tue, 6 May 2014 15:00:10 -0400
+Date: Tue, 6 May 2014 14:48:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ashish Patro <patro@cs.wisc.edu>
+Cc: linux-wireless@vger.kernel.org, linux@rempel-privat.de
+Subject: Re: [PATCH 0/3] Refactoring spectral scan code and adding spectral
+ scan support for ath9k_htc
+Message-ID: <20140506184839.GH3518@tuxdriver.com> (sfid-20140506_210015_128926_FC2A56D3)
+References: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu>
 MIME-Version: 1.0
-In-Reply-To: <1399453631.10517.10.camel@jlt4.sipsolutions.net>
-References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-	<1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
-	<1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
-	<1399387345.4218.44.camel@jlt4.sipsolutions.net>
-	<CA+BoTQ=FqfB46Bd6iC3F=Ps=b4f6CP77p5d6f4fiVLUttCYQjg@mail.gmail.com>
-	<1399449912.5038.7.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnJ7N=UtDu_tySg8uYrQg9i+BvuYrwez7x-LUVinroWDw@mail.gmail.com>
-	<1399453631.10517.10.camel@jlt4.sipsolutions.net>
-Date: Wed, 7 May 2014 11:41:35 +0200
-Message-ID: <CA+BoTQmygnk161oi=AUwfFM4U-r8TxuJVcHPMbsOG+QCzB03hQ@mail.gmail.com> (sfid-20140507_114141_237642_3A0FDFE8)
-Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2014 11:07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-05-07 at 11:05 +0200, Michal Kazior wrote:
->
->> > I don't think that works for all drivers - only drivers that actually
->> > generate and tx each beacon - but other drivers just update a template.
->> > We actually have some pending patches to make that work correctly for
->> > the CSA counters, but I'm not really sure what you want to happen in the
->> > case that one is switching while the other hasn't yet? Should it stop
->> > beaconing? Seems like clients would give up the switch then, no?
->>
->> Ah, I completely forgot about the template-based approach.
->>
->> But I don't think any beacons should be sent after cs_count=1 on the
->> old channel either way. Thus, I would expect template-based drivers to
->> stop beaconing after cs_count=1. cs_count=0 is a separate case as it
->> means "i can disappear at any time now" and is a special case, not
->> what happens after reaching cs_count=1 if I remember correctly.
->
-> I'm not really sure how this would work though - drivers that have
-> firmware generating beacons don't generally seem to be in a position to
-> just stop that aspect and continue operating otherwise, with active
-> clients and all that. It seems to me this might be really difficult to
-> implement.
+Any comments from the ath9k guys on this patchset?
 
-Yeah. This seems like a problem for template drivers. But on the other
-hand if they are capable of handling CSA IE counter they should
-understand CSA, shouldn't they?
+Also, could you post your patches with more concise subject lines
+and possibly more verbose changelog entries?
 
+John
 
->> Clients should expect next beacon to appear on the new channel after
->> seeing beacon with cs_count=1. In that case regular cqm for clients
->> should apply.
->>
->> Real-world multi-vif CSA will probably be off by up to 1 or 2 beacon
->> intervals between vifs which should be disruptive for clients I guess.
->
-> "not be disruptive"?
+On Wed, Apr 30, 2014 at 10:11:20AM -0500, Ashish Patro wrote:
+> These patches move the common components of spectral scan funcationality to common-spectral.c.
+> 
+> Also added spectral scan support to ath9k_htc using the same mechanism to collect spectral scan data as used by ath9k driver.
+> 
+> This work was done at the Wisconsin Wireless and NetworkinG Systems (WiNGS) Lab at the University of Wisconsin Madison.
+> 
+> I've also worked with Oleksij Rempel (linux@rempel-privat.de) to get these patches tested and verified with a AR9271 chipset device.
+> 
+> Ashish Patro (3):
+>   Moving the ath9k specific spectral functions to ath9k.h from
+>     spectral.h. Renamed spectral.h to common-spectral.h
+>   Refactoring the ath9k driver to move common spectral functions to
+>     common-spectral.c
+>   Update spectral scan calls to support both ath9k and ath9k_htc.
+>     Adding spectral scan functionality to ath9k_htc driver. Tested
+>     using a AR9271 WiFi card.
+> 
+>  drivers/net/wireless/ath/ath9k/Makefile           |    3 +-
+>  drivers/net/wireless/ath/ath9k/ar9002_phy.c       |   11 +-
+>  drivers/net/wireless/ath/ath9k/ath9k.h            |    9 +-
+>  drivers/net/wireless/ath/ath9k/common-spectral.c  |  213 +++++++++++++
+>  drivers/net/wireless/ath/ath9k/common-spectral.h  |  199 ++++++++++++
+>  drivers/net/wireless/ath/ath9k/htc.h              |   13 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_debug.c    |    3 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c     |    8 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c     |   75 +++++
+>  drivers/net/wireless/ath/ath9k/htc_drv_spectral.c |  353 +++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c     |   17 +
+>  drivers/net/wireless/ath/ath9k/recv.c             |    7 +-
+>  drivers/net/wireless/ath/ath9k/spectral.c         |  187 -----------
+>  drivers/net/wireless/ath/ath9k/spectral.h         |  212 ------------
+>  14 files changed, 905 insertions(+), 405 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.c
+>  create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.h
+>  create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_spectral.c
+>  delete mode 100644 drivers/net/wireless/ath/ath9k/spectral.h
+> 
+> -- 
+> 1.7.5.4
+> 
+> 
 
-Yeah. Typo.
-
-
-> Remind me why we're doing this - didn't you originally have something in
-> mind that was forcing them all to be synchronized with the switch?
-
-No, not really.
-
-With per-vif CSA requests you can end up submitting requests between
-vif TBTTs, no? Having an atomic "switch vif1,vif2,vif3 to chanX" could
-help - although currently ieee80211_beacon_get() isn't really
-synchronized well so you still hit the problem.
-
-And how do you expect to deal with multi-vif with APs with different
-beacon intervals? Those inherently can't be tightly synchronized. The
-same goes for AP+STA if you start AP first (with the other way around
-you could, in theory, match STA's AP TBTT with your own).
-
-
-Michał
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
