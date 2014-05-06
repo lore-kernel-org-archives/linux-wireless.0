@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47546 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbaEHKEC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 06:04:02 -0400
-Message-ID: <1399543438.9163.3.camel@jlt4.sipsolutions.net> (sfid-20140508_120406_552379_F2E33D34)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Thu, 08 May 2014 12:03:58 +0200
-In-Reply-To: <1399468226.6800.25.camel@dubbel>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	 <1399455657.6800.4.camel@dubbel>
-	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	 <1399457760.6800.7.camel@dubbel>
-	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	 <1399464536.6800.11.camel@dubbel>
-	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	 <1399465244.6800.13.camel@dubbel>
-	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-	 <1399467196.6800.22.camel@dubbel>
-	 <1399467968.10517.39.camel@jlt4.sipsolutions.net>
-	 <1399468226.6800.25.camel@dubbel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:48935 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933956AbaEFGex (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2014 02:34:53 -0400
+Received: by mail-ee0-f44.google.com with SMTP id c41so5951526eek.31
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 23:34:52 -0700 (PDT)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, ath9k-devel@venema.h4ckr.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 1/2] mac80211: add no update durationId bit in radiotap
+Date: Tue,  6 May 2014 08:32:46 +0200
+Message-Id: <1399357967-6541-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140506_083457_221549_F6232838)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 16:10 +0300, Luca Coelho wrote:
+Adds a new bit in radiotap_tx flags, which allows injections
+frames without changing durationId filed. The intention is
+a NAV update testing.
 
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ include/net/ieee80211_radiotap.h |   14 +++++++++-----
+ include/net/mac80211.h           |    3 +++
+ net/mac80211/tx.c                |    4 ++++
+ 3 files changed, 16 insertions(+), 5 deletions(-)
 
-> > Oh, I get it, you're thinking that there might be a situation where
-> > those vif types are maybe not supported with different channels?
-> > 
-> > But in your example you're going from this situation:
-> > 
-> > chanctx1: vif1, vif2
-> > 
-> > to
-> > 
-> > chanctx2: vif1
-> > chanctx3: vif2
-> > 
-> > 
-> > The intermediate step that I proposed would give you
-> > 
-> > chanctx1: vif1
-> > chanctx3: vif2
-> > 
-> > Which isn't really any different?
-> 
-> It could be different if the channel in chanctx1 requires radar and
-> chanctx2 doesn't, couldn't it?
-
-Yeah, I guess that'd be a counter-example...
-
-johannes
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index b0fd947..b00b7dd 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -261,11 +261,15 @@ enum ieee80211_radiotap_type {
+ 
+ /* For IEEE80211_RADIOTAP_TX_FLAGS */
+ #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001	/* failed due to excessive
+-						 * retries */
+-#define IEEE80211_RADIOTAP_F_TX_CTS	0x0002	/* used cts 'protection' */
+-#define IEEE80211_RADIOTAP_F_TX_RTS	0x0004	/* used rts/cts handshake */
+-#define IEEE80211_RADIOTAP_F_TX_NOACK	0x0008	/* don't expect an ack */
+-
++							 * retries */
++#define IEEE80211_RADIOTAP_F_TX_CTS		0x0002	/* used cts
++							 * 'protection' */
++#define IEEE80211_RADIOTAP_F_TX_RTS		0x0004	/* used rts/cts
++							 * handshake */
++#define IEEE80211_RADIOTAP_F_TX_NOACK		0x0008	/* don't expect an
++							 * ack */
++#define IEEE80211_RADIOTAP_F_TX_NO_DUR_UPDATE	0x0010  /* don't touch
++							 * durationId field */
+ 
+ /* For IEEE80211_RADIOTAP_MCS */
+ #define IEEE80211_RADIOTAP_MCS_HAVE_BW		0x01
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2de7ff4..8c55eb9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -512,11 +512,14 @@ enum mac80211_tx_info_flags {
+  *
+  * @IEEE80211_TX_CTRL_PORT_CTRL_PROTO: this frame is a port control
+  *	protocol frame (e.g. EAP)
++ * @IEEE80211_TX_CTRL_NO_DUR_UPDATE: This frame should be send without
++ *	changing durationID field.
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
++	IEEE80211_TX_CTRL_NO_DUR_UPDATE		= BIT(1),
+ };
+ 
+ /*
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 19d36d4..3b8087e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -104,6 +104,10 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 		 *    and its SIFS
+ 		 * PS Poll: BIT(15) | BIT(14) | aid
+ 		 */
++		/* Don't touch durationId field */
++		if (info->flags & IEEE80211_TX_CTRL_NO_DUR_UPDATE)
++			return hdr->duration_id;
++
+ 		return 0;
+ 	}
+ 
+-- 
+1.7.9.5
 
