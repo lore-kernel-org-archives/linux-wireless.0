@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:59359 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557AbaE1JOd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748AbaEFNQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 05:14:33 -0400
-Date: Wed, 28 May 2014 12:14:26 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/9] wireless-regdb: Add Montenegro (ME) regulatory rules
-Message-ID: <20140528091426.GA14657@jouni.qca.qualcomm.com> (sfid-20140528_111436_591986_497EA0B6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 6 May 2014 09:16:07 -0400
+Message-ID: <1399382148.4218.28.camel@jlt4.sipsolutions.net> (sfid-20140506_151611_447561_5CACA573)
+Subject: Re: [PATCH v4 0/4] mac80211/cfg80211: CSA fixes/cleanups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Tue, 06 May 2014 15:15:48 +0200
+In-Reply-To: <1397049062-24177-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_151716_663097_86B5A1EC)
+References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	 <1397049062-24177-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140409_151716_663097_86B5A1EC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source:
-http://www.cept.org/files/1050/Tools%20and%20Services/EFIS%20-%20ECO%20Frequency%20Information%20System/National%20frequency%20tables/Montenegro%20NAFT%20-%202010.pdf
+On Wed, 2014-04-09 at 15:10 +0200, Michal Kazior wrote:
+> Hi,
+> 
+> The patchset fixes CSA tx queue locking and
+> introduces interface teardown upon CSA failure
+> during finalization.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Applied (with the rename Luca suggested), thanks.
 
-diff --git a/db.txt b/db.txt
-index fe27301..6621681 100644
---- a/db.txt
-+++ b/db.txt
-@@ -556,6 +556,14 @@ country MA: DFS-ETSI
- 	(5170 - 5250 @ 80), (20)
- 	(5250 - 5330 @ 80), (20), DFS
- 
-+# Source:
-+# http://www.cept.org/files/1050/Tools%20and%20Services/EFIS%20-%20ECO%20Frequency%20Information%20System/National%20frequency%20tables/Montenegro%20NAFT%20-%202010.pdf
-+country ME: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
-+
- country MO:
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (23)
--- 
-1.9.1
+However, there's one more thing - one caller of ieee80211_csa_finalize()
+doesn't check the return value now, I think it probably should. Mind
+taking a look at that? It should *probably* be the same as the other
+caller (and not propagate the error), I'd say, so maybe that should be
+rolled into the function?
 
+Thanks,
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
