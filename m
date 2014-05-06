@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:47759 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388AbaEGTxw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44883 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934722AbaEFKtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:52 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hm4so9749147wib.16
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:51 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/23] iwlwifi: mvm: Prioritize external nvm values on top of the OTP values
-Date: Wed,  7 May 2014 22:52:49 +0300
-Message-Id: <1399492380-12050-12-git-send-email-egrumbach@gmail.com> (sfid-20140507_215406_526943_7EC6CE8A)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+	Tue, 6 May 2014 06:49:10 -0400
+Message-ID: <1399373331.4218.22.camel@jlt4.sipsolutions.net> (sfid-20140506_124929_897534_C71D6FDB)
+Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
+ failed notifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	Ilan Peer <ilan.peer@intel.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Tue, 06 May 2014 12:48:51 +0200
+In-Reply-To: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Fri, 2014-05-02 at 16:40 +0300, Luca Coelho wrote:
 
-Read first the nvm sections from the OTP, then read the nvm
-sections from the external file and override the OTP values
-(if there were any values in the OTP).
+> + * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
+> + *	has been started on an interface, regardless of the initiator
+> + *	(ie. whether it was requested from a remote device or
+> + *	initiated on our own).  It indicates that
+> + *	%NL80211_ATTR_IFINDEX will be on %NL80211_ATTR_WIPHY_FREQ
+> + *	after %NL80211_ATTR_CH_SWITCH_COUNT TBTT's.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Dor Shaish <dor.shaish@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/nvm.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+You don't seem to have that now, but it may not always be needed, and we
+could add it later (unless userspace needs to rely on having the
+attribute - otherwise it has to check for it)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index fe4c91e..2cb6c29 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -437,14 +437,7 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- 	if (WARN_ON_ONCE(mvm->cfg->nvm_hw_section_num >= NVM_MAX_NUM_SECTIONS))
- 		return -EINVAL;
- 
--	/* load external NVM if configured */
--	if (iwlwifi_mod_params.nvm_file) {
--		/* move to External NVM flow */
--		ret = iwl_mvm_read_external_nvm(mvm);
--		if (ret)
--			return ret;
--	}
--
-+	/* load NVM values from nic */
- 	if (read_nvm_from_nic) {
- 		/* list of NVM sections we are allowed/need to read */
- 		if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-@@ -512,6 +505,15 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- 			return ret;
- 	}
- 
-+	/* load external NVM if configured */
-+	if (iwlwifi_mod_params.nvm_file) {
-+		/* move to External NVM flow */
-+		ret = iwl_mvm_read_external_nvm(mvm);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/* parse the relevant nvm sections */
- 	mvm->nvm_data = iwl_parse_nvm_sections(mvm);
- 	if (!mvm->nvm_data)
- 		return -ENODATA;
--- 
-1.8.3.2
+Actually though, maybe you do need it, so that you can determine whether
+it makes sense to try anything smart - if the count is 1 or you received
+an action frame then you probably don't have time at all?
+
+> + * @NL80211_CMD_CH_SWITCH_FAILED_NOTIFY: Notify that a channel switch
+> + *	has failed on %NL80211_ATTR_IFINDEX.  This notification can
+> + *	only be sent after a @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY has
+> + *	been issued.
+
+(+Ilan, Andrei)
+
+I'm not really sure why you have this - it seems that in this case the
+interface will be stopped so you'll get a STOP_AP or DISCONNECT or
+whatever other notification. This may not actually be completely true
+right now (I seem to remember a fix in this area but can't seem to find
+it in my tree!!) but we'll have to fix that part anyway. Not really sure
+why then that couldn't be used instead of this notification? The
+userspace code is going to have to worry about that anyway, I'd think.
+
+johannes
 
