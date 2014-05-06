@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:46859 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932181AbaEGM16 convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59084 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbaEFR4X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 08:27:58 -0400
-Received: by mail-wg0-f45.google.com with SMTP id m15so896141wgh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 05:27:57 -0700 (PDT)
+	Tue, 6 May 2014 13:56:23 -0400
+Message-ID: <53692240.5010001@candelatech.com> (sfid-20140506_195626_448978_0CDAC194)
+Date: Tue, 06 May 2014 10:56:16 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	<1399455657.6800.4.camel@dubbel>
-	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	<1399457760.6800.7.camel@dubbel>
-	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	<1399464536.6800.11.camel@dubbel>
-	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
-Date: Wed, 7 May 2014 14:27:56 +0200
-Message-ID: <CA+BoTQnKxBR=sWYU=xPojcd61KDd=nsGGqhzNRFiY9zuEp4hKQ@mail.gmail.com> (sfid-20140507_142801_888674_D24ABC3E)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: How to configure monitor devices for HT80?
+References: <5367E13C.2020208@candelatech.com>  (sfid-20140505_211155_884363_141E505C) <1399317771.22235.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1399317771.22235.23.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2014 14:13, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
->
->> I was thinking about the case where you you need to involve 3 contexts.
->> Let's say you have 2 vifs in the same context and after the switch you
->> need to split them into 2 new ones (for instance, if there is some
->> incompatibility in the new chandefs).
+On 05/05/2014 12:22 PM, Johannes Berg wrote:
+> On Mon, 2014-05-05 at 12:06 -0700, Ben Greear wrote:
+>> I'm trying to sniff using a monitor interface on ath10k, on channel 36.
 >>
->> With the generic transactions you could do:
->>  - new chanctx2
->>  - new chanctx3
->>  - switch vif1 chanctx1->chanctx2
->>  - switch vif2 chanctx1->chanctx3
->>  - del chanctx1
->
-> This isn't an interesting case, because it means you have a spare, so
-> you might as well do
->
->  new chanctx3
->  switch vif2 chanctx1->chanctx3
->  switch_transaction(chanctx1, chanctx2, vif1)
+>> I'm seeing lots of packets, but not all that the AP claims to be sending
+>> (when sniffing vap0).  I am not not certain the monitor interface is
+>> using HT80 or not.
+>>
+>> Anyone have a working example of the proper iw commands to create
+>> a monitor interface on channel 36 for HT80?
+> 
+> ...
+> iw wlan0 set freq 5180 80 5210
 
-Don't you mean switch_chandef(chanctx1, chandef)? Or do you assume
-chanctx2 was prepared earlier? Don't you need to remove chanctx1 then?
-Oh, and the chanctx overcommit.. :-)
+Thanks, this works at least most of the time.
 
-I actually think Luca's example is a valid one as it shows the driver
-can freely handle things internally, no? Although I don't see when it
-would be required to make a transaction like that in real-world..
+But, it seems if I have another vif up, it will fail, even if that
+vif is (should be?) using the exact same frequency.
+
+./local/sbin/iw phy wiphy0 interface add moni0 type monitor
+./local/sbin/ip link set dev moni0 up
+./local/sbin/iw dev moni0 set freq 5180 80 5210
+-> yields error:
+command failed: Device or resource busy (-16)
 
 
-Michał
+I'm not absolutely certain the monitor device still works
+properly or not, but it at least mostly works.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
