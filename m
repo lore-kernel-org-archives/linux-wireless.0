@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22848 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815AbaESKTR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 06:19:17 -0400
-Date: Mon, 19 May 2014 13:18:56 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Karim Raslan <karim.allah.ahmed@gmail.com>
-Cc: devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change
- rtw_alloc_stainfo23a to use gfp_t instead if int
-Message-ID: <20140519101855.GU15585@mwanda> (sfid-20140519_121935_497040_18EF4A17)
-References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:29237 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753941AbaEFQQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2014 12:16:20 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCH] rfkill-gpio: Use gpio cansleep version
+Date: Tue,  6 May 2014 18:14:09 +0200
+Message-Id: <1399392849-6021-1-git-send-email-loic.poulain@intel.com> (sfid-20140506_181633_900836_B6680023)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 18, 2014 at 07:39:23AM +0100, Karim Raslan wrote:
-> This should fix a few sparse warnings like the following:
-> 
->   CHECK   drivers/staging/rtl8723au/core/rtw_ap.c
-> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45: warning: incorrect type in argument 3 (different base types)
-> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    expected int [signed] gfp
-> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    got restricted gfp_t
-> 
+If gpio controller requires waiting for read and write
+GPIO values, then we have to use the gpio cansleep api.
+Fix the rfkill_gpio_set_power which calls only the
+nonsleep version (causing kernel warning).
+There is no problem to use the cansleep version here
+because we are not in IRQ handler or similar context
+(cf rfkill_set_block).
 
-Thanks, Karim, looks good.
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-Jes's patch which added this never went to the list so I didn't review
-it.  This annoys me.
-
-I try to be fair when I review code.  I try to allow lots of patches in
-and let people send fix up patches for minor stuff.  But, obviously, you
-should be running Sparse as part of the review process so if I made you
-redo this patch it's because your process is broken.  When I review
-patches I am trying to help you.
-
-regards,
-dan carpenter
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index bd2a5b9..db6579d 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -47,16 +47,24 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ {
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
++	if (!blocked) {
++		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
++			clk_enable(rfkill->clk);
++	}
++
++	if (gpiod_cansleep(rfkill->shutdown_gpio))
++		gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
++	else
++		gpiod_set_value(rfkill->shutdown_gpio, !blocked);
++
++	if (gpiod_cansleep(rfkill->reset_gpio))
++		gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
++	else
++		gpiod_set_value(rfkill->reset_gpio, !blocked);
++
+ 	if (blocked) {
+-		gpiod_set_value(rfkill->shutdown_gpio, 0);
+-		gpiod_set_value(rfkill->reset_gpio, 0);
+ 		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+ 			clk_disable(rfkill->clk);
+-	} else {
+-		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-			clk_enable(rfkill->clk);
+-		gpiod_set_value(rfkill->reset_gpio, 1);
+-		gpiod_set_value(rfkill->shutdown_gpio, 1);
+ 	}
+ 
+ 	rfkill->clk_enabled = blocked;
+-- 
+1.8.3.2
 
