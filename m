@@ -1,100 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:64470 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754604AbaEORFI (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38530 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933191AbaEGNgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:08 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so3808455wgh.7
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:07 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/24] iwlwifi: cause build error on missing newline
-Date: Thu, 15 May 2014 20:04:27 +0300
-Message-Id: <1400173481-9047-10-git-send-email-egrumbach@gmail.com> (sfid-20140515_190516_905536_05FA3CDF)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+	Wed, 7 May 2014 09:36:45 -0400
+Message-ID: <536A36E5.6040100@candelatech.com> (sfid-20140507_153652_587170_9A66FC40)
+Date: Wed, 07 May 2014 06:36:37 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	apenwarr@gmail.com
+Subject: Re: [PATCH 0/2] ath10k: 2014-05-07 fixes
+References: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/07/2014 05:33 AM, Michal Kazior wrote:
+> Hi,
+> 
+> These 2 patches address kernel panics reported by
+> Avery recently. One of them was most likely
+> reported by Ben some time ago already.
+> 
+> I've never seen these panics myself. It'd be great
+> if you guys could give it a try and (assuming
+> you're capable of reproducing) see if it actually
+> helps.
 
-If a (debug) message is missing a newline, cause build error
-so we don't keep reintroducing this problem.
+I'll add these to my tree today and we'll run them through
+our test harness.
 
-This also prevents using a non-constant argument as the format
-string which is a good idea anyway (e.g. for security reasons.)
+I have not been able to repeat any crashes like this recently...but
+I'll let you know if I see anything strange after applying
+the patches.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h | 41 +++++++++++++++++++++++++-------
- 1 file changed, 33 insertions(+), 8 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index c8cbdbe..2950835 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -47,12 +47,32 @@ void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
- void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
- void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
- 
-+/* not all compilers can evaluate strlen() at compile time, so use sizeof() */
-+#define CHECK_FOR_NEWLINE(f) BUILD_BUG_ON(f[sizeof(f) - 2] != '\n')
-+
- /* No matter what is m (priv, bus, trans), this will work */
--#define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
--#define IWL_ERR_DEV(d, f, a...) __iwl_err((d), false, false, f, ## a)
--#define IWL_WARN(m, f, a...) __iwl_warn((m)->dev, f, ## a)
--#define IWL_INFO(m, f, a...) __iwl_info((m)->dev, f, ## a)
--#define IWL_CRIT(m, f, a...) __iwl_crit((m)->dev, f, ## a)
-+#define IWL_ERR_DEV(d, f, a...)						\
-+	do {								\
-+		CHECK_FOR_NEWLINE(f);					\
-+		__iwl_err((d), false, false, f, ## a);			\
-+	} while (0)
-+#define IWL_ERR(m, f, a...)						\
-+	IWL_ERR_DEV((m)->dev, f, ## a)
-+#define IWL_WARN(m, f, a...)						\
-+	do {								\
-+		CHECK_FOR_NEWLINE(f);					\
-+		__iwl_warn((m)->dev, f, ## a);				\
-+	} while (0)
-+#define IWL_INFO(m, f, a...)						\
-+	do {								\
-+		CHECK_FOR_NEWLINE(f);					\
-+		__iwl_info((m)->dev, f, ## a);				\
-+	} while (0)
-+#define IWL_CRIT(m, f, a...)						\
-+	do {								\
-+		CHECK_FOR_NEWLINE(f);					\
-+		__iwl_crit((m)->dev, f, ## a);				\
-+	} while (0)
- 
- #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
- void __iwl_dbg(struct device *dev,
-@@ -72,12 +92,17 @@ do {									\
- 		       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);		\
- } while (0)
- 
-+#define __IWL_DEBUG_DEV(dev, level, limit, fmt, args...)		\
-+	do {								\
-+		CHECK_FOR_NEWLINE(fmt);					\
-+		__iwl_dbg(dev, level, limit, __func__, fmt, ##args);	\
-+	} while (0)
- #define IWL_DEBUG(m, level, fmt, args...)				\
--	__iwl_dbg((m)->dev, level, false, __func__, fmt, ##args)
-+	__IWL_DEBUG_DEV((m)->dev, level, false, fmt, ##args)
- #define IWL_DEBUG_DEV(dev, level, fmt, args...)				\
--	__iwl_dbg((dev), level, false, __func__, fmt, ##args)
-+	__IWL_DEBUG_DEV(dev, level, false, fmt, ##args)
- #define IWL_DEBUG_LIMIT(m, level, fmt, args...)				\
--	__iwl_dbg((m)->dev, level, true, __func__, fmt, ##args)
-+	__IWL_DEBUG_DEV((m)->dev, level, true, fmt, ##args)
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
- #define iwl_print_hex_dump(m, level, p, len)				\
 -- 
-1.8.3.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
