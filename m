@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44411 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972AbaECVJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2014 17:09:16 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] staging: rtl8723au: fix some confusing indenting
-References: <20140503201919.GB32753@mwanda>
-Date: Sat, 03 May 2014 23:09:07 +0200
-In-Reply-To: <20140503201919.GB32753@mwanda> (Dan Carpenter's message of "Sat,
-	3 May 2014 23:19:19 +0300")
-Message-ID: <wrfjvbtmpo24.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140503_230941_596432_2CC08DD2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail2.candelatech.com ([208.74.158.173]:45039 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350AbaEGVus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 17:50:48 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath10k: Fix spelling mistake in comments.
+Date: Wed,  7 May 2014 14:50:39 -0700
+Message-Id: <1399499440-32365-1-git-send-email-greearb@candelatech.com> (sfid-20140507_235059_040020_47034407)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> The break and the "unknown++" are at the same indent level so my static
-> checker complains.  The if statement should be indented more.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Urgh yes, that should be cleaned up!
+Simple typo fix.
 
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-> index eb7b98e..4ad80e7 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-> @@ -1235,8 +1235,8 @@ static int rtw_validate_frame_ies(const u8 *start, uint len)
->  		case WLAN_EID_ERP_INFO:
->  		case WLAN_EID_EXT_SUPP_RATES:
->  		case WLAN_EID_VENDOR_SPECIFIC:
-> -		if (rtw_validate_vendor_specific_ies(pos, elen))
-> -			unknown++;
-> +			if (rtw_validate_vendor_specific_ies(pos, elen))
-> +				unknown++;
->  			break;
->  		case WLAN_EID_RSN:
->  		case WLAN_EID_PWR_CAPABILITY:
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index fa31b23..71a4470 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2340,9 +2340,9 @@ struct wmi_pdev_param_map {
+ #define WMI_PDEV_PARAM_UNSUPPORTED 0
+ 
+ enum wmi_pdev_param {
+-	/* TX chian mask */
++	/* TX chain mask */
+ 	WMI_PDEV_PARAM_TX_CHAIN_MASK = 0x1,
+-	/* RX chian mask */
++	/* RX chain mask */
+ 	WMI_PDEV_PARAM_RX_CHAIN_MASK,
+ 	/* TX power limit for 2G Radio */
+ 	WMI_PDEV_PARAM_TXPOWER_LIMIT2G,
+-- 
+1.7.11.7
+
