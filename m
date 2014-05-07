@@ -1,82 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35722 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751189AbaENFOB convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:36993 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbaEGUAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 01:14:01 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so8114377wib.5
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 22:14:00 -0700 (PDT)
+	Wed, 7 May 2014 16:00:01 -0400
+Received: by mail-we0-f178.google.com with SMTP id u56so1503593wes.37
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 13:00:00 -0700 (PDT)
+Message-ID: <536A90BD.8010204@gmail.com> (sfid-20140507_220011_428901_720E6D2D)
+Date: Wed, 07 May 2014 22:59:57 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1399996416.4137.27.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	<1399455657.6800.4.camel@dubbel>
-	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	<1399457760.6800.7.camel@dubbel>
-	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	<1399464536.6800.11.camel@dubbel>
-	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	<1399465244.6800.13.camel@dubbel>
-	<1399466312.10517.34.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
-	<1399467225.10517.35.camel@jlt4.sipsolutions.net>
-	<CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com>
-	<1399543568.9163.5.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk_hm-dgNftTK_WdPQFNgD9WyRG01sPQ0vcO=cw7+BNrg@mail.gmail.com>
-	<1399988536.4137.23.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmG_oFNgjJLr4DdEwnjtu0pC9HiQ8DhapVuhu1u1hXypw@mail.gmail.com>
-	<1399996416.4137.27.camel@jlt4.sipsolutions.net>
-Date: Wed, 14 May 2014 07:14:00 +0200
-Message-ID: <CA+BoTQn9Th=x+0iWOacYS6h1csy-2snDV5vmjeLzptd2ZXn9Pg@mail.gmail.com> (sfid-20140514_071407_074884_4630DA29)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Content-Type: text/plain; charset=UTF-8
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: pull request: iwlwifi 2014-05-07
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="i90MJA5e7uhFasxPges94rcRMWNHM4jTL"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 May 2014 17:53, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2014-05-13 at 15:56 +0200, Michal Kazior wrote:
->
->> > That's pretty much what I'd considered, except that now as far as I read
->> > the thread this wasn't sufficient for multi-context, so we'd need lists
->> > of old/new contexts?
->>
->> Hmm.. In what cases do you need a list of old/new contexts?
->
-> That was Luca's scenario, no?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--i90MJA5e7uhFasxPges94rcRMWNHM4jTL
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Hmm.. I thought of it more as a theoretical appliance of the transaction API.
+Hi John,
 
-Let me re-post his example:
+This is a pull request intended for 3.15 release.
 
-> With the generic transactions you could do:
->  - new chanctx2
->  - new chanctx3
->  - switch vif1 chanctx1->chanctx2
->  - switch vif2 chanctx1->chanctx3
->  - del chanctx1
+Alex fixes the scan by disabling the fragmented scan. David prevents scan=
+ offload while associated, the firmware seems not to like it. I fix a stu=
+pid bug I made in BT Coex, and fix a bad #ifdef clause in rate scaling.
+Along with that there is a fix for a NULL pointer exception that can happ=
+en if we load the driver and our ISR gets called because the interrupt li=
+ne is shared. The fix has been tested by the reporter.
 
->From this I infer you can run at least 2 chanctx since that's what you
-end up with. This means you can perform one of the switches separately
-because only 1 chanctx was used (that's the easy part that never
-really required transactions or multi-vif-chanctx-assign to begin
-with). The other switch would fall into the "incompat case" where you
-need to basically swap chanctx for one of the vifs in the example.
+Please pull.
 
-So I fail to see why we would need to have a list of old/new contexts
-in the proposed switch_vif_chanctx(), at least for now.
+The following changes since commit a6bc92803e7f765e02c923cf37c8e280e72964=
+2a:
+
+  iwlwifi: mvm: BT Coex - fix Look Up Table (2014-04-13 16:51:07 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ master
+
+for you to fetch changes up to 83f7a85f1134c6e914453f5747435415a23d516b:
+
+  iwlwifi: pcie: disable interrupts upon PCIe alloc (2014-05-07 22:54:32 =
++0300)
+
+----------------------------------------------------------------
+Alexander Bondar (1):
+      iwlwifi: mvm: several fixes in scan
+
+David Spinadel (1):
+      iwlwifi: mvm: do no sched scan while associated
+
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: BT Coex - fix validity flags during init
+      iwlwifi: mvm: rs - s/CPTCFG/CONFIG
+      iwlwifi: pcie: disable interrupts upon PCIe alloc
+
+ drivers/net/wireless/iwlwifi/mvm/coex.c        |  6 +++---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  8 ++++----
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c    |  5 +++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |  3 +++
+ drivers/net/wireless/iwlwifi/mvm/rs.c          |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 53 ++++++++++++--------=
+---------------------------------
+ drivers/net/wireless/iwlwifi/mvm/utils.c       | 19 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c      | 10 ++++++----
+ 8 files changed, 53 insertions(+), 53 deletions(-)
 
 
-Michał
+--i90MJA5e7uhFasxPges94rcRMWNHM4jTL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTapC9AAoJEC0Llv5uNjIBeRkP/0tsjHZGWJEoeYyqKJfm1uVU
+AlCDqAzcghx5IqYHWsNUHsYNX2kmlCiyVuJsru4Qv88yxAzWSLnIIsOKqjY47+KO
+d/pz8DTrwMMyt2VW2mAJ6vJf/BHK87x5bQptAMwSW3dJoHbTU9/UkIaFcq7IWxMT
+VwsYLsZDkQo21l6Ddu0VicHZbrtLxPwWmpiaAAAxiQoxmO8FaUDZZ/YIZYptSz/b
+0BdCsX4hXiXdwMPhzbyQW+Yr+FEr+a6c/qt8HDI6IDPtBz80SC1fUFTKKAqd9vdy
+R+6KQoP9WPFVlIYC4b33kqjCRyvnN2+gL1D5WhwEQAHUcpm+PumBxAdV/vXW6TuU
+TOuF0UHmHmGCPyBur2qzwbxNWG2bl35bWAF2mXWHa/Nt69p/KRfdLM/NcGcQ/8GB
+ZM/3iMvL7PR6MzLFSSHWPMlEwTcDyMINcybuQOBR1xVrMJU6WczoJLnMxJjl+T+0
+7wS77RItx2kap37IsL4cFy04IGzoP6VUm8mj3IIsAVtF4IdOUM7mgb2x3Xo46exv
+YmRPVY4lTNPLSISqjEv60DgPrQvYUPdy+ha9PlwztMLVZe+qUYOw/ChYoiL4/YxM
+Ch6MqS2aQizqqr9VsdLsGx16OBBr63YWKVN5nmChi3Qe+eJa/bJ+SeT3QwoyieCc
+y7b+DMUHFmoX+XxXcg0J
+=NoEl
+-----END PGP SIGNATURE-----
+
+--i90MJA5e7uhFasxPges94rcRMWNHM4jTL--
