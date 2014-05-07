@@ -1,61 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15539 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbaE0Lqc (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:46840 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbaEGMoz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 07:46:32 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 1/7] wil6210: limit MTU
-Date: Tue, 27 May 2014 14:45:44 +0300
-Message-ID: <1401191150-29037-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140527_134635_760376_5E2855E8)
-In-Reply-To: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 7 May 2014 08:44:55 -0400
+Received: by mail-wg0-f52.google.com with SMTP id l18so911804wgh.23
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 05:44:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1399466312.10517.34.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	<1399455657.6800.4.camel@dubbel>
+	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	<1399457760.6800.7.camel@dubbel>
+	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	<1399464536.6800.11.camel@dubbel>
+	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
+	<1399465244.6800.13.camel@dubbel>
+	<1399466312.10517.34.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 14:44:53 +0200
+Message-ID: <CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com> (sfid-20140507_144457_713838_9CF2BD1F)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Obey 802.11 spec that defines max. data size 7920 bytes
+On 7 May 2014 14:38, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-05-07 at 15:20 +0300, Luca Coelho wrote:
+>> On Wed, 2014-05-07 at 14:13 +0200, Johannes Berg wrote:
+>> > On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
+>> >
+>> > > I was thinking about the case where you you need to involve 3 contexts.
+>> > > Let's say you have 2 vifs in the same context and after the switch you
+>> > > need to split them into 2 new ones (for instance, if there is some
+>> > > incompatibility in the new chandefs).
+>> > >
+>> > > With the generic transactions you could do:
+>> > >  - new chanctx2
+>> > >  - new chanctx3
+>> > >  - switch vif1 chanctx1->chanctx2
+>> > >  - switch vif2 chanctx1->chanctx3
+>> > >  - del chanctx1
+>> >
+>> > This isn't an interesting case, because it means you have a spare, so
+>> > you might as well do
+>> >
+>> >  new chanctx3
+>> >  switch vif2 chanctx1->chanctx3
+>> >  switch_transaction(chanctx1, chanctx2, vif1)
+>>
+>> Couldn't this potentially break the combinations temporarily again?
+>
+> I don't see why? You had a spare channel context to start with,
+> otherwise you'd never have accepted this situation. Therefore, you can
+> use the spare one before actually doing the proposed
+> switch_vif_chanctx().
+>
+>
+> Ultimately, what I'm trying to say is that instead of the proposed
+> switch_vif_chanctx(), we need to have this:
+>
+> enum ieee80211_chanctx_switch_mode - as before
+>
+>         (*switch_vif_chanctx)(struct ieee80211_hw *hw,
+>                               struct ieee80211_vif **vifs, int n_vifs,
+>                               struct ieee80211_chanctx_conf *old_ctx,
+>                               struct ieee80211_chanctx_conf *new_ctx,
+>                               enum ieee80211_chanctx_switch_mode mode);
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/netdev.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Yeah. This is another way to do it. It does solve the edge case when
+you're maxing out on different channels.
 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index fdcaeb8..106b6dc 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -32,12 +32,26 @@ static int wil_stop(struct net_device *ndev)
- 	return wil_down(wil);
- }
- 
-+static int wil_change_mtu(struct net_device *ndev, int new_mtu)
-+{
-+	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+
-+	if (new_mtu < 68 || new_mtu > IEEE80211_MAX_DATA_LEN_DMG)
-+		return -EINVAL;
-+
-+	wil_dbg_misc(wil, "change MTU %d -> %d\n", ndev->mtu, new_mtu);
-+	ndev->mtu = new_mtu;
-+
-+	return 0;
-+}
-+
- static const struct net_device_ops wil_netdev_ops = {
- 	.ndo_open		= wil_open,
- 	.ndo_stop		= wil_stop,
- 	.ndo_start_xmit		= wil_start_xmit,
- 	.ndo_set_mac_address	= eth_mac_addr,
- 	.ndo_validate_addr	= eth_validate_addr,
-+	.ndo_change_mtu		= wil_change_mtu,
- };
- 
- static int wil6210_netdev_poll_rx(struct napi_struct *napi, int budget)
--- 
-1.9.1
+It doesn't, however, (if you don't do transactions) prevent from
+chanctx overcommit (i.e. you still can end up with more, albeit
+"idle", chanctx allocations in driver).
 
+
+Michał
