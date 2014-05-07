@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:54935 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754935AbaEEIdp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 04:33:45 -0400
-Received: by mail-pa0-f53.google.com with SMTP id kp14so4436434pab.40
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 01:33:45 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/3] rtlwifi: make MSI support a module parameter
-Date: Mon,  5 May 2014 16:33:36 +0800
-Message-Id: <1399278818-19152-1-git-send-email-adam.lee@canonical.com> (sfid-20140505_103350_044665_43603AE8)
+Received: from dedo.coelho.fi ([88.198.205.34]:42845 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932222AbaEGQHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 12:07:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, standby24x7@gmail.com
+Date: Wed,  7 May 2014 19:07:05 +0300
+Message-Id: <1399478825-18141-1-git-send-email-luca@coelho.fi> (sfid-20140507_180725_755173_F3382CD3)
+Subject: [PATCH] cfg80211: fix docbook warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes MSI support a module parameter, for debugging and workaround
-convenience.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
+When trying to generate documentation, at least xmldocs, we get the
+following warning:
+
+Warning(include/net/cfg80211.h:461): No description found for parameter 'nl80211_iftype'
+
+Fix it by adding the iftype argument name to the
+cfg80211_chandef_dfs_required() function declaration.
+
+Reported-and-tested-by: Masanari Iida <standby24x7@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rtlwifi/wifi.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ include/net/cfg80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 6965afd..eef93d1 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -2030,6 +2030,10 @@ struct rtl_mod_params {
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0631230..28f6f1a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -458,7 +458,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+  */
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 				  const struct cfg80211_chan_def *chandef,
+-				  enum nl80211_iftype);
++				  enum nl80211_iftype iftype);
  
- 	/* default: 1 = using linked fw power save */
- 	bool fwctrl_lps;
-+
-+	/* default: 0 = not using MSI interrupts mode */
-+	/* submodules should set their own defalut value */
-+	bool msi_support;
- };
- 
- struct rtl_hal_usbint_cfg {
+ /**
+  * ieee80211_chandef_rate_flags - returns rate flags for a channel
 -- 
 2.0.0.rc0
 
