@@ -1,209 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34772 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193AbaE0K4g (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:47759 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388AbaEGTxw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 06:56:36 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 11/16] brcmfmac: use asynchronous firmware request in USB
-Date: Tue, 27 May 2014 12:56:23 +0200
-Message-ID: <1401188188-16492-12-git-send-email-arend@broadcom.com> (sfid-20140527_125642_640771_9DC495C6)
-In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 7 May 2014 15:53:52 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hm4so9749147wib.16
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:51 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/23] iwlwifi: mvm: Prioritize external nvm values on top of the OTP values
+Date: Wed,  7 May 2014 22:52:49 +0300
+Message-Id: <1399492380-12050-12-git-send-email-egrumbach@gmail.com> (sfid-20140507_215406_526943_7EC6CE8A)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds use of asynchronous firmware request to
-the driver USB layer.
+From: Eran Harary <eran.harary@intel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Read first the nvm sections from the OTP, then read the nvm
+sections from the external file and override the OTP values
+(if there were any values in the OTP).
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Reviewed-by: Dor Shaish <dor.shaish@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |   98 +++++++++++++++++--------
- 1 file changed, 68 insertions(+), 30 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 8d67940..21335e2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -25,6 +25,7 @@
- #include <dhd_bus.h>
- #include <dhd_dbg.h>
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index fe4c91e..2cb6c29 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -437,14 +437,7 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 	if (WARN_ON_ONCE(mvm->cfg->nvm_hw_section_num >= NVM_MAX_NUM_SECTIONS))
+ 		return -EINVAL;
  
-+#include "firmware.h"
- #include "usb_rdl.h"
- #include "usb.h"
- 
-@@ -87,7 +88,7 @@ struct brcmf_usbdev_info {
- 	struct brcmf_usbreq *tx_reqs;
- 	struct brcmf_usbreq *rx_reqs;
- 
--	u8 *image;	/* buffer for combine fw and nvram */
-+	const u8 *image;	/* buffer for combine fw and nvram */
- 	int image_len;
- 
- 	struct usb_device *usbdev;
-@@ -1021,7 +1022,7 @@ brcmf_usb_fw_download(struct brcmf_usbdev_info *devinfo)
+-	/* load external NVM if configured */
+-	if (iwlwifi_mod_params.nvm_file) {
+-		/* move to External NVM flow */
+-		ret = iwl_mvm_read_external_nvm(mvm);
+-		if (ret)
+-			return ret;
+-	}
+-
++	/* load NVM values from nic */
+ 	if (read_nvm_from_nic) {
+ 		/* list of NVM sections we are allowed/need to read */
+ 		if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+@@ -512,6 +505,15 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 			return ret;
  	}
  
- 	err = brcmf_usb_dlstart(devinfo,
--		devinfo->image, devinfo->image_len);
-+		(u8 *)devinfo->image, devinfo->image_len);
- 	if (err == 0)
- 		err = brcmf_usb_dlrun(devinfo);
- 	return err;
-@@ -1080,7 +1081,22 @@ static int check_file(const u8 *headers)
- 	return -1;
- }
- 
--static int brcmf_usb_get_fw(struct brcmf_usbdev_info *devinfo)
-+static const char *brcmf_usb_get_fwname(struct brcmf_usbdev_info *devinfo)
-+{
-+	switch (devinfo->bus_pub.devid) {
-+	case 43143:
-+		return BRCMF_USB_43143_FW_NAME;
-+	case 43235:
-+	case 43236:
-+	case 43238:
-+		return BRCMF_USB_43236_FW_NAME;
-+	case 43242:
-+		return BRCMF_USB_43242_FW_NAME;
-+	default:
-+		return NULL;
-+	}
-+}
-+static __used int brcmf_usb_get_fw(struct brcmf_usbdev_info *devinfo)
- {
- 	s8 *fwname;
- 	const struct firmware *fw;
-@@ -1202,16 +1218,6 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
- 		goto error;
- 	}
- 
--	if (!brcmf_usb_dlneeded(devinfo))
--		return &devinfo->bus_pub;
--
--	brcmf_dbg(USB, "Start fw downloading\n");
--	if (brcmf_usb_get_fw(devinfo))
--		goto error;
--
--	if (brcmf_usb_fw_download(devinfo))
--		goto error;
--
- 	return &devinfo->bus_pub;
- 
- error:
-@@ -1252,12 +1258,47 @@ fail:
- 	return ret;
- }
- 
-+static void brcmf_usb_probe_phase2(struct device *dev,
-+				   const struct firmware *fw,
-+				   void *nvram, u32 nvlen)
-+{
-+	struct brcmf_bus *bus = dev_get_drvdata(dev);
-+	struct brcmf_usbdev_info *devinfo;
-+	int ret;
-+
-+	brcmf_dbg(USB, "Start fw downloading\n");
-+	ret = check_file(fw->data);
-+	if (ret < 0) {
-+		brcmf_err("invalid firmware\n");
-+		release_firmware(fw);
-+		goto error;
-+	}
-+
-+	devinfo = bus->bus_priv.usb->devinfo;
-+	devinfo->image = fw->data;
-+	devinfo->image_len = fw->size;
-+
-+	ret = brcmf_usb_fw_download(devinfo);
-+	release_firmware(fw);
-+	if (ret)
-+		goto error;
-+
-+	ret = brcmf_usb_bus_setup(devinfo);
-+	if (ret)
-+		goto error;
-+
-+	return;
-+error:
-+	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), ret);
-+	device_release_driver(dev);
-+}
-+
- static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- {
- 	struct brcmf_bus *bus = NULL;
- 	struct brcmf_usbdev *bus_pub = NULL;
--	int ret;
- 	struct device *dev = devinfo->dev;
-+	int ret;
- 
- 	brcmf_dbg(USB, "Enter\n");
- 	bus_pub = brcmf_usb_attach(devinfo, BRCMF_USB_NRXQ, BRCMF_USB_NTXQ);
-@@ -1280,13 +1321,16 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->proto_type = BRCMF_PROTO_BCDC;
- 	bus->always_use_fws_queue = true;
- 
--	ret = brcmf_usb_bus_setup(devinfo);
--	if (ret) {
--		brcmf_err("dongle is not responding\n");
--		goto fail;
-+	if (!brcmf_usb_dlneeded(devinfo)) {
-+		ret = brcmf_usb_bus_setup(devinfo);
++	/* load external NVM if configured */
++	if (iwlwifi_mod_params.nvm_file) {
++		/* move to External NVM flow */
++		ret = iwl_mvm_read_external_nvm(mvm);
 +		if (ret)
-+			goto fail;
- 	}
--
-+	/* request firmware here */
-+	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
-+			       brcmf_usb_probe_phase2);
- 	return 0;
++			return ret;
++	}
 +
- fail:
- 	/* Release resources in reverse order */
- 	kfree(bus);
-@@ -1409,12 +1453,8 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	}
- 
- 	/* Allocate interrupt URB and data buffer */
--	/* RNDIS says 8-byte intr, our old drivers used 4-byte */
--	if (IFEPDESC(usb, CONTROL_IF, 0).wMaxPacketSize == cpu_to_le16(16))
--		devinfo->intr_size = 8;
--	else
--		devinfo->intr_size = 4;
--
-+	devinfo->intr_size =
-+		le16_to_cpu(IFEPDESC(usb, CONTROL_IF, 0).wMaxPacketSize);
- 	devinfo->interval = IFEPDESC(usb, CONTROL_IF, 0).bInterval;
- 
- 	if (usb->speed == USB_SPEED_SUPER)
-@@ -1481,13 +1521,11 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- {
- 	struct usb_device *usb = interface_to_usbdev(intf);
- 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(&usb->dev);
--
- 	brcmf_dbg(USB, "Enter\n");
- 
--	if (!brcmf_usb_fw_download(devinfo))
--		return brcmf_usb_bus_setup(devinfo);
--
--	return -EIO;
-+	return brcmf_fw_get_firmwares(&usb->dev, 0,
-+				      brcmf_usb_get_fwname(devinfo), NULL,
-+				      brcmf_usb_probe_phase2);
- }
- 
- #define BRCMF_USB_VENDOR_ID_BROADCOM	0x0a5c
++	/* parse the relevant nvm sections */
+ 	mvm->nvm_data = iwl_parse_nvm_sections(mvm);
+ 	if (!mvm->nvm_data)
+ 		return -ENODATA;
 -- 
-1.7.9.5
+1.8.3.2
 
