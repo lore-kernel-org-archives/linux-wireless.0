@@ -1,181 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:62584 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755463AbaEJOko (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:55979 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472AbaEGNDL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2014 10:40:44 -0400
-Received: by mail-ee0-f47.google.com with SMTP id c13so3394168eek.6
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 07:40:43 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] b43: adjust code to compile without SSB
-Date: Sat, 10 May 2014 16:40:34 +0200
-Message-Id: <1399732834-26509-1-git-send-email-zajec5@gmail.com> (sfid-20140510_164048_223529_0785192D)
-In-Reply-To: <1399731244-18743-1-git-send-email-zajec5@gmail.com>
-References: <1399731244-18743-1-git-send-email-zajec5@gmail.com>
+	Wed, 7 May 2014 09:03:11 -0400
+Received: by mail-we0-f173.google.com with SMTP id u57so946978wes.4
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 06:03:10 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1399467225.10517.35.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	<1399455657.6800.4.camel@dubbel>
+	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	<1399457760.6800.7.camel@dubbel>
+	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	<1399464536.6800.11.camel@dubbel>
+	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
+	<1399465244.6800.13.camel@dubbel>
+	<1399466312.10517.34.camel@jlt4.sipsolutions.net>
+	<CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
+	<1399467225.10517.35.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 15:03:10 +0200
+Message-ID: <CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com> (sfid-20140507_150315_073583_3F0C15CF)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Users of new (BCMA based) wireless chipsets may not want to enable SSB.
-This is hopefully the last code patch for dropping SSB dependency.
+On 7 May 2014 14:53, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-05-07 at 14:44 +0200, Michal Kazior wrote:
+>
+>> > Ultimately, what I'm trying to say is that instead of the proposed
+>> > switch_vif_chanctx(), we need to have this:
+>> >
+>> > enum ieee80211_chanctx_switch_mode - as before
+>> >
+>> >         (*switch_vif_chanctx)(struct ieee80211_hw *hw,
+>> >                               struct ieee80211_vif **vifs, int n_vifs,
+>> >                               struct ieee80211_chanctx_conf *old_ctx,
+>> >                               struct ieee80211_chanctx_conf *new_ctx,
+>> >                               enum ieee80211_chanctx_switch_mode mode);
+>>
+>> Yeah. This is another way to do it. It does solve the edge case when
+>> you're maxing out on different channels.
+>
+> I thought this was what you were proposing :)
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Replace
-#ifdef CONFIG_SSB_DRIVER_PCICORE
-with
-#if defined(CONFIG_B43_SSB) && defined(CONFIG_SSB_DRIVER_PCICORE)
----
- drivers/net/wireless/b43/Kconfig |  2 +-
- drivers/net/wireless/b43/bus.h   | 10 ++++++++++
- drivers/net/wireless/b43/main.c  | 17 ++++++++++++++++-
- 3 files changed, 27 insertions(+), 2 deletions(-)
+I think Luca and I have something like this in mind:
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 088d544..ce937a9 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -116,7 +116,7 @@ config B43_PHY_N
- 
- config B43_PHY_LP
- 	bool "Support for low-power (LP-PHY) devices"
--	depends on B43
-+	depends on B43 && B43_SSB
- 	default y
- 	---help---
- 	  Support for the LP-PHY.
-diff --git a/drivers/net/wireless/b43/bus.h b/drivers/net/wireless/b43/bus.h
-index 184c956..f3205c6 100644
---- a/drivers/net/wireless/b43/bus.h
-+++ b/drivers/net/wireless/b43/bus.h
-@@ -5,7 +5,9 @@ enum b43_bus_type {
- #ifdef CONFIG_B43_BCMA
- 	B43_BUS_BCMA,
- #endif
-+#ifdef CONFIG_B43_SSB
- 	B43_BUS_SSB,
-+#endif
- };
- 
- struct b43_bus_dev {
-@@ -52,13 +54,21 @@ struct b43_bus_dev {
- 
- static inline bool b43_bus_host_is_pcmcia(struct b43_bus_dev *dev)
- {
-+#ifdef CONFIG_B43_SSB
- 	return (dev->bus_type == B43_BUS_SSB &&
- 		dev->sdev->bus->bustype == SSB_BUSTYPE_PCMCIA);
-+#else
-+	return false;
-+#endif
- }
- static inline bool b43_bus_host_is_sdio(struct b43_bus_dev *dev)
- {
-+#ifdef CONFIG_B43_SSB
- 	return (dev->bus_type == B43_BUS_SSB &&
- 		dev->sdev->bus->bustype == SSB_BUSTYPE_SDIO);
-+#else
-+	return false;
-+#endif
- }
- 
- struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core);
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 4439d25..be46439 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1197,6 +1197,7 @@ static void b43_bcma_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- }
- #endif
- 
-+#ifdef CONFIG_B43_SSB
- static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- {
- 	u32 flags = 0;
-@@ -1212,6 +1213,7 @@ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- 
- 	b43_phy_take_out_of_reset(dev);
- }
-+#endif
- 
- void b43_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- {
-@@ -2715,6 +2717,8 @@ static int b43_upload_initvals_band(struct b43_wldev *dev)
- /* Initialize the GPIOs
-  * http://bcm-specs.sipsolutions.net/GPIO
-  */
-+
-+#ifdef CONFIG_B43_SSB
- static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
- {
- 	struct ssb_bus *bus = dev->dev->sdev->bus;
-@@ -2725,10 +2729,13 @@ static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
- 	return bus->chipco.dev;
- #endif
- }
-+#endif
- 
- static int b43_gpio_init(struct b43_wldev *dev)
- {
-+#ifdef CONFIG_B43_SSB
- 	struct ssb_device *gpiodev;
-+#endif
- 	u32 mask, set;
- 
- 	b43_maskset32(dev, B43_MMIO_MACCTL, ~B43_MACCTL_GPOUTSMSK, 0);
-@@ -2787,7 +2794,9 @@ static int b43_gpio_init(struct b43_wldev *dev)
- /* Turn off all GPIO stuff. Call this on module unload, for example. */
- static void b43_gpio_cleanup(struct b43_wldev *dev)
- {
-+#ifdef CONFIG_B43_SSB
- 	struct ssb_device *gpiodev;
-+#endif
- 
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
-@@ -4519,8 +4528,12 @@ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
- 	struct ssb_bus *bus;
- 	u32 tmp;
- 
-+#ifdef CONFIG_B43_SSB
- 	if (dev->dev->bus_type != B43_BUS_SSB)
- 		return;
-+#else
-+	return;
-+#endif
- 
- 	bus = dev->dev->sdev->bus;
- 
-@@ -4675,7 +4688,7 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	}
- 	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
- 		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
--#ifdef CONFIG_SSB_DRIVER_PCICORE
-+#if defined(CONFIG_B43_SSB) && defined(CONFIG_SSB_DRIVER_PCICORE)
- 	if (dev->dev->bus_type == B43_BUS_SSB &&
- 	    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI &&
- 	    dev->dev->sdev->bus->pcicore.dev->id.revision <= 10)
-@@ -5247,6 +5260,7 @@ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl)
- 	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
- 	(pdev->subsystem_device == _subdevice)				)
- 
-+#ifdef CONFIG_B43_SSB
- static void b43_sprom_fixup(struct ssb_bus *bus)
- {
- 	struct pci_dev *pdev;
-@@ -5278,6 +5292,7 @@ static void b43_wireless_exit(struct b43_bus_dev *dev, struct b43_wl *wl)
- 	ssb_set_devtypedata(dev->sdev, NULL);
- 	ieee80211_free_hw(hw);
- }
-+#endif
- 
- static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- {
--- 
-1.8.4.5
+  drv_chanctx_update(hw,
+    { .type = CHANCTX_NEW_CHANCTX,
+      .chanctx = ctx2,
+    },
+    {
+      .type = CHANCTX_BIND,
+      .vif = vif1,
+      .chanctx_old = ctx1,
+      .chanctx_new = ctx2,
+    },
+    { 0 });
 
+The driver would be free to re-order this internally to fulfill the
+entire update request.
+
+
+>> It doesn't, however, (if you don't do transactions) prevent from
+>> chanctx overcommit (i.e. you still can end up with more, albeit
+>> "idle", chanctx allocations in driver).
+>
+> That I don't understand again - what do you mean by "chanctx
+> allocations"?
+
+Chanctx lifecycle is:
+
+ drv_add_chanctx()
+ drv_assign_vif_chanctx()
+ // .. more assign/unassign .. possibly drv_change_chanctx()
+ drv_unassign_vif_chanctx()
+ drv_remove_chanctx()
+
+What I meant by "chanctx allocations" is drv_add_chanctx.
+
+In particular when I write "chanctx overcommit" I refer to
+drv_add_chanctx() being called when in-driver chanctx count is already
+at peak for given interface combinations.
+
+Or should we just simply assume this isn't a problem and drivers
+should *always* accept empty chanctx? Why bother with a return value
+then?
+
+
+Michał
