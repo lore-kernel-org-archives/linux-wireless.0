@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:47043 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbaEXNiY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49515 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414AbaEGLVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 09:38:24 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so5932676wgh.11
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:23 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/14] staging: vt6656: CARDvCalculateOFDMRParameter fix indentation rsv_time
-Date: Sat, 24 May 2014 14:37:10 +0100
-Message-Id: <1400938630-2850-14-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153833_084555_681F1838)
-In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
-References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 7 May 2014 07:21:11 -0400
+Message-ID: <1399461668.10517.19.camel@jlt4.sipsolutions.net> (sfid-20140507_132115_494326_E94ABD2C)
+Subject: Re: [PATCHv2] rfkill-gpio: Use gpio cansleep version
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Loic Poulain <loic.poulain@intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-gpio@vger.kernel.org
+Date: Wed, 07 May 2014 13:21:08 +0200
+In-Reply-To: <1399455491-4491-1-git-send-email-loic.poulain@intel.com>
+References: <1399455491-4491-1-git-send-email-loic.poulain@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In patch
-staging: vt6656 camel case clean up CARDvCalculateOFDMRParameter
-rsv_time is indented incorrectly.
+On Wed, 2014-05-07 at 11:38 +0200, Loic Poulain wrote:
+> If gpio controller requires waiting for read and write
+> GPIO values, then we have to use the gpio cansleep api.
+> Fix the rfkill_gpio_set_power which calls only the
+> nonsleep version (causing kernel warning).
+> There is no problem to use the cansleep version here
+> because we are not in IRQ handler or similar context
+> (cf rfkill_set_block).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied.
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 5a65f75..ce069c9 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -256,7 +256,7 @@ void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
- 			*rsv_time = 4;
- 		} else {
- 			*tx_rate = 0x88;
--		*rsv_time = 10;
-+			*rsv_time = 10;
- 		}
- 		break;
- 	case RATE_54M:
--- 
-1.9.1
+johannes
 
