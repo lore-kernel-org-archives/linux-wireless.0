@@ -1,56 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10483 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbaEWI1H (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:38261 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752407AbaEGTxn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 04:27:07 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 23 May 2014 11:27:01 +0300
-In-Reply-To: <1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 15 May 2014 10:42:02 +0200")
-Message-ID: <87oayovr1m.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_102713_651362_47D8CDD2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 7 May 2014 15:53:43 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x12so1531754wgg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:42 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/23] iwlwifi: mvm: rs: don't allow TPC when power save is disabled
+Date: Wed,  7 May 2014 22:52:43 +0300
+Message-Id: <1399492380-12050-6-git-send-email-egrumbach@gmail.com> (sfid-20140507_215439_335410_8C5A1070)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Eyal Shapira <eyal@wizery.com>
 
-> This makes sure no further tx requests are
-> submitted to HTT before driver teardown.
->
-> This should prevent invalid pointer/NULL
-> dereference on htt tx pool in ath10k_htt_tx() in
-> some cases of heavy traffic.
->
-> Reported-By: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Currently we were checking only if the driver power_scheme is set
+to CAM. TPC shouldn't be enabled also when disabling powersave on the
+interface (e.g. iw wlan0 set power_save off)
+which may occur even if power_scheme wasn't set to CAM.
 
-[...]
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2289,6 +2289,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
->  /*
->   * Initialize various parameters with default vaules.
->   */
-> +static void ath10k_drain_tx(struct ath10k *ar)
-> +{
-> +	/* workers can hold conf_mutex -- avoid deadlock */
-> +	WARN_ON(lockdep_is_held(&ar->conf_mutex));
-
-If CONFIG_LOCKDEP is disabled this will fail with:
-
-drivers/net/wireless/ath/ath10k/mac.c:2301:2: error: implicit declaration of function 'lockdep_is_held' [-Werror=implicit-function-declaration]
-
-I wasn't able to come up with any other way than adding '#ifdef
-CONFIG_LOCKDEP' which is quite ugly. What should we do?
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index a7ad532..32ac66b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1750,16 +1750,21 @@ static void rs_get_adjacent_txp(struct iwl_mvm *mvm, int index,
+ 		*stronger = TPC_INVALID;
+ }
+ 
+-static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct rs_rate *rate,
+-			   enum ieee80211_band band)
++static bool rs_tpc_allowed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			   struct rs_rate *rate, enum ieee80211_band band)
+ {
+ 	int index = rate->index;
++	bool cam = (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM);
++	bool sta_ps_disabled = (vif->type == NL80211_IFTYPE_STATION &&
++				!vif->bss_conf.ps);
+ 
++	IWL_DEBUG_RATE(mvm, "cam: %d sta_ps_disabled %d\n",
++		       cam, sta_ps_disabled);
+ 	/*
+ 	 * allow tpc only if power management is enabled, or bt coex
+ 	 * activity grade allows it and we are on 2.4Ghz.
+ 	 */
+-	if (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM &&
++	if ((cam || sta_ps_disabled) &&
+ 	    !iwl_mvm_bt_coex_is_tpc_allowed(mvm, band))
+ 		return false;
+ 
+@@ -1876,7 +1881,7 @@ static bool rs_tpc_perform(struct iwl_mvm *mvm,
+ 		band = chanctx_conf->def.chan->band;
+ 	rcu_read_unlock();
+ 
+-	if (!rs_tpc_allowed(mvm, rate, band)) {
++	if (!rs_tpc_allowed(mvm, vif, rate, band)) {
+ 		IWL_DEBUG_RATE(mvm,
+ 			       "tpc is not allowed. remove txp restrictions");
+ 		lq_sta->lq.reduced_tpc = TPC_NO_REDUCTION;
 -- 
-Kalle Valo
+1.8.3.2
+
