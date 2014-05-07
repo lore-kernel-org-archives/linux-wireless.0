@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46799 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbaEIK2Z (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:49443 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbaEGTyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 06:28:25 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Sachin Ahuja <sahuja@codeaurora.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2] cfg80211: avoid restoring the regulatory during disconnect
-Date: Fri, 9 May 2014 15:58:47 +0530
-Message-ID: <1399631327-23379-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140509_122831_947693_02A0612A)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 7 May 2014 15:54:07 -0400
+Received: by mail-wg0-f49.google.com with SMTP id m15so1540542wgh.32
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:54:06 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/23] iwlwifi: mvm: implement mac80211's flush callback
+Date: Wed,  7 May 2014 22:52:58 +0300
+Message-Id: <1399492380-12050-21-git-send-email-egrumbach@gmail.com> (sfid-20140507_215435_204387_D89B8712)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sachin Ahuja <sahuja@codeaurora.org>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-When STA disconnects, cfg80211 restores the regulatory setting
-to world domain. For the drivers that ignore country ie, cfg80211
-should remain in the default country code which is configured
-at driver load and should do not be restored to world reg domain.
+This allows mac80211 to flush the Tx queues before it sends
+critical management frames.
 
-Signed-off-by: Sachin Ahuja <sahuja@codeaurora.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v2: Removed is_all_countryie_ignore
- net/wireless/sme.c | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 4bc21a2..1b771a8 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -558,10 +558,30 @@ static bool cfg80211_is_all_idle(void)
- 	return is_all_idle;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 3462624..6713b87 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2400,6 +2400,34 @@ out_unlock:
+ 	mutex_unlock(&mvm->mutex);
  }
  
-+static bool cfg80211_is_all_countryie_ignore(void)
++static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif, u32 queues, bool drop)
 +{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_mvm_vif *mvmvif;
++	struct iwl_mvm_sta *mvmsta;
 +
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		list_for_each_entry(wdev, &rdev->wdev_list, list) {
-+			wdev_lock(wdev);
-+			if (!(wdev->wiphy->regulatory_flags &
-+			      REGULATORY_COUNTRY_IE_IGNORE)) {
-+				wdev_unlock(wdev);
-+				return false;
-+			}
-+			wdev_unlock(wdev);
-+		}
++	if (!vif || vif->type != NL80211_IFTYPE_STATION)
++		return;
++
++	mutex_lock(&mvm->mutex);
++	mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, mvmvif->ap_sta_id);
++
++	if (WARN_ON_ONCE(!mvmsta))
++		goto done;
++
++	if (drop) {
++		if (iwl_mvm_flush_tx_path(mvm, mvmsta->tfd_queue_msk, true))
++			IWL_ERR(mvm, "flush request fail\n");
++	} else {
++		iwl_trans_wait_tx_queue_empty(mvm->trans,
++					      mvmsta->tfd_queue_msk);
 +	}
-+	return true;
++done:
++	mutex_unlock(&mvm->mutex);
 +}
 +
- static void disconnect_work(struct work_struct *work)
- {
- 	rtnl_lock();
--	if (cfg80211_is_all_idle())
-+	if (cfg80211_is_all_idle() &&
-+	    !cfg80211_is_all_countryie_ignore())
- 		regulatory_hint_disconnect();
- 	rtnl_unlock();
- }
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -2423,6 +2451,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.sta_rc_update = iwl_mvm_sta_rc_update,
+ 	.conf_tx = iwl_mvm_mac_conf_tx,
+ 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
++	.flush = iwl_mvm_mac_flush,
+ 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
+ 	.sched_scan_stop = iwl_mvm_mac_sched_scan_stop,
+ 	.set_key = iwl_mvm_mac_set_key,
 -- 
-1.9.2
+1.8.3.2
 
