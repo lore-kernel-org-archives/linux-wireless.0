@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:50171 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759833AbaEMJJt (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49627 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932607AbaEGLuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 05:09:49 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h3so132206igd.8
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 02:09:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140513090056.GA31546@qca.qualcomm.com>
-References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
-	<20140507195435.GF20432@tuxdriver.com>
-	<536A9479.8010201@openwrt.org>
-	<20140512174910.GM17022@tuxdriver.com>
-	<53711646.1030909@openwrt.org>
-	<CANq1E4Seak3MoBVdQTV7afFHQWmir14DJCQe_knjhC8szp4EhA@mail.gmail.com>
-	<20140513090056.GA31546@qca.qualcomm.com>
-Date: Tue, 13 May 2014 11:09:48 +0200
-Message-ID: <CANq1E4QY+mSeMJx0ctWvAdmrsONCFaD+6268HnuowMKOM2FdFQ@mail.gmail.com> (sfid-20140513_110957_930539_187BA736)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in
- hw_per_calibration() for ar9002
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 May 2014 07:50:17 -0400
+Message-ID: <1399463403.10517.24.camel@jlt4.sipsolutions.net> (sfid-20140507_135022_450001_6BBDB3E5)
+Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Date: Wed, 07 May 2014 13:50:03 +0200
+In-Reply-To: <CA+BoTQ=uNCVZcacg32nTp2i7gu2RcZQbbe4nw5_sCBANHHTY0A@mail.gmail.com> (sfid-20140507_134302_986939_8FBBE0E6)
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
+	 <1399387345.4218.44.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=FqfB46Bd6iC3F=Ps=b4f6CP77p5d6f4fiVLUttCYQjg@mail.gmail.com>
+	 <1399449912.5038.7.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnJ7N=UtDu_tySg8uYrQg9i+BvuYrwez7x-LUVinroWDw@mail.gmail.com>
+	 <1399453631.10517.10.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmygnk161oi=AUwfFM4U-r8TxuJVcHPMbsOG+QCzB03hQ@mail.gmail.com>
+	 <1399461426.10517.16.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=uNCVZcacg32nTp2i7gu2RcZQbbe4nw5_sCBANHHTY0A@mail.gmail.com>
+	 (sfid-20140507_134302_986939_8FBBE0E6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Wed, 2014-05-07 at 13:43 +0200, Michal Kazior wrote:
 
-On Tue, May 13, 2014 at 11:00 AM, Rajkumar Manoharan
-<rmanohar@qti.qualcomm.com> wrote:
-> On Tue, May 13, 2014 at 08:50:00AM +0200, David Herrmann wrote:
->> Hi
->>
->> On Mon, May 12, 2014 at 8:43 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> > I looked into it again, the scenario where I assumed that this problem
->> > could occur didn't turn out to be true. I have no idea how this crash
->> > can occur.
->>
->> The only path that can set ah->caldata to NULL is through:
->>
->> ieee80211_hw_config()
->>   ath9k_htc_config()
->>     ath9k_htc_set_channel()
->>       ath9k_hw_reset()
->>
->> This happens whenever IEEE80211_CONF_OFFCHANNEL is set.
->>
->> Now mac80211 is way to big for me to review right now and
->> ieee80211_hw_config() is used quite often. Given that the described
->> call-path does no synchronization against ath9k_htc_ani_work(), all
->> the callers of mac80211_hw_config(OFFCHANNEL) must guarantee that no
->> ani-work is running. Is that intentional? I cannot see any of those
->> functions calling into ath9k_htc_stop_ani(). This might of course be
->> implicit.
->>
->> One call-path I see is:
->> ieee80211_scan_cancel()
->>   cancel_delayed_work()
->>
->> We cannot use cancel_delayed_work_sync() here due to locking issues.
->> However, this obviously races against any following
->> set_channel(OFFCHANNEL) request.
->>
->> If there's anything I can do to debug this, let me know. I tried
->> adding some printk()'s into the hot-path and it turns out to no longer
->> fail then. So this really seems to be a quite small race (given that a
->> bunch of simple printk()s is slow enough to work around it).
->
-> David,
->
-> Are you using USB devices? What is the PID/VID? I have not looked at
-> HTC driver perspective.
+> We can't really guarantee how long we'll need to stop beaconing for.
+> 
+> Assume: AP+STA. Start AP CSA bcn_int=100ms, cs_count=5. While CSA
+> progresses STA receives cs_count=100 (with bcn_int=100ms).
+> 
+> This is all theory and in practice you won't get cs_count that big and
+> the lag greater shouldn't be greater than 5 or 6 beacon intervals. Is
+> that an "extended" period of time? I don't know. Should we even worry
+> about this? I don't think so.
 
-Yes, I'm using the htc driver. I thought that was clear by pointing at
-ar9002, but I was wrong, sorry. lsusb information is:
-  'Bus 003 Device 056: ID 0411:017f BUFFALO INC. (formerly MelCo.,
-Inc.) Sony UWA-BR100 802.11abgn Wireless Adapter [Atheros
-AR7010+AR9280]'
+I'm not sure why we'd even allow this to start with though. We should be
+able to sync it to 1 beacon interval, it seems? Particularly if we start
+the switches together.
 
-Thanks
-David
+> > Multi-BSS I totally see, but if you're trying to do that with different
+> > beacon intervals you're probably in a world of pain already - not sure
+> > we should support that to start with...
+> 
+> You still can have different TBTTs across your AP vifs. ath10k does
+> this, although it should be possible to force it to beacon in bursts.
+
+True, but then you'd still technically have a single point where the
+switch can happen, without missing a beat (beacon)
+
+> > AP/GO-follows-STA I can also see, due to regulatory and concurrent
+> > BSS/P2P usage.
+> >
+> > As for those other cases, are they really relevant?
+> 
+> I think I lost track of the point of the discussion at some point :-)
+> Weren't we discussing csa_active?
+
+:)
+
+johannes
+
