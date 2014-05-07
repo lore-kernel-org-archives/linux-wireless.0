@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:40896 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbaEBGs0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 02:48:26 -0400
-Received: by mail-pd0-f182.google.com with SMTP id v10so4213717pde.41
-        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 23:48:26 -0700 (PDT)
-Received: from mail.pileus.org (76-219-180-192.lightspeed.irvnca.sbcglobal.net. [76.219.180.192])
-        by mx.google.com with ESMTPSA id xg8sm175477322pac.26.2014.05.01.23.48.21
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 01 May 2014 23:48:22 -0700 (PDT)
-Received: from andy by mail.pileus.org with local (Exim 4.80.1)
-	(envelope-from <andy@pileus.org>)
-	id 1Wg7GX-00084N-VB
-	for linux-wireless@vger.kernel.org; Fri, 02 May 2014 06:48:13 +0000
-Date: Fri, 2 May 2014 06:48:13 +0000
-From: Andy Spencer <andy753421@ucla.edu>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] RTL8192CU: Increase max APFM_ONMAC polling count
-Message-ID: <20140502064813.GA30179@pileus.org> (sfid-20140502_084834_917808_3CDB1FAA)
+Received: from dedo.coelho.fi ([88.198.205.34]:42405 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755607AbaEGLYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 07:24:52 -0400
+In-Reply-To: <1399460994.10517.13.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com> <1398849681-3606-1-git-send-email-michal.kazior@tieto.com> <1399372915.4218.17.camel@jlt4.sipsolutions.net> <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com> <1399385141.4218.37.camel@jlt4.sipsolutions.net> <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com> <1399454858.6800.1.camel@dubbel> <1399460994.10517.13.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=UTF-8
+From: Luca Coelho <luca@coelho.fi>
+Date: Wed, 07 May 2014 14:24:36 +0300
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Message-ID: <d70278d8-0bda-45f3-89d4-ab970d7a868b@email.android.com> (sfid-20140507_132455_765211_0208266D)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With certain hardware combinations the poll interval is exceeded before
-initialization completes.
+On May 7, 2014 2:09:54 PM EEST, Johannes Berg <johannes@sipsolutions.net> wrote:
+>On Wed, 2014-05-07 at 12:27 +0300, Luca Coelho wrote:
+>
+>> > > It's a separate issue really - but sure: the iwlwifi firmware API
+>will
+>> > > likely not allow doing such trickery in the IBSS case, so we
+>should have
+>> > > a bitmap of supported interface types (e.g.
+>BIT(NL80211_IFTYPE_STATION)
+>> > > | ...) for the channel switch operation.
+>> > 
+>> > Ah, I get it now. Thanks.
+>> 
+>> I guess this should be done when the actual support for AP, STATION
+>and
+>> so on is added? For example, add the station flag with the "mac80211:
+>> use chanctx reservation for STA CSA" patch and so on...
+>
+>I don't know if we really want separate flags, rather than maybe a new
+>field with an interface types supported bitmap?
 
-Tested on a MacBookPro10,1 using a Sabrent USB-A11N USB adapter.
+Yes, that's what I had in mind too (as we discussed offline). I meant STA, AP etc. flags in this new bitmask, not in the existing HW_CONF stuff.
 
-Signed-off-by: Andy Spencer <andy753421@ucla.edu>
----
-I was unable to reproduce this issue using other hardware combinations.
-I thought it might be a USB3 issue but another laptop with USB3 worked
-without the patch.
+--
+Luca.
 
-With my hardware the polling count reaches around 230 before
-initialization completes.
 
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -511,7 +511,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 			pr_info("MAC auto ON okay!\n");
- 			break;
- 		}
--		if (pollingCount++ > 100) {
-+		if (pollingCount++ > 1000) {
- 			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
- 				 "Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
- 			return -ENODEV;
