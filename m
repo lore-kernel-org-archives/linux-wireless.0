@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:45154 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157AbaEGMMR convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:58254 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbaEGTxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 08:12:17 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f8so1189489wiw.16
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 05:12:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1399463403.10517.24.camel@jlt4.sipsolutions.net>
-References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-	<1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
-	<1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
-	<1399387345.4218.44.camel@jlt4.sipsolutions.net>
-	<CA+BoTQ=FqfB46Bd6iC3F=Ps=b4f6CP77p5d6f4fiVLUttCYQjg@mail.gmail.com>
-	<1399449912.5038.7.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnJ7N=UtDu_tySg8uYrQg9i+BvuYrwez7x-LUVinroWDw@mail.gmail.com>
-	<1399453631.10517.10.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmygnk161oi=AUwfFM4U-r8TxuJVcHPMbsOG+QCzB03hQ@mail.gmail.com>
-	<1399461426.10517.16.camel@jlt4.sipsolutions.net>
-	<CA+BoTQ=uNCVZcacg32nTp2i7gu2RcZQbbe4nw5_sCBANHHTY0A@mail.gmail.com>
-	<1399463403.10517.24.camel@jlt4.sipsolutions.net>
-Date: Wed, 7 May 2014 14:12:16 +0200
-Message-ID: <CA+BoTQk3EHR3kYQV+FUjOgp+O7vd+zp3FMeiN2LvS4zS_zEWwA@mail.gmail.com> (sfid-20140507_141222_741138_5D6B1FF3)
-Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 May 2014 15:53:34 -0400
+Received: by mail-wi0-f170.google.com with SMTP id bs8so6500744wib.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:33 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/23] iwlwifi: mvm: BT Coex - fix validity flags during init
+Date: Wed,  7 May 2014 22:52:39 +0300
+Message-Id: <1399492380-12050-2-git-send-email-egrumbach@gmail.com> (sfid-20140507_215449_711051_A966B61E)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2014 13:50, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-05-07 at 13:43 +0200, Michal Kazior wrote:
->
->> We can't really guarantee how long we'll need to stop beaconing for.
->>
->> Assume: AP+STA. Start AP CSA bcn_int=100ms, cs_count=5. While CSA
->> progresses STA receives cs_count=100 (with bcn_int=100ms).
->>
->> This is all theory and in practice you won't get cs_count that big and
->> the lag greater shouldn't be greater than 5 or 6 beacon intervals. Is
->> that an "extended" period of time? I don't know. Should we even worry
->> about this? I don't think so.
->
-> I'm not sure why we'd even allow this to start with though. We should be
-> able to sync it to 1 beacon interval, it seems? Particularly if we start
-> the switches together.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-There's no guarantee your AP and STA's AP will finish CSA in sync. So
-you either (1) prolong your stay on the (old) channel until STA's AP
-completes CSA, or (2) you switch your STA interface prematurely, (3)
-or you simply disconnect STA interface if you can't have a really
-tight sync.
+The commit below introduced a bug in the validity bits in
+init. Due to that, all the Coex mechanism stopped sending
+kills to the BT side. Fix that.
 
+Fixes: b9fae2d54c9f ("iwlwifi: mvm: BT Coex add support for Co-running block")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index fa858d54..0489314 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -611,14 +611,14 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
+ 
+ 	if (IWL_MVM_BT_COEX_CORUNNING) {
+-		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_CORUN_LUT_20 |
+-						    BT_VALID_CORUN_LUT_40);
++		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_CORUN_LUT_20 |
++						     BT_VALID_CORUN_LUT_40);
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_CORUNNING);
+ 	}
+ 
+ 	if (IWL_MVM_BT_COEX_MPLUT) {
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_MPLUT);
+-		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
++		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
+ 	}
+ 
+ 	if (mvm->cfg->bt_shared_single_ant)
+-- 
+1.8.3.2
+
