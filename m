@@ -1,77 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46475 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbaEVTaS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844AbaEGMN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 15:30:18 -0400
-Date: Thu, 22 May 2014 15:22:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rick Farina <sidhayn@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on regulatory settings.
-Message-ID: <20140522192249.GF12779@tuxdriver.com> (sfid-20140522_213023_004453_838FEFD9)
-References: <537E2ABB.6030302@candelatech.com>
- <537E36E3.6040205@candelatech.com>
- <20140522183007.GE12779@tuxdriver.com>
- <537E4C81.3060001@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <537E4C81.3060001@gmail.com>
+	Wed, 7 May 2014 08:13:28 -0400
+Message-ID: <1399464789.10517.29.camel@jlt4.sipsolutions.net> (sfid-20140507_141331_481203_12B8434F)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 14:13:09 +0200
+In-Reply-To: <1399464536.6800.11.camel@dubbel>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <1399455657.6800.4.camel@dubbel>
+	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	 <1399457760.6800.7.camel@dubbel>
+	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	 <1399464536.6800.11.camel@dubbel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2014 at 03:14:09PM -0400, Rick Farina wrote:
-> 
-> 
-> On 05/22/2014 02:30 PM, John W. Linville wrote:
-> > On Thu, May 22, 2014 at 10:41:55AM -0700, Ben Greear wrote:
-> >> On 05/22/2014 09:50 AM, Ben Greear wrote:
-> >>> Hello!
-> >>>
-> >>> I'm having issues where when we add several ath10k NICs to a system,
-> >>> the regulatory domain goes quite restricted..  There is an ath9k NIC
-> >>> with eeprom over-ride hack, and user-space sets regdomain to 'US'.
-> >>>
-> >>> Later, when registering ath10k, at least one of those NICs registeres
-> >>> as 'TW'.  The ending domain looks like this:
-> >>>
-> >>> [root@lf1011-13060017 ~]# iw reg get
-> >>> country 98: DFS-UNSET
-> >>> 	(2402 - 2472 @ 40), (N/A, 30)
-> >>> 	(5270 - 5330 @ 40), (N/A, 17), DFS
-> >>> 	(5735 - 5835 @ 80), (N/A, 30)
-> >>>
-> >>>
-> >>> I tried adding a hack to ath10k to zero out the ar->ath_common.regulatory.current_rd,
-> >>> but in fact it seems to be reported as zero to begin with.
-> >>>
-> >>> I am obviously missing something.  Either my hacks to ath10k are not
-> >>> sufficient, or possibly the system is getting regulatory info from
-> >>> somewhere else?
-> >>>
-> >>> Any ideas where else it might be getting the idea it should be in TW
-> >>> domain?  Can it get this from beacons from other systems?
-> > 
-> > FWIW, yes it can get this information from beacons.
-> > 
-> >> Ahh, sneaky nasty code....it was being set based on the timezone
-> >> of all things!
-> > 
-> > You're welcome... ;-)
-> 
-> To be fair, when I travel I rarely set my timezone at all, and when I do
-> I normally make sure the offset is right and not much else.  It's easily
-> possible to have timezone set for a country you aren't in just because
-> the offset matches.
-> 
-> I'm not saying I have a better idea, but I am saying that timezone is
-> very unreliable to determine position.
+On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
 
-Yes, but no less reliable than nothing at all.  And if you _do_
-set it properly, so much the better.
+> I was thinking about the case where you you need to involve 3 contexts.
+> Let's say you have 2 vifs in the same context and after the switch you
+> need to split them into 2 new ones (for instance, if there is some
+> incompatibility in the new chandefs).
+> 
+> With the generic transactions you could do:
+>  - new chanctx2
+>  - new chanctx3
+>  - switch vif1 chanctx1->chanctx2
+>  - switch vif2 chanctx1->chanctx3
+>  - del chanctx1
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This isn't an interesting case, because it means you have a spare, so
+you might as well do
+
+ new chanctx3
+ switch vif2 chanctx1->chanctx3
+ switch_transaction(chanctx1, chanctx2, vif1)
+
+johannes
+
