@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:58080 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbaETILn (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:45047 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472AbaEGNHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 04:11:43 -0400
-Received: from [99.240.204.5] (port=35556 helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.80)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1Wmeq1-0003sF-P6
-	for linux-wireless@vger.kernel.org; Tue, 20 May 2014 03:51:53 -0400
-Date: Tue, 20 May 2014 03:49:21 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: linux-wireless@vger.kernel.org
-Subject: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still being
- compiled?
-Message-ID: <alpine.LFD.2.11.1405200342050.10462@localhost> (sfid-20140520_101149_157876_1874D563)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Wed, 7 May 2014 09:07:12 -0400
+Received: by mail-ee0-f44.google.com with SMTP id c41so740167eek.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 06:07:10 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, apenwarr@gmail.com,
+	greearb@candelatech.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/2] ath10k: 2014-05-07 fixes
+Date: Wed,  7 May 2014 14:33:24 +0200
+Message-Id: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com> (sfid-20140507_150717_252316_DCBFCD54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-  quite possibly a silly question (which has never stopped me before),
-but in perusing the PCIE code in the kernel source, i was looking for
-sample code to demo in a classroom setting and picked on
-drivers/net/wireless/iwlwifi/pcie, which i was *assuming* was
-PCIE-dependent -- specifically, i was going to demo the Advanced-N
-6235 PCIE wifi card on an intel galileo board.
+These 2 patches address kernel panics reported by
+Avery recently. One of them was most likely
+reported by Ben some time ago already.
 
-  but i thought it was a bit strange that the pcie/ subdirectory there
-doesn't seem to depend on PCIEPORTBUS. as a test, i deselected
-PCIEPORTBUS in a configuration and did a rebuild, and the source in
-the pcie/ directory was recompiled.
+I've never seen these panics myself. It'd be great
+if you guys could give it a try and (assuming
+you're capable of reproducing) see if it actually
+helps.
 
-  am i misunderstanding the function of the kernel config variable
-PCIEPORTBUS? i notice that .../iwlwifi/Makefile includes the line:
 
-  iwlwifi-objs  += pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+Michal Kazior (2):
+  ath10k: fix htt rx ring clean up
+  ath10k: fix handling of wierd MSDU chaining cases
 
-which simply compiles those files with no regard to dependency. can
-someone clarify this? thanks.
-
-rday
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 56 +++++++++++++++++++++++---------
+ 1 file changed, 40 insertions(+), 16 deletions(-)
 
 -- 
+1.8.5.3
 
-========================================================================
-Robert P. J. Day                                 Ottawa, Ontario, CANADA
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
