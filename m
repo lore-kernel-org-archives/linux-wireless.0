@@ -1,109 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37515 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751635AbaERHSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2014 03:18:22 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] cfg80211: allow RSSI compensation
-Date: Sun, 18 May 2014 10:15:24 +0300
-Message-Id: <1400397324-8153-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140518_091825_554950_EDE1479D)
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:41827 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755316AbaEGKir convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 06:38:47 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so4323018wib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 03:38:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399457760.6800.7.camel@dubbel>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	<1399455657.6800.4.camel@dubbel>
+	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	<1399457760.6800.7.camel@dubbel>
+Date: Wed, 7 May 2014 12:38:45 +0200
+Message-ID: <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com> (sfid-20140507_123851_059266_B882E586)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channels in 2.4GHz band overlap, this means that if we
-send a probe request on channel 1 and then move to channel
-2, we will hear the probe response on channel 2. In this
-case, the RSSI will be lower than if we had heard it on
-the channel on which it was sent (1 in this case).
+On 7 May 2014 12:16, Luca Coelho <luca@coelho.fi> wrote:
+> On Wed, 2014-05-07 at 12:02 +0200, Michal Kazior wrote:
+>> On 7 May 2014 11:40, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Wed, 2014-05-07 at 10:07 +0200, Johannes Berg wrote:
+>> >> On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
+>> >>
+>> >> > Hmm... Now that I think about the atomic swap - it actually becomes a
+>> >> > little bit of an issue in some cases.
+>> >> >
+>> >> > For one you might need to overcommit number of chanctx since swapping
+>> >> > requires both chanctx (old and new) to exist but that's the least of
+>> >> > the eproblem. If you have more than one interface you end up with
+>> >> > temporarily breaking interface combinations from driver point of view
+>> >> > while switching (first swap breaks it, last swap fixes it). Driver
+>> >> > won't know whether given swap is first/last unless we somehow pass it
+>> >> > through the switch_vif_chanctx(). IOW we actually need a "chanctx
+>> >> > transaction" (sort of a start-stop) that can batch up a couple of
+>> >> > chanctx switches for different vifs as an atomic op.
+>> >>
+>> >> Hmmm. Don't you already have that problem? Or you don't because you'd do
+>> >>
+>> >> for_each_affected_vif: unassign
+>> >> del chanctx [optional depending on reservation]
+>> >> add chanctx [ditto]
+>> >> for_each_affected_vif: assign
+>> >>
+>> >> right now?
+>> >>
+>> >> I suppose a sort of transaction API, if designed the right way, would
+>> >> also work somehow - Luca?
+>> >
+>> > Yeah, I think this is a good idea.  If we have an atomic transaction API
+>> > towards the driver, we can solve the problems of switching several vifs
+>> > at once.
+>>
+>> Hmm.. I assume all chanctx calls would be subject to the transaction
+>> API, i.e. add_chanctx/remove_chanctx/switch_vif_chanctx/change_chanctx.
+>> Then all calls except begin/commit would return void - I guess this
+>> could make handling errors a little saner.
+>>
+>> Another approach would be to merge all separate chanctx ops into a
+>> single one. This would have the benefit of providing driver all
+>> information in one place and possibly making it easier to handle
+>> errors internally (due to single function flow instead of having stuff
+>> all over the place). But I imagine this could become a little
+>> ambiguous in some parameter combinations. Any thoughts?
+>
+> I think the latter is a better option.  Instead of having multiple calls
+> and requiring the driver to save all the new information until it's
+> committed (as would be the case with the first approach), the driver
+> would have all the information it needs at once.
+>
+> Maybe you could have a single function call with an array of
+> transactions?
 
-The firmware / low level driver can parse the channel in
-the DS IE or HT IE and compensate the RSSI so that it will
-still have a valid value even if we heard the frame on an
-adjacent channel. This can be done up to a certain offset.
+Hmm..
 
-Add this offset as a configuration for the low level driver.
-A low level driver that can compensate the low RSSI in this
-case should assign the maximal offset for which the RSSI
-value is still valid.
+I was actually thinking of just providing the bare minimum to fulfill
+requirements for the CSA case: int foo(*hw, **vifs, n_vifs, *oldctx,
+*newctx, flags).
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/cfg80211.h |  7 +++++++
- net/wireless/scan.c    | 12 ++++++++----
- 2 files changed, 15 insertions(+), 4 deletions(-)
+Having an array of transactions passed through a single call seems
+more robust and cleaner. Naiive drivers might just iterate over each
+entry while more complex drivers might examine the whole request and
+detect chanctx swapping.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ef56b8b..a7facad 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2934,6 +2934,12 @@ struct wiphy_vendor_command {
-  *	(including P2P GO) or 0 to indicate no such limit is advertised. The
-  *	driver is allowed to advertise a theoretical limit that it can reach in
-  *	some cases, but may not always reach.
-+ * @max_adj_channel_rssi_comp: max offset of between the channel on which the
-+ *	frame was sent and the channel on which the frame was heard for which
-+ *	the reported rssi is still valid. If a driver is able to compensate the
-+ *	low rssi when a frame is heard on different channel, then it should set
-+ *	this variable to the maximal offset for which it can compensate.
-+ *	This value should be set in MHz.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -3077,6 +3083,7 @@ struct wiphy {
- 	 * csa counters. Default (0) means infinite.
- 	 */
- 	u8 max_num_csa_counters;
-+	u8 max_adj_channel_rssi_comp;
- 
- 	char priv[0] __aligned(NETDEV_ALIGN);
- };
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 52a122f..f93b7fa 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -892,6 +892,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
- 	struct cfg80211_bss_ies *ies;
- 	struct ieee80211_channel *channel;
- 	struct cfg80211_internal_bss tmp = {}, *res;
-+	bool signal_valid;
- 
- 	if (WARN_ON(!wiphy))
- 		return NULL;
-@@ -928,8 +929,9 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
- 	rcu_assign_pointer(tmp.pub.beacon_ies, ies);
- 	rcu_assign_pointer(tmp.pub.ies, ies);
- 
--	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp,
--				  rx_channel == channel);
-+	signal_valid = abs(rx_channel->center_freq - channel->center_freq) <=
-+		wiphy->max_adj_channel_rssi_comp;
-+	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
- 	if (!res)
- 		return NULL;
- 
-@@ -953,6 +955,7 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
- 	struct cfg80211_internal_bss tmp = {}, *res;
- 	struct cfg80211_bss_ies *ies;
- 	struct ieee80211_channel *channel;
-+	bool signal_valid;
- 	size_t ielen = len - offsetof(struct ieee80211_mgmt,
- 				      u.probe_resp.variable);
- 
-@@ -1000,8 +1003,9 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
- 	tmp.pub.beacon_interval = le16_to_cpu(mgmt->u.probe_resp.beacon_int);
- 	tmp.pub.capability = le16_to_cpu(mgmt->u.probe_resp.capab_info);
- 
--	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp,
--				  rx_channel == channel);
-+	signal_valid = abs(rx_channel->center_freq - channel->center_freq) <=
-+		wiphy->max_adj_channel_rssi_comp;
-+	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
- 	if (!res)
- 		return NULL;
- 
--- 
-1.8.3.2
 
+Michał
