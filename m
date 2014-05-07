@@ -1,49 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:65102 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbaEJQMQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2014 12:12:16 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wo20so6281901obc.34
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 09:12:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140510171721.54b21a63@wiggum>
-References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
-	<20140510171721.54b21a63@wiggum>
-Date: Sat, 10 May 2014 18:12:15 +0200
-Message-ID: <CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com> (sfid-20140510_181222_723826_A6AABC3A)
-Subject: Re: [RFC][PATCH] b43: drop SSB dependency
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:42536 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755895AbaEGNKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 09:10:35 -0400
+Message-ID: <1399468226.6800.25.camel@dubbel> (sfid-20140507_151037_626331_BCF1B56B)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 16:10:26 +0300
+In-Reply-To: <1399467968.10517.39.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <1399455657.6800.4.camel@dubbel>
+	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	 <1399457760.6800.7.camel@dubbel>
+	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	 <1399464536.6800.11.camel@dubbel>
+	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
+	 <1399465244.6800.13.camel@dubbel>
+	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
+	 <1399467196.6800.22.camel@dubbel>
+	 <1399467968.10517.39.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 May 2014 17:17, Michael Büsch <m@bues.ch> wrote:
-> On Sat, 10 May 2014 16:44:48 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->> +config B43_BUSES_BCMA_AND_SSB
->> +     bool "BCMA and SSB"
->> +     depends on BCMA_POSSIBLE && SSB_POSSIBLE
->
-> I think this needs to be:
->
->         depends on (BCMA_POSSIBLE && (BCMA = y || BCMA = B43)) && (SSB_POSSIBLE && (SSB = y || SSB = B43))
->
-> to avoid the case where b43 is y and ssb or bcma is m.
-> Or did I miss something and this is caught elsewhere?
+On Wed, 2014-05-07 at 15:06 +0200, Johannes Berg wrote:
+> On Wed, 2014-05-07 at 15:53 +0300, Luca Coelho wrote:
+> 
+> > > > >  new chanctx3
+> > > > >  switch vif2 chanctx1->chanctx3
+> > > > >  switch_transaction(chanctx1, chanctx2, vif1)
+> > > > 
+> > > > Couldn't this potentially break the combinations temporarily again?
+> > > 
+> > > I don't see why? You had a spare channel context to start with,
+> > > otherwise you'd never have accepted this situation. Therefore, you can
+> > > use the spare one before actually doing the proposed
+> > > switch_vif_chanctx().
+> > 
+> > It's not about the spare, it's about having this temporarily:
+> > 
+> > chanctx3-vif2
+> > chanctx1-vif1
+> > 
+> > Can we be sure that chanctx1 with vif1 is compatible with chanctx3 with
+> > vif2? We only check chanctx2 with vif1 and chanctx3 with vif2, which is
+> > our final goal.
+> > 
+> > I'm not sure this is even possible, but it was something like this I had
+> > in mind.
+> 
+> Oh, I get it, you're thinking that there might be a situation where
+> those vif types are maybe not supported with different channels?
+> 
+> But in your example you're going from this situation:
+> 
+> chanctx1: vif1, vif2
+> 
+> to
+> 
+> chanctx2: vif1
+> chanctx3: vif2
+> 
+> 
+> The intermediate step that I proposed would give you
+> 
+> chanctx1: vif1
+> chanctx3: vif2
+> 
+> Which isn't really any different?
 
-Oh, wait, I think I meant B43_BUSES_BCMA_AND_SSB to select BCMA and
-SSB (so user doesn't have to enable BCMA and SSB on his own). It it
-the way it's handled without my patch (B43 select-s SSB).
+It could be different if the channel in chanctx1 requires radar and
+chanctx2 doesn't, couldn't it?
 
-I'd like to add
-select BCMA
-select SSB
-, but this won't guarantee BCMA (or SSB) being "y" after choosing B43
-to "y". Or will it?
 
-Any idea how to handle that?
+>  Maybe you could construct a more
+> difficult via situation though where it actually does end up with a
+> conflict - or can we prove that can't happen?
+
+I can't come up with good examples, but yeah, proving it *can't* happen
+would be good. :)
+
+--
+Luca.
+
