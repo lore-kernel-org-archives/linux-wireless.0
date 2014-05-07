@@ -1,112 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41474 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755443AbaEGPPW (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:34623 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbaEGTxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 11:15:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: wireless-regdb@lists.infradead.org
-Cc: =?UTF-8?q?Christian=20S=C3=BCnkenberg?=
-	<christian.suenkenberg@hfg-karlsruhe.de>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless-regdb: correct some flag damage...
-Date: Wed,  7 May 2014 11:02:00 -0400
-Message-Id: <1399474920-19147-1-git-send-email-linville@tuxdriver.com> (sfid-20140507_171530_829804_3D9E1F68)
-In-Reply-To: <20140507150032.GB20432@tuxdriver.com>
-References: <20140507150032.GB20432@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 May 2014 15:53:41 -0400
+Received: by mail-we0-f179.google.com with SMTP id q59so1500479wes.38
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:40 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/23] iwlwifi: mvm: rs: overhaul rs_get_best_rate
+Date: Wed,  7 May 2014 22:52:42 +0300
+Message-Id: <1399492380-12050-5-git-send-email-egrumbach@gmail.com> (sfid-20140507_215403_461013_81A2583F)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems that commit e56cd9618e3e ("wireless-regdb: remove antenna
-gain") accidentally dropped anything beyond the first flag in an entry.
-Subsequently, commit d806b5e3ba73 ("wireless-regdb: optimize two of
-DE's rules"), commit 788445b48c2e ("wireless-regdb: optimize two of
-IL's rules"), and commit 13286f2c259b ("wireless-regdb: optimize two
-of NL's rules") dutifully combined the newly/incorrectly compatible
-rules with their neighbors...
+From: Eyal Shapira <eyal@wizery.com>
 
-FWIW, this one-liner was used to find the entries that lost flags:
+rs_get_best_rate determines the optimal rate to try in a
+new Tx column. Currently we were sometimes trying a too high
+rate which would lead us to fail and avoid switching to the
+new column despite it having a potential to be better.
+Change the logic to try and find the first rate which would
+exceed the current actual throughput or be more aggressive
+if the success ratio is good.
 
-git show e56cd9618e3e | grep -n '^-[^,]*,[^,]*,[^,]*,[^,]*,'
-
-This patch corrects the damage above, including what is essentially
-a revert of the latter three commits.
-
-Reported-by: Christian Sünkenberg <christian.suenkenberg@hfg-karlsruhe.de>
-Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- db.txt | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 117 +++++++++-------------------------
+ 1 file changed, 31 insertions(+), 86 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index fcab208d1813..f4749c228cea 100644
---- a/db.txt
-+++ b/db.txt
-@@ -4,7 +4,7 @@ country 00:
- 	# Channel 12 - 13.
- 	(2457 - 2482 @ 40), (20), NO-IR
- 	# Channel 14. Only JP enables this and for 802.11b only
--	(2474 - 2494 @ 20), (20), NO-IR
-+	(2474 - 2494 @ 20), (20), NO-IR, NO-OFDM
- 	# Channel 36 - 48
- 	(5170 - 5250 @ 80), (20), NO-IR
- 	# NB: 5260 MHz - 5700 MHz requies DFS
-@@ -207,7 +207,7 @@ country CY: DFS-ETSI
- country CZ: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
--	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 80), (500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
-@@ -227,8 +227,10 @@ country CZ: DFS-ETSI
- country DE: DFS-ETSI
- 	# entries 279004 and 280006
- 	(2400 - 2483.5 @ 40), (100 mW)
--	# entry 303005, 304002 and 305002
--	(5150 - 5350 @ 80), (100 mW), NO-OUTDOOR
-+	# entry 303005
-+	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
-+	# entries 304002 and 305002
-+	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
- 	# entries 308002, 309001 and 310003
- 	(5470 - 5725 @ 80), (500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-@@ -277,7 +279,7 @@ country EG: DFS-ETSI
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
--	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 80), (500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
-@@ -398,7 +400,8 @@ country IE: DFS-ETSI
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index f9aab15..a7ad532 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1335,105 +1335,50 @@ static void rs_set_expected_tpt_table(struct iwl_lq_sta *lq_sta,
+ 	tbl->expected_tpt = rs_get_expected_tpt_table(lq_sta, column, rate->bw);
+ }
  
- country IL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5150 - 5350 @ 80), (200 mW), NO-OUTDOOR
-+	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS
+-/*
+- * Find starting rate for new "search" high-throughput mode of modulation.
+- * Goal is to find lowest expected rate (under perfect conditions) that is
+- * above the current measured throughput of "active" mode, to give new mode
+- * a fair chance to prove itself without too many challenges.
+- *
+- * This gets called when transitioning to more aggressive modulation
+- * (i.e. legacy to SISO or MIMO, or SISO to MIMO), as well as less aggressive
+- * (i.e. MIMO to SISO).  When moving to MIMO, bit rate will typically need
+- * to decrease to match "active" throughput.  When moving from MIMO to SISO,
+- * bit rate will typically need to increase, but not if performance was bad.
+- */
+ static s32 rs_get_best_rate(struct iwl_mvm *mvm,
+ 			    struct iwl_lq_sta *lq_sta,
+ 			    struct iwl_scale_tbl_info *tbl,	/* "search" */
+-			    u16 rate_mask, s8 index)
++			    unsigned long rate_mask, s8 index)
+ {
+-	/* "active" values */
+ 	struct iwl_scale_tbl_info *active_tbl =
+ 	    &(lq_sta->lq_info[lq_sta->active_tbl]);
+-	s32 active_sr = active_tbl->win[index].success_ratio;
+-	s32 active_tpt = active_tbl->expected_tpt[index];
+-	/* expected "search" throughput */
++	s32 success_ratio = active_tbl->win[index].success_ratio;
++	u16 expected_current_tpt = active_tbl->expected_tpt[index];
+ 	const u16 *tpt_tbl = tbl->expected_tpt;
+-
+-	s32 new_rate, high, low, start_hi;
+ 	u16 high_low;
+-	s8 rate = index;
+-
+-	new_rate = high = low = start_hi = IWL_RATE_INVALID;
+-
+-	while (1) {
+-		high_low = rs_get_adjacent_rate(mvm, rate, rate_mask,
+-						tbl->rate.type);
+-
+-		low = high_low & 0xff;
+-		high = (high_low >> 8) & 0xff;
+-
+-		/*
+-		 * Lower the "search" bit rate, to give new "search" mode
+-		 * approximately the same throughput as "active" if:
+-		 *
+-		 * 1) "Active" mode has been working modestly well (but not
+-		 *    great), and expected "search" throughput (under perfect
+-		 *    conditions) at candidate rate is above the actual
+-		 *    measured "active" throughput (but less than expected
+-		 *    "active" throughput under perfect conditions).
+-		 * OR
+-		 * 2) "Active" mode has been working perfectly or very well
+-		 *    and expected "search" throughput (under perfect
+-		 *    conditions) at candidate rate is above expected
+-		 *    "active" throughput (under perfect conditions).
+-		 */
+-		if ((((100 * tpt_tbl[rate]) > lq_sta->last_tpt) &&
+-		     ((active_sr > RS_SR_FORCE_DECREASE) &&
+-		      (active_sr <= IWL_RATE_HIGH_TH) &&
+-		      (tpt_tbl[rate] <= active_tpt))) ||
+-		    ((active_sr >= IWL_RATE_SCALE_SWITCH) &&
+-		     (tpt_tbl[rate] > active_tpt))) {
+-			/* (2nd or later pass)
+-			 * If we've already tried to raise the rate, and are
+-			 * now trying to lower it, use the higher rate. */
+-			if (start_hi != IWL_RATE_INVALID) {
+-				new_rate = start_hi;
+-				break;
+-			}
+-
+-			new_rate = rate;
++	u32 target_tpt;
++	int rate_idx;
  
- country IN: DFS-JP
- 	(2402 - 2482 @ 40), (20)
-@@ -574,7 +577,8 @@ country MX: DFS-FCC
+-			/* Loop again with lower rate */
+-			if (low != IWL_RATE_INVALID)
+-				rate = low;
++	if (success_ratio > RS_SR_NO_DECREASE) {
++		target_tpt = 100 * expected_current_tpt;
++		IWL_DEBUG_RATE(mvm,
++			       "SR %d high. Find rate exceeding EXPECTED_CURRENT %d\n",
++			       success_ratio, target_tpt);
++	} else {
++		target_tpt = lq_sta->last_tpt;
++		IWL_DEBUG_RATE(mvm,
++			       "SR %d not thag good. Find rate exceeding ACTUAL_TPT %d\n",
++			       success_ratio, target_tpt);
++	}
  
- country NL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5330 @ 80), (20), NO-OUTDOOR
-+	(5170 - 5250 @ 80), (20), NO-OUTDOOR
-+	(5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS
- 	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+-			/* Lower rate not available, use the original */
+-			else
+-				break;
++	rate_idx = find_first_bit(&rate_mask, BITS_PER_LONG);
+ 
+-		/* Else try to raise the "search" rate to match "active" */
+-		} else {
+-			/* (2nd or later pass)
+-			 * If we've already tried to lower the rate, and are
+-			 * now trying to raise it, use the lower rate. */
+-			if (new_rate != IWL_RATE_INVALID)
+-				break;
++	while (rate_idx != IWL_RATE_INVALID) {
++		if (target_tpt < (100 * tpt_tbl[rate_idx]))
++			break;
+ 
+-			/* Loop again with higher rate */
+-			else if (high != IWL_RATE_INVALID) {
+-				start_hi = high;
+-				rate = high;
++		high_low = rs_get_adjacent_rate(mvm, rate_idx, rate_mask,
++						tbl->rate.type);
+ 
+-			/* Higher rate not available, use the original */
+-			} else {
+-				new_rate = rate;
+-				break;
+-			}
+-		}
++		rate_idx = (high_low >> 8) & 0xff;
+ 	}
+ 
+-	return new_rate;
++	IWL_DEBUG_RATE(mvm, "Best rate found %d target_tp %d expected_new %d\n",
++		       rate_idx, target_tpt,
++		       rate_idx != IWL_RATE_INVALID ?
++		       100 * tpt_tbl[rate_idx] : IWL_INVALID_VALUE);
++
++	return rate_idx;
+ }
+ 
+ static u32 rs_bw_from_sta_bw(struct ieee80211_sta *sta)
+@@ -1649,7 +1594,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 	const struct rs_tx_column *curr_column = &rs_tx_columns[tbl->column];
+ 	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
+ 		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
+-	u16 rate_mask = 0;
++	unsigned long rate_mask = 0;
+ 	u32 rate_idx = 0;
+ 
+ 	memcpy(search_tbl, tbl, sz);
+@@ -1691,7 +1636,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 		    !(BIT(rate_idx) & rate_mask)) {
+ 			IWL_DEBUG_RATE(mvm,
+ 				       "can not switch with index %d"
+-				       " rate mask %x\n",
++				       " rate mask %lx\n",
+ 				       rate_idx, rate_mask);
+ 
+ 			goto err;
 -- 
-1.9.0
+1.8.3.2
 
