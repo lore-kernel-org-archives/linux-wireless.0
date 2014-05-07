@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:63678 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757362AbaEFMtc convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37856 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbaEGMlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 08:49:32 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so2744995wgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2014 05:49:31 -0700 (PDT)
+	Wed, 7 May 2014 08:41:06 -0400
+Message-ID: <536A29E0.4030208@candelatech.com> (sfid-20140507_144110_754167_4F98222A)
+Date: Wed, 07 May 2014 05:41:04 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	<1399373244.4218.21.camel@jlt4.sipsolutions.net>
-Date: Tue, 6 May 2014 14:49:30 +0200
-Message-ID: <CA+BoTQmQ-2MeWO3FkKPxo3XyUjQ4X2LAA2uOuYLzASRydF6+LQ@mail.gmail.com> (sfid-20140506_144936_577828_9A272E8E)
-Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-From: Michal Kazior <michal.kazior@tieto.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: How to configure monitor devices for HT80?
+References: <5367E13C.2020208@candelatech.com>	  (sfid-20140505_211155_884363_141E505C) <1399317771.22235.23.camel@jlt4.sipsolutions.net>	 <53692240.5010001@candelatech.com> <1399453264.10517.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1399453264.10517.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 May 2014 12:47, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-05-02 at 16:40 +0300, Luca Coelho wrote:
->
->> + * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
->> + *   has been started on an interface, regardless of the initiator
->> + *   (ie. whether it was requested from a remote device or
->> + *   initiated on our own).  It indicates that
->> + *   %NL80211_ATTR_IFINDEX will be on %NL80211_ATTR_WIPHY_FREQ
->> + *   after %NL80211_ATTR_CH_SWITCH_COUNT TBTT's.
->
-> You don't seem to have that now, but it may not always be needed, and we
-> could add it later (unless userspace needs to rely on having the
-> attribute - otherwise it has to check for it)
->
-> Actually though, maybe you do need it, so that you can determine whether
-> it makes sense to try anything smart - if the count is 1 or you received
-> an action frame then you probably don't have time at all?
->
->> + * @NL80211_CMD_CH_SWITCH_FAILED_NOTIFY: Notify that a channel switch
->> + *   has failed on %NL80211_ATTR_IFINDEX.  This notification can
->> + *   only be sent after a @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY has
->> + *   been issued.
->
-> (+Ilan, Andrei)
->
-> I'm not really sure why you have this - it seems that in this case the
-> interface will be stopped so you'll get a STOP_AP or DISCONNECT or
-> whatever other notification. This may not actually be completely true
-> right now (I seem to remember a fix in this area but can't seem to find
-> it in my tree!!) but we'll have to fix that part anyway. Not really sure
-> why then that couldn't be used instead of this notification? The
-> userspace code is going to have to worry about that anyway, I'd think.
-
-Just a reminder - there's my pending patchset (mac80211/cfg80211: CSA
-fixes/cleanups) for CSA that disconnects interfaces that fail to
-switch channel. Perhaps I should re-post?
 
 
-Michał
+On 05/07/2014 02:01 AM, Johannes Berg wrote:
+> On Tue, 2014-05-06 at 10:56 -0700, Ben Greear wrote:
+>
+>> But, it seems if I have another vif up, it will fail, even if that
+>> vif is (should be?) using the exact same frequency.
+>>
+>> ./local/sbin/iw phy wiphy0 interface add moni0 type monitor
+>> ./local/sbin/ip link set dev moni0 up
+>> ./local/sbin/iw dev moni0 set freq 5180 80 5210
+>> -> yields error:
+>> command failed: Device or resource busy (-16)
+>
+> You can't set the monitor frequency if you're using the hardware for
+> something else already. We could potentially allow that if the chandefs
+> are compatible, but that's getting into really messy territory so I'm
+> not sure I want to go there - if for example the other interface
+> switches bandwidth or even channel the monitor would usually simply
+> follow around.
+
+Ok, as long as I know why then the failure is not so concerning.
+
+Another question:  if I create a monitor interface first, and
+successfully set it's frequency, what do I need to do to allow
+a station to move to a different frequency later?
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
