@@ -1,116 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:57479 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750964AbaEJPRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2014 11:17:40 -0400
-Date: Sat, 10 May 2014 17:17:21 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [RFC][PATCH] b43: drop SSB dependency
-Message-ID: <20140510171721.54b21a63@wiggum> (sfid-20140510_171802_713697_043CF60D)
-In-Reply-To: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
-References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/0Waat6fnDhemZg540_DpPaX"; protocol="application/pgp-signature"
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:61125 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062AbaEGTx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 15:53:26 -0400
+Received: by mail-wi0-f179.google.com with SMTP id bs8so1975891wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:25 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/23] iwlwifi: mvm: several fixes in scan
+Date: Wed,  7 May 2014 22:52:38 +0300
+Message-Id: <1399492380-12050-1-git-send-email-egrumbach@gmail.com> (sfid-20140507_215501_869646_E0C6FF5C)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/0Waat6fnDhemZg540_DpPaX
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-On Sat, 10 May 2014 16:44:48 +0200
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+The firmware doesn't handle properly the fragmented scan.
+Stop using it.
+While at it change max_out_time and suspend_time units from
+usec to TUs as expected by firmware API.
 
->  config B43_BCMA
-> -	bool "Support for BCMA bus"
-> -	depends on B43 && (BCMA =3D y || BCMA =3D B43)
-> -	default y
-> +	bool
-> +	depends on B43
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  8 ++--
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 53 ++++++--------------------
+ 2 files changed, 16 insertions(+), 45 deletions(-)
 
-A dependency on a purely selected option is ignored.
-So I think you can remove this one as well.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index 9426905..d73a89e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -183,9 +183,9 @@ enum iwl_scan_type {
+  *	this number of packets were received (typically 1)
+  * @passive2active: is auto switching from passive to active during scan allowed
+  * @rxchain_sel_flags: RXON_RX_CHAIN_*
+- * @max_out_time: in usecs, max out of serving channel time
++ * @max_out_time: in TUs, max out of serving channel time
+  * @suspend_time: how long to pause scan when returning to service channel:
+- *	bits 0-19: beacon interal in usecs (suspend before executing)
++ *	bits 0-19: beacon interal in TUs (suspend before executing)
+  *	bits 20-23: reserved
+  *	bits 24-31: number of beacons (suspend between channels)
+  * @rxon_flags: RXON_FLG_*
+@@ -383,8 +383,8 @@ enum scan_framework_client {
+  * @quiet_plcp_th:	quiet channel num of packets threshold
+  * @good_CRC_th:	passive to active promotion threshold
+  * @rx_chain:		RXON rx chain.
+- * @max_out_time:	max uSec to be out of assoceated channel
+- * @suspend_time:	pause scan this long when returning to service channel
++ * @max_out_time:	max TUs to be out of assoceated channel
++ * @suspend_time:	pause scan this TUs when returning to service channel
+  * @flags:		RXON flags
+  * @filter_flags:	RXONfilter
+  * @tx_cmd:		tx command for active scan; for 2GHz and for 5GHz.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index c91dc84..cba88a3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -277,51 +277,22 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 					    IEEE80211_IFACE_ITER_NORMAL,
+ 					    iwl_mvm_scan_condition_iterator,
+ 					    &global_bound);
+-	/*
+-	 * Under low latency traffic passive scan is fragmented meaning
+-	 * that dwell on a particular channel will be fragmented. Each fragment
+-	 * dwell time is 20ms and fragments period is 105ms. Skipping to next
+-	 * channel will be delayed by the same period - 105ms. So suspend_time
+-	 * parameter describing both fragments and channels skipping periods is
+-	 * set to 105ms. This value is chosen so that overall passive scan
+-	 * duration will not be too long. Max_out_time in this case is set to
+-	 * 70ms, so for active scanning operating channel will be left for 70ms
+-	 * while for passive still for 20ms (fragment dwell).
+-	 */
+-	if (global_bound) {
+-		if (!iwl_mvm_low_latency(mvm)) {
+-			params->suspend_time = ieee80211_tu_to_usec(100);
+-			params->max_out_time = ieee80211_tu_to_usec(600);
+-		} else {
+-			params->suspend_time = ieee80211_tu_to_usec(105);
+-			/* P2P doesn't support fragmented passive scan, so
+-			 * configure max_out_time to be at least longest dwell
+-			 * time for passive scan.
+-			 */
+-			if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p) {
+-				params->max_out_time = ieee80211_tu_to_usec(70);
+-				params->passive_fragmented = true;
+-			} else {
+-				u32 passive_dwell;
+ 
+-				/*
+-				 * Use band G so that passive channel dwell time
+-				 * will be assigned with maximum value.
+-				 */
+-				band = IEEE80211_BAND_2GHZ;
+-				passive_dwell = iwl_mvm_get_passive_dwell(band);
+-				params->max_out_time =
+-					ieee80211_tu_to_usec(passive_dwell);
+-			}
+-		}
++	if (!global_bound)
++		goto not_bound;
++
++	params->suspend_time = 100;
++	params->max_out_time = 600;
++
++	if (iwl_mvm_low_latency(mvm)) {
++		params->suspend_time = 250;
++		params->max_out_time = 250;
+ 	}
+ 
++not_bound:
++
+ 	for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
+-		if (params->passive_fragmented)
+-			params->dwell[band].passive = 20;
+-		else
+-			params->dwell[band].passive =
+-				iwl_mvm_get_passive_dwell(band);
++		params->dwell[band].passive = iwl_mvm_get_passive_dwell(band);
+ 		params->dwell[band].active = iwl_mvm_get_active_dwell(band,
+ 								      n_ssids);
+ 	}
+-- 
+1.8.3.2
 
->  config B43_SSB
->  	bool
-> -	depends on B43 && (SSB =3D y || SSB =3D B43)
-> -	default y
-> +	depends on B43
-
-Same here.
-
-> +choice
-> +	prompt "Supported bus types"
-> +	depends on B43
-> +	default B43_BCMA_AND_SSB
-> +
-> +config B43_BUSES_BCMA_AND_SSB
-> +	bool "BCMA and SSB"
-> +	depends on BCMA_POSSIBLE && SSB_POSSIBLE
-
-I think this needs to be:
-
-	depends on (BCMA_POSSIBLE && (BCMA =3D y || BCMA =3D B43)) && (SSB_POSSIBL=
-E && (SSB =3D y || SSB =3D B43))
-
-to avoid the case where b43 is y and ssb or bcma is m.
-Or did I miss something and this is caught elsewhere?
-
-> +	select B43_BCMA
-> +	select B43_SSB
-> +
-> +config B43_BUSES_BCMA
-> +	bool "BCMA only"
-> +	depends on BCMA_POSSIBLE
-
-Similar here.
-
-> +	select B43_BCMA
-> +
-> +config B43_BUSES_SSB
-> +	bool "SSB only"
-> +	depends on SSB_POSSIBLE
-
-And here.
-
-> +	select B43_SSB
-> +
-> +endchoice
-
-
---=20
-Michael.
-
-----
-Please use PGP/GPG encryption.
-Key-ID: F532BE1D908D8B0E
---------
-
---Sig_/0Waat6fnDhemZg540_DpPaX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTbkMBAAoJEPUyvh2QjYsOxAkP/RTZKLe8jLRklFRrvjmYO2D4
-Qxg5W3JP56wWOUGMuO2/q6puvT1xCwv2uobt31S3alNIeJD9JRVOZb1E9KyDTtH2
-ngDuDKjG/vjValaI7cO0uKYnLB9NspUnuGD/ds/4YQMwhhTQoPz3Hny8Y/8q5raY
-s4vhqiNeLyzcBagXGASqRTnsiRq/JCOzx5qLhO3rlnzhszyQLovNX505i7/QqHKX
-Ku9r7UZLRGE++4Trb7SvYPv69GSdj10qacTCaMAqVV1td5xs3yM5prUb6mb1XTHW
-yGwhVGFkKcQt8zPUmfxfsTP2Z/UGGfPobeMq6T+5e8wxKRXlmEIwE52b7l72MA6S
-m0ysPL7Tt0sJS0WUnv+JUk5WaAxyC2OWBbxgOi+TpcOPJZDD7XotL73ho7vHQG1R
-iMV5W5eeNLdnQ6wx6UoFeJiD5sTJ5osRP+1K5KbV1OPHUcW6qxoio4nhi5rBB2OQ
-+MjVqYoHqEUaGoO25P3jQU/kgkq3vAi00M/sBSpJqcUqsAhcwSbc0dNcC47tedJ9
-I4lRdLM+bu2X8K3/lWZF72rrbEFRpZfxA+Fat2cLZomNs00OZXXu1lRaztOjZx1M
-PLaJUanaJkyxwjXhGc1yoGy6Uqywg8zHUg2L2ahwSk5niide1A2cBK37rZvfch5f
-gLqixSu/77ZGlipNsw9A
-=8fJK
------END PGP SIGNATURE-----
-
---Sig_/0Waat6fnDhemZg540_DpPaX--
