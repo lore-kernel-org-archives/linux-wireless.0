@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60899 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932538AbaEEOTz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 10:19:55 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Mon, 5 May 2014 07:19:44 -0700
-Subject: RE: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF59511A1FC9324@SC-VEXCH1.marvell.com> (sfid-20140505_161958_361110_5EB19FA1)
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
-	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
-	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
-	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
-	 <8738gvp8md.fsf@qca.qualcomm.com>
-	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
-	 <20140430132246.GB3635@tuxdriver.com> <87y4ymn69s.fsf@qca.qualcomm.com>
- <1399294659.22235.9.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1399294659.22235.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-we0-f179.google.com ([74.125.82.179]:42752 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaEGTxq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 15:53:46 -0400
+Received: by mail-we0-f179.google.com with SMTP id q59so1500594wes.38
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:45 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/23] iwlwifi: mvm: rs: choose correct expected tpt table
+Date: Wed,  7 May 2014 22:52:45 +0300
+Message-Id: <1399492380-12050-8-git-send-email-egrumbach@gmail.com> (sfid-20140507_215446_738552_5E14C1D4)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Eyal Shapira <eyal@wizery.com>
 
-> >
-> > 	int	(*get_dump_flag)(struct net_device *, struct ethtool_dump *);
-> > 	int	(*get_dump_data)(struct net_device *,
-> > 				 struct ethtool_dump *, void *);
-> > 	int	(*set_dump)(struct net_device *, struct ethtool_dump *);
-> >
-> > Yeah, maybe we could use that in wireless as well.
-> 
-> What was the intended use case for this though?
+The expected throughput table used when estimating a new column
+depends on the channel bandwidth. When switching from legacy to
+siso or mimo the wrong expected throughput table was used as it
+was chosen based on the the channel bandwidth in legacy which is
+always 20Mhz. Instead it should be chosen based on the current sta
+bandwidth which could be also 40Mhz or 80Mhz.
+When enabling MCS9 this bug leads to a problem where the max
+expected throughput of the siso or mimo column is 0 as MCS9 isn't
+supported in 20Mhz. This in turns prevents switching to siso or mimo.
 
-In mwifiex, we are interested in providing separate firmware dump file to user for each memory segment. Ex. ITCM, DTCM, SQRAM etc.
+Fix this by using the sta bandwidth when deciding which table to choose.
 
-It looks simpler with ethtool ops instead of creating multiple debugfs files.
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 6216618..6d5af48 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1553,7 +1553,7 @@ static enum rs_column rs_get_next_column(struct iwl_mvm *mvm,
  
-1) User can set index for required memory segment.
+ 		tpt = lq_sta->last_tpt / 100;
+ 		expected_tpt_tbl = rs_get_expected_tpt_table(lq_sta, next_col,
+-							     tbl->rate.bw);
++						     rs_bw_from_sta_bw(sta));
+ 		if (WARN_ON_ONCE(!expected_tpt_tbl))
+ 			continue;
+ 
+-- 
+1.8.3.2
 
-#ethtool --set-dump wlan0 3
-
-2) Get the details
-
-#ethtool --get-dump wlan0
-flag: 3, version:xyz, length:13450
-
-3) Dump the info in ITCM.log file
-
-#ethtool --get-dump wlan0 data ITCM.log
-
-
-Common uevent through cfg80211 API to notify firmware dump is over would be useful for us.
-
-Thanks,
-Amitkumar Karwar
