@@ -1,92 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:52121 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaEOVvl (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:43892 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbaEGTyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:41 -0400
-Received: by mail-wg0-f45.google.com with SMTP id m15so4178769wgh.16
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:40 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 05/15] staging: vt6656: lock changes: RXvMngWorkItem.
-Date: Thu, 15 May 2014 22:49:14 +0100
-Message-Id: <1400190564-5135-5-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235144_932730_037E353D)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 7 May 2014 15:54:04 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so1488731wgg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:54:03 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/23] iwlwifi: mvm: wait for d0i3 exit in some more ampdu actions
+Date: Wed,  7 May 2014 22:52:56 +0300
+Message-Id: <1399492380-12050-19-git-send-email-egrumbach@gmail.com> (sfid-20140507_215415_347056_B9E358E6)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Narrow atomic locks in RXvMngWorkItem.
+From: Eliad Peller <eliad@wizery.com>
 
-We must lock the DequeueRCB and RXvFreeRCB so that
-they are in sync.
+Some ampdu actions change queues by direct target access.
 
-vMgrRxManagePacket can nolonger be atomically called.
+Since the bus is disabled in d0i3, make sure to exit d0i3
+before handling these actions.
 
-There is no need for an overall lock.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/dpc.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 4ccaa7e..156399d 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -1363,34 +1363,43 @@ void RXvMngWorkItem(struct work_struct *work)
- 	struct vnt_rcb *pRCB = NULL;
- 	struct vnt_rx_mgmt *pRxPacket;
- 	int bReAllocSkb = false;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 97c3dea..db55d67 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -539,13 +539,22 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
+ 		return -EACCES;
  
- 	if (pDevice->Flags & fMP_DISCONNECTED)
- 		return;
+ 	/* return from D0i3 before starting a new Tx aggregation */
+-	if (action == IEEE80211_AMPDU_TX_START) {
++	switch (action) {
++	case IEEE80211_AMPDU_TX_START:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_TX_AGG);
+ 		tx_agg_ref = true;
  
-     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Rx Mng Thread\n");
+ 		/*
+-		 * wait synchronously until D0i3 exit to get the correct
+-		 * sequence number for the tid
++		 * for tx start, wait synchronously until D0i3 exit to
++		 * get the correct sequence number for the tid.
++		 * additionally, some other ampdu actions use direct
++		 * target access, which is not handled automatically
++		 * by the trans layer (unlike commands), so wait for
++		 * d0i3 exit in these cases as well.
+ 		 */
+ 		if (!wait_event_timeout(mvm->d0i3_exit_waitq,
+ 			  !test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status), HZ)) {
+@@ -553,6 +562,9 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
+ 			iwl_mvm_unref(mvm, IWL_MVM_REF_TX_AGG);
+ 			return -EIO;
+ 		}
++		break;
++	default:
++		break;
+ 	}
  
--    spin_lock_irq(&pDevice->lock);
-     while (pDevice->NumRecvMngList!=0)
-     {
-+	spin_lock_irqsave(&pDevice->lock, flags);
-+
-         pRCB = pDevice->FirstRecvMngList;
-         pDevice->NumRecvMngList--;
-         DequeueRCB(pDevice->FirstRecvMngList, pDevice->LastRecvMngList);
-+
-+	spin_unlock_irqrestore(&pDevice->lock, flags);
-+
-         if(!pRCB){
-             break;
-         }
-         pRxPacket = &(pRCB->sMngPacket);
- 	vMgrRxManagePacket(pDevice, &pDevice->vnt_mgmt, pRxPacket);
-         pRCB->Ref--;
--        if(pRCB->Ref == 0) {
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeMng %d %d\n",pDevice->NumRecvFreeList, pDevice->NumRecvMngList);
--            RXvFreeRCB(pRCB, bReAllocSkb);
--        } else {
-+	if (pRCB->Ref == 0) {
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeMng %d %d\n",
-+			pDevice->NumRecvFreeList, pDevice->NumRecvMngList);
-+
-+		spin_lock_irqsave(&pDevice->lock, flags);
-+
-+		RXvFreeRCB(pRCB, bReAllocSkb);
-+
-+		spin_unlock_irqrestore(&pDevice->lock, flags);
-+	} else {
-             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Rx Mng Only we have the right to free RCB\n");
-         }
-     }
- 
- 	pDevice->bIsRxMngWorkItemQueued = false;
--	spin_unlock_irq(&pDevice->lock);
--
- }
- 
+ 	mutex_lock(&mvm->mutex);
 -- 
-1.9.1
+1.8.3.2
 
