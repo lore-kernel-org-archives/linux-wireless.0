@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53790 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbaENJIw (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:53049 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbaEGW4P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 05:08:52 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath9k_htc: Stop ANI before doing hw_reset
-Date: Wed, 14 May 2014 14:39:21 +0530
-Message-ID: <1400058561-13411-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140514_110857_864414_EE75E541)
+	Wed, 7 May 2014 18:56:15 -0400
+Message-ID: <536ABA0C.7000907@infradead.org> (sfid-20140508_005633_254634_3ED3B522)
+Date: Wed, 07 May 2014 15:56:12 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-kernel@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Build regressions/improvements in v3.15-rc4 (wireless/ti/wlcore)
+References: <1399377878-29995-1-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1399377878-29995-1-git-send-email-geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During remain on channel request, ANI worker thread is not stopped
-before doing hw reset. This is causing kernel crash in
-hw_per_calibration. This change ensures that ANI is stopped before
-doing chip reset and it will be rescheduled later when the chip is
-configured back to home channel and having valid bss.
+On 05/06/2014 05:04 AM, Geert Uytterhoeven wrote:
+> Below is the list of build error/warning regressions/improvements in
+> v3.15-rc4[1] compared to v3.14[2].
+> 
+> 
+> 
+> *** WARNINGS ***
+> 
+> 181 regressions:
 
-Reported-by: David Herrmann <dh.herrmann@gmail.com>
-Tested-by: David Herrmann <dh.herrmann@gmail.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+>   + /scratch/kisskb/src/drivers/net/wireless/ti/wlcore/spi.c: warning: the frame size of 38080 bytes is larger than 1024 bytes [-Wframe-larger-than=]:  => 317:1
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f46cd02..5627917 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -95,8 +95,10 @@ static void ath9k_htc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 
- 	if ((vif->type == NL80211_IFTYPE_AP ||
- 	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
--	    bss_conf->enable_beacon)
-+	    bss_conf->enable_beacon) {
- 		priv->reconfig_beacon = true;
-+		priv->rearm_ani = true;
-+	}
- 
- 	if (bss_conf->assoc) {
- 		priv->rearm_ani = true;
-@@ -257,6 +259,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 
- 	ath9k_htc_ps_wakeup(priv);
- 
-+	ath9k_htc_stop_ani(priv);
- 	del_timer_sync(&priv->tx.cleanup_timer);
- 	ath9k_htc_tx_drain(priv);
- 
+Does that function:  wl12xx_spi_raw_write() in spi.c actually work without crashing??
+
 -- 
-1.9.2
-
+~Randy
