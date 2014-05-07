@@ -1,161 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29832 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751980AbaEZHtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 03:49:09 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 04/11] pinctrl: sunxi: Properly handle level triggered gpio interrupts
-Date: Mon, 26 May 2014 09:47:59 +0200
-Message-Id: <1401090486-4414-5-git-send-email-hdegoede@redhat.com> (sfid-20140526_094924_480543_E0A2EF61)
-In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:36470 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471AbaEGHfJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 03:35:09 -0400
+Received: by mail-we0-f172.google.com with SMTP id k48so573108wev.17
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 00:35:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399387428.4218.45.camel@jlt4.sipsolutions.net>
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	<1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
+	<1397051137-26201-4-git-send-email-michal.kazior@tieto.com>
+	<1399387428.4218.45.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 09:35:07 +0200
+Message-ID: <CA+BoTQnLh7Oq+40YfQtwhiDwNdaHN4sU_XSWZTr8EfVG421-HA@mail.gmail.com> (sfid-20140507_093513_778520_D3C37D2D)
+Subject: Re: [PATCH v4 3/5] mac80211: use chanctx reservation for STA CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For level triggered gpio interrupts we need to use handle_fasteoi_irq,
-like we do with the irq-sunxi-nmi driver. This is necessary to give threaded
-interrupt handlers a chance to actuall clear the source of the interrupt
-(which may involve sleeping waitnig for i2c / spi / mmc transfers), before
-acknowledging the interrupt.
+On 6 May 2014 16:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-04-09 at 15:45 +0200, Michal Kazior wrote:
+>> Channel switch finalization is now 2-step. First
+>> step is when driver calls chswitch_done(), the
+>> other is when reservation is actually finalized
+>> (which be defered for in-place reservation).
+>>
+>> It is now safe to call ieee80211_chswitch_done()
+>> more than once.
+>>
+>> Also remove the ieee80211_vif_change_channel()
+>> because it is no longer used.
+>
+> A lot of this looks really duplicated from the previous patch - since I
+> just merged the fixes is there really a need to go through the work etc.
+> and have this different, instead of going through cfg80211 for the
+> disconnect?
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/pinctrl/sunxi/pinctrl-sunxi.c | 71 +++++++++++++++++++++++++++--------
- 1 file changed, 56 insertions(+), 15 deletions(-)
+I'm not really sure what duplication you refer to? There were already
+a couple of uses of csa_connection_drop_work so I used it too. It
+might make sense now to use cfg80211_stop_iface() instead but I'd
+argue it's better to do that as a follow up patch.
 
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index d1675c9..083691e 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-@@ -31,6 +31,12 @@
- #include "../core.h"
- #include "pinctrl-sunxi.h"
- 
-+static int sunxi_pinctrl_irq_set_type(struct irq_data *d, unsigned int type);
-+static void sunxi_pinctrl_irq_mask_ack(struct irq_data *d);
-+static void sunxi_pinctrl_irq_mask(struct irq_data *d);
-+static void sunxi_pinctrl_irq_unmask(struct irq_data *d);
-+static void sunxi_pinctrl_irq_ack(struct irq_data *d);
-+
- static struct sunxi_pinctrl_group *
- sunxi_pinctrl_find_group_by_name(struct sunxi_pinctrl *pctl, const char *group)
- {
-@@ -535,11 +541,31 @@ static int sunxi_pinctrl_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
- 	return irq_find_mapping(pctl->domain, desc->irqnum);
- }
- 
-+static struct irq_chip sunxi_pinctrl_edge_irq_chip = {
-+	.irq_mask	= sunxi_pinctrl_irq_mask,
-+	.irq_mask_ack	= sunxi_pinctrl_irq_mask_ack,
-+	.irq_unmask	= sunxi_pinctrl_irq_unmask,
-+	.irq_ack	= sunxi_pinctrl_irq_ack,
-+	.irq_set_type	= sunxi_pinctrl_irq_set_type,
-+	.name		= "sunxi-pio",
-+	.flags		= IRQCHIP_SKIP_SET_WAKE,
-+};
-+
-+static struct irq_chip sunxi_pinctrl_level_irq_chip = {
-+	.irq_mask	= sunxi_pinctrl_irq_mask,
-+	.irq_mask_ack	= sunxi_pinctrl_irq_mask_ack,
-+	.irq_unmask	= sunxi_pinctrl_irq_unmask,
-+	.irq_eoi	= sunxi_pinctrl_irq_ack,
-+	.irq_set_type	= sunxi_pinctrl_irq_set_type,
-+	.name		= "sunxi-pio",
-+	.flags		= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_EOI_THREADED |
-+			  IRQCHIP_EOI_IF_HANDLED,
-+};
- 
--static int sunxi_pinctrl_irq_set_type(struct irq_data *d,
--				      unsigned int type)
-+static int sunxi_pinctrl_irq_set_type(struct irq_data *d, unsigned int type)
- {
- 	struct sunxi_pinctrl *pctl = irq_data_get_irq_chip_data(d);
-+	struct irq_desc *desc = container_of(d, struct irq_desc, irq_data);
- 	u32 reg = sunxi_irq_cfg_reg(d->hwirq);
- 	u8 index = sunxi_irq_cfg_offset(d->hwirq);
- 	struct sunxi_desc_function *func;
-@@ -567,6 +593,14 @@ static int sunxi_pinctrl_irq_set_type(struct irq_data *d,
- 		return -EINVAL;
- 	}
- 
-+	if (type & IRQ_TYPE_LEVEL_MASK) {
-+		d->chip = &sunxi_pinctrl_level_irq_chip;
-+		desc->handle_irq = handle_fasteoi_irq;
-+	} else {
-+		d->chip = &sunxi_pinctrl_edge_irq_chip;
-+		desc->handle_irq = handle_edge_irq;
-+	}
-+
- 	spin_lock_irqsave(&pctl->lock, flags);
- 
- 	regval = readl(pctl->membase + reg);
-@@ -640,14 +674,20 @@ static void sunxi_pinctrl_irq_unmask(struct irq_data *d)
- 	spin_unlock_irqrestore(&pctl->lock, flags);
- }
- 
--static struct irq_chip sunxi_pinctrl_irq_chip = {
--	.irq_mask	= sunxi_pinctrl_irq_mask,
--	.irq_mask_ack	= sunxi_pinctrl_irq_mask_ack,
--	.irq_unmask	= sunxi_pinctrl_irq_unmask,
--	.irq_set_type	= sunxi_pinctrl_irq_set_type,
--	.name		= "sunxi-pio",
--	.flags		= IRQCHIP_SKIP_SET_WAKE,
--};
-+static void sunxi_pinctrl_irq_ack(struct irq_data *d)
-+{
-+	struct sunxi_pinctrl *pctl = irq_data_get_irq_chip_data(d);
-+	u32 status_reg = sunxi_irq_status_reg(d->hwirq);
-+	u8 status_idx = sunxi_irq_status_offset(d->hwirq);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&pctl->lock, flags);
-+
-+	/* Clear the IRQ */
-+	writel(1 << status_idx, pctl->membase + status_reg);
-+
-+	spin_unlock_irqrestore(&pctl->lock, flags);
-+}
- 
- static void sunxi_pinctrl_irq_handler(unsigned irq, struct irq_desc *desc)
- {
-@@ -655,9 +695,6 @@ static void sunxi_pinctrl_irq_handler(unsigned irq, struct irq_desc *desc)
- 	struct sunxi_pinctrl *pctl = irq_get_handler_data(irq);
- 	const unsigned long reg = readl(pctl->membase + IRQ_STATUS_REG);
- 
--	/* Clear all interrupts */
--	writel(reg, pctl->membase + IRQ_STATUS_REG);
--
- 	if (reg) {
- 		int irqoffset;
- 
-@@ -892,11 +929,15 @@ int sunxi_pinctrl_init(struct platform_device *pdev,
- 	for (i = 0; i < SUNXI_IRQ_NUMBER; i++) {
- 		int irqno = irq_create_mapping(pctl->domain, i);
- 
--		irq_set_chip_and_handler(irqno, &sunxi_pinctrl_irq_chip,
--					 handle_simple_irq);
-+		irq_set_chip_and_handler(irqno, &sunxi_pinctrl_edge_irq_chip,
-+					 handle_edge_irq);
- 		irq_set_chip_data(irqno, pctl);
- 	};
- 
-+	/* Mask and clear all IRQs before registering a handler */
-+	writel(0, pctl->membase + IRQ_CTRL_REG);
-+	writel(0xffffffff, pctl->membase + IRQ_STATUS_REG);
-+
- 	irq_set_chained_handler(pctl->irq, sunxi_pinctrl_irq_handler);
- 	irq_set_handler_data(pctl->irq, pctl);
- 
--- 
-1.9.3
 
+Michał
