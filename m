@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([78.24.191.182]:42858 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbaE3Pt2 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:35649 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280AbaEGUBf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:49:28 -0400
-Date: Fri, 30 May 2014 17:48:59 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: abdoulaye berthe <berthe.ab@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	patches@opensource.wolfsonmicro.com,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
-Message-ID: <20140530154859.GK17197@linux-mips.org> (sfid-20140530_174946_179538_F8D2B24F)
-References: <20140530094025.3b78301e@canb.auug.org.au>
- <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>
- <1401449454-30895-2-git-send-email-berthe.ab@gmail.com>
- <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
+	Wed, 7 May 2014 16:01:35 -0400
+Received: by mail-wg0-f44.google.com with SMTP id a1so1490798wgh.15
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 13:01:34 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/5] iwlwifi: mvm: BT Coex - fix validity flags during init
+Date: Wed,  7 May 2014 23:01:21 +0300
+Message-Id: <1399492884-13508-2-git-send-email-egrumbach@gmail.com> (sfid-20140507_220139_132486_B2A3C619)
+In-Reply-To: <536A90BD.8010204@gmail.com>
+References: <536A90BD.8010204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 30, 2014 at 01:39:15PM +0200, Geert Uytterhoeven wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> > +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
-> > +                       panic("gpio: removing gpiochip with gpios still requested\n");
-> 
-> panic?
-> 
-> Is this likely to happen?
+The commit below introduced a bug in the validity bits in
+init. Due to that, all the Coex mechanism stopped sending
+kills to the BT side. Fix that.
 
-And while we're at it - panic() is going to add a \n itself so don't pass a
-string ending in \n to panic().
+Fixes: b9fae2d54c9f ("iwlwifi: mvm: BT Coex add support for Co-running block")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-  Ralf
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index fa858d54..0489314 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -611,14 +611,14 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
+ 
+ 	if (IWL_MVM_BT_COEX_CORUNNING) {
+-		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_CORUN_LUT_20 |
+-						    BT_VALID_CORUN_LUT_40);
++		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_CORUN_LUT_20 |
++						     BT_VALID_CORUN_LUT_40);
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_CORUNNING);
+ 	}
+ 
+ 	if (IWL_MVM_BT_COEX_MPLUT) {
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_MPLUT);
+-		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
++		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
+ 	}
+ 
+ 	if (mvm->cfg->bt_shared_single_ant)
+-- 
+1.8.3.2
+
