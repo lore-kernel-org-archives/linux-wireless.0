@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:47951 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752908AbaEWRB0 (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:44038 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752385AbaEGTxh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:26 -0400
-Received: by mail-wi0-f174.google.com with SMTP id r20so1172284wiv.7
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:24 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 15/20] staging: vt6656: camel case clean up MACvWriteBeaconInterval
-Date: Fri, 23 May 2014 18:00:14 +0100
-Message-Id: <1400864419-8327-15-git-send-email-tvboxspy@gmail.com> (sfid-20140523_192149_129224_ACDE72D2)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 7 May 2014 15:53:37 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so1475456wgh.26
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:36 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/23] iwlwifi: mvm: rs - s/CPTCFG/CONFIG
+Date: Wed,  7 May 2014 22:52:40 +0300
+Message-Id: <1399492380-12050-3-git-send-email-egrumbach@gmail.com> (sfid-20140507_215401_969262_4360DC0C)
+In-Reply-To: <536A8EE3.2050906@gmail.com>
+References: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-wInterval -> interval
-pbyData -> data
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+My bad - I forgot to update this when sending the patch
+upstream.
+
+Fixes: 87d5e4155c00 ("iwlwifi: mvm: rs: reinit rs if no tx for a long time")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/mac.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index b370b0a..f486834 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -264,18 +264,13 @@ void MACvDisableBarkerPreambleMd(struct vnt_private *priv)
- 		MAC_REG_ENCFG2, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 9f52c5b..e1c8388 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1010,7 +1010,7 @@ static void rs_tx_status(void *mvm_r, struct ieee80211_supported_band *sband,
+ 		return;
+ 	}
  
--void MACvWriteBeaconInterval(struct vnt_private *pDevice, u16 wInterval)
-+void MACvWriteBeaconInterval(struct vnt_private *priv, u16 interval)
- {
--	u8 pbyData[2];
-+	u8 data[2];
- 
--	pbyData[0] = (u8)(wInterval & 0xff);
--	pbyData[1] = (u8)(wInterval >> 8);
-+	data[0] = (u8)(interval & 0xff);
-+	data[1] = (u8)(interval >> 8);
- 
--    CONTROLnsRequestOut(pDevice,
--			MESSAGE_TYPE_WRITE,
--			MAC_REG_BI,
--			MESSAGE_REQUEST_MACREG,
--			ARRAY_SIZE(pbyData),
--			pbyData
--			);
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE,
-+		MAC_REG_BI, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
+-#ifdef CPTCFG_MAC80211_DEBUGFS
++#ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* Disable last tx check if we are debugging with fixed rate */
+ 	if (lq_sta->dbg_fixed_rate) {
+ 		IWL_DEBUG_RATE(mvm, "Fixed rate. avoid rate scaling\n");
 -- 
-1.9.1
+1.8.3.2
 
