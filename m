@@ -1,39 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0016.hostedemail.com ([216.40.44.16]:55513 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752487AbaE0OPL (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:42495 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932344AbaEGKCW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 10:15:11 -0400
-Message-ID: <1401200106.20587.0.camel@joe-AO725> (sfid-20140527_161518_601636_E739CF69)
-Subject: Re: [PATCH 4/7] wil6210: improve debug for WMI receive
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Date: Tue, 27 May 2014 07:15:06 -0700
-In-Reply-To: <1835954.xHumgOahYl@lx-wigig-72>
-References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1401191150-29037-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1401199199.18413.26.camel@joe-AO725> <1835954.xHumgOahYl@lx-wigig-72>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 7 May 2014 06:02:22 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so750116wgg.24
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 03:02:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399455657.6800.4.camel@dubbel>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	<1399455657.6800.4.camel@dubbel>
+Date: Wed, 7 May 2014 12:02:20 +0200
+Message-ID: <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com> (sfid-20140507_120228_921509_D3B8A530)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-27 at 17:11 +0300, Vladimir Kondratiev wrote:
-> On Tuesday, May 27, 2014 06:59:59 AM Joe Perches wrote:
-> > This error message might be expanded a bit to describe
-> > a bit more about what to do: report to you, turn on
-> > event debugging, update firmware, etc...
-> 
-> As of now, for the user it is nothing to do;
-> I expect to see this messages in the bug reports that
-> may be potentially sent to me. It may help understanding
-> the situation. But, again, this message itself do not
-> indicate anything interesting.
+On 7 May 2014 11:40, Luca Coelho <luca@coelho.fi> wrote:
+> On Wed, 2014-05-07 at 10:07 +0200, Johannes Berg wrote:
+>> On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
+>>
+>> > Hmm... Now that I think about the atomic swap - it actually becomes a
+>> > little bit of an issue in some cases.
+>> >
+>> > For one you might need to overcommit number of chanctx since swapping
+>> > requires both chanctx (old and new) to exist but that's the least of
+>> > the eproblem. If you have more than one interface you end up with
+>> > temporarily breaking interface combinations from driver point of view
+>> > while switching (first swap breaks it, last swap fixes it). Driver
+>> > won't know whether given swap is first/last unless we somehow pass it
+>> > through the switch_vif_chanctx(). IOW we actually need a "chanctx
+>> > transaction" (sort of a start-stop) that can batch up a couple of
+>> > chanctx switches for different vifs as an atomic op.
+>>
+>> Hmmm. Don't you already have that problem? Or you don't because you'd do
+>>
+>> for_each_affected_vif: unassign
+>> del chanctx [optional depending on reservation]
+>> add chanctx [ditto]
+>> for_each_affected_vif: assign
+>>
+>> right now?
+>>
+>> I suppose a sort of transaction API, if designed the right way, would
+>> also work somehow - Luca?
+>
+> Yeah, I think this is a good idea.  If we have an atomic transaction API
+> towards the driver, we can solve the problems of switching several vifs
+> at once.
 
-Then is it an error?
-Maybe use dev_notice instead.
+Hmm.. I assume all chanctx calls would be subject to the transaction
+API, i.e. add_chanctx/remove_chanctx/switch_vif_chanctx/change_chanctx.
+Then all calls except begin/commit would return void - I guess this
+could make handling errors a little saner.
+
+Another approach would be to merge all separate chanctx ops into a
+single one. This would have the benefit of providing driver all
+information in one place and possibly making it easier to handle
+errors internally (due to single function flow instead of having stuff
+all over the place). But I imagine this could become a little
+ambiguous in some parameter combinations. Any thoughts?
 
 
-
+Michał
