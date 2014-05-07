@@ -1,101 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:46614 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815AbaESLWU (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:49931 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652AbaEGHEr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 07:22:20 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so3515847eei.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 04:22:18 -0700 (PDT)
+	Wed, 7 May 2014 03:04:47 -0400
+Received: by mail-wi0-f182.google.com with SMTP id r20so766192wiv.15
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 00:04:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399382148.4218.28.camel@jlt4.sipsolutions.net>
+References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	<1397049062-24177-1-git-send-email-michal.kazior@tieto.com>
+	<1399382148.4218.28.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 09:04:46 +0200
+Message-ID: <CA+BoTQnx8EzBGwYKV-ZmR+zf=iv3YOaT7BPPsYKrrNG=tJkXmQ@mail.gmail.com> (sfid-20140507_090450_825641_9D2DDE53)
+Subject: Re: [PATCH v4 0/4] mac80211/cfg80211: CSA fixes/cleanups
 From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, yeohchunyeow@gmail.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix protected flag stripping
-Date: Mon, 19 May 2014 13:15:10 +0200
-Message-Id: <1400498110-12879-1-git-send-email-michal.kazior@tieto.com> (sfid-20140519_132226_269873_2C54E9D5)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents protected flag being stripped from
-undecrypted raw sniffed frames when monitor
-interface is active.
+On 6 May 2014 15:15, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-04-09 at 15:10 +0200, Michal Kazior wrote:
+>> Hi,
+>>
+>> The patchset fixes CSA tx queue locking and
+>> introduces interface teardown upon CSA failure
+>> during finalization.
+>
+> Applied (with the rename Luca suggested), thanks.
+>
+> However, there's one more thing - one caller of ieee80211_csa_finalize()
+> doesn't check the return value now, I think it probably should. Mind
+> taking a look at that? It should *probably* be the same as the other
+> caller (and not propagate the error), I'd say, so maybe that should be
+> rolled into the function?
 
-Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 33 +++++++++++++++++++++++---------
- 1 file changed, 24 insertions(+), 9 deletions(-)
+Right - the return value of ieee80211_csa_finalize() in
+__ieee80211_channel_switch() should be checked against. I think it
+should be like:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ac6a5fe..ac54d6e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -778,17 +778,30 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- static void ath10k_htt_rx_h_protected(struct ath10k_htt *htt,
- 				      struct ieee80211_rx_status *rx_status,
- 				      struct sk_buff *skb,
--				      enum htt_rx_mpdu_encrypt_type enctype)
-+				      enum htt_rx_mpdu_encrypt_type enctype,
-+				      enum rx_msdu_decap_format fmt,
-+				      bool dot11frag)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 
-+	rx_status->flag &= ~(RX_FLAG_DECRYPTED |
-+			     RX_FLAG_IV_STRIPPED |
-+			     RX_FLAG_MMIC_STRIPPED);
- 
--	if (enctype == HTT_RX_MPDU_ENCRYPT_NONE) {
--		rx_status->flag &= ~(RX_FLAG_DECRYPTED |
--				     RX_FLAG_IV_STRIPPED |
--				     RX_FLAG_MMIC_STRIPPED);
-+	if (enctype == HTT_RX_MPDU_ENCRYPT_NONE)
-+		return;
-+
-+	/*
-+	 * There's no explicit rx descriptor flag to indicate whether a given
-+	 * frame has been decrypted or not. We're forced to use the decap
-+	 * format as an implicit indication. However fragmentation rx is always
-+	 * raw and it probably never reports undecrypted raws.
-+	 *
-+	 * This makes sure sniffed frames are reported as-is without stripping
-+	 * the protected flag.
-+	 */
-+	if (fmt == RX_MSDU_DECAP_RAW && !dot11frag)
- 		return;
--	}
- 
- 	rx_status->flag |= RX_FLAG_DECRYPTED |
- 			   RX_FLAG_IV_STRIPPED |
-@@ -942,7 +955,8 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 		}
- 
- 		skb_in = skb;
--		ath10k_htt_rx_h_protected(htt, rx_status, skb_in, enctype);
-+		ath10k_htt_rx_h_protected(htt, rx_status, skb_in, enctype, fmt,
-+					  false);
- 		skb = skb->next;
- 		skb_in->next = NULL;
- 
-@@ -1024,7 +1038,7 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt,
- 		break;
- 	}
- 
--	ath10k_htt_rx_h_protected(htt, rx_status, skb, enctype);
-+	ath10k_htt_rx_h_protected(htt, rx_status, skb, enctype, fmt, false);
- 
- 	ath10k_process_rx(htt->ar, rx_status, skb);
+ err = ieee80211_csa_finalize(sdata);
+ if (err) {
+  sdata_info(sdata, "failed to finalize immediate CSA, disconnecting\n");
+  cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev, GFP_KERNEL);
+
+  /* don't propagate the error here - stop the iface instead since
+there's no way to revert CS now */
+  err = 0;
  }
-@@ -1330,7 +1344,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
- 		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
--	ath10k_htt_rx_h_protected(htt, rx_status, msdu_head, enctype);
-+	ath10k_htt_rx_h_protected(htt, rx_status, msdu_head, enctype, fmt,
-+				  true);
- 	msdu_head->ip_summed = ath10k_htt_rx_get_csum_state(msdu_head);
- 
- 	if (tkip_mic_err)
--- 
-1.8.5.3
 
+Should I re-post the patch(set?), post a follow up, or are you going
+to update the patch yourself?
+
+I'm not sure what you mean by rolling "that" into the function. You
+want to put the stop_iface() in csa_finalize()? I think it's going to
+look a bit ugly that way.
+
+
+Michał
