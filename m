@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60468 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbaE0Qu7 (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:51878 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692AbaEGLpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 12:50:59 -0400
-Message-ID: <5384C25E.70505@broadcom.com> (sfid-20140527_185117_133557_2029624A)
-Date: Tue, 27 May 2014 18:50:38 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 7 May 2014 07:45:30 -0400
+Received: by mail-we0-f177.google.com with SMTP id x48so869159wes.36
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 04:45:29 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Hans de Goede <hdegoede@redhat.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	<linux-sunxi@googlegroups.com>
-Subject: Re: [PATCH 00/11] sdio wifi oob irq support for sunxi
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <20140527152614.GB5694@tuxdriver.com>
-In-Reply-To: <20140527152614.GB5694@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1399461582.10517.18.camel@jlt4.sipsolutions.net>
+References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+	<1399373244.4218.21.camel@jlt4.sipsolutions.net>
+	<CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
+	<1399444778.5038.3.camel@jlt4.sipsolutions.net>
+	<CB3B3D4774441E42AA3EA0E1BA8230A0333F41ED@HASMSX106.ger.corp.intel.com>
+	<1399461582.10517.18.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 13:45:29 +0200
+Message-ID: <CA+BoTQnb996u2wicuetXzzcdw8ci0t93zD0G1eA7kFSX_NB9-g@mail.gmail.com> (sfid-20140507_134533_161352_E3A1FCC1)
+Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
+ failed notifications
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Peer, Ilan" <ilan.peer@intel.com>, Luca Coelho <luca@coelho.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/27/14 17:26, John W. Linville wrote:
-> On Mon, May 26, 2014 at 09:47:55AM +0200, Hans de Goede wrote:
->> Hi All,
->>
->> Here is a patch series adding support for oob irqs for the ap6210 sdio wifi
->> modules found on various Allwinner A20 boards.
->>
->> A lot of it is ground work which should be useful for adding oob irq support
->> to other sdio wifi models too.
->>
->> The first 5 patches are sunxi pinctrl patches and should go upstream through
->> the pinctrl tree.
->>
->> Patch 6 adds generic support for having per sdio function child nodes in
->> devicetree and should go upstream through the mmc tree.
->>
->> Patch 7 and 8 add oob irq support to the brcmfmac driver. Patch 9 pokes some
->> magic bits needed to enable the oob irq, this was taken from an android code
->> dump and good do with a good review from someone from Broadcom, Arend ?
+On 7 May 2014 13:19, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-05-07 at 10:27 +0000, Peer, Ilan wrote:
 >
-> If Arend approves, I'm fine with these going through another appropriate tree.
-
-Not sure in what tree these patches were created (assume some sunxi 
-tree), but if it conflicts with wireless-next I am pretty sure Stephen 
-will find that. I am fine with any tree. Patch 9 indeed has some magic 
-bits that need some clarification, but I will sort that out with Hans.
-
-Regards,
-Arend
-
->> Patch 10 and 11 add the necessary dts bits to actually enable the sdio irq
->> and should go upstream through Maxime's dt tree.
+>> > In the first case, there's no notification, nor any need for it. In the second
+>> > case, the scenario you suggest doesn't apply, and STOP_AP has to happen
+>> > anyway because the state is completely messed up, clients will be in the
+>> > process of switching etc.
+>> >
+>> > > Other than that, a STOP_AP might introduce some races, as
+>> > > wpa_supplicant/hostap will not know if the stop_ap was due to the
+>> > > failed CS or due to some other reason.
+>> >
+>> > I don't see why that would matter - even if the STOP_AP *was* for some
+>> > other reason, but happened in the middle of the CS flow, the reaction would
+>> > presumably be the same?
+>> >
 >>
->> Please review / merge.
->>
->> Thanks&  Regards,
->>
->> Hans
->>
+>> It can be beneficial to know that the STOP_AP was called due to
+>> failure of CS, as wpa_supplicant/hostap can tear down the AP and then
+>> (if possible) set it up again on the new channel or another channel.
 >
+> Maybe that's more of an argument for adding a sort of "reason" or
+> "cause" to the STOP_AP? (Btw, no tear down needed in this case - that's
+> already done)
+>
+> OTOH, what else are you thinking of doing? Why would you ever, under any
+> circumstances, not restart the AP if it was stopped by the device?
 
+I can smell a recursive start-stop ping-pong if you restart unconditionally.
+
+
+Michal
