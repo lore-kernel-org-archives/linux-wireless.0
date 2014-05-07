@@ -1,179 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:56098 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187AbaEVHYN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 03:24:13 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so9455530wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:11 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/11] iwlwifi: mvm: don't filter out the first beacon
-Date: Thu, 22 May 2014 10:23:50 +0300
-Message-Id: <1400743435-702-6-git-send-email-egrumbach@gmail.com> (sfid-20140522_092728_067796_004F90C5)
-In-Reply-To: <537DA58C.5050003@gmail.com>
-References: <537DA58C.5050003@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:60292 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476AbaEGGIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 02:08:23 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Luca Coelho <luca@coelho.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Subject: RE: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
+ failed notifications
+Date: Wed, 7 May 2014 06:08:18 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com> (sfid-20140507_080830_407242_9F5D3988)
+References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
+ <1399373244.4218.21.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1399373244.4218.21.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
-
-Enabling beacon filtering should be done only after a beacon
-has been received. Doing that too early will cause
-disconnections.
-This has already been fixed, but the fix didn't take care
-about the case where the beacon is received after the
-association, it waited only for association which is not
-enough.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 +++---
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  5 ---
- drivers/net/wireless/iwlwifi/mvm/power.c    | 62 ++++++++++-------------------
- 3 files changed, 27 insertions(+), 52 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index bdc8459..7411f12 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1368,9 +1368,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		IWL_DEBUG_MAC80211(mvm, "cqm info_changed\n");
- 		/* reset cqm events tracking */
- 		mvmvif->bf_data.last_cqm_event = 0;
--		ret = iwl_mvm_update_beacon_filter(mvm, vif, false, 0);
--		if (ret)
--			IWL_ERR(mvm, "failed to update CQM thresholds\n");
-+		if (mvmvif->bf_data.bf_enabled) {
-+			ret = iwl_mvm_enable_beacon_filter(mvm, vif, 0);
-+			if (ret)
-+				IWL_ERR(mvm,
-+					"failed to update CQM thresholds\n");
-+		}
- 	}
- 
- 	if (changes & BSS_CHANGED_ARP_FILTER) {
-@@ -1734,8 +1737,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
- 		/* enable beacon filtering */
--		if (vif->bss_conf.dtim_period)
--			WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
-+		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
- 		   new_state == IEEE80211_STA_ASSOC) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index beca97a..6ccc88b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -999,11 +999,6 @@ int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 				  u32 flags);
- int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
- 				struct ieee80211_vif *vif, bool enable);
--int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 bool force,
--				 u32 flags);
--
- /* SMPS */
- void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				enum iwl_mvm_smps_type_request req_type,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 1057647..a2b426b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -123,27 +123,6 @@ void iwl_mvm_beacon_filter_set_cqm_params(struct iwl_mvm *mvm,
- 	cmd->ba_enable_beacon_abort = cpu_to_le32(mvmvif->bf_data.ba_enabled);
- }
- 
--int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
--				struct ieee80211_vif *vif, bool enable)
--{
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_beacon_filter_cmd cmd = {
--		IWL_BF_CMD_CONFIG_DEFAULTS,
--		.bf_enable_beacon_filter = cpu_to_le32(1),
--	};
--
--	if (!mvmvif->bf_data.bf_enabled)
--		return 0;
--
--	if (mvm->cur_ucode == IWL_UCODE_WOWLAN)
--		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
--
--	mvmvif->bf_data.ba_enabled = enable;
--	iwl_mvm_beacon_filter_set_cqm_params(mvm, vif, &cmd);
--	iwl_mvm_beacon_filter_debugfs_parameters(vif, &cmd);
--	return iwl_mvm_beacon_filter_send_cmd(mvm, &cmd, 0);
--}
--
- static void iwl_mvm_power_log(struct iwl_mvm *mvm,
- 			      struct iwl_mac_power_cmd *cmd)
- {
-@@ -831,7 +810,7 @@ static int _iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int ret;
- 
--	if (mvmvif != mvm->bf_allowed_vif ||
-+	if (mvmvif != mvm->bf_allowed_vif || !vif->bss_conf.dtim_period ||
- 	    vif->type != NL80211_IFTYPE_STATION || vif->p2p)
- 		return 0;
- 
-@@ -859,6 +838,25 @@ int iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, flags, false);
- }
- 
-+int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
-+				struct ieee80211_vif *vif, bool enable)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_beacon_filter_cmd cmd = {
-+		IWL_BF_CMD_CONFIG_DEFAULTS,
-+		.bf_enable_beacon_filter = cpu_to_le32(1),
-+	};
-+
-+	if (!mvmvif->bf_data.bf_enabled)
-+		return 0;
-+
-+	if (mvm->cur_ucode == IWL_UCODE_WOWLAN)
-+		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
-+
-+	mvmvif->bf_data.ba_enabled = enable;
-+	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, 0, false);
-+}
-+
- int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 				  struct ieee80211_vif *vif,
- 				  u32 flags)
-@@ -935,23 +933,3 @@ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
- 
- 	return ret;
- }
--
--int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 bool force,
--				 u32 flags)
--{
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--
--	if (mvmvif != mvm->bf_allowed_vif)
--		return 0;
--
--	if (!mvmvif->bf_data.bf_enabled) {
--		/* disable beacon filtering explicitly if force is true */
--		if (force)
--			return iwl_mvm_disable_beacon_filter(mvm, vif, flags);
--		return 0;
--	}
--
--	return iwl_mvm_enable_beacon_filter(mvm, vif, flags);
--}
--- 
-1.8.3.2
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEpvaGFubmVzIEJlcmcNCj4gU2VudDogVHVlc2Rh
+eSwgTWF5IDA2LCAyMDE0IDEzOjQ3DQo+IFRvOiBMdWNhIENvZWxobw0KPiBDYzogbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBtaWNoYWwua2F6aW9yQHRpZXRvLmNvbTsgUGVlciwgSWxh
+bjsNCj4gT3RjaGVyZXRpYW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvNF0g
+Y2ZnODAyMTEvbmw4MDIxMTogYWRkIGNoYW5uZWwgc3dpdGNoIHN0YXJ0ZWQgYW5kDQo+IGZhaWxl
+ZCBub3RpZmljYXRpb25zDQo+IA0KPiBPbiBGcmksIDIwMTQtMDUtMDIgYXQgMTY6NDAgKzAzMDAs
+IEx1Y2EgQ29lbGhvIHdyb3RlOg0KPiANCj4gPiArICogQE5MODAyMTFfQ01EX0NIX1NXSVRDSF9T
+VEFSVEVEX05PVElGWTogTm90aWZ5IHRoYXQgYSBjaGFubmVsDQo+IHN3aXRjaA0KPiA+ICsgKglo
+YXMgYmVlbiBzdGFydGVkIG9uIGFuIGludGVyZmFjZSwgcmVnYXJkbGVzcyBvZiB0aGUgaW5pdGlh
+dG9yDQo+ID4gKyAqCShpZS4gd2hldGhlciBpdCB3YXMgcmVxdWVzdGVkIGZyb20gYSByZW1vdGUg
+ZGV2aWNlIG9yDQo+ID4gKyAqCWluaXRpYXRlZCBvbiBvdXIgb3duKS4gIEl0IGluZGljYXRlcyB0
+aGF0DQo+ID4gKyAqCSVOTDgwMjExX0FUVFJfSUZJTkRFWCB3aWxsIGJlIG9uICVOTDgwMjExX0FU
+VFJfV0lQSFlfRlJFUQ0KPiA+ICsgKglhZnRlciAlTkw4MDIxMV9BVFRSX0NIX1NXSVRDSF9DT1VO
+VCBUQlRUJ3MuDQo+IA0KPiBZb3UgZG9uJ3Qgc2VlbSB0byBoYXZlIHRoYXQgbm93LCBidXQgaXQg
+bWF5IG5vdCBhbHdheXMgYmUgbmVlZGVkLCBhbmQgd2UNCj4gY291bGQgYWRkIGl0IGxhdGVyICh1
+bmxlc3MgdXNlcnNwYWNlIG5lZWRzIHRvIHJlbHkgb24gaGF2aW5nIHRoZSBhdHRyaWJ1dGUgLQ0K
+PiBvdGhlcndpc2UgaXQgaGFzIHRvIGNoZWNrIGZvciBpdCkNCj4gDQo+IEFjdHVhbGx5IHRob3Vn
+aCwgbWF5YmUgeW91IGRvIG5lZWQgaXQsIHNvIHRoYXQgeW91IGNhbiBkZXRlcm1pbmUgd2hldGhl
+ciBpdA0KPiBtYWtlcyBzZW5zZSB0byB0cnkgYW55dGhpbmcgc21hcnQgLSBpZiB0aGUgY291bnQg
+aXMgMSBvciB5b3UgcmVjZWl2ZWQgYW4gYWN0aW9uDQo+IGZyYW1lIHRoZW4geW91IHByb2JhYmx5
+IGRvbid0IGhhdmUgdGltZSBhdCBhbGw/DQo+IA0KPiA+ICsgKiBATkw4MDIxMV9DTURfQ0hfU1dJ
+VENIX0ZBSUxFRF9OT1RJRlk6IE5vdGlmeSB0aGF0IGEgY2hhbm5lbA0KPiBzd2l0Y2gNCj4gPiAr
+ICoJaGFzIGZhaWxlZCBvbiAlTkw4MDIxMV9BVFRSX0lGSU5ERVguICBUaGlzIG5vdGlmaWNhdGlv
+biBjYW4NCj4gPiArICoJb25seSBiZSBzZW50IGFmdGVyIGEgQE5MODAyMTFfQ01EX0NIX1NXSVRD
+SF9TVEFSVEVEX05PVElGWQ0KPiBoYXMNCj4gPiArICoJYmVlbiBpc3N1ZWQuDQo+IA0KPiAoK0ls
+YW4sIEFuZHJlaSkNCj4gDQo+IEknbSBub3QgcmVhbGx5IHN1cmUgd2h5IHlvdSBoYXZlIHRoaXMg
+LSBpdCBzZWVtcyB0aGF0IGluIHRoaXMgY2FzZSB0aGUgaW50ZXJmYWNlDQo+IHdpbGwgYmUgc3Rv
+cHBlZCBzbyB5b3UnbGwgZ2V0IGEgU1RPUF9BUCBvciBESVNDT05ORUNUIG9yIHdoYXRldmVyIG90
+aGVyDQo+IG5vdGlmaWNhdGlvbi4gVGhpcyBtYXkgbm90IGFjdHVhbGx5IGJlIGNvbXBsZXRlbHkg
+dHJ1ZSByaWdodCBub3cgKEkgc2VlbSB0bw0KPiByZW1lbWJlciBhIGZpeCBpbiB0aGlzIGFyZWEg
+YnV0IGNhbid0IHNlZW0gdG8gZmluZCBpdCBpbiBteSB0cmVlISEpIGJ1dCB3ZSdsbA0KPiBoYXZl
+IHRvIGZpeCB0aGF0IHBhcnQgYW55d2F5LiBOb3QgcmVhbGx5IHN1cmUgd2h5IHRoZW4gdGhhdCBj
+b3VsZG4ndCBiZSB1c2VkDQo+IGluc3RlYWQgb2YgdGhpcyBub3RpZmljYXRpb24/IFRoZSB1c2Vy
+c3BhY2UgY29kZSBpcyBnb2luZyB0byBoYXZlIHRvIHdvcnJ5DQo+IGFib3V0IHRoYXQgYW55d2F5
+LCBJJ2QgdGhpbmsuDQo+IA0KDQpBdCBsZWFzdCBmb3IgQVAvR08sIHRoZXJlIGFyZSBjYXNlcyB0
+aGF0IGEgZmFpbGVkIGNoYW5uZWwgc3dpdGNoIHNob3VsZCBub3QgbmVjZXNzYXJpbHkgdHJpZ2dl
+ciBhIFNUT1BfQVAgZmxvdy4gRm9yIGV4YW1wbGUsIGluIGNhc2UgdGhhdCBtdWx0aS1jaGFubmVs
+IGlzIHN1cHBvcnRlZCwgd3BhX3N1cHBsaWNhbnQgbWlnaHQgcmVxdWVzdCBhIGNoYW5uZWwgc3dp
+dGNoIHRvIHRyeSB0byBzd2l0Y2ggYW4gQVAvR08gaW50ZXJmYWNlIHRvIGEgY2hhbm5lbCB1c2Vk
+IGJ5IGEgc3RhdGlvbiBpbnRlcmZhY2UgKHRvIGF2b2lkIG11bHRpIGNoYW5uZWwgb3BlcmF0aW9u
+KSwgYnV0IGluIGNhc2UgdGhhdCBzdWNoIGEgdHJhbnNpdGlvbiBmYWlscywgaXQgaXMgc3RpbGwg
+YSB2YWxpZCB0byBjb250aW51ZSB0byB1c2UgY3VycmVudCBjaGFubmVsIGFuZCBkbyBub3Qgc3Rv
+cCB0aGUgR08uIEluIHN1Y2ggYSBjYXNlLCBpdCB3b3VsZCBiZSB1c2VmdWwgdG8gZ2V0IGEgZmFp
+bHVyZSBub3RpZmljYXRpb24uIEdlbmVyYWxseSwgSSB0aGluayB0aGF0IHNpbmNlIGhvc3RhcGQv
+d3BhX3N1cHBsaWNhbnQgaGF2ZSBzdGFydGVkIHRoZSBjaGFubmVsIHN3aXRjaCwgaXQgbWlnaHQg
+YmUgYmV0dGVyIHRvIGhhdmUgdGhlbSBoYW5kbGUgYSBub3RpZmljYXRpb24gYW5kIHRha2UgdGhl
+IGFwcHJvcHJpYXRlIGFjdGlvbiAoaWYgbmVlZGVkIHN0b3AgdGhlIEFQL0dPIC4uLikuIA0KDQpP
+dGhlciB0aGFuIHRoYXQsIGEgU1RPUF9BUCBtaWdodCBpbnRyb2R1Y2Ugc29tZSByYWNlcywgYXMg
+d3BhX3N1cHBsaWNhbnQvaG9zdGFwIHdpbGwgbm90IGtub3cgaWYgdGhlIHN0b3BfYXAgd2FzIGR1
+ZSB0byB0aGUgZmFpbGVkIENTIG9yIGR1ZSB0byBzb21lIG90aGVyIHJlYXNvbi4NCg0KUmVnYXJk
+cywNCg0KSWxhbi4NCg0K
