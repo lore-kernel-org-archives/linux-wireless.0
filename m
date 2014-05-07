@@ -1,162 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:32892 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933271AbaE3P2d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:33 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n15so1343329wiw.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:32 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/12] staging: vt6656: rename vUpdateIFS to vnt_update_ifs
-Date: Fri, 30 May 2014 16:27:44 +0100
-Message-Id: <1401463671-4705-5-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172838_922974_5E7E68C9)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:42509 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755585AbaEGMxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 08:53:25 -0400
+Message-ID: <1399467196.6800.22.camel@dubbel> (sfid-20140507_145328_304530_5BDBBDCF)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 15:53:16 +0300
+In-Reply-To: <1399466312.10517.34.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <1399455657.6800.4.camel@dubbel>
+	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	 <1399457760.6800.7.camel@dubbel>
+	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	 <1399464536.6800.11.camel@dubbel>
+	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
+	 <1399465244.6800.13.camel@dubbel>
+	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/bssdb.c |  4 ++--
- drivers/staging/vt6656/card.c  |  8 ++++----
- drivers/staging/vt6656/card.h  |  2 +-
- drivers/staging/vt6656/wmgr.c  | 13 +++++++------
- 4 files changed, 14 insertions(+), 13 deletions(-)
+On Wed, 2014-05-07 at 14:38 +0200, Johannes Berg wrote:
+> On Wed, 2014-05-07 at 15:20 +0300, Luca Coelho wrote:
+> > On Wed, 2014-05-07 at 14:13 +0200, Johannes Berg wrote:
+> > > On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
+> > > 
+> > > > I was thinking about the case where you you need to involve 3 contexts.
+> > > > Let's say you have 2 vifs in the same context and after the switch you
+> > > > need to split them into 2 new ones (for instance, if there is some
+> > > > incompatibility in the new chandefs).
+> > > > 
+> > > > With the generic transactions you could do:
+> > > >  - new chanctx2
+> > > >  - new chanctx3
+> > > >  - switch vif1 chanctx1->chanctx2
+> > > >  - switch vif2 chanctx1->chanctx3
+> > > >  - del chanctx1
+> > > 
+> > > This isn't an interesting case, because it means you have a spare, so
+> > > you might as well do
+> > > 
+> > >  new chanctx3
+> > >  switch vif2 chanctx1->chanctx3
+> > >  switch_transaction(chanctx1, chanctx2, vif1)
+> > 
+> > Couldn't this potentially break the combinations temporarily again?
+> 
+> I don't see why? You had a spare channel context to start with,
+> otherwise you'd never have accepted this situation. Therefore, you can
+> use the spare one before actually doing the proposed
+> switch_vif_chanctx().
 
-diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
-index 8e9ce96..fd7ed1d 100644
---- a/drivers/staging/vt6656/bssdb.c
-+++ b/drivers/staging/vt6656/bssdb.c
-@@ -959,12 +959,12 @@ void BSSvSecondCallBack(struct work_struct *work)
- 			if (pDevice->bShortSlotTime) {
- 				pDevice->bShortSlotTime = false;
- 				BBvSetShortSlotTime(pDevice);
--				vUpdateIFS((void *) pDevice);
-+				vnt_update_ifs(pDevice);
- 			}
- 		} else if (!pDevice->bShortSlotTime) {
- 				pDevice->bShortSlotTime = true;
- 				BBvSetShortSlotTime(pDevice);
--				vUpdateIFS((void *) pDevice);
-+				vnt_update_ifs(pDevice);
- 		}
- 
- 		/* on/off barker long preamble mode */
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 9c88134..b2192c1 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -21,7 +21,7 @@
-  * Functions:
-  *      s_vSafeResetTx - Rest Tx
-  *      CARDvSetRSPINF - Set RSPINF
-- *      vUpdateIFS - Update slotTime,SIFS,DIFS, and EIFS
-+ *      vnt_update_ifs - Update slotTime,SIFS,DIFS, and EIFS
-  *      CARDvUpdateBasicTopRate - Update BasicTopRate
-  *      CARDbAddBasicRate - Add to BasicRateSet
-  *      CARDbSetBasicRate - Set Basic Tx Rate
-@@ -41,7 +41,7 @@
-  * Revision History:
-  *      06-10-2003 Bryan YC Fan:  Re-write codes to support VT3253 spec.
-  *      08-26-2003 Kyle Hsu:      Modify the definition type of dwIoBase.
-- *      09-01-2003 Bryan YC Fan:  Add vUpdateIFS().
-+ *      09-01-2003 Bryan YC Fan:  Add vnt_update_ifs().
-  *
-  */
- 
-@@ -384,7 +384,7 @@ void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
-  * Return Value: None.
-  *
-  */
--void vUpdateIFS(struct vnt_private *priv)
-+void vnt_update_ifs(struct vnt_private *priv)
- {
- 	u8 max_min = 0;
- 	u8 data[4];
-@@ -845,7 +845,7 @@ void CARDvSetBSSMode(struct vnt_private *priv)
- 	else if (priv->byBBType == BB_TYPE_11G)
- 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
- 
--	vUpdateIFS(priv);
-+	vnt_update_ifs(priv);
- 	CARDvSetRSPINF(priv, (u8)priv->byBBType);
- 
- 	if (priv->byBBType == BB_TYPE_11A) {
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index 06498ef..0b5c11c 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -47,7 +47,7 @@ struct vnt_private;
- 
- void vnt_set_channel(struct vnt_private *, u32);
- void CARDvSetRSPINF(struct vnt_private *, u8);
--void vUpdateIFS(struct vnt_private *);
-+void vnt_update_ifs(struct vnt_private *);
- void CARDvUpdateBasicTopRate(struct vnt_private *);
- void CARDbAddBasicRate(struct vnt_private *, u16);
- int CARDbIsOFDMinBasicRate(struct vnt_private *pDevice);
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index c30782f..c1151b9 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -1659,7 +1659,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
-                         } else {
-                             MACvDisableProtectMD(pDevice);
-                         }
--                        vUpdateIFS(pDevice);
-+			vnt_update_ifs(pDevice);
-                     }
-                     if ((pBSSList->sERP.byERP & WLAN_EID_ERP_NONERP_PRESENT) != pDevice->bNonERPPresent) {//0000 0001
-                         pDevice->bNonERPPresent = (pBSSList->sERP.byERP & WLAN_EID_ERP_USE_PROTECTION);
-@@ -1690,7 +1690,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
-                     if (bShortSlotTime != pDevice->bShortSlotTime) {
-                         pDevice->bShortSlotTime = bShortSlotTime;
-                         BBvSetShortSlotTime(pDevice);
--                        vUpdateIFS(pDevice);
-+			vnt_update_ifs(pDevice);
-                     }
-                 }
- 
-@@ -2337,7 +2337,8 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
- 	    RATEvParseMaxRate((void *)pDevice, pItemRates, pItemExtRates, true,
-                               &wMaxBasicRate, &wMaxSuppRate, &wSuppRate,
-                               &byTopCCKBasicRate, &byTopOFDMBasicRate);
--            vUpdateIFS(pDevice);
-+
-+	    vnt_update_ifs(pDevice);
-             // TODO: deal with if wCapInfo the privacy is on, but station WEP is off
-             // TODO: deal with if wCapInfo the PS-Pollable is on.
-             pMgmt->wCurrBeaconPeriod = pCurr->wBeaconInterval;
-@@ -2391,7 +2392,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-                     } else {
-                         MACvDisableProtectMD(pDevice);
-                     }
--                    vUpdateIFS(pDevice);
-+		    vnt_update_ifs(pDevice);
-                 }
-                 if ((pCurr->sERP.byERP & WLAN_EID_ERP_NONERP_PRESENT) != pDevice->bNonERPPresent) {//0000 0001
-                     pDevice->bNonERPPresent = (pCurr->sERP.byERP & WLAN_EID_ERP_USE_PROTECTION);
-@@ -2421,7 +2422,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-                 if (bShortSlotTime != pDevice->bShortSlotTime) {
-                     pDevice->bShortSlotTime = bShortSlotTime;
-                     BBvSetShortSlotTime(pDevice);
--                    vUpdateIFS(pDevice);
-+		    vnt_update_ifs(pDevice);
-                 }
-             }
- 
-@@ -2480,7 +2481,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
- 			      (PWLAN_IE_SUPP_RATES)pMgmt->abyCurrSuppRates,
-                               NULL, true, &wMaxBasicRate, &wMaxSuppRate, &wSuppRate,
-                               &byTopCCKBasicRate, &byTopOFDMBasicRate);
--            vUpdateIFS(pDevice);
-+	    vnt_update_ifs(pDevice);
-             pMgmt->wCurrCapInfo = pCurr->wCapInfo;
-             pMgmt->wCurrBeaconPeriod = pCurr->wBeaconInterval;
-             memset(pMgmt->abyCurrSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN);
--- 
-1.9.1
+It's not about the spare, it's about having this temporarily:
+
+chanctx3-vif2
+chanctx1-vif1
+
+Can we be sure that chanctx1 with vif1 is compatible with chanctx3 with
+vif2? We only check chanctx2 with vif1 and chanctx3 with vif2, which is
+our final goal.
+
+I'm not sure this is even possible, but it was something like this I had
+in mind.
+
+--
+Luca.
+
+
+
+> 
+> Ultimately, what I'm trying to say is that instead of the proposed
+> switch_vif_chanctx(), we need to have this:
+> 
+> enum ieee80211_chanctx_switch_mode - as before
+> 
+>         (*switch_vif_chanctx)(struct ieee80211_hw *hw,
+>                               struct ieee80211_vif **vifs, int n_vifs,
+>                               struct ieee80211_chanctx_conf *old_ctx,
+>                               struct ieee80211_chanctx_conf *new_ctx,
+>                               enum ieee80211_chanctx_switch_mode mode);
+> 
+> 
+> johannes
+> 
+
 
