@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:35442 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753478AbaEWRBR (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:54019 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129AbaEGCwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:17 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so1164354wib.5
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:15 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/20] staging: vt6656: camel case clean up MACvWriteBSSIDAddress
-Date: Fri, 23 May 2014 18:00:09 +0100
-Message-Id: <1400864419-8327-10-git-send-email-tvboxspy@gmail.com> (sfid-20140523_192148_874557_DE8855AE)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 6 May 2014 22:52:35 -0400
+Received: by mail-pd0-f174.google.com with SMTP id w10so386274pde.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2014 19:52:34 -0700 (PDT)
+Date: Wed, 7 May 2014 10:52:30 +0800
+From: Adam Lee <adam.lee@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/3] rtlwifi: make MSI support a module parameter
+Message-ID: <20140507025230.GB3712@adam-laptop> (sfid-20140507_045243_584206_80915847)
+References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
+ <5367A690.7010305@lwfinger.net>
+ <20140505154037.19620ac2@nehalam.linuxnetplumber.net>
+ <20140506021915.GA3624@adam-laptop>
+ <20140506180836.GF3518@tuxdriver.com>
+ <20140507023105.GA3712@adam-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140507023105.GA3712@adam-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-pbyEtherAddr -> addr
+On Wed, May 07, 2014 at 10:31:05AM +0800, Adam Lee wrote:
+> On Tue, May 06, 2014 at 02:08:37PM -0400, John W. Linville wrote:
+> > > > Standard practice is to assume MSI is available, and let the quirks
+> > > > in the PCI subsystem reject the request to enable MSI.
+> > > > 
+> > > > Also other drivers have a 'disable_msi' module parameter why not follow
+> > > > their example.
+> > > > 
+> > > 
+> > > Because some submodule's MSI causes an regression, and other submodules
+> > > of rtlwifi are not fully tested under MSI, we need to disable it by
+> > > default(regression has higher priority) and have an 'enable_msi' module
+> > > parameter for some certain users.
+> > 
+> > Couldn't it be called 'disable_msi' and default to 'on'?
+> 
+> It could be, will send an v2 patchset, thanks.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+Sorry, just grep linux/driver, there is no convention of 'disable_msi'
+parameter, only 5 drivers uses that, but 15 drivers are using 'msi'...
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 31f54fb..a19602f3 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -214,15 +214,10 @@ void MACvWriteWord(struct vnt_private *priv, u8 reg_ofs, u16 word)
- 		reg_ofs, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
--void MACvWriteBSSIDAddress(struct vnt_private *pDevice, u8 *pbyEtherAddr)
-+void MACvWriteBSSIDAddress(struct vnt_private *priv, u8 *addr)
- {
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE,
--                        MAC_REG_BSSID0,
--                        MESSAGE_REQUEST_MACREG,
--			ETH_ALEN,
--			pbyEtherAddr
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_BSSID0,
-+		MESSAGE_REQUEST_MACREG, ETH_ALEN, addr);
- }
- 
- void MACvEnableProtectMD(struct vnt_private *pDevice)
+Please still apply v1, setting 'disable_msi' to 'on' and asking users to
+set it to 'off' is a little weird. John, please ask me to send v2 if you
+think the 'disable_msi' parameter is better.
+
+Thanks.
+
 -- 
-1.9.1
-
+Adam Lee
