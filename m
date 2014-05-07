@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38877 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704AbaETOaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 10:30:14 -0400
-Date: Tue, 20 May 2014 10:24:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-Message-ID: <20140520142453.GB13981@tuxdriver.com> (sfid-20140520_163021_237489_C57542FF)
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:42908 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750811AbaEGRF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 13:05:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Wed,  7 May 2014 20:05:12 +0300
+Message-Id: <1399482312-20151-1-git-send-email-luca@coelho.fi> (sfid-20140507_190530_115263_81DA4FA8)
+Subject: [PATCH] mac80211: fix sparse warning caused by __ieee80211_channel_switch()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 12:33:51AM -0700, Luis R. Rodriguez wrote:
-> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
-> <janusz.dziedzic@tieto.com> wrote:
-> > Introduce support for setting DFS CAC time
-> > in milliseconds.
-> >
-> > Eg.
-> > (5250 - 5330 @ AUTO), (20), (60000), DFS
-> >
-> > will setup CAC 60 seconds CAC time.
-> 
-> Can you elaborate whether or not this will require a bump on CRDA  and
-> issuing of two new wireless-regdb files for the different versions on
-> the commit log?
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I would really prefer not to manage two regdb binary releases.
-Fear of that is what has kept me from merging this patch.
+Commit 59af6928 (mac80211: fix CSA tx queue stopping) introduced a
+sparse warning:
 
-John
+net/mac80211/cfg.c:3274:5: warning: symbol '__ieee80211_channel_switch' was not declared. Should it be static?
+
+Fix it by declaring the function static.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0c87c8c..3f8f005 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3271,8 +3271,9 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-			       struct cfg80211_csa_settings *params)
++static int
++__ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			   struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.0.0.rc0
+
