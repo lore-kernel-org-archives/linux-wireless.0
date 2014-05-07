@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:51354 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272AbaE1IxU (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:46859 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181AbaEGM16 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 04:53:20 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wp18so10550927obc.31
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 01:53:20 -0700 (PDT)
+	Wed, 7 May 2014 08:27:58 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so896141wgh.4
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 05:27:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAGb2v65NW61+BV2hR3wn_xRvCyPo+AhcMU7hmFjQxKWj49G=Bw@mail.gmail.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-	<1401090486-4414-2-git-send-email-hdegoede@redhat.com>
-	<CACRpkdZpy2aT_kFp01bnrviVB3SOggiNUJB46wbWAY_bqW8=gg@mail.gmail.com>
-	<CAGb2v65NW61+BV2hR3wn_xRvCyPo+AhcMU7hmFjQxKWj49G=Bw@mail.gmail.com>
-Date: Wed, 28 May 2014 10:53:19 +0200
-Message-ID: <CACRpkdbJJWXyO-beDCed5rBfAx0aMmdXLTUDtYuyWZGfABXzpA@mail.gmail.com> (sfid-20140528_105327_620014_FA05092E)
-Subject: Re: [linux-sunxi] Re: [PATCH 01/11] pinctrl: sunxi: create irq/pin
- mapping during init
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: linux-sunxi <linux-sunxi@googlegroups.com>,
-	devicetree <devicetree@vger.kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
+In-Reply-To: <1399464789.10517.29.camel@jlt4.sipsolutions.net>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	<1399455657.6800.4.camel@dubbel>
+	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	<1399457760.6800.7.camel@dubbel>
+	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	<1399464536.6800.11.camel@dubbel>
+	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
+Date: Wed, 7 May 2014 14:27:56 +0200
+Message-ID: <CA+BoTQnKxBR=sWYU=xPojcd61KDd=nsGGqhzNRFiY9zuEp4hKQ@mail.gmail.com> (sfid-20140507_142801_888674_D24ABC3E)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	Chris Ball <chris@printf.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
+	Simon Wunderlich <sw@simonwunderlich.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2014 at 4:21 PM, Chen-Yu Tsai <wens@csie.org> wrote:
-> On Tue, May 27, 2014 at 10:11 PM, Linus Walleij
-
->> I tried to hack the sunxi driver to even use the gpiolib
->> irqchip helpers but exactly this complex map thing in
->> ->irq_array[] git me stuck. If any of you guys could be so
->> nice to take a stab at this (compare to other commits
->> converting drivers to use gpiolibs irqchip helpers) then
->> I'd be very happy.
+On 7 May 2014 14:13, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
 >
-> We still need to rework the whole irqchip stuff for sun6i/sun8i,
-> which have 1 parent interrupt per EINT capable pin bank.
+>> I was thinking about the case where you you need to involve 3 contexts.
+>> Let's say you have 2 vifs in the same context and after the switch you
+>> need to split them into 2 new ones (for instance, if there is some
+>> incompatibility in the new chandefs).
+>>
+>> With the generic transactions you could do:
+>>  - new chanctx2
+>>  - new chanctx3
+>>  - switch vif1 chanctx1->chanctx2
+>>  - switch vif2 chanctx1->chanctx3
+>>  - del chanctx1
 >
-> Earlier discussions with Maxime (on IRC IIRC) suggested moving this
-> over to gpiolib irqchip helpers might be more work than using our own
-> irqchip implementation, requiring 1 gpiochip per pin group? (not sure)
+> This isn't an interesting case, because it means you have a spare, so
+> you might as well do
+>
+>  new chanctx3
+>  switch vif2 chanctx1->chanctx3
+>  switch_transaction(chanctx1, chanctx2, vif1)
 
-OK then keep your current code. I do not intend to cover all
-cases in the world with these helpers, just the simple cases.
-Complex hardware merits complex code.
+Don't you mean switch_chandef(chanctx1, chandef)? Or do you assume
+chanctx2 was prepared earlier? Don't you need to remove chanctx1 then?
+Oh, and the chanctx overcommit.. :-)
 
-Yours,
-Linus Walleij
+I actually think Luca's example is a valid one as it shows the driver
+can freely handle things internally, no? Although I don't see when it
+would be required to make a transaction like that in real-world..
+
+
+Michał
