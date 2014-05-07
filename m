@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47250 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751777AbaEZHsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 03:48:52 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 01/11] pinctrl: sunxi: create irq/pin mapping during init
-Date: Mon, 26 May 2014 09:47:56 +0200
-Message-Id: <1401090486-4414-2-git-send-email-hdegoede@redhat.com> (sfid-20140526_094900_820179_ECFF60C7)
-In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:49427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755441AbaEGLJi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 07:09:38 -0400
+Message-ID: <1399460964.10517.12.camel@jlt4.sipsolutions.net> (sfid-20140507_130941_942105_878714FF)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 13:09:24 +0200
+In-Reply-To: <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com> (sfid-20140507_123846_454540_5D41186C)
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <1399455657.6800.4.camel@dubbel>
+	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	 <1399457760.6800.7.camel@dubbel>
+	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	 (sfid-20140507_123846_454540_5D41186C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chen-Yu Tsai <wens@csie.org>
+On Wed, 2014-05-07 at 12:38 +0200, Michal Kazior wrote:
 
-The irq/pin mapping is used to lookup the pin to mux to the irq
-function when the irq is enabled. It is created when gpio_to_irq
-is called. Creating the mapping during init allows us to map the
-interrupts directly from the device tree.
+> I was actually thinking of just providing the bare minimum to fulfill
+> requirements for the CSA case: int foo(*hw, **vifs, n_vifs, *oldctx,
+> *newctx, flags).
+> 
+> Having an array of transactions passed through a single call seems
+> more robust and cleaner. Naiive drivers might just iterate over each
+> entry while more complex drivers might examine the whole request and
+> detect chanctx swapping.
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/pinctrl/sunxi/pinctrl-sunxi.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Not sure what you mean by "detect chanctx swapping" - the flags would
+indicate that anyway, no? In any case, I like this better than a more
+general transaction API I think, it's easier for the driver
+implementation and clearer as to what needs to be done/supported.
 
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index f6522b5..db9ccd6 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-@@ -529,8 +529,6 @@ static int sunxi_pinctrl_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
- 	if (!desc)
- 		return -EINVAL;
- 
--	pctl->irq_array[desc->irqnum] = offset;
--
- 	dev_dbg(chip->dev, "%s: request IRQ for GPIO %d, return %d\n",
- 		chip->label, offset + chip->base, desc->irqnum);
- 
-@@ -731,6 +729,9 @@ static int sunxi_pinctrl_build_state(struct platform_device *pdev)
- 		struct sunxi_desc_function *func = pin->functions;
- 
- 		while (func->name) {
-+			/* Create interrupt mapping while we're at it */
-+			if (!strcmp(func->name, "irq"))
-+				pctl->irq_array[func->irqnum] = pin->pin.number;
- 			sunxi_pinctrl_add_function(pctl, func->name);
- 			func++;
- 		}
--- 
-1.9.3
+johannes
 
