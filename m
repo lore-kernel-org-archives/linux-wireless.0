@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:37563 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaESOaJ (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:41984 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933936AbaEGPxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 10:30:09 -0400
-Received: by mail-ie0-f179.google.com with SMTP id rd18so2224480iec.10
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 07:30:08 -0700 (PDT)
-Date: Mon, 19 May 2014 10:29:59 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 802.11s mode without HWMP
-Message-ID: <20140519142959.GB6198@localhost> (sfid-20140519_163013_495743_E599A789)
-References: <CAGnRvurDvRqeNZYHZQG63=6FQv2XnFOR+J9K4-Dk=F77c6SdKQ@mail.gmail.com>
- <20140519131832.GA6198@localhost>
- <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
+	Wed, 7 May 2014 11:53:23 -0400
+Received: by mail-ee0-f54.google.com with SMTP id b57so885933eek.41
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 08:53:21 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH 3/4] rtl8180: make CTS-to-self protection work
+Date: Wed,  7 May 2014 17:53:17 +0200
+Message-Id: <1399477997-26455-1-git-send-email-andrea.merello@gmail.com> (sfid-20140507_175332_795359_63718326)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2014 at 04:14:36PM +0200, Henning Rogge wrote:
-> I want to force 802.11s only to connect to other stations one layer-2
-> hop away. So no forwarding by intermediate stations.
-> 
-> Does the "mesh_fwding" parameter maybe help? Or can I set a "TTL" for
-> the PREQ messages to 1?
+CTS protection was not working properly because the HW still need
+RTS flag to be asserted, and it need also RTS rate field to be
+set with CTS-to-self rate and RTS duration field to be filled with
+CTS-to-self duration.
 
-Ah, ok got it.  Then yes, you are right, either of those approaches will
-disable forwarding.
+This patch makes the driver to do this.
 
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 8d07df2..2c1c02b 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -463,18 +463,23 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
+ 			    RTL818X_TX_DESC_FLAG_NO_ENC;
+ 
+ 	rc_flags = info->control.rates[0].flags;
++
++	/* HW will perform RTS-CTS when only RTS flags is set.
++	 * HW will perform CTS-to-self when both RTS and CTS flags are set.
++	 * RTS rate and RTS duration will be used also for CTS-to-self.
++	 */
+ 	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		tx_flags |= RTL818X_TX_DESC_FLAG_RTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
++		rts_duration = ieee80211_rts_duration(dev, priv->vif,
++						skb->len, info);
+ 	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+-		tx_flags |= RTL818X_TX_DESC_FLAG_CTS;
++		tx_flags |= RTL818X_TX_DESC_FLAG_RTS | RTL818X_TX_DESC_FLAG_CTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
++		rts_duration = ieee80211_ctstoself_duration(dev, priv->vif,
++						skb->len, info);
+ 	}
+ 
+-	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS)
+-		rts_duration = ieee80211_rts_duration(dev, priv->vif, skb->len,
+-						      info);
+-
+ 	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8180) {
+ 		unsigned int remainder;
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.8.3.2
+
