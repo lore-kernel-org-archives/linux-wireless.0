@@ -1,103 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:38692 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbaEOMmR convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48767 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671AbaEGIH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 08:42:17 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so994804wes.18
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 05:42:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87r43v9v2n.fsf@kamboji.qca.qualcomm.com>
-References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
-	<1400050658-2763-2-git-send-email-michal.kazior@tieto.com>
-	<87r43v9v2n.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 15 May 2014 14:42:16 +0200
-Message-ID: <CA+BoTQkYMFi5_a1w0UQaPanAEaeiK9-ScnmLzxro1uB2dzK4MA@mail.gmail.com> (sfid-20140515_144221_130324_5BAEF9EA)
-Subject: Re: [PATCH 1/2] ath10k: improve warm reset reliability
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 7 May 2014 04:07:59 -0400
+Message-ID: <1399450061.5038.10.camel@jlt4.sipsolutions.net> (sfid-20140507_100819_772616_5C298C34)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Luca Coelho <luca@coelho.fi>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 10:07:41 +0200
+In-Reply-To: <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com> (sfid-20140507_080520_858946_318E5B7B)
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 (sfid-20140507_080520_858946_318E5B7B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 May 2014 12:48, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Warm reset is now able to recover after device
->> crashes which required a cold reset before.
->>
->> This should greatly reduce chances of getting data
->> bus errors or host system freezes due to buggy
->> cold reset on some chips.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Awesome! This is very much needed. I just have a cosmetic comment:
->
->> +/* this function effectively clears target memory controller assert line */
->> +static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
->> +{
->> +     u32 val;
->> +
->> +     val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
->> +                             SOC_RESET_CONTROL_ADDRESS);
->> +     ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
->> +                        val | SOC_RESET_CONTROL_SI0_RST_MASK);
->> +     val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
->> +                             SOC_RESET_CONTROL_ADDRESS);
->
-> We do have the ath10k_pci_soc_ functions for accessing SOC registers, I
-> would prefer to use those here. I now modified your patch with the diff
-> below. Is that ok to you?
+On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
 
-Ah, yeah. I totally forgot about these functions (again).
+> Hmm... Now that I think about the atomic swap - it actually becomes a
+> little bit of an issue in some cases.
+> 
+> For one you might need to overcommit number of chanctx since swapping
+> requires both chanctx (old and new) to exist but that's the least of
+> the eproblem. If you have more than one interface you end up with
+> temporarily breaking interface combinations from driver point of view
+> while switching (first swap breaks it, last swap fixes it). Driver
+> won't know whether given swap is first/last unless we somehow pass it
+> through the switch_vif_chanctx(). IOW we actually need a "chanctx
+> transaction" (sort of a start-stop) that can batch up a couple of
+> chanctx switches for different vifs as an atomic op.
 
+Hmmm. Don't you already have that problem? Or you don't because you'd do
 
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -1807,20 +1807,18 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
->  {
->         u32 val;
->
-> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> -                               SOC_RESET_CONTROL_ADDRESS);
-> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-> -                          val | SOC_RESET_CONTROL_SI0_RST_MASK);
-> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> -                               SOC_RESET_CONTROL_ADDRESS);
-> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-> +       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
-> +                              val | SOC_RESET_CONTROL_SI0_RST_MASK);
-> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-> +
->         msleep(10);
->
-> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> -                               SOC_RESET_CONTROL_ADDRESS);
-> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-> -                          val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
-> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> -                               SOC_RESET_CONTROL_ADDRESS);
-> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-> +       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
-> +                              val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
-> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-> +
->         msleep(10);
->  }
+for_each_affected_vif: unassign
+del chanctx [optional depending on reservation]
+add chanctx [ditto]
+for_each_affected_vif: assign
 
-Looks good to me :-)
+right now?
 
+I suppose a sort of transaction API, if designed the right way, would
+also work somehow - Luca?
 
-> Full patch here:
->
-> https://github.com/kvalo/ath/commit/7b52054308a371d479a9e686e1d8411d19a90fd7
+johannes
 
-You probably mean:
-
-https://github.com/kvalo/ath/commit/136ef8110cba61752eee5ef6bd7ce170b15cf491
-
-
-Michał
