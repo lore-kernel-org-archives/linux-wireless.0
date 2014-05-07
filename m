@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44063 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751439AbaEWJOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 05:14:54 -0400
-Message-ID: <1400836483.25946.37.camel@dubbel> (sfid-20140523_111458_795792_DA32F73F)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 23 May 2014 12:14:43 +0300
-In-Reply-To: <1400835498.4358.9.camel@jlt4.sipsolutions.net>
-References: <1400769938.4174.29.camel@jlt4.sipsolutions.net>
-	 <1400812703-15685-1-git-send-email-luca@coelho.fi>
-	 <CA+BoTQkof_e_T=xegftVHdKK_XFeb2HegOQWmV5+PkCdLkzEyg@mail.gmail.com>
-	 (sfid-20140523_100116_761277_D988CC7D) <1400835498.4358.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] mac80211: add a single-transaction driver op to switch
- contexts
+Received: from mga11.intel.com ([192.55.52.93]:55311 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755104AbaEGJiQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 05:38:16 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linux-gpio@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCHv2] rfkill-gpio: Use gpio cansleep version
+Date: Wed,  7 May 2014 11:38:11 +0200
+Message-Id: <1399455491-4491-1-git-send-email-loic.poulain@intel.com> (sfid-20140507_113820_302076_EE1C1BB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-23 at 10:58 +0200, Johannes Berg wrote:
-> On Fri, 2014-05-23 at 10:01 +0200, Michal Kazior wrote:
-> 
-> > So.. which patch are we going forward with? Luca's or mine? Either way
-> > is fine with me as long as we reach a conclusion :-)
-> 
-> Looks like both are missing some things? Luca's doesn't have tracing,
-> and supports just a single interface (which you'll not like :) ) but
-> personally I liked the struct API a bit better than multiple double
-> pointer arrays you had.
+If gpio controller requires waiting for read and write
+GPIO values, then we have to use the gpio cansleep api.
+Fix the rfkill_gpio_set_power which calls only the
+nonsleep version (causing kernel warning).
+There is no problem to use the cansleep version here
+because we are not in IRQ handler or similar context
+(cf rfkill_set_block).
 
-What do you mean mine doesn't support tracing? Check the bottom of the
-patch again. :) I don't think it's the most beautiful code, but it seems
-to work. :)
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
+---
+ v2: use cansleep unconditionnaly
 
-Also, my patch *does* support multiple vifs.  But the code we have
-doesn't support it, so I call the new op with a single-vif only.
-Michal's patch doesn't call the new op (only on a later patch), so it's
-pretty much the same.
+ net/rfkill/rfkill-gpio.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
---
-Luca.
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index bd2a5b9..1cb42d0 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -47,17 +47,14 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ {
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+-	if (blocked) {
+-		gpiod_set_value(rfkill->shutdown_gpio, 0);
+-		gpiod_set_value(rfkill->reset_gpio, 0);
+-		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+-			clk_disable(rfkill->clk);
+-	} else {
+-		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+-			clk_enable(rfkill->clk);
+-		gpiod_set_value(rfkill->reset_gpio, 1);
+-		gpiod_set_value(rfkill->shutdown_gpio, 1);
+-	}
++	if (!blocked && !IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
++		clk_enable(rfkill->clk);
++
++	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
++	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
++
++	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
++		clk_disable(rfkill->clk);
+ 
+ 	rfkill->clk_enabled = blocked;
+ 
+-- 
+1.8.3.2
 
