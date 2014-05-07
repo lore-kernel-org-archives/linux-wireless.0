@@ -1,70 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:62029 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753379AbaEOVuX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46602 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971AbaEGUAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:50:23 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so1278139wib.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:50:22 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 7 May 2014 16:00:25 -0400
+Date: Wed, 7 May 2014 15:54:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Herrmann <dh.herrmann@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 01/15] staging: staging: vt6656: nsDMA_tx_packet Move pContext later.
-Date: Thu, 15 May 2014 22:49:10 +0100
-Message-Id: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235027_293883_2C32A4E5)
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net,
+	Oleksij Rempel <linux@rempel-privat.de>
+Subject: Re: [PATCH] ath9k: fix NULL-deref in hw_per_calibration() for ar9002
+Message-ID: <20140507195435.GF20432@tuxdriver.com> (sfid-20140507_220031_058352_CB325137)
+References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-call s_vGetFreeContext later in function skiping large
-chunk of code.
+On Wed, May 07, 2014 at 09:22:58AM +0200, David Herrmann wrote:
+> ah->caldata may be NULL if no channel is selected. Check for that before
+> accessing it.
+> 
+> Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+> ---
+> Hi
+> 
+> This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
+> is freed while we run in hw_per_calibration(). However, this patch fixes serious
+> kernel panics with wifi-P2P on my machine.
+> 
+> I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
+> correct fix would be to synchronously stop any running hw-calibration before
+> setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
+> this small workaround.
+> 
+> Thanks
+> David
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+Is there any hope for getting a more complete fix from the ath9k guys
+in short order?
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 03d5339..57eb502 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -2172,14 +2172,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
-         }
-     }
- 
--	pContext = s_vGetFreeContext(pDevice);
--
--    if (pContext == NULL) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
--        dev_kfree_skb_irq(skb);
--        return STATUS_RESOURCES;
--    }
--
- 	memcpy(&pDevice->sTxEthHeader, skb->data, ETH_HLEN);
- 
- //mike add:station mode check eapol-key challenge--->
-@@ -2402,7 +2394,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
- 
-             if (pTransmitKey == NULL) {
-                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"return no tx key\n");
--		pContext->bBoolInUse = false;
-                 dev_kfree_skb_irq(skb);
-                 pStats->tx_dropped++;
-                 return STATUS_FAILURE;
-@@ -2410,6 +2401,13 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
-         }
-     }
- 
-+	pContext = s_vGetFreeContext(pDevice);
-+	if (!pContext) {
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
-+		dev_kfree_skb_irq(skb);
-+		return STATUS_RESOURCES;
-+	}
-+
- 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
- 
-     fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
+John
+
+> 
+>  drivers/net/wireless/ath/ath9k/ar9002_calib.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> index cdc7400..4667ab9 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> @@ -99,14 +99,16 @@ static bool ar9002_hw_per_calibration(struct ath_hw *ah,
+>  				}
+>  
+>  				currCal->calData->calPostProc(ah, numChains);
+> -				caldata->CalValid |= currCal->calData->calType;
+> +				if (caldata)
+> +					caldata->CalValid |= currCal->calData->calType;
+> +
+>  				currCal->calState = CAL_DONE;
+>  				iscaldone = true;
+>  			} else {
+>  				ar9002_hw_setup_calibration(ah, currCal);
+>  			}
+>  		}
+> -	} else if (!(caldata->CalValid & currCal->calData->calType)) {
+> +	} else if (caldata && !(caldata->CalValid & currCal->calData->calType)) {
+>  		ath9k_hw_reset_calibration(ah, currCal);
+>  	}
+>  
+> -- 
+> 1.9.2
+> 
+> 
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
