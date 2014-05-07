@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42475 "EHLO mga02.intel.com"
+Received: from nbd.name ([46.4.11.11]:53152 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759981AbaEMJ45 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 05:56:57 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] mac80211: fix suspend vs. association race
-Date: Tue, 13 May 2014 12:54:09 +0300
-Message-Id: <1399974849-12353-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140513_115706_418125_B4AD1FB4)
+	id S1750892AbaEGUQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 16:16:04 -0400
+Message-ID: <536A9479.8010201@openwrt.org> (sfid-20140507_221608_568572_0619703A)
+Date: Wed, 07 May 2014 22:15:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	David Herrmann <dh.herrmann@gmail.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in hw_per_calibration()
+ for ar9002
+References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com> <20140507195435.GF20432@tuxdriver.com>
+In-Reply-To: <20140507195435.GF20432@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the association is in progress while we suspend, the
-stack will be in a messed up state. Clean it before we
-suspend.
+On 2014-05-07 21:54, John W. Linville wrote:
+> On Wed, May 07, 2014 at 09:22:58AM +0200, David Herrmann wrote:
+>> ah->caldata may be NULL if no channel is selected. Check for that before
+>> accessing it.
+>> 
+>> Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+>> ---
+>> Hi
+>> 
+>> This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
+>> is freed while we run in hw_per_calibration(). However, this patch fixes serious
+>> kernel panics with wifi-P2P on my machine.
+>> 
+>> I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
+>> correct fix would be to synchronously stop any running hw-calibration before
+>> setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
+>> this small workaround.
+>> 
+>> Thanks
+>> David
+> 
+> Is there any hope for getting a more complete fix from the ath9k guys
+> in short order?
+This looks easy to fix. I'll send a patch soon.
 
-This patch completes Johannes's patch:
-
-1a1cb744de160ee70086a77afff605bbc275d291
-Author: Johannes Berg <johannes.berg@intel.com>
-
-    mac80211: fix suspend vs. authentication race
-
-Cc: <stable@vger.kernel.org>
-Fixes: 12e7f517029d ("mac80211: cleanup generic suspend/resume procedures")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/mlme.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 139005d..5e4f7ea 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3600,7 +3600,7 @@ void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
- 
- 	sdata_lock(sdata);
- 
--	if (ifmgd->auth_data) {
-+	if (ifmgd->auth_data || ifmgd->assoc_data) {
- 		/*
- 		 * If we are trying to authenticate while suspending, cfg80211
- 		 * won't know and won't actually abort those attempts, thus we
-@@ -3611,7 +3611,10 @@ void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
- 					       IEEE80211_STYPE_DEAUTH,
- 					       WLAN_REASON_DEAUTH_LEAVING,
- 					       false, frame_buf);
--		ieee80211_destroy_auth_data(sdata, false);
-+		if (ifmgd->assoc_data)
-+			ieee80211_destroy_assoc_data(sdata, false);
-+		if (ifmgd->auth_data)
-+			ieee80211_destroy_auth_data(sdata, false);
- 		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
- 				      IEEE80211_DEAUTH_FRAME_LEN);
- 	}
--- 
-1.8.3.2
+- Felix
 
