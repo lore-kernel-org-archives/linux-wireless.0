@@ -1,79 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:42246 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752780AbaENDSQ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:23098 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750920AbaEGFDK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 23:18:16 -0400
-Date: Wed, 14 May 2014 13:18:05 +1000
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Subject: Re: mwifiex: no wr_port available
-Message-ID: <20140514031804.GN12785@us.netrek.org> (sfid-20140514_051819_713011_4BC1A9EE)
-References: <20140507120634.GM17490@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
+	Wed, 7 May 2014 01:03:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/3] mwifiex: configure inactivity timeout for TDLS link
+Date: Tue, 6 May 2014 22:02:43 -0700
+Message-ID: <1399438965-12221-1-git-send-email-bzhao@marvell.com> (sfid-20140507_070314_871862_E3422557)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 13, 2014 at 07:52:47PM -0700, Bing Zhao wrote:
-> Hi James,
-> 
-> > G'day,
-> > 
-> > Is there a short duration leak of wr_port in
-> > mwifiex_sdio_host_to_card()?
-> 
-> You are right. There is a leak in the error case. Thanks for
-> pointing it out.
+From: Avinash Patil <patila@marvell.com>
 
-Thanks.
+This patch adds configuration timeout for TDLS link. This is
+configuered at the time of TDLS link configuration. If TDLS link
+is inactive for more than timeout, FW will tear this link.
 
-> > If mwifiex_host_to_card_mp_aggr fails because of is_suspended in
-> > mwifiex_write_data_sync, is the wr_port ever released?
-> > 
-> > Or maybe mp_wr_bitmap is re-read from the card when a download
-> > interrupt occurs, or if an upload interrupt occurs after a command is
-> > sent.
-> 
-> A patch has been sent to address this issue.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h      | 8 ++++++++
+ drivers/net/wireless/mwifiex/sta_cmd.c | 7 +++++++
+ 2 files changed, 15 insertions(+)
 
-Reviewed, thanks.  Functionally identical to a patch that I've been
-testing locally:
-
-/*
- * Rollback the effects of _get_wr_port above.
- */
-static void mwifiex_put_wr_port(struct mwifiex_adapter *adapter, u8 port)
-{
-	struct sdio_mmc_card *card = adapter->card;
-
-	card->mp_wr_bitmap |= (1 << port);
-	card->curr_wr_port = port;
-}
-
-...
-
-		if (type == MWIFIEX_TYPE_DATA) {
-			mwifiex_put_wr_port(adapter, port);
-			adapter->data_sent = false;
-		}
-
-You may be interested that rd_port also has possible leak when skb
-cannot be allocated.  See mwifiex_process_int_status:
-
-		skb = dev_alloc_skb(rx_len);
-		if (!skb)
-			return -1;
-
-We have a hack in OLPC production arm-3.5 kernel which restores
-rd_port bit, restores int_status.
-
-http://dev.laptop.org/git/olpc-kernel/commit/?h=arm-3.5&id=59fcaf10cce5bbdc370ec1c262b12aeb66ed1dca
-
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index b485dc1..28994ab 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -169,6 +169,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_GWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 146)
+ #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
+ #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
++#define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
+ #define TLV_TYPE_FW_API_REV         (PROPRIETARY_TLV_BASE_ID + 199)
+ 
+ #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
+@@ -708,6 +709,13 @@ struct mwifiex_ie_types_vendor_param_set {
+ 	u8 ie[MWIFIEX_MAX_VSIE_LEN];
+ };
+ 
++#define MWIFIEX_TDLS_IDLE_TIMEOUT	60
++
++struct mwifiex_ie_types_tdls_idle_timeout {
++	struct mwifiex_ie_types_header header;
++	__le16 value;
++} __packed;
++
+ struct mwifiex_ie_types_rsn_param_set {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 rsn_ie[1];
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index e3cac14..88202ce 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1546,6 +1546,7 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ 	struct mwifiex_ie_types_extcap *extcap;
+ 	struct mwifiex_ie_types_vhtcap *vht_capab;
+ 	struct mwifiex_ie_types_aid *aid;
++	struct mwifiex_ie_types_tdls_idle_timeout *timeout;
+ 	u8 *pos, qos_info;
+ 	u16 config_len = 0;
+ 	struct station_parameters *params = priv->sta_params;
+@@ -1643,6 +1644,12 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ 			config_len += sizeof(struct mwifiex_ie_types_aid);
+ 		}
+ 
++		timeout = (void *)(pos + config_len);
++		timeout->header.type = cpu_to_le16(TLV_TYPE_TDLS_IDLE_TIMEOUT);
++		timeout->header.len = cpu_to_le16(sizeof(timeout->value));
++		timeout->value = cpu_to_le16(MWIFIEX_TDLS_IDLE_TIMEOUT);
++		config_len += sizeof(struct mwifiex_ie_types_tdls_idle_timeout);
++
+ 		break;
+ 	default:
+ 		dev_err(priv->adapter->dev, "Unknown TDLS operation\n");
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.8.2.3
+
