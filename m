@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f179.google.com ([209.85.128.179]:53032 "EHLO
-	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbaEZGLl (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222AbaEGLRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 02:11:41 -0400
-Received: by mail-ve0-f179.google.com with SMTP id oy12so8775047veb.38
-        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 23:11:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
- <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com> <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Sun, 25 May 2014 23:11:19 -0700
-Message-ID: <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com> (sfid-20140526_081144_385770_27CAA04A)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 May 2014 07:17:19 -0400
+Message-ID: <1399461426.10517.16.camel@jlt4.sipsolutions.net> (sfid-20140507_131723_560192_CC4291BE)
+Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Date: Wed, 07 May 2014 13:17:06 +0200
+In-Reply-To: <CA+BoTQmygnk161oi=AUwfFM4U-r8TxuJVcHPMbsOG+QCzB03hQ@mail.gmail.com> (sfid-20140507_114135_873360_B581D97F)
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
+	 <1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
+	 <1399387345.4218.44.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=FqfB46Bd6iC3F=Ps=b4f6CP77p5d6f4fiVLUttCYQjg@mail.gmail.com>
+	 <1399449912.5038.7.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnJ7N=UtDu_tySg8uYrQg9i+BvuYrwez7x-LUVinroWDw@mail.gmail.com>
+	 <1399453631.10517.10.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmygnk161oi=AUwfFM4U-r8TxuJVcHPMbsOG+QCzB03hQ@mail.gmail.com>
+	 (sfid-20140507_114135_873360_B581D97F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 25, 2014 at 10:39 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Mon, May 26, 2014 at 8:06 AM, Andy Lutomirski <luto@amacapital.net> wrote:
->> On Sun, May 25, 2014 at 10:23 AM, Andy Lutomirski <luto@amacapital.net> wrote:
->>> I have an old iwldvm station (Intel(R) Centrino(R) Ultimate-N 6300
->>> AGN, REV=0x74) and a new ath10k AP (QCA9880-BR4A, I think, as found in
->>> the TP-Link Archer C7 vs).  The former is Fedora's 3.14 kernel and the
->>> latter is OpenWRT trunk from a few days ago.
->>>
->>> Every now and then, my connection drops out.  From wireshark on the
->>> station, it looks like traffic from the AP to the STA is coming
->>> through but traffic from the STA to the AP is not.  I could be wrong
->>> here, though.  Nothing is logged in either machine's kernel log.
->>> After 5 seconds to a couple minutes, everything starts working again.
->>>
->>> A couple of Apple devices using the same radio on the same AP seem to work fine.
->>>
->>> Any advice for debugging this?  I don't know where to start.
->>
->> I caught one of the stalls with iwlwifi debugging on.  I've attached
->> the dmesg.  The stall ended ten seconds or so before the end of this
->> trace.  Is this an indication that something's wrong with iwlwifi?
->>
->> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
->> shold 50 delta 96 msecs 103
->> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
->>
-> Can you please disable powersave?
-> It seems that it should be disabled by default, but you enabled it?
-> I might be confused though... Looking again at the code...
+On Wed, 2014-05-07 at 11:41 +0200, Michal Kazior wrote:
 
-This?
+> > I'm not really sure how this would work though - drivers that have
+> > firmware generating beacons don't generally seem to be in a position to
+> > just stop that aspect and continue operating otherwise, with active
+> > clients and all that. It seems to me this might be really difficult to
+> > implement.
+> 
+> Yeah. This seems like a problem for template drivers. But on the other
+> hand if they are capable of handling CSA IE counter they should
+> understand CSA, shouldn't they?
 
-$ cat /sys/module/iwlwifi/parameters/power_save
-N
+Yeah but that doesn't mean they can simply stop beaconing for "extended"
+periods of time.
 
-I have pcie_aspm.policy=powersave, but I don't think that should
-matter.  Or am I missing something?
+> > Remind me why we're doing this - didn't you originally have something in
+> > mind that was forcing them all to be synchronized with the switch?
+> 
+> No, not really.
+> 
+> With per-vif CSA requests you can end up submitting requests between
+> vif TBTTs, no? Having an atomic "switch vif1,vif2,vif3 to chanX" could
+> help - although currently ieee80211_beacon_get() isn't really
+> synchronized well so you still hit the problem.
+> 
+> And how do you expect to deal with multi-vif with APs with different
+> beacon intervals? Those inherently can't be tightly synchronized. The
+> same goes for AP+STA if you start AP first (with the other way around
+> you could, in theory, match STA's AP TBTT with your own).
 
---Andy
+I'm not really sure all of these are cases that we need to consider
+though?
+
+Multi-BSS I totally see, but if you're trying to do that with different
+beacon intervals you're probably in a world of pain already - not sure
+we should support that to start with...
+
+AP/GO-follows-STA I can also see, due to regulatory and concurrent
+BSS/P2P usage.
+
+As for those other cases, are they really relevant?
+
+johannes
+
