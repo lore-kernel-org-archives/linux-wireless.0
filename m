@@ -1,91 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:35360 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbaENHEo (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:59673 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456AbaEGUBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 03:04:44 -0400
-Received: by mail-ee0-f50.google.com with SMTP id e51so1014403eek.9
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 00:04:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: retry warm reset a few times
-Date: Wed, 14 May 2014 08:57:38 +0200
-Message-Id: <1400050658-2763-3-git-send-email-michal.kazior@tieto.com> (sfid-20140514_090449_327847_6EA31871)
-In-Reply-To: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
-References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 7 May 2014 16:01:36 -0400
+Received: by mail-wi0-f174.google.com with SMTP id r20so6425488wiv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 13:01:36 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/5] iwlwifi: mvm: rs - s/CPTCFG/CONFIG
+Date: Wed,  7 May 2014 23:01:22 +0300
+Message-Id: <1399492884-13508-3-git-send-email-egrumbach@gmail.com> (sfid-20140507_220141_628271_FF23A10F)
+In-Reply-To: <536A90BD.8010204@gmail.com>
+References: <536A90BD.8010204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes warm reset works upon retry. It might be
-related to imperfect warm reset routine, but for
-now let's just do the retries.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This should improve the reliability of some chips
-that hang/crash with cold reset which is used as a
-last resort if warm reset fails.
+My bad - I forgot to update this when sending the patch
+upstream.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Fixes: 87d5e4155c00 ("iwlwifi: mvm: rs: reinit rs if no tx for a long time")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 29 ++++++++++++++++++++++++++---
- 1 file changed, 26 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c9b14b4..c9e482e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -59,6 +59,7 @@ MODULE_PARM_DESC(reset_mode, "0: auto, 1: warm only (default: 0)");
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 9f52c5b..e1c8388 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1010,7 +1010,7 @@ static void rs_tx_status(void *mvm_r, struct ieee80211_supported_band *sband,
+ 		return;
+ 	}
  
- /* how long wait to wait for target to initialise, in ms */
- #define ATH10K_PCI_TARGET_WAIT 3000
-+#define ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS 3
- 
- #define QCA988X_2_0_DEVICE_ID	(0x003c)
- 
-@@ -2012,6 +2013,28 @@ err:
- 	return ret;
- }
- 
-+static int ath10k_pci_hif_power_up_warm(struct ath10k *ar)
-+{
-+	int i, ret;
-+
-+	/*
-+	 * Sometime warm reset succeeds after retries.
-+	 *
-+	 * FIXME: It might be possible to tune ath10k_pci_warm_reset() to work
-+	 * at first try.
-+	 */
-+	for (i = 0; i < ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS; i++) {
-+		ret = __ath10k_pci_hif_power_up(ar, false);
-+		if (ret == 0)
-+			break;
-+
-+		ath10k_warn("failed to warm reset (attempt %d out of %d): %d\n",
-+			    i + 1, ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS, ret);
-+	}
-+
-+	return ret;
-+}
-+
- static int ath10k_pci_hif_power_up(struct ath10k *ar)
- {
- 	int ret;
-@@ -2023,10 +2046,10 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	 * preferred (and safer) way to perform a device reset is through a
- 	 * warm reset.
- 	 *
--	 * Warm reset doesn't always work though (notably after a firmware
--	 * crash) so fall back to cold reset if necessary.
-+	 * Warm reset doesn't always work though so fall back to cold reset may
-+	 * be necessary.
- 	 */
--	ret = __ath10k_pci_hif_power_up(ar, false);
-+	ret = ath10k_pci_hif_power_up_warm(ar);
- 	if (ret) {
- 		ath10k_warn("failed to power up target using warm reset: %d\n",
- 			    ret);
+-#ifdef CPTCFG_MAC80211_DEBUGFS
++#ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* Disable last tx check if we are debugging with fixed rate */
+ 	if (lq_sta->dbg_fixed_rate) {
+ 		IWL_DEBUG_RATE(mvm, "Fixed rate. avoid rate scaling\n");
 -- 
-1.8.5.3
+1.8.3.2
 
