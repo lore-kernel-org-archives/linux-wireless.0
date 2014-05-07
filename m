@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:62930 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388AbaEGTxo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:44 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so1502804wes.4
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:43 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/23] iwlwifi: mvm: rs: avoid TPC while in search cycle
-Date: Wed,  7 May 2014 22:52:44 +0300
-Message-Id: <1399492380-12050-7-git-send-email-egrumbach@gmail.com> (sfid-20140507_215438_208191_DE8B2FDB)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:42329 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932261AbaEGJl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2014 05:41:28 -0400
+Message-ID: <1399455679.6800.5.camel@dubbel> (sfid-20140507_114131_898139_78F094F8)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Wed, 07 May 2014 12:41:19 +0300
+In-Reply-To: <CA+BoTQkuHOXS92WOtNfRAu01n66CTpOdwTVNHHoa7=SfaFE=-g@mail.gmail.com>
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQkuHOXS92WOtNfRAu01n66CTpOdwTVNHHoa7=SfaFE=-g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Wed, 2014-05-07 at 10:51 +0200, Michal Kazior wrote:
+> On 7 May 2014 10:07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
+> >
+> >> Hmm... Now that I think about the atomic swap - it actually becomes a
+> >> little bit of an issue in some cases.
+> >>
+> >> For one you might need to overcommit number of chanctx since swapping
+> >> requires both chanctx (old and new) to exist but that's the least of
+> >> the eproblem. If you have more than one interface you end up with
+> >> temporarily breaking interface combinations from driver point of view
+> >> while switching (first swap breaks it, last swap fixes it). Driver
+> >> won't know whether given swap is first/last unless we somehow pass it
+> >> through the switch_vif_chanctx(). IOW we actually need a "chanctx
+> >> transaction" (sort of a start-stop) that can batch up a couple of
+> >> chanctx switches for different vifs as an atomic op.
+> >
+> > Hmmm. Don't you already have that problem? Or you don't because you'd do
+> >
+> > for_each_affected_vif: unassign
+> > del chanctx [optional depending on reservation]
+> > add chanctx [ditto]
+> > for_each_affected_vif: assign
+> >
+> > right now?
+> 
+> Correct - this is how my patch deals with this problem. This was also
+> the reason why I split the new_chanctx() into alloc_chanctx() and
+> add_chanctx().
 
-TPC is a power optimization which should only be attempted when
-we're in the "stay in column" state after we've locked onto an optimal
-rate.
+Right, I had forgotten the overcommit thing...
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 32ac66b..6216618 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2185,7 +2185,8 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		break;
- 	case RS_ACTION_STAY:
- 		/* No change */
--		update_lq = rs_tpc_perform(mvm, sta, lq_sta, tbl);
-+		if (lq_sta->rs_state == RS_STATE_STAY_IN_COLUMN)
-+			update_lq = rs_tpc_perform(mvm, sta, lq_sta, tbl);
- 		break;
- 	default:
- 		break;
--- 
-1.8.3.2
+--
+Luca.
 
