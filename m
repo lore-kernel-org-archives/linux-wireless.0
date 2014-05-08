@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10267 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbaEUOiB (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58685 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754619AbaEHSSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 10:38:01 -0400
-Date: Wed, 21 May 2014 20:08:34 +0530
+	Thu, 8 May 2014 14:18:07 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	"Senthil Balasubramanian" <senthilb@qti.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Oleksij Rempel <linux@rempel-privat.de>
+Date: Thu, 8 May 2014 23:48:32 +0530
 From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Jim Davis <jim.epost@gmail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next <linux-next@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@lists.ath9k.org>, netdev <netdev@vger.kernel.org>
-Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in
- drivers/net/wireless/ath/ath9k/dfs.c
-Message-ID: <20140521143832.GA9563@qca.qualcomm.com> (sfid-20140521_163828_841239_DB20684D)
-References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
- <20140521110143.GA2375@qca.qualcomm.com>
- <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com>
+To: David Herrmann <dh.herrmann@gmail.com>
+Subject: Re: [PATCH] ath9k: fix NULL-deref in hw_per_calibration() for ar9002
+Message-ID: <20140508181830.GA9859@qca.qualcomm.com> (sfid-20140508_201812_295557_1677CB10)
+References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2014 at 10:12:26PM +1000, Julian Calaby wrote:
-> Hi Rajkumar,
+On Wed, May 07, 2014 at 09:22:58AM +0200, David Herrmann wrote:
+> ah->caldata may be NULL if no channel is selected. Check for that before
+> accessing it.
 > 
-> On Wed, May 21, 2014 at 9:01 PM, Rajkumar Manoharan
-> <rmanohar@qti.qualcomm.com> wrote:
-> > On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
-> >> Building with the attached random configuration file,
-> >>
-> >> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
-> >>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
-> >>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
-> >> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
-> >> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
-> >> has no member named ‘debug’
-> >>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
-> >>               ^
-> >> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
-> >> macro ‘ath_dbg’
-> >>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
-> >>                                          ^
-> >> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
-> >> has no member named ‘debug’
-> >>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
-> >>      ^
-> >> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
-> >
-> > Please select CONFIG_ATH9K_DEBUGFS.
+> Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+> ---
+> Hi
 > 
-> The point of randconfig builds is to ensure that there it's really
-> unlikely that there are any config combinations that don't build, even
-> if they're utterly insane.
+> This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
+> is freed while we run in hw_per_calibration(). However, this patch fixes serious
+> kernel panics with wifi-P2P on my machine.
 > 
-> You should really change the ath9k Kconfig rules or move or add ifdefs
-> to prevent this from being possible.
+> I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
+> correct fix would be to synchronously stop any running hw-calibration before
+> setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
+> this small workaround.
 >
-Completely agree. But ath9k Kconfig has proper dependecy for
-ATH9K_DFS_DEBUGFS. I am wondering how it is selected w/o ATH9K_DEBUGFS.
+David,
 
-config ATH9K_DFS_DEBUGFS
-        def_bool y
-	depends on ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED
-
-Should it be like this?
-
-config ATH9K_DFS_DEBUGFS
-	def_bool y if (ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED)
+Whenever the DUT is moving to off-channel, ah->caldata is set to NULL in
+hw_reset. As you mentioned, before doing hw_reset, the on-going calibration is stopped
+synchronously. I using ar9280 for p2p (GO & CLI) validation. Somehow i do not observe
+the panics. Is there a easiest way to reproduce the problem. Are you
+using wireless-testing tree? Thanks for reporting the problem. Will try
+to fix asap.
 
 -Rajkumar
