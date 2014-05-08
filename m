@@ -1,62 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42469 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751358AbaEGMUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 08:20:53 -0400
-Message-ID: <1399465244.6800.13.camel@dubbel> (sfid-20140507_142056_379995_259ED52D)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 07 May 2014 15:20:44 +0300
-In-Reply-To: <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	 <1399455657.6800.4.camel@dubbel>
-	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	 <1399457760.6800.7.camel@dubbel>
-	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	 <1399464536.6800.11.camel@dubbel>
-	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:64808 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbaEHFnD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2014 01:43:03 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x12so2018590wgg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 22:43:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399499440-32365-2-git-send-email-greearb@candelatech.com>
+References: <1399499440-32365-1-git-send-email-greearb@candelatech.com>
+	<1399499440-32365-2-git-send-email-greearb@candelatech.com>
+Date: Thu, 8 May 2014 07:43:01 +0200
+Message-ID: <CA+BoTQ==ayUd3PuD5FBvrKyJ2AtdZTAbFD9AVfm61T_Zn7uYfA@mail.gmail.com> (sfid-20140508_074308_355505_6388DF80)
+Subject: Re: [PATCH 2/2] ath10k: support get/set antenna configurations.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 14:13 +0200, Johannes Berg wrote:
-> On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
-> 
-> > I was thinking about the case where you you need to involve 3 contexts.
-> > Let's say you have 2 vifs in the same context and after the switch you
-> > need to split them into 2 new ones (for instance, if there is some
-> > incompatibility in the new chandefs).
-> > 
-> > With the generic transactions you could do:
-> >  - new chanctx2
-> >  - new chanctx3
-> >  - switch vif1 chanctx1->chanctx2
-> >  - switch vif2 chanctx1->chanctx3
-> >  - del chanctx1
-> 
-> This isn't an interesting case, because it means you have a spare, so
-> you might as well do
-> 
->  new chanctx3
->  switch vif2 chanctx1->chanctx3
->  switch_transaction(chanctx1, chanctx2, vif1)
+On 7 May 2014 23:50,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Tested with CT firmware, but should work on standard
+> firmware as well.
+>
+> Verified that target's tx/rx chain register is set appropriately,
+> and that the tx rate goes down as number of chains
+> decrease, but I did not actually try to verify antenna
+> ceased to transmit when disabled.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.h |  5 +++
+>  drivers/net/wireless/ath/ath10k/mac.c  | 64 ++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/wmi.c  |  5 +++
+>  3 files changed, 74 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 7050c47..f7eb8050 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -472,6 +472,11 @@ struct ath10k {
+>         u32 dfs_block_radar_events;
+>         int install_key_rv; /* Store error code from key-install */
+>
+> +       unsigned char supp_tx_chainmask;
+> +       unsigned char supp_rx_chainmask;
+> +       unsigned char cfg_tx_chainmask;
+> +       unsigned char cfg_rx_chainmask;
 
-Couldn't this potentially break the combinations temporarily again?
+It's probably a good idea to note these are protected by conf_mutex.
 
---
-Luca.
 
+> +
+>         struct wmi_pdev_set_wmm_params_arg wmm_params;
+>         struct completion install_key_done;
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index dcb147d..cc85bd9 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -2483,6 +2483,61 @@ void ath10k_halt(struct ath10k *ar)
+>         spin_unlock_bh(&ar->data_lock);
+>  }
+>
+> +static int ath10k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+> +{
+> +       struct ath10k *ar = hw->priv;
+> +
+> +       if (ar->cfg_tx_chainmask) {
+> +               *tx_ant = ar->cfg_tx_chainmask;
+> +               *rx_ant = ar->cfg_rx_chainmask;
+> +       } else {
+> +               *tx_ant = ar->supp_tx_chainmask;
+> +               *rx_ant = ar->supp_rx_chainmask;
+> +       }
+
+Shouldn't this be protected by conf_mutex?
+
+
+> +       return 0;
+> +}
+> +
+> +static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+> +{
+> +       int ret;
+> +
+
++lockdep_assert_held(&ar->conf_mutex);
+
+
+> +       ar->cfg_tx_chainmask = tx_ant;
+> +       ar->cfg_rx_chainmask = rx_ant;
+> +
+> +       if (ar->state != ATH10K_STATE_ON)
+
+This won't update set antenna during hw restart. You should accept
+ATH10K_STATE_RESTARTED here too.
+
+
+> +               return 0;
+> +
+> +       ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->tx_chain_mask,
+> +                                       tx_ant);
+> +       if (ret) {
+> +               ath10k_warn("failed to set tx-chainmask: %d, req 0x%x\n",
+> +                           ret, tx_ant);
+> +               return ret;
+> +       }
+> +
+> +       ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->rx_chain_mask,
+> +                                       rx_ant);
+> +       if (ret) {
+> +               ath10k_warn("failed to set rx-chainmask: %d, req 0x%x\n",
+> +                           ret, rx_ant);
+> +               return ret;
+> +       }
+> +
+> +       return ret;
+
+return 0 is probably fine here too.
+
+
+Michał
