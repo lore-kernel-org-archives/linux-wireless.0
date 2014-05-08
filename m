@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dewberryfields.co.uk ([217.41.92.67]:45618 "EHLO
-	mail.dewberryfields.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbaEORUm (ORCPT
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:59747 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbaEHIsY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:20:42 -0400
-Message-ID: <5374F638.6000505@dewberryfields.co.uk> (sfid-20140515_192045_220941_2317CF3C)
-Date: Thu, 15 May 2014 18:15:36 +0100
-From: Michael Howard <mike@dewberryfields.co.uk>
+	Thu, 8 May 2014 04:48:24 -0400
+Received: by mail-qa0-f47.google.com with SMTP id s7so2254434qap.34
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 01:48:24 -0700 (PDT)
 MIME-Version: 1.0
+Date: Thu, 8 May 2014 10:48:24 +0200
+Message-ID: <CAMfPB_xfAYCzqk0LPQJXhXjO-OZpxoafGNqGndfzFNECxz=MHg@mail.gmail.com> (sfid-20140508_104829_451189_11851F4E)
+Subject: rtl8192cu general status
+From: Alessandro Lannocca <alessandro.lannocca@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: Re: Mwifiex driver on Globalscale Mirabox
-References: <5346DED8.2030704@free.fr>
-	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
-	<53480138.2080805@free.fr>	<53733AB4.7010500@free.fr>
-	<20140514215126.GA15419@us.netrek.org>
- <CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
-In-Reply-To: <CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, a quick follow-up to my year(s)-old bugreport about rtl8192cu driver:
 
-On 15/05/2014 15:06, Avinash Patil wrote:
-> Hi James/Anthony,
->
-> If an unsupported command is downloaded to FW, it results into command
-> response not supported - code 0x2.
-> It wouldnt result into command timeout.
-> According to our internal discussions, this issue is seen only on
-> Globalscale mirabox where SDIO controller is mvsdio.
->
-> "On Mirabox the SDIO controller is mvsdio. It polls for interrupts but
-> polling itself doesn’t seem to be the problem.
-> In the log, I got from another person it seems that there is no
-> SDIO_INT bit in controller “intr” register after scan command is sent.
-> Other commands are fine, only scan commands fail. I don’t why scan
-> (0x06 or 0x107) is special in this case."
->
-> Hi Anthony,
->
-> Could you please enable dynamic debug on mwifiex, mwifiex_sdio &
-> mvsdio driver; this will confirm if this is same issue.
->
-> Thanks,
-> Avinash.
->
-Using kernel 3.15.0-rc5, starting hostapd results in;
+as of backports20140417, using this driver with an AWUS036NHR on
+fedora 20 x86_64 running kernel 3.14 I no longer suffer from:
 
-May 15 17:11:04 mirabox kernel: mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 
-0x112 error, result=0x2
+1> card not being able to recognize WPA/WPA2 associated clients with
+their respective APs while in monitor mode (this was annoying)
 
-hostapd runs but there in no AP.
+2> card not being able to capture WPA 4-way handshakes (due to 1)
 
-If I can be of any help testing/debugging just say so.
+Also, the driver works flawlessy (afaik) in managed mode.
 
-Cheers,
-Mike.
-
--- 
+The problem with the regulatory domain being stuck to only allow
+channels 1-11 in 2.4ghz band seems to remain, but I already posted an
+old patch (not mine) which seems to fix the problem, in my previous
+message; also, the led is not blinking during activity, it's just
+off/on according to interface(s) status (wlan* up/down), I'm not sure
+if this is a bug, even if it is, it's just cosmetic I think.
 
 
+This message to thank you for fixing the driver, having the
+possibility to use rtl8192cu for my work, just makes it way more
+comfortable.
+
+
+Alessandro Lannocca
