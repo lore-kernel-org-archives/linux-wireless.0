@@ -1,86 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:43318
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750758AbaETAbb (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34222 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448AbaEHL2t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 20:31:31 -0400
-Date: Tue, 20 May 2014 08:30:46 +0800 (SGT)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
-In-Reply-To: <5379FCD0.2030506@cogentembedded.com>
-Message-ID: <alpine.DEB.2.10.1405200829390.2723@hadrien> (sfid-20140520_023153_911006_E7479365)
-References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr> <5379FCD0.2030506@cogentembedded.com>
+	Thu, 8 May 2014 07:28:49 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so6478029igb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 04:28:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1399447711-12441-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1399447711-12441-1-git-send-email-helmut.schaa@googlemail.com>
+Date: Thu, 8 May 2014 13:28:48 +0200
+Message-ID: <CAGXE3d8C8+qOc0xETnQv1dD1sUkrxvzt04pFSwnw4AwcnHS2SA@mail.gmail.com> (sfid-20140508_132852_775895_63206DB0)
+Subject: Re: [PATCH] ath9k: Allow platform override without EEPROM override
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@openwrt.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 7, 2014 at 9:28 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Add a new platform data flag "use_eeprom" that indicates that the eeprom
+> found on the card itself should be used instead of the one present in
+> the platform data.
+>
+> This allows to override the MAC address of a PCI card while preserving
+> the eeprom data from the card itself.
+>
+> The default behavior is preserved.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-
-On Mon, 19 May 2014, Sergei Shtylyov wrote:
-
-> Hello.
->
-> On 19-05-2014 8:31, Julia Lawall wrote:
->
-> > From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> > Delete unnecessary local variable whose value is always 0 and that hides
-> > the fact that the result is always 0.
->
-> > A simplified version of the semantic patch that fixes this problem is as
-> > follows: (http://coccinelle.lip6.fr/)
->
-> > // <smpl>
-> > @r exists@
-> > local idexpression ret;
-> > expression e;
-> > position p;
-> > @@
-> >
-> > -ret = 0;
-> > ... when != ret = e
-> > return
-> > - ret
-> > + 0
-> >    ;
-> > // </smpl>
->
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> > ---
-> > Alternatively, was an error code intended in the bad length case, as is
-> > done in process_brxed_802_11_packet?
->
-> >   drivers/net/wireless/libertas/rx.c |    7 ++-----
-> >   1 file changed, 2 insertions(+), 5 deletions(-)
->
-> > diff --git a/drivers/net/wireless/libertas/rx.c
-> > b/drivers/net/wireless/libertas/rx.c
-> > index c7366b0..807c5b8 100644
-> > --- a/drivers/net/wireless/libertas/rx.c
-> > +++ b/drivers/net/wireless/libertas/rx.c
-> [...]
-> > @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv,
-> > struct sk_buff *skb)
-> >   	else
-> >   		netif_rx_ni(skb);
-> >
-> > -	ret = 0;
-> >   done:
-> > -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
-> > -	return ret;
-> > +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
->
->    Why not just "ret 0"?
-
-OK, I wasn't sure if it was useful to keep the same number of arguments.
-But I will update it, since from the definition of lbs_deb_leave_args it
-seems ok.
-
-julia
+John, please hold on this one. I'll send a v2.
+Helmut
