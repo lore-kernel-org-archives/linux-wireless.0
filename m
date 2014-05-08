@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56158 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbaEORYc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58476 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422AbaEHPaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:24:32 -0400
-Message-ID: <5374F84E.1090208@candelatech.com> (sfid-20140515_192448_404540_BCB54FFA)
-Date: Thu, 15 May 2014 10:24:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 8 May 2014 11:30:14 -0400
+Date: Thu, 8 May 2014 11:29:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi 2014-05-07
+Message-ID: <20140508152953.GD6180@tuxdriver.com> (sfid-20140508_173525_736359_9420128D)
+References: <536A90BD.8010204@gmail.com>
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
-References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com> <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <536A90BD.8010204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a few questions on this patch (long since accepted upstream).
+On Wed, May 07, 2014 at 10:59:57PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> This is a pull request intended for 3.15 release.
+> 
+> Alex fixes the scan by disabling the fragmented scan. David prevents scan offload while associated, the firmware seems not to like it. I fix a stupid bug I made in BT Coex, and fix a bad #ifdef clause in rate scaling.
+> Along with that there is a fix for a NULL pointer exception that can happen if we load the driver and our ISR gets called because the interrupt line is shared. The fix has been tested by the reporter.
+> 
+> Please pull.
+> 
+> The following changes since commit a6bc92803e7f765e02c923cf37c8e280e729642a:
+> 
+>   iwlwifi: mvm: BT Coex - fix Look Up Table (2014-04-13 16:51:07 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git master
+> 
+> for you to fetch changes up to 83f7a85f1134c6e914453f5747435415a23d516b:
+> 
+>   iwlwifi: pcie: disable interrupts upon PCIe alloc (2014-05-07 22:54:32 +0300)
 
-First, why do you only memset the rx_status if START_VALID is set,
-and why do you not set:
-
-rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL
-
-in an else clause if START_VALID is not set?
-
-The patch definitely helps, but I'm still getting less accuracy than expected
-(as compared to ath9k going through a similar rate vs range test).
+Pulling now...  Please limit any further fix requests to very small
+and important fixes only.
 
 Thanks,
-Ben
 
-
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index be25e16..f7ecc10 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  
->  	lockdep_assert_held(&htt->rx_ring.lock);
->  
-> -	memset(rx_status, 0, sizeof(*rx_status));
-> -
->  	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
->  	fw_desc = (u8 *)&rx->fw_desc;
->  
-> @@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
->  
->  	/* Fill this once, while this is per-ppdu */
-> -	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-> -	rx_status->signal += rx->ppdu.combined_rssi;
-> +	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
-> +		memset(rx_status, 0, sizeof(*rx_status));
-> +		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
-> +				     rx->ppdu.combined_rssi;
-> +	}
->  
->  	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
->  		/* TSF available only in 32-bit */
-> 
-
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
