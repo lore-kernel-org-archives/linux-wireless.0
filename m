@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:36274 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756628AbaEGPyw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58646 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbaEHPpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 11:54:52 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e53so888050eek.36
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 08:54:51 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH 4/4] rtl8187: make CTS-to-self protection work
-Date: Wed,  7 May 2014 17:54:46 +0200
-Message-Id: <1399478086-26586-1-git-send-email-andrea.merello@gmail.com> (sfid-20140507_175501_111719_164DB86D)
+	Thu, 8 May 2014 11:45:10 -0400
+Date: Thu, 8 May 2014 11:37:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi-next 2014-05-07
+Message-ID: <20140508153732.GE6180@tuxdriver.com> (sfid-20140508_174516_433878_541653B1)
+References: <536A8EE3.2050906@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <536A8EE3.2050906@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CTS protection was not working properly because the HW needs
-RTS flag to be asserted, and it need also RTS duration field to be
-filled with CTS-to-self duration.
+On Wed, May 07, 2014 at 10:52:03PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> I have here another pull request for 3.16.
+> I merged wireless-next.git because of dependencies on changes in mac80211. I merged iwlwifi-fixes.git (that feeds wireless.git) because of dependencies in the rate scaling changes that were sent to wireless.git.
+> 
+> Eran continues to work on new devices, Eyal is still digging in the rate control stuff, and Johannes added new functionality to the debug system we have in place now along with a few cleanups he made on the way.
+> That's pretty much it.
+> 
+> Please pull. 
+> 
+> The following changes since commit 48d11dc37977614a461bfedddc52d1c651bc279f:
+> 
+>   rsi: Changing opcode for sta mode according to changes in firmware (2014-04-30 12:13:16 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to 017a64161f6d082f6e3ed85646217bd7217af15a:
+> 
+>   iwlwifi: mvm: rs: enable MCS9 for Tx (2014-05-07 22:44:43 +0300)
 
-This patch makes the driver to do this.
+Pulling now...
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8187/dev.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index 6e4b177..629ad8c 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -253,14 +253,21 @@ static void rtl8187_tx(struct ieee80211_hw *dev,
- 	flags |= ieee80211_get_tx_rate(dev, info)->hw_value << 24;
- 	if (ieee80211_has_morefrags(tx_hdr->frame_control))
- 		flags |= RTL818X_TX_DESC_FLAG_MOREFRAG;
-+
-+	/* HW will perform RTS-CTS when only RTS flags is set.
-+	 * HW will perform CTS-to-self when both RTS and CTS flags are set.
-+	 * RTS rate and RTS duration will be used also for CTS-to-self.
-+	 */
- 	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		flags |= RTL818X_TX_DESC_FLAG_RTS;
- 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
- 		rts_dur = ieee80211_rts_duration(dev, priv->vif,
- 						 skb->len, info);
- 	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
--		flags |= RTL818X_TX_DESC_FLAG_CTS;
-+		flags |= RTL818X_TX_DESC_FLAG_RTS | RTL818X_TX_DESC_FLAG_CTS;
- 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
-+		rts_dur = ieee80211_ctstoself_duration(dev, priv->vif,
-+						 skb->len, info);
- 	}
- 
- 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
