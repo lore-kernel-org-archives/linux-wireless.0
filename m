@@ -1,141 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:65060 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbaE2WOh (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:36248 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755180AbaEIMnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 18:14:37 -0400
-Message-ID: <5387B149.20408@gmail.com> (sfid-20140530_001504_904833_BAE99FF5)
-Date: Thu, 29 May 2014 15:14:33 -0700
-From: David Daney <ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-To: abdoulaye berthe <berthe.ab@gmail.com>
-CC: linus.walleij@linaro.org, gnurou@gmail.com, m@bues.ch,
-	linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	patches@opensource.wolfsonmicro.com, linux-input@vger.kernel.org,
-	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Subject: Re: [PATCH] gpio: removes all usage of gpiochip_remove retval
-References: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
-In-Reply-To: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 9 May 2014 08:43:00 -0400
+Received: by mail-ee0-f43.google.com with SMTP id d17so2615528eek.16
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:42:59 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 7/7] ath10k: remove old unused defines
+Date: Fri,  9 May 2014 14:35:57 +0200
+Message-Id: <1399638957-20449-8-git-send-email-michal.kazior@tieto.com> (sfid-20140509_144310_771565_5ED85AEB)
+In-Reply-To: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2014 02:54 PM, abdoulaye berthe wrote:
+These aren't used anywhere anymore.
 
-Did you forget a changelog explaining why this is either needed, or even 
-a good idea?  I joined the conversation late and don't know why you are 
-doing this.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 1 -
+ drivers/net/wireless/ath/ath10k/mac.c  | 2 --
+ 2 files changed, 3 deletions(-)
 
-Thanks,
-David Daney
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 01f1830..1128b5d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -37,7 +37,6 @@
+ #define WO(_f)      ((_f##_OFFSET) >> 2)
+ 
+ #define ATH10K_SCAN_ID 0
+-#define WMI_READY_TIMEOUT (5 * HZ)
+ #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
+ #define ATH10K_NUM_CHANS 38
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9e3b16f..e9608e7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3551,8 +3551,6 @@ exit:
+ 	return ret;
+ }
+ 
+-#define ATH10K_ROC_TIMEOUT_HZ (2*HZ)
+-
+ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+ 				    struct ieee80211_channel *chan,
+-- 
+1.8.5.3
 
-
-
-> Signed-off-by: abdoulaye berthe <berthe.ab@gmail.com>
-> ---
->   arch/arm/common/scoop.c                        | 10 ++--------
->   arch/mips/txx9/generic/setup.c                 |  4 ++--
->   arch/powerpc/platforms/83xx/mcu_mpc8349emitx.c |  3 ++-
->   arch/sh/boards/mach-x3proto/gpio.c             |  6 ++----
->   drivers/bcma/driver_gpio.c                     |  3 ++-
->   drivers/gpio/gpio-74x164.c                     |  8 +++-----
->   drivers/gpio/gpio-adnp.c                       |  9 +--------
->   drivers/gpio/gpio-adp5520.c                    |  8 +-------
->   drivers/gpio/gpio-adp5588.c                    |  6 +-----
->   drivers/gpio/gpio-amd8111.c                    |  3 +--
->   drivers/gpio/gpio-arizona.c                    |  3 ++-
->   drivers/gpio/gpio-cs5535.c                     |  8 +-------
->   drivers/gpio/gpio-da9052.c                     |  3 ++-
->   drivers/gpio/gpio-da9055.c                     |  3 ++-
->   drivers/gpio/gpio-dwapb.c                      |  2 +-
->   drivers/gpio/gpio-em.c                         |  5 +----
->   drivers/gpio/gpio-f7188x.c                     | 18 ++----------------
->   drivers/gpio/gpio-generic.c                    |  3 ++-
->   drivers/gpio/gpio-grgpio.c                     |  4 +---
->   drivers/gpio/gpio-ich.c                        |  9 +--------
->   drivers/gpio/gpio-it8761e.c                    |  6 +-----
->   drivers/gpio/gpio-janz-ttl.c                   |  8 +-------
->   drivers/gpio/gpio-kempld.c                     |  3 ++-
->   drivers/gpio/gpio-lp3943.c                     |  3 ++-
->   drivers/gpio/gpio-lynxpoint.c                  |  5 +----
->   drivers/gpio/gpio-max730x.c                    | 12 ++++--------
->   drivers/gpio/gpio-max732x.c                    |  7 +------
->   drivers/gpio/gpio-mc33880.c                    | 11 +++--------
->   drivers/gpio/gpio-mc9s08dz60.c                 |  3 ++-
->   drivers/gpio/gpio-mcp23s08.c                   | 26 +++++++-------------------
->   drivers/gpio/gpio-ml-ioh.c                     |  8 ++------
->   drivers/gpio/gpio-msm-v2.c                     |  5 +----
->   drivers/gpio/gpio-mxc.c                        |  2 +-
->   drivers/gpio/gpio-octeon.c                     |  3 ++-
->   drivers/gpio/gpio-palmas.c                     |  3 ++-
->   drivers/gpio/gpio-pca953x.c                    |  7 +------
->   drivers/gpio/gpio-pcf857x.c                    |  4 +---
->   drivers/gpio/gpio-pch.c                        | 10 ++--------
->   drivers/gpio/gpio-rc5t583.c                    |  3 ++-
->   drivers/gpio/gpio-rcar.c                       |  5 +----
->   drivers/gpio/gpio-rdc321x.c                    |  7 ++-----
->   drivers/gpio/gpio-sch.c                        | 16 +++-------------
->   drivers/gpio/gpio-sch311x.c                    |  6 ++----
->   drivers/gpio/gpio-sodaville.c                  |  4 +---
->   drivers/gpio/gpio-stmpe.c                      |  8 +-------
->   drivers/gpio/gpio-sx150x.c                     |  7 ++-----
->   drivers/gpio/gpio-syscon.c                     |  3 ++-
->   drivers/gpio/gpio-tb10x.c                      |  5 +----
->   drivers/gpio/gpio-tc3589x.c                    |  8 +-------
->   drivers/gpio/gpio-timberdale.c                 |  5 +----
->   drivers/gpio/gpio-tps6586x.c                   |  3 ++-
->   drivers/gpio/gpio-tps65910.c                   |  3 ++-
->   drivers/gpio/gpio-tps65912.c                   |  3 ++-
->   drivers/gpio/gpio-ts5500.c                     |  6 +++---
->   drivers/gpio/gpio-twl4030.c                    |  4 +---
->   drivers/gpio/gpio-twl6040.c                    |  3 ++-
->   drivers/gpio/gpio-ucb1400.c                    |  2 +-
->   drivers/gpio/gpio-viperboard.c                 | 10 +++-------
->   drivers/gpio/gpio-vx855.c                      |  3 +--
->   drivers/gpio/gpio-wm831x.c                     |  3 ++-
->   drivers/gpio/gpio-wm8350.c                     |  3 ++-
->   drivers/gpio/gpio-wm8994.c                     |  3 ++-
->   drivers/hid/hid-cp2112.c                       |  6 ++----
->   drivers/input/keyboard/adp5588-keys.c          |  4 +---
->   drivers/input/keyboard/adp5589-keys.c          |  4 +---
->   drivers/input/touchscreen/ad7879.c             | 10 +++-------
->   drivers/leds/leds-pca9532.c                    | 10 ++--------
->   drivers/leds/leds-tca6507.c                    |  7 ++-----
->   drivers/media/dvb-frontends/cxd2820r_core.c    | 10 +++-------
->   drivers/mfd/asic3.c                            |  3 ++-
->   drivers/mfd/htc-i2cpld.c                       |  8 +-------
->   drivers/mfd/sm501.c                            | 17 +++--------------
->   drivers/mfd/tc6393xb.c                         | 13 ++++---------
->   drivers/mfd/ucb1x00-core.c                     |  8 ++------
->   drivers/pinctrl/pinctrl-abx500.c               | 15 +++------------
->   drivers/pinctrl/pinctrl-adi2.c                 |  9 ++++-----
->   drivers/pinctrl/pinctrl-as3722.c               | 11 ++---------
->   drivers/pinctrl/pinctrl-baytrail.c             |  5 +----
->   drivers/pinctrl/pinctrl-coh901.c               | 10 ++--------
->   drivers/pinctrl/pinctrl-exynos5440.c           |  6 +-----
->   drivers/pinctrl/pinctrl-msm.c                  | 11 ++---------
->   drivers/pinctrl/pinctrl-nomadik.c              |  2 +-
->   drivers/pinctrl/pinctrl-rockchip.c             | 16 ++++------------
->   drivers/pinctrl/pinctrl-samsung.c              | 14 ++++----------
->   drivers/pinctrl/pinctrl-sunxi.c                |  3 +--
->   drivers/pinctrl/sh-pfc/gpio.c                  |  9 +++------
->   drivers/pinctrl/spear/pinctrl-plgpio.c         |  3 +--
->   drivers/pinctrl/vt8500/pinctrl-wmt.c           |  9 ++-------
->   drivers/platform/x86/intel_pmic_gpio.c         |  3 +--
->   drivers/ssb/driver_gpio.c                      |  3 ++-
->   drivers/staging/vme/devices/vme_pio2_gpio.c    |  4 +---
->   drivers/tty/serial/max310x.c                   | 10 ++++------
->   drivers/video/fbdev/via/via-gpio.c             | 10 +++-------
->   sound/soc/codecs/wm5100.c                      |  5 +----
->   sound/soc/codecs/wm8903.c                      |  6 +-----
->   sound/soc/codecs/wm8962.c                      |  5 +----
->   sound/soc/codecs/wm8996.c                      |  6 +-----
->   97 files changed, 182 insertions(+), 460 deletions(-)
->
-[...]
