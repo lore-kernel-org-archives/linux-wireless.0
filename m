@@ -1,150 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33945 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331AbaESQHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 12:07:17 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: constify wowlan/coalesce mask/pattern pointers
-Date: Mon, 19 May 2014 18:07:08 +0200
-Message-Id: <1400515628-10107-1-git-send-email-johannes@sipsolutions.net> (sfid-20140519_180722_070674_DF1D5264)
+Received: from dedo.coelho.fi ([88.198.205.34]:44365 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756509AbaEILMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 07:12:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	andrei.otcheretianski@intel.com
+Date: Fri,  9 May 2014 14:11:47 +0300
+Message-Id: <1399633911-12788-5-git-send-email-luca@coelho.fi> (sfid-20140509_131237_576081_6957B982)
+In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 4/8] mac80211: Support multiple CSA counters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-This requires changing the nl80211 parsing code a bit to use
-intermediate pointers for the allocation, but clarifies the
-API towards the drivers.
+Support up to IEEE80211_MAX_CSA_COUNTERS_NUM csa counters.
+This is defined to be 2 now, to support both CSA and eCSA
+counters.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c     |  2 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  4 ++--
- include/net/cfg80211.h                    |  2 +-
- net/wireless/nl80211.c                    | 39 +++++++++++++++++--------------
- 4 files changed, 26 insertions(+), 21 deletions(-)
+ net/mac80211/cfg.c         | 24 +++++++++++++------
+ net/mac80211/ibss.c        |  2 +-
+ net/mac80211/ieee80211_i.h |  6 +++--
+ net/mac80211/main.c        |  2 ++
+ net/mac80211/mesh.c        |  2 +-
+ net/mac80211/tx.c          | 58 ++++++++++++++++++++++++++++------------------
+ net/wireless/nl80211.c     |  4 ++--
+ 7 files changed, 63 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 077eb5b9cd74..02c91d6db753 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1416,7 +1416,7 @@ void wl1271_rx_filter_free(struct wl12xx_rx_filter *filter)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6f132a5..43af0d6b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3191,14 +3191,24 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		if (params->count <= 1)
+ 			break;
  
- int wl1271_rx_filter_alloc_field(struct wl12xx_rx_filter *filter,
- 				 u16 offset, u8 flags,
--				 u8 *pattern, u8 len)
-+				 const u8 *pattern, u8 len)
- {
- 	struct wl12xx_rx_filter_field *field;
+-		sdata->csa_counter_offset_beacon =
+-			params->counter_offsets_beacon[0];
++		if ((params->n_counter_offsets_beacon >
++		     IEEE80211_MAX_CSA_COUNTERS_NUM) ||
++		    (params->n_counter_offsets_presp >
++		     IEEE80211_MAX_CSA_COUNTERS_NUM))
++			return -EINVAL;
  
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 756e890bc5ee..c2c34a84ff3d 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -512,8 +512,8 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- void wl12xx_queue_recovery_work(struct wl1271 *wl);
- size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen);
- int wl1271_rx_filter_alloc_field(struct wl12xx_rx_filter *filter,
--					u16 offset, u8 flags,
--					u8 *pattern, u8 len);
-+				 u16 offset, u8 flags,
-+				 const u8 *pattern, u8 len);
- void wl1271_rx_filter_free(struct wl12xx_rx_filter *filter);
- struct wl12xx_rx_filter *wl1271_rx_filter_alloc(void);
- int wl1271_rx_filter_get_fields_size(struct wl12xx_rx_filter *filter);
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3299d1b731ef..fe4fa287f788 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1827,7 +1827,7 @@ struct cfg80211_pmksa {
-  * memory, free @mask only!
-  */
- struct cfg80211_pkt_pattern {
--	u8 *mask, *pattern;
-+	const u8 *mask, *pattern;
- 	int pattern_len;
- 	int pkt_offset;
- };
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ca19b1520389..49adf58646e6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8554,6 +8554,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 
- 		nla_for_each_nested(pat, tb[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem) {
-+			u8 *mask_pat;
+-		if (params->n_counter_offsets_presp)
+-			sdata->csa_counter_offset_presp =
+-				params->counter_offsets_presp[0];
+-		else
+-			sdata->csa_counter_offset_presp = 0;
++		/* make sure we don't have garbage in other counters */
++		memset(sdata->csa_counter_offset_beacon, 0,
++		       sizeof(sdata->csa_counter_offset_beacon));
++		memset(sdata->csa_counter_offset_presp, 0,
++		       sizeof(sdata->csa_counter_offset_presp));
 +
- 			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
- 				  nla_len(pat), NULL);
- 			err = -EINVAL;
-@@ -8577,19 +8579,18 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 				goto error;
- 			new_triggers.patterns[i].pkt_offset = pkt_offset;
++		memcpy(sdata->csa_counter_offset_beacon,
++		       params->counter_offsets_beacon,
++		       params->n_counter_offsets_beacon * sizeof(u16));
++		memcpy(sdata->csa_counter_offset_presp,
++		       params->counter_offsets_presp,
++		       params->n_counter_offsets_presp * sizeof(u16));
  
--			new_triggers.patterns[i].mask =
--				kmalloc(mask_len + pat_len, GFP_KERNEL);
--			if (!new_triggers.patterns[i].mask) {
-+			mask_pat = kmalloc(mask_len + pat_len, GFP_KERNEL);
-+			if (!mask_pat) {
- 				err = -ENOMEM;
- 				goto error;
- 			}
--			new_triggers.patterns[i].pattern =
--				new_triggers.patterns[i].mask + mask_len;
--			memcpy(new_triggers.patterns[i].mask,
--			       nla_data(pat_tb[NL80211_PKTPAT_MASK]),
-+			new_triggers.patterns[i].mask = mask_pat;
-+			memcpy(mask_pat, nla_data(pat_tb[NL80211_PKTPAT_MASK]),
- 			       mask_len);
-+			mask_pat += mask_len;
-+			new_triggers.patterns[i].pattern = mask_pat;
- 			new_triggers.patterns[i].pattern_len = pat_len;
--			memcpy(new_triggers.patterns[i].pattern,
-+			memcpy(mask_pat,
- 			       nla_data(pat_tb[NL80211_PKTPAT_PATTERN]),
- 			       pat_len);
- 			i++;
-@@ -8781,6 +8782,8 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
- 
- 	nla_for_each_nested(pat, tb[NL80211_ATTR_COALESCE_RULE_PKT_PATTERN],
- 			    rem) {
-+		u8 *mask_pat;
-+
- 		nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
- 			  nla_len(pat), NULL);
- 		if (!pat_tb[NL80211_PKTPAT_MASK] ||
-@@ -8802,17 +8805,19 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
- 			return -EINVAL;
- 		new_rule->patterns[i].pkt_offset = pkt_offset;
- 
--		new_rule->patterns[i].mask =
--			kmalloc(mask_len + pat_len, GFP_KERNEL);
--		if (!new_rule->patterns[i].mask)
-+		mask_pat = kmalloc(mask_len + pat_len, GFP_KERNEL);
-+		if (!mask_pat)
- 			return -ENOMEM;
--		new_rule->patterns[i].pattern =
--			new_rule->patterns[i].mask + mask_len;
--		memcpy(new_rule->patterns[i].mask,
--		       nla_data(pat_tb[NL80211_PKTPAT_MASK]), mask_len);
-+
-+		new_rule->patterns[i].mask = mask_pat;
-+		memcpy(mask_pat, nla_data(pat_tb[NL80211_PKTPAT_MASK]),
-+		       mask_len);
-+
-+		mask_pat += mask_len;
-+		new_rule->patterns[i].pattern = mask_pat;
- 		new_rule->patterns[i].pattern_len = pat_len;
--		memcpy(new_rule->patterns[i].pattern,
--		       nla_data(pat_tb[NL80211_PKTPAT_PATTERN]), pat_len);
-+		memcpy(mask_pat, nla_data(pat_tb[NL80211_PKTPAT_PATTERN]),
-+		       pat_len);
- 		i++;
+ 		err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
+ 		if (err < 0) {
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ff4d415..1bbac94 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -143,7 +143,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 		*pos++ = csa_settings->block_tx ? 1 : 0;
+ 		*pos++ = ieee80211_frequency_to_channel(
+ 				csa_settings->chandef.chan->center_freq);
+-		sdata->csa_counter_offset_beacon = (pos - presp->head);
++		sdata->csa_counter_offset_beacon[0] = (pos - presp->head);
+ 		*pos++ = csa_settings->count;
  	}
  
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index fb2d9e7..05ed592 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -70,6 +70,8 @@ struct ieee80211_local;
+ 
+ #define IEEE80211_DEAUTH_FRAME_LEN	(24 /* hdr */ + 2 /* reason */)
+ 
++#define IEEE80211_MAX_CSA_COUNTERS_NUM 2
++
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+@@ -753,8 +755,8 @@ struct ieee80211_sub_if_data {
+ 	struct mac80211_qos_map __rcu *qos_map;
+ 
+ 	struct work_struct csa_finalize_work;
+-	int csa_counter_offset_beacon;
+-	int csa_counter_offset_presp;
++	u16 csa_counter_offset_beacon[IEEE80211_MAX_CSA_COUNTERS_NUM];
++	u16 csa_counter_offset_presp[IEEE80211_MAX_CSA_COUNTERS_NUM];
+ 	bool csa_radar_required;
+ 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
+ 	struct cfg80211_chan_def csa_chandef;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 69175f1..767335f 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -954,6 +954,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
+ 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
++
+ 	result = wiphy_register(local->hw.wiphy);
+ 	if (result < 0)
+ 		goto fail_wiphy_register;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index b06ddc9..6495a3f 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -679,7 +679,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		*pos++ = 0x0;
+ 		*pos++ = ieee80211_frequency_to_channel(
+ 				csa->settings.chandef.chan->center_freq);
+-		sdata->csa_counter_offset_beacon = hdr_len + 6;
++		sdata->csa_counter_offset_beacon[0] = hdr_len + 6;
+ 		*pos++ = csa->settings.count;
+ 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
+ 		*pos++ = 6;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 263dea5..0d1a42d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2417,10 +2417,9 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 				 struct beacon_data *beacon)
+ {
+ 	struct probe_resp *resp;
+-	int counter_offset_beacon = sdata->csa_counter_offset_beacon;
+-	int counter_offset_presp = sdata->csa_counter_offset_presp;
+ 	u8 *beacon_data;
+ 	size_t beacon_data_len;
++	int i;
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+@@ -2438,32 +2437,47 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 	default:
+ 		return;
+ 	}
+-	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
+-		return;
+ 
+-	/* Warn if the driver did not check for/react to csa
+-	 * completeness.  A beacon with CSA counter set to 0 should
+-	 * never occur, because a counter of 1 means switch just
+-	 * before the next beacon.
+-	 */
+-	if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
+-		return;
++	for (i = 0; i < IEEE80211_MAX_CSA_COUNTERS_NUM; ++i) {
++		u16 counter_offset_beacon =
++			sdata->csa_counter_offset_beacon[i];
++		u16 counter_offset_presp = sdata->csa_counter_offset_presp[i];
+ 
+-	sdata->csa_current_counter--;
+-	beacon_data[counter_offset_beacon] = sdata->csa_current_counter;
++		if (counter_offset_beacon) {
++			if (WARN_ON(counter_offset_beacon >= beacon_data_len))
++				return;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP && counter_offset_presp) {
+-		rcu_read_lock();
+-		resp = rcu_dereference(sdata->u.ap.probe_resp);
++			/* Warn if the driver did not check for/react to csa
++			 * completeness.  A beacon with CSA counter set to 0
++			 * should never occur, because a counter of 1 means
++			 * switch just before the next beacon.
++			 */
++			if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
++				return;
+ 
+-		/* if nl80211 accepted the offset, this should not happen. */
+-		if (WARN_ON(!resp)) {
++			beacon_data[counter_offset_beacon] =
++				sdata->csa_current_counter - 1;
++		}
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP &&
++		    counter_offset_presp) {
++			rcu_read_lock();
++			resp = rcu_dereference(sdata->u.ap.probe_resp);
++
++			/* If nl80211 accepted the offset, this should
++			 * not happen.
++			 */
++			if (WARN_ON(!resp)) {
++				rcu_read_unlock();
++				return;
++			}
++			resp->data[counter_offset_presp] =
++				sdata->csa_current_counter - 1;
+ 			rcu_read_unlock();
+-			return;
+ 		}
+-		resp->data[counter_offset_presp] = sdata->csa_current_counter;
+-		rcu_read_unlock();
+ 	}
++
++	sdata->csa_current_counter--;
+ }
+ 
+ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+@@ -2472,7 +2486,7 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ 	struct beacon_data *beacon = NULL;
+ 	u8 *beacon_data;
+ 	size_t beacon_data_len;
+-	int counter_beacon = sdata->csa_counter_offset_beacon;
++	int counter_beacon = sdata->csa_counter_offset_beacon[0];
+ 	int ret = false;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6cfff9b..30ab799 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1669,9 +1669,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			nla_nest_end(msg, nested);
+ 		}
+ 
+-		if (dev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH &&
++		if (rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH &&
+ 		    nla_put_u8(msg, NL80211_ATTR_MAX_CSA_COUNTERS,
+-			       dev->wiphy.max_num_csa_counters))
++			       rdev->wiphy.max_num_csa_counters))
+ 			goto nla_put_failure;
+ 
+ 		/* done */
 -- 
 2.0.0.rc0
 
