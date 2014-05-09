@@ -1,435 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:36130 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbaEOG4B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 02:56:01 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e53so292617eek.8
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 23:56:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/2] ath10k: fix core start sequence
-Date: Thu, 15 May 2014 08:48:40 +0200
-Message-Id: <1400136521-11184-2-git-send-email-michal.kazior@tieto.com> (sfid-20140515_085608_312457_3D5EC924)
-In-Reply-To: <1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
-References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
- <1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:44374 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756498AbaEILMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 07:12:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	andrei.otcheretianski@intel.com
+Date: Fri,  9 May 2014 14:11:48 +0300
+Message-Id: <1399633911-12788-6-git-send-email-luca@coelho.fi> (sfid-20140509_131222_716558_954B23C0)
+In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 5/8] iwlwifi: mvm: Add AP/GO channel switch support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible to call hif_stop() 2 times through
-ath10k_htc_connect_init() timeout failpath which
-could lead to double free_irq() kernel splat for
-multiple MSI interrupt case.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Re-order init sequence to avoid this problem. The
-HTC stop shouldn't stop HIF implicitly since it
-doesn't implicitly start it. Since the re-ordering
-required some functions to be split/removed/renamed
-rename a few functions to make more sense while at
-it.
+Publish WIPHY_FLAG_HAS_CHANNEL_SWITCH if the fw supports
+newly introduced IWL_UCODE_TLV_API_CSA_FLOW.
+When CSA starts, save the switching vif inside mvm and during the CSA period
+configure fw with a new beacon after each beacon transmission in order to
+update the csa counters.
+Also, handle correctly the CSA unbind-bind flow which is triggered by mac80211
+when the actual channel switch happens.
 
-Reported-By: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c   | 101 +++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/htc.c    |   6 --
- drivers/net/wireless/ath/ath10k/htt.c    |  42 +------------
- drivers/net/wireless/ath/ath10k/htt.h    |  18 +++---
- drivers/net/wireless/ath/ath10k/htt_rx.c |   4 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c |   8 +--
- drivers/net/wireless/ath/ath10k/wmi.c    |   2 +-
- drivers/net/wireless/ath/ath10k/wmi.h    |   2 +-
- 8 files changed, 76 insertions(+), 107 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw.h       |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 12 ++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 44 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  2 +-
+ 5 files changed, 60 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7034c72..243697b 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -58,36 +58,6 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
- 	complete(&ar->target_suspend);
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index d14f193..946c13d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -128,9 +128,11 @@ enum iwl_ucode_tlv_flag {
+ /**
+  * enum iwl_ucode_tlv_api - ucode api
+  * @IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID: wowlan config includes tid field.
++ * @IWL_UCODE_TLV_API_CSA_FLOW: ucode can do unbind-bind flow for CSA.
+  */
+ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID	= BIT(0),
++	IWL_UCODE_TLV_API_CSA_FLOW		= BIT(4),
+ };
  
--static int ath10k_init_connect_htc(struct ath10k *ar)
--{
--	int status;
--
--	status = ath10k_wmi_connect_htc_service(ar);
--	if (status)
--		goto conn_fail;
--
--	/* Start HTC */
--	status = ath10k_htc_start(&ar->htc);
--	if (status)
--		goto conn_fail;
--
--	/* Wait for WMI event to be ready */
--	status = ath10k_wmi_wait_for_service_ready(ar);
--	if (status <= 0) {
--		ath10k_warn("wmi service ready event not received");
--		status = -ETIMEDOUT;
--		goto timeout;
--	}
--
--	ath10k_dbg(ATH10K_DBG_BOOT, "boot wmi ready\n");
--	return 0;
--
--timeout:
--	ath10k_htc_stop(&ar->htc);
--conn_fail:
--	return status;
--}
--
- static int ath10k_init_configure_target(struct ath10k *ar)
- {
- 	u32 param_host;
-@@ -808,10 +778,28 @@ int ath10k_core_start(struct ath10k *ar)
- 		goto err;
- 	}
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 9ccec10..25901ad 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1240,11 +1240,23 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 	u32 rate __maybe_unused =
+ 		le32_to_cpu(beacon->beacon_notify_hdr.initial_rate);
  
-+	status = ath10k_htt_init(ar);
-+	if (status) {
-+		ath10k_err("failed to init htt: %d\n", status);
-+		goto err_wmi_detach;
++	lockdep_assert_held(&mvm->mutex);
++
+ 	IWL_DEBUG_RX(mvm, "beacon status %#x retries:%d tsf:0x%16llX rate:%d\n",
+ 		     status & TX_STATUS_MSK,
+ 		     beacon->beacon_notify_hdr.failure_frame,
+ 		     le64_to_cpu(beacon->tsf),
+ 		     rate);
++
++	if (unlikely(mvm->csa_vif && mvm->csa_vif->csa_active)) {
++		if (!ieee80211_csa_is_complete(mvm->csa_vif)) {
++			iwl_mvm_mac_ctxt_beacon_changed(mvm, mvm->csa_vif);
++		} else {
++			ieee80211_csa_finish(mvm->csa_vif);
++			mvm->csa_vif = NULL;
++		}
 +	}
 +
-+	status = ath10k_htt_tx_alloc(&ar->htt);
-+	if (status) {
-+		ath10k_err("failed to alloc htt tx: %d\n", status);
-+		goto err_wmi_detach;
-+	}
-+
-+	status = ath10k_htt_rx_alloc(&ar->htt);
-+	if (status) {
-+		ath10k_err("failed to alloc htt rx: %d\n", status);
-+		goto err_htt_tx_detach;
-+	}
-+
- 	status = ath10k_hif_start(ar);
- 	if (status) {
- 		ath10k_err("could not start HIF: %d\n", status);
--		goto err_wmi_detach;
-+		goto err_htt_rx_detach;
- 	}
- 
- 	status = ath10k_htc_wait_target(&ar->htc);
-@@ -820,15 +808,30 @@ int ath10k_core_start(struct ath10k *ar)
- 		goto err_hif_stop;
- 	}
- 
--	status = ath10k_htt_attach(ar);
-+	status = ath10k_htt_connect(&ar->htt);
- 	if (status) {
--		ath10k_err("could not attach htt (%d)\n", status);
-+		ath10k_err("failed to connect htt (%d)\n", status);
- 		goto err_hif_stop;
- 	}
- 
--	status = ath10k_init_connect_htc(ar);
--	if (status)
--		goto err_htt_detach;
-+	status = ath10k_wmi_connect(ar);
-+	if (status) {
-+		ath10k_err("could not connect wmi: %d\n", status);
-+		goto err_hif_stop;
-+	}
-+
-+	status = ath10k_htc_start(&ar->htc);
-+	if (status) {
-+		ath10k_err("failed to start htc: %d\n", status);
-+		goto err_hif_stop;
-+	}
-+
-+	status = ath10k_wmi_wait_for_service_ready(ar);
-+	if (status <= 0) {
-+		ath10k_warn("wmi service ready event not received");
-+		status = -ETIMEDOUT;
-+		goto err_htc_stop;
-+	}
- 
- 	ath10k_dbg(ATH10K_DBG_BOOT, "firmware %s booted\n",
- 		   ar->hw->wiphy->fw_version);
-@@ -836,23 +839,25 @@ int ath10k_core_start(struct ath10k *ar)
- 	status = ath10k_wmi_cmd_init(ar);
- 	if (status) {
- 		ath10k_err("could not send WMI init command (%d)\n", status);
--		goto err_disconnect_htc;
-+		goto err_htc_stop;
- 	}
- 
- 	status = ath10k_wmi_wait_for_unified_ready(ar);
- 	if (status <= 0) {
- 		ath10k_err("wmi unified ready event not received\n");
- 		status = -ETIMEDOUT;
--		goto err_disconnect_htc;
-+		goto err_htc_stop;
- 	}
- 
--	status = ath10k_htt_attach_target(&ar->htt);
--	if (status)
--		goto err_disconnect_htc;
-+	status = ath10k_htt_setup(&ar->htt);
-+	if (status) {
-+		ath10k_err("failed to setup htt: %d\n", status);
-+		goto err_htc_stop;
-+	}
- 
- 	status = ath10k_debug_start(ar);
- 	if (status)
--		goto err_disconnect_htc;
-+		goto err_htc_stop;
- 
- 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
- 	INIT_LIST_HEAD(&ar->arvifs);
-@@ -871,12 +876,14 @@ int ath10k_core_start(struct ath10k *ar)
- 
- 	return 0;
- 
--err_disconnect_htc:
-+err_htc_stop:
- 	ath10k_htc_stop(&ar->htc);
--err_htt_detach:
--	ath10k_htt_detach(&ar->htt);
- err_hif_stop:
- 	ath10k_hif_stop(ar);
-+err_htt_rx_detach:
-+	ath10k_htt_rx_free(&ar->htt);
-+err_htt_tx_detach:
-+	ath10k_htt_tx_free(&ar->htt);
- err_wmi_detach:
- 	ath10k_wmi_detach(ar);
- err:
-@@ -916,7 +923,9 @@ void ath10k_core_stop(struct ath10k *ar)
- 
- 	ath10k_debug_stop(ar);
- 	ath10k_htc_stop(&ar->htc);
--	ath10k_htt_detach(&ar->htt);
-+	ath10k_hif_stop(ar);
-+	ath10k_htt_tx_free(&ar->htt);
-+	ath10k_htt_rx_free(&ar->htt);
- 	ath10k_wmi_detach(ar);
- }
- EXPORT_SYMBOL(ath10k_core_stop);
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 5b58dbb..e493db4 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -830,17 +830,11 @@ int ath10k_htc_start(struct ath10k_htc *htc)
  	return 0;
  }
  
--/*
-- * stop HTC communications, i.e. stop interrupt reception, and flush all
-- * queued buffers
-- */
- void ath10k_htc_stop(struct ath10k_htc *htc)
- {
- 	spin_lock_bh(&htc->tx_lock);
- 	htc->stopped = true;
- 	spin_unlock_bh(&htc->tx_lock);
--
--	ath10k_hif_stop(htc->ar);
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 4dd9ff4..af1d9da 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -322,6 +322,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_GO_UAPSD)
+ 		hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
  
- /* registered target arrival callback from the HIF layer */
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 69697af5..19c12cc 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -22,7 +22,7 @@
- #include "core.h"
- #include "debug.h"
- 
--static int ath10k_htt_htc_attach(struct ath10k_htt *htt)
-+int ath10k_htt_connect(struct ath10k_htt *htt)
- {
- 	struct ath10k_htc_svc_conn_req conn_req;
- 	struct ath10k_htc_svc_conn_resp conn_resp;
-@@ -48,39 +48,14 @@ static int ath10k_htt_htc_attach(struct ath10k_htt *htt)
- 	return 0;
- }
- 
--int ath10k_htt_attach(struct ath10k *ar)
-+int ath10k_htt_init(struct ath10k *ar)
- {
- 	struct ath10k_htt *htt = &ar->htt;
--	int ret;
- 
- 	htt->ar = ar;
- 	htt->max_throughput_mbps = 800;
- 
- 	/*
--	 * Connect to HTC service.
--	 * This has to be done before calling ath10k_htt_rx_attach,
--	 * since ath10k_htt_rx_attach involves sending a rx ring configure
--	 * message to the target.
--	 */
--	ret = ath10k_htt_htc_attach(htt);
--	if (ret) {
--		ath10k_err("could not attach htt htc (%d)\n", ret);
--		goto err_htc_attach;
--	}
--
--	ret = ath10k_htt_tx_attach(htt);
--	if (ret) {
--		ath10k_err("could not attach htt tx (%d)\n", ret);
--		goto err_htc_attach;
--	}
--
--	ret = ath10k_htt_rx_attach(htt);
--	if (ret) {
--		ath10k_err("could not attach htt rx (%d)\n", ret);
--		goto err_rx_attach;
--	}
--
--	/*
- 	 * Prefetch enough data to satisfy target
- 	 * classification engine.
- 	 * This is for LL chips. HL chips will probably
-@@ -93,11 +68,6 @@ int ath10k_htt_attach(struct ath10k *ar)
- 		2; /* ip4 dscp or ip6 priority */
- 
- 	return 0;
--
--err_rx_attach:
--	ath10k_htt_tx_detach(htt);
--err_htc_attach:
--	return ret;
- }
- 
- #define HTT_TARGET_VERSION_TIMEOUT_HZ (3*HZ)
-@@ -117,7 +87,7 @@ static int ath10k_htt_verify_version(struct ath10k_htt *htt)
- 	return 0;
- }
- 
--int ath10k_htt_attach_target(struct ath10k_htt *htt)
-+int ath10k_htt_setup(struct ath10k_htt *htt)
- {
- 	int status;
- 
-@@ -140,9 +110,3 @@ int ath10k_htt_attach_target(struct ath10k_htt *htt)
- 
- 	return ath10k_htt_send_rx_ring_cfg_ll(htt);
- }
--
--void ath10k_htt_detach(struct ath10k_htt *htt)
--{
--	ath10k_htt_rx_detach(htt);
--	ath10k_htt_tx_detach(htt);
--}
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 645a563..9a26346 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1328,14 +1328,16 @@ struct htt_rx_desc {
- #define HTT_LOG2_MAX_CACHE_LINE_SIZE 7	/* 2^7 = 128 */
- #define HTT_MAX_CACHE_LINE_SIZE_MASK ((1 << HTT_LOG2_MAX_CACHE_LINE_SIZE) - 1)
- 
--int ath10k_htt_attach(struct ath10k *ar);
--int ath10k_htt_attach_target(struct ath10k_htt *htt);
--void ath10k_htt_detach(struct ath10k_htt *htt);
--
--int ath10k_htt_tx_attach(struct ath10k_htt *htt);
--void ath10k_htt_tx_detach(struct ath10k_htt *htt);
--int ath10k_htt_rx_attach(struct ath10k_htt *htt);
--void ath10k_htt_rx_detach(struct ath10k_htt *htt);
-+int ath10k_htt_connect(struct ath10k_htt *htt);
-+int ath10k_htt_init(struct ath10k *ar);
-+int ath10k_htt_setup(struct ath10k_htt *htt);
++	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_CSA_FLOW)
++		hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
 +
-+int ath10k_htt_tx_alloc(struct ath10k_htt *htt);
-+void ath10k_htt_tx_free(struct ath10k_htt *htt);
-+
-+int ath10k_htt_rx_alloc(struct ath10k_htt *htt);
-+void ath10k_htt_rx_free(struct ath10k_htt *htt);
-+
- void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
- int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ac6a5fe..f744e35 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -243,7 +243,7 @@ static void ath10k_htt_rx_ring_clean_up(struct ath10k_htt *htt)
+ 	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
+ 	hw->wiphy->n_iface_combinations =
+ 		ARRAY_SIZE(iwl_mvm_iface_combinations);
+@@ -2178,6 +2181,11 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
++		/* Unless it's a CSA flow we have nothing to do here */
++		if (vif->csa_active) {
++			mvmvif->ap_ibss_active = true;
++			break;
++		}
+ 	case NL80211_IFTYPE_ADHOC:
+ 		/*
+ 		 * The AP binding flow is handled as part of the start_ap flow
+@@ -2214,6 +2222,12 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 			goto out_remove_binding;
  	}
+ 
++	/* Handle binding during CSA */
++	if (vif->type == NL80211_IFTYPE_AP) {
++		iwl_mvm_update_quotas(mvm, vif);
++		iwl_mvm_mac_ctxt_changed(mvm, vif);
++	}
++
+ 	goto out_unlock;
+ 
+  out_remove_binding:
+@@ -2238,13 +2252,20 @@ static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 	iwl_mvm_remove_time_event(mvm, mvmvif, &mvmvif->time_event_data);
+ 
+ 	switch (vif->type) {
+-	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_ADHOC:
+ 		goto out_unlock;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		mvmvif->monitor_active = false;
+ 		iwl_mvm_update_quotas(mvm, NULL);
+ 		break;
++	case NL80211_IFTYPE_AP:
++		/* This part is triggered only during CSA */
++		if (!vif->csa_active || !mvmvif->ap_ibss_active)
++			goto out_unlock;
++
++		mvmvif->ap_ibss_active = false;
++		iwl_mvm_update_quotas(mvm, NULL);
++		/*TODO: bt_coex notification here? */
+ 	default:
+ 		break;
+ 	}
+@@ -2340,6 +2361,25 @@ static int iwl_mvm_mac_testmode_cmd(struct ieee80211_hw *hw,
  }
+ #endif
  
--void ath10k_htt_rx_detach(struct ath10k_htt *htt)
-+void ath10k_htt_rx_free(struct ath10k_htt *htt)
- {
- 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
- 	tasklet_kill(&htt->rx_replenish_task);
-@@ -492,7 +492,7 @@ static void ath10k_htt_rx_replenish_task(unsigned long ptr)
- 	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
++static void iwl_mvm_channel_switch_beacon(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif,
++					  struct cfg80211_chan_def *chandef)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++
++	mutex_lock(&mvm->mutex);
++	if (WARN(mvm->csa_vif && mvm->csa_vif->csa_active,
++		 "Another CSA is already in progress"))
++		goto out_unlock;
++
++	IWL_DEBUG_MAC80211(mvm, "CSA started to freq %d\n",
++			   chandef->center_freq1);
++	mvm->csa_vif = vif;
++
++out_unlock:
++	mutex_unlock(&mvm->mutex);
++}
++
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -2382,6 +2422,8 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
  
--int ath10k_htt_rx_attach(struct ath10k_htt *htt)
-+int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- {
- 	dma_addr_t paddr;
- 	void *vaddr;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 7a3e2e4..7064354 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -83,7 +83,7 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
- 	__clear_bit(msdu_id, htt->used_msdu_ids);
- }
+ 	.set_tim = iwl_mvm_set_tim,
  
--int ath10k_htt_tx_attach(struct ath10k_htt *htt)
-+int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- {
- 	spin_lock_init(&htt->tx_lock);
- 	init_waitqueue_head(&htt->empty_tx_wq);
-@@ -120,7 +120,7 @@ int ath10k_htt_tx_attach(struct ath10k_htt *htt)
- 	return 0;
- }
++	.channel_switch_beacon = iwl_mvm_channel_switch_beacon,
++
+ 	CFG80211_TESTMODE_CMD(iwl_mvm_mac_testmode_cmd)
  
--static void ath10k_htt_tx_cleanup_pending(struct ath10k_htt *htt)
-+static void ath10k_htt_tx_free_pending(struct ath10k_htt *htt)
- {
- 	struct htt_tx_done tx_done = {0};
- 	int msdu_id;
-@@ -141,9 +141,9 @@ static void ath10k_htt_tx_cleanup_pending(struct ath10k_htt *htt)
- 	spin_unlock_bh(&htt->tx_lock);
- }
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index d564233..87f2105 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -631,6 +631,8 @@ struct iwl_mvm {
+ 	bool ps_disabled;
+ 	/* Indicate if device power management is allowed */
+ 	bool pm_disabled;
++
++	struct ieee80211_vif *csa_vif;
+ };
  
--void ath10k_htt_tx_detach(struct ath10k_htt *htt)
-+void ath10k_htt_tx_free(struct ath10k_htt *htt)
- {
--	ath10k_htt_tx_cleanup_pending(htt);
-+	ath10k_htt_tx_free_pending(htt);
- 	kfree(htt->pending_tx);
- 	kfree(htt->used_msdu_ids);
- 	dma_pool_destroy(htt->tx_pool);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index acc7481..ed28503 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2375,7 +2375,7 @@ void ath10k_wmi_detach(struct ath10k *ar)
- 	ar->wmi.num_mem_chunks = 0;
- }
+ /* Extract MVM priv from op_mode and _hw */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 9545d7f..729a857 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -220,7 +220,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, false),
  
--int ath10k_wmi_connect_htc_service(struct ath10k *ar)
-+int ath10k_wmi_connect(struct ath10k *ar)
- {
- 	int status;
- 	struct ath10k_htc_svc_conn_req conn_req;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index e59b245..89ef3b3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4259,7 +4259,7 @@ void ath10k_wmi_detach(struct ath10k *ar);
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar);
- int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
- 
--int ath10k_wmi_connect_htc_service(struct ath10k *ar);
-+int ath10k_wmi_connect(struct ath10k *ar);
- int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
- 				const struct wmi_channel_arg *);
- int ath10k_wmi_pdev_suspend_target(struct ath10k *ar, u32 suspend_opt);
+ 	RX_HANDLER(BT_PROFILE_NOTIFICATION, iwl_mvm_rx_bt_coex_notif, true),
+-	RX_HANDLER(BEACON_NOTIFICATION, iwl_mvm_rx_beacon_notif, false),
++	RX_HANDLER(BEACON_NOTIFICATION, iwl_mvm_rx_beacon_notif, true),
+ 	RX_HANDLER(STATISTICS_NOTIFICATION, iwl_mvm_rx_statistics, true),
+ 	RX_HANDLER(ANTENNA_COUPLING_NOTIFICATION,
+ 		   iwl_mvm_rx_ant_coupling_notif, true),
 -- 
-1.8.5.3
+2.0.0.rc0
 
