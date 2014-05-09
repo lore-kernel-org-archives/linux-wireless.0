@@ -1,121 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:47270 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934161AbaE3Q4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 12:56:37 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [RFC 1/4] cfg80211: Add channel flags limiting availability to OCB mode only
-Date: Fri, 30 May 2014 18:56:21 +0200
-Message-Id: <1401468984-24575-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185800_853386_EC0807E5)
-In-Reply-To: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+Received: from dedo.coelho.fi ([88.198.205.34]:44384 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756544AbaEILMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 07:12:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	andrei.otcheretianski@intel.com
+Date: Fri,  9 May 2014 14:11:50 +0300
+Message-Id: <1399633911-12788-8-git-send-email-luca@coelho.fi> (sfid-20140509_131224_639320_6452E45F)
+In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 7/8] mac80211: Handle the CSA counters correctly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.11p operates in its own 5.9GHz band. When there will
-be a record for the 5.9GHz band in the regulatory daemon,
-it must be limited to the OCB mode only -- using the newly
-added flags.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Make the beacon CSA counters part of ieee80211_mutable_offsets and don't
+decrement CSA counters when generating a beacon template. This permits the
+driver to offload the CSA counters handling. Since mac80211 updates the probe
+responses with the correct counter, the driver should sync the counter's value
+with mac80211 using ieee80211_csa_update_counter function.
+
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/nl80211.c       | 3 +++
- net/wireless/reg.c           | 2 ++
- 4 files changed, 12 insertions(+)
+ include/net/mac80211.h     | 23 +++++++++++++-
+ net/mac80211/cfg.c         |  4 +--
+ net/mac80211/ieee80211_i.h |  2 --
+ net/mac80211/tx.c          | 76 ++++++++++++++++++++++++++++++++++------------
+ 4 files changed, 80 insertions(+), 25 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5c7169b..6722ab2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -115,6 +115,7 @@ enum ieee80211_band {
-  *	on this channel.
-  * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-  *	on this channel.
-+ * @IEEE80211_CHAN_OCB_ONLY: only OCB is allowed on this channel.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e652126..982d2cd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3411,14 +3411,20 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+  */
+ void ieee80211_report_low_ack(struct ieee80211_sta *sta, u32 num_packets);
+ 
++#define IEEE80211_MAX_CSA_COUNTERS_NUM 2
++
+ /**
+  * struct ieee80211_mutable_offsets - mutable beacon offsets
+  * @tim_offset: position of TIM element
+  * @tim_length: size of TIM element
++ * @csa_offs: array of IEEE80211_MAX_CSA_COUNTERS_NUM offsets to CSA counters.
++ *	This array can contain zero values which should be ignored.
+  */
+ struct ieee80211_mutable_offsets {
+ 	u16 tim_offset;
+ 	u16 tim_length;
++
++	u16 csa_counter_offs[IEEE80211_MAX_CSA_COUNTERS_NUM];
+ };
+ 
+ /**
+@@ -3433,7 +3439,8 @@ struct ieee80211_mutable_offsets {
   *
-  */
- enum ieee80211_channel_flags {
-@@ -131,6 +132,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
- 	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
- 	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
-+	IEEE80211_CHAN_OCB_ONLY         = 1<<13,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 406010d..970c5df 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2362,6 +2362,8 @@ enum nl80211_band_attr {
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
-  *	on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_OCB_ONLY: no other than OCB networks are
-+ *	permitted on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -2390,6 +2392,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
- 	NL80211_FREQUENCY_ATTR_NO_20MHZ,
- 	NL80211_FREQUENCY_ATTR_NO_10MHZ,
-+	NL80211_FREQUENCY_ATTR_OCB_ONLY,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -2558,6 +2561,7 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
-  *	base on contiguous rules and wider channels will be allowed to cross
-  *	multiple contiguous/overlapping frequency ranges.
-+ * @NL80211_RRF_OCB_ONLY: no other than OCB is allowed
-  */
- enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_OFDM		= 1<<0,
-@@ -2570,6 +2574,7 @@ enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_IR		= 1<<7,
- 	__NL80211_RRF_NO_IBSS		= 1<<8,
- 	NL80211_RRF_AUTO_BW		= 1<<11,
-+	NL80211_RRF_OCB_ONLY            = 1<<12,
- };
- 
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0f1b18f2..c766c31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -633,6 +633,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
- 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
- 			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_OCB_ONLY) &&
-+		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_OCB_ONLY))
-+			goto nla_put_failure;
- 	}
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e78f532..74e41f7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -906,6 +906,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_NO_OFDM;
- 	if (rd_flags & NL80211_RRF_NO_OUTDOOR)
- 		channel_flags |= IEEE80211_CHAN_INDOOR_ONLY;
-+	if (rd_flags & NL80211_RRF_OCB_ONLY)
-+		channel_flags |= IEEE80211_CHAN_OCB_ONLY;
- 	return channel_flags;
+  * This function should be used if the beacon frames are generated by the
+  * device, and then the driver must use the returned beacon as the template
+- * The driver is responsible to update the DTIM count.
++ * The driver or the device are responsible to update the DTIM and, when
++ * applicable, the CSA count.
+  *
+  * The driver is responsible for freeing the returned skb.
+  *
+@@ -3486,6 +3493,20 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
  }
  
+ /**
++ * ieee80211_csa_update_counter - request mac80211 to decrement the csa counter
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * The csa counter should be updated after each beacon transmission.
++ * This function is called implicitly when
++ * ieee80211_beacon_get/ieee80211_beacon_get_tim are called, however if the
++ * beacon frames are generated by the device, the driver should call this
++ * function after each beacon transmission to sync mac80211's csa counters.
++ *
++ * Return: new csa counter value
++ */
++u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_csa_finish - notify mac80211 about channel switch
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  *
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 43af0d6b..4584765 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3502,10 +3502,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
+ 	    params->n_csa_offsets) {
+ 		int i;
++		u8 c = sdata->csa_current_counter;
+ 
+ 		for (i = 0; i < params->n_csa_offsets; i++)
+-			data[params->csa_offsets[i]] =
+-					sdata->csa_current_counter;
++			data[params->csa_offsets[i]] = c;
+ 	}
+ 	IEEE80211_SKB_CB(skb)->flags = flags;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 05ed592..57e0b26 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -70,8 +70,6 @@ struct ieee80211_local;
+ 
+ #define IEEE80211_DEAUTH_FRAME_LEN	(24 /* hdr */ + 2 /* reason */)
+ 
+-#define IEEE80211_MAX_CSA_COUNTERS_NUM 2
+-
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 509456e..5214686 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2416,13 +2416,14 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+-				 struct beacon_data *beacon)
++static void ieee80211_set_csa(struct ieee80211_sub_if_data *sdata,
++			      struct beacon_data *beacon)
+ {
+ 	struct probe_resp *resp;
+ 	u8 *beacon_data;
+ 	size_t beacon_data_len;
+ 	int i;
++	u8 count = sdata->csa_current_counter;
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+@@ -2450,16 +2451,7 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 			if (WARN_ON(counter_offset_beacon >= beacon_data_len))
+ 				return;
+ 
+-			/* Warn if the driver did not check for/react to csa
+-			 * completeness.  A beacon with CSA counter set to 0
+-			 * should never occur, because a counter of 1 means
+-			 * switch just before the next beacon.
+-			 */
+-			if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
+-				return;
+-
+-			beacon_data[counter_offset_beacon] =
+-				sdata->csa_current_counter - 1;
++			beacon_data[counter_offset_beacon] = count;
+ 		}
+ 
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP &&
+@@ -2474,14 +2466,24 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 				rcu_read_unlock();
+ 				return;
+ 			}
+-			resp->data[counter_offset_presp] =
+-				sdata->csa_current_counter - 1;
++			resp->data[counter_offset_presp] = count;
+ 			rcu_read_unlock();
+ 		}
+ 	}
++}
++
++u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+ 	sdata->csa_current_counter--;
++
++	/* the counter should never reach 0 */
++	WARN_ON(!sdata->csa_current_counter);
++
++	return sdata->csa_current_counter;
+ }
++EXPORT_SYMBOL(ieee80211_csa_update_counter);
+ 
+ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ {
+@@ -2552,6 +2554,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 	enum ieee80211_band band;
+ 	struct ieee80211_tx_rate_control txrc;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
++	int csa_off_base = 0;
+ 
+ 	rcu_read_lock();
+ 
+@@ -2569,8 +2572,12 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		struct beacon_data *beacon = rcu_dereference(ap->beacon);
+ 
+ 		if (beacon) {
+-			if (sdata->vif.csa_active)
+-				ieee80211_update_csa(sdata, beacon);
++			if (sdata->vif.csa_active) {
++				if (!is_template)
++					ieee80211_csa_update_counter(vif);
++
++				ieee80211_set_csa(sdata, beacon);
++			}
+ 
+ 			/*
+ 			 * headroom, head length,
+@@ -2593,6 +2600,9 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 			if (offs) {
+ 				offs->tim_offset = beacon->head_len;
+ 				offs->tim_length = skb->len - beacon->head_len;
++
++				/* for AP the csa offsets are from tail */
++				csa_off_base = skb->len;
+ 			}
+ 
+ 			if (beacon->tail)
+@@ -2608,9 +2618,12 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		if (!presp)
+ 			goto out;
+ 
+-		if (sdata->vif.csa_active)
+-			ieee80211_update_csa(sdata, presp);
++		if (sdata->vif.csa_active) {
++			if (!is_template)
++				ieee80211_csa_update_counter(vif);
+ 
++			ieee80211_set_csa(sdata, presp);
++		}
+ 
+ 		skb = dev_alloc_skb(local->tx_headroom + presp->head_len +
+ 				    local->hw.extra_beacon_tailroom);
+@@ -2630,8 +2643,17 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		if (!bcn)
+ 			goto out;
+ 
+-		if (sdata->vif.csa_active)
+-			ieee80211_update_csa(sdata, bcn);
++		if (sdata->vif.csa_active) {
++			if (!is_template)
++				/* TODO: For mesh csa_counter is in TU, so
++				 * decrementing it by one isn't correct, but
++				 * for now we leave it consistent with overall
++				 * mac80211's behavior.
++				 */
++				ieee80211_csa_update_counter(vif);
++
++			ieee80211_set_csa(sdata, bcn);
++		}
+ 
+ 		if (ifmsh->sync_ops)
+ 			ifmsh->sync_ops->adjust_tbtt(sdata, bcn);
+@@ -2658,6 +2680,20 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
++	/* CSA offsets */
++	if (offs) {
++		int i;
++
++		for (i = 0; i < IEEE80211_MAX_CSA_COUNTERS_NUM; i++) {
++			u16 csa_off = sdata->csa_counter_offset_beacon[i];
++
++			if (!csa_off)
++				continue;
++
++			offs->csa_counter_offs[i] = csa_off_base + csa_off;
++		}
++	}
++
+ 	band = chanctx_conf->def.chan->band;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
 -- 
-2.0.0.rc4
+2.0.0.rc0
 
