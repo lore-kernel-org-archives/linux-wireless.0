@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55378 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbaENOWN (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:35008 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbaEIIjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 10:22:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: warm reset fixes 2014-05-14
-References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 14 May 2014 17:22:05 +0300
-In-Reply-To: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 14 May 2014 08:57:36 +0200")
-Message-ID: <87bnv0fnjm.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_162217_182293_35034BE8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 9 May 2014 04:39:00 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d49so2355235eek.18
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 01:38:59 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] crda: add AUTO-BW rule flag support
+Date: Fri,  9 May 2014 10:38:43 +0200
+Message-Id: <1399624723-9167-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140509_103913_158212_919592E5)
+In-Reply-To: <1399624723-9167-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1399624723-9167-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ regdb.h  |    1 +
+ reglib.c |    4 ++++
+ 2 files changed, 5 insertions(+)
 
-> Warm reset was not able to recover from a device
-> crash so ath10k was falling back to cold reset
-> which would occasionally hang the system or
-> generate a data bus error with some device chips.
->
-> Warm reset now works a lot more reliably (at least
-> on my T430). It's able to recover from a "hard"
-> simulate fw crash and some firmware asserts I've
-> forced meaning it should recover in most cases
-> without falling back to the cold reset.
->
-> There's still one case of a crash warm reset is
-> incapable to recover from: IOMMU faults (when
-> supported and enabled and device tries to access
-> non-DMA mapped host memory) trigger device crash
-> and leave CE totally unresponsive before and after
-> the warm reset.
->
->
-> Michal Kazior (2):
->   ath10k: improve warm reset reliability
->   ath10k: retry warm reset a few times
-
-The patches don't apply anymore and the conflict was not trivial enough
-for me to fix it. Can you rebase, please?
-
+diff --git a/regdb.h b/regdb.h
+index 20f29e9..3ffb781 100644
+--- a/regdb.h
++++ b/regdb.h
+@@ -81,6 +81,7 @@ enum reg_rule_flags {
+ 					 * Point links */
+ 	RRF_NO_IR		= 1<<7, /* do not initiate radiation */
+ 	__RRF_NO_IBSS		= 1<<8, /* old no-IBSS rule, maps to no-ir */
++	RRF_AUTO_BW		= 1<<11, /* Auto BW calculations */
+ };
+ 
+ #define RRF_NO_IR_ALL	(RRF_NO_IR | __RRF_NO_IBSS)
+diff --git a/reglib.c b/reglib.c
+index 1e57634..3deca4a 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -750,6 +750,8 @@ static void print_reg_rule(const struct ieee80211_reg_rule *rule)
+ 		printf(", PTMP-ONLY");
+ 	if (rule->flags & RRF_NO_IR_ALL)
+ 		printf(", NO-IR");
++	if (rule->flags & RRF_AUTO_BW)
++		printf(", AUTO-BW");
+ 
+ 	printf("\n");
+ }
+@@ -793,6 +795,8 @@ static uint32_t reglib_parse_rule_flag(char *flag_s)
+ 		return RRF_PTMP_ONLY;
+ 	if (strncmp(flag_s, "NO-IR", 5) == 0)
+ 		return RRF_NO_IR;
++	if (strncmp(flag_s, "AUTO-BW", 7) == 0)
++		return RRF_AUTO_BW;
+ 
+ 	return 0;
+ }
 -- 
-Kalle Valo
+1.7.9.5
+
