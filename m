@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:56743 "EHLO ni.piap.pl"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51929 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720AbaEZLRl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 07:17:41 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <m3k39fmyqg.fsf@t19.piap.pl>
-	<CANUX_P0CyqhFU5fpTMa=q=du2ZkEPkyuvE32VBmFPUejgn0xOA@mail.gmail.com>
-	<m3fvk1m2hv.fsf@t19.piap.pl>
-Date: Mon, 26 May 2014 13:13:10 +0200
-In-Reply-To: <m3fvk1m2hv.fsf@t19.piap.pl> ("Krzysztof =?utf-8?Q?Ha=C5=82as?=
- =?utf-8?Q?a=22's?= message of
-	"Fri, 23 May 2014 08:29:48 +0200")
-MIME-Version: 1.0
-Message-ID: <m3sinwlrnd.fsf@t19.piap.pl> (sfid-20140526_131745_524082_1C6F9A85)
-Content-Type: text/plain; charset=utf-8
-Subject: Re: iwlwifi Microcode SW error and subsequent WARNINGs
+	id S1751924AbaEIM70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 08:59:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlwifi: remove spurious newline in Kconfig
+Date: Fri,  9 May 2014 14:59:16 +0200
+Message-Id: <1399640356-16983-1-git-send-email-johannes@sipsolutions.net> (sfid-20140509_145930_153630_5D710AE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-khalasa@piap.pl (Krzysztof Hałasa) writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> However, the card doesn't join the ad hoc network. It creates a new IBSS
-> instead.
+There's an extra newline that shouldn't be there - remove it.
 
-This seems to be caused by uninitialized sdata->u.ibss.last_scan_completed.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-I'll post a patch to net/mac80211/ibss.c.
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index b82d30c0f0c9..d216509d167e 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -128,7 +128,6 @@ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+ 	  Enable use of experimental ucode for testing and debugging.
+ 
+ config IWLWIFI_DEVICE_TRACING
+-
+ 	bool "iwlwifi device access tracing"
+ 	depends on IWLWIFI
+ 	depends on EVENT_TRACING
 -- 
-Krzysztof Halasa
+2.0.0.rc0
 
-Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
