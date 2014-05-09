@@ -1,314 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:47644 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934081AbaE3Q4i (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:40537 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751270AbaEIMm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 12:56:38 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [RFC 2/4] cfg80211: Add new interface type for OCB mode
-Date: Fri, 30 May 2014 18:56:22 +0200
-Message-Id: <1401468984-24575-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185801_684934_E3781C32)
-In-Reply-To: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Fri, 9 May 2014 08:42:58 -0400
+Received: by mail-ee0-f54.google.com with SMTP id b57so2664340eek.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:42:57 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/7] ath10k: reduce timeout values
+Date: Fri,  9 May 2014 14:35:55 +0200
+Message-Id: <1399638957-20449-6-git-send-email-michal.kazior@tieto.com> (sfid-20140509_144303_999728_711610A8)
+In-Reply-To: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new OCB mode (outside the context of the BSS) interface
-type as well as functions necessary to configure the interface
-when 'joining' such network.
+It doesn't make much sense to wait more than 1
+second in most cases.
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+This speeds up teardown in some failcases.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/cfg80211.h       |  7 +++++
- include/uapi/linux/nl80211.h |  3 ++
- net/wireless/Makefile        |  2 +-
- net/wireless/chan.c          |  2 ++
- net/wireless/core.h          |  8 +++++
- net/wireless/nl80211.c       |  1 +
- net/wireless/ocb.c           | 75 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 11 +++++++
- net/wireless/trace.h         | 17 ++++++++++
- net/wireless/util.c          |  5 ++-
- 10 files changed, 129 insertions(+), 2 deletions(-)
- create mode 100644 net/wireless/ocb.c
+ drivers/net/wireless/ath/ath10k/core.h | 2 +-
+ drivers/net/wireless/ath/ath10k/htt.c  | 2 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 6 +++---
+ drivers/net/wireless/ath/ath10k/txrx.c | 2 +-
+ drivers/net/wireless/ath/ath10k/wmi.h  | 4 ++--
+ 5 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6722ab2..c3879b8 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1314,6 +1314,11 @@ struct mesh_setup {
- 	u32 basic_rates;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 074cb41..01f1830 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -221,7 +221,7 @@ struct ath10k_sta {
+ 	struct work_struct update_wk;
  };
  
-+struct ocb_setup {
-+	struct cfg80211_chan_def chandef;
-+	u32 basic_rates;
-+};
-+
- /**
-  * struct ieee80211_txq_params - TX queue parameters
-  * @ac: AC identifier
-@@ -2371,6 +2376,8 @@ struct cfg80211_ops {
- 			     const struct mesh_setup *setup);
- 	int	(*leave_mesh)(struct wiphy *wiphy, struct net_device *dev);
+-#define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
++#define ATH10K_VDEV_SETUP_TIMEOUT_HZ (1*HZ)
  
-+	int	(*join_ocb)(struct wiphy *wiphy, struct net_device *dev,
-+			    struct ocb_setup *setup);
- 	int	(*change_bss)(struct wiphy *wiphy, struct net_device *dev,
- 			      struct bss_parameters *params);
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 970c5df..250b8d8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1994,6 +1994,8 @@ enum nl80211_attrs {
-  *	and therefore can't be created in the normal ways, use the
-  *	%NL80211_CMD_START_P2P_DEVICE and %NL80211_CMD_STOP_P2P_DEVICE
-  *	commands to create and destroy one
-+ * @NL80211_IF_TYPE_OCB: outside context of a bss
-+ *	this mode corresponds to the MIB variable dot11OCBActivated=true
-  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
-  * @NUM_NL80211_IFTYPES: number of defined interface types
-  *
-@@ -2013,6 +2015,7 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_P2P_CLIENT,
- 	NL80211_IFTYPE_P2P_GO,
- 	NL80211_IFTYPE_P2P_DEVICE,
-+	NL80211_IFTYPE_OCB,
- 
- 	/* keep last */
- 	NUM_NL80211_IFTYPES,
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index a761670..4c9e39f 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
- obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
- 
- cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
--cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o trace.o
-+cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o trace.o ocb.o
- cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
- cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 84d686e..a457085 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -370,6 +370,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_OCB:
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 		break;
- 	case NUM_NL80211_IFTYPES:
-@@ -892,6 +893,7 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
- 				*radar_detect |= BIT(wdev->chandef.width);
- 		}
- 		return;
-+	case NL80211_IFTYPE_OCB:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_WDS:
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e9afbf1..3d8fde5 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -290,6 +290,14 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 			      struct wireless_dev *wdev,
- 			      struct cfg80211_chan_def *chandef);
- 
-+/* OCB */
-+int __cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
-+			struct net_device *dev,
-+			struct ocb_setup *setup);
-+int cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
-+		      struct net_device *dev,
-+		      struct ocb_setup *setup);
-+
- /* AP */
- int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev, bool notify);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c766c31..79bae31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1859,6 +1859,7 @@ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
- 	 * operation to set the monitor channel if possible.
- 	 */
- 	return !wdev ||
-+		wdev->iftype == NL80211_IFTYPE_OCB ||
- 		wdev->iftype == NL80211_IFTYPE_AP ||
- 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
- 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
-diff --git a/net/wireless/ocb.c b/net/wireless/ocb.c
-new file mode 100644
-index 0000000..66da583
---- /dev/null
-+++ b/net/wireless/ocb.c
-@@ -0,0 +1,75 @@
-+/* OCB mode implementation
-+ * Copyright 2014, Czech Technical University in Prague, Rostislav Lisovy
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/ieee80211.h>
-+#include <net/cfg80211.h>
-+#include "nl80211.h"
-+#include "core.h"
-+#include "rdev-ops.h"
-+
-+
-+int __cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
-+			struct net_device *dev,
-+			struct ocb_setup *setup)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
-+
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_OCB)
-+		return -EOPNOTSUPP;
-+
-+	if (!setup->chandef.chan)
-+		WARN_ON(!setup->chandef.chan);
-+
-+	 /* In OCB mode only those channels flagged with 'CHAN_OCB_ONLY'
-+	  * may be used
-+	  */
-+	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_OCB &&
-+	    !(setup->chandef.chan->flags & IEEE80211_CHAN_OCB_ONLY))
-+		return -EINVAL;
-+
-+	 /* check if basic rates are available otherwise use mandatory
-+	  * rates as basic rates
-+	  */
-+	if (!setup->basic_rates) {
-+		enum nl80211_bss_scan_width scan_width;
-+		struct ieee80211_supported_band *sband =
-+				rdev->wiphy.bands[setup->chandef.chan->band];
-+		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
-+		setup->basic_rates = ieee80211_mandatory_rates(sband,
-+							       scan_width);
-+	}
-+
-+	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					   setup->chandef.chan,
-+					   CHAN_MODE_EXCLUSIVE, 0);
-+	if (err)
-+		return err;
-+
-+	err = rdev_join_ocb(rdev, dev, setup);
-+	if (!err)
-+		wdev->chandef = setup->chandef;
-+
-+	return err;
-+}
-+
-+int cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
-+		      struct net_device *dev,
-+		      struct ocb_setup *setup)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
-+
-+	wdev_lock(wdev);
-+	err = __cfg80211_join_ocb(rdev, dev, setup);
-+	wdev_unlock(wdev);
-+
-+	return err;
-+}
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 00cdf73..2f2fa14 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -322,6 +322,17 @@ static inline int rdev_leave_mesh(struct cfg80211_registered_device *rdev,
+ struct ath10k_vif {
+ 	struct list_head list;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 69697af5..60ea5f1 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -100,7 +100,7 @@ err_htc_attach:
  	return ret;
  }
  
-+static inline int rdev_join_ocb(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev,
-+				struct ocb_setup *setup)
-+{
-+	int ret;
-+	trace_rdev_join_ocb(&rdev->wiphy, dev, setup);
-+	ret = rdev->ops->join_ocb(&rdev->wiphy, dev, setup);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- static inline int rdev_change_bss(struct cfg80211_registered_device *rdev,
- 				  struct net_device *dev,
- 				  struct bss_parameters *params)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index cdfbb00..f4e2cc3 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1256,6 +1256,23 @@ TRACE_EVENT(rdev_join_ibss,
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(bssid), __entry->ssid)
- );
+-#define HTT_TARGET_VERSION_TIMEOUT_HZ (3*HZ)
++#define HTT_TARGET_VERSION_TIMEOUT_HZ (1*HZ)
  
-+TRACE_EVENT(rdev_join_ocb,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 const struct ocb_setup *setup),
-+	TP_ARGS(wiphy, netdev, setup),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG)
-+);
-+
-+
- TRACE_EVENT(rdev_set_wiphy_params,
- 	TP_PROTO(struct wiphy *wiphy, u32 changed),
- 	TP_ARGS(wiphy, changed),
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index a756429..019e34c 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -441,7 +441,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 		break;
- 	case cpu_to_le16(0):
- 		if (iftype != NL80211_IFTYPE_ADHOC &&
--		    iftype != NL80211_IFTYPE_STATION)
-+		    iftype != NL80211_IFTYPE_STATION &&
-+		    iftype != NL80211_IFTYPE_OCB)
- 				return -1;
- 		break;
+ static int ath10k_htt_verify_version(struct ath10k_htt *htt)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9b14ec8..9e3b16f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -98,7 +98,7 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = wait_for_completion_timeout(&ar->install_key_done, 3*HZ);
++	ret = wait_for_completion_timeout(&ar->install_key_done, 1*HZ);
+ 	if (ret == 0)
+ 		return -ETIMEDOUT;
+ 
+@@ -2190,7 +2190,7 @@ static int ath10k_abort_scan(struct ath10k *ar)
+ 		return -EIO;
  	}
-@@ -517,6 +518,7 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
- 		memcpy(hdr.addr3, skb->data, ETH_ALEN);
- 		hdrlen = 24;
- 		break;
-+	case NL80211_IFTYPE_OCB:
- 	case NL80211_IFTYPE_ADHOC:
- 		/* DA SA BSSID */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-@@ -935,6 +937,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 			if (dev->ieee80211_ptr->use_4addr)
- 				break;
- 			/* fall through */
-+		case NL80211_IFTYPE_OCB:
- 		case NL80211_IFTYPE_P2P_CLIENT:
- 		case NL80211_IFTYPE_ADHOC:
- 			dev->priv_flags |= IFF_DONT_BRIDGE;
+ 
+-	ret = wait_for_completion_timeout(&ar->scan.completed, 3*HZ);
++	ret = wait_for_completion_timeout(&ar->scan.completed, 1*HZ);
+ 	if (ret == 0)
+ 		ath10k_warn("timed out while waiting for scan to stop\n");
+ 
+@@ -3604,7 +3604,7 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 		goto exit;
+ 	}
+ 
+-	ret = wait_for_completion_timeout(&ar->scan.on_channel, 3*HZ);
++	ret = wait_for_completion_timeout(&ar->scan.on_channel, 1*HZ);
+ 	if (ret == 0) {
+ 		ath10k_warn("failed to switch to channel for roc scan\n");
+ 		ath10k_abort_scan(ar);
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 82669a7..9007f2e 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -146,7 +146,7 @@ static int ath10k_wait_for_peer_common(struct ath10k *ar, int vdev_id,
+ 			spin_unlock_bh(&ar->data_lock);
+ 
+ 			mapped == expect_mapped;
+-		}), 3*HZ);
++		}), 1*HZ);
+ 
+ 	if (ret <= 0)
+ 		return -ETIMEDOUT;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ae83822..772dbb6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1162,8 +1162,8 @@ struct wmi_service_ready_event_10x {
+ } __packed;
+ 
+ 
+-#define WMI_SERVICE_READY_TIMEOUT_HZ (5*HZ)
+-#define WMI_UNIFIED_READY_TIMEOUT_HZ (5*HZ)
++#define WMI_SERVICE_READY_TIMEOUT_HZ (1*HZ)
++#define WMI_UNIFIED_READY_TIMEOUT_HZ (1*HZ)
+ 
+ struct wmi_ready_event {
+ 	__le32 sw_version;
 -- 
-2.0.0.rc4
+1.8.5.3
 
