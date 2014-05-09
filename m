@@ -1,104 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:36993 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752421AbaEGUAB (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36140 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbaEIKhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 16:00:01 -0400
-Received: by mail-we0-f178.google.com with SMTP id u56so1503593wes.37
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 13:00:00 -0700 (PDT)
-Message-ID: <536A90BD.8010204@gmail.com> (sfid-20140507_220011_428901_720E6D2D)
-Date: Wed, 07 May 2014 22:59:57 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 9 May 2014 06:37:11 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Daniel Kim <dekim@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for-3.15] brcmfmac: Fix iovar 'bw_cap' set command failure
+Date: Fri, 9 May 2014 12:37:05 +0200
+Message-ID: <1399631825-19319-1-git-send-email-arend@broadcom.com> (sfid-20140509_123716_916714_1E4B8656)
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Subject: pull request: iwlwifi 2014-05-07
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="i90MJA5e7uhFasxPges94rcRMWNHM4jTL"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---i90MJA5e7uhFasxPges94rcRMWNHM4jTL
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Daniel Kim <dekim@broadcom.com>
 
+Fix iovar 'bw_cap' set command failure introduced by
+
+  commit ff3b0fba6f25555ef59c55d138a467d0f81d82d7
+  Author: Arend van Spriel <arend@broadcom.com>
+  Date:   Sat Mar 15 12:00:57 2014 +0100
+
+      brcmfmac: fallback to mimo_bw_cap for older firmwares
+
+This resulted in disabling 20MHz operation in the firmware.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Daniel Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
 Hi John,
 
-This is a pull request intended for 3.15 release.
+This patch fixes issue introduced by 3.15 patch. So this fix
+is intended for v3.15 and applies to the master branch of the
+wireless repository.
 
-Alex fixes the scan by disabling the fragmented scan. David prevents scan=
- offload while associated, the firmware seems not to like it. I fix a stu=
-pid bug I made in BT Coex, and fix a bad #ifdef clause in rate scaling.
-Along with that there is a fix for a NULL pointer exception that can happ=
-en if we load the driver and our ISR gets called because the interrupt li=
-ne is shared. The fix has been tested by the reporter.
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please pull.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index afb3d15..be198529 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4948,7 +4948,7 @@ static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
+ 	if (!err) {
+ 		/* only set 2G bandwidth using bw_cap command */
+ 		band_bwcap.band = cpu_to_le32(WLC_BAND_2G);
+-		band_bwcap.bw_cap = cpu_to_le32(WLC_BW_40MHZ_BIT);
++		band_bwcap.bw_cap = cpu_to_le32(WLC_BW_CAP_40MHZ);
+ 		err = brcmf_fil_iovar_data_set(ifp, "bw_cap", &band_bwcap,
+ 					       sizeof(band_bwcap));
+ 	} else {
+-- 
+1.8.1.3
 
-The following changes since commit a6bc92803e7f765e02c923cf37c8e280e72964=
-2a:
-
-  iwlwifi: mvm: BT Coex - fix Look Up Table (2014-04-13 16:51:07 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- master
-
-for you to fetch changes up to 83f7a85f1134c6e914453f5747435415a23d516b:
-
-  iwlwifi: pcie: disable interrupts upon PCIe alloc (2014-05-07 22:54:32 =
-+0300)
-
-----------------------------------------------------------------
-Alexander Bondar (1):
-      iwlwifi: mvm: several fixes in scan
-
-David Spinadel (1):
-      iwlwifi: mvm: do no sched scan while associated
-
-Emmanuel Grumbach (3):
-      iwlwifi: mvm: BT Coex - fix validity flags during init
-      iwlwifi: mvm: rs - s/CPTCFG/CONFIG
-      iwlwifi: pcie: disable interrupts upon PCIe alloc
-
- drivers/net/wireless/iwlwifi/mvm/coex.c        |  6 +++---
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  8 ++++----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c    |  5 +++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h         |  3 +++
- drivers/net/wireless/iwlwifi/mvm/rs.c          |  2 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c        | 53 ++++++++++++--------=
----------------------------------
- drivers/net/wireless/iwlwifi/mvm/utils.c       | 19 +++++++++++++++++++
- drivers/net/wireless/iwlwifi/pcie/trans.c      | 10 ++++++----
- 8 files changed, 53 insertions(+), 53 deletions(-)
-
-
---i90MJA5e7uhFasxPges94rcRMWNHM4jTL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTapC9AAoJEC0Llv5uNjIBeRkP/0tsjHZGWJEoeYyqKJfm1uVU
-AlCDqAzcghx5IqYHWsNUHsYNX2kmlCiyVuJsru4Qv88yxAzWSLnIIsOKqjY47+KO
-d/pz8DTrwMMyt2VW2mAJ6vJf/BHK87x5bQptAMwSW3dJoHbTU9/UkIaFcq7IWxMT
-VwsYLsZDkQo21l6Ddu0VicHZbrtLxPwWmpiaAAAxiQoxmO8FaUDZZ/YIZYptSz/b
-0BdCsX4hXiXdwMPhzbyQW+Yr+FEr+a6c/qt8HDI6IDPtBz80SC1fUFTKKAqd9vdy
-R+6KQoP9WPFVlIYC4b33kqjCRyvnN2+gL1D5WhwEQAHUcpm+PumBxAdV/vXW6TuU
-TOuF0UHmHmGCPyBur2qzwbxNWG2bl35bWAF2mXWHa/Nt69p/KRfdLM/NcGcQ/8GB
-ZM/3iMvL7PR6MzLFSSHWPMlEwTcDyMINcybuQOBR1xVrMJU6WczoJLnMxJjl+T+0
-7wS77RItx2kap37IsL4cFy04IGzoP6VUm8mj3IIsAVtF4IdOUM7mgb2x3Xo46exv
-YmRPVY4lTNPLSISqjEv60DgPrQvYUPdy+ha9PlwztMLVZe+qUYOw/ChYoiL4/YxM
-Ch6MqS2aQizqqr9VsdLsGx16OBBr63YWKVN5nmChi3Qe+eJa/bJ+SeT3QwoyieCc
-y7b+DMUHFmoX+XxXcg0J
-=NoEl
------END PGP SIGNATURE-----
-
---i90MJA5e7uhFasxPges94rcRMWNHM4jTL--
