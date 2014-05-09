@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:37276 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755882AbaEIQRu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 12:17:50 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] orinoco_usb: Fix broken firmware load error checking
-Date: Fri, 9 May 2014 18:10:34 +0200
-Cc: Kumar Amit Mehta <gmate.amit@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201405091810.34444.linux@rainbow-software.org> (sfid-20140509_181752_960842_31069C3D)
+Received: from dedo.coelho.fi ([88.198.205.34]:44389 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756498AbaEILMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 07:12:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	andrei.otcheretianski@intel.com
+Date: Fri,  9 May 2014 14:11:51 +0300
+Message-Id: <1399633911-12788-9-git-send-email-luca@coelho.fi> (sfid-20140509_131226_513239_D9A3CF6F)
+In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 8/8] iwlwifi: mvm: Use beacon_get_template instead of beacon_get
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check of ezusb_firmware_download() return value (added by commit
-488ec878034eccb852267b0e27ce9d511f75c587) is broken because
-ezusb_firmware_download() returns 1 on success.
-This causes the driver not to work with the following error:
-orinoco_usb: probe of 3-3:1.0 failed with error -14
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Check the return value only for negative values.
+Call ieee80211_beacon_get_template instead of ieee80211_beacon_get and sync the
+CSA counters with mac80211 after each beacon transmission.
 
-This fix should be applied to -stable kernels too.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/orinoco/orinoco_usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index f9805c9..1cbb783 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -1687,7 +1687,7 @@ static int ezusb_probe(struct usb_interface *interface,
- 		firmware.code = fw_entry->data;
- 	}
- 	if (firmware.size && firmware.code) {
--		if (ezusb_firmware_download(upriv, &firmware))
-+		if (ezusb_firmware_download(upriv, &firmware) < 0)
- 			goto error;
- 	} else {
- 		err("No firmware to download");
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 25901ad..9b73a85 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -997,7 +997,7 @@ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
+ 	WARN_ON(vif->type != NL80211_IFTYPE_AP &&
+ 		vif->type != NL80211_IFTYPE_ADHOC);
+ 
+-	beacon = ieee80211_beacon_get(mvm->hw, vif);
++	beacon = ieee80211_beacon_get_template(mvm->hw, vif, NULL);
+ 	if (!beacon)
+ 		return -ENOMEM;
+ 
+@@ -1250,6 +1250,7 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 
+ 	if (unlikely(mvm->csa_vif && mvm->csa_vif->csa_active)) {
+ 		if (!ieee80211_csa_is_complete(mvm->csa_vif)) {
++			ieee80211_csa_update_counter(mvm->csa_vif);
+ 			iwl_mvm_mac_ctxt_beacon_changed(mvm, mvm->csa_vif);
+ 		} else {
+ 			ieee80211_csa_finish(mvm->csa_vif);
 -- 
-Ondrej Zary
+2.0.0.rc0
+
