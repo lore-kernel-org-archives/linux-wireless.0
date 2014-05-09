@@ -1,79 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8759 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754614AbaEVMd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 08:33:26 -0400
-Message-ID: <1400761961.15674.4.camel@dcbw.local> (sfid-20140522_143350_209277_D31D0F7E)
-Subject: [PATCH] libertas: fix return value when processing invalid packet
-From: Dan Williams <dcbw@redhat.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, Julia Lawall <Julia.Lawall@lip6.fr>
-Date: Thu, 22 May 2014 07:32:41 -0500
-In-Reply-To: <1400520341.3819.15.camel@dcbw.local>
-References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
-	 <5379FCD0.2030506@cogentembedded.com> <1400520341.3819.15.camel@dcbw.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64286 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751270AbaEIMmw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 08:42:52 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so2604067eei.33
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:42:51 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
+Date: Fri,  9 May 2014 14:35:50 +0200
+Message-Id: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com> (sfid-20140509_144255_713431_61C6B753)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nothing actually uses the return value yet, but we might as well
-make it correct, like process_rxed_802_11_packet() does for the
-same case.  Also ensure that if monitor mode is enabled (and
-thus process_rxed_802_11_packet() is called) that the debugging
-enter/leave functions are balanced.
+Hi,
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/Makefile | 4 ++--
- drivers/net/wireless/libertas/rx.c     | 8 +++++---
- 2 files changed, 7 insertions(+), 5 deletions(-)
+This depends on my `ath10k: recovery fixes
+2014-05-09`.
 
-diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-index c7366b0..e446fed 100644
---- a/drivers/net/wireless/libertas/rx.c
-+++ b/drivers/net/wireless/libertas/rx.c
-@@ -67,30 +67,32 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
- 
- 	lbs_deb_enter(LBS_DEB_RX);
- 
- 	BUG_ON(!skb);
- 
- 	skb->ip_summed = CHECKSUM_NONE;
- 
--	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
--		return process_rxed_802_11_packet(priv, skb);
-+	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
-+		ret = process_rxed_802_11_packet(priv, skb);
-+		goto done;
-+	}
- 
- 	p_rx_pd = (struct rxpd *) skb->data;
- 	p_rx_pkt = (struct rxpackethdr *) ((u8 *)p_rx_pd +
- 		le32_to_cpu(p_rx_pd->pkt_ptr));
- 
- 	dev = lbs_mesh_set_dev(priv, dev, p_rx_pd);
- 
- 	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
- 		 min_t(unsigned int, skb->len, 100));
- 
- 	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
- 		lbs_deb_rx("rx err: frame received with bad length\n");
- 		dev->stats.rx_length_errors++;
--		ret = 0;
-+		ret = -EINVAL;
- 		dev_kfree_skb(skb);
- 		goto done;
- 	}
- 
- 	lbs_deb_rx("rx data: skb->len - pkt_ptr = %d-%zd = %zd\n",
- 		skb->len, (size_t)le32_to_cpu(p_rx_pd->pkt_ptr),
- 		skb->len - (size_t)le32_to_cpu(p_rx_pd->pkt_ptr));
+Hopefully the split makes it a little saner to
+review.
+
+Please note: `ath10k: make wmi timeout trigger hw
+restart` effectively hides the mgmt tx / htc
+credit starvation issue that was discussed
+recently. My intention is to make the driver more
+robust and as a side effect it makes the
+starvation issue less painful. If desired so
+the patch can be easily ignored in the series as
+nothing depends on it.
+
+
+Michal Kazior (7):
+  ath10k: move restart_work call
+  ath10k: introduce core restart symbol
+  ath10k: drain wmi quickly upon hw restart
+  ath10k: wake up everything on core restart
+  ath10k: reduce timeout values
+  ath10k: make wmi timeout trigger hw restart
+  ath10k: remove old unused defines
+
+ drivers/net/wireless/ath/ath10k/core.c | 27 +++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/core.h |  7 +++++--
+ drivers/net/wireless/ath/ath10k/htt.c  |  2 +-
+ drivers/net/wireless/ath/ath10k/mac.c  |  8 +++-----
+ drivers/net/wireless/ath/ath10k/pci.c  |  3 +--
+ drivers/net/wireless/ath/ath10k/txrx.c |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c  | 17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h  |  4 ++--
+ 8 files changed, 54 insertions(+), 16 deletions(-)
+
 -- 
-1.9.0
-
+1.8.5.3
 
