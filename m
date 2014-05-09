@@ -1,144 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17141 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752212AbaEZPn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 11:43:56 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Benoit Taine <benoit.taine@lip6.fr>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 9/18] staging: rtl8723au: Use kmemdup instead of kmalloc + memcpy
-References: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
-	<1401117687-28911-10-git-send-email-benoit.taine@lip6.fr>
-Date: Mon, 26 May 2014 17:43:45 +0200
-In-Reply-To: <1401117687-28911-10-git-send-email-benoit.taine@lip6.fr> (Benoit
-	Taine's message of "Mon, 26 May 2014 17:21:18 +0200")
-Message-ID: <wrfjy4xo35qm.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140526_174418_707123_2E76E040)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:54281 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750702AbaEIMbb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2014 08:31:31 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so2636711eei.0
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:31:30 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/5] ath10k: perform hw restart lazily
+Date: Fri,  9 May 2014 14:15:46 +0200
+Message-Id: <1399637749-13489-3-git-send-email-michal.kazior@tieto.com> (sfid-20140509_143133_956815_7088845C)
+In-Reply-To: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benoit Taine <benoit.taine@lip6.fr> writes:
-> This issue was reported by coccicheck using the semantic patch 
-> at scripts/coccinelle/api/memdup.cocci
->
-> Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
-> ---
-> Tested by compilation without errors.
->
->  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |    3 +--
->  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c |   16 ++++++----------
->  2 files changed, 7 insertions(+), 12 deletions(-)
+This reduces risk of races and prepares for more
+hw restart fixes.
 
-Benoit,
+It also makes sense to perform teardown after
+mac80211 starts its restart routine as it
+guarantees it has stopped itself by then
+(including tx queues).
 
-I believe this was already applied to staging-next - if you feel
-something is missing. Could you please re-diff against the latest
-staging-next tree.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |  5 ++++-
+ drivers/net/wireless/ath/ath10k/mac.c  | 34 ++++++++++++++++------------------
+ 2 files changed, 20 insertions(+), 19 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 75b3dfb..7034c72 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -681,7 +681,8 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	switch (ar->state) {
+ 	case ATH10K_STATE_ON:
+ 		ar->state = ATH10K_STATE_RESTARTING;
+-		ath10k_halt(ar);
++		del_timer_sync(&ar->scan.timeout);
++		ath10k_reset_scan((unsigned long)ar);
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
+@@ -690,6 +691,8 @@ static void ath10k_core_restart(struct work_struct *work)
+ 		ath10k_warn("cannot restart a device that hasn't been started\n");
+ 		break;
+ 	case ATH10K_STATE_RESTARTING:
++		/* hw restart might be requested from multiple places */
++		break;
+ 	case ATH10K_STATE_RESTARTED:
+ 		ar->state = ATH10K_STATE_WEDGED;
+ 		/* fall through */
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index eef9104..dbf0960 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2303,6 +2303,7 @@ void ath10k_halt(struct ath10k *ar)
+ 	}
+ 
+ 	del_timer_sync(&ar->scan.timeout);
++	ath10k_reset_scan((unsigned long)ar);
+ 	ath10k_offchan_tx_purge(ar);
+ 	ath10k_mgmt_over_wmi_tx_purge(ar);
+ 	ath10k_peer_cleanup_all(ar);
+@@ -2310,12 +2311,6 @@ void ath10k_halt(struct ath10k *ar)
+ 	ath10k_hif_power_down(ar);
+ 
+ 	spin_lock_bh(&ar->data_lock);
+-	if (ar->scan.in_progress) {
+-		del_timer(&ar->scan.timeout);
+-		ar->scan.in_progress = false;
+-		ieee80211_scan_completed(ar->hw, true);
+-	}
+-
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		if (!arvif->beacon)
+ 			continue;
+@@ -2336,8 +2331,18 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+-	if (ar->state != ATH10K_STATE_OFF &&
+-	    ar->state != ATH10K_STATE_RESTARTING) {
++	switch (ar->state) {
++	case ATH10K_STATE_OFF:
++		ar->state = ATH10K_STATE_ON;
++		break;
++	case ATH10K_STATE_RESTARTING:
++		ath10k_halt(ar);
++		ar->state = ATH10K_STATE_RESTARTED;
++		break;
++	case ATH10K_STATE_ON:
++	case ATH10K_STATE_RESTARTED:
++	case ATH10K_STATE_WEDGED:
++		WARN_ON(1);
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+@@ -2354,11 +2359,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		goto err_power_down;
+ 	}
+ 
+-	if (ar->state == ATH10K_STATE_OFF)
+-		ar->state = ATH10K_STATE_ON;
+-	else if (ar->state == ATH10K_STATE_RESTARTING)
+-		ar->state = ATH10K_STATE_RESTARTED;
+-
+ 	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->pmf_qos, 1);
+ 	if (ret) {
+ 		ath10k_warn("failed to enable PMF QOS: %d\n", ret);
+@@ -2409,12 +2409,10 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ 	struct ath10k *ar = hw->priv;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+-	if (ar->state == ATH10K_STATE_ON ||
+-	    ar->state == ATH10K_STATE_RESTARTED ||
+-	    ar->state == ATH10K_STATE_WEDGED)
++	if (ar->state != ATH10K_STATE_OFF) {
+ 		ath10k_halt(ar);
+-
+-	ar->state = ATH10K_STATE_OFF;
++		ar->state = ATH10K_STATE_OFF;
++	}
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	ath10k_mgmt_over_wmi_tx_purge(ar);
+-- 
+1.8.5.3
 
-commit 4a6eea4dcbc0328c3126fed264c42b0725bea659
-Author: Benoit Taine <benoit.taine@lip6.fr>
-Date:   Thu May 22 15:08:33 2014 +0200
-
-    staging: rtl8723au: Use kmemdup() instead of memcpy() to duplicate memory
-    
-    This issue was reported by coccicheck using the semantic patch
-    at scripts/coccinelle/api/memdup.cocci, and tested by compilation.
-    
-    Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-
->
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> index e2d426a..f917edd 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> @@ -339,12 +339,11 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
->  		rtStatus = _FAIL;
->  		goto Exit;
->  	}
-> -	firmware_buf = kzalloc(fw->size, GFP_KERNEL);
-> +	firmware_buf = kmemdup(fw->data, fw->size, GFP_KERNEL);
->  	if (!firmware_buf) {
->  		rtStatus = _FAIL;
->  		goto Exit;
->  	}
-> -	memcpy(firmware_buf, fw->data, fw->size);
->  	buf = firmware_buf;
->  	fw_size = fw->size;
->  	release_firmware(fw);
-> diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> index 182f57c..735eb99 100644
-> --- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> +++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> @@ -1426,14 +1426,13 @@ static int rtw_cfg80211_set_probe_req_wpsp2pie(struct rtw_adapter *padapter,
->  				pmlmepriv->wps_probe_req_ie = NULL;
->  			}
->  
-> -			pmlmepriv->wps_probe_req_ie =
-> -				kmalloc(wps_ielen, GFP_KERNEL);
-> +			pmlmepriv->wps_probe_req_ie = kmemdup(wps_ie,
-> +							wps_ielen, GFP_KERNEL);
->  			if (pmlmepriv->wps_probe_req_ie == NULL) {
->  				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
->  					  __func__, __LINE__);
->  				return -EINVAL;
->  			}
-> -			memcpy(pmlmepriv->wps_probe_req_ie, wps_ie, wps_ielen);
->  			pmlmepriv->wps_probe_req_ie_len = wps_ielen;
->  		}
->  	}
-> @@ -1697,12 +1696,11 @@ static int rtw_cfg80211_set_wpa_ie(struct rtw_adapter *padapter, const u8 *pie,
->  		ret = -EINVAL;
->  		goto exit;
->  	}
-> -	buf = kzalloc(ielen, GFP_KERNEL);
-> +	buf = kmemdup(pie, ielen, GFP_KERNEL);
->  	if (buf == NULL) {
->  		ret = -ENOMEM;
->  		goto exit;
->  	}
-> -	memcpy(buf, pie, ielen);
->  
->  	/* dump */
->  	DBG_8723A("set wpa_ie(length:%zu):\n", ielen);
-> @@ -3178,14 +3176,13 @@ static int rtw_cfg80211_set_beacon_wpsp2pie(struct net_device *ndev, char *buf,
->  				pmlmepriv->wps_beacon_ie = NULL;
->  			}
->  
-> -			pmlmepriv->wps_beacon_ie =
-> -				kmalloc(wps_ielen, GFP_KERNEL);
-> +			pmlmepriv->wps_beacon_ie = kmemdup(wps_ie, wps_ielen,
-> +							   GFP_KERNEL);
->  			if (pmlmepriv->wps_beacon_ie == NULL) {
->  				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
->  					  __func__, __LINE__);
->  				return -EINVAL;
->  			}
-> -			memcpy(pmlmepriv->wps_beacon_ie, wps_ie, wps_ielen);
->  			pmlmepriv->wps_beacon_ie_len = wps_ielen;
->  
->  #ifdef CONFIG_8723AU_AP_MODE
-> @@ -3270,14 +3267,13 @@ static int rtw_cfg80211_set_assoc_resp_wpsp2pie(struct net_device *net,
->  			pmlmepriv->wps_assoc_resp_ie = NULL;
->  		}
->  
-> -		pmlmepriv->wps_assoc_resp_ie = kmalloc(len, GFP_KERNEL);
-> +		pmlmepriv->wps_assoc_resp_ie = kmemdup(buf, len, GFP_KERNEL);
->  		if (pmlmepriv->wps_assoc_resp_ie == NULL) {
->  			DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
->  				  __func__, __LINE__);
->  			return -EINVAL;
->  
->  		}
-> -		memcpy(pmlmepriv->wps_assoc_resp_ie, buf, len);
->  		pmlmepriv->wps_assoc_resp_ie_len = len;
->  	}
->  
