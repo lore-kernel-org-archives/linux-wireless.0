@@ -1,105 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:41594 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbaE0Lqe (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:56629 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbaEIIi4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 07:46:34 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 2/7] wil6210: limit fw error recovery attempts
-Date: Tue, 27 May 2014 14:45:45 +0300
-Message-ID: <1401191150-29037-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140527_134637_688284_5A52CB64)
-In-Reply-To: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 9 May 2014 04:38:56 -0400
+Received: by mail-ee0-f53.google.com with SMTP id c13so2409327eek.12
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 01:38:55 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] wireless-regdb: add AUTO-BW rule flag
+Date: Fri,  9 May 2014 10:38:41 +0200
+Message-Id: <1399624723-9167-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140509_103901_679530_56112C60)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case there is something fundamentally wrong with the firmware
-(example: RF cable disconnected), FW will always crash immediately
-after reset. This leads to infinite fw error recovery loop.
+Sync with latest nl80211.h and add AUTO-BW flag.
+If this flag set, maximum available bandwidth should
+be calculated base on contiguous rules and wider channels
+will be allowed to cross multiple contiguous/overlapping
+frequency ranges.
 
-Count consecutive unsuccessful error recovery attempts in a short period
-of time, and stop doing recovery after some reasonable count.
-It is still possible to manually reset fw doing
-interface down/up sequence.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 22 +++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h |  4 ++++
- 2 files changed, 25 insertions(+), 1 deletion(-)
+ dbparse.py |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 670cc6d..f24cb92 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -161,12 +161,30 @@ static void wil_fw_error_worker(struct work_struct *work)
- 	if (no_fw_recovery)
- 		return;
- 
-+	/* increment @recovery_count if less then WIL6210_FW_RECOVERY_TO
-+	 * passed since last recovery attempt
-+	 */
-+	if (time_is_after_jiffies(wil->last_fw_recovery +
-+				  WIL6210_FW_RECOVERY_TO))
-+		wil->recovery_count++;
-+	else
-+		wil->recovery_count = 1; /* fw was alive for a long time */
-+
-+	if (wil->recovery_count > WIL6210_FW_RECOVERY_RETRIES) {
-+		wil_err(wil, "too many recovery attempts (%d), giving up\n",
-+			wil->recovery_count);
-+		return;
-+	}
-+
-+	wil->last_fw_recovery = jiffies;
-+
- 	mutex_lock(&wil->mutex);
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_MONITOR:
--		wil_info(wil, "fw error recovery started...\n");
-+		wil_info(wil, "fw error recovery started (try %d)...\n",
-+			 wil->recovery_count);
- 		wil_reset(wil);
- 
- 		/* need to re-allocate Rx ring after reset */
-@@ -249,6 +267,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 		return -EAGAIN;
- 	}
- 
-+	wil->last_fw_recovery = jiffies;
-+
- 	return 0;
+diff --git a/dbparse.py b/dbparse.py
+index ac7234b..b735b6a 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -16,6 +16,7 @@ flag_definitions = {
+     # hole at bit 8
+     # hole at bit 9. FIXME: Where is NO-HT40 defined?
+     'NO-HT40':		1<<10,
++    'AUTO-BW':		1<<11,
  }
  
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 3427ac4..f8c598e 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -40,6 +40,8 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- #define WIL6210_MAX_CID		(8) /* HW limit */
- #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
- #define WIL6210_ITR_TRSH	(10000) /* arbitrary - about 15 IRQs/msec */
-+#define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
-+#define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
- 
- /* Hardware definitions begin */
- 
-@@ -361,6 +363,8 @@ struct wil6210_priv {
- 	u32 fw_version;
- 	u32 hw_version;
- 	u8 n_mids; /* number of additional MIDs as reported by FW */
-+	int recovery_count; /* num of FW recovery attempts in a short time */
-+	unsigned long last_fw_recovery; /* jiffies of last fw recovery */
- 	/* profile */
- 	u32 monitor_flags;
- 	u32 secure_pcp; /* create secure PCP? */
+ dfs_regions = {
 -- 
-1.9.1
+1.7.9.5
 
