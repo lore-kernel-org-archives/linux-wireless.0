@@ -1,67 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:48284 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbaEaSuI (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:58803 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbaEIIkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 14:50:08 -0400
-Received: by mail-wg0-f45.google.com with SMTP id m15so3442077wgh.16
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:50:06 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 5/9] b43: b43_op_config: set channel info before switching band
-Date: Sat, 31 May 2014 20:49:37 +0200
-Message-Id: <1401562181-14608-6-git-send-email-zajec5@gmail.com> (sfid-20140531_205015_467096_B71E1B00)
-In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 9 May 2014 04:40:40 -0400
+Received: by mail-ee0-f43.google.com with SMTP id d17so2415893eek.30
+        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 01:40:39 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] wireless-regdb: add DFS CAC time parameter
+Date: Fri,  9 May 2014 10:40:23 +0200
+Message-Id: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140509_104057_135588_3206A70C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Band switching code needs to know what channel we switch to.
+Introduce support for setting DFS CAC time
+in milliseconds.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Eg.
+(5250 - 5330 @ AUTO), (20), (60000), DFS
+
+will setup CAC 60 seconds CAC time.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/b43/main.c       | 3 ++-
- drivers/net/wireless/b43/phy_common.c | 1 -
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ db2bin.py  |    6 +++---
+ dbparse.py |   17 +++++++++++++----
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 59aa4fd..5e4eed3 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3808,6 +3808,7 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	b43_mac_suspend(dev);
+diff --git a/db2bin.py b/db2bin.py
+index 41d3741..f6c3bc1 100755
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -7,7 +7,7 @@ from dbparse import DBParser
+ import sys
  
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		phy->channel = conf->chandef.chan->hw_value;
- 		if (conf_is_ht(conf))
- 			phy->is_40mhz = conf_is_ht40_minus(conf) ||
- 					conf_is_ht40_plus(conf);
-@@ -3822,7 +3823,7 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 		/* Switch to the requested channel.
- 		 * The firmware takes care of races with the TX handler.
- 		 */
--		b43_switch_channel(dev, conf->chandef.chan->hw_value);
-+		b43_switch_channel(dev, phy->channel);
- 	}
+ MAGIC = 0x52474442
+-VERSION = 19
++VERSION = 20
  
- 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 3bfb795..b465011 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -424,7 +424,6 @@ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
- 	if (err)
- 		goto err_restore_cookie;
+ if len(sys.argv) < 3:
+     print 'Usage: %s output-file input-file [key-file]' % sys.argv[0]
+@@ -93,8 +93,8 @@ for reg_rule in rules:
+     freq_range, power_rule = reg_rule.freqband, reg_rule.power
+     reg_rules[reg_rule] = output.tell()
+     # struct regdb_file_reg_rule
+-    output.write(struct.pack('>III', freq_ranges[freq_range], power_rules[power_rule],
+-                             reg_rule.flags))
++    output.write(struct.pack('>IIII', freq_ranges[freq_range], power_rules[power_rule],
++                             reg_rule.flags, reg_rule.cac_time))
  
--	dev->phy.channel = new_channel;
- 	/* Wait for the radio to tune to the channel and stabilize. */
- 	msleep(8);
  
+ reg_rules_collections = {}
+diff --git a/dbparse.py b/dbparse.py
+index b735b6a..d54311f 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -77,12 +77,13 @@ class FlagError(Exception):
+         self.flag = flag
+ 
+ class Permission(object):
+-    def __init__(self, freqband, power, flags):
++    def __init__(self, freqband, power, flags, cac_time):
+         assert isinstance(freqband, FreqBand)
+         assert isinstance(power, PowerRestriction)
+         self.freqband = freqband
+         self.power = power
+         self.flags = 0
++        self.cac_time = cac_time
+         for flag in flags:
+             if not flag in flag_definitions:
+                 raise FlagError(flag)
+@@ -90,7 +91,7 @@ class Permission(object):
+         self.textflags = flags
+ 
+     def _as_tuple(self):
+-        return (self.freqband, self.power, self.flags)
++        return (self.freqband, self.power, self.flags, self.cac_time)
+ 
+     def __cmp__(self, other):
+         if not isinstance(other, Permission):
+@@ -254,6 +255,7 @@ class DBParser(object):
+         self._comments = []
+ 
+     def _parse_country_item(self, line):
++        cac_time = 0
+         if line[0] == '(':
+             try:
+                 band, line = line[1:].split('),', 1)
+@@ -282,7 +284,14 @@ class DBParser(object):
+                 flags = []
+             else:
+                 pname = items[0]
+-                flags = items[1].split(',')
++                pcac = items[1]
++                if pcac[0] == '(':
++                    cac, flags = pcac.split('),', 1)
++                    flags = flags.split(',')
++                    cac_time = int(cac[1:])
++                else:
++                    flags = items[1].split(',')
++
+             power = pname[1:]
+             pname = 'UNNAMED %d' % self._lineno
+             self._parse_power_def(pname, power, dupwarn=False)
+@@ -303,7 +312,7 @@ class DBParser(object):
+         b = self._bands[bname]
+         p = self._power[pname]
+         try:
+-            perm = Permission(b, p, flags)
++            perm = Permission(b, p, flags, cac_time)
+         except FlagError, e:
+             self._syntax_error("Invalid flag '%s'" % e.flag)
+         for cname, c in self._current_countries.iteritems():
 -- 
-1.8.4.5
+1.7.9.5
 
