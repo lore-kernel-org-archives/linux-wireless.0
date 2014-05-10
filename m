@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:40478 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbaENL5S (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:62776 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757816AbaEJRFe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 07:57:18 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e49so1286349eek.21
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 04:57:17 -0700 (PDT)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH] ath10k: get rid of pci_assign_resource() call from pci_probe
-Date: Wed, 14 May 2014 13:57:07 +0200
-Message-Id: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20140514_135721_922616_E3C299A1)
+	Sat, 10 May 2014 13:05:34 -0400
+Received: by mail-oa0-f47.google.com with SMTP id i7so6407679oag.34
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 10:05:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140510183645.04c801f2@wiggum>
+References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
+	<20140510171721.54b21a63@wiggum>
+	<CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com>
+	<20140510183645.04c801f2@wiggum>
+Date: Sat, 10 May 2014 19:05:33 +0200
+Message-ID: <CACna6rzS8_VCtJhktiX1B+MoM714_j_LRzHK0SzcGNnr1JzBNg@mail.gmail.com> (sfid-20140510_190537_385904_FF0205FF)
+Subject: Re: [RFC][PATCH] b43: drop SSB dependency
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On ARM-based (MSM mach), the pci_assign_resource() is passing
-some invalid pointers and leading to L2 cache errors,
-what prevents the PCI communication completly.
+On 10 May 2014 18:36, Michael Büsch <m@bues.ch> wrote:
+> On Sat, 10 May 2014 18:12:15 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> On 10 May 2014 17:17, Michael Büsch <m@bues.ch> wrote:
+>> > On Sat, 10 May 2014 16:44:48 +0200
+>> > Rafał Miłecki <zajec5@gmail.com> wrote:
+>> >> +config B43_BUSES_BCMA_AND_SSB
+>> >> +     bool "BCMA and SSB"
+>> >> +     depends on BCMA_POSSIBLE && SSB_POSSIBLE
+>> >
+>> > I think this needs to be:
+>> >
+>> >         depends on (BCMA_POSSIBLE && (BCMA = y || BCMA = B43)) && (SSB_POSSIBLE && (SSB = y || SSB = B43))
+>> >
+>> > to avoid the case where b43 is y and ssb or bcma is m.
+>> > Or did I miss something and this is caught elsewhere?
+>>
+>> Oh, wait, I think I meant B43_BUSES_BCMA_AND_SSB to select BCMA and
+>> SSB (so user doesn't have to enable BCMA and SSB on his own). It it
+>> the way it's handled without my patch (B43 select-s SSB).
+>>
+>> I'd like to add
+>> select BCMA
+>> select SSB
+>> , but this won't guarantee BCMA (or SSB) being "y" after choosing B43
+>> to "y". Or will it?
+>
+> I'm currently unsure.
+> You probably want to add select SSB to config B43_SSB and the same for B43_BCMA.
 
-So far I have not found this funtion to be directly called by
-any other wifi driver and did not found this assigning needed
-on any other platform. So removing it completly.
-
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 66b1f30..9a579cd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2602,18 +2602,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 
- 	pci_set_drvdata(pdev, ar);
- 
--	/*
--	 * Without any knowledge of the Host, the Target may have been reset or
--	 * power cycled and its Config Space may no longer reflect the PCI
--	 * address space that was assigned earlier by the PCI infrastructure.
--	 * Refresh it now.
--	 */
--	ret = pci_assign_resource(pdev, BAR_NUM);
--	if (ret) {
--		ath10k_err("failed to assign PCI space: %d\n", ret);
--		goto err_ar;
--	}
--
- 	ret = pci_enable_device(pdev);
- 	if (ret) {
- 		ath10k_err("failed to enable PCI device: %d\n", ret);
--- 
-1.8.2
-
+I've just tried this, however this will force SSB to be "y" (even if
+B43 is "m"). We have to select BCMA/SSB from non-bool configs.
+This lead me to the idea of select-ing SSB and BCMA in "B43" depending
+on the B43_BCMA and B43_SSB. That should make the trick. I'll test it
+and submit V2.
