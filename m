@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:53188 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757929AbaEKIFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2014 04:05:40 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 08/10] ath9k_htc: use ath9k_cmn_debug_recv
-Date: Sun, 11 May 2014 10:04:38 +0200
-Message-Id: <1399795480-7459-9-git-send-email-linux@rempel-privat.de> (sfid-20140511_100559_319409_0A487840)
-In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
-References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:65102 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbaEJQMQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 May 2014 12:12:16 -0400
+Received: by mail-ob0-f175.google.com with SMTP id wo20so6281901obc.34
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 09:12:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140510171721.54b21a63@wiggum>
+References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
+	<20140510171721.54b21a63@wiggum>
+Date: Sat, 10 May 2014 18:12:15 +0200
+Message-ID: <CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com> (sfid-20140510_181222_723826_A6AABC3A)
+Subject: Re: [RFC][PATCH] b43: drop SSB dependency
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+On 10 May 2014 17:17, Michael Büsch <m@bues.ch> wrote:
+> On Sat, 10 May 2014 16:44:48 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>> +config B43_BUSES_BCMA_AND_SSB
+>> +     bool "BCMA and SSB"
+>> +     depends on BCMA_POSSIBLE && SSB_POSSIBLE
+>
+> I think this needs to be:
+>
+>         depends on (BCMA_POSSIBLE && (BCMA = y || BCMA = B43)) && (SSB_POSSIBLE && (SSB = y || SSB = B43))
+>
+> to avoid the case where b43 is y and ssb or bcma is m.
+> Or did I miss something and this is caught elsewhere?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index a71f5f4..bc7b551 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -542,8 +542,11 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
- 			    priv, &fops_tgt_rx_stats);
- 	debugfs_create_file("xmit", S_IRUSR, priv->debug.debugfs_phy,
- 			    priv, &fops_xmit);
--	debugfs_create_file("recv", S_IRUSR, priv->debug.debugfs_phy,
-+	debugfs_create_file("phy_err", S_IRUSR, priv->debug.debugfs_phy,
- 			    priv, &fops_recv);
-+
-+	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
-+
- 	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
- 			    priv, &fops_slot);
- 	debugfs_create_file("queue", S_IRUSR, priv->debug.debugfs_phy,
--- 
-1.9.1
+Oh, wait, I think I meant B43_BUSES_BCMA_AND_SSB to select BCMA and
+SSB (so user doesn't have to enable BCMA and SSB on his own). It it
+the way it's handled without my patch (B43 select-s SSB).
 
+I'd like to add
+select BCMA
+select SSB
+, but this won't guarantee BCMA (or SSB) being "y" after choosing B43
+to "y". Or will it?
+
+Any idea how to handle that?
