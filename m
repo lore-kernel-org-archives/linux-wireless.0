@@ -1,55 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:49069 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbaETMbU (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:37483 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754595AbaEJOOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 08:31:20 -0400
-Received: by mail-qg0-f42.google.com with SMTP id q107so572186qgd.29
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 05:31:19 -0700 (PDT)
+	Sat, 10 May 2014 10:14:34 -0400
+Received: by mail-ee0-f47.google.com with SMTP id c13so3382548eek.6
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 07:14:33 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: adjust code to compile without SSB
+Date: Sat, 10 May 2014 16:14:04 +0200
+Message-Id: <1399731244-18743-1-git-send-email-zajec5@gmail.com> (sfid-20140510_161438_344310_32C3BE9B)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UtCkxvQ=4ZnwnsEQY6kMdx-x+-YUgu636z0OTbOiNPcw@mail.gmail.com>
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
- <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
- <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com>
- <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com>
- <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com>
- <CA+XVXfcJ4H32D6ZABZ9tSC2JO0Dv3c3uuHkEC-m0P4q0JJcdgQ@mail.gmail.com> <CAB=NE6UtCkxvQ=4ZnwnsEQY6kMdx-x+-YUgu636z0OTbOiNPcw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 20 May 2014 15:31:04 +0300
-Message-ID: <CA+XVXfcvXEi0o-UGNu1T95+rEfpQoVZPf9oVGL3AiqgGiu-LEw@mail.gmail.com> (sfid-20140520_143123_761686_BB02ACFA)
-Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 12:54 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, May 20, 2014 at 2:25 AM, Arik Nemtsov <arik@wizery.com> wrote:
->>
->> Why won't old regdb rules work? The NL80211_RRF_NO_160MHZ for instance
->> is not used anywhere in old or new regdbs.
->> So all the new code in reg_get_max_bandwidth is ignored in current or
->> older crda/regdb flows.
->>
->> What am I missing?
->
-> It will also be ignored on newer kernels using old wireless-regdb.
+Users of new (BCMA based) wireless chipsets may not want to enable SSB.
+This is hopefully the last code patch for dropping SSB dependency.
 
-Is that a problem?
-Note that the new flags don't permit more things, but only narrow down
-the range. So if VHT80 was blocked due to the range, it will still be
-blocked.
-Don't really see a reason to use them in newer regdbs either. Like you
-said - range only is more scalable.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/Kconfig |  2 +-
+ drivers/net/wireless/b43/bus.h   | 10 ++++++++++
+ drivers/net/wireless/b43/main.c  | 15 +++++++++++++++
+ 3 files changed, 26 insertions(+), 1 deletion(-)
 
-These flags are very useful for translating the Intel FW regulatory
-format to reg.c format. We don't have ranges there, only flags per
-channel. This allows for seamless interop, with per-channel rules.
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 088d544..ce937a9 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -116,7 +116,7 @@ config B43_PHY_N
+ 
+ config B43_PHY_LP
+ 	bool "Support for low-power (LP-PHY) devices"
+-	depends on B43
++	depends on B43 && B43_SSB
+ 	default y
+ 	---help---
+ 	  Support for the LP-PHY.
+diff --git a/drivers/net/wireless/b43/bus.h b/drivers/net/wireless/b43/bus.h
+index 184c956..f3205c6 100644
+--- a/drivers/net/wireless/b43/bus.h
++++ b/drivers/net/wireless/b43/bus.h
+@@ -5,7 +5,9 @@ enum b43_bus_type {
+ #ifdef CONFIG_B43_BCMA
+ 	B43_BUS_BCMA,
+ #endif
++#ifdef CONFIG_B43_SSB
+ 	B43_BUS_SSB,
++#endif
+ };
+ 
+ struct b43_bus_dev {
+@@ -52,13 +54,21 @@ struct b43_bus_dev {
+ 
+ static inline bool b43_bus_host_is_pcmcia(struct b43_bus_dev *dev)
+ {
++#ifdef CONFIG_B43_SSB
+ 	return (dev->bus_type == B43_BUS_SSB &&
+ 		dev->sdev->bus->bustype == SSB_BUSTYPE_PCMCIA);
++#else
++	return false;
++#endif
+ }
+ static inline bool b43_bus_host_is_sdio(struct b43_bus_dev *dev)
+ {
++#ifdef CONFIG_B43_SSB
+ 	return (dev->bus_type == B43_BUS_SSB &&
+ 		dev->sdev->bus->bustype == SSB_BUSTYPE_SDIO);
++#else
++	return false;
++#endif
+ }
+ 
+ struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core);
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 4439d25..9aab7e3 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1197,6 +1197,7 @@ static void b43_bcma_wireless_core_reset(struct b43_wldev *dev, bool gmode)
+ }
+ #endif
+ 
++#ifdef CONFIG_B43_SSB
+ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, bool gmode)
+ {
+ 	u32 flags = 0;
+@@ -1212,6 +1213,7 @@ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, bool gmode)
+ 
+ 	b43_phy_take_out_of_reset(dev);
+ }
++#endif
+ 
+ void b43_wireless_core_reset(struct b43_wldev *dev, bool gmode)
+ {
+@@ -2715,6 +2717,8 @@ static int b43_upload_initvals_band(struct b43_wldev *dev)
+ /* Initialize the GPIOs
+  * http://bcm-specs.sipsolutions.net/GPIO
+  */
++
++#ifdef CONFIG_B43_SSB
+ static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
+ {
+ 	struct ssb_bus *bus = dev->dev->sdev->bus;
+@@ -2725,10 +2729,13 @@ static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
+ 	return bus->chipco.dev;
+ #endif
+ }
++#endif
+ 
+ static int b43_gpio_init(struct b43_wldev *dev)
+ {
++#ifdef CONFIG_B43_SSB
+ 	struct ssb_device *gpiodev;
++#endif
+ 	u32 mask, set;
+ 
+ 	b43_maskset32(dev, B43_MMIO_MACCTL, ~B43_MACCTL_GPOUTSMSK, 0);
+@@ -2787,7 +2794,9 @@ static int b43_gpio_init(struct b43_wldev *dev)
+ /* Turn off all GPIO stuff. Call this on module unload, for example. */
+ static void b43_gpio_cleanup(struct b43_wldev *dev)
+ {
++#ifdef CONFIG_B43_SSB
+ 	struct ssb_device *gpiodev;
++#endif
+ 
+ 	switch (dev->dev->bus_type) {
+ #ifdef CONFIG_B43_BCMA
+@@ -4519,8 +4528,12 @@ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+ 	struct ssb_bus *bus;
+ 	u32 tmp;
+ 
++#ifdef CONFIG_B43_SSB
+ 	if (dev->dev->bus_type != B43_BUS_SSB)
+ 		return;
++#else
++	return;
++#endif
+ 
+ 	bus = dev->dev->sdev->bus;
+ 
+@@ -5247,6 +5260,7 @@ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl)
+ 	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
+ 	(pdev->subsystem_device == _subdevice)				)
+ 
++#ifdef CONFIG_B43_SSB
+ static void b43_sprom_fixup(struct ssb_bus *bus)
+ {
+ 	struct pci_dev *pdev;
+@@ -5278,6 +5292,7 @@ static void b43_wireless_exit(struct b43_bus_dev *dev, struct b43_wl *wl)
+ 	ssb_set_devtypedata(dev->sdev, NULL);
+ 	ieee80211_free_hw(hw);
+ }
++#endif
+ 
+ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ {
+-- 
+1.8.4.5
 
-Regards,
-Arik
