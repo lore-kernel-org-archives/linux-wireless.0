@@ -1,86 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:58062 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756101AbaE2J5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 05:57:31 -0400
-Received: by mail-we0-f176.google.com with SMTP id q59so119911wes.35
-        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 02:57:30 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: remove unnecessary htt rx corruption check
-Date: Thu, 29 May 2014 11:50:08 +0200
-Message-Id: <1401357008-16259-1-git-send-email-michal.kazior@tieto.com> (sfid-20140529_115751_462722_922CDF54)
+Received: from bues.ch ([80.190.117.144]:57499 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751132AbaEJQhI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 May 2014 12:37:08 -0400
+Date: Sat, 10 May 2014 18:36:45 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [RFC][PATCH] b43: drop SSB dependency
+Message-ID: <20140510183645.04c801f2@wiggum> (sfid-20140510_183737_933696_950D4DC3)
+In-Reply-To: <CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com>
+References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
+	<20140510171721.54b21a63@wiggum>
+	<CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/1LMQIbuTvzg/33d_3GqDhGz"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While fixing a bug reported by Avery I went ahead
-and added a warning suspecting there might be
-something more to the bug. This ended up with
-people reporting they see warnings during heavy
-traffic. This bought me some time and helped me
-understand the problem better - apparently fw/hw
-can report a chained msdus as follows: 1 msdu, 1
-chained, 1 msdu (0 length).
+--Sig_/1LMQIbuTvzg/33d_3GqDhGz
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The patch removes the extra check but leaves the
-other change that fixed the original skb_push
-panic bug (msdu_chaining was overwritten in an
-unfortunate way which made the above example to
-be treated as non-chained case).
+On Sat, 10 May 2014 18:12:15 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Reported-by: Tim Harvey <tharvey@gateworks.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+> On 10 May 2014 17:17, Michael B=C3=BCsch <m@bues.ch> wrote:
+> > On Sat, 10 May 2014 16:44:48 +0200
+> > Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+> >> +config B43_BUSES_BCMA_AND_SSB
+> >> +     bool "BCMA and SSB"
+> >> +     depends on BCMA_POSSIBLE && SSB_POSSIBLE
+> >
+> > I think this needs to be:
+> >
+> >         depends on (BCMA_POSSIBLE && (BCMA =3D y || BCMA =3D B43)) && (=
+SSB_POSSIBLE && (SSB =3D y || SSB =3D B43))
+> >
+> > to avoid the case where b43 is y and ssb or bcma is m.
+> > Or did I miss something and this is caught elsewhere?
+>=20
+> Oh, wait, I think I meant B43_BUSES_BCMA_AND_SSB to select BCMA and
+> SSB (so user doesn't have to enable BCMA and SSB on his own). It it
+> the way it's handled without my patch (B43 select-s SSB).
+>=20
+> I'd like to add
+> select BCMA
+> select SSB
+> , but this won't guarantee BCMA (or SSB) being "y" after choosing B43
+> to "y". Or will it?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6c102b1..eebc860 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -312,7 +312,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 	int msdu_len, msdu_chaining = 0;
- 	struct sk_buff *msdu;
- 	struct htt_rx_desc *rx_desc;
--	bool corrupted = false;
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
-@@ -439,9 +438,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
- 				RX_MSDU_END_INFO0_LAST_MSDU;
- 
--		if (msdu_chaining && !last_msdu)
--			corrupted = true;
--
- 		if (last_msdu) {
- 			msdu->next = NULL;
- 			break;
-@@ -457,20 +453,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		msdu_chaining = -1;
- 
- 	/*
--	 * Apparently FW sometimes reports weird chained MSDU sequences with
--	 * more than one rx descriptor. This seems like a bug but needs more
--	 * analyzing. For the time being fix it by dropping such sequences to
--	 * avoid blowing up the host system.
--	 */
--	if (corrupted) {
--		ath10k_warn("failed to pop chained msdus, dropping\n");
--		ath10k_htt_rx_free_msdu_chain(*head_msdu);
--		*head_msdu = NULL;
--		*tail_msdu = NULL;
--		msdu_chaining = -EINVAL;
--	}
--
--	/*
- 	 * Don't refill the ring yet.
- 	 *
- 	 * First, the elements popped here are still in use - it is not
--- 
-1.8.5.3
+I'm currently unsure.
+You probably want to add select SSB to config B43_SSB and the same for B43_=
+BCMA.
 
+> Any idea how to handle that?
+
+The (SSB =3D y || SSB =3D B43) dependency is supposed to handle that.
+And it was required in the past. But maybe it's not required anymore
+due to other changes. I'm not sure.
+
+
+--=20
+Michael.
+
+----
+Please use PGP/GPG encryption.
+Key-ID: F532BE1D908D8B0E
+--------
+
+--Sig_/1LMQIbuTvzg/33d_3GqDhGz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTblWgAAoJEPUyvh2QjYsOeiUQAOHhhgETo2n/mV1DU8YJx95+
+pCQx41Bz9uFMXScFga5fovSW0JYl+lZgiloEGTsQyE4NK11quNUp6g+C1PZ73+/2
+s8Zg/0Ss0nbyPTjHEDpIvsJ/ODWxIBqy1swXBzDGzaGGb8W0LvzFmI8pST4s8Y0v
+89DLtxte5+94Ky9r1hqkIxba3R3x/V3AOgmC/UD73XONpkx0RKQhrrPs2MeJcn++
+hzenWF6vwqVboYdKu8VRGkmO6MgE9Oza+AHdKuyfbJ+rTVUxhM/hI6egW6vxtAKq
+dTz82qObrwlYXU+wnpxD50NeVzcprxzYvXHh11db6nSijIiok3gdVqVSuIZcopeu
+lzIzZMQSIy0Xu62S465aR1vDYqnsH9nztD3YvVxA2uTfuXqrbIzvhr7fMiPq9fc7
+pYojAfEuvGSezlN/oq7Zu06Y1GgzN7LiHibPGyWAf9SLwhljXiCfspAhVUQCiEsA
+uXZOlan4HrfWuT7HdsukQ5aI4gGEWUgnhI62z1BK29+eRl1CPlkdwYfrQhONDjBO
+DOWnQhzU2mGe0I2qM1vM7i2cFdnX8J6Goc2BSM5XOrvcxl8rBRBftfnKs18P5XXF
+CQg1kF8W/c/kxkRFA5qneIN5oHwPPDyir9AIYXOauOBrKx540NJ6pXNEYKBjcue3
+/OjJD5UdGBwN2WUDUL66
+=XsyQ
+-----END PGP SIGNATURE-----
+
+--Sig_/1LMQIbuTvzg/33d_3GqDhGz--
