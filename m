@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:51538 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbaESTef (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 15:34:35 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n15so4736772wiw.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 15/20] staging: vt6656: BBvSetDeepSleep remove camel case
-Date: Mon, 19 May 2014 20:33:07 +0100
-Message-Id: <1400527992-3061-15-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213441_304370_737A1AC3)
-In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
-References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:57928 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757966AbaEKIxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:53:37 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/7] cfg80211: don't set reg timeout for user-handled hint
+Date: Sun, 11 May 2014 11:50:44 +0300
+Message-Id: <1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140511_105345_577377_B7B88670)
+In-Reply-To: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pDevice -> priv
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Otherwise every "indoor" setting by usermode will cause a regdomain reset.
+
+Change-Id: I3225325d9fb956174458d386d4dd0f4e069deb58
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/baseband.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/reg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 466abd9..9956f5a 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -1121,17 +1121,17 @@ void BBvSetVGAGainOffset(struct vnt_private *priv, u8 data)
-  *
-  * Parameters:
-  *  In:
-- *      pDevice          - Device Structure
-+ *	priv	- Device Structure
-  *  Out:
-  *      none
-  *
-  * Return Value: none
-  *
-  */
--void BBvSetDeepSleep(struct vnt_private *pDevice)
-+void BBvSetDeepSleep(struct vnt_private *priv)
- {
--    ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x0c, 0x17);//CR12
--    ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x0D, 0xB9);//CR13
-+	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x0c, 0x17);/* CR12 */
-+	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x0d, 0xB9);/* CR13 */
- }
- 
- void BBvExitDeepSleep(struct vnt_private *pDevice)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e78f532..558b0e3 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1876,7 +1876,8 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		treatment = reg_process_hint_user(reg_request);
+ 		if (treatment == REG_REQ_IGNORE ||
+-		    treatment == REG_REQ_ALREADY_SET)
++		    treatment == REG_REQ_ALREADY_SET ||
++		    treatment == REG_REQ_USER_HINT_HANDLED)
+ 			return;
+ 		queue_delayed_work(system_power_efficient_wq,
+ 				   &reg_timeout, msecs_to_jiffies(3142));
 -- 
-1.9.1
+1.8.3.2
 
