@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:32848 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752908AbaEWRBW (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36646 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757719AbaEKKdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:22 -0400
-Received: by mail-we0-f171.google.com with SMTP id w62so5182352wes.16
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:21 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 13/20] staging: vt6656: camel case clean up MACvEnableBarkerPreambleMd
-Date: Fri, 23 May 2014 18:00:12 +0100
-Message-Id: <1400864419-8327-13-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190129_891645_6739662E)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 11 May 2014 06:33:36 -0400
+Date: Sun, 11 May 2014 12:33:27 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: George Spelvin <linux@horizon.com>
+Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
+Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use
+ get/put_unaligned_be32
+Message-ID: <20140511103327.GB32609@xo-6d-61-c0.localdomain> (sfid-20140511_123340_246560_4556D8B2)
+References: <20140511100211.1334.qmail@ns.horizon.com>
+ <20140511100502.1491.qmail@ns.horizon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140511100502.1491.qmail@ns.horizon.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-pDevice -> priv
-pbyData -> data
+On Sun 2014-05-11 06:05:02, George Spelvin wrote:
+> Very minor source and binary size reduction.
+> 
+> Signed-off-by: George Spelvin <linux@horizon.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 0805341..86bf3fb 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -242,20 +242,15 @@ void MACvDisableProtectMD(struct vnt_private *priv)
- 		MAC_REG_ENCFG0, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
--void MACvEnableBarkerPreambleMd(struct vnt_private *pDevice)
-+void MACvEnableBarkerPreambleMd(struct vnt_private *priv)
- {
--	u8 pbyData[2];
-+	u8 data[2];
- 
--    pbyData[0] = EnCFG_BarkerPream;
--    pbyData[1] = EnCFG_BarkerPream;
-+	data[0] = EnCFG_BarkerPream;
-+	data[1] = EnCFG_BarkerPream;
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE_MASK,
--                        MAC_REG_ENCFG2,
--                        MESSAGE_REQUEST_MACREG,
--			ARRAY_SIZE(pbyData),
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
-+		MAC_REG_ENCFG2, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
- void MACvDisableBarkerPreambleMd(struct vnt_private *pDevice)
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 -- 
-1.9.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
