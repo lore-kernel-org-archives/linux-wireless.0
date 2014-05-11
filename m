@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:43077 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbaEZJqu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 05:46:50 -0400
-Received: by mail-we0-f175.google.com with SMTP id t61so7812274wes.34
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 02:46:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1401097086.29704.0.camel@jlt4.sipsolutions.net>
-References: <1401089962-10720-1-git-send-email-chaitanya.mgit@gmail.com> <1401097086.29704.0.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 26 May 2014 15:16:28 +0530
-Message-ID: <CABPxzYKe5Cy36uc=C5wVEVZV0qiR=55yBw0LtzuRv412p58c9g@mail.gmail.com> (sfid-20140526_114653_228504_5B9059AD)
-Subject: Re: [regdb] Add support to parse 2000mW tx power
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Luis Rodriguez <mcgrof@gmail.com>,
-	wireless-regdb@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.17.22]:53188 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757929AbaEKIFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:05:40 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 08/10] ath9k_htc: use ath9k_cmn_debug_recv
+Date: Sun, 11 May 2014 10:04:38 +0200
+Message-Id: <1399795480-7459-9-git-send-email-linux@rempel-privat.de> (sfid-20140511_100559_319409_0A487840)
+In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 3:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2014-05-26 at 13:09 +0530, chaitanya.mgit@gmail.com wrote:
->
->> @@ -74,7 +74,7 @@ function parse_reg_rule()
->>                       power = 23
->>               } else if (power == 500) {
->>                       power = 27
->> -             } else if (power == 1000) {
->> +             } else if ((power == 1000) || (power == 2000)) {
->>                       power = 30
->
-> This seems like a pretty sick thing to do to start with, and certainly
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Agree.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index a71f5f4..bc7b551 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -542,8 +542,11 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 			    priv, &fops_tgt_rx_stats);
+ 	debugfs_create_file("xmit", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_xmit);
+-	debugfs_create_file("recv", S_IRUSR, priv->debug.debugfs_phy,
++	debugfs_create_file("phy_err", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_recv);
++
++	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
++
+ 	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_slot);
+ 	debugfs_create_file("queue", S_IRUSR, priv->debug.debugfs_phy,
+-- 
+1.9.1
 
-> power=30 isn't right for 2000mW...
-
-Sorry, typo. Its supposed to be 33.
-
-> Can't awk calculate the logarithm?
-Does kernel support log arithmetic/Float operations.?
