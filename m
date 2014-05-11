@@ -1,103 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:64182 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313AbaENKRQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 06:17:16 -0400
-Received: by mail-qg0-f46.google.com with SMTP id q108so2352097qgd.5
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 03:17:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140511100502.1491.qmail@ns.horizon.com>
-References: <20140511100211.1334.qmail@ns.horizon.com>
-	<20140511100502.1491.qmail@ns.horizon.com>
-Date: Wed, 14 May 2014 12:17:15 +0200
-Message-ID: <CAPDyKFo9xZ-z6eM0zG2A+=Bwj0EVyGxm=m28Lh9cHPSB+8qq1w@mail.gmail.com> (sfid-20140514_121732_729794_6F5CDBB6)
-Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: George Spelvin <linux@horizon.com>
-Cc: Pavel Machek <pavel@ucw.cz>, arik@wizery.com,
-	david.gnedt@davizone.at, eliad@wizery.com, jan.nikitenko@gmail.com,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>, luca@coelho.fi,
-	Tony Lindgren <tony@atomide.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.19]:64229 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757631AbaEKIFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:05:30 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 04/10] ath9k_htc: use ath9k_cmn_debug_base_eeprom
+Date: Sun, 11 May 2014 10:04:34 +0200
+Message-Id: <1399795480-7459-5-git-send-email-linux@rempel-privat.de> (sfid-20140511_100549_704367_DDD86F70)
+In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 May 2014 12:05, George Spelvin <linux@horizon.com> wrote:
-> Very minor source and binary size reduction.
->
-> Signed-off-by: George Spelvin <linux@horizon.com>
-> ---
-> I spotted this while making the previous crc7 change.
->
-> This looks simple enough, but I don't actually have one of these devices to test.
-> At least one other careful desk-check is solicited.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 138 +------------------------
+ 1 file changed, 1 insertion(+), 137 deletions(-)
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index a573239..c5071bb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -486,141 +486,6 @@ static const struct file_operations fops_debug = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
+-				     size_t count, loff_t *ppos)
+-{
+-	struct ath9k_htc_priv *priv = file->private_data;
+-	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	struct base_eep_header *pBase = NULL;
+-	unsigned int len = 0, size = 1500;
+-	ssize_t retval = 0;
+-	char *buf;
+-
+-	pBase = ath9k_htc_get_eeprom_base(priv);
+-
+-	if (pBase == NULL) {
+-		ath_err(common, "Unknown EEPROM type\n");
+-		return 0;
+-	}
+-
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
+-
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "Major Version",
+-			 pBase->version >> 12);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "Minor Version",
+-			 pBase->version & 0xFFF);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "Checksum",
+-			 pBase->checksum);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "Length",
+-			 pBase->length);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "RegDomain1",
+-			 pBase->regDmn[0]);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n", "RegDomain2",
+-			 pBase->regDmn[1]);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "TX Mask", pBase->txMask);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "RX Mask", pBase->rxMask);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Allow 5GHz",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_11A));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Allow 2GHz",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_11G));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Disable 2GHz HT20",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_N_2G_HT20));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Disable 2GHz HT40",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_N_2G_HT40));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Disable 5Ghz HT20",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_N_5G_HT20));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Disable 5Ghz HT40",
+-			 !!(pBase->opCapFlags & AR5416_OPFLAGS_N_5G_HT40));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Big Endian",
+-			 !!(pBase->eepMisc & 0x01));
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Cal Bin Major Ver",
+-			 (pBase->binBuildNumber >> 24) & 0xFF);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Cal Bin Minor Ver",
+-			 (pBase->binBuildNumber >> 16) & 0xFF);
+-	len += scnprintf(buf + len, size - len,
+-			 "%20s : %10d\n",
+-			 "Cal Bin Build",
+-			 (pBase->binBuildNumber >> 8) & 0xFF);
+-
+-	/*
+-	 * UB91 specific data.
+-	 */
+-	if (AR_SREV_9271(priv->ah)) {
+-		struct base_eep_header_4k *pBase4k =
+-			&priv->ah->eeprom.map4k.baseEepHeader;
+-
+-		len += scnprintf(buf + len, size - len,
+-				 "%20s : %10d\n",
+-				 "TX Gain type",
+-				 pBase4k->txGainType);
+-	}
+-
+-	/*
+-	 * UB95 specific data.
+-	 */
+-	if (priv->ah->hw_version.usbdev == AR9287_USB) {
+-		struct base_eep_ar9287_header *pBase9287 =
+-			&priv->ah->eeprom.map9287.baseEepHeader;
+-
+-		len += scnprintf(buf + len, size - len,
+-				 "%20s : %10ddB\n",
+-				 "Power Table Offset",
+-				 pBase9287->pwrTableOffset);
+-
+-		len += scnprintf(buf + len, size - len,
+-				 "%20s : %10d\n",
+-				 "OpenLoop Power Ctrl",
+-				 pBase9287->openLoopPwrCntl);
+-	}
+-
+-	len += scnprintf(buf + len, size - len, "%20s : %pM\n", "MacAddress",
+-			 pBase->macAddr);
+-	if (len > size)
+-		len = size;
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-
+-	return retval;
+-}
+-
+-static const struct file_operations fops_base_eeprom = {
+-	.read = read_file_base_eeprom,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+ /* Ethtool support for get-stats */
+ #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
+ static const char ath9k_htc_gstrings_stats[][ETH_GSTRING_LEN] = {
+@@ -727,9 +592,8 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 			    priv, &fops_queue);
+ 	debugfs_create_file("debug", S_IRUSR | S_IWUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_debug);
+-	debugfs_create_file("base_eeprom", S_IRUSR, priv->debug.debugfs_phy,
+-			    priv, &fops_base_eeprom);
+ 
++	ath9k_cmn_debug_base_eeprom(priv->debug.debugfs_phy, priv->ah);
+ 	ath9k_cmn_debug_modal_eeprom(priv->debug.debugfs_phy, priv->ah);
+ 
+ 	return 0;
+-- 
+1.9.1
 
-Feel free to take this through the wireless tree as well. I assumes
-it's that same patchset as the other spi related fixes?
-
-Kind regards
-Ulf Hansson
-
->
->  drivers/mmc/host/mmc_spi.c | 18 ++++++------------
->  1 file changed, 6 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/mmc/host/mmc_spi.c b/drivers/mmc/host/mmc_spi.c
-> index 338e2202ea..cc8d4a6099 100644
-> --- a/drivers/mmc/host/mmc_spi.c
-> +++ b/drivers/mmc/host/mmc_spi.c
-> @@ -448,7 +448,6 @@ mmc_spi_command_send(struct mmc_spi_host *host,
->  {
->         struct scratch          *data = host->data;
->         u8                      *cp = data->status;
-> -       u32                     arg = cmd->arg;
->         int                     status;
->         struct spi_transfer     *t;
->
-> @@ -465,14 +464,12 @@ mmc_spi_command_send(struct mmc_spi_host *host,
->          * We init the whole buffer to all-ones, which is what we need
->          * to write while we're reading (later) response data.
->          */
-> -       memset(cp++, 0xff, sizeof(data->status));
-> +       memset(cp, 0xff, sizeof(data->status));
->
-> -       *cp++ = 0x40 | cmd->opcode;
-> -       *cp++ = (u8)(arg >> 24);
-> -       *cp++ = (u8)(arg >> 16);
-> -       *cp++ = (u8)(arg >> 8);
-> -       *cp++ = (u8)arg;
-> -       *cp++ = crc7_be(0, &data->status[1], 5) | 0x01;
-> +       cp[1] = 0x40 | cmd->opcode;
-> +       put_unaligned_be32(cmd->arg, cp+2);
-> +       cp[6] = crc7_be(0, cp+1, 5) | 0x01;
-> +       cp += 7;
->
->         /* Then, read up to 13 bytes (while writing all-ones):
->          *  - N(CR) (== 1..8) bytes of all-ones
-> @@ -711,10 +708,7 @@ mmc_spi_writeblock(struct mmc_spi_host *host, struct spi_transfer *t,
->          * so we have to cope with this situation and check the response
->          * bit-by-bit. Arggh!!!
->          */
-> -       pattern  = scratch->status[0] << 24;
-> -       pattern |= scratch->status[1] << 16;
-> -       pattern |= scratch->status[2] << 8;
-> -       pattern |= scratch->status[3];
-> +       pattern = get_unaligned_be32(scratch->status);
->
->         /* First 3 bit of pattern are undefined */
->         pattern |= 0xE0000000;
-> --
-> 1.9.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
