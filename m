@@ -1,63 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:64835 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbaERGlp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2014 02:41:45 -0400
-From: Karim Raslan <karim.allah.ahmed@gmail.com>
-Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Masanari Iida <standby24x7@gmail.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: rtw_sta_mgt: change rtw_alloc_stainfo23a to use gfp_t instead if int
-Date: Sun, 18 May 2014 07:39:23 +0100
-Message-Id: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com> (sfid-20140518_084205_942653_F12980A2)
-To: unlisted-recipients:; (no To-header on input)
+Received: from mout.gmx.net ([212.227.17.21]:62255 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757929AbaEKIF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:05:28 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 01/10] ath9k-common: create common-debug and move modal_eeprom to cmn
+Date: Sun, 11 May 2014 10:04:31 +0200
+Message-Id: <1399795480-7459-2-git-send-email-linux@rempel-privat.de> (sfid-20140511_100540_471978_944AB680)
+In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should fix a few sparse warnings like the following:
-
-  CHECK   drivers/staging/rtl8723au/core/rtw_ap.c
-drivers/staging/rtl8723au/core/rtw_ap.c:1054:45: warning: incorrect type in argument 3 (different base types)
-drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    expected int [signed] gfp
-drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    got restricted gfp_t
-
-Signed-off-by: Karim Raslan <karim.allah.ahmed@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c |    2 +-
- drivers/staging/rtl8723au/include/sta_info.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile       |  3 +-
+ drivers/net/wireless/ath/ath9k/common-debug.c | 53 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common-debug.h | 18 +++++++++
+ drivers/net/wireless/ath/ath9k/common.h       |  1 +
+ drivers/net/wireless/ath/ath9k/debug.c        | 33 ++---------------
+ 5 files changed, 77 insertions(+), 31 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.h
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-index 7f1f66c..1ecfb87 100644
---- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-@@ -106,7 +106,7 @@ u32	_rtw_free_sta_priv23a(struct	sta_priv *pstapriv)
- }
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 8e1c7b0..8fcd586 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -53,7 +53,8 @@ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+ ath9k_common-y:=	common.o \
+ 			common-init.o \
+-			common-beacon.o
++			common-beacon.o \
++			common-debug.o
  
- struct sta_info *
--rtw_alloc_stainfo23a(struct sta_priv *pstapriv, u8 *hwaddr, int gfp)
-+rtw_alloc_stainfo23a(struct sta_priv *pstapriv, u8 *hwaddr, gfp_t gfp)
- {
- 	struct list_head	*phash_list;
- 	struct sta_info	*psta;
-diff --git a/drivers/staging/rtl8723au/include/sta_info.h b/drivers/staging/rtl8723au/include/sta_info.h
-index 10d933e..e3bd31b 100644
---- a/drivers/staging/rtl8723au/include/sta_info.h
-+++ b/drivers/staging/rtl8723au/include/sta_info.h
-@@ -362,7 +362,7 @@ static inline u32 wifi_mac_hash(const u8 *mac)
- u32	_rtw_init_sta_priv23a(struct sta_priv *pstapriv);
- u32	_rtw_free_sta_priv23a(struct sta_priv *pstapriv);
+ ath9k_htc-y +=	htc_hst.o \
+ 		hif_usb.o \
+diff --git a/drivers/net/wireless/ath/ath9k/common-debug.c b/drivers/net/wireless/ath/ath9k/common-debug.c
+new file mode 100644
+index 0000000..da5efdb
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/common-debug.c
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (c) 2008-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "common.h"
++
++static ssize_t read_file_modal_eeprom(struct file *file, char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct ath_hw *ah = file->private_data;
++	u32 len = 0, size = 6000;
++	char *buf;
++	size_t retval;
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (buf == NULL)
++		return -ENOMEM;
++
++	len = ah->eep_ops->dump_eeprom(ah, false, buf, len, size);
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	return retval;
++}
++
++static const struct file_operations fops_modal_eeprom = {
++	.read = read_file_modal_eeprom,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++
++void ath9k_cmn_debug_modal_eeprom(struct dentry *debugfs_phy,
++				  struct ath_hw *ah)
++{
++	debugfs_create_file("modal_eeprom", S_IRUSR, debugfs_phy, ah,
++			    &fops_modal_eeprom);
++}
++EXPORT_SYMBOL(ath9k_cmn_debug_modal_eeprom);
+diff --git a/drivers/net/wireless/ath/ath9k/common-debug.h b/drivers/net/wireless/ath/ath9k/common-debug.h
+new file mode 100644
+index 0000000..062c007
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/common-debug.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2008-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++void ath9k_cmn_debug_modal_eeprom(struct dentry *debugfs_phy,
++				  struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index ca38116..ffc454b 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -23,6 +23,7 @@
  
--struct sta_info *rtw_alloc_stainfo23a(struct sta_priv *pstapriv, u8 *hwaddr, int gfp);
-+struct sta_info *rtw_alloc_stainfo23a(struct sta_priv *pstapriv, u8 *hwaddr, gfp_t gfp);
- u32 rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta);
- void rtw_free_all_stainfo23a(struct rtw_adapter *padapter);
- struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr);
+ #include "common-init.h"
+ #include "common-beacon.h"
++#include "common-debug.h"
+ 
+ /* Common header for Atheros 802.11n base driver cores */
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 780ff1b..1825a49 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1296,34 +1296,6 @@ static const struct file_operations fops_base_eeprom = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t read_file_modal_eeprom(struct file *file, char __user *user_buf,
+-				      size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-	struct ath_hw *ah = sc->sc_ah;
+-	u32 len = 0, size = 6000;
+-	char *buf;
+-	size_t retval;
+-
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
+-
+-	len = ah->eep_ops->dump_eeprom(ah, false, buf, len, size);
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-
+-	return retval;
+-}
+-
+-static const struct file_operations fops_modal_eeprom = {
+-	.read = read_file_modal_eeprom,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static ssize_t read_file_btcoex(struct file *file, char __user *user_buf,
+ 				size_t count, loff_t *ppos)
+@@ -1549,8 +1521,9 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_dump_nfcal);
+ 	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_base_eeprom);
+-	debugfs_create_file("modal_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_modal_eeprom);
++
++	ath9k_cmn_debug_modal_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
++
+ 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
+ 	debugfs_create_u32("gpio_val", S_IRUSR | S_IWUSR,
 -- 
-1.7.9.5
+1.9.1
 
