@@ -1,83 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:57749 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbaEaSuB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 14:50:01 -0400
-Received: by mail-wi0-f174.google.com with SMTP id r20so2688455wiv.1
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:50:00 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/9] b43: b43_op_config: drop check for core change
-Date: Sat, 31 May 2014 20:49:34 +0200
-Message-Id: <1401562181-14608-3-git-send-email-zajec5@gmail.com> (sfid-20140531_205013_838077_E4C734EE)
-In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.18]:63027 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752038AbaEKIFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:05:07 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 00/10] ath9k & ath9k_htc: remove some debugfs code dups
+Date: Sun, 11 May 2014 10:04:30 +0200
+Message-Id: <1399795480-7459-1-git-send-email-linux@rempel-privat.de> (sfid-20140511_100524_696980_49DD7D4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There aren't devices with multiple 802.11 cores supported by b43.
+some debugfs related parts in this drivers are identical or almost identical.
+This patch set remove most obvious parts.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c | 20 ++------------------
- 1 file changed, 2 insertions(+), 18 deletions(-)
+Module sizes before patch set:
+ath9k_htc		 81196
+ath9k			125783
+ath9k_common		  8185
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 32538ac..a9e50ee 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3798,17 +3798,13 @@ static void b43_set_retry_limits(struct b43_wldev *dev,
- static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
--	struct b43_wldev *dev;
--	struct b43_phy *phy;
-+	struct b43_wldev *dev = wl->current_dev;
-+	struct b43_phy *phy = &dev->phy;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int antenna;
- 	int err = 0;
--	bool reload_bss = false;
- 
- 	mutex_lock(&wl->mutex);
--
--	dev = wl->current_dev;
--
- 	b43_mac_suspend(dev);
- 
- 	/* Switch the band (if necessary). This might change the active core. */
-@@ -3816,15 +3812,6 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (err)
- 		goto out_unlock_mutex;
- 
--	/* Need to reload all settings if the core changed */
--	if (dev != wl->current_dev) {
--		dev = wl->current_dev;
--		changed = ~0;
--		reload_bss = true;
--	}
--
--	phy = &dev->phy;
--
- 	if (conf_is_ht(conf))
- 		phy->is_40mhz =
- 			(conf_is_ht40_minus(conf) || conf_is_ht40_plus(conf));
-@@ -3881,9 +3868,6 @@ out_mac_enable:
- out_unlock_mutex:
- 	mutex_unlock(&wl->mutex);
- 
--	if (wl->vif && reload_bss)
--		b43_op_bss_info_changed(hw, wl->vif, &wl->vif->bss_conf, ~0);
--
- 	return err;
- }
- 
+Module sizes after patch set:
+ath9k_htc		 63361
+ath9k			121433
+ath9k_common		 13145
+
+Oleksij Rempel (10):
+  ath9k-common: create common-debug and move modal_eeprom to cmn
+  ath9k_htc: use ath9k_cmn_debug_modal_eeprom
+  ath9k: move base_eeprom debug code to ath9k_cmn_debug_base_eeprom
+  ath9k_htc: use ath9k_cmn_debug_base_eeprom
+  ath9k: reorder or remove some includes
+  ath9k & ath9k_htc: move ath_rx_stats to cmn
+  ath9k: move recv to ath9k_cmn_debug_recv
+  ath9k_htc: use ath9k_cmn_debug_recv
+  ath9k: move phy_err to ath9k_cmn_debug_phy_err
+  ath9k_htc: use ath9k_cmn_debug_phy_err
+
+ drivers/net/wireless/ath/ath9k/Makefile        |   3 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h         |   2 +-
+ drivers/net/wireless/ath/ath9k/common-debug.c  | 253 +++++++++++
+ drivers/net/wireless/ath/ath9k/common-debug.h  |  72 ++++
+ drivers/net/wireless/ath/ath9k/common.h        |   1 +
+ drivers/net/wireless/ath/ath9k/debug.c         | 214 +---------
+ drivers/net/wireless/ath/ath9k/debug.h         |  44 --
+ drivers/net/wireless/ath/ath9k/htc.h           |  17 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 555 ++-----------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   3 +-
+ drivers/net/wireless/ath/ath9k/hw.c            |   1 -
+ 11 files changed, 377 insertions(+), 788 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-debug.h
+
 -- 
-1.8.4.5
+1.9.1
 
