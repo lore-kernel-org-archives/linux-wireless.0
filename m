@@ -1,110 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:26251 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646AbaELIro (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 04:47:44 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/14] brcmfmac: Make FWS queueing configurable.
-Date: Mon, 12 May 2014 10:47:30 +0200
-Message-ID: <1399884459-5048-6-git-send-email-arend@broadcom.com> (sfid-20140512_105149_483231_C9DA043F)
-In-Reply-To: <1399884459-5048-1-git-send-email-arend@broadcom.com>
-References: <1399884459-5048-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.17.22]:56006 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757867AbaEKIFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:05:23 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 10/10] ath9k_htc: use ath9k_cmn_debug_phy_err
+Date: Sun, 11 May 2014 10:04:40 +0200
+Message-Id: <1399795480-7459-11-git-send-email-linux@rempel-privat.de> (sfid-20140511_100539_849002_4F556460)
+In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-FWS is always queuing frames and using a worker for de-queueing,
-this is not always efficient for all bus layer. For example SDIO
-has an internal queue and worker making the queueing of FWS
-unnecessary. Make it possible to bypass the worker if fws mode
-is none using a bus interface configuration. For USB bus layer
-this configuration is set true to have fws provide queueing
-regardless the fws mode.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    1 +
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   15 +++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    1 +
- 3 files changed, 17 insertions(+)
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 44 ++++----------------------
+ 1 file changed, 6 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index c453561..c5dcd82 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -99,6 +99,7 @@ struct brcmf_bus {
- 	unsigned long tx_realloc;
- 	u32 chip;
- 	u32 chiprev;
-+	bool always_use_fws_queue;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index bc7b551..8b529e4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -248,13 +248,9 @@ void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ 	ath9k_cmn_debug_stat_rx(&priv->debug.rx_stats, rs);
+ }
  
- 	struct brcmf_bus_ops *ops;
- };
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index b58a97a..699908d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -476,6 +476,7 @@ struct brcmf_fws_info {
- 	bool bus_flow_blocked;
- 	bool creditmap_received;
- 	u8 mode;
-+	bool avoid_queueing;
- };
+-static ssize_t read_file_recv(struct file *file, char __user *user_buf,
++static ssize_t read_file_skb_rx(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+-#define PHY_ERR(s, p)							\
+-	len += scnprintf(buf + len, size - len, "%20s : %10u\n", s,	\
+-			 priv->debug.rx_stats.phy_err_stats[p]);
+-
+ 	struct ath9k_htc_priv *priv = file->private_data;
+ 	char *buf;
+ 	unsigned int len = 0, size = 1500;
+@@ -274,33 +270,6 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 			 "%20s : %10u\n", "SKBs Dropped",
+ 			 priv->debug.skbrx_stats.skb_dropped);
  
- /*
-@@ -1872,6 +1873,13 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+-	PHY_ERR("UNDERRUN", ATH9K_PHYERR_UNDERRUN);
+-	PHY_ERR("TIMING", ATH9K_PHYERR_TIMING);
+-	PHY_ERR("PARITY", ATH9K_PHYERR_PARITY);
+-	PHY_ERR("RATE", ATH9K_PHYERR_RATE);
+-	PHY_ERR("LENGTH", ATH9K_PHYERR_LENGTH);
+-	PHY_ERR("RADAR", ATH9K_PHYERR_RADAR);
+-	PHY_ERR("SERVICE", ATH9K_PHYERR_SERVICE);
+-	PHY_ERR("TOR", ATH9K_PHYERR_TOR);
+-	PHY_ERR("OFDM-TIMING", ATH9K_PHYERR_OFDM_TIMING);
+-	PHY_ERR("OFDM-SIGNAL-PARITY", ATH9K_PHYERR_OFDM_SIGNAL_PARITY);
+-	PHY_ERR("OFDM-RATE", ATH9K_PHYERR_OFDM_RATE_ILLEGAL);
+-	PHY_ERR("OFDM-LENGTH", ATH9K_PHYERR_OFDM_LENGTH_ILLEGAL);
+-	PHY_ERR("OFDM-POWER-DROP", ATH9K_PHYERR_OFDM_POWER_DROP);
+-	PHY_ERR("OFDM-SERVICE", ATH9K_PHYERR_OFDM_SERVICE);
+-	PHY_ERR("OFDM-RESTART", ATH9K_PHYERR_OFDM_RESTART);
+-	PHY_ERR("FALSE-RADAR-EXT", ATH9K_PHYERR_FALSE_RADAR_EXT);
+-	PHY_ERR("CCK-TIMING", ATH9K_PHYERR_CCK_TIMING);
+-	PHY_ERR("CCK-HEADER-CRC", ATH9K_PHYERR_CCK_HEADER_CRC);
+-	PHY_ERR("CCK-RATE", ATH9K_PHYERR_CCK_RATE_ILLEGAL);
+-	PHY_ERR("CCK-SERVICE", ATH9K_PHYERR_CCK_SERVICE);
+-	PHY_ERR("CCK-RESTART", ATH9K_PHYERR_CCK_RESTART);
+-	PHY_ERR("CCK-LENGTH", ATH9K_PHYERR_CCK_LENGTH_ILLEGAL);
+-	PHY_ERR("CCK-POWER-DROP", ATH9K_PHYERR_CCK_POWER_DROP);
+-	PHY_ERR("HT-CRC", ATH9K_PHYERR_HT_CRC_ERROR);
+-	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
+-	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
+-
+ 	if (len > size)
+ 		len = size;
  
- 	drvr->tx_multicast += !!multicast;
+@@ -308,12 +277,10 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	kfree(buf);
  
-+	if (fws->avoid_queueing) {
-+		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
-+		if (rc < 0)
-+			brcmf_txfinalize(drvr, skb, ifp->ifidx, false);
-+		return rc;
-+	}
-+
- 	/* set control buffer information */
- 	skcb->if_flags = 0;
- 	skcb->state = BRCMF_FWS_SKBSTATE_NEW;
-@@ -2030,6 +2038,13 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 	fws->drvr = drvr;
- 	fws->fcmode = fcmode;
+ 	return retval;
+-
+-#undef PHY_ERR
+ }
  
-+	if ((drvr->bus_if->always_use_fws_queue == false) &&
-+	    (fcmode == BRCMF_FWS_FCMODE_NONE)) {
-+		fws->avoid_queueing = true;
-+		brcmf_dbg(INFO, "FWS queueing will be avoided\n");
-+		return 0;
-+	}
-+
- 	fws->fws_wq = create_singlethread_workqueue("brcmf_fws_wq");
- 	if (fws->fws_wq == NULL) {
- 		brcmf_err("workqueue creation failed\n");
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 24f65cd..3ce0e7c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1254,6 +1254,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->chip = bus_pub->devid;
- 	bus->chiprev = bus_pub->chiprev;
- 	bus->proto_type = BRCMF_PROTO_BCDC;
-+	bus->always_use_fws_queue = true;
+-static const struct file_operations fops_recv = {
+-	.read = read_file_recv,
++static const struct file_operations fops_skb_rx = {
++	.read = read_file_skb_rx,
+ 	.open = simple_open,
+ 	.owner = THIS_MODULE,
+ 	.llseek = default_llseek,
+@@ -542,10 +509,11 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 			    priv, &fops_tgt_rx_stats);
+ 	debugfs_create_file("xmit", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_xmit);
+-	debugfs_create_file("phy_err", S_IRUSR, priv->debug.debugfs_phy,
+-			    priv, &fops_recv);
++	debugfs_create_file("skb_rx", S_IRUSR, priv->debug.debugfs_phy,
++			    priv, &fops_skb_rx);
  
- 	/* Attach to the common driver interface */
- 	ret = brcmf_attach(dev);
+ 	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
++	ath9k_cmn_debug_phy_err(priv->debug.debugfs_phy, &priv->debug.rx_stats);
+ 
+ 	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_slot);
 -- 
-1.7.9.5
+1.9.1
 
