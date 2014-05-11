@@ -1,105 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:64309 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbaEHKlv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 06:41:51 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so782678wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 03:41:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1399543568.9163.5.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	<1399455657.6800.4.camel@dubbel>
-	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	<1399457760.6800.7.camel@dubbel>
-	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	<1399464536.6800.11.camel@dubbel>
-	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	<1399465244.6800.13.camel@dubbel>
-	<1399466312.10517.34.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
-	<1399467225.10517.35.camel@jlt4.sipsolutions.net>
-	<CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com>
-	<1399543568.9163.5.camel@jlt4.sipsolutions.net>
-Date: Thu, 8 May 2014 12:41:50 +0200
-Message-ID: <CA+BoTQk_hm-dgNftTK_WdPQFNgD9WyRG01sPQ0vcO=cw7+BNrg@mail.gmail.com> (sfid-20140508_125201_163499_553133B8)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:57928 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758048AbaEKIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:53:39 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
+Date: Sun, 11 May 2014 11:50:45 +0300
+Message-Id: <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140511_105346_221466_850BE7C0)
+In-Reply-To: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 May 2014 12:06, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-05-07 at 15:03 +0200, Michal Kazior wrote:
->
->> I think Luca and I have something like this in mind:
->>
->>   drv_chanctx_update(hw,
->>     { .type = CHANCTX_NEW_CHANCTX,
->>       .chanctx = ctx2,
->>     },
->>     {
->>       .type = CHANCTX_BIND,
->>       .vif = vif1,
->>       .chanctx_old = ctx1,
->>       .chanctx_new = ctx2,
->>     },
->>     { 0 });
->>
->> The driver would be free to re-order this internally to fulfill the
->> entire update request.
->
-> Yeah, that's just a little complex maybe? And we don't really allow
-> *arbitrary* transactions, so we'd have to impose limits on the
-> transactions etc.
+From: Arik Nemtsov <arik@wizery.com>
 
-Yeah. I also get the feeling it's overly complex.
+Allow setting bandwidth related regulatory flags. These flags are mapped
+to the corresponding channel flags in the specified range.
+Make sure the new flags are consulted when calculating the maximum
+bandwidth allowed by a regulatory-rule.
 
+Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
+channel.
 
->> Chanctx lifecycle is:
->>
->>  drv_add_chanctx()
->>  drv_assign_vif_chanctx()
->>  // .. more assign/unassign .. possibly drv_change_chanctx()
->>  drv_unassign_vif_chanctx()
->>  drv_remove_chanctx()
->>
->> What I meant by "chanctx allocations" is drv_add_chanctx.
->>
->> In particular when I write "chanctx overcommit" I refer to
->> drv_add_chanctx() being called when in-driver chanctx count is already
->> at peak for given interface combinations.
->>
->> Or should we just simply assume this isn't a problem and drivers
->> should *always* accept empty chanctx? Why bother with a return value
->> then?
->
-> No, we shouldn't do that and assume that the driver would reject that.
+Change-Id: I1b0506ab332cdd268cbf4b02e03574f5c30ba5c0
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/uapi/linux/nl80211.h | 12 ++++++++++++
+ net/wireless/reg.c           | 30 ++++++++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 2 deletions(-)
 
-Then, if you want to avoid the chanctx overcommit problem, you need to
-make switch_vif_chanctx() to act as drv_add_chanctx(old_ctx) and
-drv_remove_chanctx(new_ctx) implicitly, i.e.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 406010d..f332231 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2558,6 +2558,11 @@ enum nl80211_sched_scan_match_attr {
+  * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
+  *	base on contiguous rules and wider channels will be allowed to cross
+  *	multiple contiguous/overlapping frequency ranges.
++ * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
++ * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
++ * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
++ * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
++ * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
+  */
+ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_NO_OFDM		= 1<<0,
+@@ -2570,11 +2575,18 @@ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_NO_IR		= 1<<7,
+ 	__NL80211_RRF_NO_IBSS		= 1<<8,
+ 	NL80211_RRF_AUTO_BW		= 1<<11,
++	NL80211_RRF_GO_CONCURRENT	= 1<<12,
++	NL80211_RRF_NO_HT40MINUS	= 1<<13,
++	NL80211_RRF_NO_HT40PLUS		= 1<<14,
++	NL80211_RRF_NO_80MHZ		= 1<<15,
++	NL80211_RRF_NO_160MHZ		= 1<<16,
+ };
+ 
+ #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
+ #define NL80211_RRF_NO_IBSS		NL80211_RRF_NO_IR
+ #define NL80211_RRF_NO_IR		NL80211_RRF_NO_IR
++#define NL80211_RRF_NO_HT40		(NL80211_RRF_NO_HT40MINUS |\
++					 NL80211_RRF_NO_HT40PLUS)
+ 
+ /* For backport compatibility with older userspace */
+ #define NL80211_RRF_NO_IR_ALL		(NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 558b0e3..efd6d0d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -572,8 +572,9 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+ 	return get_cfg80211_regdom();
+ }
+ 
+-unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+-				   const struct ieee80211_reg_rule *rule)
++static unsigned int
++reg_get_max_bandwidth_from_range(const struct ieee80211_regdomain *rd,
++				 const struct ieee80211_reg_rule *rule)
+ {
+ 	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
+ 	const struct ieee80211_freq_range *freq_range_tmp;
+@@ -621,6 +622,21 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 	return end_freq - start_freq;
+ }
+ 
++unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
++				   const struct ieee80211_reg_rule *rule)
++{
++	unsigned int bw = reg_get_max_bandwidth_from_range(rd, rule);
++
++	if (rule->flags & NL80211_RRF_NO_160MHZ)
++		bw = min_t(unsigned int, bw, MHZ_TO_KHZ(80));
++	if (rule->flags & NL80211_RRF_NO_80MHZ)
++		bw = min_t(unsigned int, bw, MHZ_TO_KHZ(40));
++	if (rule->flags & NL80211_RRF_NO_HT40)
++		bw = min_t(unsigned int, bw, MHZ_TO_KHZ(20));
++
++	return bw;
++}
++
+ /* Sanity check on a regulatory rule */
+ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ {
+@@ -906,6 +922,16 @@ static u32 map_regdom_flags(u32 rd_flags)
+ 		channel_flags |= IEEE80211_CHAN_NO_OFDM;
+ 	if (rd_flags & NL80211_RRF_NO_OUTDOOR)
+ 		channel_flags |= IEEE80211_CHAN_INDOOR_ONLY;
++	if (rd_flags & NL80211_RRF_GO_CONCURRENT)
++		channel_flags |= IEEE80211_CHAN_GO_CONCURRENT;
++	if (rd_flags & NL80211_RRF_NO_HT40MINUS)
++		channel_flags |= IEEE80211_CHAN_NO_HT40MINUS;
++	if (rd_flags & NL80211_RRF_NO_HT40PLUS)
++		channel_flags |= IEEE80211_CHAN_NO_HT40PLUS;
++	if (rd_flags & NL80211_RRF_NO_80MHZ)
++		channel_flags |= IEEE80211_CHAN_NO_80MHZ;
++	if (rd_flags & NL80211_RRF_NO_160MHZ)
++		channel_flags |= IEEE80211_CHAN_NO_160MHZ;
+ 	return channel_flags;
+ }
+ 
+-- 
+1.8.3.2
 
- drv_switch_vif_chanctx(hw, vifs, n_vifs, old_ctx, new_ctx, SWAP);
-
-instead of:
-
- drv_add_chanctx(new_ctx);
- drv_switch_vif_chanctx(hw, vifs, n_vifs, old_ctx, new_ctx, SWAP);
- drv_remove_chanctx(old_ctx);
-
-
-Michał
