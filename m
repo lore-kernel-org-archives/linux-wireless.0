@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:64885 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbaE1LlX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 07:41:23 -0400
-Received: by mail-pb0-f49.google.com with SMTP id jt11so10874039pbb.8
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 04:41:22 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: devel@driverdev.osuosl.org
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	Jes.Sorensen@redhat.com, gregkh@linuxfoundation.org,
-	sachin.kamat@linaro.org
-Subject: [PATCH 1/1] staging: rtl8723au: Remove duplicate inclusion of wlan_bssdef.h
-Date: Wed, 28 May 2014 17:09:01 +0530
-Message-Id: <1401277141-29710-1-git-send-email-sachin.kamat@linaro.org> (sfid-20140528_134126_456790_1FCE874C)
+Received: from mga01.intel.com ([192.55.52.88]:57928 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758003AbaEKIxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 May 2014 04:53:50 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 7/7] regulatory: add NULL to alpha2
+Date: Sun, 11 May 2014 11:50:50 +0300
+Message-Id: <1399798250-20987-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140511_105354_713074_3983F9B4)
+In-Reply-To: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wlan_bssdef.h was included twice.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+alpha2 is defined as 2-chars array, but is used in multiple
+places as string (e.g. with nla_put_string calls), which
+might leak kernel data.
+
+Solve it by simply adding an extra char for the NULL
+terminator, making such operations safe.
+
+Change-Id: Ib31639dc65deab62953923cab3cdf169cb1d0d32
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/rtl8723au/include/drv_types.h |    1 -
- 1 file changed, 1 deletion(-)
+ include/net/regulatory.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/include/drv_types.h b/drivers/staging/rtl8723au/include/drv_types.h
-index 49add5f..a94857d 100644
---- a/drivers/staging/rtl8723au/include/drv_types.h
-+++ b/drivers/staging/rtl8723au/include/drv_types.h
-@@ -38,7 +38,6 @@ enum _NIC_VERSION {
- #include <rtw_ht.h>
- 
- #include <rtw_cmd.h>
--#include <wlan_bssdef.h>
- #include <rtw_xmit.h>
- #include <rtw_recv.h>
- #include <hal_intf.h>
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 2599924..dad7ab2 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -167,7 +167,7 @@ struct ieee80211_reg_rule {
+ struct ieee80211_regdomain {
+ 	struct rcu_head rcu_head;
+ 	u32 n_reg_rules;
+-	char alpha2[2];
++	char alpha2[3];
+ 	enum nl80211_dfs_regions dfs_region;
+ 	struct ieee80211_reg_rule reg_rules[];
+ };
 -- 
-1.7.9.5
+1.8.3.2
 
