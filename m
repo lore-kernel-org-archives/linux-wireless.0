@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:57140 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460AbaEaKv2 (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36720 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751489AbaEKKgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 06:51:28 -0400
-Received: by mail-we0-f180.google.com with SMTP id q58so3098417wes.39
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:27 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/14] staging: vt6656: rename MACvSetBBType to vnt_mac_set_bb_type
-Date: Sat, 31 May 2014 11:50:38 +0100
-Message-Id: <1401533449-2972-3-git-send-email-tvboxspy@gmail.com> (sfid-20140531_125136_393433_A41E390C)
-In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
-References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 11 May 2014 06:36:10 -0400
+Date: Sun, 11 May 2014 12:36:02 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: George Spelvin <linux@horizon.com>
+Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
+Subject: Re: [PATCH 3/3] drivers/net/wireless/ti/wl*/spi.c: Simplify CRC
+ computation
+Message-ID: <20140511103602.GC32609@xo-6d-61-c0.localdomain> (sfid-20140511_123628_014529_F67E222E)
+References: <20140511100211.1334.qmail@ns.horizon.com>
+ <20140511100743.1712.qmail@ns.horizon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140511100743.1712.qmail@ns.horizon.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 4 ++--
- drivers/staging/vt6656/mac.c  | 2 +-
- drivers/staging/vt6656/mac.h  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+On Sun 2014-05-11 06:07:43, George Spelvin wrote:
+> These devices require commands stored in buffers in an odd order,
+> different from that in which the CRC is computed.
+> 
+> Rather than make two copies of the commands in two different orders,
+> form the commands in logical (CRC) order, append the CRC, then byte-swap
+> in place to the desired order.
+> 
+> The old code worked fine, I'm just scratching an "ugh, that's ugly"
+> itch.
+> 
+> Signed-off-by: George Spelvin <linux@horizon.com>
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index ffd6a01..03b0cf3 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -832,9 +832,9 @@ int vnt_radio_power_on(struct vnt_private *priv)
- void vnt_set_bss_mode(struct vnt_private *priv)
- {
- 	if (priv->byRFType == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
--		MACvSetBBType(priv, BB_TYPE_11G);
-+		vnt_mac_set_bb_type(priv, BB_TYPE_11G);
- 	else
--		MACvSetBBType(priv, priv->byBBType);
-+		vnt_mac_set_bb_type(priv, priv->byBBType);
- 
- 	priv->byPacketType = vnt_get_pkt_type(priv);
- 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 5ee5376..136c263 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -74,7 +74,7 @@ void vnt_mac_shutdown(struct vnt_private *priv)
- 	vnt_control_out(priv, MESSAGE_TYPE_MACSHUTDOWN, 0, 0, 0, NULL);
- }
- 
--void MACvSetBBType(struct vnt_private *priv, u8 type)
-+void vnt_mac_set_bb_type(struct vnt_private *priv, u8 type)
- {
- 	u8 data[2];
- 
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index 9eee6d7..ac3d794 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -416,7 +416,7 @@ struct vnt_mac_set_key {
- 
- void vnt_mac_set_filter(struct vnt_private *, u64);
- void vnt_mac_shutdown(struct vnt_private *);
--void MACvSetBBType(struct vnt_private *, u8);
-+void vnt_mac_set_bb_type(struct vnt_private *, u8);
- void MACvDisableKeyEntry(struct vnt_private *, u8);
- void MACvSetKeyEntry(struct vnt_private *, u16, u32, u32, u8 *, u8 *);
- void MACvRegBitsOff(struct vnt_private *, u8, u8);
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+
+
 -- 
-1.9.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
