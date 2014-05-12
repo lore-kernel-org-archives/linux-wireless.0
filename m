@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:53399 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbaEAMbd (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:25073 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752045AbaELGtc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2014 08:31:33 -0400
-Received: by mail-ob0-f179.google.com with SMTP id vb8so3520329obc.24
-        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2014 05:31:32 -0700 (PDT)
-Date: Thu, 1 May 2014 07:31:27 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Nicolas Vaquero <nicovaq92@hotmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Sven Eckelmann <sven@narfation.org>,
-	Tim Gardner <rtg.canonical@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel source
-Message-ID: <20140501123127.GA47034@ubuntu-hedt> (sfid-20140501_143141_365200_B0741B66)
-References: <535E7741.1030607@lwfinger.net>
- <3262959.TlL8alHHte@bentobox>
- <53610B15.4000607@lwfinger.net>
- <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
+	Mon, 12 May 2014 02:49:32 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Arik Nemtsov" <arik@wizery.com>,
+	"Nemtsov, ArikX" <arikx.nemtsov@intel.com>
+Subject: RE: [PATCH 1/7] cfg80211: don't set reg timeout for user-handled
+ hint
+Date: Mon, 12 May 2014 06:49:28 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DF0A87@HASMSX103.ger.corp.intel.com> (sfid-20140512_084935_896770_1F23B011)
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com>
+ <87egzz4hp7.fsf@purkki.adurom.net>
+In-Reply-To: <87egzz4hp7.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 02:50:46PM -0300, Nicolas Vaquero wrote:
-> If you want, I can reinstall Ubuntu 12.04 and update it to the
-> lastest Kernel version from Update Manager.
-> Teach me how to make a Bug Report and I'll send it to you.
-> (Sorry for my English, maybe your eyes are bleeding)
-
-To file the bug report against the kernel in Ubuntu, open a terminal and
-run 'ubuntu-bug linux'. This will guide you through the process of
-filing the bug.
-
-Thanks,
-Seth
-
 > 
-> Nicolas
+> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
 > 
-> El 30/04/14 11:39, Larry Finger escribió:
-> >Sven and Tim,
+> > From: Arik Nemtsov <arik@wizery.com>
 > >
-> >Attached is a one-line fix for the problem that shows up between
-> >3.8.0-36 and 3.8.0-37. It is just a bare patch file, but feel free
-> >to add any explanatory text to make it a proper commit.
+> > Otherwise every "indoor" setting by usermode will cause a regdomain
+> reset.
 > >
-> >I have no real understanding as to why this line of code does not
-> >cause any problems with later kernel versions, but it does here.
-> >In addition, I have not had any reports of problems with other
-> >users. That makes me suspect some kind of bad interaction with the
-> >user-space network control components in 12.04.
-> >
-> >Would it be helpful for Nicolas to prepare a bug report at Ubuntu?
-> >
-> >Larry
-> >
-> >
+> > Change-Id: I3225325d9fb956174458d386d4dd0f4e069deb58
+> > Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> All the patches in the series have the useless Change-Id tag.
+> 
+
+Yeah - I know - I thought I had removed them, but then I had to rebase the patches and they re-appeared. Anyway - I removed the hook from the directory, so that should be the last time I'll do that mistake. Thank you for pointing that out.
+Johannes, do you want me to re-submit, or you'll remove them by yourself?
