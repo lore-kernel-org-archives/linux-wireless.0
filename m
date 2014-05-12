@@ -1,108 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:47259 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756507AbaEaNKb (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7664 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754597AbaELIrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 09:10:31 -0400
-Received: by mail-wi0-f182.google.com with SMTP id r20so2393733wiv.15
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 06:10:29 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>, kbuild@01.org
-Subject: [PATCH] staging: vt6656: Fix vnt_rf_table_download __builtin_memcpy() addr* too small (3 vs 64).
-Date: Sat, 31 May 2014 14:09:27 +0100
-Message-Id: <1401541767-2940-1-git-send-email-tvboxspy@gmail.com> (sfid-20140531_151034_921055_AEBC53F8)
+	Mon, 12 May 2014 04:47:43 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Kim <dekim@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/14] brcmfmac: Fix reconnect failure after beacon timeout
+Date: Mon, 12 May 2014 10:47:32 +0200
+Message-ID: <1399884459-5048-8-git-send-email-arend@broadcom.com> (sfid-20140512_104817_611702_97E90FEC)
+In-Reply-To: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+References: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix following errors
-drivers/staging/vt6656/rf.c:1060 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
-drivers/staging/vt6656/rf.c:1078 vnt_rf_table_download() error: __builtin_memcpy() 'addr3' too small (3 vs 64)
-drivers/staging/vt6656/rf.c:1094 vnt_rf_table_download() error: __builtin_memcpy() 'addr1' too small (3 vs 48)
-drivers/staging/vt6656/rf.c:1108 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
+From: Daniel Kim <dekim@broadcom.com>
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: kbuild@01.org
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+The DISASSOC command needs to be sent to firmware when a connection
+loss is detected by firmware (e.g., beacon timeout). Otherwise the
+next connect request fails due to a lingering LINK(down) event from
+firmware. This patch resolves the issue by using brcmf_link_down()
+handler, instead of the incomplete duplicated codes.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Daniel Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/rf.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   11 -----------
+ 1 file changed, 11 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 3f54ae3..131764f 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -1003,41 +1003,41 @@ void vnt_rf_table_download(struct vnt_private *priv)
- 		length1 = CB_AL2230_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL_24G * 3;
- 		length3 = CB_MAX_CHANNEL_24G * 3;
--		addr1 = &al2230_init_table[0][0];
--		addr2 = &al2230_channel_table0[0][0];
--		addr3 = &al2230_channel_table1[0][0];
-+		addr1 = (u8 *)al2230_init_table;
-+		addr2 = (u8 *)al2230_channel_table0;
-+		addr3 = (u8 *)al2230_channel_table1;
- 		break;
- 	case RF_AIROHA7230:
- 		length1 = CB_AL7230_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL * 3;
- 		length3 = CB_MAX_CHANNEL * 3;
--		addr1 = &al7230_init_table[0][0];
--		addr2 = &al7230_channel_table0[0][0];
--		addr3 = &al7230_channel_table1[0][0];
-+		addr1 = (u8 *)al7230_init_table;
-+		addr2 = (u8 *)al7230_channel_table0;
-+		addr3 = (u8 *)al7230_channel_table1;
- 		break;
- 	case RF_VT3226:
- 		length1 = CB_VT3226_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL_24G * 3;
- 		length3 = CB_MAX_CHANNEL_24G * 3;
--		addr1 = &vt3226_init_table[0][0];
--		addr2 = &vt3226_channel_table0[0][0];
--		addr3 = &vt3226_channel_table1[0][0];
-+		addr1 = (u8 *)vt3226_init_table;
-+		addr2 = (u8 *)vt3226_channel_table0;
-+		addr3 = (u8 *)vt3226_channel_table1;
- 		break;
- 	case RF_VT3226D0:
- 		length1 = CB_VT3226_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL_24G * 3;
- 		length3 = CB_MAX_CHANNEL_24G * 3;
--		addr1 = &vt3226d0_init_table[0][0];
--		addr2 = &vt3226_channel_table0[0][0];
--		addr3 = &vt3226_channel_table1[0][0];
-+		addr1 = (u8 *)vt3226d0_init_table;
-+		addr2 = (u8 *)vt3226_channel_table0;
-+		addr3 = (u8 *)vt3226_channel_table1;
- 		break;
- 	case RF_VT3342A0:
- 		length1 = CB_VT3342_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL * 3;
- 		length3 = CB_MAX_CHANNEL * 3;
--		addr1 = &vt3342a0_init_table[0][0];
--		addr2 = &vt3342_channel_table0[0][0];
--		addr3 = &vt3342_channel_table1[0][0];
-+		addr1 = (u8 *)vt3342a0_init_table;
-+		addr2 = (u8 *)vt3342_channel_table0;
-+		addr3 = (u8 *)vt3342_channel_table1;
- 		break;
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index c3857c9..401529c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4687,7 +4687,6 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
+ 	struct ieee80211_channel *chan;
+ 	s32 err = 0;
+-	u16 reason;
  
-@@ -1086,8 +1086,8 @@ void vnt_rf_table_download(struct vnt_private *priv)
- 	if (priv->byRFType == RF_AIROHA7230) {
- 		length1 = CB_AL7230_INIT_SEQ * 3;
- 		length2 = CB_MAX_CHANNEL * 3;
--		addr1 = &(al7230_init_table_amode[0][0]);
--		addr2 = &(al7230_channel_table2[0][0]);
-+		addr1 = (u8 *)al7230_init_table_amode;
-+		addr2 = (u8 *)al7230_channel_table2;
- 
- 		memcpy(array, addr1, length1);
- 
+ 	if (brcmf_is_apmode(ifp->vif)) {
+ 		err = brcmf_notify_connect_status_ap(cfg, ndev, e, data);
+@@ -4708,16 +4707,6 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 		brcmf_dbg(CONN, "Linkdown\n");
+ 		if (!brcmf_is_ibssmode(ifp->vif)) {
+ 			brcmf_bss_connect_done(cfg, ndev, e, false);
+-			if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTED,
+-					       &ifp->vif->sme_state)) {
+-				reason = 0;
+-				if (((e->event_code == BRCMF_E_DEAUTH_IND) ||
+-				     (e->event_code == BRCMF_E_DISASSOC_IND)) &&
+-				    (e->reason != WLAN_REASON_UNSPECIFIED))
+-					reason = e->reason;
+-				cfg80211_disconnected(ndev, reason, NULL, 0,
+-						      GFP_KERNEL);
+-			}
+ 		}
+ 		brcmf_link_down(ifp->vif);
+ 		brcmf_init_prof(ndev_to_prof(ndev));
 -- 
-1.9.1
+1.7.9.5
 
