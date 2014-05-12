@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:37060 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068AbaEaSuD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 14:50:03 -0400
-Received: by mail-we0-f171.google.com with SMTP id w62so3379020wes.2
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:50:02 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/9] b43: b43_op_config: use IEEE80211_CONF_CHANGE_CHANNEL
-Date: Sat, 31 May 2014 20:49:35 +0200
-Message-Id: <1401562181-14608-4-git-send-email-zajec5@gmail.com> (sfid-20140531_205014_453950_00CD0CC5)
-In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+Received: from canardo.mork.no ([148.122.252.1]:54838 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756705AbaELO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2014 10:27:54 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+Subject: [PATCH] wireless-regdb: update NO's regulatory rules
+Date: Mon, 12 May 2014 16:26:52 +0200
+Message-Id: <1399904812-22753-1-git-send-email-bjorn@mork.no> (sfid-20140512_162757_304685_D2AA3F37)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is tiny optimization and grouping band/channel ops.
+This aligns the regdb entry with the current Norwegian
+regulations.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+ o Adding a reference to the authoritative source
+
+ o Adding a note about TPC
+
+ o Adjusting band edges to match the text of the regulations,
+   except for merging 5470 - 5725 and 5725 – 5795 MHz using
+   the lowest common EIRP limit
+
+ o Syncronizing EIRP limits with the regulation text, fixing
+   values, using mW instead of dBm, and adjusting for "no TPC"
+   where applicable
+
+ o Adding the bands 5710 – 5795 MHz, 5815 – 5850 MHz and
+   17.1 - 17.3 GHz
+
+An unofficial English translation of the regulations is available
+from (attachment link on the right):
+http://eng.npt.no/technical/frequency-management/frequency-licenses/permission-to-use-radio-frequencies
+The relevant part is "Section 11. Wireless networks"
+
+The reference in the db.txt comment is the actual authoritative
+publication of these regulations, in Norwegian only.
+
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
 ---
- drivers/net/wireless/b43/main.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ db.txt | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index a9e50ee..59aa4fd 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3807,16 +3807,23 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_lock(&wl->mutex);
- 	b43_mac_suspend(dev);
+diff --git a/db.txt b/db.txt
+index fcab208..9d32643 100644
+--- a/db.txt
++++ b/db.txt
+@@ -579,11 +579,18 @@ country NL: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
--	/* Switch the band (if necessary). This might change the active core. */
--	err = b43_switch_band(dev, conf->chandef.chan);
--	if (err)
--		goto out_unlock_mutex;
-+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		if (conf_is_ht(conf))
-+			phy->is_40mhz = conf_is_ht40_minus(conf) ||
-+					conf_is_ht40_plus(conf);
-+		else
-+			phy->is_40mhz = false;
++# Data from http://www.lovdata.no/dokument/SF/forskrift/2012-01-19-77
++# Power at 5250 - 5350 MHz, 5470 - 5725 MHz and 5815 – 5850 MHz can
++# be doubled if TPC is implemented.
++# Up to 2W (or 4W with TPC) is allowed in the 5725 – 5795 MHz band
++# which has been merged with 5470 - 5725 MHz to allow wide channels
+ country NO: DFS-ETSI
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(2400 - 2483.5 @ 40), (100 mW)
++	(5150 - 5250 @ 80), (200 mW)
++	(5250 - 5350 @ 80), (100 mW), DFS
++	(5470 - 5795 @ 80), (500 mW), DFS
++	(5815 - 5850 @ 35), (2000 mW), DFS
++	(17100 - 17300 @ 200), (100 mW)
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
--	if (conf_is_ht(conf))
--		phy->is_40mhz =
--			(conf_is_ht40_minus(conf) || conf_is_ht40_plus(conf));
--	else
--		phy->is_40mhz = false;
-+		/* Switch the band (if necessary). */
-+		err = b43_switch_band(dev, conf->chandef.chan);
-+		if (err)
-+			goto out_mac_enable;
-+
-+		/* Switch to the requested channel.
-+		 * The firmware takes care of races with the TX handler.
-+		 */
-+		b43_switch_channel(dev, conf->chandef.chan->hw_value);
-+	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
- 		b43_set_retry_limits(dev, conf->short_frame_max_tx_count,
-@@ -3825,11 +3832,6 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (!changed)
- 		goto out_mac_enable;
- 
--	/* Switch to the requested channel.
--	 * The firmware takes care of races with the TX handler. */
--	if (conf->chandef.chan->hw_value != phy->channel)
--		b43_switch_channel(dev, conf->chandef.chan->hw_value);
--
- 	dev->wl->radiotap_enabled = !!(conf->flags & IEEE80211_CONF_MONITOR);
- 
- 	/* Adjust the desired TX power level. */
-@@ -3865,7 +3867,6 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- out_mac_enable:
- 	b43_mac_enable(dev);
--out_unlock_mutex:
- 	mutex_unlock(&wl->mutex);
- 
- 	return err;
 -- 
-1.8.4.5
+2.0.0.rc2
 
