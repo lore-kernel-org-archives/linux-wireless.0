@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57453 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbaEOTcB (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7664 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450AbaELIrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 15:32:01 -0400
-Message-ID: <53751630.2030501@candelatech.com> (sfid-20140515_213206_157675_CA7B847F)
-Date: Thu, 15 May 2014 12:32:00 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 12 May 2014 04:47:42 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 00/14] brcmfmac: enable 80MHz 11ac AP mode and minor changes
+Date: Mon, 12 May 2014 10:47:25 +0200
+Message-ID: <1399884459-5048-1-git-send-email-arend@broadcom.com> (sfid-20140512_104752_225209_ACB121EF)
 MIME-Version: 1.0
-To: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
-CC: johannes@sipsolutions.net, jouni@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211/mac80211: Add support for Proxy ARP
-References: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com>
-In-Reply-To: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2014 12:06 PM, Kyeyoon Park wrote:
-> Proxy ARP allows the AP devices to keep track of the hardware address
-> to IP address mapping of the STA devices within the BSS. When a request
-> for such information is made (i.e. ARP request, Neighbor Solicitation),
-> the AP will respond on behalf of the STA device within the BSS. Such
-> requests could originate from a device within the BSS or also from the
-> bridge. In the process of the AP replying to the request (i.e. ARP
-> reply, Neighbor Advertisement), the AP will drop the original request
-> frame. The relevant STA will not even know that such information was
-> ever requested.
-> 
-> This feature is a requirement for Hotspot 2.0. This feature is defined
-> in IEEE Std 802.11-2012, 10.23.13. This particular commit will
-> eventually be split into two separate commits (cfg80211 and mac80211
-> separately). This commit implements one part of the feature, dynamic
-> IPv4 addresses and ARP. Additional commits will be made to support
-> static IPv4 addresses and IPv6.
-> 
-> Signed-off-by: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
+The major part of this series are changes to enable 80MHz 11ac AP mode
+operation. The other changes are minor optimizations and/or redesign to
+prepare for new features.
 
-> +#define STA_IPV4_HASH_SIZE 32
-> +#define STA_IPV4_HASH(ipv4) (((u8 *)&ipv4)[3] & 0x1F)
+The series is intended for v3.16 and applies to the master branch
+of the wireless-next repository.
 
-This should be a better hash I think.  Use an existing hash
-method or at least mix in the higher bits manually?
+Arend van Spriel (8):
+  brcmfmac: enhance nvram processing
+  brcmfmac: remove usage of cfg80211_get_chandef_type()
+  brcm80211: extend channel conversion functions for 80MHz support
+  brcmfmac: provide VHT capability information to user-space
+  brcmfmac: enable 80Mhz in 5G custom regulatory rules
+  brcmfmac: get rid of brcmf_cfg80211_set_channel() function
+  brcmfmac: handle 80MHz chanspecs in construct_reg_info() function
+  brcmfmac: determine chanspec from struct cfg80211_chan_def info
 
-Thanks,
-Ben
+Daniel Kim (3):
+  brcmfmac: Give priority to 5GHz band in selecting target BSS
+  brcmfmac: Report the support of firmware roaming
+  brcmfmac: Fix reconnect failure after beacon timeout
+
+Hante Meuleman (3):
+  brcmfmac: Move out hdrpull from tx_finalize.
+  brcmfmac: Move handling 802.1x frames to dhd_linux.
+  brcmfmac: Make FWS queueing configurable.
+
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    1 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   18 ++
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   32 +--
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |   24 +++
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   80 +++----
+ drivers/net/wireless/brcm80211/brcmfmac/nvram.c    |  220 ++++++++++++++++----
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    1 +
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  200 +++++++++++++-----
+ drivers/net/wireless/brcm80211/brcmutil/d11.c      |   93 +++++++--
+ drivers/net/wireless/brcm80211/include/brcmu_d11.h |   14 +-
+ .../net/wireless/brcm80211/include/brcmu_wifi.h    |    1 +
+ 12 files changed, 508 insertions(+), 178 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
