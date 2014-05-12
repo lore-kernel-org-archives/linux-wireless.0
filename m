@@ -1,50 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:54167 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbaENMXf (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:31551 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754605AbaELIro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 08:23:35 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e53so1295255eek.22
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 05:23:34 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: prevent hif_stop being called twice
-Date: Wed, 14 May 2014 14:16:26 +0200
-Message-Id: <1400069786-9764-3-git-send-email-michal.kazior@tieto.com> (sfid-20140514_142340_570284_EC2A0426)
-In-Reply-To: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
-References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 12 May 2014 04:47:44 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 04/14] brcmfmac: Move handling 802.1x frames to dhd_linux.
+Date: Mon, 12 May 2014 10:47:29 +0200
+Message-ID: <1399884459-5048-5-git-send-email-arend@broadcom.com> (sfid-20140512_105149_349625_FBAFF00C)
+In-Reply-To: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+References: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently there was a bug discovered that involved
-hif_stop() being called twice that ended up with a
-double free_irq() call but it only manifested with
-multiple MSI interrupts mapping.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Catch this kind of a problem early in driver
-regardless of interrupt mapping.
+Tracking and handling of 802.1x frames is done in two modules, it
+is more logical and clear to move this to dhd_linux module.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 3 +++
- 1 file changed, 3 insertions(+)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    5 ++++-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   15 +++++----------
+ 2 files changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 66b1f30..b58db5a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1271,6 +1271,9 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 6056efd..4cacc3d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -190,7 +190,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	int ret;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_pub *drvr = ifp->drvr;
+-	struct ethhdr *eh;
++	struct ethhdr *eh = (struct ethhdr *)(skb->data);
  
- 	ath10k_dbg(ATH10K_DBG_BOOT, "boot hif stop\n");
+ 	brcmf_dbg(DATA, "Enter, idx=%d\n", ifp->bssidx);
  
-+	if (WARN_ON(!ar_pci->started))
-+		return;
+@@ -236,6 +236,9 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 		goto done;
+ 	}
+ 
++	if (eh->h_proto == htons(ETH_P_PAE))
++		atomic_inc(&ifp->pend_8021x_cnt);
 +
- 	ret = ath10k_ce_disable_interrupts(ar);
- 	if (ret)
- 		ath10k_warn("failed to disable CE interrupts: %d\n", ret);
+ 	ret = brcmf_fws_process_skb(ifp, skb);
+ 
+ done:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index bfe7c9a..b58a97a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1863,7 +1863,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	struct ethhdr *eh = (struct ethhdr *)(skb->data);
+ 	int fifo = BRCMF_FWS_FIFO_BCMC;
+ 	bool multicast = is_multicast_ether_addr(eh->h_dest);
+-	bool pae = eh->h_proto == htons(ETH_P_PAE);
++	int rc = 0;
+ 
+ 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
+ 	/* determine the priority */
+@@ -1871,8 +1871,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		skb->priority = cfg80211_classify8021d(skb, NULL);
+ 
+ 	drvr->tx_multicast += !!multicast;
+-	if (pae)
+-		atomic_inc(&ifp->pend_8021x_cnt);
+ 
+ 	/* set control buffer information */
+ 	skcb->if_flags = 0;
+@@ -1894,15 +1892,12 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		brcmf_fws_schedule_deq(fws);
+ 	} else {
+ 		brcmf_err("drop skb: no hanger slot\n");
+-		if (pae) {
+-			atomic_dec(&ifp->pend_8021x_cnt);
+-			if (waitqueue_active(&ifp->pend_8021x_wait))
+-				wake_up(&ifp->pend_8021x_wait);
+-		}
+-		brcmu_pkt_buf_free_skb(skb);
++		brcmf_txfinalize(drvr, skb, ifp->ifidx, false);
++		rc = -ENOMEM;
+ 	}
+ 	brcmf_fws_unlock(fws);
+-	return 0;
++
++	return rc;
+ }
+ 
+ void brcmf_fws_reset_interface(struct brcmf_if *ifp)
 -- 
-1.8.5.3
+1.7.9.5
 
