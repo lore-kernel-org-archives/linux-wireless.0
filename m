@@ -1,70 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:54978 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514AbaEaQMw (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:31551 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754582AbaELIrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 12:12:52 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/11 V2] cw1200: Remove useless return variables
-Date: Sat, 31 May 2014 13:12:26 -0300
-Message-Id: <1401552746-10615-1-git-send-email-peter.senna@gmail.com> (sfid-20140531_181320_847957_51CEB54C)
+	Mon, 12 May 2014 04:47:42 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Kim <dekim@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 01/14] brcmfmac: Give priority to 5GHz band in selecting target BSS
+Date: Mon, 12 May 2014 10:47:26 +0200
+Message-ID: <1399884459-5048-2-git-send-email-arend@broadcom.com> (sfid-20140512_104805_518350_5E88B559)
+In-Reply-To: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+References: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch remove variables that are initialized with a constant,
-are never updated, and are only used as parameter of return.
-Return the constant instead of using a variable.
+From: Daniel Kim <dekim@broadcom.com>
 
-Verified by compilation only.
+When a BSS provides both 2.4GHz and 5GHz bands, in many cases it
+makes sense to choose 5GHz. Typically a 5GHz channel is less crowded
+and has less interference and therefore its performance will be
+better than a crowded 2.4 GHz channel. This patch configures
+'join_pref' to induce firmware to preferably select 5GHz BSS.
 
-The coccinelle script that find and fixes this issue is:
-// <smpl>
-@@
-type T;
-constant C;
-identifier ret;
-@@
-- T ret = C;
-... when != ret
-    when strict
-return
-- ret
-+ C
-;
-// </smpl>
-
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
-
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Daniel Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Changes from V1:
-- Keep commented code instead of removing it
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   18 +++++++++++++++
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |   24 ++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
 
- drivers/net/wireless/cw1200/sta.c |   19 +------------------
- 1 file changed, 1 insertion(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
-index cd0cad7..5b84664 100644
---- a/drivers/net/wireless/cw1200/sta.c
-+++ b/drivers/net/wireless/cw1200/sta.c
-@@ -2289,7 +2289,6 @@ static int cw1200_upload_null(struct cw1200_common *priv)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 6a8983a..ed3e32c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -32,6 +32,9 @@
+ #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ #define BRCMF_DEFAULT_PACKET_FILTER	"100 0 0 0 0x01 0x00"
  
- static int cw1200_upload_qosnull(struct cw1200_common *priv)
++/* boost value for RSSI_DELTA in preferred join selection */
++#define BRCMF_JOIN_PREF_RSSI_BOOST	8
++
+ 
+ bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
+ 		      struct sk_buff *pkt, int prec)
+@@ -246,6 +249,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
  {
--	int ret = 0;
- 	/* TODO:  This needs to be implemented
+ 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
+ 	u8 buf[BRCMF_DCMD_SMLEN];
++	struct brcmf_join_pref_params join_pref_params[2];
+ 	char *ptr;
+ 	s32 err;
  
- 	struct wsm_template_frame frame = {
-@@ -2306,7 +2305,7 @@ static int cw1200_upload_qosnull(struct cw1200_common *priv)
- 	dev_kfree_skb(frame.skb);
+@@ -298,6 +302,20 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		goto done;
+ 	}
  
- 	*/
--	return ret;
-+	return 0;
- }
++	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
++	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
++	join_pref_params[0].len = 2;
++	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
++	join_pref_params[0].band = WLC_BAND_5G;
++	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
++	join_pref_params[1].len = 2;
++	join_pref_params[1].rssi_gain = 0;
++	join_pref_params[1].band = 0;
++	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
++				       sizeof(join_pref_params));
++	if (err)
++		brcmf_err("Set join_pref error (%d)\n", err);
++
+ 	/* Setup event_msgs, enable E_IF */
+ 	err = brcmf_fil_iovar_data_get(ifp, "event_msgs", eventmask,
+ 				       BRCMF_EVENTING_MASK_LEN);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 614e488..2bc68a2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -53,6 +53,14 @@
+ #define BRCMF_OBSS_COEX_OFF		0
+ #define BRCMF_OBSS_COEX_ON		1
  
- static int cw1200_enable_beaconing(struct cw1200_common *priv,
++/* join preference types for join_pref iovar */
++enum brcmf_join_pref_types {
++	BRCMF_JOIN_PREF_RSSI = 1,
++	BRCMF_JOIN_PREF_WPA,
++	BRCMF_JOIN_PREF_BAND,
++	BRCMF_JOIN_PREF_RSSI_DELTA,
++};
++
+ enum brcmf_fil_p2p_if_types {
+ 	BRCMF_FIL_P2P_IF_CLIENT,
+ 	BRCMF_FIL_P2P_IF_GO,
+@@ -282,6 +290,22 @@ struct brcmf_assoc_params_le {
+ 	__le16 chanspec_list[1];
+ };
+ 
++/**
++ * struct join_pref params - parameters for preferred join selection.
++ *
++ * @type: preference type (see enum brcmf_join_pref_types).
++ * @len: length of bytes following (currently always 2).
++ * @rssi_gain: signal gain for selection (only when @type is RSSI_DELTA).
++ * @band: band to which selection preference applies.
++ *	This is used if @type is BAND or RSSI_DELTA.
++ */
++struct brcmf_join_pref_params {
++	u8 type;
++	u8 len;
++	u8 rssi_gain;
++	u8 band;
++};
++
+ /* used for join with or without a specific bssid and channel list */
+ struct brcmf_join_params {
+ 	struct brcmf_ssid_le ssid_le;
+-- 
+1.7.9.5
+
