@@ -1,57 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:37890 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbaETGp7 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8584 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754711AbaELIrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 02:45:59 -0400
-Received: by mail-lb0-f173.google.com with SMTP id 10so23848lbg.4
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 23:45:57 -0700 (PDT)
+	Mon, 12 May 2014 04:47:47 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 14/14] brcmfmac: determine chanspec from struct cfg80211_chan_def info
+Date: Mon, 12 May 2014 10:47:39 +0200
+Message-ID: <1399884459-5048-15-git-send-email-arend@broadcom.com> (sfid-20140512_104801_982468_DB041AE2)
+In-Reply-To: <1399884459-5048-1-git-send-email-arend@broadcom.com>
+References: <1399884459-5048-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A0333EC082@HASMSX106.ger.corp.intel.com>
-References: <1398234178-24685-1-git-send-email-ilan.peer@intel.com>
- <1398437216.4152.7.camel@jlt4.sipsolutions.net> <CB3B3D4774441E42AA3EA0E1BA8230A0333EC082@HASMSX106.ger.corp.intel.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 19 May 2014 23:45:37 -0700
-Message-ID: <CAB=NE6VMhMLbQOjQtaE=dBzfVMuLAfS2bH8VBVw77Njkk=zLqg@mail.gmail.com> (sfid-20140520_084603_593928_6F2AB3BD)
-Subject: Re: [PATCH] cfg80211: Fix GO Concurrent relaxation on UNII-3
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 27, 2014 at 2:33 AM, Peer, Ilan <ilan.peer@intel.com> wrote:
->> On Wed, 2014-04-23 at 09:22 +0300, Ilan Peer wrote:
->> > At some locations, channels 149-165 are considered a single bundle,
->> > while at some other locations, e.g., Indonesia, channels
->> > 149-161 are considered a single bundle, while channel 165 belongs to a
->> > different bundle. This means that:
->> >
->> > 1. A station interface connection to an AP on channel 165 allows
->> >    the instantiation of a P2P GO on channels 149-165.
->> > 2. A station interface connection to an AP on channels 149-161
->> >    does NOT allow the instantiation of a P2P GO on channel 165.
->> >
->> > Fix this.
->>
->> I'll apply this, but I'm not a big fan of it. Please work with Luis to get some
->> information into the regulatory database.
->>
->
-> Sure. Luis, how would like me to address this?
+The struct cfg80211_chan_def contains additional info to derive the
+bandwidth and side-band information of the chanspec. This patch adds
+chandef_to_chanspec() function used in IBSS join and starting AP
+operation.
 
-Generally we move things that are not universal as flags, or value
-attributes, the difficulty here lies in that we'd get different sets
-of groups that allow flexibility to lift restrictions. A flag would
-still work in the case of UNII 3 and would enable this permissive rule
-to be usable on other bands as well. It would also then make the
-restriction to Indonesia specific to that region. As far as I can tell
-P2P does mandate country IE to be set so this would make relying on
-the country IE to be available on clients associating, the flag could
-also be cleared upon disconnect as we clear all permissive flags as we
-do not after a disconnect /  suspend / resume / reboot.
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   60 +++++++++++++++++++-
+ 1 file changed, 57 insertions(+), 3 deletions(-)
 
-Let me know what you think.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 290fc09..23cfd04 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -341,6 +341,60 @@ static u8 brcmf_mw_to_qdbm(u16 mw)
+ 	return qdbm;
+ }
+ 
++u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
++			struct cfg80211_chan_def *ch)
++{
++	struct brcmu_chan ch_inf;
++	s32 primary_offset;
++
++	brcmf_dbg(TRACE, "chandef: control %d center %d width %d\n",
++		  ch->chan->center_freq, ch->center_freq1, ch->width);
++	ch_inf.chnum = ieee80211_frequency_to_channel(ch->center_freq1);
++	primary_offset = ch->center_freq1 - ch->chan->center_freq;
++	switch (ch->width) {
++	case NL80211_CHAN_WIDTH_20:
++		ch_inf.bw = BRCMU_CHAN_BW_20;
++		WARN_ON(primary_offset != 0);
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		ch_inf.bw = BRCMU_CHAN_BW_40;
++		if (primary_offset < 0)
++			ch_inf.sb = BRCMU_CHAN_SB_U;
++		else
++			ch_inf.sb = BRCMU_CHAN_SB_L;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		ch_inf.bw = BRCMU_CHAN_BW_80;
++		if (primary_offset < 0) {
++			if (primary_offset < -CH_10MHZ_APART)
++				ch_inf.sb = BRCMU_CHAN_SB_UU;
++			else
++				ch_inf.sb = BRCMU_CHAN_SB_UL;
++		} else {
++			if (primary_offset > CH_10MHZ_APART)
++				ch_inf.sb = BRCMU_CHAN_SB_LL;
++			else
++				ch_inf.sb = BRCMU_CHAN_SB_LU;
++		}
++		break;
++	default:
++		WARN_ON_ONCE(1);
++	}
++	switch (ch->chan->band) {
++	case IEEE80211_BAND_2GHZ:
++		ch_inf.band = BRCMU_CHAN_BAND_2G;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		ch_inf.band = BRCMU_CHAN_BAND_5G;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++	}
++	d11inf->encchspec(&ch_inf);
++
++	return ch_inf.chspec;
++}
++
+ u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+ 			struct ieee80211_channel *ch)
+ {
+@@ -1236,8 +1290,8 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 				params->chandef.chan->center_freq);
+ 		if (params->channel_fixed) {
+ 			/* adding chanspec */
+-			chanspec = channel_to_chanspec(&cfg->d11inf,
+-						       params->chandef.chan);
++			chanspec = chandef_to_chanspec(&cfg->d11inf,
++						       &params->chandef);
+ 			join_params.params_le.chanspec_list[0] =
+ 				cpu_to_le16(chanspec);
+ 			join_params.params_le.chanspec_num = cpu_to_le32(1);
+@@ -3810,7 +3864,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
+ 
+-	chanspec = channel_to_chanspec(&cfg->d11inf, settings->chandef.chan);
++	chanspec = chandef_to_chanspec(&cfg->d11inf, &settings->chandef);
+ 	err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
+ 	if (err < 0) {
+ 		brcmf_err("Set Channel failed: chspec=%d, %d\n", chanspec, err);
+-- 
+1.7.9.5
 
-  Luis
