@@ -1,159 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:42937 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbaETJZX (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:36546 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758227AbaELO60 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 05:25:23 -0400
-Received: by mail-qg0-f48.google.com with SMTP id i50so280309qgf.35
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 02:25:22 -0700 (PDT)
+	Mon, 12 May 2014 10:58:26 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wo20so8130793obc.7
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2014 07:58:26 -0700 (PDT)
+Message-ID: <5370E189.4050702@lwfinger.net> (sfid-20140512_165830_561582_4AE583FD)
+Date: Mon, 12 May 2014 09:58:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com>
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
- <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
- <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com>
- <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com> <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 20 May 2014 12:25:07 +0300
-Message-ID: <CA+XVXfcJ4H32D6ZABZ9tSC2JO0Dv3c3uuHkEC-m0P4q0JJcdgQ@mail.gmail.com> (sfid-20140520_112529_755056_4F8F9F81)
-Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Content-Type: text/plain; charset=UTF-8
+CC: Timber Deng <fengjingchao@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel binary for RTL8192EE
+References: <536FA82C.1040203@lwfinger.net>	<CAB1v6G2jEgcUrCsQn2mo5Zts2mXpVfYTmjkg_dMT2oAQKOc08w@mail.gmail.com> <CAB1v6G0iFqjaLcmsFS=H_5d+Shr13-wJww74jP=adi01mLmZdw@mail.gmail.com>
+In-Reply-To: <CAB1v6G0iFqjaLcmsFS=H_5d+Shr13-wJww74jP=adi01mLmZdw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 11:51 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, May 20, 2014 at 1:33 AM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Tue, May 20, 2014 at 11:26 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->>> On Sun, May 11, 2014 at 1:50 AM, Emmanuel Grumbach
->>> <emmanuel.grumbach@intel.com> wrote:
->>>> From: Arik Nemtsov <arik@wizery.com>
->>>>
->>>> Allow setting bandwidth related regulatory flags. These flags are mapped
->>>> to the corresponding channel flags in the specified range.
->>>> Make sure the new flags are consulted when calculating the maximum
->>>> bandwidth allowed by a regulatory-rule.
->>>>
->>>> Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
->>>> channel.
->>>>
->>>> Change-Id: I1b0506ab332cdd268cbf4b02e03574f5c30ba5c0
->>>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->>>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>>> ---
->>>>  include/uapi/linux/nl80211.h | 12 ++++++++++++
->>>>  net/wireless/reg.c           | 30 ++++++++++++++++++++++++++++--
->>>>  2 files changed, 40 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
->>>> index 406010d..f332231 100644
->>>> --- a/include/uapi/linux/nl80211.h
->>>> +++ b/include/uapi/linux/nl80211.h
->>>> @@ -2558,6 +2558,11 @@ enum nl80211_sched_scan_match_attr {
->>>>   * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
->>>>   *     base on contiguous rules and wider channels will be allowed to cross
->>>>   *     multiple contiguous/overlapping frequency ranges.
->>>> + * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
->>>> + * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
->>>> + * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
->>>> + * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
->>>> + * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
->>>>   */
->>>>  enum nl80211_reg_rule_flags {
->>>>         NL80211_RRF_NO_OFDM             = 1<<0,
->>>> @@ -2570,11 +2575,18 @@ enum nl80211_reg_rule_flags {
->>>>         NL80211_RRF_NO_IR               = 1<<7,
->>>>         __NL80211_RRF_NO_IBSS           = 1<<8,
->>>>         NL80211_RRF_AUTO_BW             = 1<<11,
->>>> +       NL80211_RRF_GO_CONCURRENT       = 1<<12,
->>>> +       NL80211_RRF_NO_HT40MINUS        = 1<<13,
->>>> +       NL80211_RRF_NO_HT40PLUS         = 1<<14,
->>>> +       NL80211_RRF_NO_80MHZ            = 1<<15,
->>>> +       NL80211_RRF_NO_160MHZ           = 1<<16,
->>>>  };
->>>
->>> Automatic calculation on max bandwidth scales better, I'd much prefer
->>> these only be used and properly documented to only be used in cases
->>> where we want to be explicit about this, I don't think this should be
->>> the automatic behavior, or at least your patch in no way explains any
->>> justification as to why the move is being done, so I cannot guess what
->>> the logic was here.
->>
->> We're not going to use CRDA/wireless-regdb as the regulatory data
->> source.
+On 05/12/2014 09:11 AM, Timber Deng wrote:
+> Hi Larry,
 >
-> Why not?
-
-There's no good reason I can point to. It's just a decision by Intel
-regulatory. This is not only for Linux, but for everything.
-
+> Failed to sent to "linux-wireless@vger.kernelorg
+> <mailto:linux-wireless@vger.kernel.org>" in previous try... In case you didn't
+> receive message, it's below.
 >
->> These flags fit the reg-data storage format of the intel FW.
->> It's just a different way of doing things.
+> BTW, if I wanna fix the bug myself, how can I find some guide for kernel
+> function documentation, debugging? Let me know.
 >
-> You can covert things, we have tons of drivers doing that already.
-
-Again, it's not my call to do this.
-
+> Thanks!
 >
->>>>  #define NL80211_RRF_PASSIVE_SCAN       NL80211_RRF_NO_IR
->>>>  #define NL80211_RRF_NO_IBSS            NL80211_RRF_NO_IR
->>>>  #define NL80211_RRF_NO_IR              NL80211_RRF_NO_IR
->>>> +#define NL80211_RRF_NO_HT40            (NL80211_RRF_NO_HT40MINUS |\
->>>> +                                        NL80211_RRF_NO_HT40PLUS)
->>>>
->>>>  /* For backport compatibility with older userspace */
->>>>  #define NL80211_RRF_NO_IR_ALL          (NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
->>>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>>> index 558b0e3..efd6d0d 100644
->>>> --- a/net/wireless/reg.c
->>>> +++ b/net/wireless/reg.c
->>>> @@ -572,8 +572,9 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
->>>>         return get_cfg80211_regdom();
->>>>  }
->>>>
->>>> -unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
->>>> -                                  const struct ieee80211_reg_rule *rule)
->>>> +static unsigned int
->>>> +reg_get_max_bandwidth_from_range(const struct ieee80211_regdomain *rd,
->>>> +                                const struct ieee80211_reg_rule *rule)
->>>
->>> This change is renaming a routine we used heavily to something tucked
->>> in the closet and then introducing the usage of the new flags, which
->>> have no justifications nor proper regdb updates, this also doesn't
->>> even account for the old regdb situations so I'll have to provide a
->>> huge NACK for all these reasons.
->>>
->>> You want to consider wireless-regdb / CRDA when making these changes.
->>
->> I can rename things any way you'd like.
+> /--/
+> /Hongchao Deng (Timber)/
+> /Carnegie Mellon University
+> /
+> /hongchad@andrew.cmu.edu <mailto:hongchad@andrew.cmu.edu>/
 >
-> You missed my point, you just did not rename something you went and
-> then made this new unused flag you introduced be used in tons of
-> locations, that'd introduce tons of regressions.
-
-This is on purpose - I want this code to consider the new flags in all
-existing locations.
-I'm not sure I follow regarding regressions. The new flags are not set
-in any existing regulatory database.
-
 >
->> Not sure how this can hurt old
->> regdb situations though. The new flags are not used in any rules
->> there.
+> On Mon, May 12, 2014 at 10:07 AM, Timber Deng <fengjingchao@gmail.com
+> <mailto:fengjingchao@gmail.com>> wrote:
 >
-> Exactly, you can't expect the rules to work then.
+>     Hi Larry,
+>
+>     I am reporting an error in current RTL8192EE driver. This error happened
+>     both in the 3.13.9 kernel you sent earlier or custom 3.14 built with patches
+>     in
+>     (http://www.lwfinger.com/__realtek_drivers/0001-staging-__r8192ee-Add-new-driver.patch
+>     <http://www.lwfinger.com/realtek_drivers/0001-staging-r8192ee-Add-new-driver.patch>
+>     ​, ​
+>     http://www.lwfinger.com/__realtek_drivers/0002-staging-__r8192ee-Add-new-driver.patch
+>     <http://www.lwfinger.com/realtek_drivers/0002-staging-r8192ee-Add-new-driver.patch>
+>     ​​). Ubuntu 14.04.
+>     ​
+>
+>     After using the wifi for a relatively long time and viewing large traffic
+>     (e.g. video streaming), the OS is stuck and no actions can be made.
+>     ​
+>     The kernel log​ (/var/log/kern.log) shows that repeatedly:
+>     ===
+>     ...
+>     May 12 08:13:44 feng-T440s kernel: [39766.630856] skb->end - skb->tail =
+>     16000, len is 16174
+>     May 12 08:13:44 feng-T440s kernel: [39766.635128] skb->end - skb->tail =
+>     16000, len is 16174
+>     May 12 08:13:44 feng-T440s kernel: [39766.733385] skb->end - skb->tail =
+>     16000, len is 16174
+>     ...
+>     ===
+>
+>     I looked at the patch code, it's here:
+>     ===
+>
+>     len = rtlpriv->cfg->ops->get_desc((u8 *)pdesc, false,
+>     +						  HW_DESC_RXPKT_LEN);
+>
+>     	        if (skb->end - skb->tail > len) {
+>     +			skb_put(skb, len);
+>     +			if (rtlpriv->use_new_trx_flow)
+>     +				skb_reserve(skb, status.rx_drvinfo_size +
+>     +						 status.rx_bufshift + 24);
+>     +			else
+>     +				skb_reserve(skb, status.rx_drvinfo_size +
+>     +						 status.rx_bufshift);
+>     +
+>     +		} else {
+>     +			printk("skb->end - skb->tail = %d, len is %d\n",
+>     +			       skb->end - skb->tail, len);
+>     +			break;
+>     +		}
+>     +
+>
+>     ===
+>
+>     It seems like the wireless is constantly receiving packet larger than socket buffer and dropping it.
+>
+>     What's worse, it doesn't stop this behavior in a reasonable way but continuously consuming all CPU resources.
+>
+>
+>     Please fix it ASAP.
+>     Thanks!
+>
+>     /--/
+>     /Hongchao Deng (Timber)/
+>     /Carnegie Mellon University
+>     /
+>     /hongchad@andrew.cmu.edu <mailto:hongchad@andrew.cmu.edu>/
+>
+>
+>     On Sun, May 11, 2014 at 12:41 PM, Larry Finger <Larry.Finger@lwfinger.net
+>     <mailto:Larry.Finger@lwfinger.net>> wrote:
+>
+>         This mail is blind copied to everyone that has contacted me regarding a
+>         driver for the RTL8192EE, and to the Realtek developers.
+>
+>         Although the patches needed to add this driver to the 3.14.X kernel were
+>         made available earlier, not everyone has the expertise needed to build a
+>         kernel for their system. As the Lenovo T440s is the only computer that
+>         currently is shipping with this device, and Lenovo uses Ubuntu 14.04, I
+>         have built such a patched kernel and I am making is available. This one
+>         uses the official 3.13.3 source currently in use by Ubuntu and includes
+>         all of their patches.
+>
+>         The file is obtained at
+>         http://www.lwfinger.com/__realtek_drivers/linux-image-3.__13.9_0.9_amd64.deb
+>         <http://www.lwfinger.com/realtek_drivers/linux-image-3.13.9_0.9_amd64.deb>.
+>         At present, I do not have a 32-bit version available. After downloading,
+>         this kernel is installed using the command 'sudo dpkg -i
+>         <path_to_downloaded_deb_file>
 
-Why won't old regdb rules work? The NL80211_RRF_NO_160MHZ for instance
-is not used anywhere in old or new regdbs.
-So all the new code in reg_get_max_bandwidth is ignored in current or
-older crda/regdb flows.
+You have a typo in the linux-wireless address. It is kernel.org, not kernelorg.
 
-What am I missing?
+The first place to look for debugging help in in the Documentation directory in 
+the sources. I have seen the same printout with my version in the main wireless 
+tree, but I have not seen it with the staging version. It is not reasonable for 
+the packet length to be that that long. The apparent packet length comes from 
+reading the copy of the RX descriptor passed in the skb. The low 14 bits in the 
+first word should contain that quantity. I do not know if the problem is in the 
+firmware or the driver code.
 
-Arik
+Sometime in the next couple of days, I will post revised patches and a new deb 
+file that handles the problem more intelligently. Unfortunately, I do not have a 
+fix.
+
+On Linux mailing lists, please refrain from top posting. If you bottom post as I 
+did here, a reader can see whatever history the writer wants to show without 
+scrolling down and back up. The standard joke is
+
+A. Because it is not in natural order.
+
+Q. Why is top posting bad?
+
+Larry
+
+
+
