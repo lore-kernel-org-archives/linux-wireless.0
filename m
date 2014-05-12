@@ -1,143 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:39201 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751643AbaEBNlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 09:41:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: michal.kazior@tieto.com
-Date: Fri,  2 May 2014 16:40:30 +0300
-Message-Id: <1399038031-23206-3-git-send-email-luca@coelho.fi> (sfid-20140502_154123_085093_CB3C856E)
-In-Reply-To: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 3/4] mac80211: send channel switch failed notifications
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:31478 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245AbaELSeW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2014 14:34:22 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Sachin Ahuja <sahuja@codeaurora.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v3] cfg80211: avoid restoring the regulatory during disconnect
+Date: Tue, 13 May 2014 00:04:49 +0530
+Message-ID: <1399919689-31742-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140512_203425_725775_92A136DA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Sachin Ahuja <sahuja@codeaurora.org>
 
-Send a channel switch failed notification to userspace when an ongoing
-channel swith fails.
+When STA disconnects, cfg80211 restores the regulatory setting
+to world domain. For the drivers that ignore country ie, cfg80211
+should remain in the default country code which is configured
+at driver load and should do not be restored to world reg domain.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sachin Ahuja <sahuja@codeaurora.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/mac80211/cfg.c   | 30 +++++++++++++++++++++++-------
- net/mac80211/iface.c |  6 +++++-
- net/mac80211/mlme.c  |  9 ++++++++-
- 3 files changed, 36 insertions(+), 9 deletions(-)
+v2: Removed is_all_countryie_ignore
+v3: Removed wdev_lock
+ net/wireless/sme.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 53a2cfe..f8958e0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1101,9 +1101,13 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 4bc21a2..031ab4c 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -558,10 +558,23 @@ static bool cfg80211_is_all_idle(void)
+ 	return is_all_idle;
+ }
  
- 	/* abort any running channel switch */
--	sdata->vif.csa_active = false;
--	kfree(sdata->u.ap.next_beacon);
--	sdata->u.ap.next_beacon = NULL;
-+	if (sdata->vif.csa_active) {
-+		cfg80211_ch_switch_failed_notify(sdata->dev,
-+						 &sdata->csa_chandef);
-+		sdata->vif.csa_active = false;
-+		kfree(sdata->u.ap.next_beacon);
-+		sdata->u.ap.next_beacon = NULL;
-+	}
- 
- 	/* turn off carrier for this interface and dependent VLANs */
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-@@ -3030,8 +3034,11 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	mutex_unlock(&local->mtx);
--	if (WARN_ON(err < 0))
-+	if (WARN_ON(err < 0)) {
-+		cfg80211_ch_switch_failed_notify(sdata->dev,
-+						 &sdata->csa_chandef);
- 		return;
-+	}
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3045,21 +3052,30 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		kfree(sdata->u.ap.next_beacon);
- 		sdata->u.ap.next_beacon = NULL;
- 
--		if (err < 0)
-+		if (err < 0) {
-+			cfg80211_ch_switch_failed_notify(sdata->dev,
-+							 &sdata->csa_chandef);
- 			return;
-+		}
- 		changed |= err;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		err = ieee80211_ibss_finish_csa(sdata);
--		if (err < 0)
-+		if (err < 0) {
-+			cfg80211_ch_switch_failed_notify(sdata->dev,
-+							 &sdata->csa_chandef);
- 			return;
-+		}
- 		changed |= err;
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
- 		err = ieee80211_mesh_finish_csa(sdata);
--		if (err < 0)
-+		if (err < 0) {
-+			cfg80211_ch_switch_failed_notify(sdata->dev,
-+							 &sdata->csa_chandef);
- 			return;
-+		}
- 		changed |= err;
- 		break;
- #endif
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 7fff3dc..578f6e6 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -838,7 +838,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	cancel_work_sync(&sdata->recalc_smps);
- 	sdata_lock(sdata);
--	sdata->vif.csa_active = false;
-+	if (sdata->vif.csa_active) {
-+		sdata->vif.csa_active = false;
-+		cfg80211_ch_switch_failed_notify(sdata->dev,
-+						 &sdata->csa_chandef);
-+	}
- 	sdata_unlock(sdata);
- 	cancel_work_sync(&sdata->csa_finalize_work);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 139005d..beff8c8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -958,6 +958,8 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 			   "vif channel switch failed, disconnecting\n");
- 		ieee80211_queue_work(&sdata->local->hw,
- 				     &ifmgd->csa_connection_drop_work);
-+		cfg80211_ch_switch_failed_notify(sdata->dev,
-+						 &sdata->csa_chandef);
- 		goto out;
- 	}
- 
-@@ -2060,7 +2062,12 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
- 			       true, frame_buf);
- 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
--	sdata->vif.csa_active = false;
++static bool cfg80211_is_all_countryie_ignore(void)
++{
++	struct cfg80211_registered_device *rdev;
 +
-+	if (sdata->vif.csa_active) {
-+			cfg80211_ch_switch_failed_notify(sdata->dev,
-+							 &sdata->csa_chandef);
-+			sdata->vif.csa_active = false;
++	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
++		if (!(rdev->wiphy.regulatory_flags &
++		      REGULATORY_COUNTRY_IE_IGNORE))
++			return false;
 +	}
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
++	return true;
++}
++
+ static void disconnect_work(struct work_struct *work)
+ {
+ 	rtnl_lock();
+-	if (cfg80211_is_all_idle())
++	if (cfg80211_is_all_idle() &&
++	    !cfg80211_is_all_countryie_ignore())
+ 		regulatory_hint_disconnect();
+ 	rtnl_unlock();
+ }
 -- 
 1.9.2
 
