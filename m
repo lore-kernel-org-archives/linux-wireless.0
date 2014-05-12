@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:41013 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932540AbaESTe3 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:45492 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532AbaELHey convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 15:34:29 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so4788496wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:27 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 11/20] staging: vt6656: clean up BBvSetAntennaMode.
-Date: Mon, 19 May 2014 20:33:03 +0100
-Message-Id: <1400527992-3061-11-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213444_121748_F8FEB6EC)
-In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
-References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 12 May 2014 03:34:54 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so3954543wib.11
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2014 00:34:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 12 May 2014 09:34:53 +0200
+Message-ID: <CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com> (sfid-20140512_093458_796090_35871187)
+Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-white space clean up.
+On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Hi,
+>
+> This depends on my `ath10k: recovery fixes
+> 2014-05-09`.
+>
+> Hopefully the split makes it a little saner to
+> review.
+>
+> Please note: `ath10k: make wmi timeout trigger hw
+> restart` effectively hides the mgmt tx / htc
+> credit starvation issue that was discussed
+> recently. My intention is to make the driver more
+> robust and as a side effect it makes the
+> starvation issue less painful. If desired so
+> the patch can be easily ignored in the series as
+> nothing depends on it.
+>
+>
+> Michal Kazior (7):
+>   ath10k: move restart_work call
+>   ath10k: introduce core restart symbol
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 32 ++++++++++++++------------------
- 1 file changed, 14 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 0bdc814..5e2ffab 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -869,25 +869,21 @@ void BBvCalculateParameter(struct vnt_private *priv, u32 frame_length,
-  */
- void BBvSetAntennaMode(struct vnt_private *pDevice, u8 byAntennaMode)
- {
--    switch (byAntennaMode) {
--        case ANT_TXA:
--        case ANT_TXB:
--            break;
--        case ANT_RXA:
--            pDevice->byBBRxConf &= 0xFC;
--            break;
--        case ANT_RXB:
--            pDevice->byBBRxConf &= 0xFE;
--            pDevice->byBBRxConf |= 0x02;
--            break;
--    }
-+	switch (byAntennaMode) {
-+	case ANT_TXA:
-+	case ANT_TXB:
-+		break;
-+	case ANT_RXA:
-+		pDevice->byBBRxConf &= 0xFC;
-+		break;
-+	case ANT_RXB:
-+		pDevice->byBBRxConf &= 0xFE;
-+		pDevice->byBBRxConf |= 0x02;
-+		break;
-+	}
- 
--    CONTROLnsRequestOut(pDevice,
--                    MESSAGE_TYPE_SET_ANTMD,
--                    (u16) byAntennaMode,
--                    0,
--                    0,
--                    NULL);
-+	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_SET_ANTMD,
-+		(u16)byAntennaMode, 0, 0, NULL);
- }
- 
- /*
--- 
-1.9.1
+>   ath10k: drain wmi quickly upon hw restart
+>   ath10k: wake up everything on core restart
 
+These 2 are harmful as they are. In case of early fw crash
+uninitialized structures are accessed. I'll re-spin later.
+
+
+Michał
