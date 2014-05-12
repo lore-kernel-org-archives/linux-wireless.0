@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:55608 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbaE0Lqm (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:50450 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754079AbaELIFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 07:46:42 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 7/7] wil6210: optimize wil_release_reorder_frames
-Date: Tue, 27 May 2014 14:45:50 +0300
-Message-ID: <1401191150-29037-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140527_134645_608021_28C85439)
-In-Reply-To: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 12 May 2014 04:05:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140511100502.1491.qmail@ns.horizon.com>
+References: <20140511100211.1334.qmail@ns.horizon.com>
+	<20140511100502.1491.qmail@ns.horizon.com>
+Date: Mon, 12 May 2014 10:05:45 +0200
+Message-ID: <CAMuHMdWxwwfPMYmAnrbF-PLaZiDNr4=F5izgNkxVXz7EQZqMtA@mail.gmail.com> (sfid-20140512_100609_225813_52E0D0F7)
+Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: George Spelvin <linux@horizon.com>
+Cc: Pavel Machek <pavel@ucw.cz>, arik@wizery.com,
+	david.gnedt@davizone.at, eliad@wizery.com, jan.nikitenko@gmail.com,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux MMC List <linux-mmc@vger.kernel.org>,
+	linux-spi <linux-spi@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>, luca@coelho.fi,
+	ext Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of receiving frame with sequence number far greater than current,
-wil_release_reorder_frames() will iterate many times over empty buffer.
+On Sun, May 11, 2014 at 12:05 PM, George Spelvin <linux@horizon.com> wrote:
+> Very minor source and binary size reduction.
+>
+> Signed-off-by: George Spelvin <linux@horizon.com>
 
-Optimize this case by checking buffer emptiness and simply update
-head_seq_num without iterating.
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Suggested-by: Vladimir Shulman <Vladimir.Shulman@Wilocity.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/rx_reorder.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Gr{oetje,eeting}s,
 
-diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-index ec29954..747ae12 100644
---- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
-+++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-@@ -49,10 +49,17 @@ static void wil_release_reorder_frames(struct wil6210_priv *wil,
- {
- 	int index;
- 
--	while (seq_less(r->head_seq_num, hseq)) {
-+	/* note: this function is never called with
-+	 * hseq preceding r->head_seq_num, i.e it is always true
-+	 * !seq_less(hseq, r->head_seq_num)
-+	 * and thus on loop exit it should be
-+	 * r->head_seq_num == hseq
-+	 */
-+	while (seq_less(r->head_seq_num, hseq) && r->stored_mpdu_num) {
- 		index = reorder_index(r, r->head_seq_num);
- 		wil_release_reorder_frame(wil, r, index);
- 	}
-+	r->head_seq_num = hseq;
- }
- 
- static void wil_reorder_release(struct wil6210_priv *wil,
--- 
-1.9.1
+                        Geert
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
