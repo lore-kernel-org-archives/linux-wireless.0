@@ -1,75 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:11320 "EHLO mail.neratec.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34353 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751637AbaEWPXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 11:23:09 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kvalo@adurom.com,
-	jim.epost@gmail.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] ath9k: simplify DFS pulse interval debug printing
-Date: Fri, 23 May 2014 17:22:37 +0200
-Message-Id: <1400858557-21037-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20140523_172313_777274_FA712FA8)
-In-Reply-To: <20140523144058.GB13311@tuxdriver.com>
-References: <20140523144058.GB13311@tuxdriver.com>
+	id S1751894AbaELOFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2014 10:05:31 -0400
+Message-ID: <1399903516.4337.12.camel@jlt4.sipsolutions.net> (sfid-20140512_160534_228081_A3E858FA)
+Subject: pull-request: mac80211 2014-05-12
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 12 May 2014 16:05:16 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-oFJzo/AHxEANw/WS7owR"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make DFS pulse interval calculation independent
-from CONFIG_ATH9K_DEBUGFS.
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h     | 1 +
- drivers/net/wireless/ath/ath9k/dfs.c       | 6 ++----
- drivers/net/wireless/ath/ath9k/dfs_debug.h | 1 -
- 3 files changed, 3 insertions(+), 5 deletions(-)
+--=-oFJzo/AHxEANw/WS7owR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b204694..2ca8f7e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -770,6 +770,7 @@ struct ath_softc {
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
- 	struct dfs_pattern_detector *dfs_detector;
-+	u64 dfs_prev_pulse_ts;
- 	u32 wow_enabled;
- 	/* relay(fs) channel for spectral scan */
- 	struct rchan *rfs_chan_spec_scan;
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index e0c740d..726271c 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -178,14 +178,12 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
- 	pe.ts = mactime;
- 	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
- 		struct dfs_pattern_detector *pd = sc->dfs_detector;
--#ifdef CONFIG_ATH9K_DEBUGFS
- 		ath_dbg(common, DFS,
- 			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
- 			"width=%d, rssi=%d, delta_ts=%llu\n",
- 			pe.freq, pe.ts, pe.width, pe.rssi,
--			pe.ts - sc->debug.stats.dfs_stats.last_ts);
--		sc->debug.stats.dfs_stats.last_ts = pe.ts;
--#endif
-+			pe.ts - sc->dfs_prev_pulse_ts);
-+		sc->dfs_prev_pulse_ts = pe.ts;
- 		DFS_STAT_INC(sc, pulses_processed);
- 		if (pd != NULL && pd->add_pulse(pd, &pe)) {
- 			DFS_STAT_INC(sc, radar_detected);
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.h b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-index d948686..7936c91 100644
---- a/drivers/net/wireless/ath/ath9k/dfs_debug.h
-+++ b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-@@ -51,7 +51,6 @@ struct ath_dfs_stats {
- 	/* pattern detection stats */
- 	u32 pulses_processed;
- 	u32 radar_detected;
--	u64 last_ts;
- };
- 
- #if defined(CONFIG_ATH9K_DFS_DEBUGFS)
--- 
-1.9.1
+Hi John
+
+Two more fixes - both I've been sitting on, sorry
+
+One fix is to get better VHT performance and the other fixes tracing
+garbage or other potential issues with the interface name tracing.
+
+Let me know if there are any issues.
+
+Thanks,
+johannes
+
+
+The following changes since commit e669ba2d06c6195662601956454ac959892f0762=
+:
+
+  mac80211: fix nested rtnl locking on ieee80211_reconfig (2014-05-05 15:14=
+:58 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git HEAD
+
+for you to fetch changes up to f9ac71bfcc5c937ff02765dc316cf5bc01d21d97:
+
+  mac80211: fix vif name tracing (2014-05-09 14:35:40 +0200)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: fix vif name tracing
+
+Johannes Berg (1):
+      mac80211: allow VHT with peers not capable of 40MHz
+
+ net/mac80211/trace.h | 4 ++--
+ net/mac80211/vht.c   | 9 ++++++---
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+
+--=-oFJzo/AHxEANw/WS7owR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJTcNUgAAoJEDBSmw7B7bqrpAQP/jRO2XTEtlq1I6mi3ANIrVEr
+VgIMELrR/yf/cvwBtrnNtc3lxtRlx4yGHTORO8b5tfIB+5HcohNSC7tw+i+q2MoH
+kGPdw8358ngp58b13LLn8ZCG0bCCxKt3MpQtrSst1p/fXwgiVzXnadRi6IBtav8X
+d/fz5VXHnxW+XYyktFOq8vh+Mi/gJ2ti7JkoYx7AK6p2GtnhVxf6PFrjnV7qabCB
+KIXUPV5UEzeajGjto4gh4XxL2cmSwSm4KoPMYIYvxzDtOI3QxjEpcyDmM+mwDEnK
+hvfmITWVSV7LyfGGR52TBI1OVq8z/ts6UKzAHGoN+pBj/4LZKophsyEb8e+PYZ+L
+rxqoaaaJeSakoeKt9FsZM1yTXZfEj9DaoUCI11XnhfDbj14K7HQd9wvUh9u1HC63
+mmFvIPq31U1JnnhjHoD8B7NZaCIGp3ZkoAYJjvfXa7Z12wgbl0M9uRaGxb2EUHLV
+QQWWa8pB6aymLvlt8mcFc2sgEz9qKtusPOpjJJsx21CI2yxe3/yBLVDBbTI2sXfv
+5CviX3hpqmUdrBz9hVHDZJza2nXtq23UgYj72P2YBa9ZligA5IWDLnl7Mn58mNHl
+PTx/Zt9D1rKNSehjjmB2evwme6DtGy31GzhmdCguFdzGgu49nTzzHZOXKY8r710G
+ev9SArd2RFWOpH6LohLX
+=+om3
+-----END PGP SIGNATURE-----
+
+--=-oFJzo/AHxEANw/WS7owR--
 
