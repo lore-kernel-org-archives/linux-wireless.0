@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:47332 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755212AbaE3P2a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:30 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so2219714wes.32
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from s3.sipsolutions.net ([5.9.151.49]:38373 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759619AbaEMMpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 08:45:42 -0400
+Message-ID: <1399985130.4137.12.camel@jlt4.sipsolutions.net> (sfid-20140513_144545_418073_3AC2998E)
+Subject: Re: [RFC] wireless: add cfg80211 ethtool infrastructure for
+ firmware dumps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/12] staging: vt6656: rename swGetOFDMControlRate to vnt_get_ofdm_rate
-Date: Fri, 30 May 2014 16:27:42 +0100
-Message-Id: <1401463671-4705-3-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172834_817274_F0C10961)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Bing Zhao <bzhao@marvell.com>
+Date: Tue, 13 May 2014 14:45:30 +0200
+In-Reply-To: <1399928367-306-1-git-send-email-linville@tuxdriver.com> (sfid-20140512_230022_577558_3D9056B9)
+References: <1399928367-306-1-git-send-email-linville@tuxdriver.com>
+	 (sfid-20140512_230022_577558_3D9056B9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop control and rename vnt_get_ofdm_rate
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> +++ b/include/net/cfg80211.h
+> @@ -2506,6 +2506,16 @@ struct cfg80211_ops {
+>  				struct ethtool_stats *stats, u64 *data);
+>  	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+>  				  u32 sset, u8 *data);
+> +	int	(*set_et_dump)(struct wiphy *wiphy,
+> +			       struct net_device *dev,
+> +			       struct ethtool_dump *dump);
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index b2dc8a8..695236b 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -154,7 +154,7 @@ static u16 vnt_get_cck_rate(struct vnt_private *priv, u16 rate_idx)
-  * Return Value: response Control frame rate
-  *
-  */
--static u16 swGetOFDMControlRate(struct vnt_private *priv, u16 rate_idx)
-+static u16 vnt_get_ofdm_rate(struct vnt_private *priv, u16 rate_idx)
- {
- 	u16 ui = rate_idx;
- 
-@@ -337,19 +337,19 @@ void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
- 						&tx_rate[4], &rsv_time[4]);
- 
- 	/*RSPINF_a_36*/
--	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_36M),
-+	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_36M),
- 					bb_type, &tx_rate[5], &rsv_time[5]);
- 
- 	/*RSPINF_a_48*/
--	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_48M),
-+	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_48M),
- 					bb_type, &tx_rate[6], &rsv_time[6]);
- 
- 	/*RSPINF_a_54*/
--	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_54M),
-+	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
- 					bb_type, &tx_rate[7], &rsv_time[7]);
- 
- 	/*RSPINF_a_72*/
--	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_54M),
-+	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
- 					bb_type, &tx_rate[8], &rsv_time[8]);
- 
- 	put_unaligned(phy[0].len, (u16 *)&data[0]);
--- 
-1.9.1
+Maybe it would be more effective now to rip this all out and let the
+driver export an ethtool ops to cfg80211, where either the few things
+that cfg80211 implements are overridden by cfg80211 (which means that it
+couldn't be const, which is unfortunate) or having cfg80211 export the
+few functions that should be set there?
+
+johannes
 
