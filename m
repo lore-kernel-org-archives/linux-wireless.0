@@ -1,50 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:33401 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbaEZFjy (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:51165 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933066AbaEMNo4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 01:39:54 -0400
-Received: by mail-oa0-f49.google.com with SMTP id eb12so7852897oac.22
-        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 22:39:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
-	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
-Date: Mon, 26 May 2014 08:39:53 +0300
-Message-ID: <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com> (sfid-20140526_073958_073160_B5E73536)
-Subject: Re: Help debugging iwldvm / ath10k stalls
+	Tue, 13 May 2014 09:44:56 -0400
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/3] iwlwifi: mvm: fix setting channel in monitor mode
+Date: Tue, 13 May 2014 16:44:43 +0300
+Message-Id: <1399988685-14715-1-git-send-email-egrumbach@gmail.com> (sfid-20140513_154459_903253_67222743)
+In-Reply-To: <53722142.6070105@gmail.com>
+References: <53722142.6070105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 8:06 AM, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Sun, May 25, 2014 at 10:23 AM, Andy Lutomirski <luto@amacapital.net> wrote:
->> I have an old iwldvm station (Intel(R) Centrino(R) Ultimate-N 6300
->> AGN, REV=0x74) and a new ath10k AP (QCA9880-BR4A, I think, as found in
->> the TP-Link Archer C7 vs).  The former is Fedora's 3.14 kernel and the
->> latter is OpenWRT trunk from a few days ago.
->>
->> Every now and then, my connection drops out.  From wireshark on the
->> station, it looks like traffic from the AP to the STA is coming
->> through but traffic from the STA to the AP is not.  I could be wrong
->> here, though.  Nothing is logged in either machine's kernel log.
->> After 5 seconds to a couple minutes, everything starts working again.
->>
->> A couple of Apple devices using the same radio on the same AP seem to work fine.
->>
->> Any advice for debugging this?  I don't know where to start.
->
-> I caught one of the stalls with iwlwifi debugging on.  I've attached
-> the dmesg.  The stall ended ten seconds or so before the end of this
-> trace.  Is this an indication that something's wrong with iwlwifi?
->
-> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
-> shold 50 delta 96 msecs 103
-> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
->
-Can you please disable powersave?
-It seems that it should be disabled by default, but you enabled it?
-I might be confused though... Looking again at the code...
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+There was a deadlock in monitor mode when we were setting the
+channel if the channel was not 1.
+
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.14.3 #4 Not tainted
+-------------------------------------------------------
+iw/3323 is trying to acquire lock:
+ (&local->chanctx_mtx){+.+.+.}, at: [<ffffffffa062e2f2>] ieee80211_vif_release_channel+0x42/0xb0 [mac80211]
+
+but task is already holding lock:
+ (&local->iflist_mtx){+.+...}, at: [<ffffffffa0609e0a>] ieee80211_set_monitor_channel+0x5a/0x1b0 [mac80211]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&local->iflist_mtx){+.+...}:
+       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
+       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
+       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
+       [<ffffffffa06225cf>] ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
+       [<ffffffffa0518189>] iwl_mvm_recalc_multicast+0x49/0xa0 [iwlmvm]
+       [<ffffffffa051822e>] iwl_mvm_configure_filter+0x4e/0x70 [iwlmvm]
+       [<ffffffffa05e6d43>] ieee80211_configure_filter+0x153/0x5f0 [mac80211]
+       [<ffffffffa05e71f5>] ieee80211_reconfig_filter+0x15/0x20 [mac80211]
+       [snip]
+
+-> #1 (&mvm->mutex){+.+.+.}:
+       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
+       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
+       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
+       [<ffffffffa0517246>] iwl_mvm_add_chanctx+0x56/0xe0 [iwlmvm]
+       [<ffffffffa062ca1e>] ieee80211_new_chanctx+0x13e/0x410 [mac80211]
+       [<ffffffffa062d953>] ieee80211_vif_use_channel+0x1c3/0x5a0 [mac80211]
+       [<ffffffffa06035ab>] ieee80211_add_virtual_monitor+0x1ab/0x6b0 [mac80211]
+       [<ffffffffa06052ea>] ieee80211_do_open+0xe6a/0x15a0 [mac80211]
+       [<ffffffffa0605a79>] ieee80211_open+0x59/0x60 [mac80211]
+       [snip]
+
+-> #0 (&local->chanctx_mtx){+.+.+.}:
+       [<ffffffff810d6cb7>] check_prevs_add+0x977/0x980
+       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
+       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
+       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
+       [<ffffffffa062e2f2>] ieee80211_vif_release_channel+0x42/0xb0 [mac80211]
+       [<ffffffffa0609ec3>] ieee80211_set_monitor_channel+0x113/0x1b0 [mac80211]
+       [<ffffffffa058fb37>] cfg80211_set_monitor_channel+0x77/0x2b0 [cfg80211]
+       [<ffffffffa056e0b2>] __nl80211_set_channel+0x122/0x140 [cfg80211]
+       [<ffffffffa0581374>] nl80211_set_wiphy+0x284/0xaf0 [cfg80211]
+       [snip]
+
+other info that might help us debug this:
+
+Chain exists of:
+  &local->chanctx_mtx --> &mvm->mutex --> &local->iflist_mtx
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&local->iflist_mtx);
+                               lock(&mvm->mutex);
+                               lock(&local->iflist_mtx);
+  lock(&local->chanctx_mtx);
+
+ *** DEADLOCK ***
+
+This deadlock actually occurs:
+INFO: task iw:3323 blocked for more than 120 seconds.
+      Not tainted 3.14.3 #4
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+iw              D ffff8800c8afcd80  4192  3323   3322 0x00000000
+ ffff880078fdb7e0 0000000000000046 ffff8800c8afcd80 ffff880078fdbfd8
+ 00000000001d5540 00000000001d5540 ffff8801141b0000 ffff8800c8afcd80
+ ffff880078ff9e38 ffff880078ff9e38 ffff880078ff9e40 0000000000000246
+Call Trace:
+ [<ffffffff817ea841>] schedule_preempt_disabled+0x31/0x80
+ [<ffffffff817ebaed>] mutex_lock_nested+0x19d/0x4f0
+ [<ffffffffa06225cf>] ? ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
+ [<ffffffffa06225cf>] ? ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
+ [<ffffffffa052a680>] ? iwl_mvm_power_mac_update_mode+0xc0/0xc0 [iwlmvm]
+ [<ffffffffa06225cf>] ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
+ [<ffffffffa0529357>] _iwl_mvm_power_update_binding+0x27/0x80 [iwlmvm]
+ [<ffffffffa0516eb1>] iwl_mvm_unassign_vif_chanctx+0x81/0xc0 [iwlmvm]
+ [<ffffffffa062d3ff>] __ieee80211_vif_release_channel+0xdf/0x470 [mac80211]
+ [<ffffffffa062e2fa>] ieee80211_vif_release_channel+0x4a/0xb0 [mac80211]
+ [<ffffffffa0609ec3>] ieee80211_set_monitor_channel+0x113/0x1b0 [mac80211]
+ [<ffffffffa058fb37>] cfg80211_set_monitor_channel+0x77/0x2b0 [cfg80211]
+ [<ffffffffa056e0b2>] __nl80211_set_channel+0x122/0x140 [cfg80211]
+ [<ffffffffa0581374>] nl80211_set_wiphy+0x284/0xaf0 [cfg80211]
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=75541
+
+Cc: <stable@vger.kernel.org> [3.13+]
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 593f723..4b0b8b6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1007,7 +1007,7 @@ static void iwl_mvm_mc_iface_iterator(void *_data, u8 *mac,
+ 	memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
+ 	len = roundup(sizeof(*cmd) + cmd->count * ETH_ALEN, 4);
+ 
+-	ret = iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_SYNC, len, cmd);
++	ret = iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_ASYNC, len, cmd);
+ 	if (ret)
+ 		IWL_ERR(mvm, "mcast filter cmd error. ret=%d\n", ret);
+ }
+@@ -1023,7 +1023,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
+ 	if (WARN_ON_ONCE(!mvm->mcast_filter_cmd))
+ 		return;
+ 
+-	ieee80211_iterate_active_interfaces(
++	ieee80211_iterate_active_interfaces_atomic(
+ 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		iwl_mvm_mc_iface_iterator, &iter_data);
+ }
+-- 
+1.8.3.2
+
