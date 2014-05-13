@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49649 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753175AbaEZQGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 12:06:39 -0400
-From: Jes.Sorensen@redhat.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/1] wireless: Add missing WLAN_EID 73
-Date: Mon, 26 May 2014 18:06:33 +0200
-Message-Id: <1401120394-22503-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20140526_180712_610838_A5353708)
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:36915 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbaEMTDv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 15:03:51 -0400
+Received: by mail-lb0-f170.google.com with SMTP id w7so628787lbi.29
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 12:03:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1405131223270.29439@admin.chi.technicality.org>
+References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
+	<alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
+	<CANUX_P3TaX_2BFg6qxjiFYLvUiaaFYqdxWbkCbymA0sGrWh4Gg@mail.gmail.com>
+	<alpine.DEB.2.02.1405131223270.29439@admin.chi.technicality.org>
+Date: Tue, 13 May 2014 22:03:50 +0300
+Message-ID: <CANUX_P18EWxs9RtMygH0grwZujNMHTP2EDtO5Mpna=umJVH-kg@mail.gmail.com> (sfid-20140513_210354_706283_1141D5DD)
+Subject: Re: [ANN] New firmware for Intel 7260 / 3160 - 22.212.9.0
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Nate Carlson <linux-wireless@natecarlson.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> So yeah - the name of the directory / tarball isn't the same as the
+>> version reported here. Sorry for that. No impact though.
+>
+>
+> Great, just wanted to make sure that it wasn't a bleeding-edge firmware that
+> was unintentionally released or something like that.  ;)
 
-Hi,
-
-The rtl8723au driver references EID 73 and carries a local copy of
-it. It seems to make more sense to put it in next to all the others.
-
-It would be great if we could get this in soon for 3.16 so I can make
-the matching change in the staging tree driver :)
-
-Cheers,
-Jes
-
-
-Jes Sorensen (1):
-  include/linux/ieee80211.h: Add missing
-    WLAN_EID_BSS_INTOLERANT_CHL_REPORT
-
- include/linux/ieee80211.h | 1 +
- 1 file changed, 1 insertion(+)
-
--- 
-1.9.3
-
+Actually, I remember what happened - I started to prepare the
+delivery, and then there were last minute fixes and I forgot to update
+the title in the mail + tarball name.
+But since Ben hasn't pulled yet, I might very well update it again
+(with non critical fixes).
