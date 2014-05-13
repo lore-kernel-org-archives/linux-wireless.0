@@ -1,100 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f179.google.com ([209.85.128.179]:41855 "EHLO
-	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbaEZSIk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33430 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163AbaEMTAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 14:08:40 -0400
-Received: by mail-ve0-f179.google.com with SMTP id oy12so9556208veb.38
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 11:08:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
- <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
- <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
- <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
- <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
- <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
- <CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com> <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Mon, 26 May 2014 11:08:19 -0700
-Message-ID: <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com> (sfid-20140526_200844_473896_FB3B0B1B)
-Subject: Re: Help debugging iwldvm / ath10k stalls
+	Tue, 13 May 2014 15:00:12 -0400
+Date: Tue, 13 May 2014 14:53:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi 2014-05-13
+Message-ID: <20140513185300.GG21204@tuxdriver.com> (sfid-20140513_210015_741941_70422014)
+References: <53722142.6070105@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53722142.6070105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 11:00 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>>>>>> Every now and then, my connection drops out.  From wireshark on the
->>>>>>>> station, it looks like traffic from the AP to the STA is coming
->>>>>>>> through but traffic from the STA to the AP is not.  I could be wrong
->>>>>>>> here, though.  Nothing is logged in either machine's kernel log.
->>>>>>>> After 5 seconds to a couple minutes, everything starts working again.
->>>>>>>>
->>>>>>>> A couple of Apple devices using the same radio on the same AP seem to work fine.
->>>>>>>>
->>>>>>>> Any advice for debugging this?  I don't know where to start.
->>>>>>>
->>>>>>> I caught one of the stalls with iwlwifi debugging on.  I've attached
->>>>>>> the dmesg.  The stall ended ten seconds or so before the end of this
->>>>>>> trace.  Is this an indication that something's wrong with iwlwifi?
->>>>>>>
->>>>>>> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
->>>>>>> shold 50 delta 96 msecs 103
->>>>>>> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
->>>>>>>
->>>>>> Can you please disable powersave?
->>>>>> It seems that it should be disabled by default, but you enabled it?
->>>>>> I might be confused though... Looking again at the code...
->>>>>
->>>>> This?
->>>>>
->>>>> $ cat /sys/module/iwlwifi/parameters/power_save
->>>>> N
->>>>>
->>>>> I have pcie_aspm.policy=powersave, but I don't think that should
->>>>> matter.  Or am I missing something?
->>>>
->>>> That should be ok.
->>>
->>> Does this help?
->>>
->>> diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
->>> b/drivers/net/wireless/iwlwifi/dvm/power.c
->>> index f2c1439..e5a6b70 100644
->>> --- a/drivers/net/wireless/iwlwifi/dvm/power.c
->>> +++ b/drivers/net/wireless/iwlwifi/dvm/power.c
->>> @@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
->>>         bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
->>>         int dtimper;
->>>
->>> +       iwl_power_sleep_cam_cmd(priv, cmd);
->>> +       return;
->>> +
->>>         dtimper = priv->hw->conf.ps_dtim_period ?: 1;
->>>
->>>         if (priv->wowlan)
->>
->> This patch has survived for about 15 minutes on 3.15-rc.  It certainly
->> has some effect: pinging from the AP to the STA now takes a consistent
->> ~3.8ms instead of taking varying amounts of time between 5 and 200 ms
->> or so.
->>
->> I wonder if this is something 802.11n/802.11ac-specific?  I remember
->> having all kinds of problems with 802.11n on this laptop that were
->> resolved by turning off 11n or turning off power saving.
->>
->
-> well... my patch really turns off power saving. The hard way.
-> But since you are having issues - I guess I'll post it and disable
-> power save for these devices. Note that today most of the power save
-> features are disabled anyway.
+On Tue, May 13, 2014 at 04:42:26PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> here is a bit more content content for 3.15.
+> 
+> We have here a fix from David Spinadel that makes a previous fix more complete, and an off-by-one issue fixed by Eliad in the same area.
+> I fix the monitor that broke on the way.
+> 
+> Let me know about issues you may have.
+> 
+> Cheers,
+> 
+> 
+> The following changes since commit 83f7a85f1134c6e914453f5747435415a23d516b:
+> 
+>   iwlwifi: pcie: disable interrupts upon PCIe alloc (2014-05-07 22:54:32 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to b538b8ce76f69f7fa225bc0817bbb361b877ea23:
+> 
+>   iwlwifi: mvm: prevent sched scan while not idle (2014-05-13 15:05:32 +0300)
 
-Would it make sense to do this only when connected to a VHT-supporting
-AP or whatever AP feature is probably triggering the problem?
+Pulling now...
 
-*sigh* I'd just plug in a new PCIe wireless card, except that I think
-that my evil BIOS will refuse to boot if I do that.
-
---Andy
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
