@@ -1,177 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:48167 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbaEVOTq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 10:19:46 -0400
-Received: by mail-ee0-f43.google.com with SMTP id d17so2677801eek.16
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 07:19:45 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: relocate core create/destroy functions
-Date: Thu, 22 May 2014 16:12:34 +0200
-Message-Id: <1400767955-16313-2-git-send-email-michal.kazior@tieto.com> (sfid-20140522_161951_199055_E9C8DE67)
-In-Reply-To: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38938 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211AbaEMPxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 11:53:52 -0400
+Message-ID: <1399996416.4137.27.camel@jlt4.sipsolutions.net> (sfid-20140513_175356_222497_CBA41A1A)
+Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Date: Tue, 13 May 2014 17:53:36 +0200
+In-Reply-To: <CA+BoTQmG_oFNgjJLr4DdEwnjtu0pC9HiQ8DhapVuhu1u1hXypw@mail.gmail.com> (sfid-20140513_155622_752722_FF831C3F)
+References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
+	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
+	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
+	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
+	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
+	 <1399455657.6800.4.camel@dubbel>
+	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
+	 <1399457760.6800.7.camel@dubbel>
+	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
+	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
+	 <1399463646.10517.28.camel@jlt4.sipsolutions.net>
+	 <1399464536.6800.11.camel@dubbel>
+	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
+	 <1399465244.6800.13.camel@dubbel>
+	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
+	 <1399467225.10517.35.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com>
+	 <1399543568.9163.5.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk_hm-dgNftTK_WdPQFNgD9WyRG01sPQ0vcO=cw7+BNrg@mail.gmail.com>
+	 <1399988536.4137.23.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmG_oFNgjJLr4DdEwnjtu0pC9HiQ8DhapVuhu1u1hXypw@mail.gmail.com>
+	 (sfid-20140513_155622_752722_FF831C3F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will avoid unnecessary forward declaration of
-any kind in the future.
+On Tue, 2014-05-13 at 15:56 +0200, Michal Kazior wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 128 ++++++++++++++++-----------------
- 1 file changed, 64 insertions(+), 64 deletions(-)
+> > That's pretty much what I'd considered, except that now as far as I read
+> > the thread this wasn't sufficient for multi-context, so we'd need lists
+> > of old/new contexts?
+> 
+> Hmm.. In what cases do you need a list of old/new contexts?
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 75b3dfb..bd4d1cc 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -701,70 +701,6 @@ static void ath10k_core_restart(struct work_struct *work)
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
--struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
--				  const struct ath10k_hif_ops *hif_ops)
--{
--	struct ath10k *ar;
--
--	ar = ath10k_mac_create();
--	if (!ar)
--		return NULL;
--
--	ar->ath_common.priv = ar;
--	ar->ath_common.hw = ar->hw;
--
--	ar->p2p = !!ath10k_p2p;
--	ar->dev = dev;
--
--	ar->hif.priv = hif_priv;
--	ar->hif.ops = hif_ops;
--
--	init_completion(&ar->scan.started);
--	init_completion(&ar->scan.completed);
--	init_completion(&ar->scan.on_channel);
--	init_completion(&ar->target_suspend);
--
--	init_completion(&ar->install_key_done);
--	init_completion(&ar->vdev_setup_done);
--
--	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
--
--	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
--	if (!ar->workqueue)
--		goto err_wq;
--
--	mutex_init(&ar->conf_mutex);
--	spin_lock_init(&ar->data_lock);
--
--	INIT_LIST_HEAD(&ar->peers);
--	init_waitqueue_head(&ar->peer_mapping_wq);
--
--	init_completion(&ar->offchan_tx_completed);
--	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
--	skb_queue_head_init(&ar->offchan_tx_queue);
--
--	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
--	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
--
--	INIT_WORK(&ar->restart_work, ath10k_core_restart);
--
--	return ar;
--
--err_wq:
--	ath10k_mac_destroy(ar);
--	return NULL;
--}
--EXPORT_SYMBOL(ath10k_core_create);
--
--void ath10k_core_destroy(struct ath10k *ar)
--{
--	flush_workqueue(ar->workqueue);
--	destroy_workqueue(ar->workqueue);
--
--	ath10k_mac_destroy(ar);
--}
--EXPORT_SYMBOL(ath10k_core_destroy);
--
- int ath10k_core_start(struct ath10k *ar)
- {
- 	int status;
-@@ -1058,6 +994,70 @@ void ath10k_core_unregister(struct ath10k *ar)
- }
- EXPORT_SYMBOL(ath10k_core_unregister);
- 
-+struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
-+				  const struct ath10k_hif_ops *hif_ops)
-+{
-+	struct ath10k *ar;
-+
-+	ar = ath10k_mac_create();
-+	if (!ar)
-+		return NULL;
-+
-+	ar->ath_common.priv = ar;
-+	ar->ath_common.hw = ar->hw;
-+
-+	ar->p2p = !!ath10k_p2p;
-+	ar->dev = dev;
-+
-+	ar->hif.priv = hif_priv;
-+	ar->hif.ops = hif_ops;
-+
-+	init_completion(&ar->scan.started);
-+	init_completion(&ar->scan.completed);
-+	init_completion(&ar->scan.on_channel);
-+	init_completion(&ar->target_suspend);
-+
-+	init_completion(&ar->install_key_done);
-+	init_completion(&ar->vdev_setup_done);
-+
-+	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
-+
-+	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
-+	if (!ar->workqueue)
-+		goto err_wq;
-+
-+	mutex_init(&ar->conf_mutex);
-+	spin_lock_init(&ar->data_lock);
-+
-+	INIT_LIST_HEAD(&ar->peers);
-+	init_waitqueue_head(&ar->peer_mapping_wq);
-+
-+	init_completion(&ar->offchan_tx_completed);
-+	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
-+	skb_queue_head_init(&ar->offchan_tx_queue);
-+
-+	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
-+	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
-+
-+	INIT_WORK(&ar->restart_work, ath10k_core_restart);
-+
-+	return ar;
-+
-+err_wq:
-+	ath10k_mac_destroy(ar);
-+	return NULL;
-+}
-+EXPORT_SYMBOL(ath10k_core_create);
-+
-+void ath10k_core_destroy(struct ath10k *ar)
-+{
-+	flush_workqueue(ar->workqueue);
-+	destroy_workqueue(ar->workqueue);
-+
-+	ath10k_mac_destroy(ar);
-+}
-+EXPORT_SYMBOL(ath10k_core_destroy);
-+
- MODULE_AUTHOR("Qualcomm Atheros");
- MODULE_DESCRIPTION("Core module for QCA988X PCIe devices.");
- MODULE_LICENSE("Dual BSD/GPL");
--- 
-1.8.5.3
+That was Luca's scenario, no?
+
+johannes
 
