@@ -1,267 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:51042 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752283AbaESTe0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33947 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbaEMTpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 15:34:26 -0400
-Received: by mail-we0-f179.google.com with SMTP id q59so5956592wes.38
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:24 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/20] staging: vt6656: checkpatch cleanup BBvCalculateParameter.
-Date: Mon, 19 May 2014 20:33:01 +0100
-Message-Id: <1400527992-3061-9-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213431_175166_81B5DBCA)
-In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
-References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 13 May 2014 15:45:09 -0400
+Date: Tue, 13 May 2014 15:42:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] rsi: Changed the return value to enable BA set-up
+Message-ID: <20140513194235.GH21204@tuxdriver.com> (sfid-20140513_214513_032148_D60943CF)
+References: <53709FC4.3070700@redpinesignals.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53709FC4.3070700@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-White space clean up.
+Please format you patches so that they can be applied with 'patch -p1'...
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 218 ++++++++++++++++++--------------------
- 1 file changed, 103 insertions(+), 115 deletions(-)
+I'll fix-up this one and merge it.
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 36977f0..9f435c5 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -731,129 +731,117 @@ void BBvCalculateParameter(struct vnt_private *pDevice, u32 cbFrameLength,
- 	int bExtBit;
- 	u8 byPreambleType = pDevice->byPreambleType;
- 
--    cbBitCount = cbFrameLength * 8;
--    bExtBit = false;
--
--    switch (wRate) {
--    case RATE_1M :
--        cbUsCount = cbBitCount;
--	phy->signal = 0x00;
--        break;
--
--    case RATE_2M :
--        cbUsCount = cbBitCount / 2;
--        if (byPreambleType == 1)
--		phy->signal = 0x09;
--        else // long preamble
--		phy->signal = 0x01;
--        break;
--
--    case RATE_5M :
--        cbUsCount = (cbBitCount * 10) / 55;
--        cbTmp = (cbUsCount * 55) / 10;
--        if (cbTmp != cbBitCount)
--            cbUsCount ++;
--        if (byPreambleType == 1)
--		phy->signal = 0x0a;
--        else // long preamble
--		phy->signal = 0x02;
--        break;
--
--    case RATE_11M :
--        cbUsCount = cbBitCount / 11;
--        cbTmp = cbUsCount * 11;
--        if (cbTmp != cbBitCount) {
--            cbUsCount ++;
--            if ((cbBitCount - cbTmp) <= 3)
--                bExtBit = true;
--        }
--        if (byPreambleType == 1)
--		phy->signal = 0x0b;
--        else // long preamble
--		phy->signal = 0x03;
--        break;
--
--    case RATE_6M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9b;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8b;
--        }
--        break;
-+	cbBitCount = cbFrameLength * 8;
-+	bExtBit = false;
- 
--    case RATE_9M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9f;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8f;
--        }
--        break;
-+	switch (wRate) {
-+	case RATE_1M:
-+		cbUsCount = cbBitCount;
- 
--    case RATE_12M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9a;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8a;
--        }
--        break;
-+		phy->signal = 0x00;
- 
--    case RATE_18M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9e;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8e;
--        }
--        break;
-+		break;
-+	case RATE_2M:
-+		cbUsCount = cbBitCount / 2;
- 
--    case RATE_24M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x99;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x89;
--        }
--        break;
-+		if (byPreambleType == 1)
-+			phy->signal = 0x09;
-+		else
-+			phy->signal = 0x01;
- 
--    case RATE_36M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9d;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8d;
--        }
--        break;
-+		break;
-+	case RATE_5M:
-+		cbUsCount = (cbBitCount * 10) / 55;
-+		cbTmp = (cbUsCount * 55) / 10;
- 
--    case RATE_48M :
--        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x98;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x88;
--        }
--        break;
-+		if (cbTmp != cbBitCount)
-+			cbUsCount++;
- 
--    case RATE_54M :
--        if (byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9c;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8c;
--        }
--        break;
-+		if (byPreambleType == 1)
-+			phy->signal = 0x0a;
-+		else
-+			phy->signal = 0x02;
- 
--    default :
--        if (byPacketType == PK_TYPE_11A) {//11a, 5GHZ
--		phy->signal = 0x9c;
--        }
--        else {//11g, 2.4GHZ
--		phy->signal = 0x8c;
--        }
--        break;
--    }
-+		break;
-+	case RATE_11M:
-+		cbUsCount = cbBitCount / 11;
-+		cbTmp = cbUsCount * 11;
-+
-+		if (cbTmp != cbBitCount) {
-+			cbUsCount++;
-+
-+			if ((cbBitCount - cbTmp) <= 3)
-+				bExtBit = true;
-+		}
-+
-+		if (byPreambleType == 1)
-+			phy->signal = 0x0b;
-+		else
-+			phy->signal = 0x03;
-+
-+		break;
-+	case RATE_6M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9b;
-+		else
-+			phy->signal = 0x8b;
-+
-+		break;
-+	case RATE_9M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9f;
-+		else
-+			phy->signal = 0x8f;
-+
-+		break;
-+	case RATE_12M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9a;
-+		else
-+			phy->signal = 0x8a;
-+
-+		break;
-+	case RATE_18M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9e;
-+		else
-+			phy->signal = 0x8e;
-+
-+		break;
-+	case RATE_24M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x99;
-+		else
-+			phy->signal = 0x89;
-+
-+		break;
-+	case RATE_36M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9d;
-+		else
-+			phy->signal = 0x8d;
-+
-+		break;
-+	case RATE_48M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x98;
-+		else
-+			phy->signal = 0x88;
-+
-+		break;
-+	case RATE_54M:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9c;
-+		else
-+			phy->signal = 0x8c;
-+		break;
-+	default:
-+		if (byPacketType == PK_TYPE_11A)
-+			phy->signal = 0x9c;
-+		else
-+			phy->signal = 0x8c;
-+		break;
-+	}
- 
- 	if (byPacketType == PK_TYPE_11B) {
- 		phy->service = 0x00;
+On Mon, May 12, 2014 at 03:47:40PM +0530, Jahnavi Meher wrote:
+> From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+> 
+> Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+> ---
+> 
+> rsi_91x_mac80211.c |    1 +
+> 1 file changed, 1 insertion(+)
+> 
+> diff -uprN a/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> --- a/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c	2014-05-10 01:40:52.000000000 +0530
+> +++ b/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c	2014-05-12 15:15:42.272468987 +0530
+> @@ -656,6 +656,7 @@ static int rsi_mac80211_ampdu_action(str
+>  	case IEEE80211_AMPDU_TX_START:
+>  		common->vif_info[ii].seq_start = seq_no;
+>  		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+> +		status = 0;
+>  		break;
+>  
+>  	case IEEE80211_AMPDU_TX_STOP_CONT:
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
