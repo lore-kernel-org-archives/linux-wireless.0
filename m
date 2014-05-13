@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49505 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932698AbaEGLT4 (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:46075 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174AbaEMRBI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 07:19:56 -0400
-Message-ID: <1399461582.10517.18.camel@jlt4.sipsolutions.net> (sfid-20140507_131959_433524_EE40D355)
-Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Wed, 07 May 2014 13:19:42 +0200
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A0333F41ED@HASMSX106.ger.corp.intel.com>
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	 <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
-	 <1399444778.5038.3.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F41ED@HASMSX106.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 13 May 2014 13:01:08 -0400
+Received: by mail-la0-f52.google.com with SMTP id gl10so505750lab.25
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 10:01:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
+References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
+	<alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
+Date: Tue, 13 May 2014 20:01:07 +0300
+Message-ID: <CANUX_P3TaX_2BFg6qxjiFYLvUiaaFYqdxWbkCbymA0sGrWh4Gg@mail.gmail.com> (sfid-20140513_190113_495039_B28B3693)
+Subject: Re: [ANN] New firmware for Intel 7260 / 3160 - 22.212.9.0
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Nate Carlson <linux-wireless@natecarlson.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 10:27 +0000, Peer, Ilan wrote:
-
-> > In the first case, there's no notification, nor any need for it. In the second
-> > case, the scenario you suggest doesn't apply, and STOP_AP has to happen
-> > anyway because the state is completely messed up, clients will be in the
-> > process of switching etc.
-> > 
-> > > Other than that, a STOP_AP might introduce some races, as
-> > > wpa_supplicant/hostap will not know if the stop_ap was due to the
-> > > failed CS or due to some other reason.
-> > 
-> > I don't see why that would matter - even if the STOP_AP *was* for some
-> > other reason, but happened in the middle of the CS flow, the reaction would
-> > presumably be the same?
-> > 
-> 
-> It can be beneficial to know that the STOP_AP was called due to
-> failure of CS, as wpa_supplicant/hostap can tear down the AP and then
-> (if possible) set it up again on the new channel or another channel.
-
-Maybe that's more of an argument for adding a sort of "reason" or
-"cause" to the STOP_AP? (Btw, no tear down needed in this case - that's
-already done)
-
-OTOH, what else are you thinking of doing? Why would you ever, under any
-circumstances, not restart the AP if it was stopped by the device?
-
-johannes
-
+On Tue, May 13, 2014 at 5:15 PM, Nate Carlson
+<linux-wireless@natecarlson.com> wrote:
+> On Mon, 28 Apr 2014, Emmanuel Grumbach wrote:
+>>
+>> The firmwares are available at [1].
+>> I will send a pull request to linux-firmware.git soon.
+>>
+>> The new firmware's version number is 22.212.9.0:
+>>
+>> $ dmesg | grep loaded\ firmware
+>> loaded firmware version 22.212.9.0 op_mode iwlmvm
+>>
+>> [1] http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
+>
+>
+> Hi,
+>
+> I've just noticed that the firmware, as downloaded from both your git tree
+> and from the wireless.kernel.org URL, reports that it is v23.214.9.0 --
+>
+>
+> $ dmesg | grep loaded\ firmware
+> [   16.628491] iwlwifi 0000:03:00.0: loaded firmware version 23.214.9.0
+> op_mode iwlmvm
+>
+> md5sum of installed firmware when the driver was loaded and reported that:
+> $ md5sum /lib/firmware/iwlwifi-7260-9.ucode
+> 1005c3b82879ecfa0d60544a78de7f92  /lib/firmware/iwlwifi-7260-9.ucode
+>
+> md5sum of the firmware from 'iwlwifi-7260-ucode-22.212.9.0.tgz':
+> $ md5sum iwlwifi-7260-ucode-22.212.9.0/iwlwifi-7260-9.ucode
+> 1005c3b82879ecfa0d60544a78de7f92
+> iwlwifi-7260-ucode-22.212.9.0/iwlwifi-7260-9.ucode
+>
+So yeah  - the name of the directory / tarball isn't the same as the
+version reported here. Sorry for that. No impact though.
