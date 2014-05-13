@@ -1,69 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:1873 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751203AbaEVFCw (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:35952 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933066AbaEMNo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 01:02:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/5] mwifiex: delete TDLS link upon Teardown event
-Date: Wed, 21 May 2014 22:02:29 -0700
-Message-ID: <1400734951-6851-3-git-send-email-bzhao@marvell.com> (sfid-20140522_070257_097213_9F21AE2F)
-In-Reply-To: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
-References: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 13 May 2014 09:44:58 -0400
+Received: by mail-wg0-f51.google.com with SMTP id x13so403886wgg.22
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 06:44:57 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/3] iwlwifi: mvm: prevent sched scan while not idle
+Date: Tue, 13 May 2014 16:44:45 +0300
+Message-Id: <1399988685-14715-3-git-send-email-egrumbach@gmail.com> (sfid-20140513_154501_857822_CE3F5969)
+In-Reply-To: <53722142.6070105@gmail.com>
+References: <53722142.6070105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: David Spinadel <david.spinadel@intel.com>
 
-If userspace application does not take care of TDLS teardown
-event, TDLS link would be present in driver database and thus
-driver would send such packets on direct link while peer has
-already severed link causing data traffic failure. Disable TDLS
-link upon teardown event so as to ensure this does not happen.
+Prevent sched scan while not idle (including during association or in AP
+mode) instead of while associated only.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+This fixes my previous commit which was incomplete:
+
+commit bd5e4744a6ca64299b57a2682c720d00a475a734
+Author: David Spinadel <david.spinadel@intel.com>
+Date:   Thu Apr 24 13:15:29 2014 +0300
+
+    iwlwifi: mvm: do no sched scan while associated
+
+    Currently the FW doesn't support sched scan while associated,
+    Prevent it.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/sta_event.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/utils.c    | 16 ++++++++--------
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 5aea719..f6395ef 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -137,6 +137,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
- 				    struct sk_buff *event_skb)
- {
-+	int ret = 0;
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct mwifiex_sta_node *sta_ptr;
- 	struct mwifiex_tdls_generic_event *tdls_evt =
-@@ -162,12 +163,15 @@ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
- 					   NL80211_TDLS_TEARDOWN,
- 					   le16_to_cpu(tdls_evt->u.reason_code),
- 					   GFP_KERNEL);
-+		ret = mwifiex_tdls_oper(priv, tdls_evt->peer_mac,
-+					MWIFIEX_TDLS_DISABLE_LINK);
-+		queue_work(adapter->workqueue, &adapter->main_work);
- 		break;
- 	default:
- 		break;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 4b0b8b6..b41dc84 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1807,7 +1807,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
  
--	return 0;
-+	return ret;
+ 	mutex_lock(&mvm->mutex);
+ 
+-	if (iwl_mvm_is_associated(mvm)) {
++	if (!iwl_mvm_is_idle(mvm)) {
+ 		ret = -EBUSY;
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 84c75a1..f1ec098 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1004,7 +1004,7 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
  }
  
- /*
+ /* Assoc status */
+-bool iwl_mvm_is_associated(struct iwl_mvm *mvm);
++bool iwl_mvm_is_idle(struct iwl_mvm *mvm);
+ 
+ /* Thermal management and CT-kill */
+ void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 6fdbef9..2180902 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -645,21 +645,21 @@ bool iwl_mvm_low_latency(struct iwl_mvm *mvm)
+ 	return result;
+ }
+ 
+-static void iwl_mvm_assoc_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
++static void iwl_mvm_idle_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
+ {
+-	bool *assoc = _data;
++	bool *idle = _data;
+ 
+-	if (vif->bss_conf.assoc)
+-		*assoc = true;
++	if (!vif->bss_conf.idle)
++		*idle = false;
+ }
+ 
+-bool iwl_mvm_is_associated(struct iwl_mvm *mvm)
++bool iwl_mvm_is_idle(struct iwl_mvm *mvm)
+ {
+-	bool assoc = false;
++	bool idle = true;
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+-			iwl_mvm_assoc_iter, &assoc);
++			iwl_mvm_idle_iter, &idle);
+ 
+-	return assoc;
++	return idle;
+ }
 -- 
-1.8.2.3
+1.8.3.2
 
