@@ -1,132 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46832 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932733AbaESR0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 13:26:22 -0400
-Message-ID: <1400520341.3819.15.camel@dcbw.local> (sfid-20140519_192705_138648_0D6B13C5)
-Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
-From: Dan Williams <dcbw@redhat.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 19 May 2014 12:25:41 -0500
-In-Reply-To: <5379FCD0.2030506@cogentembedded.com>
-References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
-	 <5379FCD0.2030506@cogentembedded.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:52053 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723AbaEMNnS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 09:43:18 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so408445wgh.16
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 06:43:17 -0700 (PDT)
+Message-ID: <53722142.6070105@gmail.com> (sfid-20140513_154321_547483_D4AEFCB9)
+Date: Tue, 13 May 2014 16:42:26 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: pull request: iwlwifi 2014-05-13
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="9rvqlQ1CqsPDpOtkUhWGPWtWB5DAcLuL8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-05-19 at 16:45 +0400, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 19-05-2014 8:31, Julia Lawall wrote:
-> 
-> > From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> > Delete unnecessary local variable whose value is always 0 and that hides
-> > the fact that the result is always 0.
-> 
-> > A simplified version of the semantic patch that fixes this problem is as
-> > follows: (http://coccinelle.lip6.fr/)
-> 
-> > // <smpl>
-> > @r exists@
-> > local idexpression ret;
-> > expression e;
-> > position p;
-> > @@
-> >
-> > -ret = 0;
-> > ... when != ret = e
-> > return
-> > - ret
-> > + 0
-> >    ;
-> > // </smpl>
-> 
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> > ---
-> > Alternatively, was an error code intended in the bad length case, as is
-> > done in process_brxed_802_11_packet?
-> 
-> >   drivers/net/wireless/libertas/rx.c |    7 ++-----
-> >   1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> > diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-> > index c7366b0..807c5b8 100644
-> > --- a/drivers/net/wireless/libertas/rx.c
-> > +++ b/drivers/net/wireless/libertas/rx.c
-> [...]
-> > @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
-> >   	else
-> >   		netif_rx_ni(skb);
-> >
-> > -	ret = 0;
-> >   done:
-> > -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
-> > -	return ret;
-> > +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
-> 
->     Why not just "ret 0"?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--9rvqlQ1CqsPDpOtkUhWGPWtWB5DAcLuL8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I think instead we want:
+Hi John,
 
-diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-index c7366b0..e446fed 100644
---- a/drivers/net/wireless/libertas/rx.c
-+++ b/drivers/net/wireless/libertas/rx.c
-@@ -67,30 +67,32 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
- 
- 	lbs_deb_enter(LBS_DEB_RX);
- 
- 	BUG_ON(!skb);
- 
- 	skb->ip_summed = CHECKSUM_NONE;
- 
--	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
--		return process_rxed_802_11_packet(priv, skb);
-+	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
-+		ret = process_rxed_802_11_packet(priv, skb);
-+		goto done;
-+	}
- 
- 	p_rx_pd = (struct rxpd *) skb->data;
- 	p_rx_pkt = (struct rxpackethdr *) ((u8 *)p_rx_pd +
- 		le32_to_cpu(p_rx_pd->pkt_ptr));
- 
- 	dev = lbs_mesh_set_dev(priv, dev, p_rx_pd);
- 
- 	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
- 		 min_t(unsigned int, skb->len, 100));
- 
- 	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
- 		lbs_deb_rx("rx err: frame received with bad length\n");
- 		dev->stats.rx_length_errors++;
--		ret = 0;
-+		ret = -EINVAL;
- 		dev_kfree_skb(skb);
- 		goto done;
- 	}
- 
- 	lbs_deb_rx("rx data: skb->len - pkt_ptr = %d-%zd = %zd\n",
- 		skb->len, (size_t)le32_to_cpu(p_rx_pd->pkt_ptr),
- 		skb->len - (size_t)le32_to_cpu(p_rx_pd->pkt_ptr));
+here is a bit more content content for 3.15.
 
-Since that (a) preserves the enter/leave balance when monitor mode is
-enabled, and (b) fixes the return code that has been 0 since the driver
-was added to the tree in early 2007.  Dave Woodhouse fixed the
-process_rxed_802_11_packet() return code for EINVAL case in commit
-7bf02c29 from late 2007, and I think the normal codepath should do
-EINVAL too.  (though it turns out nothing cares about the return code
-anyway, we should still fix it)
+We have here a fix from David Spinadel that makes a previous fix more com=
+plete, and an off-by-one issue fixed by Eliad in the same area.
+I fix the monitor that broke on the way.
 
-Dan
+Let me know about issues you may have.
+
+Cheers,
 
 
+The following changes since commit 83f7a85f1134c6e914453f5747435415a23d51=
+6b:
+
+  iwlwifi: pcie: disable interrupts upon PCIe alloc (2014-05-07 22:54:32 =
++0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to b538b8ce76f69f7fa225bc0817bbb361b877ea23:
+
+  iwlwifi: mvm: prevent sched scan while not idle (2014-05-13 15:05:32 +0=
+300)
+
+----------------------------------------------------------------
+David Spinadel (1):
+      iwlwifi: mvm: prevent sched scan while not idle
+
+Eliad Peller (1):
+      iwlwifi: mvm: fix off-by-one in scan channels configuration
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: fix setting channel in monitor mode
+
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  6 +++---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/utils.c    | 16 ++++++++--------
+ 4 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wi=
+reless/iwlwifi/mvm/mac80211.c
+index 593f723..b41dc84 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1007,7 +1007,7 @@ static void iwl_mvm_mc_iface_iterator(void *_data, =
+u8 *mac,
+        memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
+        len =3D roundup(sizeof(*cmd) + cmd->count * ETH_ALEN, 4);
+
+-       ret =3D iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_SYNC, len=
+, cmd);
++       ret =3D iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_ASYNC, le=
+n, cmd);
+        if (ret)
+                IWL_ERR(mvm, "mcast filter cmd error. ret=3D%d\n", ret);
+ }
+@@ -1023,7 +1023,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm=
+ *mvm)
+        if (WARN_ON_ONCE(!mvm->mcast_filter_cmd))
+                return;
+
+-       ieee80211_iterate_active_interfaces(
++       ieee80211_iterate_active_interfaces_atomic(
+                mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+                iwl_mvm_mc_iface_iterator, &iter_data);
+ }
+@@ -1807,7 +1807,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee=
+80211_hw *hw,
+
+        mutex_lock(&mvm->mutex);
+
+-       if (iwl_mvm_is_associated(mvm)) {
++       if (!iwl_mvm_is_idle(mvm)) {
+                ret =3D -EBUSY;
+                goto out;
+        }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireles=
+s/iwlwifi/mvm/mvm.h
+index 84c75a1..f1ec098 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1004,7 +1004,7 @@ static inline bool iwl_mvm_vif_low_latency(struct i=
+wl_mvm_vif *mvmvif)
+ }
+
+ /* Assoc status */
+-bool iwl_mvm_is_associated(struct iwl_mvm *mvm);
++bool iwl_mvm_is_idle(struct iwl_mvm *mvm);
+
+ /* Thermal management and CT-kill */
+ void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wirele=
+ss/iwlwifi/mvm/scan.c
+index cba88a3..c28de54 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -732,7 +732,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
+        int band_2ghz =3D mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_cha=
+nnels;
+        int band_5ghz =3D mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_cha=
+nnels;
+        int head =3D 0;
+-       int tail =3D band_2ghz + band_5ghz;
++       int tail =3D band_2ghz + band_5ghz - 1;
+        u32 ssid_bitmap;
+        int cmd_len;
+        int ret;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wirel=
+ess/iwlwifi/mvm/utils.c
+index 6fdbef9..2180902 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -645,21 +645,21 @@ bool iwl_mvm_low_latency(struct iwl_mvm *mvm)
+        return result;
+ }
+
+-static void iwl_mvm_assoc_iter(void *_data, u8 *mac, struct ieee80211_vi=
+f *vif)
++static void iwl_mvm_idle_iter(void *_data, u8 *mac, struct ieee80211_vif=
+ *vif)
+ {
+-       bool *assoc =3D _data;
++       bool *idle =3D _data;
+
+-       if (vif->bss_conf.assoc)
+-               *assoc =3D true;
++       if (!vif->bss_conf.idle)
++               *idle =3D false;
+ }
+
+-bool iwl_mvm_is_associated(struct iwl_mvm *mvm)
++bool iwl_mvm_is_idle(struct iwl_mvm *mvm)
+ {
+-       bool assoc =3D false;
++       bool idle =3D true;
+
+        ieee80211_iterate_active_interfaces_atomic(
+                        mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+-                       iwl_mvm_assoc_iter, &assoc);
++                       iwl_mvm_idle_iter, &idle);
+
+-       return assoc;
++       return idle;
+ }
+
+
+--9rvqlQ1CqsPDpOtkUhWGPWtWB5DAcLuL8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTciFeAAoJEC0Llv5uNjIBi94P/0Fd5oomYuyKe0mtqEGH47Qe
+VgX6xjUaev9o32ERLlE02nywItXQ0DUwJyF790HriwXd0tupqZMvPGuh8zqnp6EJ
+Q9x06d9FA1L6nVHfOvu6TZa0fsNRCs2oSxtjoxE+G8reaEsrr7nvGJrPywrSHOtC
+bGlG7IWaYHMUxRt6ejfXx5lP0LtxvdcQcuxfM+r2Tk3a30dDEfAT0QJ6KU11bXbs
+fS/lalrvPQ199Mfxh6EGarhqYyageHiyee6MaVT2cMLbFKvWJFnsHL9jViwWMGAf
+j6BgVzscZEJ+BQ7ZlMfy9SE5aAOhGelQeP5DToVa96tNjFtt2rU0XiMmROvvtCOI
+LdeGLuMdJTFU3Hya8mSjN2hTaAAA2jffv+UdX24f9pUq3b6YXbcRTMrdABfcNk3p
+3+vx0CKEpMjSf6rPfA8B/2jVLO5vFx+VOAelPDQLN9BFxz9rUfwgZ7FVSEFk0wXC
+D5dGxdhDzM8IJ8YK3imz09ssVMXGrD/lJJ7cnfOdIv8Y7oi5lw15UCFxijMwiwjg
+XsjUuoF6AzD9Olv86S+ovkrKXHvfiriPFkWTrR2pAiX8SOTSk2Z2muuS+JveXVV0
+vwuuz2sjb5+PHKX4ad0leOJV6c2tPFRKwmYYm4mKJ0B0Yq9pEh2dMzMjmkpGI1pT
+6HMRh/8O2M0xVCeJEXaT
+=g5zu
+-----END PGP SIGNATURE-----
+
+--9rvqlQ1CqsPDpOtkUhWGPWtWB5DAcLuL8--
