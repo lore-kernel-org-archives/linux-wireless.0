@@ -1,104 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45502 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756849AbaEFOFv (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:50171 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759833AbaEMJJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 10:05:51 -0400
-Message-ID: <1399385141.4218.37.camel@jlt4.sipsolutions.net> (sfid-20140506_160554_344639_964BB851)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Tue, 06 May 2014 16:05:41 +0200
-In-Reply-To: <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com> (sfid-20140506_144718_658608_A2433FAF)
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 (sfid-20140506_144718_658608_A2433FAF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 13 May 2014 05:09:49 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h3so132206igd.8
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 02:09:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140513090056.GA31546@qca.qualcomm.com>
+References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
+	<20140507195435.GF20432@tuxdriver.com>
+	<536A9479.8010201@openwrt.org>
+	<20140512174910.GM17022@tuxdriver.com>
+	<53711646.1030909@openwrt.org>
+	<CANq1E4Seak3MoBVdQTV7afFHQWmir14DJCQe_knjhC8szp4EhA@mail.gmail.com>
+	<20140513090056.GA31546@qca.qualcomm.com>
+Date: Tue, 13 May 2014 11:09:48 +0200
+Message-ID: <CANq1E4QY+mSeMJx0ctWvAdmrsONCFaD+6268HnuowMKOM2FdFQ@mail.gmail.com> (sfid-20140513_110957_930539_187BA736)
+Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in
+ hw_per_calibration() for ar9002
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-06 at 14:47 +0200, Michal Kazior wrote:
+Hi
 
-> > So I finally got around to discussing this with Luca and getting a
-> > better understanding of what we have right now and where we're going to
-> > this. Unfortunately (for you :) ) I don't think we're quite on the right
-> > track between what we have and what you (and others) are doing here and
-> > what we'll want.
-> 
-> Yay! :-)
+On Tue, May 13, 2014 at 11:00 AM, Rajkumar Manoharan
+<rmanohar@qti.qualcomm.com> wrote:
+> On Tue, May 13, 2014 at 08:50:00AM +0200, David Herrmann wrote:
+>> Hi
+>>
+>> On Mon, May 12, 2014 at 8:43 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> > I looked into it again, the scenario where I assumed that this problem
+>> > could occur didn't turn out to be true. I have no idea how this crash
+>> > can occur.
+>>
+>> The only path that can set ah->caldata to NULL is through:
+>>
+>> ieee80211_hw_config()
+>>   ath9k_htc_config()
+>>     ath9k_htc_set_channel()
+>>       ath9k_hw_reset()
+>>
+>> This happens whenever IEEE80211_CONF_OFFCHANNEL is set.
+>>
+>> Now mac80211 is way to big for me to review right now and
+>> ieee80211_hw_config() is used quite often. Given that the described
+>> call-path does no synchronization against ath9k_htc_ani_work(), all
+>> the callers of mac80211_hw_config(OFFCHANNEL) must guarantee that no
+>> ani-work is running. Is that intentional? I cannot see any of those
+>> functions calling into ath9k_htc_stop_ani(). This might of course be
+>> implicit.
+>>
+>> One call-path I see is:
+>> ieee80211_scan_cancel()
+>>   cancel_delayed_work()
+>>
+>> We cannot use cancel_delayed_work_sync() here due to locking issues.
+>> However, this obviously races against any following
+>> set_channel(OFFCHANNEL) request.
+>>
+>> If there's anything I can do to debug this, let me know. I tried
+>> adding some printk()'s into the hot-path and it turns out to no longer
+>> fail then. So this really seems to be a quite small race (given that a
+>> bunch of simple printk()s is slow enough to work around it).
+>
+> David,
+>
+> Are you using USB devices? What is the PID/VID? I have not looked at
+> HTC driver perspective.
 
-I'm guessing you're excited I finally looked at it - not that I said it
-wasn't what I wanted ;-)
+Yes, I'm using the htc driver. I thought that was clear by pointing at
+ar9002, but I was wrong, sorry. lsusb information is:
+  'Bus 003 Device 056: ID 0411:017f BUFFALO INC. (formerly MelCo.,
+Inc.) Sony UWA-BR100 802.11abgn Wireless Adapter [Atheros
+AR7010+AR9280]'
 
-Sorry about that though - I'll try to be better, now that I understand
-CSA. It was exactly what I was afraid of, that I'd actually have to go
-sit down for a day to understand it first :-)
-
-> So.. is my understanding correct that my patch itself stands with the
-> exception of the hunk you cited that would need to be reworked to use
-> the new suggested API instead of the unassign/assign trickery?
-
-Yes. The rest of your patch is pretty small though :)
-
-> If I consider non-chanctx drivers we would need to do:
->   if (!local->chanctx) { del_chanctx(); add_chanctx(); } else {
-> switch_vif_chanctx(); }
-
-Not sure - we still need to do the right book-keeping inside mac80211 to
-remove/add the chanctx around (after) the new driver operation, that
-might in itself do enough. Depends on how the code is structured, I
-guess. But yeah, something will probably be needed.
-
-> Btw. Do you intend the new switch_vif_chanctx() to take over
-> unassign_vif_chanctx() too?
-
-It has to, yeah. There are two cases for the new op - the ones you
-called "use_reserved_incompat" and "use_reserved_compat".
-
-For the former, our driver will behave as though you'd called
-
- unassign_vif_chanctx(vif, old)
- delete_chanctx(old)
- add_chanctx(new)
- assign_vif_chanctx(vif, new)
-
-[though other drivers may behave differently]
-
-For the latter, drivers will behave as though you'd called
-
- unassign_vif_chanctx(vif, old)
- assign_vif_chanctx(vif, new)
-
-[but depending on how the driver operates it'll be able to do this in a
-single atomic step, similar to how mac80211 never goes through NULL in
-either of these cases for the vif chanctx pointer]
-
-
-> > Separately, I think due to the complexities involved in the driver
-> > implementation we'll probably need a bitmap indicating which interface
-> > types are supported (this is not something we do today, and this would
-> > be broken in iwlwifi for sure.)
-> 
-> Care to elaborate?
-
-It's a separate issue really - but sure: the iwlwifi firmware API will
-likely not allow doing such trickery in the IBSS case, so we should have
-a bitmap of supported interface types (e.g. BIT(NL80211_IFTYPE_STATION)
-| ...) for the channel switch operation.
-
-> > As a result, I'm going to drop this patch, which likely also means your
-> > other 5-patch series won't apply?
-> 
-> Yeah (although it's probably possible to transplant part of the patch
-> so the other 5 can apply).
-
-I'll review the others now.
-
-johannes
-
+Thanks
+David
