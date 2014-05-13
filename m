@@ -1,105 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:40775 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753739AbaE0UIO (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:53422 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933968AbaEMKcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 16:08:14 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so9908496wgg.6
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:08:12 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: PHY: allow init optimizations by tracking PHY state
-Date: Tue, 27 May 2014 22:07:31 +0200
-Message-Id: <1401221253-4135-1-git-send-email-zajec5@gmail.com> (sfid-20140527_220825_666186_7C4A991C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 13 May 2014 06:32:18 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so252118eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 03:32:17 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] ath: add JP DFS pattern detector
+Date: Tue, 13 May 2014 12:32:06 +0200
+Message-Id: <1399977126-8343-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140513_123238_862992_6F0E11E0)
+In-Reply-To: <1399977126-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1399977126-8343-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PHY has to be often re-initialized (e.g. during band switching after PHY
-reset), however some operations have to be performed only once (only
-power reset affects them).
+Add initial values for JP DFS pattern detector.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/b43/main.c       | 3 +++
- drivers/net/wireless/b43/phy_common.c | 5 +++++
- drivers/net/wireless/b43/phy_common.h | 3 +++
- 3 files changed, 11 insertions(+)
+ drivers/net/wireless/ath/dfs_pattern_detector.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 3d67e6b..bf27917 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5164,6 +5164,7 @@ static void b43_supported_bands(struct b43_wldev *dev, bool *have_2ghz_phy,
- static int b43_wireless_core_attach(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl = dev->wl;
-+	struct b43_phy *phy = &dev->phy;
- 	int err;
- 	u32 tmp;
- 	bool have_2ghz_phy = false, have_5ghz_phy = false;
-@@ -5181,6 +5182,8 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 6269f4e..650be79 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -96,9 +96,29 @@ static const struct radar_types fcc_radar_types = {
+ 	.radar_types		= fcc_radar_ref_types,
+ };
  
-+	phy->do_full_init = true;
++#define JP_PATTERN FCC_PATTERN
++static const struct radar_detector_specs jp_radar_ref_types[] = {
++	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
++	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18),
++	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18),
++	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18),
++	JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
++	JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
++	JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 20, 1),
++	JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
++};
 +
- 	/* Try to guess supported bands for the first init needs */
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index fb0dddd..08244b3 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -98,11 +98,14 @@ int b43_phy_init(struct b43_wldev *dev)
- 
- 	phy->ops->switch_analog(dev, true);
- 	b43_software_rfkill(dev, false);
++static const struct radar_types jp_radar_types = {
++	.region			= NL80211_DFS_JP,
++	.num_radar_types	= ARRAY_SIZE(jp_radar_ref_types),
++	.radar_types		= jp_radar_ref_types,
++};
 +
- 	err = ops->init(dev);
- 	if (err) {
- 		b43err(dev->wl, "PHY init failed\n");
- 		goto err_block_rf;
- 	}
-+	phy->do_full_init = false;
-+
- 	/* Make sure to switch hardware and firmware (SHM) to
- 	 * the default channel. */
- 	err = b43_switch_channel(dev, ops->get_default_chan(dev));
-@@ -114,6 +117,7 @@ int b43_phy_init(struct b43_wldev *dev)
- 	return 0;
+ static const struct radar_types *dfs_domains[] = {
+ 	&etsi_radar_types_v15,
+ 	&fcc_radar_types,
++	&jp_radar_types,
+ };
  
- err_phy_exit:
-+	phy->do_full_init = true;
- 	if (ops->exit)
- 		ops->exit(dev);
- err_block_rf:
-@@ -127,6 +131,7 @@ void b43_phy_exit(struct b43_wldev *dev)
- 	const struct b43_phy_operations *ops = dev->phy.ops;
- 
- 	b43_software_rfkill(dev, true);
-+	dev->phy.do_full_init = true;
- 	if (ops->exit)
- 		ops->exit(dev);
- }
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index 47b5585..4ad6240 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -234,6 +234,9 @@ struct b43_phy {
- 	/* Is GMODE (2 GHz mode) bit enabled? */
- 	bool gmode;
- 
-+	/* After power reset full init has to be performed */
-+	bool do_full_init;
-+
- 	/* Analog Type */
- 	u8 analog;
- 	/* B43_PHYTYPE_ */
+ /**
 -- 
-1.8.4.5
+1.7.9.5
 
