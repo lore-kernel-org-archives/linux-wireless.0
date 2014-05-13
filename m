@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:53502 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaEHIfq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 04:35:46 -0400
-Received: by mail-qa0-f54.google.com with SMTP id j15so2218080qaq.27
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 01:35:46 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:63635 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759817AbaEMNKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 09:10:10 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Gottlieb, Matti" <matti.gottlieb@intel.com>
+Subject: RE: [PATCH] mac80211: add TX frame consecutive loss statistics
+Date: Tue, 13 May 2014 13:10:06 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DF2E29@HASMSX103.ger.corp.intel.com> (sfid-20140513_151015_574121_5AA0F807)
+References: <1399798043-20891-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1399986467.4137.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1399986467.4137.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Date: Thu, 8 May 2014 10:35:46 +0200
-Message-ID: <CAMfPB_zT33JxJ+OYpgc3nySfBX29Eg66_YwMt7EZM1onymXOLQ@mail.gmail.com> (sfid-20140508_103551_980264_1DE2A91E)
-Subject: rtl8192cu regulatory domain
-From: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone, I'm using backports20140417 on fedora 20 running
-kernel 3.14; I have an rtl8192cu-based wifi card (AWUS036NHR) I bought
-from amazon italy; I usually had to 'pimp' the CH1_11 rule definition
-in regd.c to be able to use channels 12-13 here in italy, however this
-morning i stumbled accross this patch:
-
-Signed-off-by John Williams <john@xxxxxxxxxxxxx>
-
---- linux-3.2/drivers/net/wireless/rtlwifi/regd.c.orig
-+++ linux-3.2/drivers/net/wireless/rtlwifi/regd.c
-@@ -405,7 +405,7 @@
-  return -EINVAL;
-
-  /* init country_code from efuse channel plan */
-- rtlpriv->regd.country_code = rtlpriv->efuse.channel_plan;
-+ rtlpriv->regd.country_code = rtlpriv->efuse.eeprom_channelplan;
-
-  RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
-  (KERN_DEBUG "rtl: EEPROM regdomain: 0x%0x\n",
-
---
-
-I just dropped by to say that it works and I'm no more stuck into
-channels 1-11 nor into hacky-whacky ugly workarounds; maybe this patch
-could be pushed into production.
-
-
-Credits: I found this patch in a ml message by Mr. John Williams dated
-Mon, 5 Mar 2012 21:39:56 +0000
-
-Thank you all for your work :)
-
-Alessandro Lannocca
+PiANCj4gT24gU3VuLCAyMDE0LTA1LTExIGF0IDExOjQ3ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFj
+aCB3cm90ZToNCj4gPiBGcm9tOiBNYXR0aSBHb3R0bGllYiA8bWF0dGkuZ290dGxpZWJAaW50ZWwu
+Y29tPg0KPiA+DQo+ID4gTWVhc3VyZSBUWCBmcmFtZXMgY29uc2VjdXRpdmUgbG9zcyBzdGF0aXN0
+aWNzIHBlciBzdGF0aW9uL1RJRC4NCj4gPiBUaGVzZSBNZWFzdXJlbWVudHMgYXJlIGRpc2FibGVk
+IGJ5IGRlZmF1bHQgYW5kIGNhbiBiZSBlbmFibGVkIHZpYQ0KPiA+IGRlYnVnZnMuDQo+IA0KPiBJ
+J20gZ3Vlc3NpbmcgdGhhdCB3ZSdyZSB0aGUgb25seSB1c2VyIG9mIHRoaXMsIGFuZCB3ZSdyZSBl
+dmFsdWF0aW5nIG1vdmluZyB0bw0KPiB0cmFjaW5nLiBBcyBzdWNoLCBJJ20gbm90IGdvaW5nIHRv
+IGFwcGx5IHRoaXMgYW5kIGhvcGUgdGhhdCB3ZSdsbCBiZSBhYmxlIHRvIHVzZQ0KPiB0cmFjaW5n
+ICh3aXRoIHNvbWUgYWRkZWQgdHJhY2Vwb2ludHMpIGluc3RlYWQgLSBtYXliZSBldmVuIHJlbW92
+aW5nIHRoZQ0KPiBvdGhlciBjb2RlIHRoYXQgd2UgYWxyZWFkeSBoYXZlIGhlcmUuDQo+IA0KDQpJ
+IGFtIGFsbCBmb3IgaXQgOikNCg==
