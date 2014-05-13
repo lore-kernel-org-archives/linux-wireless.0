@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40850 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932574AbaEEM7S (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45558 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977AbaEMVnt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 08:59:18 -0400
-Message-ID: <1399294750.22235.11.camel@jlt4.sipsolutions.net> (sfid-20140505_145922_589553_8EF42EF9)
-Subject: Re: [PATCH] cfg80211: free sme on connection failures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 05 May 2014 14:59:10 +0200
-In-Reply-To: <1398862693-19264-1-git-send-email-eliad@wizery.com> (sfid-20140430_145824_430540_863BD337)
-References: <1398862693-19264-1-git-send-email-eliad@wizery.com>
-	 (sfid-20140430_145824_430540_863BD337)
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 13 May 2014 17:43:49 -0400
+Date: Tue, 13 May 2014 17:43:45 -0400 (EDT)
+Message-Id: <20140513.174345.406760552060437774.davem@davemloft.net> (sfid-20140513_234418_480422_E763F142)
+To: w-lkml@lebenslange-mailadresse.de
+Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-acenic@sunsite.dk, nios2-dev@lists.rocketboards.org,
+	linuxppc-dev@lists.ozlabs.org, e1000-devel@lists.sourceforge.net,
+	devel@linuxdriverproject.org, linux-usb@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
+	b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux-foundation.org,
+	dev@openvswitch.org, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [resend] net: get rid of SET_ETHTOOL_OPS
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140511001231.GC7875@kaos.lebenslange-mailadresse.de>
+References: <20140511001231.GC7875@kaos.lebenslange-mailadresse.de>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-30 at 15:58 +0300, Eliad Peller wrote:
-> cfg80211 is notified about connection failures by
-> __cfg80211_connect_result() call. However, this
-> function currently does not free cfg80211 sme.
-> 
-> This results in hanging connection attempts in some cases
-> 
-> e.g. when mac80211 authentication attempt is denied,
-> we have this function call:
-> ieee80211_rx_mgmt_auth() -> cfg80211_rx_mlme_mgmt() ->
-> cfg80211_process_auth() -> cfg80211_sme_rx_auth() ->
-> __cfg80211_connect_result()
-> 
-> but cfg80211_sme_free() is never get called.
+From: Wilfried Klaebe <w-lkml@lebenslange-mailadresse.de>
+Date: Sun, 11 May 2014 00:12:32 +0000
 
-Applied.
+> net: get rid of SET_ETHTOOL_OPS
+> 
+> Dave Miller mentioned he'd like to see SET_ETHTOOL_OPS gone.
+> This does that.
+> 
+> Mostly done via coccinelle script:
+> @@
+> struct ethtool_ops *ops;
+> struct net_device *dev;
+> @@
+> -       SET_ETHTOOL_OPS(dev, ops);
+> +       dev->ethtool_ops = ops;
+> 
+> Compile tested only, but I'd seriously wonder if this broke anything.
+> 
+> Suggested-by: Dave Miller <davem@davemloft.net>
+> Signed-off-by: Wilfried Klaebe <w-lkml@lebenslange-mailadresse.de>
 
-johannes
-
+Applied to net-next, thanks.
