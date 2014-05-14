@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41689 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751808AbaENIZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 04:25:28 -0400
-Message-ID: <1400055913.4759.7.camel@jlt4.sipsolutions.net> (sfid-20140514_102536_463448_857B4923)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3176 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906AbaENTRw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 15:17:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 14 May 2014 10:25:13 +0200
-In-Reply-To: <CA+BoTQn9Th=x+0iWOacYS6h1csy-2snDV5vmjeLzptd2ZXn9Pg@mail.gmail.com> (sfid-20140514_071401_269606_19D0911A)
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	 <1399455657.6800.4.camel@dubbel>
-	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	 <1399457760.6800.7.camel@dubbel>
-	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	 <1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	 <1399464536.6800.11.camel@dubbel>
-	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	 <1399465244.6800.13.camel@dubbel>
-	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
-	 <1399467225.10517.35.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com>
-	 <1399543568.9163.5.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk_hm-dgNftTK_WdPQFNgD9WyRG01sPQ0vcO=cw7+BNrg@mail.gmail.com>
-	 <1399988536.4137.23.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmG_oFNgjJLr4DdEwnjtu0pC9HiQ8DhapVuhu1u1hXypw@mail.gmail.com>
-	 <1399996416.4137.27.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQn9Th=x+0iWOacYS6h1csy-2snDV5vmjeLzptd2ZXn9Pg@mail.gmail.com>
-	 (sfid-20140514_071401_269606_19D0911A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/5] ath10k: protect wep tx key setup
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1399637749-13489-5-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 14 May 2014 22:17:44 +0300
+In-Reply-To: <1399637749-13489-5-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 9 May 2014 14:15:48 +0200")
+Message-ID: <87ha4scgpz.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_211755_179600_D5246F99)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-14 at 07:14 +0200, Michal Kazior wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Hmm.. I thought of it more as a theoretical appliance of the transaction API.
-> 
-> Let me re-post his example:
-> 
-> > With the generic transactions you could do:
-> >  - new chanctx2
-> >  - new chanctx3
-> >  - switch vif1 chanctx1->chanctx2
-> >  - switch vif2 chanctx1->chanctx3
-> >  - del chanctx1
-> 
-> From this I infer you can run at least 2 chanctx since that's what you
-> end up with. This means you can perform one of the switches separately
-> because only 1 chanctx was used (that's the easy part that never
-> really required transactions or multi-vif-chanctx-assign to begin
-> with). The other switch would fall into the "incompat case" where you
-> need to basically swap chanctx for one of the vifs in the example.
-> 
-> So I fail to see why we would need to have a list of old/new contexts
-> in the proposed switch_vif_chanctx(), at least for now.
+> All configuration sequences should be protected
+> with conf_mutex to avoid concurrent/conflicting
+> requests.
+>
+> This should make sure that wep tx key setup is not
+> performed while hw is restarted (at least).
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Further down the thread there was a discussion about e.g. radar
-detection with the combinations, when one needs radar and the other
-doesn't or something, then maybe you're running into a situation where
-some interface combination allows more than 2 channels and the other
-doesn't, or such.
+[...]
 
-johannes
+> @@ -1902,10 +1904,12 @@ static void ath10k_tx_wep_key_work(struct work_struct *work)
+>  		ath10k_warn("failed to update wep key index for vdev %d: %d\n",
+>  			    arvif->vdev_id,
+>  			    ret);
+> -		return;
+> +		goto unlock;
+>  	}
+>  
+>  	arvif->def_wep_key_idx = keyidx;
+> +unlock:
+> +	mutex_unlock(&arvif->ar->conf_mutex);
+>  }
 
+Empty line before the label, please.
+
+-- 
+Kalle Valo
