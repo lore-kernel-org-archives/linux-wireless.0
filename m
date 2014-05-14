@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40567 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbaEZIj2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 04:39:28 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wo20so7729081obc.34
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 01:39:28 -0700 (PDT)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46053 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753250AbaENCxG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 22:53:06 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: James Cameron <quozl@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Tue, 13 May 2014 19:52:47 -0700
+Subject: RE: mwifiex: no wr_port available
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com> (sfid-20140514_045311_600006_DCE5386F)
+References: <20140507120634.GM17490@us.netrek.org>
+In-Reply-To: <20140507120634.GM17490@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
-	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
-	<CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
-	<CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
-	<CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
-Date: Mon, 26 May 2014 11:39:28 +0300
-Message-ID: <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com> (sfid-20140526_103933_090796_C8CA6461)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 11:29 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>>>
->>>>> Every now and then, my connection drops out.  From wireshark on the
->>>>> station, it looks like traffic from the AP to the STA is coming
->>>>> through but traffic from the STA to the AP is not.  I could be wrong
->>>>> here, though.  Nothing is logged in either machine's kernel log.
->>>>> After 5 seconds to a couple minutes, everything starts working again.
->>>>>
->>>>> A couple of Apple devices using the same radio on the same AP seem to work fine.
->>>>>
->>>>> Any advice for debugging this?  I don't know where to start.
->>>>
->>>> I caught one of the stalls with iwlwifi debugging on.  I've attached
->>>> the dmesg.  The stall ended ten seconds or so before the end of this
->>>> trace.  Is this an indication that something's wrong with iwlwifi?
->>>>
->>>> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
->>>> shold 50 delta 96 msecs 103
->>>> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
->>>>
->>> Can you please disable powersave?
->>> It seems that it should be disabled by default, but you enabled it?
->>> I might be confused though... Looking again at the code...
->>
->> This?
->>
->> $ cat /sys/module/iwlwifi/parameters/power_save
->> N
->>
->> I have pcie_aspm.policy=powersave, but I don't think that should
->> matter.  Or am I missing something?
->
-> That should be ok.
+Hi James,
 
-Does this help?
+> G'day,
+> 
+> Is there a short duration leak of wr_port in
+> mwifiex_sdio_host_to_card()?
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
-b/drivers/net/wireless/iwlwifi/dvm/power.c
-index f2c1439..e5a6b70 100644
---- a/drivers/net/wireless/iwlwifi/dvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/power.c
-@@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
-        bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
-        int dtimper;
+You are right. There is a leak in the error case. Thanks for pointing it out.
 
-+       iwl_power_sleep_cam_cmd(priv, cmd);
-+       return;
-+
-        dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+> 
+> If mwifiex_host_to_card_mp_aggr fails because of is_suspended in
+> mwifiex_write_data_sync, is the wr_port ever released?
+> 
+> Or maybe mp_wr_bitmap is re-read from the card when a download
+> interrupt occurs, or if an upload interrupt occurs after a command is
+> sent.
 
-        if (priv->wowlan)
+A patch has been sent to address this issue.
+
+Thanks,
+Bing
+
