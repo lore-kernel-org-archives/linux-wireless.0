@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43420 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750984AbaEVG4w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 02:56:52 -0400
-Message-ID: <1400741808.4174.5.camel@jlt4.sipsolutions.net> (sfid-20140522_085655_509364_423E9B78)
-Subject: Re: [PATCHv2] nl80211: Provide TDLS link state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Date: Thu, 22 May 2014 08:56:48 +0200
-In-Reply-To: <CAMcMvsh-zKuNgMSyo73VmsEUkM9YnhVtkg_Vigdter0QarJ6_g@mail.gmail.com> (sfid-20140521_221907_003160_C6CF738D)
-References: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-	 <20140520223316.EFCF1E0007@pstew.mtv.corp.google.com>
-	 <1400668890.4136.1.camel@jlt4.sipsolutions.net>
-	 <CAMcMvsiGJrJFee_nuGC1L8tRuTJLZR3nikU+4F-Zo1mgNeuNjw@mail.gmail.com>
-	 <1400702385.4136.18.camel@jlt4.sipsolutions.net>
-	 <CAMcMvsh-zKuNgMSyo73VmsEUkM9YnhVtkg_Vigdter0QarJ6_g@mail.gmail.com>
-	 (sfid-20140521_221907_003160_C6CF738D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from zimbra.real-time.com ([63.170.91.9]:43804 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189AbaENE1T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 00:27:19 -0400
+Date: Wed, 14 May 2014 14:26:54 +1000
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: mwifiex: no wr_port available
+Message-ID: <20140514042654.GQ12785@us.netrek.org> (sfid-20140514_062723_289454_A0BF90F1)
+References: <20140507120634.GM17490@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
+ <20140514031804.GN12785@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70D87C6F@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70D87C6F@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-21 at 13:19 -0700, Paul Stewart wrote:
-
-> > Is it really that bad to demand the firmware notify the host? It's not
-> > like this is a very frequent event, and if querying is supported then
-> > notification can't be all that much more difficult.
+On Tue, May 13, 2014 at 08:54:53PM -0700, Bing Zhao wrote:
+> Hi James,
+> [...]
+> > You may be interested that rd_port also has possible leak when skb
+> > cannot be allocated.  See mwifiex_process_int_status:
+> > 
+> > 		skb = dev_alloc_skb(rx_len);
+> > 		if (!skb)
+> > 			return -1;
+> > 
+> > We have a hack in OLPC production arm-3.5 kernel which restores
+> > rd_port bit, restores int_status.
+> > 
+> > http://dev.laptop.org/git/olpc-kernel/commit/?h=arm-3.5&id=59fcaf10cce5bbdc370ec1c262b12aeb66ed1dca
 > 
-> I think firmware vendors are coming to the point of view that they
-> must minimize host processor wakeups.  They may argue from that
-> perspective that the firmware should divulge such information only on
-> request.
+> The rd_port/int_status change looks correct. But what issue did you
+> encounter prior to applying the change "cache the read bitmap at the
+> time of the interrupt rather than when the interrupt status bits are
+> handled"?
 
-That's reasonable, but the request could also be "list all TDLS peers
-please", right? Then you could still implement it very easily. It
-doesn't have to be an event.
+No specific issue, instead ensuring that all effects are rolled back.
+The effects of a call to mwifiex_process_int_status that returned -1
+due to dev_alloc_skb fail were:
 
-johannes
+- change to curr_rd_port,
 
+- bits cleared in mp_rd_bitmap,
+
+So both effects were rolled back.  Perhaps not needed?
+
+I'm not recommending this as the right solution, because the patch
+caused CPU loop during memory exhaustion, the interrupt came
+back immediately.  I added a hack to reduce impact of that:
+
+http://dev.laptop.org/git/olpc-kernel/commit/?h=arm-3.5&id=491188ebd4721f3c8804b7fa626e63d6fdd2ed09
+
+I did not have the experience to find out _why_ we could not
+dev_alloc_skb, but at least was able to let the driver continue rather
+than timeout.
+
+-- 
+James Cameron
+http://quozl.linux.org.au/
