@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42405 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755607AbaEGLYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 07:24:52 -0400
-In-Reply-To: <1399460994.10517.13.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com> <1398849681-3606-1-git-send-email-michal.kazior@tieto.com> <1399372915.4218.17.camel@jlt4.sipsolutions.net> <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com> <1399385141.4218.37.camel@jlt4.sipsolutions.net> <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com> <1399454858.6800.1.camel@dubbel> <1399460994.10517.13.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-From: Luca Coelho <luca@coelho.fi>
-Date: Wed, 07 May 2014 14:24:36 +0300
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Message-ID: <d70278d8-0bda-45f3-89d4-ab970d7a868b@email.android.com> (sfid-20140507_132455_765211_0208266D)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Received: from smtprelay0007.hostedemail.com ([216.40.44.7]:50063 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752725AbaENTPZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 15:15:25 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] wlcore: Remove trailing semicolon from do {...} while (0) macro
+Date: Wed, 14 May 2014 12:15:14 -0700
+Message-Id: <a62dbcaa8438b3ee6cdf94d7681427c6f48f122a.1400094804.git.joe@perches.com> (sfid-20140514_211609_058010_7F298304)
+In-Reply-To: <cover.1400094804.git.joe@perches.com>
+References: <cover.1400094804.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On May 7, 2014 2:09:54 PM EEST, Johannes Berg <johannes@sipsolutions.net> wrote:
->On Wed, 2014-05-07 at 12:27 +0300, Luca Coelho wrote:
->
->> > > It's a separate issue really - but sure: the iwlwifi firmware API
->will
->> > > likely not allow doing such trickery in the IBSS case, so we
->should have
->> > > a bitmap of supported interface types (e.g.
->BIT(NL80211_IFTYPE_STATION)
->> > > | ...) for the channel switch operation.
->> > 
->> > Ah, I get it now. Thanks.
->> 
->> I guess this should be done when the actual support for AP, STATION
->and
->> so on is added? For example, add the station flag with the "mac80211:
->> use chanctx reservation for STA CSA" patch and so on...
->
->I don't know if we really want separate flags, rather than maybe a new
->field with an interface types supported bitmap?
+These should not have trailing semicolons so remove them.
 
-Yes, that's what I had in mind too (as we discussed offline). I meant STA, AP etc. flags in this new bitmask, not in the existing HW_CONF stuff.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---
-Luca.
-
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.h b/drivers/net/wireless/ti/wlcore/debugfs.h
+index f7381dd..0f2cfb0 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.h
++++ b/drivers/net/wireless/ti/wlcore/debugfs.h
+@@ -57,7 +57,7 @@ static const struct file_operations name## _ops = {			\
+ 					    wl, &name## _ops);		\
+ 		if (!entry || IS_ERR(entry))				\
+ 			goto err;					\
+-	} while (0);
++	} while (0)
+ 
+ 
+ #define DEBUGFS_ADD_PREFIX(prefix, name, parent)			\
+@@ -66,7 +66,7 @@ static const struct file_operations name## _ops = {			\
+ 				    wl, &prefix## _## name## _ops);	\
+ 		if (!entry || IS_ERR(entry))				\
+ 			goto err;					\
+-	} while (0);
++	} while (0)
+ 
+ #define DEBUGFS_FWSTATS_FILE(sub, name, fmt, struct_type)		\
+ static ssize_t sub## _ ##name## _read(struct file *file,		\
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
