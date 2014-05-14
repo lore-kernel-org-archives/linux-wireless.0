@@ -1,27 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38584 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169AbaEMNsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 09:48:47 -0400
-Message-ID: <1399988918.4137.24.camel@jlt4.sipsolutions.net> (sfid-20140513_154849_749923_6E13CD6D)
-Subject: Re: [PATCH] iw: handle DFS CAC time param
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 May 2014 15:48:38 +0200
-In-Reply-To: <1399623595-8051-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140509_102007_701333_299239E3)
-References: <1399623595-8051-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140509_102007_701333_299239E3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11576 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbaENO0X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 10:26:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath10k: fixes 2014-05-14
+References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 14 May 2014 17:26:15 +0300
+In-Reply-To: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 14 May 2014 14:16:24 +0200")
+Message-ID: <8738gcfnco.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_162626_674518_09D9B6BB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-09 at 10:19 +0200, Janusz Dziedzic wrote:
-> Handle DFS CAC time param for
-> iw list/info, iw reg get
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Applied, thanks.
+> This is another pair of patches.
+>
+> It fixes a crash recently reported by Ben, but..
+>
+> I've been able to find only a single code path
+> that called free_irq() twice in upstream code.
+> However it doesn't match the call trace reported
+> by Ben. I have to assume this is related to his
+> local patches or this is a very wierd case of
+> recovery race between userspace/mac80211/driver.
+>
+>
+> Michal Kazior (2):
+>   ath10k: fix core start sequence
+>   ath10k: prevent hif_stop being called twice
 
-johannes
+The patches don't apply anymore and the conflict was not trivial enough
+for me to fix it. Can you rebase, please?
 
+(This is the thread I was supposed to reply, sorry for the confusion.)
+
+-- 
+Kalle Valo
