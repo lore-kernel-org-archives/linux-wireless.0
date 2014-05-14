@@ -1,74 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39054 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751008AbaETJfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 05:35:20 -0400
-Message-ID: <537B21CC.1040302@openwrt.org> (sfid-20140520_113526_449286_AAB1A533)
-Date: Tue, 20 May 2014 11:35:08 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: Abort transmission for sleeping station
-References: <1400480077-18619-1-git-send-email-rmanohar@qti.qualcomm.com> <537AFD8C.2090302@openwrt.org>
-In-Reply-To: <537AFD8C.2090302@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:46485 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbaENHEo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 03:04:44 -0400
+Received: by mail-ee0-f51.google.com with SMTP id e51so1005320eek.10
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 00:04:41 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: improve warm reset reliability
+Date: Wed, 14 May 2014 08:57:37 +0200
+Message-Id: <1400050658-2763-2-git-send-email-michal.kazior@tieto.com> (sfid-20140514_090447_005987_B49E0F02)
+In-Reply-To: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
+References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-05-20 09:00, Felix Fietkau wrote:
-> On 2014-05-19 08:14, Rajkumar Manoharan wrote:
->> The data transmission to the power save station should be aborted
->> immediately, whenever the station informs sleep state. Right now
->> the frames queued into into hardware are being transmitted until
->> the hardware detects the power save station based excessive retries
->> of the data frames due to unacknowlegdement. Then remaining frames
->> are returned with filetered status and might be retried later by
->> driver or mac80211.
->> 
->> Per WFA certification testing, AP should not send out more than two
->> frames after processing nullfunc with PM bit set from associated
->> station. To speed up tx filtering, the pending frames in hardware
->> queues for given station will be aborted immediately via tx filter
->> registers. This transmit filters can be ignored if the descriptor
->> is having invalid destination index or clear destination mask set.
->> 
->> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/mac.c  | 22 ++++++++++++++++++++++
->>  drivers/net/wireless/ath/ath9k/mac.h  |  1 +
->>  drivers/net/wireless/ath/ath9k/main.c |  8 ++++++++
->>  drivers/net/wireless/ath/ath9k/reg.h  |  3 ---
->>  4 files changed, 31 insertions(+), 3 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index 8d7b9b6..47d442a 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> 
->> @@ -1593,6 +1597,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
->>  			ath9k_del_ps_key(sc, vif, sta);
->>  
->>  		ret = ath_key_config(common, vif, sta, key);
->> +		if (sta && (ret > 0))
->> +			((struct ath_node *)sta->drv_priv)->ps_key = ret;
->>  		if (ret >= 0) {
->>  			key->hw_key_idx = ret;
->>  			/* push IV and Michael MIC generation to stack */
->> @@ -1607,6 +1613,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
->>  		break;
->>  	case DISABLE_KEY:
->>  		ath_key_delete(common, key);
->> +		if (sta)
->> +			((struct ath_node *)sta->drv_priv)->ps_key = 0;
->>  		break;
->>  	default:
->>  		ret = -EINVAL;
-> I think this part won't work if you have multiple keys for the same STA.
-> Also, it will leak the previous ps_key if it was auto-assigned for an
-> unencrypted sta.
-Actually, never mind about the leak, ath9k_del_ps_key will take care of
-that. Having multiple keys will still be problematic though.
+Warm reset is now able to recover after device
+crashes which required a cold reset before.
 
-- Felix
+This should greatly reduce chances of getting data
+bus errors or host system freezes due to buggy
+cold reset on some chips.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 66b1f30..c9b14b4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1802,6 +1802,28 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
+ 	ath10k_pci_sleep(ar);
+ }
+ 
++/* this function effectively clears target memory controller assert line */
++static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
++{
++	u32 val;
++
++	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
++				SOC_RESET_CONTROL_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
++			   val | SOC_RESET_CONTROL_SI0_RST_MASK);
++	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
++				SOC_RESET_CONTROL_ADDRESS);
++	msleep(10);
++
++	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
++				SOC_RESET_CONTROL_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
++			   val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
++	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
++				SOC_RESET_CONTROL_ADDRESS);
++	msleep(10);
++}
++
+ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ {
+ 	int ret = 0;
+@@ -1860,6 +1882,8 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ 				SOC_RESET_CONTROL_ADDRESS);
+ 	msleep(10);
+ 
++	ath10k_pci_warm_reset_si0(ar);
++
+ 	/* debug */
+ 	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+ 				PCIE_INTR_CAUSE_ADDRESS);
+-- 
+1.8.5.3
+
