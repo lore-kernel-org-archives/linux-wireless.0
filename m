@@ -1,73 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:38204 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932160AbaEQIwx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 04:52:53 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n15so2024756wiw.14
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:52 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/22] staging: vt6656: PIPEnsControlOut remove camel case.
-Date: Sat, 17 May 2014 09:50:21 +0100
-Message-Id: <1400316639-4430-4-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105302_060973_A808D3AE)
-In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
-References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42547 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755317AbaENNoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 09:44:17 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.15] mac80211: fix on-channel remain-on-channel
+Date: Wed, 14 May 2014 15:44:13 +0200
+Message-Id: <1400075053-31863-1-git-send-email-johannes@sipsolutions.net> (sfid-20140514_154420_866836_E82DC3E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-pDevice, byRequest,  wValue, wIndex, wLength, pbyBuffer, ntStatus
+From: Johannes Berg <johannes.berg@intel.com>
 
-->
+Jouni reported that if a remain-on-channel was active on the
+same channel as the current operating channel, then the ROC
+would start, but any frames transmitted using mgmt-tx on the
+same channel would get delayed until after the ROC.
 
-priv, request, value, index, length, buffer, status
+The reason for this is that the ROC starts, but doesn't have
+any handling for "remain on the same channel", so it stops
+the interface queues. The later mgmt-tx then puts the frame
+on the interface queues (since it's on the current operating
+channel) and thus they get delayed until after the ROC.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+To fix this, add some logic to handle remaining on the same
+channel specially and not stop the queues etc. in this case.
+This not only fixes the bug but also improves behaviour in
+this case as data frames etc. can continue to flow.
+
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/offchannel.c  | 27 ++++++++++++++++++++-------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 5a466653..76fa19e 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -61,23 +61,23 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 222c28b75315..f169b6ee94ee 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -317,6 +317,7 @@ struct ieee80211_roc_work {
  
--int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
--		u16 wIndex, u16 wLength, u8 *pbyBuffer)
-+int PIPEnsControlOut(struct vnt_private *priv, u8 request, u16 value,
-+		u16 index, u16 length, u8 *buffer)
- {
--	int ntStatus = 0;
-+	int status = 0;
+ 	bool started, abort, hw_begun, notified;
+ 	bool to_be_freed;
++	bool on_channel;
  
--	if (pDevice->Flags & fMP_DISCONNECTED)
-+	if (priv->Flags & fMP_DISCONNECTED)
- 		return STATUS_FAILURE;
+ 	unsigned long hw_start_time;
  
--	mutex_lock(&pDevice->usb_lock);
-+	mutex_lock(&priv->usb_lock);
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 6fb38558a5e6..7a17decd27f9 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -333,7 +333,7 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_roc_work, work.work);
+ 	struct ieee80211_sub_if_data *sdata = roc->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	bool started;
++	bool started, on_channel;
  
--	ntStatus = usb_control_msg(pDevice->usb,
--		usb_sndctrlpipe(pDevice->usb, 0), byRequest, 0x40, wValue,
--			wIndex, pbyBuffer, wLength, USB_CTL_WAIT);
-+	status = usb_control_msg(priv->usb,
-+		usb_sndctrlpipe(priv->usb, 0), request, 0x40, value,
-+			index, buffer, length, USB_CTL_WAIT);
+ 	mutex_lock(&local->mtx);
  
--	mutex_unlock(&pDevice->usb_lock);
-+	mutex_unlock(&priv->usb_lock);
+@@ -354,14 +354,26 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+ 	if (!roc->started) {
+ 		struct ieee80211_roc_work *dep;
  
--	if (ntStatus < (int)wLength)
-+	if (status < (int)length)
- 		return STATUS_FAILURE;
+-		/* start this ROC */
+-		ieee80211_offchannel_stop_vifs(local);
++		WARN_ON(local->use_chanctx);
++
++		/* If actually operating on the desired channel (with at least
++		 * 20 MHz channel width) don't stop all the operations but still
++		 * treat it as though the ROC operation started properly, so
++		 * other ROC operations won't interfere with this one.
++		 */
++		roc->on_channel = roc->chan == local->_oper_chandef.chan &&
++				  local->_oper_chandef.width != NL80211_CHAN_WIDTH_5 &&
++				  local->_oper_chandef.width != NL80211_CHAN_WIDTH_10;
  
- 	return STATUS_SUCCESS;
+-		/* switch channel etc */
++		/* start this ROC */
+ 		ieee80211_recalc_idle(local);
+ 
+-		local->tmp_channel = roc->chan;
+-		ieee80211_hw_config(local, 0);
++		if (!roc->on_channel) {
++			ieee80211_offchannel_stop_vifs(local);
++
++			local->tmp_channel = roc->chan;
++			ieee80211_hw_config(local, 0);
++		}
+ 
+ 		/* tell userspace or send frame */
+ 		ieee80211_handle_roc_started(roc);
+@@ -380,9 +392,10 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+  finish:
+ 		list_del(&roc->list);
+ 		started = roc->started;
++		on_channel = roc->on_channel;
+ 		ieee80211_roc_notify_destroy(roc, !roc->abort);
+ 
+-		if (started) {
++		if (started && !on_channel) {
+ 			ieee80211_flush_queues(local, NULL);
+ 
+ 			local->tmp_channel = NULL;
 -- 
-1.9.1
+2.0.0.rc0
 
