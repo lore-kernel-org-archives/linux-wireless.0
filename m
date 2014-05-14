@@ -1,271 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dewberryfields.co.uk ([217.41.92.67]:54411 "EHLO
-	mail.dewberryfields.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbaEULEE (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:56420 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbaENVQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 07:04:04 -0400
-Message-ID: <537C8821.6070507@dewberryfields.co.uk> (sfid-20140521_130408_747633_F9FAA5D5)
-Date: Wed, 21 May 2014 12:04:01 +0100
-From: Michael Howard <mike@dewberryfields.co.uk>
+	Wed, 14 May 2014 17:16:06 -0400
+Message-ID: <5373DCC7.9070708@open-mesh.com> (sfid-20140514_231610_271905_B8D26956)
+Date: Wed, 14 May 2014 23:14:47 +0200
+From: Antonio Quartulli <antonio@open-mesh.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Mwifiex driver on Globalscale Mirabox
-References: <5346DED8.2030704@free.fr>
-	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
-	<53480138.2080805@free.fr>	<53733AB4.7010500@free.fr>
-	<20140514215126.GA15419@us.netrek.org>
-	<CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
-	<5374F638.6000505@dewberryfields.co.uk>
-	<CAJwzM1mvK1i3ENrQyVZNoiwYFiopWGRaOVe5iGTr61TQVXdaMQ@mail.gmail.com>
- <CAJwzM1mg5KVZFev4Gs9Qw43H5OwiLF3fmhwv8-3y9mEvWM6b6g@mail.gmail.com>
-In-Reply-To: <CAJwzM1mg5KVZFev4Gs9Qw43H5OwiLF3fmhwv8-3y9mEvWM6b6g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <antonio@meshcoding.com>
+CC: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org
+Subject: Re: [PATCH 3/7] mac80211: add new RC API to retrieve expected throughput
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>	 <1397484205-20905-3-git-send-email-antonio@meshcoding.com> <1398440716.4152.27.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1398440716.4152.27.camel@jlt4.sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="a34WJAWs3KVtFjMOFwIWUd0nAvmqTHGtJ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 16/05/2014 13:27, Avinash Patil wrote:
->
-> Hi Michael,
->
-> We are not able to reproduce this issue in our setup with sd8787 p96. 
-> Could you please share hostapd config file, console logs and driver 
-> debug logs?
->
-> Thanks,
-> -Avinash
->
->
-H Avinash,
-
-I was incorrect in my last message, the sd8787 AP had not started 
-working when I installed the AR9287. So, here is my config;
-
-interface=uap0
-bridge=br0
-driver=nl80211
-ssid=TEST
-hw_mode=g
-channel=1
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=3
-wpa_passphrase=????????????????
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-logger_syslog=-1
-logger_syslog_level=0
-logger_stdout=-1
-logger_stdout_level=0
-country_code=GB
-
-dmesg;
-ieee80211 phy0: ignoring F/W country code US
-mwifiex_sdio mmc0:0001:1: driver_version = mwifiex 1.0 (14.66.9.p96)
-
-console output;
-
-root@mirabox:~# usr/sbin/hostapd -ddd /etc/hostapd/hostapd.conf
--bash: usr/sbin/hostapd: No such file or directory
-root@mirabox:~# /usr/sbin/hostapd -ddd /etc/hostapd/hostapd.conf
-random: Trying to read entropy from /dev/random
-Configuration file: /etc/hostapd/hostapd.conf
-nl80211: interface uap0 in phy phy0
-rfkill: Cannot open RFKILL control device
-nl80211: RFKILL status not available
-nl80211: Use separate P2P group interface (driver advertised support)
-nl80211: Add own interface ifindex 6
-nl80211: Add own interface ifindex 7
-nl80211: Set mode ifindex 7 iftype 3 (AP)
-nl80211: Create interface iftype 6 (MONITOR)
-Failed to create interface mon.uap0: -95 (Operation not supported)
-nl80211: Driver does not support monitor interface type - try to run 
-without it
-nl80211: Adding interface uap0 into bridge br0
-BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-nl80211: Regulatory information - country=00
-nl80211: 2402-2472 @ 40 MHz
-nl80211: 2457-2482 @ 40 MHz
-nl80211: 2474-2494 @ 20 MHz
-nl80211: 5170-5250 @ 160 MHz
-nl80211: 5250-5330 @ 160 MHz
-nl80211: 5490-5730 @ 160 MHz
-nl80211: Added 802.11b mode based on 802.11g information
-Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=20 dBm
-Completing interface initialization
-Mode: IEEE 802.11g  Channel: 1  Frequency: 2412 MHz
-nl80211: Set freq 2412 (ht_enabled=0 sec_channel_offset=0)
-Failed to update rate sets in kernel module
-RATE[0] rate=10 flags=0x1
-RATE[1] rate=20 flags=0x1
-RATE[2] rate=55 flags=0x1
-RATE[3] rate=110 flags=0x1
-RATE[4] rate=60 flags=0x0
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x0
-RATE[7] rate=180 flags=0x0
-RATE[8] rate=240 flags=0x0
-RATE[9] rate=360 flags=0x0
-RATE[10] rate=480 flags=0x0
-RATE[11] rate=540 flags=0x0
-Flushing old station entries
-Deauthenticate all stations
-nl80211: Frame command failed: ret=-22 (Invalid argument) (freq=0 wait=0)
-wpa_driver_nl80211_set_key: ifindex=7 alg=0 addr=(nil) key_idx=0 
-set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=7 alg=0 addr=(nil) key_idx=1 
-set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=7 alg=0 addr=(nil) key_idx=2 
-set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=7 alg=0 addr=(nil) key_idx=3 
-set_tx=0 seq_len=0 key_len=0
-Using interface uap0 with hwaddr 94:db:c9:cd:5a:46 and ssid 'TEST'
-Deriving WPA PSK based on passphrase
-SSID - hexdump_ascii(len=4):
-      54 45 53 54                                       TEST
-PSK (ASCII passphrase) - hexdump_ascii(len=14): [REMOVED]
-PSK (from passphrase) - hexdump(len=32): [REMOVED]
-random: Got 15/20 bytes from /dev/random
-random: Only 15/20 bytes of strong random data available from /dev/random
-random: Not enough entropy pool available for secure operations
-WPA: Not enough entropy in random pool for secure operations - update 
-keys later when the first station connects
-Get randomness: len=32 entropy=0
-random from os_get_random - hexdump(len=32): [REMOVED]
-random_mix_pool - hexdump(len=20): [REMOVED]
-random from internal pool - hexdump(len=16): [REMOVED]
-random_mix_pool - hexdump(len=20): [REMOVED]
-random from internal pool - hexdump(len=16): [REMOVED]
-mixed random - hexdump(len=32): [REMOVED]
-GMK - hexdump(len=32): [REMOVED]
-Get randomness: len=32 entropy=0
-random from os_get_random - hexdump(len=32): [REMOVED]
-random_mix_pool - hexdump(len=20): [REMOVED]
-random from internal pool - hexdump(len=16): [REMOVED]
-random_mix_pool - hexdump(len=20): [REMOVED]
-random from internal pool - hexdump(len=16): [REMOVED]
-mixed random - hexdump(len=32): [REMOVED]
-Key Counter - hexdump(len=32): [REMOVED]
-WPA: Delay group state machine start until Beacon frames have been 
-configured
-VLAN: vlan_set_name_type(name_type=2)
-nl80211: Set beacon (beacon_set=0)
-nl80211: Ignore AP isolation configuration error since isolation is not used
-WPA: Start group state machine to set initial keys
-WPA: group state machine entering state GTK_INIT (VLAN-ID 0)
-Get randomness: len=16 entropy=0
-random from os_get_random - hexdump(len=16): [REMOVED]
-random_mix_pool - hexdump(len=20): [REMOVED]
-random from internal pool - hexdump(len=16): [REMOVED]
-mixed random - hexdump(len=16): [REMOVED]
-GTK - hexdump(len=32): [REMOVED]
-WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
-wpa_driver_nl80211_set_key: ifindex=7 alg=2 addr=0xb6f5d77c key_idx=1 
-set_tx=1 seq_len=0 key_len=32
-    broadcast key
-wpa_driver_nl80211_set_operstate: operstate 0->1 (UP)
-netlink: Operstate: linkmode=-1, operstate=6
-Failed to set TX queue parameters for queue 0.
-Failed to set TX queue parameters for queue 1.
-Failed to set TX queue parameters for queue 2.
-Failed to set TX queue parameters for queue 3.
-uap0: Setup of interface done.
-random: Got 5/5 bytes from /dev/random
-RTM_NEWLINK: operstate=1 ifi_flags=0x1002 ()
-nl80211: Ignore interface down event since interface uap0 is up
-RTM_NEWLINK: operstate=1 ifi_flags=0x1002 ()
-nl80211: Ignore interface down event since interface uap0 is up
-RTM_NEWLINK: operstate=1 ifi_flags=0x1002 ()
-nl80211: Ignore interface down event since interface uap0 is up
-RTM_NEWLINK: operstate=1 ifi_flags=0x1002 ()
-nl80211: Ignore interface down event since interface uap0 is up
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'br0' added
-Unknown event 5
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'br0' added
-Unknown event 5
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'br0' added
-Unknown event 5
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-VLAN: vlan_newlink(uap0)
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-VLAN: vlan_newlink(uap0)
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-VLAN: vlan_newlink(uap0)
-RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'uap0' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Add ifindex 6 for bridge br0
-nl80211: Add own interface ifindex 6
-VLAN: vlan_newlink(uap0)
-
-==> kern.log <== (on execution of hostapd)
-May 21 10:37:01 mirabox kernel: mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 
-0x112 error, result=0x2
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--a34WJAWs3KVtFjMOFwIWUd0nAvmqTHGtJ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
 
-As mentioned, the AP does not exist though hostapd appears to run.
 
-The exact same configuration works with the AR9287 card.
+On 25/04/14 17:45, Johannes Berg wrote:
+> On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
+>> From: Antonio Quartulli <antonio@open-mesh.com>
+>>
+>> In order to make mac80211 export the expected throughput,
+>> a new API which extracts such information from any mac80211
+>> SW RC algorithm is needed.
+>> Therefore add the new get_expected_throughput() member
+>> to the rate_control_ops structure.
+>>
+>> The exported value is expressed in Mbps/100. Such unit has
+>> been chosen because it is the highest precision that
+>> MinstrelHT can return.
+>=20
+> Same as in patch 2 - and realistically 2/3/4 could just be squashed.
+>=20
 
-Hope this helps.
+Yeah, I will specify the 0 value as "I don't know what to provide" and I
+think it is fine to have just one patch.
 
-Regards,
-Mike.
-
--- 
+--=20
+Antonio Quartulli
 
 
+--a34WJAWs3KVtFjMOFwIWUd0nAvmqTHGtJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJTc9zRAAoJEEKTMo6mOh1VnfEP/R9WGHaPpFYW5QNjxxORMXc3
+bjI9zs6MQTFiRr1IplNjuMZ26U+6zSIotK9PskGySus3iBBFvBHTp5wu7jIh2ykf
+WjLi+pdZOtJ6RPsDMshW8fPNSuzHjV93UOOdWzvE0KtUPqmsHL/DSWbqPbRSgH2i
+BlBI+gshfwkc03JESurBYN4ok3xGqzSSHiI1EKQtHt2oq9fUDg2wxoSEQcI24lbP
+4YJs7sGDkyeF91QhwTxnMmViKHQaYl3GViyETW2qpacAbhStwwn66hC1MzThPyxi
+8JbjZN89rtgljvYMt8Y6bMtzW2tYDjFqa0Q+gspMu8eauA4c4b9xyVh0uApG3Klu
+FFFXC0fFDVE/0z1E7HV1bUKCh7mKk5Qyf/+pJXp/bluJcxxGFC6I/YqzGfNdbYfA
+tDr5XBnIWMPs/86qT0kzHUSztwfr7+8UtevQJK1TxgijC6j0L3qVJHI4C+6A798j
+fj9xb1PcGrzrZrYCCSlLCKQ8d7K3QEwX75l6LofH/JuWogZPXbyECSUp4UnD8fxi
+wxeFZGz58wH9mbutZDZ5yNw5+mrVBEmRihWHTouqDQ4L4CpwP+sCOuv93D9JDpvb
+CNo9ZN1glUizV95DoEvJkt3JwCta6qJtlDE9tyDqF4T8ONunXT6ecRLnUZU8OAU5
+xFhaTeNOZbxU6mjWk+8S
+=yoLI
+-----END PGP SIGNATURE-----
+
+--a34WJAWs3KVtFjMOFwIWUd0nAvmqTHGtJ--
