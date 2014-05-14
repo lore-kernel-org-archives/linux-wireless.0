@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34353 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751894AbaELOFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 10:05:31 -0400
-Message-ID: <1399903516.4337.12.camel@jlt4.sipsolutions.net> (sfid-20140512_160534_228081_A3E858FA)
-Subject: pull-request: mac80211 2014-05-12
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 12 May 2014 16:05:16 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-oFJzo/AHxEANw/WS7owR"
-Mime-Version: 1.0
+Received: from ns.horizon.com ([71.41.210.147]:11829 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755312AbaENMX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 08:23:59 -0400
+Date: 14 May 2014 08:23:57 -0400
+Message-ID: <20140514122357.11052.qmail@ns.horizon.com> (sfid-20140514_142423_995943_4716DD51)
+From: "George Spelvin" <linux@horizon.com>
+To: linux@horizon.com, ulf.hansson@linaro.org
+Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
+Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, pavel@ucw.cz,
+	tony@atomide.com
+In-Reply-To: <CAPDyKFo9xZ-z6eM0zG2A+=Bwj0EVyGxm=m28Lh9cHPSB+8qq1w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ulf Hansson wrote:
+> Feel free to take this through the wireless tree as well. I assumes
+> it's that same patchset as the other spi related fixes?
 
---=-oFJzo/AHxEANw/WS7owR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'd like to answer, but I'm not sure which "other spi related fixes"
+you're referring to.  If you mean patches 1 and 3 of this series, then
+obviously.  If you mean something else then probably not.
 
-Hi John
-
-Two more fixes - both I've been sitting on, sorry
-
-One fix is to get better VHT performance and the other fixes tracing
-garbage or other potential issues with the interface name tracing.
-
-Let me know if there are any issues.
-
-Thanks,
-johannes
+[PATCH 1/3] lib/crc7: Shift crc7() output left 1 bit
+[PATCH 3/3] drivers/net/wireless/ti/wl*/spi.c: Simplify CRC computation
 
 
-The following changes since commit e669ba2d06c6195662601956454ac959892f0762=
-:
+As there seems to be no objection to sending the mmc change via the
+wireless tree, are they ready to be queued there?
 
-  mac80211: fix nested rtnl locking on ieee80211_reconfig (2014-05-05 15:14=
-:58 +0200)
+The additional reviews are:
+All 3: Reviewed-by: Pavel Machek <pavel@ucw.cz>
+2/3: Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+2/3: Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git HEAD
-
-for you to fetch changes up to f9ac71bfcc5c937ff02765dc316cf5bc01d21d97:
-
-  mac80211: fix vif name tracing (2014-05-09 14:35:40 +0200)
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      mac80211: fix vif name tracing
-
-Johannes Berg (1):
-      mac80211: allow VHT with peers not capable of 40MHz
-
- net/mac80211/trace.h | 4 ++--
- net/mac80211/vht.c   | 9 ++++++---
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-
---=-oFJzo/AHxEANw/WS7owR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTcNUgAAoJEDBSmw7B7bqrpAQP/jRO2XTEtlq1I6mi3ANIrVEr
-VgIMELrR/yf/cvwBtrnNtc3lxtRlx4yGHTORO8b5tfIB+5HcohNSC7tw+i+q2MoH
-kGPdw8358ngp58b13LLn8ZCG0bCCxKt3MpQtrSst1p/fXwgiVzXnadRi6IBtav8X
-d/fz5VXHnxW+XYyktFOq8vh+Mi/gJ2ti7JkoYx7AK6p2GtnhVxf6PFrjnV7qabCB
-KIXUPV5UEzeajGjto4gh4XxL2cmSwSm4KoPMYIYvxzDtOI3QxjEpcyDmM+mwDEnK
-hvfmITWVSV7LyfGGR52TBI1OVq8z/ts6UKzAHGoN+pBj/4LZKophsyEb8e+PYZ+L
-rxqoaaaJeSakoeKt9FsZM1yTXZfEj9DaoUCI11XnhfDbj14K7HQd9wvUh9u1HC63
-mmFvIPq31U1JnnhjHoD8B7NZaCIGp3ZkoAYJjvfXa7Z12wgbl0M9uRaGxb2EUHLV
-QQWWa8pB6aymLvlt8mcFc2sgEz9qKtusPOpjJJsx21CI2yxe3/yBLVDBbTI2sXfv
-5CviX3hpqmUdrBz9hVHDZJza2nXtq23UgYj72P2YBa9ZligA5IWDLnl7Mn58mNHl
-PTx/Zt9D1rKNSehjjmB2evwme6DtGy31GzhmdCguFdzGgu49nTzzHZOXKY8r710G
-ev9SArd2RFWOpH6LohLX
-=+om3
------END PGP SIGNATURE-----
-
---=-oFJzo/AHxEANw/WS7owR--
-
+I can resend everything with the additional signoff lines
+if that's easier for you.
