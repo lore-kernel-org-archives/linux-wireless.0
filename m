@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56885 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755392AbaEOSdu (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:42246 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752780AbaENDSQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 14:33:50 -0400
-Message-ID: <5375088D.1090009@candelatech.com> (sfid-20140515_203422_812676_7ABD2CE8)
-Date: Thu, 15 May 2014 11:33:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 13 May 2014 23:18:16 -0400
+Date: Wed, 14 May 2014 13:18:05 +1000
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: mwifiex: no wr_port available
+Message-ID: <20140514031804.GN12785@us.netrek.org> (sfid-20140514_051819_713011_4BC1A9EE)
+References: <20140507120634.GM17490@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k:  fix rssi reporting.
-References: <1400178663-25661-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1400178663-25661-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, ...this and previous patch should not have gone to LKML.
+On Tue, May 13, 2014 at 07:52:47PM -0700, Bing Zhao wrote:
+> Hi James,
+> 
+> > G'day,
+> > 
+> > Is there a short duration leak of wr_port in
+> > mwifiex_sdio_host_to_card()?
+> 
+> You are right. There is a leak in the error case. Thanks for
+> pointing it out.
 
-Will send it over to ath10k list where it was supposed to go.
+Thanks.
 
-Thanks,
-Ben
+> > If mwifiex_host_to_card_mp_aggr fails because of is_suspended in
+> > mwifiex_write_data_sync, is the wr_port ever released?
+> > 
+> > Or maybe mp_wr_bitmap is re-read from the card when a download
+> > interrupt occurs, or if an upload interrupt occurs after a command is
+> > sent.
+> 
+> A patch has been sent to address this issue.
 
-On 05/15/2014 11:31 AM, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> When the driver cannot provide proper rssi, mark
-> status with RX_FLAG_NO_SIGNAL_VAL so that stack
-> properly ignores it.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> Patch is against my tree, hopefully will apply OK against upstream
-> but have not tested that yet.
-> 
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 0c83ffb..d8ec8dd 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1216,11 +1216,12 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
->  
->  	/* Fill this once, while this is per-ppdu */
-> -	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
-> -		memset(rx_status, 0, sizeof(*rx_status));
-> +	memset(rx_status, 0, sizeof(*rx_status));
-> +	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID)
->  		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
->  				     rx->ppdu.combined_rssi;
-> -	}
-> +	else
-> +		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
->  
->  	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
->  		/* TSF available only in 32-bit */
-> 
+Reviewed, thanks.  Functionally identical to a patch that I've been
+testing locally:
 
+/*
+ * Rollback the effects of _get_wr_port above.
+ */
+static void mwifiex_put_wr_port(struct mwifiex_adapter *adapter, u8 port)
+{
+	struct sdio_mmc_card *card = adapter->card;
+
+	card->mp_wr_bitmap |= (1 << port);
+	card->curr_wr_port = port;
+}
+
+...
+
+		if (type == MWIFIEX_TYPE_DATA) {
+			mwifiex_put_wr_port(adapter, port);
+			adapter->data_sent = false;
+		}
+
+You may be interested that rd_port also has possible leak when skb
+cannot be allocated.  See mwifiex_process_int_status:
+
+		skb = dev_alloc_skb(rx_len);
+		if (!skb)
+			return -1;
+
+We have a hack in OLPC production arm-3.5 kernel which restores
+rd_port bit, restores int_status.
+
+http://dev.laptop.org/git/olpc-kernel/commit/?h=arm-3.5&id=59fcaf10cce5bbdc370ec1c262b12aeb66ed1dca
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+James Cameron
+http://quozl.linux.org.au/
