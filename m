@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48987 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838AbaEGJCb (ORCPT
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:50329 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbaENMaq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 05:02:31 -0400
-Message-ID: <1399453340.10517.7.camel@jlt4.sipsolutions.net> (sfid-20140507_110235_340141_1A135760)
-Subject: Re: [PATCH] rfkill-gpio: Use gpio cansleep version
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Loic Poulain <loic.poulain@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-gpio <linux-gpio@vger.kernel.org>
-Date: Wed, 07 May 2014 11:02:20 +0200
-In-Reply-To: <1399392849-6021-1-git-send-email-loic.poulain@intel.com>
-References: <1399392849-6021-1-git-send-email-loic.poulain@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 14 May 2014 08:30:46 -0400
+Received: by mail-qc0-f176.google.com with SMTP id r5so2576855qcx.21
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 05:30:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140514122357.11052.qmail@ns.horizon.com>
+References: <CAPDyKFo9xZ-z6eM0zG2A+=Bwj0EVyGxm=m28Lh9cHPSB+8qq1w@mail.gmail.com>
+	<20140514122357.11052.qmail@ns.horizon.com>
+Date: Wed, 14 May 2014 14:30:45 +0200
+Message-ID: <CAPDyKFqu4ZcJVZH+9-9ett1fAo5T8ff+F+hf-j95cJuRPzGi5A@mail.gmail.com> (sfid-20140514_143104_022279_7EA0CFF5)
+Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: George Spelvin <linux@horizon.com>
+Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, luca@coelho.fi,
+	Pavel Machek <pavel@ucw.cz>, Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-06 at 18:14 +0200, Loic Poulain wrote:
+On 14 May 2014 14:23, George Spelvin <linux@horizon.com> wrote:
+> Ulf Hansson wrote:
+>> Feel free to take this through the wireless tree as well. I assumes
+>> it's that same patchset as the other spi related fixes?
+>
+> I'd like to answer, but I'm not sure which "other spi related fixes"
+> you're referring to.  If you mean patches 1 and 3 of this series, then
+> obviously.  If you mean something else then probably not.
+>
+> [PATCH 1/3] lib/crc7: Shift crc7() output left 1 bit
+> [PATCH 3/3] drivers/net/wireless/ti/wl*/spi.c: Simplify CRC computation
+>
 
-> +	if (gpiod_cansleep(rfkill->shutdown_gpio))
-> +		gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
-> +	else
-> +		gpiod_set_value(rfkill->shutdown_gpio, !blocked);
-> +
-> +	if (gpiod_cansleep(rfkill->reset_gpio))
-> +		gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
-> +	else
-> +		gpiod_set_value(rfkill->reset_gpio, !blocked);
+Sorry for being unclear. It's those above I referred to.
 
-Really? I mean, there's not even a fallback where the cansleep() API
-calls the non-sleeping one if the cansleep isn't support? This is really
-ugly.
-
-johannes
-
+Kind regards
+Ulf Hansson
