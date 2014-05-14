@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21464 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358AbaE1JNg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26478 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755383AbaENNyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 05:13:36 -0400
-Date: Wed, 28 May 2014 12:13:30 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/9] wireless-regdb: Add Mauritania (MR) regulatory rules
-Message-ID: <20140528091330.GA14638@jouni.qca.qualcomm.com> (sfid-20140528_111339_672023_808A77CC)
+	Wed, 14 May 2014 09:54:31 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
+	<87oaz0fprm.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmytFM-YxXCMdhZ8J3OhK2udRrAtuWrY0rrLrHbASjGgA@mail.gmail.com>
+Date: Wed, 14 May 2014 16:54:24 +0300
+In-Reply-To: <CA+BoTQmytFM-YxXCMdhZ8J3OhK2udRrAtuWrY0rrLrHbASjGgA@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 14 May 2014 15:43:11 +0200")
+Message-ID: <87fvkcfotr.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_155435_533400_AC8DBA90)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source:
-http://www.are.mr/pdfs/telec_freq_TNAbf_2010.pdf
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> On 14 May 2014 15:34, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>> Hi,
+>>>>
+>>>> This depends on my `ath10k: recovery fixes
+>>>> 2014-05-09`.
+>>>>
+>>>> Hopefully the split makes it a little saner to
+>>>> review.
+>>>>
+>>>> Please note: `ath10k: make wmi timeout trigger hw
+>>>> restart` effectively hides the mgmt tx / htc
+>>>> credit starvation issue that was discussed
+>>>> recently. My intention is to make the driver more
+>>>> robust and as a side effect it makes the
+>>>> starvation issue less painful. If desired so
+>>>> the patch can be easily ignored in the series as
+>>>> nothing depends on it.
+>>>>
+>>>>
+>>>> Michal Kazior (7):
+>>>>   ath10k: move restart_work call
+>>>>   ath10k: introduce core restart symbol
+>>>
+>>>
+>>>>   ath10k: drain wmi quickly upon hw restart
+>>>>   ath10k: wake up everything on core restart
+>>>
+>>> These 2 are harmful as they are. In case of early fw crash
+>>> uninitialized structures are accessed. I'll re-spin later.
+>>
+>> So I can drop the whole series, right?
+>
+> Correct.
 
-diff --git a/db.txt b/db.txt
-index df92842..fe27301 100644
---- a/db.txt
-+++ b/db.txt
-@@ -570,6 +570,14 @@ country MK: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
-+# Source:
-+# http://www.are.mr/pdfs/telec_freq_TNAbf_2010.pdf
-+country MR: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
-+
- country MT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20)
+Thanks. I dropped the series from my queue now.
+
 -- 
-1.9.1
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
