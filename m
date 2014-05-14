@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7079 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757532AbaEPNxe (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45921 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751612AbaENCuW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 09:53:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	<johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2 V3] ath10k: Fix pmf for action frames
-References: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
-	<1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com>
-Date: Fri, 16 May 2014 16:53:27 +0300
-In-Reply-To: <1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com>
-	(Marek Kwaczynski's message of "Mon, 14 Apr 2014 11:27:22 +0200")
-Message-ID: <87fvk94yp4.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_155341_509346_7A1E5582)
+	Tue, 13 May 2014 22:50:22 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	James Cameron <quozl@laptop.org>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: restore current SDIO write port in failure cases
+Date: Tue, 13 May 2014 19:49:42 -0700
+Message-ID: <1400035782-24355-1-git-send-email-bzhao@marvell.com> (sfid-20140514_045027_055507_1F8E3115)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Kwaczynski <marek.kwaczynski@tieto.com> writes:
+From: Avinash Patil <patila@marvell.com>
 
-> Fix sending and receiveing protected managment frames.
-> Lack of protected flag for received protected action frames
-> causes report these frames as unprotected robust action frames.
-> If the driver in AP mode sent frame with protected flag and
-> CCMP header using IEEE80211_KEY_FLAG_SW_MGMT_TX flag,
-> the FW encrypted frames once again. From user side all
-> received SA Query Requests and Responses were skipped and
-> all protected action frames were sent as malformed packets.
->
-> Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+During SDIO MP aggregation, we at first acquire current write
+port to write data onto and then proceed with using this port
+for SDIO write. If error occurs later in mwifiex_write_data_sync
+because device is suspended or SDIO write failure, we do not
+restore current write port and write bitmap. This results into
+leaking one port and hole in SDIO write port bitmap.
+Restore current write port and reset bitmap accordingly in
+failure cases to avoid this.
 
-Thanks, applied.
+Reported-by: James Cameron <quozl@laptop.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index a1773d3..4ce3d7b 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1678,8 +1678,12 @@ static int mwifiex_sdio_host_to_card(struct mwifiex_adapter *adapter,
+ 	if (ret) {
+ 		if (type == MWIFIEX_TYPE_CMD)
+ 			adapter->cmd_sent = false;
+-		if (type == MWIFIEX_TYPE_DATA)
++		if (type == MWIFIEX_TYPE_DATA) {
+ 			adapter->data_sent = false;
++			/* restore curr_wr_port in error cases */
++			card->curr_wr_port = port;
++			card->mp_wr_bitmap |= (u32)(1 << card->curr_wr_port);
++		}
+ 	} else {
+ 		if (type == MWIFIEX_TYPE_DATA) {
+ 			if (!(card->mp_wr_bitmap & (1 << card->curr_wr_port)))
 -- 
-Kalle Valo
+1.8.2.3
+
