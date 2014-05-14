@@ -1,64 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41802 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751962AbaEUUAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 16:00:00 -0400
-Message-ID: <1400702385.4136.18.camel@jlt4.sipsolutions.net> (sfid-20140521_220005_011580_C99D0E7B)
-Subject: Re: [PATCHv2] nl80211: Provide TDLS link state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Date: Wed, 21 May 2014 21:59:45 +0200
-In-Reply-To: <CAMcMvsiGJrJFee_nuGC1L8tRuTJLZR3nikU+4F-Zo1mgNeuNjw@mail.gmail.com> (sfid-20140521_181740_112931_AC558836)
-References: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-	 <20140520223316.EFCF1E0007@pstew.mtv.corp.google.com>
-	 <1400668890.4136.1.camel@jlt4.sipsolutions.net>
-	 <CAMcMvsiGJrJFee_nuGC1L8tRuTJLZR3nikU+4F-Zo1mgNeuNjw@mail.gmail.com>
-	 (sfid-20140521_181740_112931_AC558836)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13617 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbaENMqn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 08:46:43 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: get rid of pci_assign_resource() call from pci_probe
+References: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Wed, 14 May 2014 15:46:35 +0300
+In-Reply-To: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 14 May 2014 13:57:07 +0200")
+Message-ID: <87fvkch6j8.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_144646_168631_B889CA03)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-21 at 09:17 -0700, Paul Stewart wrote:
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
->  I still think this might be too heavyweight in situations where the
-> firmware handles TDLS links. Think about a system where the firmware
-> is completely responsible for terminating incoming TDLS requests and
-> offers no facility to notify the kernel as the TDLS link (initiated
-> remotely) was established.
+> On ARM-based (MSM mach), the pci_assign_resource() is passing
+> some invalid pointers and leading to L2 cache errors,
+> what prevents the PCI communication completly.
+>
+> So far I have not found this funtion to be directly called by
+> any other wifi driver and did not found this assigning needed
+> on any other platform. So removing it completly.
 
-Is it really that bad to demand the firmware notify the host? It's not
-like this is a very frequent event, and if querying is supported then
-notification can't be all that much more difficult.
+Typo, it should be "completely". I have fixed this up in ath-next-test.
 
-We're not in a great position to demand that upstream, I guess, it
-should be easier for you :-)
-
-If it's really such a big problem, in theory one could support
-get_station() (which gives you a MAC address) and not dump_station(). I
-wouldn't necessarily recommend it, but it does seem possible.
-
-
-> Unless the driver polls the firmware for
-> ALL MAC addresses, there's no way for a station entry to magically
-> appear.  I wan this method so we can directly ask the firmware "hey,
-> is there a TDLS link to 02:00:00:00:01:00?"  This pre-supposes that
-> user-space has some knowledge about this remote host (suppose we're
-> streaming media to it) and we want to know whether in this case, for
-> diagnostic reasons, whether TDLS was established between them at this
-> time.
-
-But then the next diagnostic thing will be ... oh, let's see what
- * the signal quality is
- * bitrate is used
- * etc.
-
-all of which is covered by station information (and can optionally be
-made available for the station entry.) Right now you're only asking "is
-there a link" but I see no reason that (in particular for
-diagnostics/debug!) you wouldn't want more :-)
-
-johannes
-
+-- 
+Kalle Valo
