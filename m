@@ -1,60 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45050 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbaEVSAN (ORCPT
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:64182 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313AbaENKRQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 14:00:13 -0400
-Date: Thu, 22 May 2014 13:57:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.16] NFC update
-Message-ID: <20140522175755.GB12779@tuxdriver.com> (sfid-20140522_200017_673799_2B7630C5)
-References: <20140520221319.GA15540@zurbaran>
+	Wed, 14 May 2014 06:17:16 -0400
+Received: by mail-qg0-f46.google.com with SMTP id q108so2352097qgd.5
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 03:17:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140520221319.GA15540@zurbaran>
+In-Reply-To: <20140511100502.1491.qmail@ns.horizon.com>
+References: <20140511100211.1334.qmail@ns.horizon.com>
+	<20140511100502.1491.qmail@ns.horizon.com>
+Date: Wed, 14 May 2014 12:17:15 +0200
+Message-ID: <CAPDyKFo9xZ-z6eM0zG2A+=Bwj0EVyGxm=m28Lh9cHPSB+8qq1w@mail.gmail.com> (sfid-20140514_121732_729794_6F5CDBB6)
+Subject: Re: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: George Spelvin <linux@horizon.com>
+Cc: Pavel Machek <pavel@ucw.cz>, arik@wizery.com,
+	david.gnedt@davizone.at, eliad@wizery.com, jan.nikitenko@gmail.com,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, luca@coelho.fi,
+	Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2014 at 12:13:19AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the NFC pull request for 3.16. We have:
-> 
-> - STMicroeectronics st21nfca support. The st21nfca is an HCI chipset and
->   thus relies on the HCI stack. This submission provides support for tag
->   redaer/writer mode (including Type 5) and device tree bindings.
-> 
-> - PM runtime support and a bunch of bug fixes for TI's trf7970a.
-> 
-> - Device tree support for NXP's pn544. Legacy platform data support is
->   obviously kept intact.
-> 
-> - NFC Tag type 4B support to the NFC Digital stack.
-> 
-> - SOCK_RAW type support to the raw NFC socket, and allow NCI
->   sniffing from that. This can be extended to report HCI frames and also
->   proprietarry ones like e.g. the pn533 ones.
-> 
-> Thanks in advance for pulling those in.
-> 
-> The following changes since commit 321d03c86732e45f5f33ad0db5b68e2e1364acb9:
-> 
->   Merge branch 'misc' of git://git.kernel.org/pub/scm/linux/kernel/git/mmarek/kbuild (2014-04-12 18:22:27 -0700)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git nfc-next-3.16-1
-> 
-> for you to fetch changes up to 7974728094d35f38775417a26d8f30ea3602496a:
-> 
->   NFC: st21nfca: Add ISO15693 Reader/Writer support (2014-05-20 00:48:28 +0200)
+On 11 May 2014 12:05, George Spelvin <linux@horizon.com> wrote:
+> Very minor source and binary size reduction.
+>
+> Signed-off-by: George Spelvin <linux@horizon.com>
+> ---
+> I spotted this while making the previous crc7 change.
+>
+> This looks simple enough, but I don't actually have one of these devices to test.
+> At least one other careful desk-check is solicited.
 
-Pulling now...
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Feel free to take this through the wireless tree as well. I assumes
+it's that same patchset as the other spi related fixes?
+
+Kind regards
+Ulf Hansson
+
+>
+>  drivers/mmc/host/mmc_spi.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/mmc/host/mmc_spi.c b/drivers/mmc/host/mmc_spi.c
+> index 338e2202ea..cc8d4a6099 100644
+> --- a/drivers/mmc/host/mmc_spi.c
+> +++ b/drivers/mmc/host/mmc_spi.c
+> @@ -448,7 +448,6 @@ mmc_spi_command_send(struct mmc_spi_host *host,
+>  {
+>         struct scratch          *data = host->data;
+>         u8                      *cp = data->status;
+> -       u32                     arg = cmd->arg;
+>         int                     status;
+>         struct spi_transfer     *t;
+>
+> @@ -465,14 +464,12 @@ mmc_spi_command_send(struct mmc_spi_host *host,
+>          * We init the whole buffer to all-ones, which is what we need
+>          * to write while we're reading (later) response data.
+>          */
+> -       memset(cp++, 0xff, sizeof(data->status));
+> +       memset(cp, 0xff, sizeof(data->status));
+>
+> -       *cp++ = 0x40 | cmd->opcode;
+> -       *cp++ = (u8)(arg >> 24);
+> -       *cp++ = (u8)(arg >> 16);
+> -       *cp++ = (u8)(arg >> 8);
+> -       *cp++ = (u8)arg;
+> -       *cp++ = crc7_be(0, &data->status[1], 5) | 0x01;
+> +       cp[1] = 0x40 | cmd->opcode;
+> +       put_unaligned_be32(cmd->arg, cp+2);
+> +       cp[6] = crc7_be(0, cp+1, 5) | 0x01;
+> +       cp += 7;
+>
+>         /* Then, read up to 13 bytes (while writing all-ones):
+>          *  - N(CR) (== 1..8) bytes of all-ones
+> @@ -711,10 +708,7 @@ mmc_spi_writeblock(struct mmc_spi_host *host, struct spi_transfer *t,
+>          * so we have to cope with this situation and check the response
+>          * bit-by-bit. Arggh!!!
+>          */
+> -       pattern  = scratch->status[0] << 24;
+> -       pattern |= scratch->status[1] << 16;
+> -       pattern |= scratch->status[2] << 8;
+> -       pattern |= scratch->status[3];
+> +       pattern = get_unaligned_be32(scratch->status);
+>
+>         /* First 3 bit of pattern are undefined */
+>         pattern |= 0xE0000000;
+> --
+> 1.9.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
