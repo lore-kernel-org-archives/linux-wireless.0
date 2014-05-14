@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36173 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbaEZI3Q (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63376 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751612AbaENCua (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 04:29:16 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uz6so7823861obc.33
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 01:29:15 -0700 (PDT)
+	Tue, 13 May 2014 22:50:30 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: set valid tx_param during mwifiex_send_null_packet
+Date: Tue, 13 May 2014 19:50:13 -0700
+Message-ID: <1400035813-24420-1-git-send-email-bzhao@marvell.com> (sfid-20140514_045033_585214_29D739BF)
 MIME-Version: 1.0
-In-Reply-To: <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
-	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
-	<CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
-	<CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
-Date: Mon, 26 May 2014 11:29:15 +0300
-Message-ID: <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com> (sfid-20140526_102919_447572_4CDD2DA3)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>
->>>> Every now and then, my connection drops out.  From wireshark on the
->>>> station, it looks like traffic from the AP to the STA is coming
->>>> through but traffic from the STA to the AP is not.  I could be wrong
->>>> here, though.  Nothing is logged in either machine's kernel log.
->>>> After 5 seconds to a couple minutes, everything starts working again.
->>>>
->>>> A couple of Apple devices using the same radio on the same AP seem to work fine.
->>>>
->>>> Any advice for debugging this?  I don't know where to start.
->>>
->>> I caught one of the stalls with iwlwifi debugging on.  I've attached
->>> the dmesg.  The stall ended ten seconds or so before the end of this
->>> trace.  Is this an indication that something's wrong with iwlwifi?
->>>
->>> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
->>> shold 50 delta 96 msecs 103
->>> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
->>>
->> Can you please disable powersave?
->> It seems that it should be disabled by default, but you enabled it?
->> I might be confused though... Looking again at the code...
->
-> This?
->
-> $ cat /sys/module/iwlwifi/parameters/power_save
-> N
->
-> I have pcie_aspm.policy=powersave, but I don't think that should
-> matter.  Or am I missing something?
+From: Avinash Patil <patila@marvell.com>
 
-That should be ok.
+While sending null packet from driver we are passing NULL
+tx_param pointer to indicate there are no more packets in queue.
+PCIe send routine assumes caller has done sanity check on
+tx_param and may cause crash while dereferencing next_pkt_len
+from tx_param.
+
+Avoid this by passing tx_param structure with next_pkt_len as
+zero instead of NULL pointer.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c   | 1 +
+ drivers/net/wireless/mwifiex/sta_tx.c | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index c2cfeec..574d4b5 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1071,6 +1071,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
+  * is mapped to PCI device memory. Tx ring pointers are advanced accordingly.
+  * Download ready interrupt to FW is deffered if Tx ring is not full and
+  * additional payload can be accomodated.
++ * Caller must ensure tx_param parameter to this function is not NULL.
+  */
+ static int
+ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index 1236a5d..5fce7e7 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -128,6 +128,7 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct txpd *local_tx_pd;
++	struct mwifiex_tx_param tx_param;
+ /* sizeof(struct txpd) + Interface specific header */
+ #define NULL_PACKET_HDR 64
+ 	u32 data_len = NULL_PACKET_HDR;
+@@ -168,8 +169,9 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 						   skb, NULL);
+ 	} else {
+ 		skb_push(skb, INTF_HEADER_LEN);
++		tx_param.next_pkt_len = 0;
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+-						   skb, NULL);
++						   skb, &tx_param);
+ 	}
+ 	switch (ret) {
+ 	case -EBUSY:
+-- 
+1.8.2.3
+
