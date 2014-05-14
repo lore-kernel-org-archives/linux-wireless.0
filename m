@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:47448 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbaEOGGK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8345 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbaENNeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 02:06:10 -0400
-Date: Thu, 15 May 2014 08:06:08 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: George Spelvin <linux@horizon.com>
-Cc: arik@wizery.com, coelho@ti.com, david.gnedt@davizone.at,
-	eliad@wizery.com, jan.nikitenko@gmail.com,
-	laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-Subject: Re: [PATCH] lib/crc7: Shift crc7() output left 1 bit
-Message-ID: <20140515060607.GA28219@amd.pavel.ucw.cz> (sfid-20140515_080626_936964_4A515E20)
-References: <20140514195657.GA5320@amd.pavel.ucw.cz>
- <20140515003225.23627.qmail@ns.horizon.com>
+	Wed, 14 May 2014 09:34:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
+Date: Wed, 14 May 2014 16:34:05 +0300
+In-Reply-To: <CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 12 May 2014 09:34:53 +0200")
+Message-ID: <87oaz0fprm.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_153419_494560_80276746)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140515003225.23627.qmail@ns.horizon.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 2014-05-14 20:32:25, George Spelvin wrote:
-> Pavel Machek wrote;
-> > On Sun 2014-05-11 05:16:07, George Spelvin wrote:
-> >> To do it properly, I have to rename all of:
-> >> 
-> >> crc7_syndrome_table[]
-> >> crc7_byte()
-> >> crc7()
-> >> 
-> >> even though the third is the only (in-tree) user of the first two.
-> 
-> > If the first two are static, there's no problem.
-> 
-> They're not; they're exported from the header (even though, as
-> I mentioned, their only user is crc7()).
-> 
-> So my patch v2 1/3 renamed all three.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-That's one way.
+> On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Hi,
+>>
+>> This depends on my `ath10k: recovery fixes
+>> 2014-05-09`.
+>>
+>> Hopefully the split makes it a little saner to
+>> review.
+>>
+>> Please note: `ath10k: make wmi timeout trigger hw
+>> restart` effectively hides the mgmt tx / htc
+>> credit starvation issue that was discussed
+>> recently. My intention is to make the driver more
+>> robust and as a side effect it makes the
+>> starvation issue less painful. If desired so
+>> the patch can be easily ignored in the series as
+>> nothing depends on it.
+>>
+>>
+>> Michal Kazior (7):
+>>   ath10k: move restart_work call
+>>   ath10k: introduce core restart symbol
+>
+>
+>>   ath10k: drain wmi quickly upon hw restart
+>>   ath10k: wake up everything on core restart
+>
+> These 2 are harmful as they are. In case of early fw crash
+> uninitialized structures are accessed. I'll re-spin later.
 
-Other would be to make them static so people can't use old interfaces
-by mistake.
-									Pavel
+So I can drop the whole series, right?
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Kalle Valo
