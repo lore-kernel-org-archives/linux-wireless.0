@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:37283 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964774AbaEQQnH (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:56412 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279AbaENVLD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 12:43:07 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCHv3 2/4] cfg80211: export expected throughput via nl80211 (GET_STATION)
-Date: Sat, 17 May 2014 18:41:44 +0200
-Message-Id: <1400344906-27984-3-git-send-email-antonio@meshcoding.com> (sfid-20140517_184318_391743_6B095094)
-In-Reply-To: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
-References: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
+	Wed, 14 May 2014 17:11:03 -0400
+Message-ID: <5373DB83.2080006@open-mesh.com> (sfid-20140514_231107_339484_28016F97)
+Date: Wed, 14 May 2014 23:09:23 +0200
+From: Antonio Quartulli <antonio@open-mesh.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <antonio@meshcoding.com>
+CC: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org
+Subject: Re: [PATCH 2/7] mac80211: add get_expected_throughput API
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>	 <1397484205-20905-2-git-send-email-antonio@meshcoding.com> <1398440696.4152.26.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1398440696.4152.26.camel@jlt4.sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="ORNF4T3Ao6Kb63UtdaHlwbCU0hE1I7DmI"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--ORNF4T3Ao6Kb63UtdaHlwbCU0hE1I7DmI
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Send the expected throughput when replying to a GET_STATION
-command via nl80211.
+On 25/04/14 17:44, Johannes Berg wrote:
+> On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
+>=20
+>> +	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
+>=20
+> This isn't nice - it forces drivers to conjure up a value.
+>=20
+> You should probably at least allow returning 0 for "no idea" or
+> something.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 4 ++++
- 2 files changed, 7 insertions(+)
+Yeah, I think so too. Returning 0 as "I don't know what to provide"
+should be fine. I will specify this in the doc.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 0cfa827..2964948 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2199,6 +2199,8 @@ enum nl80211_sta_bss_param {
-  *	Contains a nested array of signal strength attributes (u8, dBm)
-  * @NL80211_STA_INFO_CHAIN_SIGNAL_AVG: per-chain signal strength average
-  *	Same format as NL80211_STA_INFO_CHAIN_SIGNAL.
-+ * @NL80211_STA_EXPECTED_THROUGHPUT: expected throughput (considering also the
-+ *	802.11 header) expressed in kbps
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2230,6 +2232,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TX_BYTES64,
- 	NL80211_STA_INFO_CHAIN_SIGNAL,
- 	NL80211_STA_INFO_CHAIN_SIGNAL_AVG,
-+	NL80211_STA_INFO_EXPECTED_THROUGHPUT,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ca19b15..9631648 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3650,6 +3650,10 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 	    nla_put_u32(msg, NL80211_STA_INFO_TX_FAILED,
- 			sinfo->tx_failed))
- 		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_EXPECTED_THROUGHPUT) &&
-+	    nla_put_u32(msg, NL80211_STA_INFO_EXPECTED_THROUGHPUT,
-+			sinfo->expected_throughput))
-+		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_BEACON_LOSS_COUNT) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_BEACON_LOSS,
- 			sinfo->beacon_loss_count))
--- 
-1.8.5.5
 
+Cheers,
+
+--=20
+Antonio Quartulli
+
+
+--ORNF4T3Ao6Kb63UtdaHlwbCU0hE1I7DmI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJTc9uLAAoJEEKTMo6mOh1Vfr4P/0n0mFbSxtiUpVl1EQ6dBUct
++G3Qs1ToZQNQHrqzynWNEc/XIhFZBLX86aYHN8g1jF3ngbDPcbmt/gtSrt/CRZ6P
+uifzzAJVbPmN7kWSoU97CtFGrB06lL2jiG2NIflrwl0qbL7/4lphE4KY8Mm8vdWa
+45FLAEOvtsO8D6R0YDaNlNFtSAlCopZ0UNcllzoW8bgodoXbfN7ClrM1sIkiJ9gy
+aTDI9+C6qNJV8rw3tyxhczuo2VGVGvORExpldwIemogX12lsx2j2zQ7seP7tP/MW
++XHM7wW2XQbBGNHIIEoNV8ultU4MCeJsozIXxnqPVnmgY43yx/rx9LqvhFECQVdZ
+XFAoStiboR9cQtDXtHvI/U3Nc40npOIbwL40r1IPV4MlDBUk8dgP1Ji33Ls/uVRQ
+89IG+EMPDh2QD0LfrBcfQku9HLjqQ0A6wdO0wLfwPU/U0Cdr6iBdjCaUzbe4BNfn
+romgB8B8f7lEn3ClKLEHpXBOttuNA3VXYxHoZ01H64l0p4h7aZSkbJ9FcDKATi8s
+Gf67rE71NHwISPSQMbo/MwZ97SmIEdwERlgX730OGAGTVa/FV+LNpO5XSCBKfCBX
+BsyFTDtOhlpS6E2vGKquN6ENUWLaFrGe+7Wtffz5h8EjCDj0xmA5cL/Dy/ScUYTC
+8wVj62CWtkfAg2LQWz/F
+=TpMe
+-----END PGP SIGNATURE-----
+
+--ORNF4T3Ao6Kb63UtdaHlwbCU0hE1I7DmI--
