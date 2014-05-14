@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:35123 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751198AbaEOB0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 21:26:53 -0400
-In-Reply-To: <20140515011551.26781.qmail@ns.horizon.com>
-References: <20140515011551.26781.qmail@ns.horizon.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38626 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752872AbaENDzN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2014 23:55:13 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Tue, 13 May 2014 20:54:53 -0700
+Subject: RE: mwifiex: no wr_port available
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70D87C6F@SC-VEXCH1.marvell.com> (sfid-20140514_055746_702395_32182AEE)
+References: <20140507120634.GM17490@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70D87C4D@SC-VEXCH1.marvell.com>
+ <20140514031804.GN12785@us.netrek.org>
+In-Reply-To: <20140514031804.GN12785@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
-From: "H. Peter Anvin" <hpa@zytor.com>
-Date: Wed, 14 May 2014 18:26:09 -0700
-To: George Spelvin <linux@horizon.com>, pavel@ucw.cz
-CC: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-Message-ID: <2e076c13-84aa-4da4-a443-7e8fcc462fc9@email.android.com> (sfid-20140515_032751_591244_40C8AE48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seems to me to make the code easier to read, not harder. That was the whole point.
+Hi James,
 
-On May 14, 2014 6:15:51 PM PDT, George Spelvin <linux@horizon.com> wrote:
->H. Peter Anvin wrote:
->> If the whole point of this is to use it for MMC/SD cards, why not
->just
->> also subsume the OR 1 and call it crc7_mmc() or something like that.
->>
->> (Which I'm all for doing... I don't know of any other crc7 users.)
->
->You'll find all users in my patch series.  2/3 updates the MMC
->card, while 3/3 hits drivers/net/wireless/ti/wl1251/spi.c and
->drivers/net/wireless/ti/wlcore/spi.c (which I'm pretty sure aren't
->MMC/SPI cards).
->
->Now, it turns out that they *also* set the lsbit (calling it
->WSPI_INIT_CMD_END).  However, it's not possible to put that into the
->CRC
->table (it would mess up all bytes but the last), so an explicitly coded
->"| 1" is required at the end.  Thic ends up being no saving at all to
->execution path length, and only moves one instruction from three
->drivers
->to shared code.  While making it harder to read the drivers.
->
->A microscopic space saving (if and only if you have more than one of
->these
->drivers loaded) and no performance improvement didn't seem worth it to
->me.
+> > > If mwifiex_host_to_card_mp_aggr fails because of is_suspended in
+> > > mwifiex_write_data_sync, is the wr_port ever released?
+> > >
+> > > Or maybe mp_wr_bitmap is re-read from the card when a download
+> > > interrupt occurs, or if an upload interrupt occurs after a command is
+> > > sent.
+> >
+> > A patch has been sent to address this issue.
+> 
+> Reviewed, thanks.  Functionally identical to a patch that I've been
+> testing locally:
 
--- 
-Sent from my mobile phone.  Please pardon brevity and lack of formatting.
+Thanks!
+
+> 
+> /*
+>  * Rollback the effects of _get_wr_port above.
+>  */
+> static void mwifiex_put_wr_port(struct mwifiex_adapter *adapter, u8 port)
+> {
+> 	struct sdio_mmc_card *card = adapter->card;
+> 
+> 	card->mp_wr_bitmap |= (1 << port);
+> 	card->curr_wr_port = port;
+> }
+
+Yeah, that's the same fix.
+
+> 
+> ...
+> 
+> 		if (type == MWIFIEX_TYPE_DATA) {
+> 			mwifiex_put_wr_port(adapter, port);
+> 			adapter->data_sent = false;
+> 		}
+> 
+> You may be interested that rd_port also has possible leak when skb
+> cannot be allocated.  See mwifiex_process_int_status:
+> 
+> 		skb = dev_alloc_skb(rx_len);
+> 		if (!skb)
+> 			return -1;
+> 
+> We have a hack in OLPC production arm-3.5 kernel which restores
+> rd_port bit, restores int_status.
+> 
+> http://dev.laptop.org/git/olpc-kernel/commit/?h=arm-3.5&id=59fcaf10cce5bbdc370ec1c262b12aeb66ed1dca
+
+The rd_port/int_status change looks correct. But what issue did you encounter prior to applying the change "cache the read bitmap at the time of the interrupt rather than when the interrupt status bits are handled"?
+
+Thanks,
+Bing
+
