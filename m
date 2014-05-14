@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45313 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755633AbaEFNIk (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10810 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbaENS61 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 09:08:40 -0400
-Message-ID: <1399381710.4218.26.camel@jlt4.sipsolutions.net> (sfid-20140506_150845_037694_48B09A66)
-Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 14 May 2014 14:58:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Tue, 06 May 2014 15:08:30 +0200
-In-Reply-To: <CA+BoTQmQ-2MeWO3FkKPxo3XyUjQ4X2LAA2uOuYLzASRydF6+LQ@mail.gmail.com> (sfid-20140506_144931_550819_743E42C5)
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	 <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmQ-2MeWO3FkKPxo3XyUjQ4X2LAA2uOuYLzASRydF6+LQ@mail.gmail.com>
-	 (sfid-20140506_144931_550819_743E42C5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/5] ath10k: dont configure bssid for ap mode
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1399637749-13489-6-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 14 May 2014 21:58:19 +0300
+In-Reply-To: <1399637749-13489-6-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 9 May 2014 14:15:49 +0200")
+Message-ID: <87tx8schmc.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_205830_955268_FDD0A2FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-06 at 14:49 +0200, Michal Kazior wrote:
-> > (I seem to remember a fix in this area but can't seem to find
-> > it in my tree!!)
-> 
-> Just a reminder - there's my pending patchset (mac80211/cfg80211: CSA
-> fixes/cleanups) for CSA that disconnects interfaces that fail to
-> switch channel. Perhaps I should re-post?
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-D'oh. No, I have it, I'll pick it up. I just forgot - there was some
-minor thing with it and I thought Luca might pick it up, so I dropped
-it. I'll go look at it now.
+> FW creates self-peer for AP internally.
+>
+> This prevents ath10k from trying to create
+> explicit self-peer during hw recovery and thus
+> prevents a timeout and a warning during teardown:
+>
+>   ath10k: removing stale peer $AP_BSSID from vdev_id 0
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+[...]
 
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -2953,7 +2953,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+>  		arvif->u.ap.hidden_ssid = info->hidden_ssid;
+>  	}
+>  
+> -	if (changed & BSS_CHANGED_BSSID) {
+> +	if (changed & BSS_CHANGED_BSSID &&
+> +	    vif->type != NL80211_IFTYPE_AP) {
+>  		if (!is_zero_ether_addr(info->bssid)) {
+>  			ath10k_dbg(ATH10K_DBG_MAC,
+>  				   "mac vdev %d create peer %pM\n",
+
+I think this deserves a comment, at least "Firmware creates self-peer in
+AP mode automatically" or something like that.
+
+-- 
+Kalle Valo
