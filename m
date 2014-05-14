@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933011AbaEEPFL (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:64463 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755733AbaENM7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 11:05:11 -0400
-Message-ID: <1399302291.22235.22.camel@jlt4.sipsolutions.net> (sfid-20140505_170521_233933_CF060714)
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Anirban Chakraborty <anirban.chakraborty@qlogic.com>,
-	Ben Hutchings <ben@decadent.org.uk>
-Date: Mon, 05 May 2014 17:04:51 +0200
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF59511A1FC9324@SC-VEXCH1.marvell.com>
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
-	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
-	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
-	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
-	 <8738gvp8md.fsf@qca.qualcomm.com>
-	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
-	 <20140430132246.GB3635@tuxdriver.com> <87y4ymn69s.fsf@qca.qualcomm.com>
-	 <1399294659.22235.9.camel@jlt4.sipsolutions.net>
-	 <5FF020A1CFFEEC49BD1E09530C4FF59511A1FC9324@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 14 May 2014 08:59:21 -0400
+Received: by mail-we0-f174.google.com with SMTP id k48so1854021wev.5
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 05:59:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <878uq4h690.fsf@kamboji.qca.qualcomm.com>
+References: <1397695357-14028-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQ=Q3s6_9tXq02_3S0=q5qv4U4V1F_qHoN1X1pfWV9CKBA@mail.gmail.com>
+	<878uq4h690.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 14 May 2014 14:59:09 +0200
+Message-ID: <CA+BoTQnPznQ_yFGVSvZY9PUsSGZmwPSsQcorpMYmNBgJ0vZOsQ@mail.gmail.com> (sfid-20140514_145933_130626_1F5F7A41)
+Subject: Re: [PATCH] ath10k: Hold tx-lock while detaching htt.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-05-05 at 07:19 -0700, Amitkumar Karwar wrote:
+On 14 May 2014 14:52, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 17 April 2014 02:42,  <greearb@candelatech.com> wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> And check for null pool in the tx path (which would
+>>> indicate we are detaching).
+>>
+>> Shouldn't we just make sure tx is stopped before we try to detach htt?
+>> Stoping mac80211 queues and synchronize_net() should be sufficient I
+>> think.
+>>
+>>
+>>> @@ -403,6 +412,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+>>>                 goto err;
+>>>
+>>>         spin_lock_bh(&htt->tx_lock);
+>>> +
+>>> +       /* Check if we are detached... */
+>>> +       if (! htt->tx_pool) {
+>>> +               spin_unlock_bh(&htt->tx_lock);
+>>
+>> Setting `res` would be nice to indicate an error. And there's a space after !.
+>
+> Ben, are you planning to send v2? Or what should we do with this patch?
 
-> In mwifiex, we are interested in providing separate firmware dump file to user for each memory segment. Ex. ITCM, DTCM, SQRAM etc.
-
-We have multiple things as well, firmware memory, last driver
-commands, ...
-
-> It looks simpler with ethtool ops instead of creating multiple debugfs files.
-
-What we decided to do is encode the file with an IE-like structure so we
-can extend the format in the future.
- 
-> 1) User can set index for required memory segment.
-> 
-> #ethtool --set-dump wlan0 3
-> 
-> 2) Get the details
-> 
-> #ethtool --get-dump wlan0
-> flag: 3, version:xyz, length:13450
-> 
-> 3) Dump the info in ITCM.log file
-> 
-> #ethtool --get-dump wlan0 data ITCM.log
-
-This works, though I'd be worried about getting a consistent snapshot,
-no?
-
-> Common uevent through cfg80211 API to notify firmware dump is over would be useful for us.
-
-That makes some sense.
+My patchset `ath10k: recovery fixes 2014-05-09` fixes the problem by
+avoiding the tx to happen when it shouldn't in the first place so
+Ben's patch isn't necessary anymore I suppose.
 
 
-The way our code works is that it stores all the desired data on an
-error, triggers the event & restart, and then you can request the data
-later.
-
-I'm not sure ethtool dump is appropriate for that - it seems to be more
-used for "get a dump right now during operation" type scenarios?
-
-johannes
-
+Michal
