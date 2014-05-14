@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:49993 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751071AbaEYR7w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 May 2014 13:59:52 -0400
-From: =?UTF-8?q?Manuel=20Sch=C3=B6lling?= <manuel.schoelling@gmx.de>
-To: bzhao@marvell.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	=?UTF-8?q?Manuel=20Sch=C3=B6lling?= <manuel.schoelling@gmx.de>
-Subject: [PATCH] mwifiex: use time_after()
-Date: Sun, 25 May 2014 19:59:36 +0200
-Message-Id: <1401040776-13711-1-git-send-email-manuel.schoelling@gmx.de> (sfid-20140525_200019_642998_71DA518B)
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:55822 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750943AbaENT47 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 15:56:59 -0400
+Date: Wed, 14 May 2014 21:56:57 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: George Spelvin <linux@horizon.com>
+Cc: arik@wizery.com, coelho@ti.com, david.gnedt@davizone.at,
+	eliad@wizery.com, jan.nikitenko@gmail.com,
+	laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
+Subject: Re: [PATCH] lib/crc7: Shift crc7() output left 1 bit
+Message-ID: <20140514195657.GA5320@amd.pavel.ucw.cz> (sfid-20140514_215721_035103_410BCCC2)
+References: <20140511082811.GA2695@xo-6d-61-c0.localdomain>
+ <20140511091607.31386.qmail@ns.horizon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140511091607.31386.qmail@ns.horizon.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be future-proof and for better readability the time comparisons are
-modified to use time_after() instead of plain, error-prone math.
+On Sun 2014-05-11 05:16:07, George Spelvin wrote:
+> > Looks good, but should not function name change when functionality got
+> > completely different?
+> 
+> I couldn't think of one.  Can you?
+> 
+> I suppose adding a _be (big-endian) suffix would be consistent.
+> Is that okay with you?
+> 
+> To do it properly, I have to rename all of:
+> 
+> crc7_syndrome_table[]
+> crc7_byte()
+> crc7()
+> 
+> even though the third is the only (in-tree) user of the first two.
 
-Signed-off-by: Manuel Schölling <manuel.schoelling@gmx.de>
----
- drivers/net/wireless/mwifiex/main.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If the first two are static, there's no problem.
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d53e1e8..3191066 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1101,7 +1101,7 @@ mwifiex_11h_get_csa_closed_channel(struct mwifiex_private *priv)
- 		return 0;
- 
- 	/* Clear csa channel, if DFS channel move time has passed */
--	if (jiffies > priv->csa_expire_time) {
-+	if (time_after(jiffies, priv->csa_expire_time)) {
- 		priv->csa_chan = 0;
- 		priv->csa_expire_time = 0;
- 	}
+									Pavel
 -- 
-1.7.10.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
