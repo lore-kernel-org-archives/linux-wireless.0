@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55323 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbaEFSPL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45877 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755440AbaENNnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 14:15:11 -0400
-Date: Tue, 6 May 2014 14:08:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Adam Lee <adam.lee@canonical.com>
-Cc: Stephen Hemminger <stephen@networkplumber.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/3] rtlwifi: make MSI support a module parameter
-Message-ID: <20140506180836.GF3518@tuxdriver.com> (sfid-20140506_201518_907439_EB025F86)
-References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
- <5367A690.7010305@lwfinger.net>
- <20140505154037.19620ac2@nehalam.linuxnetplumber.net>
- <20140506021915.GA3624@adam-laptop>
+	Wed, 14 May 2014 09:43:16 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>, <apenwarr@gmail.com>
+Subject: Re: [PATCH 0/2] ath10k: 2014-05-07 fixes
+References: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 14 May 2014 16:43:08 +0300
+In-Reply-To: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 7 May 2014 14:33:24 +0200")
+Message-ID: <87k39ofpcj.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_154318_791134_2F809B33)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140506021915.GA3624@adam-laptop>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 06, 2014 at 10:19:15AM +0800, Adam Lee wrote:
-> On Mon, May 05, 2014 at 03:40:37PM -0700, Stephen Hemminger wrote:
-> > On Mon, 05 May 2014 09:56:16 -0500
-> > Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > 
-> > > On 05/05/2014 03:33 AM, Adam Lee wrote:
-> > > > This makes MSI support a module parameter, for debugging and workaround
-> > > > convenience.
-> > > >
-> > > > Signed-off-by: Adam Lee <adam.lee@canonical.com>  
-> > > 
-> > > Acked-by: Larry Finger <Larry.Finger@lwfinger.net> (for all 3 patches)
-> > > 
-> > > I would have made the default for the MSI option to be true, but that is a 
-> > > matter of preference, and only experience would show which default leads to the 
-> > > fewer failures. On my laptop, both rtl8188ee and rtl8723be work either way. I am 
-> > > now working on a driver for the RTL8192EE that also can use MSI - that has only 
-> > > been tested with the option on.
-> > > 
-> > > Larry
-> > 
-> > Standard practice is to assume MSI is available, and let the quirks
-> > in the PCI subsystem reject the request to enable MSI.
-> > 
-> > Also other drivers have a 'disable_msi' module parameter why not follow
-> > their example.
-> > 
-> 
-> Because some submodule's MSI causes an regression, and other submodules
-> of rtlwifi are not fully tested under MSI, we need to disable it by
-> default(regression has higher priority) and have an 'enable_msi' module
-> parameter for some certain users.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Couldn't it be called 'disable_msi' and default to 'on'?
+> These 2 patches address kernel panics reported by
+> Avery recently. One of them was most likely
+> reported by Ben some time ago already.
+>
+> I've never seen these panics myself. It'd be great
+> if you guys could give it a try and (assuming
+> you're capable of reproducing) see if it actually
+> helps.
+>
+>
+> Michal Kazior (2):
+>   ath10k: fix htt rx ring clean up
+>   ath10k: fix handling of wierd MSDU chaining cases
+
+Thanks, applied.
+
+I didn't see any reports if these help or not, but the patches looked
+good and I applied them anyway.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
