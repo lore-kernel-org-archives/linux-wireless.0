@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:42150 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350AbaEWKf7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 06:35:59 -0400
-Received: by mail-ee0-f53.google.com with SMTP id c13so3468956eek.40
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:35:58 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/3] ath10k: remove unnecessary tasklet_kill()
-Date: Fri, 23 May 2014 12:28:46 +0200
-Message-Id: <1400840927-14272-3-git-send-email-michal.kazior@tieto.com> (sfid-20140523_123605_847730_1EE49A3B)
-In-Reply-To: <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
- <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga02.intel.com ([134.134.136.20]:46124 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbaEOJwB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 05:52:01 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"eliad@wizery.com" <eliad@wizery.com>
+Subject: Re: [PATCH] cfg80211: fix start_radar_detection issue
+Date: Thu, 15 May 2014 09:51:54 +0000
+Message-ID: <1400147514.4521.10.camel@dubbel> (sfid-20140515_115205_847210_DFD46FD9)
+References: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1400078561.4759.12.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcixQDE7FbvJ2k3jw501BjS2_LkKG72zYok6WbmzCxq5A@mail.gmail.com>
+	 (sfid-20140515_112846_166140_C2756793)
+ <1400146757.4146.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1400146757.4146.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tasklet is already guaranteed to be killed on
-the teardown path.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-
-Notes:
-    v2:
-     * split from another patch [Kalle]
-
- drivers/net/wireless/ath/ath10k/pci.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 7d72b9c..dadf4ce 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2758,8 +2758,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
- 	if (!ar_pci)
- 		return;
- 
--	tasklet_kill(&ar_pci->msi_fw_err);
--
- 	ath10k_core_unregister(ar);
- 	ath10k_pci_free_ce(ar);
- 
--- 
-1.8.5.3
-
+T24gVGh1LCAyMDE0LTA1LTE1IGF0IDExOjM5ICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUaHUsIDIwMTQtMDUtMTUgYXQgMTI6MjggKzAzMDAsIEVsaWFkIFBlbGxlciB3cm90ZToN
+Cj4gPiBPbiBXZWQsIE1heSAxNCwgMjAxNCBhdCA1OjQyIFBNLCBKb2hhbm5lcyBCZXJnDQo+ID4g
+PGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOg0KPiA+ID4gT24gV2VkLCAyMDE0LTA1
+LTE0IGF0IDEzOjI1ICswMjAwLCBKYW51c3ogRHppZWR6aWMgd3JvdGU6DQo+ID4gPj4gQWZ0ZXIg
+cGF0Y2g6DQo+ID4gPj4gY2ZnODAyMTEvbWFjODAyMTE6IHJlZmFjdG9yIGNmZzgwMjExX2NoYW5k
+ZWZfZGZzX3JlcXVpcmVkKCkNCj4gPiA+Pg0KPiA+ID4+IHN0YXJ0X3JhZGFyX2RldGVjdGlvbiBh
+bHdheXMgZmFpbCB3aXRoIC1FSU5WQUwuDQo+ID4gPg0KPiA+ID4gQXBwbGllZCwgdGhhbmtzLg0K
+PiA+ID4NCj4gPiBwcm9iYWJseSBhIGJpdCBsYXRlLCBidXQgaSBkb24ndCByZWFsbHkgc2VlIHdo
+eSBwYXNzaW5nDQo+ID4gTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQgYXQgYWxsLCBpbnN0ZWFk
+IG9mIHRoZSBpZnR5cGU/DQo+IA0KPiBJIGRpZCBicmllZmx5IHdvbmRlciBhYm91dCB0aGUgc2Ft
+ZSwgYnV0IGRlY2lkZWQgTHVjYSBwcm9iYWJseSBrbmV3DQo+IGJldHRlciA6KQ0KDQpBY3R1YWxs
+eSBJIGFsc28gdGhvdWdodCB0aGUgc2FtZSB0aGluZywgYnV0IGhhZCB0aGUgaW1wcmVzc2lvbiB0
+aGF0DQp0aGVyZSB3ZXJlIGNhc2VzIHdoZW4gd2Ugd291bGRuJ3QgaGF2ZSB0aGUgaWZ0eXBlIHdo
+ZW4gY2FsbGluZyB0aGlzLg0KQnV0IG5vdyBJIGNoZWNrZWQgYm90aCBjYXNlcyB3aGVyZSB3ZSB1
+c2UgTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQgYW5kDQppdCBzZWVtcyB0aGF0IHdlIHJlYWxs
+eSBkb24ndCBuZWVkIGl0Lg0KDQpJJ2xsIHNlbmQgYSBwYXRjaCB0byBmaXggdGhpcyBhbmQgcmV2
+ZXJ0IEphbnVzeidzIGNoYW5nZSAodW5sZXNzDQpKb2hhbm5lcyB3YW50cyB0byByZWJhc2UgdGhl
+IG1hYzgwMjExLW5leHQgdHJlZSkuDQoNClNvcnJ5IGZvciB0aGUgdHJvdWJsZS4NCg0KLS0NCkx1
+Y2EuDQo=
