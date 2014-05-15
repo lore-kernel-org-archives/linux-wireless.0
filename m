@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13617 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbaENMqn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 08:46:43 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: get rid of pci_assign_resource() call from pci_probe
-References: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 14 May 2014 15:46:35 +0300
-In-Reply-To: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 14 May 2014 13:57:07 +0200")
-Message-ID: <87fvkch6j8.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_144646_168631_B889CA03)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from dedo.coelho.fi ([88.198.205.34]:49155 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751845AbaEONSU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 09:18:20 -0400
+Message-ID: <1400159890.4521.21.camel@dubbel> (sfid-20140515_151823_519752_2F4D4269)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	andrei.otcheretianski@intel.com
+Date: Thu, 15 May 2014 16:18:10 +0300
+In-Reply-To: <1400159466.4146.4.camel@jlt4.sipsolutions.net>
+References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
+	 <1400159466.4146.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 0/8] mac80211/cfg80211/iwlwifi: a few channel-switch
+ patches
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+On Thu, 2014-05-15 at 15:11 +0200, Johannes Berg wrote:
+> On Fri, 2014-05-09 at 14:11 +0300, Luca Coelho wrote:
+> > From: Luciano Coelho <luciano.coelho@intel.com>
+> > 
+> > Hi,
+> > 
+> > These are a few channel-switch patches by Andrei that we have in our
+> > internal tree.  I have rebased them for upstream.
+> 
+> Applied the cfg80211/mac80211 changes, but please ... that cover letter
+> was useless,
 
-> On ARM-based (MSM mach), the pci_assign_resource() is passing
-> some invalid pointers and leading to L2 cache errors,
-> what prevents the PCI communication completly.
->
-> So far I have not found this funtion to be directly called by
-> any other wifi driver and did not found this assigning needed
-> on any other platform. So removing it completly.
+Yes, it was a bit useless in terms of content, but I like to group
+things and reckoned it would be nice to explain why I was sending
+Andrei's patches.  Also, I like the fact that you can reply to the cover
+letter saying that you applied everything (or not) instead of replying
+to one of the actual patches (say 1/8).
 
-Typo, it should be "completely". I have fixed this up in ath-next-test.
+>  and your patch set had build breakage in the middle. :)
 
--- 
-Kalle Valo
+Oh, really? Sorry about that... I probably screwed up the rebase...
+
+> I fixed that with along with some minor editing changes and a change to
+> the netlink dump as well.
+
+Thanks!
+
+Maybe next time I should not volunteer to send other people's patches
+upstream.  I do enough breakage with my own stuff! :P
+
+--
+Luca.
+
