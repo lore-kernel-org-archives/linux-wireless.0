@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:63239 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754254AbaESQF5 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48870 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752356AbaEONVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 12:05:57 -0400
-Received: by mail-wi0-f175.google.com with SMTP id f8so4434708wiw.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 09:05:56 -0700 (PDT)
+	Thu, 15 May 2014 09:21:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/7] ath10k: wake up everything on core restart
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+	<1399638957-20449-5-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 15 May 2014 16:21:18 +0300
+In-Reply-To: <1399638957-20449-5-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 9 May 2014 14:35:54 +0200")
+Message-ID: <87fvkb89f5.fsf@kamboji.qca.qualcomm.com> (sfid-20140515_152130_621803_0A80AD59)
 MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <1400515344.4273.19.camel@jlt4.sipsolutions.net>
-References: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
- <1400509775.4273.8.camel@jlt4.sipsolutions.net> <1400510950.4273.9.camel@jlt4.sipsolutions.net>
- <CAN8YU5OdpxQ0F7RMEFeQWC6PNzppHu6bDEt7Tv6dKntEUMy-9A@mail.gmail.com> <1400515344.4273.19.camel@jlt4.sipsolutions.net>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Mon, 19 May 2014 18:05:36 +0200
-Message-ID: <CAN8YU5P5rFjjF9kjLBi0qXwZ1-Zphfi-fbY048wbO9oBmKoULQ@mail.gmail.com> (sfid-20140519_180601_293940_C667F85C)
-Subject: Re: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216..
- and RX path involved in scan
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: emmanuel.grumbach@intel.com,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	joerg.albert@gmx.de, Alex Stewart <alex@foogod.com>,
-	n0_5p4m_p13453@hotmail.com, Pavel Roskin <proski@gnu.org>,
-	agx@sigxcpu.org, Kalle Valo <kalle.valo@iki.fi>, sesmo@gmx.net,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I agree.. I thougth the same thing: parsing
-beacons/probe-response in the driver was also my last resort :)
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Andrea
+> It makes sense to finish completions as they may
+> be waited for while holding conf_mutex thus
+> delaying hw restart.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 3f4d28f..bf7c323 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -709,6 +709,18 @@ void ath10k_core_restart(struct ath10k *ar)
+>  	spin_lock_bh(&ar->data_lock);
+>  	ar->wmi.drop = true;
+>  	wake_up(&ar->wmi.tx_credits_wq);
+> +
+> +	complete(&ar->target_suspend);
+> +	complete(&ar->debug.event_stats_compl);
 
-On Mon, May 19, 2014 at 6:02 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2014-05-19 at 17:42 +0200, Andrea Merello wrote:
->
->> About Johannes patch.. Looks good :) But I already tried to do almost
->> the same thing in the at79 driver, but I failed, because despite
->> setting the single channel and performing a bunch of HW scan (one for
->> each ch), it happened that my HW did several full scans disregarding
->> the channel setting.
->
-> Well, if it doesn't work we can go back to the mac80211 solution I
-> suppose. Although the better solution even then might be to at least
-> detect in the driver that we're in the scan, and then attempt to parse
-> the DS information in the driver, so that it works regardless of whether
-> mac80211 has both those long paths or not. That patch would also be
-> simpler.
->
-> johannes
->
+We dropped this patchset already, but for the future, this patch
+introduces a new warning:
+
+   drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_restart':
+>> drivers/net/wireless/ath/ath10k/core.c:714:14: error: 'struct ath10k'
+>> has no member named 'debug'
+     complete(&ar->debug.event_stats_compl);
+                 ^
+
+Maybe that complete call should be in debug.c?
+
+-- 
+Kalle Valo
