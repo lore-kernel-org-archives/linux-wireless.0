@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:46170 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbaERLlp (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:49036 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753334AbaEORFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2014 07:41:45 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e53so2748854eek.36
-        for <linux-wireless@vger.kernel.org>; Sun, 18 May 2014 04:41:44 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: make B43_PCMCIA and B43_SDIO depend on B43_SSB
-Date: Sun, 18 May 2014 13:41:33 +0200
-Message-Id: <1400413293-25973-1-git-send-email-zajec5@gmail.com> (sfid-20140518_134332_718591_5DADE127)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 May 2014 13:05:05 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so3788350wgh.14
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:04 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/24] iwlwifi: mvm: Add power management support for P2P DCM
+Date: Thu, 15 May 2014 20:04:25 +0300
+Message-Id: <1400173481-9047-8-git-send-email-egrumbach@gmail.com> (sfid-20140515_190610_681037_965559FA)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are extra configs specific to the SSB. Lack of this dependency and
-CONFIG_B43=y
-CONFIG_B43_BUSES_BCMA=y
-CONFIG_SSB=m
-would result in:
-> drivers/built-in.o: In function `b43_sdio_remove':
-> sdio.c:(.text+0x14657f): undefined reference to `ssb_bus_unregister'
-> drivers/built-in.o: In function `b43_sdio_probe':
-> sdio.c:(.text+0x14672f): undefined reference to `ssb_bus_sdiobus_register'
+From: Avri Altman <avri.altman@intel.com>
 
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+If two clients are active while each one is alone on its channel,
+and the applicable flags are set, power management should be enabled.
+This condition is referred to as Different Channel Mode (DCM).
+Up to now, in DCM power management was supported only on BSS.
+This patch adds support for P2P power management in DCM as well.
+
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/b43/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/power.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 1c7d27b..e3f67b8 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -73,7 +73,7 @@ config B43_PCICORE_AUTOSELECT
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 78309f7..258405f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -613,11 +613,15 @@ iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
+ 		ap_same_channel = (bss_mvmvif->phy_ctxt->id ==
+ 				   ap_mvmvif->phy_ctxt->id);
  
- config B43_PCMCIA
- 	bool "Broadcom 43xx PCMCIA device support"
--	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
-+	depends on B43 && B43_SSB && SSB_PCMCIAHOST_POSSIBLE
- 	select SSB_PCMCIAHOST
- 	---help---
- 	  Broadcom 43xx PCMCIA device support.
-@@ -93,7 +93,7 @@ config B43_PCMCIA
+-	/* bss is not stand alone: enable PM if alone on its channel */
+-	if (vifs->bss_active && !(client_same_channel || ap_same_channel) &&
++	/* clients are not stand alone: enable PM if DCM */
++	if (!(client_same_channel || ap_same_channel) &&
+ 	    (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BSS_P2P_PS_DCM)) {
++		if (vifs->bss_active)
+ 			bss_mvmvif->pm_enabled = true;
+-			return;
++		if (vifs->p2p_active &&
++		    (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_P2P_PM))
++			p2p_mvmvif->pm_enabled = true;
++		return;
+ 	}
  
- config B43_SDIO
- 	bool "Broadcom 43xx SDIO device support"
--	depends on B43 && SSB_SDIOHOST_POSSIBLE
-+	depends on B43 && B43_SSB && SSB_SDIOHOST_POSSIBLE
- 	select SSB_SDIOHOST
- 	---help---
- 	  Broadcom 43xx device support for Soft-MAC SDIO devices.
+ 	/*
 -- 
-1.8.4.5
+1.8.3.2
 
