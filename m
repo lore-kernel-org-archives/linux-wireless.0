@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:43587 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756219AbaE2LOy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 07:14:54 -0400
-Received: by mail-pa0-f46.google.com with SMTP id kq14so205002pab.33
-        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 04:14:53 -0700 (PDT)
+Received: from terminus.zytor.com ([198.137.202.10]:34791 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751559AbaEOAiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 20:38:01 -0400
+Message-ID: <53740C42.3000906@zytor.com> (sfid-20140515_023825_015191_F0E76EAE)
+Date: Wed, 14 May 2014 17:37:22 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-In-Reply-To: <78e41a7f3d624575aa7feef3b002553c@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
-References: <78e41a7f3d624575aa7feef3b002553c@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
-Date: Thu, 29 May 2014 16:44:53 +0530
-Message-ID: <CAJwzM1=_uOi_RvaQaxS=uZLLpqiNqObRYuyD-SaKnK77py2PZw@mail.gmail.com> (sfid-20140529_131457_374023_3B4899F5)
-Subject: Re: Support for 88W8897 in 3.10.17 kernel
-From: Avinash Patil <avinashapatil@gmail.com>
-To: Krishnankutty Plachikkattle
-	<Krishnankutty_Plachikkattle@mindtree.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: George Spelvin <linux@horizon.com>, pavel@ucw.cz
+CC: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
+Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
+References: <20140511100211.1334.qmail@ns.horizon.com>
+In-Reply-To: <20140511100211.1334.qmail@ns.horizon.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Krishnan,
+On 05/11/2014 03:02 AM, George Spelvin wrote:
+> From 770aa22e6c9c92027e3e21797192ccabb3e7c70e Mon Sep 17 00:00:00 2001
+> From: George Spelvin <linux@horizon.com>
+> Date: Sat, 10 May 2014 10:32:57 -0400
+> Subject: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
+> 
+> This eliminates a 1-bit left shift in every single caller,
+> and makes the inner loop of the CRC computation more efficient.
+> 
+> Renamed crc7 to crc7_be (big-endian) since the interface changed.
+> 
+> Also purged #include <linux/crc7.h> from files that don't use it at all.
+> 
+> Signed-off-by: George Spelvin <linux@horizon.com>
 
->Is there any open source driver that supports  NFC and Bluetooth in this SoC?
-Yes; btmrvl.ko and btusb.ko would support PCIe-USB8897 BT
-functionality. Please check CONFIG_BT_MRVL kernel configuration
-parameter.
-For NFC,  nfcmrvl.ko & nfcmrvl_usb.ko would support 8897 NFC
-functionality. Please check for CONFIG_NFC_MRVL kernel configuration
-parameter.
+If the whole point of this is to use it for MMC/SD cards, why not just
+also subsume the OR 1 and call it crc7_mmc() or something like that.
 
-Thanks,
-Avinash
+(Which I'm all for doing... I don't know of any other crc7 users.)
 
-On Thu, May 29, 2014 at 2:47 PM, Krishnankutty Plachikkattle
-<Krishnankutty_Plachikkattle@mindtree.com> wrote:
-> Hi Avinash,
->
->
->
-> Greetings. We are starting a new product development with 88W8897.
->
->
->
-> This time I am planning to use PCIe interface.
->
->
->
-> I am using kernel version 3.10.17. Looks like mwifiex  driver needs minimal
-> changes.
->
->
->
-> Is there any open source driver that supports  NFC and Bluetooth in this
-> SoC?
->
->
->
->
->
-> Thanks in advance,
->
->
->
-> Regards
->
-> Krishnan
->
->
->
->
->
->
-> ________________________________
->
-> http://www.mindtree.com/email/disclaimer.html
+	-hpa
+
+
