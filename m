@@ -1,56 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:58254 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbaEGTxe (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:48812 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756148AbaEOVv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:34 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so6500744wib.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:33 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/23] iwlwifi: mvm: BT Coex - fix validity flags during init
-Date: Wed,  7 May 2014 22:52:39 +0300
-Message-Id: <1399492380-12050-2-git-send-email-egrumbach@gmail.com> (sfid-20140507_215449_711051_A966B61E)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+	Thu, 15 May 2014 17:51:59 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so1740140wes.15
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:58 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH rebased 15/15] staging: vt6656: Remove PIPEnsControlOutAsyn/CONTROLnsRequestOutAsyn
+Date: Thu, 15 May 2014 22:49:24 +0100
+Message-Id: <1400190564-5135-15-git-send-email-tvboxspy@gmail.com> (sfid-20140516_002147_630988_096C3ADE)
+In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This now the same as PIPEnsControlOut.
 
-The commit below introduced a bug in the validity bits in
-init. Due to that, all the Coex mechanism stopped sending
-kills to the BT side. Fix that.
+Replace with PIPEnsControlOut/CONTROLnsRequestOut.
 
-Fixes: b9fae2d54c9f ("iwlwifi: mvm: BT Coex add support for Co-running block")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/control.h  |  3 ---
+ drivers/staging/vt6656/firmware.c |  2 +-
+ drivers/staging/vt6656/mac.c      |  2 +-
+ drivers/staging/vt6656/usbpipe.c  | 38 --------------------------------------
+ drivers/staging/vt6656/usbpipe.h  |  2 --
+ 5 files changed, 2 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index fa858d54..0489314 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -611,14 +611,14 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
+diff --git a/drivers/staging/vt6656/control.h b/drivers/staging/vt6656/control.h
+index 9da9b96..4658910 100644
+--- a/drivers/staging/vt6656/control.h
++++ b/drivers/staging/vt6656/control.h
+@@ -36,9 +36,6 @@
+ #define CONTROLnsRequestOut(Device, Request, Value, Index, Length, Buffer) \
+ 	PIPEnsControlOut(Device, Request, Value, Index, Length, Buffer)
  
- 	if (IWL_MVM_BT_COEX_CORUNNING) {
--		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_CORUN_LUT_20 |
--						    BT_VALID_CORUN_LUT_40);
-+		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_CORUN_LUT_20 |
-+						     BT_VALID_CORUN_LUT_40);
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_CORUNNING);
- 	}
+-#define CONTROLnsRequestOutAsyn(Device, Request, Value, Index, Length, Buffer) \
+-	PIPEnsControlOutAsyn(Device, Request, Value, Index, Length, Buffer)
+-
+ #define CONTROLnsRequestIn(Device, Request, Value, Index, Length, Buffer) \
+ 	PIPEnsControlIn(Device, Request, Value, Index, Length, Buffer)
  
- 	if (IWL_MVM_BT_COEX_MPLUT) {
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_MPLUT);
--		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
-+		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
- 	}
+diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
+index 7a4a972..e03f1f9 100644
+--- a/drivers/staging/vt6656/firmware.c
++++ b/drivers/staging/vt6656/firmware.c
+@@ -71,7 +71,7 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
+ 		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
+ 		memcpy(pBuffer, fw->data + ii, wLength);
  
- 	if (mvm->cfg->bt_shared_single_ant)
+-		NdisStatus = CONTROLnsRequestOutAsyn(pDevice,
++		NdisStatus = CONTROLnsRequestOut(pDevice,
+ 						0,
+ 						0x1200+ii,
+ 						0x0000,
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 3ce19dd..8bd3ab0 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -75,7 +75,7 @@ void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
+  */
+ void MACbShutdown(struct vnt_private *pDevice)
+ {
+-    CONTROLnsRequestOutAsyn(pDevice,
++	CONTROLnsRequestOut(pDevice,
+                         MESSAGE_TYPE_MACSHUTDOWN,
+                         0,
+                         0,
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 9946bfd..433edca 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -64,44 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+ 
+-int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+-	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
+-{
+-	int ntStatus;
+-
+-    if (pDevice->Flags & fMP_DISCONNECTED)
+-        return STATUS_FAILURE;
+-
+-    if (in_interrupt()) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
+-        return STATUS_FAILURE;
+-    }
+-
+-	mutex_lock(&pDevice->usb_lock);
+-
+-    ntStatus = usb_control_msg(
+-                            pDevice->usb,
+-                            usb_sndctrlpipe(pDevice->usb , 0),
+-                            byRequest,
+-                            0x40, // RequestType
+-                            wValue,
+-                            wIndex,
+-			    (void *) pbyBuffer,
+-                            wLength,
+-                            HZ
+-                          );
+-    if (ntStatus >= 0) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe ntStatus= %d\n", ntStatus);
+-        ntStatus = 0;
+-    } else {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe fail, ntStatus= %d\n", ntStatus);
+-    }
+-
+-	mutex_unlock(&pDevice->usb_lock);
+-
+-    return ntStatus;
+-}
+-
+ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
+ {
+diff --git a/drivers/staging/vt6656/usbpipe.h b/drivers/staging/vt6656/usbpipe.h
+index f537703..42ad4f7 100644
+--- a/drivers/staging/vt6656/usbpipe.h
++++ b/drivers/staging/vt6656/usbpipe.h
+@@ -34,8 +34,6 @@
+ 
+ int PIPEnsControlOut(struct vnt_private *, u8 byRequest, u16 wValue,
+ 		u16 wIndex, u16 wLength, u8 *pbyBuffer);
+-int PIPEnsControlOutAsyn(struct vnt_private *, u8 byRequest,
+-	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer);
+ int PIPEnsControlIn(struct vnt_private *, u8 byRequest, u16 wValue,
+ 	u16 wIndex, u16 wLength,  u8 *pbyBuffer);
+ 
 -- 
-1.8.3.2
+1.9.1
 
