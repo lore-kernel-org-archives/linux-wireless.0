@@ -1,61 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57369 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752350AbaEUSP0 (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:44622 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364AbaEOItN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 14:15:26 -0400
-Date: Wed, 21 May 2014 14:00:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-Message-ID: <20140521180020.GA13656@tuxdriver.com> (sfid-20140521_201529_758384_A7477342)
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
- <20140520142453.GB13981@tuxdriver.com>
- <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
- <20140520180832.GD13981@tuxdriver.com>
- <1400610273.4474.6.camel@jlt4.sipsolutions.net>
- <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
- <1400688233.4136.8.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400688233.4136.8.camel@jlt4.sipsolutions.net>
+	Thu, 15 May 2014 04:49:13 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d49so409855eek.29
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 01:49:11 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+Date: Thu, 15 May 2014 10:42:02 +0200
+Message-Id: <1400143324-14911-4-git-send-email-michal.kazior@tieto.com> (sfid-20140515_104924_407112_3748F6D5)
+In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+ <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2014 at 06:03:53PM +0200, Johannes Berg wrote:
-> On Tue, 2014-05-20 at 11:48 -0700, Luis R. Rodriguez wrote:
-> 
-> > > I think we should, but if we can't then at least can we cut to an
-> > > extensible format?
-> 
-> I don't see any way to extend the format right now.
-> 
-> There's a wrinkle with making it more extensible too though - if we do
-> that then we must be extremely careful that future older crda versions
-> (i.e. the next version that we're about to write) will not parse a newer
-> extended file more permissively, so our extensions are limited anyway.
-> 
-> Looks like the format update really is needed, which probably means we
-> should change the scripts to generate two databases and change the
-> filename, or so?
+This makes sure no further tx requests are
+submitted to HTT before driver teardown.
 
-The 'do not parse more permissively' would seem to be a problem if
-we still produce an older format too, no?  I mean, wouldn't we have
-to simply drop new rules to produce an older binary?  Even worse if
-we left the old binary in place, since then you could never update
-any rules for old crda installations at all.
+This should prevent invalid pointer/NULL
+dereference on htt tx pool in ath10k_htt_tx() in
+some cases of heavy traffic.
 
-It seems like forcing a crda update to use any new format-breaking
-rules might just be the right thing.  Can we make crda choke and die
-loudly when it sees an unknown format?  Will the current crda do that?
+Reported-By: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b5d75b8..577a3a5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2289,6 +2289,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ /*
+  * Initialize various parameters with default vaules.
+  */
++static void ath10k_drain_tx(struct ath10k *ar)
++{
++	/* workers can hold conf_mutex -- avoid deadlock */
++	WARN_ON(lockdep_is_held(&ar->conf_mutex));
++
++	/* make sure rcu-protected mac80211 tx path itself is drained */
++	synchronize_net();
++
++	ath10k_offchan_tx_purge(ar);
++	ath10k_mgmt_over_wmi_tx_purge(ar);
++
++	cancel_work_sync(&ar->offchan_tx_work);
++	cancel_work_sync(&ar->wmi_mgmt_tx_work);
++}
++
+ void ath10k_halt(struct ath10k *ar)
+ {
+ 	struct ath10k_vif *arvif;
+@@ -2304,8 +2319,6 @@ void ath10k_halt(struct ath10k *ar)
+ 
+ 	del_timer_sync(&ar->scan.timeout);
+ 	ath10k_reset_scan((unsigned long)ar);
+-	ath10k_offchan_tx_purge(ar);
+-	ath10k_mgmt_over_wmi_tx_purge(ar);
+ 	ath10k_peer_cleanup_all(ar);
+ 	ath10k_core_stop(ar);
+ 	ath10k_hif_power_down(ar);
+@@ -2329,6 +2342,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 	struct ath10k *ar = hw->priv;
+ 	int ret = 0;
+ 
++	/*
++	 * This makes sense only when restarting hw. It is harmless to call
++	 * uncoditionally. This is necessary to make sure no HTT/WMI tx
++	 * commands will be submitted while restarting.
++	 */
++	ath10k_drain_tx(ar);
++
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	switch (ar->state) {
+@@ -2412,6 +2432,8 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 
++	ath10k_drain_tx(ar);
++
+ 	mutex_lock(&ar->conf_mutex);
+ 	if (ar->state != ATH10K_STATE_OFF) {
+ 		ath10k_halt(ar);
+@@ -2419,10 +2441,6 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ 	}
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+-	ath10k_mgmt_over_wmi_tx_purge(ar);
+-
+-	cancel_work_sync(&ar->offchan_tx_work);
+-	cancel_work_sync(&ar->wmi_mgmt_tx_work);
+ 	cancel_work_sync(&ar->restart_work);
+ }
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
