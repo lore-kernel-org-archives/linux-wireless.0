@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:62654 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbaEWRBP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:15 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so5003217wgg.13
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:14 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/20] staging: vt6656: MACvWriteBSSIDAddress remove pbyData
-Date: Fri, 23 May 2014 18:00:08 +0100
-Message-Id: <1400864419-8327-9-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190122_543577_4D10AAA2)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46015 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753610AbaEOJjd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 05:39:33 -0400
+Message-ID: <1400146757.4146.1.camel@jlt4.sipsolutions.net> (sfid-20140515_113938_466916_E0B03E4D)
+Subject: Re: [PATCH] cfg80211: fix start_radar_detection issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>
+Date: Thu, 15 May 2014 11:39:17 +0200
+In-Reply-To: <CAB3XZEcixQDE7FbvJ2k3jw501BjS2_LkKG72zYok6WbmzCxq5A@mail.gmail.com> (sfid-20140515_112846_166140_C2756793)
+References: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1400078561.4759.12.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcixQDE7FbvJ2k3jw501BjS2_LkKG72zYok6WbmzCxq5A@mail.gmail.com>
+	 (sfid-20140515_112846_166140_C2756793)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove pbyData and point directly to pbyEtherAddr
+On Thu, 2014-05-15 at 12:28 +0300, Eliad Peller wrote:
+> On Wed, May 14, 2014 at 5:42 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2014-05-14 at 13:25 +0200, Janusz Dziedzic wrote:
+> >> After patch:
+> >> cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+> >>
+> >> start_radar_detection always fail with -EINVAL.
+> >
+> > Applied, thanks.
+> >
+> probably a bit late, but i don't really see why passing
+> NL80211_IFTYPE_UNSPECIFIED at all, instead of the iftype?
 
-The size is always ETH_ALEN (6)
+I did briefly wonder about the same, but decided Luca probably knew
+better :)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index a195703..31f54fb 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -216,21 +216,12 @@ void MACvWriteWord(struct vnt_private *priv, u8 reg_ofs, u16 word)
- 
- void MACvWriteBSSIDAddress(struct vnt_private *pDevice, u8 *pbyEtherAddr)
- {
--	u8 pbyData[6];
--
--    pbyData[0] = *((u8 *)pbyEtherAddr);
--    pbyData[1] = *((u8 *)pbyEtherAddr+1);
--    pbyData[2] = *((u8 *)pbyEtherAddr+2);
--    pbyData[3] = *((u8 *)pbyEtherAddr+3);
--    pbyData[4] = *((u8 *)pbyEtherAddr+4);
--    pbyData[5] = *((u8 *)pbyEtherAddr+5);
--
-     CONTROLnsRequestOut(pDevice,
-                         MESSAGE_TYPE_WRITE,
-                         MAC_REG_BSSID0,
-                         MESSAGE_REQUEST_MACREG,
--			ARRAY_SIZE(pbyData),
--                        pbyData
-+			ETH_ALEN,
-+			pbyEtherAddr
-                         );
- }
- 
--- 
-1.9.1
+johannes
 
