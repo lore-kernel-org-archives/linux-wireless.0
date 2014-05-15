@@ -1,98 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41386 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751900AbaE0IKD (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:55747 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754549AbaEORFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 04:10:03 -0400
-Date: Tue, 27 May 2014 10:07:46 +0200
-From: Maxime Ripard <maxime.ripard@free-electrons.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [PATCH 02/11] pinctrl: sunxi: add IRQCHIP_SKIP_SET_WAKE flag for
- pinctrl irq chip
-Message-ID: <20140527080746.GB4730@lukather> (sfid-20140527_101748_681419_B00BE04C)
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
- <1401090486-4414-3-git-send-email-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
-In-Reply-To: <1401090486-4414-3-git-send-email-hdegoede@redhat.com>
+	Thu, 15 May 2014 13:05:07 -0400
+Received: by mail-wg0-f46.google.com with SMTP id n12so3812097wgh.29
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:05 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/24] iwlwifi: mvm: Disable uAPSD for a DCM client
+Date: Thu, 15 May 2014 20:04:26 +0300
+Message-Id: <1400173481-9047-9-git-send-email-egrumbach@gmail.com> (sfid-20140515_190613_088572_5CDB3FBC)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Avri Altman <avri.altman@intel.com>
 
---61jdw2sOBCFtR2d/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+A binding object associates virtual MACs to a Phy.
+Binding object can ask (and get) air time, thus
+allowing several MACs to share the medium.
+A binding object can be in either one of 3 states:
+1) standalone - A single active MAC
+2) Different Channel Mode (DCM) - There are 2 active
+   MACs or more (not necessarily just clients), but each
+   has its own channel.
+3) Same Channel Mode (SCM) - There are 2 active
+   MACs or more (not necessarily just clients), that
+   share the same channel.
+This patch introduces an additional condition for enabling uAPSD:
+uAPSD should be disabled for a client in DCM.
+The reason for that is a low latency issue in Miracast.
 
-On Mon, May 26, 2014 at 09:47:57AM +0200, Hans de Goede wrote:
-> From: Chen-Yu Tsai <wens@csie.org>
->=20
-> The sunxi pinctrl irq chip driver does not support wakeup at the
-> moment. Adding IRQCHIP_SKIP_SET_WAKE lets the irqs work with drivers
-> using wakeup.
->=20
-> Also add a name to the irq chip.
->=20
-> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->  drivers/pinctrl/sunxi/pinctrl-sunxi.c | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunx=
-i/pinctrl-sunxi.c
-> index db9ccd6..ec60c2e 100644
-> --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-> +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-> @@ -646,6 +646,8 @@ static struct irq_chip sunxi_pinctrl_irq_chip =3D {
->  	.irq_mask_ack	=3D sunxi_pinctrl_irq_mask_ack,
->  	.irq_unmask	=3D sunxi_pinctrl_irq_unmask,
->  	.irq_set_type	=3D sunxi_pinctrl_irq_set_type,
-> +	.name		=3D "sunxi-pio",
-> +	.flags		=3D IRQCHIP_SKIP_SET_WAKE,
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/power.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-I'd rather see the name set to dev_name() or something like that. This
-will not work that great with multiple pin controller supporting
-interrupts.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 258405f..9985273 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -268,10 +268,30 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 		IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
+ }
+ 
++static void iwl_mvm_binding_iterator(void *_data, u8 *mac,
++				      struct ieee80211_vif *vif)
++{
++	unsigned long *data = _data;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++	if (!mvmvif->phy_ctxt)
++		return;
++
++	if (vif->type == NL80211_IFTYPE_STATION ||
++	    vif->type == NL80211_IFTYPE_AP)
++		__set_bit(mvmvif->phy_ctxt->id, data);
++}
++
+ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
+ 				       struct ieee80211_vif *vif)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	unsigned long phy_ctxt_counter = 0;
++
++	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   iwl_mvm_binding_iterator,
++						   &phy_ctxt_counter);
+ 
+ 	if (!memcmp(mvmvif->uapsd_misbehaving_bssid, vif->bss_conf.bssid,
+ 		    ETH_ALEN))
+@@ -289,6 +309,13 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
+ 	    IEEE80211_P2P_OPPPS_ENABLE_BIT))
+ 		return false;
+ 
++	/*
++	 * Avoid using uAPSD if client is in DCM -
++	 * low latency issue in Miracast
++	 */
++	if (hweight8(phy_ctxt_counter) >= 2)
++		return false;
++
+ 	return true;
+ }
+ 
+-- 
+1.8.3.2
 
-Maxime
-
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---61jdw2sOBCFtR2d/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJThEfSAAoJEBx+YmzsjxAgemUP/3yI6XcdPZgPYFYTPh0RX0I2
-b7IlgHuWJ2jnYiyk15jZ5n0afd4EJngy646fXE7VqZYpGaQ239llJCIEkwlPe03r
-RaFD3Aft4S4dJd8qlTBk0q+NXEEmlee4aC8fAnxxfMZfZAXA/kNTmMNcqnlF78Oh
-fRtgu4Zj1EYTSx4BNOaSnonSn09hFqWcojtHwHgP7TagJCZkAb4fExHsntGiUnyr
-NQdvUOt7yD2ZrIwAs6USbJNcV+wOBS4JY8t/zN1vT8Dd8Xet6CnbMgLzp95JG5ZL
-xAiJcga2O9u3KRcu1/RkSqp379VSsyYM61u9SrAXhlefrixJVZhLACh6bWATxquW
-2ImCrdw2LpLNnXi/Uecjwf8BlE6pKPB1CNWIbIOXPFldAXUKRo0n7AfO+LKfX/AY
-OAHbv8rtIro6eoK4+NwyYqW27GTWW/gWI4/eB9U0u751OE5h5RQO9lXBjFOxnSWd
-UgWqBpAVJaaTL3Cqaj6hjRrwLqnULYNbukkF4zwcR06o3Nfi5FY45bf+ipRDC3nS
-gl5cfGiXdP4NBH8ojKA6e+/I8Bii9e0XKh/qZf9UesGnY16InwqLL6qjkjEIAstT
-jZwjAnXkofVt3b/AyFgQanVZiKbQqXNgi/XrZIVA528QEu6YdpTxnVqNrQ8Z3KTo
-3aeOeT4KGeEKjb0Yxtkz
-=JPY0
------END PGP SIGNATURE-----
-
---61jdw2sOBCFtR2d/--
