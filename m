@@ -1,138 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:35622 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbaECOUH (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:57719 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754848AbaEORFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2014 10:20:07 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi5so2708016wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:20:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 13/13] staging: vt6656: Remove PIPEnsControlOutAsyn/CONTROLnsRequestOutAsyn
-Date: Sat,  3 May 2014 15:17:34 +0100
-Message-Id: <1399126654-2663-13-git-send-email-tvboxspy@gmail.com> (sfid-20140503_162016_457802_C0E9F452)
-In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
-References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 15 May 2014 13:05:17 -0400
+Received: by mail-we0-f177.google.com with SMTP id x48so1360787wes.22
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:16 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/24] iwlwifi: mvm: set SKIP_OVER_DTIM flag only if needed
+Date: Thu, 15 May 2014 20:04:32 +0300
+Message-Id: <1400173481-9047-15-git-send-email-egrumbach@gmail.com> (sfid-20140515_190534_864640_E2E58914)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This now the sames as PIPEnsControlOut.
+From: Eliad Peller <eliad@wizery.com>
 
-Replace with PIPEnsControlOut/CONTROLnsRequestOut.
+setting SKIP_OVER_DTIM when skip_dtim_periods is 0
+causes a ucode assert. set the flag only if needed.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/control.h  |  3 ---
- drivers/staging/vt6656/firmware.c |  2 +-
- drivers/staging/vt6656/mac.c      |  2 +-
- drivers/staging/vt6656/usbpipe.c  | 38 --------------------------------------
- drivers/staging/vt6656/usbpipe.h  |  2 --
- 5 files changed, 2 insertions(+), 45 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/power.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/control.h b/drivers/staging/vt6656/control.h
-index 9da9b96..4658910 100644
---- a/drivers/staging/vt6656/control.h
-+++ b/drivers/staging/vt6656/control.h
-@@ -36,9 +36,6 @@
- #define CONTROLnsRequestOut(Device, Request, Value, Index, Length, Buffer) \
- 	PIPEnsControlOut(Device, Request, Value, Index, Length, Buffer)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index fc178d0..2e99ddd 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -902,9 +902,10 @@ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
+ 		if (WARN_ON(!dtimper_msec))
+ 			return 0;
  
--#define CONTROLnsRequestOutAsyn(Device, Request, Value, Index, Length, Buffer) \
--	PIPEnsControlOutAsyn(Device, Request, Value, Index, Length, Buffer)
--
- #define CONTROLnsRequestIn(Device, Request, Value, Index, Length, Buffer) \
- 	PIPEnsControlIn(Device, Request, Value, Index, Length, Buffer)
- 
-diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
-index 7a4a972..e03f1f9 100644
---- a/drivers/staging/vt6656/firmware.c
-+++ b/drivers/staging/vt6656/firmware.c
-@@ -71,7 +71,7 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
- 		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
- 		memcpy(pBuffer, fw->data + ii, wLength);
- 
--		NdisStatus = CONTROLnsRequestOutAsyn(pDevice,
-+		NdisStatus = CONTROLnsRequestOut(pDevice,
- 						0,
- 						0x1200+ii,
- 						0x0000,
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 3ce19dd..8bd3ab0 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -75,7 +75,7 @@ void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
-  */
- void MACbShutdown(struct vnt_private *pDevice)
- {
--    CONTROLnsRequestOutAsyn(pDevice,
-+	CONTROLnsRequestOut(pDevice,
-                         MESSAGE_TYPE_MACSHUTDOWN,
-                         0,
-                         0,
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 9946bfd..433edca 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -64,44 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
- 
--int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
--	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
--{
--	int ntStatus;
--
--    if (pDevice->Flags & fMP_DISCONNECTED)
--        return STATUS_FAILURE;
--
--    if (in_interrupt()) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
--        return STATUS_FAILURE;
--    }
--
--	mutex_lock(&pDevice->usb_lock);
--
--    ntStatus = usb_control_msg(
--                            pDevice->usb,
--                            usb_sndctrlpipe(pDevice->usb , 0),
--                            byRequest,
--                            0x40, // RequestType
--                            wValue,
--                            wIndex,
--			    (void *) pbyBuffer,
--                            wLength,
--                            HZ
--                          );
--    if (ntStatus >= 0) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe ntStatus= %d\n", ntStatus);
--        ntStatus = 0;
--    } else {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe fail, ntStatus= %d\n", ntStatus);
--    }
--
--	mutex_unlock(&pDevice->usb_lock);
--
--    return ntStatus;
--}
--
- int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
- {
-diff --git a/drivers/staging/vt6656/usbpipe.h b/drivers/staging/vt6656/usbpipe.h
-index f537703..42ad4f7 100644
---- a/drivers/staging/vt6656/usbpipe.h
-+++ b/drivers/staging/vt6656/usbpipe.h
-@@ -34,8 +34,6 @@
- 
- int PIPEnsControlOut(struct vnt_private *, u8 byRequest, u16 wValue,
- 		u16 wIndex, u16 wLength, u8 *pbyBuffer);
--int PIPEnsControlOutAsyn(struct vnt_private *, u8 byRequest,
--	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer);
- int PIPEnsControlIn(struct vnt_private *, u8 byRequest, u16 wValue,
- 	u16 wIndex, u16 wLength,  u8 *pbyBuffer);
- 
+-		cmd.flags |=
+-			cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
+ 		cmd.skip_dtim_periods = 300 / dtimper_msec;
++		if (cmd.skip_dtim_periods)
++			cmd.flags |=
++				cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
+ 	}
+ 	iwl_mvm_power_log(mvm, &cmd);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
 -- 
-1.9.1
+1.8.3.2
 
