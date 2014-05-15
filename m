@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50383 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755177AbaE3JbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 05:31:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1WqJ9V-0000KQ-9t
-	for linux-wireless@vger.kernel.org; Fri, 30 May 2014 11:31:05 +0200
-Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 11:31:05 +0200
-Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 11:31:05 +0200
-To: linux-wireless@vger.kernel.org
-From: piotr <pitkotko@gmail.com>
-Subject: Re: [Ilw] Wireless Centrino 2230-N issues
-Date: Fri, 30 May 2014 09:30:51 +0000 (UTC)
-Message-ID: <loom.20140530T111920-677@post.gmane.org> (sfid-20140530_113112_167050_F89D4534)
-References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com> <loom.20140530T020912-598@post.gmane.org> <53882EAD.4010609@gmail.com> <53882EF4.4070105@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:63595 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbaEOLhS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 07:37:18 -0400
+Received: by mail-lb0-f180.google.com with SMTP id p9so673145lbv.39
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 04:37:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1400148339-10006-1-git-send-email-luca@coelho.fi>
+References: <1400148339-10006-1-git-send-email-luca@coelho.fi>
+Date: Thu, 15 May 2014 13:37:16 +0200
+Message-ID: <CALhHN=pNMXpEhTur2zH15_8ZptTrM9WGkE6fJ7-EXvM_3_bQNw@mail.gmail.com> (sfid-20140515_133722_765569_9B770E09)
+Subject: Re: [PATCH] cfg80211: pass the actual iftype when calling cfg80211_chandef_dfs_required()
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, eliad@wizery.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@...> writes:
+On 15 May 2014 12:05, Luca Coelho <luca@coelho.fi> wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+>
+> There is no need to pass NL80211_IFTYPE_UNSPECIFIED when calling
+> cfg80211_chandef_dfs_required() since we always already have the
+> interface type.  So, pass the actual interface type instead.
+>
+> Additionally, have cfg80211_chandef_dfs_required() WARN if the passed
+> interface type is NL80211_IFTYPE_UNSPECIFIED, so we can detect
+> problems more easily.
+>
+> Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Reported-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 
-> 
-> >>
-> >> I have similar problem. My system is Ubuntu 14.04 with kernel 3.13.0-24
-> >> installed on a new Toshiba laptop with N2230 wifi card. 
-> >> dmesg:
-> >> [  614.007461] iwlwifi 0000:01:00.0: Could not complete ALIVE
-transition: -5
-> >> [  614.007748] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-> >> [  614.007790] iwlwifi 0000:01:00.0: Unable to initialize device.
-> >> [  614.008318] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-> >> [  614.015390] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-> >> [  614.059495] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD
-failed:
-> >> FW Error
-> >>
-> >> Is the card broken?
-> >>
-> >> Best,
-> >> Piotr
-> >>
-> >>
-> > 
-> > Can you try to add bt_coex_active=0 as debug parameter?
-> > 
-> 
-> Sorry, I meant *module* parameter. The mode is iwlwifi
+Tested-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Thanks for quick reply.
+Thanks, works fine.
 
-I've tried your suggestion on the fly: 
-
-modprobe -rv iwlwifi
-modprobe iwlwifi bt_coex_active=0
-
-After this, I get "N" from "more
-/sys/module/iwlwifi/parameters/bt_coex_active", but it seems not to take any
-effect on device functioning nor on the kernel messages. 
-Is this what you meant? BTW, the bluetooth seems to work.
-
-Best,
-Piotr
-
+BR
+Janusz
