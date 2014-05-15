@@ -1,89 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:54702 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932338AbaEaKvp (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:43623 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbaEOItK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 06:51:45 -0400
-Received: by mail-wi0-f179.google.com with SMTP id bs8so2390790wib.6
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:44 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Thu, 15 May 2014 04:49:10 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so408024eei.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 01:49:09 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/14] staging: vt6656: rename MACvWriteBeaconInterval to vnt_mac_set_beacon_interval
-Date: Sat, 31 May 2014 11:50:49 +0100
-Message-Id: <1401533449-2972-14-git-send-email-tvboxspy@gmail.com> (sfid-20140531_132148_011304_EE20F0B9)
-In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
-References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/5] ath10k: clean up start() callback
+Date: Thu, 15 May 2014 10:42:00 +0200
+Message-Id: <1400143324-14911-2-git-send-email-michal.kazior@tieto.com> (sfid-20140515_104927_547913_DA0C1CED)
+In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+ <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop write for set
+This fixes failpath when override AC pdev param
+setup fails and makes other pdev params setting
+fail as well.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/mac.c  | 2 +-
- drivers/staging/vt6656/mac.h  | 2 +-
- drivers/staging/vt6656/wmgr.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+v2:
+ * add empty lines before each goto label [Kalle]
+ * dont use err goto paths on main code path [Kalle]
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 3275ee9..b06436f 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -230,7 +230,7 @@ void vnt_mac_disable_barker_preamble_mode(struct vnt_private *priv)
- 		MAC_REG_ENCFG2, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ drivers/net/wireless/ath/ath10k/mac.c | 34 +++++++++++++++++++++++-----------
+ 1 file changed, 23 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7026f02..854e183 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2339,22 +2339,19 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 	if (ar->state != ATH10K_STATE_OFF &&
+ 	    ar->state != ATH10K_STATE_RESTARTING) {
+ 		ret = -EINVAL;
+-		goto exit;
++		goto err;
+ 	}
+ 
+ 	ret = ath10k_hif_power_up(ar);
+ 	if (ret) {
+ 		ath10k_err("Could not init hif: %d\n", ret);
+-		ar->state = ATH10K_STATE_OFF;
+-		goto exit;
++		goto err_off;
+ 	}
+ 
+ 	ret = ath10k_core_start(ar);
+ 	if (ret) {
+ 		ath10k_err("Could not init core: %d\n", ret);
+-		ath10k_hif_power_down(ar);
+-		ar->state = ATH10K_STATE_OFF;
+-		goto exit;
++		goto err_power_down;
+ 	}
+ 
+ 	if (ar->state == ATH10K_STATE_OFF)
+@@ -2363,12 +2360,16 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		ar->state = ATH10K_STATE_RESTARTED;
+ 
+ 	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->pmf_qos, 1);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to enable PMF QOS: %d\n", ret);
++		goto err_core_stop;
++	}
+ 
+ 	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->dynamic_bw, 1);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to enable dynamic BW: %d\n", ret);
++		goto err_core_stop;
++	}
+ 
+ 	/*
+ 	 * By default FW set ARP frames ac to voice (6). In that case ARP
+@@ -2384,14 +2385,25 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 	if (ret) {
+ 		ath10k_warn("failed to set arp ac override parameter: %d\n",
+ 			    ret);
+-		goto exit;
++		goto err_core_stop;
+ 	}
+ 
+ 	ar->num_started_vdevs = 0;
+ 	ath10k_regd_update(ar);
+-	ret = 0;
+ 
+-exit:
++	mutex_unlock(&ar->conf_mutex);
++	return 0;
++
++err_core_stop:
++	ath10k_core_stop(ar);
++
++err_power_down:
++	ath10k_hif_power_down(ar);
++
++err_off:
++	ar->state = ATH10K_STATE_OFF;
++
++err:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
  }
- 
--void MACvWriteBeaconInterval(struct vnt_private *priv, u16 interval)
-+void vnt_mac_set_beacon_interval(struct vnt_private *priv, u16 interval)
- {
- 	u8 data[2];
- 
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index dfeacbf..eac2be7 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -427,7 +427,7 @@ void vnt_mac_enable_protect_mode(struct vnt_private *);
- void vnt_mac_disable_protect_mode(struct vnt_private *);
- void vnt_mac_enable_barker_preamble_mode(struct vnt_private *);
- void vnt_mac_disable_barker_preamble_mode(struct vnt_private *);
--void MACvWriteBeaconInterval(struct vnt_private *, u16);
-+void vnt_mac_set_beacon_interval(struct vnt_private *, u16);
- void vnt_mac_set_led(struct vnt_private *priv, u8, u8);
- 
- #endif /* __MAC_H__ */
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 73c6e90..a1b5307 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -1915,7 +1915,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
-                      // set HW beacon interval and re-synchronizing....
-                      DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Rejoining to Other Adhoc group with same SSID........\n");
- 
--                     MACvWriteBeaconInterval(pDevice, pMgmt->wCurrBeaconPeriod);
-+		     vnt_mac_set_beacon_interval(pDevice, pMgmt->wCurrBeaconPeriod);
- 		     vnt_adjust_tsf(pDevice, pRxPacket->byRxRate, qwTimestamp, pRxPacket->qwLocalTSF);
- 		     vnt_update_next_tbtt(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
- 
-@@ -2041,7 +2041,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-     // set HW beacon interval
-     if (pMgmt->wIBSSBeaconPeriod == 0)
-         pMgmt->wIBSSBeaconPeriod = DEFAULT_IBSS_BI;
--    MACvWriteBeaconInterval(pDevice, pMgmt->wIBSSBeaconPeriod);
-+    vnt_mac_set_beacon_interval(pDevice, pMgmt->wIBSSBeaconPeriod);
- 
-     vnt_get_current_tsf(pDevice, &qwCurrTSF);
-     // clear TSF counter
-@@ -2579,7 +2579,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
-     vnt_adjust_tsf(pDevice, pCurr->byRxRate, pCurr->qwBSSTimestamp, pCurr->qwLocalTSF);
- 
-     // set HW beacon interval
--    MACvWriteBeaconInterval(pDevice, pCurr->wBeaconInterval);
-+    vnt_mac_set_beacon_interval(pDevice, pCurr->wBeaconInterval);
- 
-     // set Next TBTT
-     // Next TBTT = ((local_current_TSF / beacon_interval) + 1 ) * beacon_interval
 -- 
-1.9.1
+1.8.5.3
 
