@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:57437 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbaETN0u (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56158 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362AbaEORYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 09:26:50 -0400
-Received: by mail-la0-f42.google.com with SMTP id el20so394164lab.29
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 06:26:48 -0700 (PDT)
+	Thu, 15 May 2014 13:24:32 -0400
+Message-ID: <5374F84E.1090208@candelatech.com> (sfid-20140515_192448_404540_BCB54FFA)
+Date: Thu, 15 May 2014 10:24:30 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-Date: Tue, 20 May 2014 15:26:48 +0200
-Message-ID: <CALhHN=rLpBt-aTNDSbO6BO-TwFYuHf79=rpsTetysBrW_D47cA@mail.gmail.com> (sfid-20140520_152703_370909_DC8595CD)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
+References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com> <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
+In-Reply-To: <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2014 09:33, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
-> <janusz.dziedzic@tieto.com> wrote:
->> Introduce support for setting DFS CAC time
->> in milliseconds.
->>
->> Eg.
->> (5250 - 5330 @ AUTO), (20), (60000), DFS
->>
->> will setup CAC 60 seconds CAC time.
->
-> Can you elaborate whether or not this will require a bump on CRDA  and
-> issuing of two new wireless-regdb files for the different versions on
-> the commit log?
->
-Yes, sure - will add this.
+I have a few questions on this patch (long since accepted upstream).
 
-BTW, probably you know, why we decide to split usermode regulatory
-code into crda, regdb? This required binary interface between them and
-a lot of "not needed" code? Why we don't simply zip/sign db.tx code
-and parse this direrctly in crda and use just one user mode project
-for that.
-What was the reason for have regulatory in binary file?
+First, why do you only memset the rx_status if START_VALID is set,
+and why do you not set:
 
-BR
-Janusz
+rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL
+
+in an else clause if START_VALID is not set?
+
+The patch definitely helps, but I'm still getting less accuracy than expected
+(as compared to ath9k going through a similar rate vs range test).
+
+Thanks,
+Ben
+
+
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index be25e16..f7ecc10 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+>  
+>  	lockdep_assert_held(&htt->rx_ring.lock);
+>  
+> -	memset(rx_status, 0, sizeof(*rx_status));
+> -
+>  	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
+>  	fw_desc = (u8 *)&rx->fw_desc;
+>  
+> @@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+>  	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+>  
+>  	/* Fill this once, while this is per-ppdu */
+> -	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+> -	rx_status->signal += rx->ppdu.combined_rssi;
+> +	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
+> +		memset(rx_status, 0, sizeof(*rx_status));
+> +		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
+> +				     rx->ppdu.combined_rssi;
+> +	}
+>  
+>  	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+>  		/* TSF available only in 32-bit */
+> 
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
