@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40306 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbaEUKlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 06:41:45 -0400
-Message-ID: <1400668890.4136.1.camel@jlt4.sipsolutions.net> (sfid-20140521_124148_787986_8F8B89FB)
-Subject: Re: [PATCHv2] nl80211: Provide TDLS link state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org, Luca Coelho <luca@coelho.fi>
-Date: Wed, 21 May 2014 12:41:30 +0200
-In-Reply-To: <20140520223316.EFCF1E0007@pstew.mtv.corp.google.com> (sfid-20140521_003322_185995_CD232EF2)
-References: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-	 <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-	 <20140520223316.EFCF1E0007@pstew.mtv.corp.google.com>
-	 (sfid-20140521_003322_185995_CD232EF2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ns.horizon.com ([71.41.210.147]:46649 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751180AbaEOCCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2014 22:02:42 -0400
+Date: 14 May 2014 22:02:38 -0400
+Message-ID: <20140515020238.32013.qmail@ns.horizon.com> (sfid-20140515_040300_452793_11396DE7)
+From: "George Spelvin" <linux@horizon.com>
+To: hpa@zytor.com, linux@horizon.com, pavel@ucw.cz
+Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
+Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
+	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
+In-Reply-To: <2e076c13-84aa-4da4-a443-7e8fcc462fc9@email.android.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-20 at 13:27 -0700, Paul Stewart wrote:
-> Provide a method to query TDLS state in drivers that use the
-> NL80211_CMD_TDLS_OPER method for link setup.
+H. Peter Anvin wrote:
+> Seems to me to make the code easier to read, not harder. That was the
+> whole point.
 
-Apart from the fact that your patch isn't very clear on how this was
-intended to be used (some return value?) I don't really see why even
-such a driver couldn't implement station operations
-(get_station/dump_station) and get the same API for this that mac80211
-already implements.
+I thought it made it harder by moving the terminating 1 bit out of the
+driver proper, where it has a symbolic name.  Thus someone comparing
+the driver to the spec has to read another source file to figure out
+how the driver gets that bit set.
 
-iw wlan0 station dump gives me
-Station 02:00:00:00:01:00 (on wlan0)
-	inactive time:	450 ms
-	rx bytes:	3068
-	rx packets:	2
-	tx bytes:	3036
-	tx packets:	2
-	tx retries:	0
-	tx failed:	0
-	signal:  	-30 dBm
-	signal avg:	-30 dBm
-	tx bitrate:	24.0 MBit/s
-	rx bitrate:	12.0 MBit/s
-	authorized:	yes
-	authenticated:	yes
-	preamble:	long
-	WMM/WME:	no
-	MFP:		no
-	TDLS peer:	yes
-[...]
+As it is, the straight-line code in the driver corresponds very simply
+with the packet as illustrated in the data sheets.
 
+I agree it's really really minor either way, but so is the saving
+we're going for.
 
-johannes
-
+Since it's not *clearly* an improvement, I err on the side of not
+messing with a driver I can't test.
