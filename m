@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13352 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390AbaEPOST convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56846 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755225AbaEOSbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 10:18:19 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jim Davis <jim.epost@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next <linux-next@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Larry.Finger@lwfinger.net,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel <devel@driverdev.osuosl.org>
-Subject: Re: randconfig build error with next-20140516, in drivers/staging/rtl8723au/core/rtw_cmd.c
-References: <CA+r1Zhh8=cjcheZEzS_cn0-n11s2RoXzHZS65U7XN4bbozKrCA@mail.gmail.com>
-Date: Fri, 16 May 2014 16:18:09 +0200
-In-Reply-To: <CA+r1Zhh8=cjcheZEzS_cn0-n11s2RoXzHZS65U7XN4bbozKrCA@mail.gmail.com>
-	(Jim Davis's message of "Fri, 16 May 2014 06:42:59 -0700")
-Message-ID: <wrfjha4px0wu.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140516_161835_988213_5BEB40D7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 15 May 2014 14:31:05 -0400
+From: greearb@candelatech.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  fix rssi reporting.
+Date: Thu, 15 May 2014 11:31:03 -0700
+Message-Id: <1400178663-25661-1-git-send-email-greearb@candelatech.com> (sfid-20140515_203141_916908_8F1754D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jim Davis <jim.epost@gmail.com> writes:
-> Building with the attached random configuration file,
->
-> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘c2h_evt_hdl’:
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1315:4: error: implicit declaration of
-> function ‘c2h_handler_8723a’ [-Werror=implicit-function-declaration]
->     ret = c2h_handler_8723a(adapter, c2h_evt);
->     ^
-> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘rtw_evt_work’:
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1349:2: error: implicit declaration of
-> function ‘c2h_id_filter_ccx_8723a’ [-Werror=implicit-function-declaration]
->   if (c2h_id_filter_ccx_8723a(ework->u.c2h_evt.id) == true) {
->   ^
-> cc1: some warnings being treated as errors
+From: Ben Greear <greearb@candelatech.com>
 
-Thanks for the report, I'll have a look.
+When the driver cannot provide proper rssi, mark
+status with RX_FLAG_NO_SIGNAL_VAL so that stack
+properly ignores it.
 
-Jes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+Patch is against my tree, hopefully will apply OK against upstream
+but have not tested that yet.
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 0c83ffb..d8ec8dd 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1216,11 +1216,12 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+ 
+ 	/* Fill this once, while this is per-ppdu */
+-	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
+-		memset(rx_status, 0, sizeof(*rx_status));
++	memset(rx_status, 0, sizeof(*rx_status));
++	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID)
+ 		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
+ 				     rx->ppdu.combined_rssi;
+-	}
++	else
++		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+ 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+ 		/* TSF available only in 32-bit */
+-- 
+1.7.11.7
+
