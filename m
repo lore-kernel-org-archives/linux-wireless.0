@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49058 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910AbaERLxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2014 07:53:43 -0400
-Date: Sun, 18 May 2014 13:53:24 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: make B43_PCMCIA and B43_SDIO depend on B43_SSB
-Message-ID: <20140518135324.415cf8d4@wiggum> (sfid-20140518_135421_048005_5D85EB50)
-In-Reply-To: <1400413293-25973-1-git-send-email-zajec5@gmail.com>
-References: <1400413293-25973-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/T+QJe2k/V31EJ/dhuJq42vl"; protocol="application/pgp-signature"
+Received: from mail-we0-f173.google.com ([74.125.82.173]:64339 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754251AbaEORFO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 13:05:14 -0400
+Received: by mail-we0-f173.google.com with SMTP id u57so1393977wes.32
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:13 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/24] iwlwifi: use dev_printk instead of dev_dbg for debug logs
+Date: Thu, 15 May 2014 20:04:30 +0300
+Message-Id: <1400173481-9047-13-git-send-email-egrumbach@gmail.com> (sfid-20140515_190527_596832_3A255C78)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/T+QJe2k/V31EJ/dhuJq42vl
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-On Sun, 18 May 2014 13:41:33 +0200
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+When calling IWL_DEBUG_*() dev_dbg() is currently used, and this
+could result in the log being ignored no matter the internal
+loglevel, since dev_dbg() may get turned on or off based on the
+dynamic debug mechanism.
 
->  config B43_PCMCIA
->  	bool "Broadcom 43xx PCMCIA device support"
-> -	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
-> +	depends on B43 && B43_SSB && SSB_PCMCIAHOST_POSSIBLE
->  	select SSB_PCMCIAHOST
->  	---help---
->  	  Broadcom 43xx PCMCIA device support.
-> @@ -93,7 +93,7 @@ config B43_PCMCIA
-> =20
->  config B43_SDIO
->  	bool "Broadcom 43xx SDIO device support"
-> -	depends on B43 && SSB_SDIOHOST_POSSIBLE
-> +	depends on B43 && B43_SSB && SSB_SDIOHOST_POSSIBLE
->  	select SSB_SDIOHOST
->  	---help---
->  	  Broadcom 43xx device support for Soft-MAC SDIO devices.
+Replace the dev_dbg() with dev_printk() since dynamic printing
+is pointless as we use our own debug level mechanism and there
+is just a single dev_dbg() call in the code.
 
-This makes sense.
-Ack by me.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+[rephrase commit message a bit]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.c b/drivers/net/wireless/iwlwifi/iwl-debug.c
+index 8a44f59..09feff4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
+@@ -61,8 +61,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define DEBUG
+-
+ #include <linux/device.h>
+ #include <linux/interrupt.h>
+ #include <linux/export.h>
+@@ -128,8 +126,8 @@ void __iwl_dbg(struct device *dev,
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (iwl_have_debug_level(level) &&
+ 	    (!limit || net_ratelimit()))
+-		dev_dbg(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
+-			function, &vaf);
++		dev_printk(KERN_DEBUG, dev, "%c %s %pV",
++			   in_interrupt() ? 'I' : 'U', function, &vaf);
+ #endif
+ 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
+ 	va_end(args);
+-- 
+1.8.3.2
 
---=20
-Michael.
-
-----
-Please use PGP/GPG encryption.
-Key-ID: F532BE1D908D8B0E
---------
-
---Sig_/T+QJe2k/V31EJ/dhuJq42vl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTeJ80AAoJEPUyvh2QjYsOdJQP/RM5qc11tqkBhULtlk+46KuP
-ZbX1xJzZNMz7LJqVi58lNPvkZrqSKvB+yU+uoldetkLpByr4Utu7EWp9+Xhkgwoe
-heA0jKHZPSXIAZJhlYCECl0df/xAAC1EJqA71dG/HvYCjuryZPvLjS2o/fKkNgnu
-oceOwwrJXA3PBgZYMlVhVx0GmnqMy+i5e0UllcjW44gVn70AwD2TG0hrh6xMbY8u
-NxBYhH2ggUOUbXYnlE55mACcGZJfHV1gogvHj37wkX1TS+o76xKdyhzxNboWDkeA
-iKRUR32K1fWPqrH0+JVgjo6OmNxF9BnqDCcuMpieCHtK7gLN9UgfZ8/0cpgCI87N
-jGDQ9zgnuMZhjO7b4UmYtqFPBjqg0qBH6KWc739ZVV15445yJv1A+nIBzL55OyVQ
-FCzKHjPG0fX8Ym4HSkCVy7tCsVqusN3KS2cE59wKkK9NBY8YNgRIFMxGYBP2ytQY
-EQ5J+TEMfjEpOLg89Iw8qrKYV6BJEtQOWpkLDrYMdmJSD41JFaPMKwjBDpuvVzOU
-Rod1R+xFiD96x1SUl6dGrYzHlfAi0bU0BSzfw7bbHTTfhR3AiwVg/77EOm7pzBqi
-zA7dGpOS3JvD+/N1BlBIH2tf4o4MstOy5p5LGYQk1eNnq8fav9xmg7Js/Q1R2CdM
-oCVaLm10Fhejf1w3mI6r
-=ca2G
------END PGP SIGNATURE-----
-
---Sig_/T+QJe2k/V31EJ/dhuJq42vl--
