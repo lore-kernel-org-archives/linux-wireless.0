@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8609 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751234AbaE1Efq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 00:35:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 27 May 2014 21:35:21 -0700
-Subject: RE: [RFC] mwifiex: block work queue while suspended
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5E4B3@SC-VEXCH1.marvell.com> (sfid-20140528_063549_949434_3892A3A9)
-References: <20140516012439.GI15430@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
- <20140526080110.GJ6118@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
- <20140528020128.GG4151@us.netrek.org>
-In-Reply-To: <20140528020128.GG4151@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:35316 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916AbaEORFK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 13:05:10 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so3788474wgh.14
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:09 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/24] iwlwifi: remove spurious newline in Kconfig
+Date: Thu, 15 May 2014 20:04:28 +0300
+Message-Id: <1400173481-9047-11-git-send-email-egrumbach@gmail.com> (sfid-20140515_190520_204633_D747E54E)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > We use a GPIO to wake from WLAN.
-> >
-> > This doesn't match the gpio parameter configured in hscfg command
-> > 0xe5.
-> 
-> You're right, and I'm quite wrong.  Sorry about that.  I misread our
-> code.
-> 
-> Correction, we use SDIO to wake from WLAN.
-> 
-> We set gap to 0xff, which we think is a special value that means the
-> device will wait for the host to acknowledge before sending data to
-> the host.
+There's an extra newline that shouldn't be there - remove it.
 
-Yes, gap=0xff should be used. Actually I also have the patch to set gap to 0xff queued in my local tree. I will send it upstream.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-> 
-> Looking through history of development, we thought that this would
-> avoid a race condition, where the host starts to suspend, configures
-> the device for host sleep, but the device may wake in the time before
-> the host suspends.
-> 
-> We don't see this "mmc0: Timeout waiting for hardware interrupt."
-> problem unless we use WPA2.  It does not reproduce on an open access
-> point.
-
-With WPA2 enabled, does the "mmc0 timeout" happen in every suspend attempt?
-
-Thanks,
-Bing
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index b82d30c..d216509 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -128,7 +128,6 @@ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+ 	  Enable use of experimental ucode for testing and debugging.
+ 
+ config IWLWIFI_DEVICE_TRACING
+-
+ 	bool "iwlwifi device access tracing"
+ 	depends on IWLWIFI
+ 	depends on EVENT_TRACING
+-- 
+1.8.3.2
 
