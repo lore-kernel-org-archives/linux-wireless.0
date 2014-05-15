@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42845 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932222AbaEGQHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 12:07:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, standby24x7@gmail.com
-Date: Wed,  7 May 2014 19:07:05 +0300
-Message-Id: <1399478825-18141-1-git-send-email-luca@coelho.fi> (sfid-20140507_180725_755173_F3382CD3)
-Subject: [PATCH] cfg80211: fix docbook warning
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:62029 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379AbaEOVuX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 17:50:23 -0400
+Received: by mail-wi0-f170.google.com with SMTP id bs8so1278139wib.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:50:22 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH rebased 01/15] staging: staging: vt6656: nsDMA_tx_packet Move pContext later.
+Date: Thu, 15 May 2014 22:49:10 +0100
+Message-Id: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235027_293883_2C32A4E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+call s_vGetFreeContext later in function skiping large
+chunk of code.
 
-When trying to generate documentation, at least xmldocs, we get the
-following warning:
-
-Warning(include/net/cfg80211.h:461): No description found for parameter 'nl80211_iftype'
-
-Fix it by adding the iftype argument name to the
-cfg80211_chandef_dfs_required() function declaration.
-
-Reported-and-tested-by: Masanari Iida <standby24x7@gmail.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0631230..28f6f1a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -458,7 +458,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
-  */
- int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 				  const struct cfg80211_chan_def *chandef,
--				  enum nl80211_iftype);
-+				  enum nl80211_iftype iftype);
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 03d5339..57eb502 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -2172,14 +2172,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+         }
+     }
  
- /**
-  * ieee80211_chandef_rate_flags - returns rate flags for a channel
+-	pContext = s_vGetFreeContext(pDevice);
+-
+-    if (pContext == NULL) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
+-        dev_kfree_skb_irq(skb);
+-        return STATUS_RESOURCES;
+-    }
+-
+ 	memcpy(&pDevice->sTxEthHeader, skb->data, ETH_HLEN);
+ 
+ //mike add:station mode check eapol-key challenge--->
+@@ -2402,7 +2394,6 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+ 
+             if (pTransmitKey == NULL) {
+                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"return no tx key\n");
+-		pContext->bBoolInUse = false;
+                 dev_kfree_skb_irq(skb);
+                 pStats->tx_dropped++;
+                 return STATUS_FAILURE;
+@@ -2410,6 +2401,13 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
+         }
+     }
+ 
++	pContext = s_vGetFreeContext(pDevice);
++	if (!pContext) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
++		dev_kfree_skb_irq(skb);
++		return STATUS_RESOURCES;
++	}
++
+ 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
+ 
+     fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
 -- 
-2.0.0.rc0
+1.9.1
 
