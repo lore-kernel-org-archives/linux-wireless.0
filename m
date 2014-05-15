@@ -1,32 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33482 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754101AbaESNVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 09:21:48 -0400
-Message-ID: <1400503214.4273.0.camel@jlt4.sipsolutions.net> (sfid-20140519_152152_017847_7C8D24C2)
-Subject: Re: [PATCH] cfg80211: add documentation for max_num_csa_coutners
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, andrei.otcheretianski@intel.com
-Date: Mon, 19 May 2014 14:40:14 +0200
-In-Reply-To: <1400174289-22108-1-git-send-email-luca@coelho.fi>
-References: <1400174289-22108-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from dedo.coelho.fi ([88.198.205.34]:49029 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751249AbaEOKF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 06:05:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, eliad@wizery.com,
+	janusz.dziedzic@tieto.com
+Date: Thu, 15 May 2014 13:05:39 +0300
+Message-Id: <1400148339-10006-1-git-send-email-luca@coelho.fi> (sfid-20140515_120600_357416_A70F7B3D)
+Subject: [PATCH] cfg80211: pass the actual iftype when calling cfg80211_chandef_dfs_required()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-05-15 at 20:18 +0300, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> Move the comment in the structure to a description of the
-> max_num_csa_counters field in the docbook area.
-> 
-> This fixes a warning when building htmldocs (at least):
-> 
->  Warning(include/net/cfg80211.h:3064): No description found for parameter 'max_num_csa_counters'
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Applied (with the subject typo fixed)
+There is no need to pass NL80211_IFTYPE_UNSPECIFIED when calling
+cfg80211_chandef_dfs_required() since we always already have the
+interface type.  So, pass the actual interface type instead.
 
-johannes
+Additionally, have cfg80211_chandef_dfs_required() WARN if the passed
+interface type is NL80211_IFTYPE_UNSPECIFIED, so we can detect
+problems more easily.
+
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Reported-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/wireless/chan.c    | 5 ++---
+ net/wireless/nl80211.c | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 7a679a6..992b340 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -340,7 +340,6 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_MESH_POINT:
+-	case NL80211_IFTYPE_UNSPECIFIED:
+ 		width = cfg80211_chandef_get_width(chandef);
+ 		if (width < 0)
+ 			return -EINVAL;
+@@ -372,6 +371,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
++	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+ 		WARN_ON(1);
+ 	}
+@@ -796,8 +796,7 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+ 	    !cfg80211_go_permissive_chan(rdev, chandef->chan))
+ 		prohibited_flags |= IEEE80211_CHAN_NO_IR;
+ 
+-	if (cfg80211_chandef_dfs_required(wiphy, chandef,
+-					  NL80211_IFTYPE_UNSPECIFIED) > 0 &&
++	if (cfg80211_chandef_dfs_required(wiphy, chandef, iftype) > 0 &&
+ 	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
+ 		/* We can skip IEEE80211_CHAN_NO_IR if chandef dfs available */
+ 		prohibited_flags = IEEE80211_CHAN_DISABLED;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c083383..74e7299 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5822,7 +5822,7 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 		return -EBUSY;
+ 
+ 	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef,
+-					    NL80211_IFTYPE_UNSPECIFIED);
++					    wdev->iftype);
+ 	if (err < 0)
+ 		return err;
+ 
+-- 
+2.0.0.rc0
 
