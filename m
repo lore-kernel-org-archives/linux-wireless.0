@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58685 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754619AbaEHSSH (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:40191 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbaEOG4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 14:18:07 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	"Senthil Balasubramanian" <senthilb@qti.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Oleksij Rempel <linux@rempel-privat.de>
-Date: Thu, 8 May 2014 23:48:32 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: David Herrmann <dh.herrmann@gmail.com>
-Subject: Re: [PATCH] ath9k: fix NULL-deref in hw_per_calibration() for ar9002
-Message-ID: <20140508181830.GA9859@qca.qualcomm.com> (sfid-20140508_201812_295557_1677CB10)
-References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
+	Thu, 15 May 2014 02:56:02 -0400
+Received: by mail-ee0-f49.google.com with SMTP id e53so291746eek.36
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 23:56:01 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/2] ath10k: prevent hif_stop being called twice
+Date: Thu, 15 May 2014 08:48:41 +0200
+Message-Id: <1400136521-11184-3-git-send-email-michal.kazior@tieto.com> (sfid-20140515_085610_348840_657DF598)
+In-Reply-To: <1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
+References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
+ <1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 07, 2014 at 09:22:58AM +0200, David Herrmann wrote:
-> ah->caldata may be NULL if no channel is selected. Check for that before
-> accessing it.
-> 
-> Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-> ---
-> Hi
-> 
-> This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
-> is freed while we run in hw_per_calibration(). However, this patch fixes serious
-> kernel panics with wifi-P2P on my machine.
-> 
-> I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
-> correct fix would be to synchronously stop any running hw-calibration before
-> setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
-> this small workaround.
->
-David,
+Recently there was a bug discovered that involved
+hif_stop() being called twice that ended up with a
+double free_irq() call but it only manifested with
+multiple MSI interrupts mapping.
 
-Whenever the DUT is moving to off-channel, ah->caldata is set to NULL in
-hw_reset. As you mentioned, before doing hw_reset, the on-going calibration is stopped
-synchronously. I using ar9280 for p2p (GO & CLI) validation. Somehow i do not observe
-the panics. Is there a easiest way to reproduce the problem. Are you
-using wireless-testing tree? Thanks for reporting the problem. Will try
-to fix asap.
+Catch this kind of a problem early in driver
+regardless of interrupt mapping.
 
--Rajkumar
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3d0cd75..70e91ac 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1272,6 +1272,9 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 
+ 	ath10k_dbg(ATH10K_DBG_BOOT, "boot hif stop\n");
+ 
++	if (WARN_ON(!ar_pci->started))
++		return;
++
+ 	ret = ath10k_ce_disable_interrupts(ar);
+ 	if (ret)
+ 		ath10k_warn("failed to disable CE interrupts: %d\n", ret);
+-- 
+1.8.5.3
+
