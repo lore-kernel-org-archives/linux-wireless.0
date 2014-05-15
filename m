@@ -1,135 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32627 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750920AbaEGFDH (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:42084 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbaEOItP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 01:03:07 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: disable TDLS link upon tear down event
-Date: Tue, 6 May 2014 22:02:44 -0700
-Message-ID: <1399438965-12221-2-git-send-email-bzhao@marvell.com> (sfid-20140507_070312_259624_7C391289)
-In-Reply-To: <1399438965-12221-1-git-send-email-bzhao@marvell.com>
-References: <1399438965-12221-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 15 May 2014 04:49:15 -0400
+Received: by mail-ee0-f49.google.com with SMTP id e53so396486eek.22
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 01:49:14 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 5/5] ath10k: dont configure bssid for ap mode
+Date: Thu, 15 May 2014 10:42:04 +0200
+Message-Id: <1400143324-14911-6-git-send-email-michal.kazior@tieto.com> (sfid-20140515_104937_582018_21276655)
+In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+ <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+FW creates self-peer for AP internally.
 
-This patch adds code to disable TDLS link upon reception of TDLS
-teardown event from peer. Teardown event can happen either
-because of TDLS teardown packet from peer or internal timeout
-configured during TDLS setup. Event is propogated to cfg80211
-so that userspace application can take appropriate action.
+This prevents ath10k from trying to create
+explicit self-peer during hw recovery and thus
+prevents a timeout and a warning during teardown:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+  ath10k: removing stale peer $AP_BSSID from vdev_id 0
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/fw.h        | 11 +++++++++
- drivers/net/wireless/mwifiex/sta_event.c | 40 ++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+v2:
+ * add comment why CHANGED_BSSID is skipped for AP [Kalle]
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 28994ab..f0730bd 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -488,6 +488,7 @@ enum P2P_MODES {
- #define EVENT_UAP_MIC_COUNTERMEASURES   0x0000004c
- #define EVENT_HOSTWAKE_STAIE		0x0000004d
- #define EVENT_CHANNEL_SWITCH_ANN        0x00000050
-+#define EVENT_TDLS_GENERIC_EVENT        0x00000052
- #define EVENT_EXT_SCAN_REPORT           0x00000058
- #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+ drivers/net/wireless/ath/ath10k/mac.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e474eca..5b01b82 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2961,7 +2961,12 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 		arvif->u.ap.hidden_ssid = info->hidden_ssid;
+ 	}
  
-@@ -520,6 +521,7 @@ enum P2P_MODES {
- #define ACT_TDLS_DELETE            0x00
- #define ACT_TDLS_CREATE            0x01
- #define ACT_TDLS_CONFIG            0x02
-+#define TDLS_EVENT_LINK_TEAR_DOWN  3
- 
- #define MWIFIEX_FW_V15		   15
- 
-@@ -1753,6 +1755,15 @@ struct host_cmd_ds_802_11_subsc_evt {
- 	__le16 events;
- } __packed;
- 
-+struct mwifiex_tdls_generic_event {
-+	__le16 type;
-+	u8 peer_mac[ETH_ALEN];
-+	union {
-+		__le16 reason_code;
-+		__le16 reserved;
-+	} u;
-+} __packed;
-+
- struct mwifiex_ie {
- 	__le16 ie_index;
- 	__le16 mgmt_subtype_mask;
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 368450c..5aea719 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -134,6 +134,42 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- 		netif_carrier_off(priv->netdev);
- }
- 
-+static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
-+				    struct sk_buff *event_skb)
-+{
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct mwifiex_sta_node *sta_ptr;
-+	struct mwifiex_tdls_generic_event *tdls_evt =
-+			(void *)event_skb->data + sizeof(adapter->event_cause);
-+
-+	/* reserved 2 bytes are not mandatory in tdls event */
-+	if (event_skb->len < (sizeof(struct mwifiex_tdls_generic_event) -
-+			      sizeof(u16) - sizeof(adapter->event_cause))) {
-+		dev_err(adapter->dev, "Invalid event length!\n");
-+		return -1;
-+	}
-+
-+	sta_ptr = mwifiex_get_sta_entry(priv, tdls_evt->peer_mac);
-+	if (!sta_ptr) {
-+		dev_err(adapter->dev, "cannot get sta entry!\n");
-+		return -1;
-+	}
-+
-+	switch (le16_to_cpu(tdls_evt->type)) {
-+	case TDLS_EVENT_LINK_TEAR_DOWN:
-+		cfg80211_tdls_oper_request(priv->netdev,
-+					   tdls_evt->peer_mac,
-+					   NL80211_TDLS_TEARDOWN,
-+					   le16_to_cpu(tdls_evt->u.reason_code),
-+					   GFP_KERNEL);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * This function handles events generated by firmware.
-  *
-@@ -459,6 +495,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 			false);
- 		break;
- 
-+	case EVENT_TDLS_GENERIC_EVENT:
-+		ret = mwifiex_parse_tdls_event(priv, adapter->event_skb);
-+		break;
-+
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
+-	if (changed & BSS_CHANGED_BSSID) {
++	/*
++	 * Firmware manages AP self-peer internally so make sure to not create
++	 * it in driver. Otherwise AP self-peer deletion may timeout later.
++	 */
++	if (changed & BSS_CHANGED_BSSID &&
++	    vif->type != NL80211_IFTYPE_AP) {
+ 		if (!is_zero_ether_addr(info->bssid)) {
+ 			ath10k_dbg(ATH10K_DBG_MAC,
+ 				   "mac vdev %d create peer %pM\n",
 -- 
-1.8.2.3
+1.8.5.3
 
