@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:56109 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaEYUi2 (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:34552 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756079AbaEOVvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 May 2014 16:38:28 -0400
-Received: by mail-wg0-f51.google.com with SMTP id x13so6938958wgg.34
-        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 13:38:27 -0700 (PDT)
+	Thu, 15 May 2014 17:51:52 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so1698659wes.20
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:51 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6656: s_vFillTxKey fix indentation of memcpy
-Date: Sun, 25 May 2014 21:36:28 +0100
-Message-Id: <1401050189-3249-7-git-send-email-tvboxspy@gmail.com> (sfid-20140525_223832_784093_529CE665)
-In-Reply-To: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
-References: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH rebased 11/15] staging: vt6656: lock changes: s_nsBulkInUsbIoCompleteRead.
+Date: Thu, 15 May 2014 22:49:20 +0100
+Message-Id: <1400190564-5135-11-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235157_364547_A6375374)
+In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use spin_lock_irqsave/spin_unlock_irqrestore
+
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/rxtx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6656/usbpipe.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 742559d..f11c2d3 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -204,7 +204,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 						pTransmitKey->uKeyLength);
- 			if (pTransmitKey->uKeyLength == WLAN_WEP40_KEYLEN) {
- 				memcpy(pbyBuf+8, (u8 *)&rev_iv_counter, 3);
--			memcpy(pbyBuf+11, pTransmitKey->abyKey,
-+				memcpy(pbyBuf+11, pTransmitKey->abyKey,
- 						pTransmitKey->uKeyLength);
- 			}
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 934d0a9..b707470 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -474,6 +474,7 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ {
+ 	struct vnt_rcb *rcb = urb->context;
+ 	struct vnt_private *priv = rcb->pDevice;
++	unsigned long flags;
+ 	int re_alloc_skb = false;
  
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkInUsbIoCompleteRead\n");
+@@ -493,23 +494,23 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 	}
+ 
+ 	if (urb->actual_length) {
+-		spin_lock(&priv->lock);
++		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		if (RXbBulkInProcessData(priv, rcb, urb->actual_length) == true)
+ 			re_alloc_skb = true;
+ 
+-		spin_unlock(&priv->lock);
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 	}
+ 
+ 	rcb->Ref--;
+ 	if (rcb->Ref == 0) {
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeNormal %d\n",
+ 							priv->NumRecvFreeList);
+-		spin_lock(&priv->lock);
++		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		RXvFreeRCB(rcb, re_alloc_skb);
+ 
+-		spin_unlock(&priv->lock);
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 	}
+ 
+ 	return;
 -- 
 1.9.1
 
