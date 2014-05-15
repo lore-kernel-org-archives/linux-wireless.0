@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:37589 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbaEBEAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 00:00:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Wg4dn-0004tD-Ii
-	for linux-wireless@vger.kernel.org; Fri, 02 May 2014 06:00:04 +0200
-Received: from pool-180.151.210.rev.spectranet.in ([pool-180.151.210.rev.spectranet.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2014 06:00:03 +0200
-Received: from haipavanhai by pool-180.151.210.rev.spectranet.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2014 06:00:03 +0200
-To: linux-wireless@vger.kernel.org
-From: pavan <haipavanhai@gmail.com>
-Subject: Kernel panic triggered as soon as DHCP IP acquired from router NETGEAR WNDR3700
-Date: Fri, 2 May 2014 03:53:09 +0000 (UTC)
-Message-ID: <loom.20140502T054430-24@post.gmane.org> (sfid-20140502_060017_014373_F493F4D0)
+Received: from dedo.coelho.fi ([88.198.205.34]:49021 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750927AbaEOJzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 05:55:46 -0400
+Message-ID: <1400147737.4521.11.camel@dubbel> (sfid-20140515_115548_921028_F7792DD4)
+From: Luca Coelho <luca@coelho.fi>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"eliad@wizery.com" <eliad@wizery.com>
+Date: Thu, 15 May 2014 12:55:37 +0300
+In-Reply-To: <1400147514.4521.10.camel@dubbel>
+References: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1400078561.4759.12.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcixQDE7FbvJ2k3jw501BjS2_LkKG72zYok6WbmzCxq5A@mail.gmail.com>
+	 (sfid-20140515_112846_166140_C2756793) <1400146757.4146.1.camel@jlt4.sipsolutions.net>
+	 <1400147514.4521.10.camel@dubbel>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH] cfg80211: fix start_radar_detection issue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2014-05-15 at 09:51 +0000, Coelho, Luciano wrote:
+> On Thu, 2014-05-15 at 11:39 +0200, Johannes Berg wrote:
+> > On Thu, 2014-05-15 at 12:28 +0300, Eliad Peller wrote:
+> > > On Wed, May 14, 2014 at 5:42 PM, Johannes Berg
+> > > <johannes@sipsolutions.net> wrote:
+> > > > On Wed, 2014-05-14 at 13:25 +0200, Janusz Dziedzic wrote:
+> > > >> After patch:
+> > > >> cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+> > > >>
+> > > >> start_radar_detection always fail with -EINVAL.
+> > > >
+> > > > Applied, thanks.
+> > > >
+> > > probably a bit late, but i don't really see why passing
+> > > NL80211_IFTYPE_UNSPECIFIED at all, instead of the iftype?
+> > 
+> > I did briefly wonder about the same, but decided Luca probably knew
+> > better :)
+> 
+> Actually I also thought the same thing, but had the impression that
+> there were cases when we wouldn't have the iftype when calling this.
+> But now I checked both cases where we use NL80211_IFTYPE_UNSPECIFIED and
+> it seems that we really don't need it.
+> 
+> I'll send a patch to fix this and revert Janusz's change (unless
+> Johannes wants to rebase the mac80211-next tree).
 
-I am using ath6kl - AR9374 chip in our product which has ARC platform.
-wireless drivers used are from 
+Instead of just reverting Janusz's patch, I'll make
+cfg80211_chandef_dfs_required() WARN if UNSPECIFIED is passed.
 
-https://github.com/senthilb/ath6kl-compat-wireless/tree/olca-3.2.2
-
-Steps followed
-
-1. Inserted compat.ko, cfg80211.ko, ath6kl_usb.ko
-2. Kernel on the platform is 2.6.26 + ARC platform
-3. I could see wlan0 interface
-4. Ran wpa_supplicant and noticed that module is associated with the router 
-NETGEAR WNDR3700
-
-5. Kernel panic observed as Misaligned access (ip_table + 0xac) triggered, 
-this is after router issued IP to the ath6kl wireless module.
-
-Any suggestions are very much helpful.
-
-Regards,
-Pavan
+--
+Luca.
 
