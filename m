@@ -1,86 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:45501 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751750AbaEZLyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 07:54:50 -0400
-Message-ID: <1401105274.4431.9.camel@dubbel> (sfid-20140526_135453_890369_EE078580)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 May 2014 14:54:34 +0300
-In-Reply-To: <536A1FA9.7010404@broadcom.com>
-References: <536A1FA9.7010404@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: scheduled scan api
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:53607 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755935AbaEOVvv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 17:51:51 -0400
+Received: by mail-wi0-f175.google.com with SMTP id f8so11731wiw.8
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:49 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH rebased 10/15] staging: vt6656: lock changes: usbpipe.c add mutex lock.
+Date: Thu, 15 May 2014 22:49:19 +0100
+Message-Id: <1400190564-5135-10-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235155_248073_25D71165)
+In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+PIPEnsControlOut and PIPEnsControlIn are nolonger
+atomic but they do need a usb lock.
 
-I'm replying to this since I've been "somewhat" involved in the
-implementation. ;)
+Add new mutex lock for these functions and PIPEnsControlOutAsyn.
 
-I think it will make more sense if you check the nl80211 doc:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   |  1 +
+ drivers/staging/vt6656/main_usb.c |  2 ++
+ drivers/staging/vt6656/usbpipe.c  | 16 ++++++++++++++++
+ 3 files changed, 19 insertions(+)
 
-
----8<----
- * @NL80211_ATTR_SCHED_SCAN_MATCH: Nested attribute with one or more
- *	sets of attributes to match during scheduled scans.  Only BSSs
- *	that match any of the sets will be reported.  These are
- *	pass-thru filter rules.
- *	For a match to succeed, the BSS must match all attributes of a
- *	set.  Since not every hardware supports matching all types of
- *	attributes, there is no guarantee that the reported BSSs are
- *	fully complying with the match sets and userspace needs to be
- *	able to ignore them by itself.
- *	Thus, the implementation is somewhat hardware-dependent, but
- *	this is only an optimization and the userspace application
- *	needs to handle all the non-filtered results anyway.
- *	If the match attributes don't make sense when combined with
- *	the values passed in @NL80211_ATTR_SCAN_SSIDS (eg. if an SSID
- *	is included in the probe request, but the match attributes
- *	will never let it go through), -EINVAL may be returned.
- *	If ommited, no filtering is done.
----8<----
-
-Especially the second paragraph.  This means that for the SSIDs, a
-broadcast SSID means that everything goes through, there is no filtering
-of SSIDs.  You can use that for RSSI-only matches with a single RSSI
-match attribute (so you don't need to specify an RSSI attribute for
-every SSID you need to match).
-
-This is a bit unclear, but it's due to some confusion that was
-introduced when the RSSI match attribute was added.
-
---
-Luca.
-
-On Wed, 2014-05-07 at 13:57 +0200, Arend van Spriel wrote:
-> Hi Johannes,
-> 
-> I received a couple of reports from people who got problem with brcmfmac 
-> when a scheduled scan is requested, without any ssid specified. 
-> Currently, brcmfmac basically rejects the request. So what are valid 
-> usage scenarios for scheduled scans with respect to the n_ssid, 
-> n_channels, and n_matchsets. In the kernel doc below it says a 
-> zero-length ssid means 'no match'. I suppose it means any ssid which 
-> signal is above RRSI threshold will match.
-> 
-> Regards,
-> Arend
-> ---8<----------------------------------------------------------
-> /**
->   * struct cfg80211_match_set - sets of attributes to match
->   *
->   * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
->   * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
->   */
-> _______________________________________________
-> HostAP mailing list
-> HostAP@lists.shmoo.com
-> http://lists.shmoo.com/mailman/listinfo/hostap
-
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index f36a2eb..622cf02 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -363,6 +363,7 @@ struct vnt_private {
+ 	u8 byRxMode;
+ 
+ 	spinlock_t lock;
++	struct mutex usb_lock;
+ 
+ 	u32 rx_bytes;
+ 
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index e99d2a9..14e649a 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -695,6 +695,8 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 
+ 	device_set_options(pDevice);
+ 	spin_lock_init(&pDevice->lock);
++	mutex_init(&pDevice->usb_lock);
++
+ 	INIT_DELAYED_WORK(&pDevice->run_command_work, vRunCommand);
+ 	INIT_DELAYED_WORK(&pDevice->second_callback_work, BSSvSecondCallBack);
+ 	INIT_WORK(&pDevice->read_work_item, RXvWorkItem);
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 836da00..934d0a9 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -82,6 +82,8 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+         return STATUS_FAILURE;
+     }
+ 
++	mutex_lock(&pDevice->usb_lock);
++
+     ntStatus = usb_control_msg(
+                             pDevice->usb,
+                             usb_sndctrlpipe(pDevice->usb , 0),
+@@ -100,6 +102,8 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe fail, ntStatus= %d\n", ntStatus);
+     }
+ 
++	mutex_unlock(&pDevice->usb_lock);
++
+     return ntStatus;
+ }
+ 
+@@ -123,6 +127,8 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 	if (pDevice->pControlURB->hcpriv)
+ 		return STATUS_FAILURE;
+ 
++	mutex_lock(&pDevice->usb_lock);
++
+ 	MP_SET_FLAG(pDevice, fMP_CONTROL_WRITES);
+ 
+ 	pDevice->sUsbCtlRequest.bRequestType = 0x40;
+@@ -143,6 +149,7 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 			"control send request submission failed: %d\n",
+ 				ntStatus);
+ 		MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
++		mutex_unlock(&pDevice->usb_lock);
+ 		return STATUS_FAILURE;
+ 	}
+ 
+@@ -157,10 +164,13 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		DBG_PRT(MSG_LEVEL_DEBUG,
+ 			KERN_INFO "control send request submission timeout\n");
+             MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
++	    mutex_unlock(&pDevice->usb_lock);
+             return STATUS_FAILURE;
+         }
+     }
+ 
++	mutex_unlock(&pDevice->usb_lock);
++
+     return STATUS_SUCCESS;
+ }
+ 
+@@ -184,6 +194,8 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 	if (pDevice->pControlURB->hcpriv)
+ 		return STATUS_FAILURE;
+ 
++	mutex_lock(&pDevice->usb_lock);
++
+ 	MP_SET_FLAG(pDevice, fMP_CONTROL_READS);
+ 
+ 	pDevice->sUsbCtlRequest.bRequestType = 0xC0;
+@@ -202,6 +214,7 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+ 			"control request submission failed: %d\n", ntStatus);
+ 		MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
++		mutex_unlock(&pDevice->usb_lock);
+ 		return STATUS_FAILURE;
+ 	}
+ 
+@@ -216,10 +229,13 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		DBG_PRT(MSG_LEVEL_DEBUG,
+ 			KERN_INFO "control rcv request submission timeout\n");
+             MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
++	    mutex_unlock(&pDevice->usb_lock);
+             return STATUS_FAILURE;
+         }
+     }
+ 
++	mutex_unlock(&pDevice->usb_lock);
++
+     return ntStatus;
+ }
+ 
+-- 
+1.9.1
 
