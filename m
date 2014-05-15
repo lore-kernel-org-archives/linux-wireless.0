@@ -1,51 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44558 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498AbaEVOhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 10:37:43 -0400
-Message-ID: <1400769454.4174.22.camel@jlt4.sipsolutions.net> (sfid-20140522_163747_967070_FC75DEAE)
-Subject: Re: [PATCH 1/3] mac80211: move csa counters from sdata to
- beacon/presp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 22 May 2014 16:37:34 +0200
-In-Reply-To: <CA+BoTQmw6taxwxHtK99BQXgGugu6aDrGUOCz+-MvUo52JoWrpw@mail.gmail.com> (sfid-20140522_155348_321691_FA0123D1)
-References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
-	 <1400765294-14732-2-git-send-email-michal.kazior@tieto.com>
-	 <1400766195.4174.13.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmw6taxwxHtK99BQXgGugu6aDrGUOCz+-MvUo52JoWrpw@mail.gmail.com>
-	 (sfid-20140522_155348_321691_FA0123D1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f173.google.com ([74.125.82.173]:38692 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbaEOMmR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 08:42:17 -0400
+Received: by mail-we0-f173.google.com with SMTP id u57so994804wes.18
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 05:42:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87r43v9v2n.fsf@kamboji.qca.qualcomm.com>
+References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
+	<1400050658-2763-2-git-send-email-michal.kazior@tieto.com>
+	<87r43v9v2n.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 15 May 2014 14:42:16 +0200
+Message-ID: <CA+BoTQkYMFi5_a1w0UQaPanAEaeiK9-ScnmLzxro1uB2dzK4MA@mail.gmail.com> (sfid-20140515_144221_130324_5BAEF9EA)
+Subject: Re: [PATCH 1/2] ath10k: improve warm reset reliability
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-05-22 at 15:53 +0200, Michal Kazior wrote:
+On 15 May 2014 12:48, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Warm reset is now able to recover after device
+>> crashes which required a cold reset before.
+>>
+>> This should greatly reduce chances of getting data
+>> bus errors or host system freezes due to buggy
+>> cold reset on some chips.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Awesome! This is very much needed. I just have a cosmetic comment:
+>
+>> +/* this function effectively clears target memory controller assert line */
+>> +static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
+>> +{
+>> +     u32 val;
+>> +
+>> +     val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+>> +                             SOC_RESET_CONTROL_ADDRESS);
+>> +     ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+>> +                        val | SOC_RESET_CONTROL_SI0_RST_MASK);
+>> +     val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+>> +                             SOC_RESET_CONTROL_ADDRESS);
+>
+> We do have the ath10k_pci_soc_ functions for accessing SOC registers, I
+> would prefer to use those here. I now modified your patch with the diff
+> below. Is that ok to you?
 
-> >>  static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
-> >> -                                struct cfg80211_beacon_data *params)
-> >> +                                struct cfg80211_beacon_data *params,
-> >> +                                const u16 *csa_counter_offset_beacon,
-> >> +                                int n_csa_counter_offset_beacon,
-> >> +                                const u16 *csa_counter_offset_presp,
-> >> +                                int n_csa_counter_offset_presp,
-> >> +                                u8 csa_count)
-> >
-> > But that seems overkill. Maybe those CSA-related arguments could be in
-> > some new struct so you don't have to pass "..., NULL, 0, NULL, 0, 0"?
-> 
-> I didn't want to invent a structure just to pass a bunch of arguments.
+Ah, yeah. I totally forgot about these functions (again).
 
-I don't see any problem with that?
 
-> Hmm.. maybe we can move counter offsets into cfg80211_beacon_data?
-> This would apply to cfg80211_csa_settings as well.
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -1807,20 +1807,18 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
+>  {
+>         u32 val;
+>
+> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+> -                               SOC_RESET_CONTROL_ADDRESS);
+> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+> -                          val | SOC_RESET_CONTROL_SI0_RST_MASK);
+> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+> -                               SOC_RESET_CONTROL_ADDRESS);
+> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
+> +       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
+> +                              val | SOC_RESET_CONTROL_SI0_RST_MASK);
+> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
+> +
+>         msleep(10);
+>
+> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+> -                               SOC_RESET_CONTROL_ADDRESS);
+> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+> -                          val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
+> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+> -                               SOC_RESET_CONTROL_ADDRESS);
+> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
+> +       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
+> +                              val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
+> +       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
+> +
+>         msleep(10);
+>  }
 
-I don't think that's a good idea, since the cfg80211_beacon_data is used
-in places where that wouldn't make sense, that would confuse the API.
-You could use "struct cfg80211_csa_settings" here I suppose, but I think
-a new struct is perfectly reasonable.
+Looks good to me :-)
 
-johannes
 
+> Full patch here:
+>
+> https://github.com/kvalo/ath/commit/7b52054308a371d479a9e686e1d8411d19a90fd7
+
+You probably mean:
+
+https://github.com/kvalo/ath/commit/136ef8110cba61752eee5ef6bd7ce170b15cf491
+
+
+Michał
