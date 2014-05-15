@@ -1,92 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:44299 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933239AbaE3P2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:32 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so2225297wes.0
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:31 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/12] staging: vt6656: rename CARDvCalculateOFDMRParameter to vnt_calculate_ofdm_rate
-Date: Fri, 30 May 2014 16:27:43 +0100
-Message-Id: <1401463671-4705-4-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172837_082879_362E449A)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:49459 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755805AbaEORcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 13:32:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, andrei.otcheretianski@intel.com
+Date: Thu, 15 May 2014 20:32:08 +0300
+Message-Id: <1400175128-25656-1-git-send-email-luca@coelho.fi> (sfid-20140515_193458_573227_74CD477E)
+Subject: [PATCH] mac80211: fix csa_couter_offs argument name in docbook
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop card and Parameter. R is the rate to rename to vnt_calculate_ofdm_rate
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+The csa_counter_offs was erroneously described as csa_counter_offs in
+the docbook section.
+
+This fixes two warnings when making htmldocs (at least):
+
+Warning(include/net/mac80211.h:3428): No description found for parameter 'csa_counter_offs[IEEE80211_MAX_CSA_COUNTERS_NUM]'
+Warning(include/net/mac80211.h:3428): Excess struct/union/enum/typedef member 'csa_offs' description in 'ieee80211_mutable_offsets'
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/card.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+ include/net/mac80211.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 695236b..9c88134 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -197,7 +197,7 @@ static u16 vnt_get_ofdm_rate(struct vnt_private *priv, u16 rate_idx)
-  * Return Value: none
-  *
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 982d2cd..a34f26a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3417,8 +3417,9 @@ void ieee80211_report_low_ack(struct ieee80211_sta *sta, u32 num_packets);
+  * struct ieee80211_mutable_offsets - mutable beacon offsets
+  * @tim_offset: position of TIM element
+  * @tim_length: size of TIM element
+- * @csa_offs: array of IEEE80211_MAX_CSA_COUNTERS_NUM offsets to CSA counters.
+- *	This array can contain zero values which should be ignored.
++ * @csa_counter_offs: array of IEEE80211_MAX_CSA_COUNTERS_NUM offsets
++ *	to CSA counters.  This array can contain zero values which
++ *	should be ignored.
   */
--static void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
-+static void vnt_calculate_ofdm_rate(u16 rate, u8 bb_type,
- 					u8 *tx_rate, u8 *rsv_time)
- {
- 
-@@ -317,39 +317,34 @@ void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
- 
- 
- 	/*RSPINF_a_6*/
--	CARDvCalculateOFDMRParameter(RATE_6M, bb_type,
--						&tx_rate[0], &rsv_time[0]);
-+	vnt_calculate_ofdm_rate(RATE_6M, bb_type, &tx_rate[0], &rsv_time[0]);
- 
- 	/*RSPINF_a_9*/
--	CARDvCalculateOFDMRParameter(RATE_9M, bb_type,
--						&tx_rate[1], &rsv_time[1]);
-+	vnt_calculate_ofdm_rate(RATE_9M, bb_type, &tx_rate[1], &rsv_time[1]);
- 
- 	/*RSPINF_a_12*/
--	CARDvCalculateOFDMRParameter(RATE_12M, bb_type,
--						&tx_rate[2], &rsv_time[2]);
-+	vnt_calculate_ofdm_rate(RATE_12M, bb_type, &tx_rate[2], &rsv_time[2]);
- 
- 	/*RSPINF_a_18*/
--	CARDvCalculateOFDMRParameter(RATE_18M, bb_type,
--						&tx_rate[3], &rsv_time[3]);
-+	vnt_calculate_ofdm_rate(RATE_18M, bb_type, &tx_rate[3], &rsv_time[3]);
- 
- 	/*RSPINF_a_24*/
--	CARDvCalculateOFDMRParameter(RATE_24M, bb_type,
--						&tx_rate[4], &rsv_time[4]);
-+	vnt_calculate_ofdm_rate(RATE_24M, bb_type, &tx_rate[4], &rsv_time[4]);
- 
- 	/*RSPINF_a_36*/
--	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_36M),
-+	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_36M),
- 					bb_type, &tx_rate[5], &rsv_time[5]);
- 
- 	/*RSPINF_a_48*/
--	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_48M),
-+	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_48M),
- 					bb_type, &tx_rate[6], &rsv_time[6]);
- 
- 	/*RSPINF_a_54*/
--	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
-+	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_54M),
- 					bb_type, &tx_rate[7], &rsv_time[7]);
- 
- 	/*RSPINF_a_72*/
--	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
-+	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_54M),
- 					bb_type, &tx_rate[8], &rsv_time[8]);
- 
- 	put_unaligned(phy[0].len, (u16 *)&data[0]);
+ struct ieee80211_mutable_offsets {
+ 	u16 tim_offset;
 -- 
-1.9.1
+2.0.0.rc0
 
