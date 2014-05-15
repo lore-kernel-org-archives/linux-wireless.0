@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:44701 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbaEWKpW (ORCPT
+Received: from mail-yh0-f47.google.com ([209.85.213.47]:62671 "EHLO
+	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbaEON4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 06:45:22 -0400
-Received: by mail-ve0-f175.google.com with SMTP id jw12so5982595veb.20
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:45:21 -0700 (PDT)
+	Thu, 15 May 2014 09:56:05 -0400
+Date: Thu, 15 May 2014 10:56:00 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2014-05-15
+Message-ID: <20140515135600.GB1966@joana> (sfid-20140515_155609_346453_98AF44DE)
 MIME-Version: 1.0
-Date: Fri, 23 May 2014 12:45:21 +0200
-Message-ID: <CAD3NH5U3yhFe=CiKtz0-YA8s88eOdBJiua_95wyhDsaAb13NEQ@mail.gmail.com> (sfid-20140523_124554_428150_4E0945EB)
-Subject: Calling function in mac80211 from another kernel module
-From: Dani Camps <danicamps81@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Hi John,
 
-We are trying to implement a kernel module that calls some functions
-defined in mac80211. For that we have seen that sta_info.c already has
-some functions that are exported and declared in mac80211.h. For
-example:
+This pull request contains a very important fix for 3.15. Here we fix the
+permissions of a debugfs file that would otherwise allow unauthorized users
+to write content to it.
 
-EXPORT_SYMBOL(ieee80211_sta_block_awake)
+Please pull! Thanks.
 
-This function is declared in mac80211.h, so we include the full path
-to this header in the C file of our module. However, compilation
-crashes due to other header files included in mac80211.h.
+        Gustavo
 
-Our understanding is that we should include in the Makefile of our
-module the paths to the folders hosting relevant header files in
-linux_backports. However, we are struggling to find what these folders
-are, could anyone advise on what these folders should be? e.g. we
-found backports_include but that one alone is not enough.
+---
+The following changes since commit 1fb4e09a7e780b915dbd172592ae7e2a4c071065:
 
-Thanks for your help.
+  Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-25 09:47:16 +0300)
 
-Best Regards
+are available in the git repository at:
 
-Daniel
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git master
+
+for you to fetch changes up to 40b9397a1a61a37917b93e7d57e6f2faf3a086b4:
+
+  Bluetooth: Fix L2CAP LE debugfs entries permissions (2014-05-14 09:07:07 -0700)
+
+----------------------------------------------------------------
+Samuel Ortiz (1):
+      Bluetooth: Fix L2CAP LE debugfs entries permissions
+
+ net/bluetooth/l2cap_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
