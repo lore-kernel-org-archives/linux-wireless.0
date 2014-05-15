@@ -1,78 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:49789 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933541AbaE2GqS (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:48604 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916AbaEORFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 02:46:18 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so4930789wib.11
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 23:46:17 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Thu, 15 May 2014 13:05:22 -0400
+Received: by mail-we0-f181.google.com with SMTP id w61so1343860wes.26
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:21 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/2] mac80211: use csa counter offsets instead of csa_active
-Date: Thu, 29 May 2014 08:38:55 +0200
-Message-Id: <1401345535-22991-3-git-send-email-michal.kazior@tieto.com> (sfid-20140529_084643_761016_E73A6979)
-In-Reply-To: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
-References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/24] iwlwifi: mvm: revisit the NVM handling code
+Date: Thu, 15 May 2014 20:04:34 +0300
+Message-Id: <1400173481-9047-17-git-send-email-egrumbach@gmail.com> (sfid-20140515_190604_929211_9C479AC3)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vif->csa_active is protected by mutexes only. This
-means it is unreliable to depend on it on codeflow
-in non-sleepable beacon and CSA code. There was no
-guarantee to have vif->csa_active update be
-visible before beacons are updated on SMP systems.
+From: Eran Harary <eran.harary@intel.com>
 
-Using csa counter offsets which are embedded in
-beacon struct (and thus are protected with single
-RCU assignment) is much safer.
+Fix a bug in nvm_read_section function if size of the section
+is a multiple of 2K:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+   - if the size of the section is *not* multiple of 2K,
+   then we will have: read(2K) - return 2K ... read(2K) - return 2K
+   read(2K) - return the rest (in bytes) and exit the while loop.
+   - else, if the size of the section is a multiple of 2K,
+   then we have: read(2K) - return 2K read(2K) - return 2K read(2K) -
+   return 2K read(2K) - return 0 and exit the while with an error.
+
+We should not return an error in the latter case, because it
+might well be that the section was completely read.
+
+Also, we try now to read all the sections as this is needed
+for new devices.
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/tx.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-config.h |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/nvm.c    | 64 +++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 33 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index acad42a..0211590 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2536,6 +2536,9 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
- 		goto out;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 8a62068..b7047905 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -195,7 +195,7 @@ struct iwl_ht_params {
+ 
+ /* lower blocks contain EEPROM image and calibration data */
+ #define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
+-#define OTP_LOW_IMAGE_SIZE_FAMILY_7000	(4 * 512 * sizeof(u16)) /* 4 KB */
++#define OTP_LOW_IMAGE_SIZE_FAMILY_7000	(16 * 512 * sizeof(u16)) /* 16 KB */
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_8000	(32 * 512 * sizeof(u16)) /* 32 KB */
+ 
+ struct iwl_eeprom_params {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index 8acb9f9..808f78f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -74,6 +74,12 @@
+ #define NVM_WRITE_OPCODE 1
+ #define NVM_READ_OPCODE 0
+ 
++/* load nvm chunk response */
++enum {
++	READ_NVM_CHUNK_SUCCEED = 0,
++	READ_NVM_CHUNK_NOT_VALID_ADDRESS = 1
++};
++
+ /*
+  * prepare the NVM host command w/ the pointers to the nvm buffer
+  * and send it to fw
+@@ -139,10 +145,26 @@ static int iwl_nvm_read_chunk(struct iwl_mvm *mvm, u16 section,
+ 	offset_read = le16_to_cpu(nvm_resp->offset);
+ 	resp_data = nvm_resp->data;
+ 	if (ret) {
+-		IWL_ERR(mvm,
+-			"NVM access command failed with status %d (device: %s)\n",
+-			ret, mvm->cfg->name);
+-		ret = -EINVAL;
++		if ((offset != 0) &&
++		    (ret == READ_NVM_CHUNK_NOT_VALID_ADDRESS)) {
++			/*
++			 * meaning of NOT_VALID_ADDRESS:
++			 * driver try to read chunk from address that is
++			 * multiple of 2K and got an error since addr is empty.
++			 * meaning of (offset != 0): driver already
++			 * read valid data from another chunk so this case
++			 * is not an error.
++			 */
++			IWL_DEBUG_EEPROM(mvm->trans->dev,
++					 "NVM access command failed on offset 0x%x since that section size is multiple 2K\n",
++					 offset);
++			ret = 0;
++		} else {
++			IWL_DEBUG_EEPROM(mvm->trans->dev,
++					 "NVM access command failed with status %d (device: %s)\n",
++					 ret, mvm->cfg->name);
++			ret = -EIO;
++		}
+ 		goto exit;
  	}
  
-+	if (!beacon->csa_counter_offsets[0])
-+		goto out;
-+
- 	if (WARN_ON_ONCE(beacon->csa_counter_offsets[0] > beacon_data_len))
- 		goto out;
+@@ -211,9 +233,9 @@ static int iwl_nvm_read_section(struct iwl_mvm *mvm, u16 section,
+ 	while (ret == length) {
+ 		ret = iwl_nvm_read_chunk(mvm, section, offset, length, data);
+ 		if (ret < 0) {
+-			IWL_ERR(mvm,
+-				"Cannot read NVM from section %d offset %d, length %d\n",
+-				section, offset, length);
++			IWL_DEBUG_EEPROM(mvm->trans->dev,
++					 "Cannot read NVM from section %d offset %d, length %d\n",
++					 section, offset, length);
+ 			return ret;
+ 		}
+ 		offset += ret;
+@@ -436,32 +458,14 @@ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
  
-@@ -2580,7 +2583,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ {
+-	int ret, i, section;
++	int ret, section;
+ 	u8 *nvm_buffer, *temp;
+-	int nvm_to_read[NVM_MAX_NUM_SECTIONS];
+-	int num_of_sections_to_read;
  
- 		beacon = rcu_dereference(ap->beacon);
- 		if (beacon) {
--			if (sdata->vif.csa_active) {
-+			if (beacon->csa_counter_offsets[0]) {
- 				if (!is_template)
- 					ieee80211_csa_update_counter(vif);
+ 	if (WARN_ON_ONCE(mvm->cfg->nvm_hw_section_num >= NVM_MAX_NUM_SECTIONS))
+ 		return -EINVAL;
  
-@@ -2626,7 +2629,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (!beacon)
- 			goto out;
+ 	/* load NVM values from nic */
+ 	if (read_nvm_from_nic) {
+-		/* list of NVM sections we are allowed/need to read */
+-		if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+-			nvm_to_read[0] = mvm->cfg->nvm_hw_section_num;
+-			nvm_to_read[1] = NVM_SECTION_TYPE_SW;
+-			nvm_to_read[2] = NVM_SECTION_TYPE_CALIBRATION;
+-			nvm_to_read[3] = NVM_SECTION_TYPE_PRODUCTION;
+-			num_of_sections_to_read = 4;
+-		} else {
+-			nvm_to_read[0] = NVM_SECTION_TYPE_SW;
+-			nvm_to_read[1] = NVM_SECTION_TYPE_CALIBRATION;
+-			nvm_to_read[2] = NVM_SECTION_TYPE_PRODUCTION;
+-			nvm_to_read[3] = NVM_SECTION_TYPE_REGULATORY;
+-			nvm_to_read[4] = NVM_SECTION_TYPE_MAC_OVERRIDE;
+-			num_of_sections_to_read = 5;
+-		}
+-
+ 		/* Read From FW NVM */
+ 		IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from NVM\n");
  
--		if (sdata->vif.csa_active) {
-+		if (beacon->csa_counter_offsets[0]) {
- 			if (!is_template)
- 				ieee80211_csa_update_counter(vif);
+@@ -469,12 +473,11 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 				     GFP_KERNEL);
+ 		if (!nvm_buffer)
+ 			return -ENOMEM;
+-		for (i = 0; i < num_of_sections_to_read; i++) {
+-			section = nvm_to_read[i];
++		for (section = 0; section < NVM_MAX_NUM_SECTIONS; section++) {
+ 			/* we override the constness for initial read */
+ 			ret = iwl_nvm_read_section(mvm, section, nvm_buffer);
+ 			if (ret < 0)
+-				break;
++				continue;
+ 			temp = kmemdup(nvm_buffer, ret, GFP_KERNEL);
+ 			if (!temp) {
+ 				ret = -ENOMEM;
+@@ -503,13 +506,10 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 					mvm->nvm_hw_blob.size = ret;
+ 					break;
+ 				}
+-				WARN(1, "section: %d", section);
+ 			}
+ #endif
+ 		}
+ 		kfree(nvm_buffer);
+-		if (ret < 0)
+-			return ret;
+ 	}
  
-@@ -2651,7 +2654,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (!beacon)
- 			goto out;
- 
--		if (sdata->vif.csa_active) {
-+		if (beacon->csa_counter_offsets[0]) {
- 			if (!is_template)
- 				/* TODO: For mesh csa_counter is in TU, so
- 				 * decrementing it by one isn't correct, but
+ 	/* load external NVM if configured */
 -- 
-1.8.5.3
+1.8.3.2
 
