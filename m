@@ -1,136 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:48370 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbaETIwK (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:47660 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756148AbaEOVvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 04:52:10 -0400
-Received: by mail-la0-f43.google.com with SMTP id mc6so128508lab.30
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 01:52:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com>
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
- <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
- <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com> <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 20 May 2014 01:51:48 -0700
-Message-ID: <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com> (sfid-20140520_105216_081387_D0E3074F)
-Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 May 2014 17:51:55 -0400
+Received: by mail-wi0-f170.google.com with SMTP id bs8so1279820wib.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:54 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH rebased 13/15] staging: vt6656: usbpipe.c PIPEnsControlOut use usb_control_msg
+Date: Thu, 15 May 2014 22:49:22 +0100
+Message-Id: <1400190564-5135-13-git-send-email-tvboxspy@gmail.com> (sfid-20140516_002147_446644_BD513EC7)
+In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 1:33 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Tue, May 20, 2014 at 11:26 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> On Sun, May 11, 2014 at 1:50 AM, Emmanuel Grumbach
->> <emmanuel.grumbach@intel.com> wrote:
->>> From: Arik Nemtsov <arik@wizery.com>
->>>
->>> Allow setting bandwidth related regulatory flags. These flags are mapped
->>> to the corresponding channel flags in the specified range.
->>> Make sure the new flags are consulted when calculating the maximum
->>> bandwidth allowed by a regulatory-rule.
->>>
->>> Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
->>> channel.
->>>
->>> Change-Id: I1b0506ab332cdd268cbf4b02e03574f5c30ba5c0
->>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>> ---
->>>  include/uapi/linux/nl80211.h | 12 ++++++++++++
->>>  net/wireless/reg.c           | 30 ++++++++++++++++++++++++++++--
->>>  2 files changed, 40 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
->>> index 406010d..f332231 100644
->>> --- a/include/uapi/linux/nl80211.h
->>> +++ b/include/uapi/linux/nl80211.h
->>> @@ -2558,6 +2558,11 @@ enum nl80211_sched_scan_match_attr {
->>>   * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
->>>   *     base on contiguous rules and wider channels will be allowed to cross
->>>   *     multiple contiguous/overlapping frequency ranges.
->>> + * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
->>> + * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
->>> + * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
->>> + * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
->>> + * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
->>>   */
->>>  enum nl80211_reg_rule_flags {
->>>         NL80211_RRF_NO_OFDM             = 1<<0,
->>> @@ -2570,11 +2575,18 @@ enum nl80211_reg_rule_flags {
->>>         NL80211_RRF_NO_IR               = 1<<7,
->>>         __NL80211_RRF_NO_IBSS           = 1<<8,
->>>         NL80211_RRF_AUTO_BW             = 1<<11,
->>> +       NL80211_RRF_GO_CONCURRENT       = 1<<12,
->>> +       NL80211_RRF_NO_HT40MINUS        = 1<<13,
->>> +       NL80211_RRF_NO_HT40PLUS         = 1<<14,
->>> +       NL80211_RRF_NO_80MHZ            = 1<<15,
->>> +       NL80211_RRF_NO_160MHZ           = 1<<16,
->>>  };
->>
->> Automatic calculation on max bandwidth scales better, I'd much prefer
->> these only be used and properly documented to only be used in cases
->> where we want to be explicit about this, I don't think this should be
->> the automatic behavior, or at least your patch in no way explains any
->> justification as to why the move is being done, so I cannot guess what
->> the logic was here.
->
-> We're not going to use CRDA/wireless-regdb as the regulatory data
-> source.
+Now that this fucntion is nolonger atomic change to usb_control_msg
 
-Why not?
+Return STATUS_FAILURE if ntStatus less than wLength.
 
-> These flags fit the reg-data storage format of the intel FW.
-> It's just a different way of doing things.
+Remove fMP_CONTROL_WRITES flag
 
-You can covert things, we have tons of drivers doing that already.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   |  1 -
+ drivers/staging/vt6656/main_usb.c |  1 -
+ drivers/staging/vt6656/usbpipe.c  | 87 ++++-----------------------------------
+ 3 files changed, 7 insertions(+), 82 deletions(-)
 
->>>  #define NL80211_RRF_PASSIVE_SCAN       NL80211_RRF_NO_IR
->>>  #define NL80211_RRF_NO_IBSS            NL80211_RRF_NO_IR
->>>  #define NL80211_RRF_NO_IR              NL80211_RRF_NO_IR
->>> +#define NL80211_RRF_NO_HT40            (NL80211_RRF_NO_HT40MINUS |\
->>> +                                        NL80211_RRF_NO_HT40PLUS)
->>>
->>>  /* For backport compatibility with older userspace */
->>>  #define NL80211_RRF_NO_IR_ALL          (NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
->>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>> index 558b0e3..efd6d0d 100644
->>> --- a/net/wireless/reg.c
->>> +++ b/net/wireless/reg.c
->>> @@ -572,8 +572,9 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
->>>         return get_cfg80211_regdom();
->>>  }
->>>
->>> -unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
->>> -                                  const struct ieee80211_reg_rule *rule)
->>> +static unsigned int
->>> +reg_get_max_bandwidth_from_range(const struct ieee80211_regdomain *rd,
->>> +                                const struct ieee80211_reg_rule *rule)
->>
->> This change is renaming a routine we used heavily to something tucked
->> in the closet and then introducing the usage of the new flags, which
->> have no justifications nor proper regdb updates, this also doesn't
->> even account for the old regdb situations so I'll have to provide a
->> huge NACK for all these reasons.
->>
->> You want to consider wireless-regdb / CRDA when making these changes.
->
-> I can rename things any way you'd like.
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 622cf02..da1b70d 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -744,7 +744,6 @@ struct vnt_private {
+ #define fMP_POST_READS                      0x00000100
+ #define fMP_POST_WRITES                     0x00000200
+ #define fMP_CONTROL_READS                   0x00000400
+-#define fMP_CONTROL_WRITES                  0x00000800
+ 
+ #define MP_SET_FLAG(_M, _F)             ((_M)->Flags |= (_F))
+ #define MP_CLEAR_FLAG(_M, _F)            ((_M)->Flags &= ~(_F))
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 462f95d..6ca5d78 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -965,7 +965,6 @@ static int  device_open(struct net_device *dev)
+ 
+     MP_CLEAR_FLAG(pDevice, fMP_DISCONNECTED);
+     MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
+-    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
+     MP_SET_FLAG(pDevice, fMP_POST_READS);
+     MP_SET_FLAG(pDevice, fMP_POST_WRITES);
+ 
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index b707470..1ab3958 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -64,7 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+ static void s_nsControlInUsbIoCompleteRead(struct urb *urb);
+-static void s_nsControlInUsbIoCompleteWrite(struct urb *urb);
+ 
+ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+ 	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
+@@ -74,9 +73,6 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+     if (pDevice->Flags & fMP_DISCONNECTED)
+         return STATUS_FAILURE;
+ 
+-    if (pDevice->Flags & fMP_CONTROL_WRITES)
+-        return STATUS_FAILURE;
+-
+     if (in_interrupt()) {
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
+         return STATUS_FAILURE;
+@@ -109,69 +105,24 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+ 
+ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
+-		__releases(&pDevice->lock)
+-		__acquires(&pDevice->lock)
+ {
+ 	int ntStatus = 0;
+-	int ii;
+-
+-    if (pDevice->Flags & fMP_DISCONNECTED)
+-        return STATUS_FAILURE;
+-
+-    if (pDevice->Flags & fMP_CONTROL_WRITES)
+-        return STATUS_FAILURE;
+ 
+-	if (pDevice->Flags & fMP_CONTROL_READS)
+-		return STATUS_FAILURE;
+-
+-	if (pDevice->pControlURB->hcpriv)
++	if (pDevice->Flags & fMP_DISCONNECTED)
+ 		return STATUS_FAILURE;
+ 
+ 	mutex_lock(&pDevice->usb_lock);
+ 
+-	MP_SET_FLAG(pDevice, fMP_CONTROL_WRITES);
++	ntStatus = usb_control_msg(pDevice->usb,
++		usb_sndctrlpipe(pDevice->usb, 0), byRequest, 0x40, wValue,
++			wIndex, pbyBuffer, wLength, USB_CTL_WAIT);
+ 
+-	pDevice->sUsbCtlRequest.bRequestType = 0x40;
+-	pDevice->sUsbCtlRequest.bRequest = byRequest;
+-	pDevice->sUsbCtlRequest.wValue = cpu_to_le16p(&wValue);
+-	pDevice->sUsbCtlRequest.wIndex = cpu_to_le16p(&wIndex);
+-	pDevice->sUsbCtlRequest.wLength = cpu_to_le16p(&wLength);
+-	pDevice->pControlURB->transfer_flags |= URB_ASYNC_UNLINK;
+-    pDevice->pControlURB->actual_length = 0;
+-    // Notice, pbyBuffer limited point to variable buffer, can't be constant.
+-  	usb_fill_control_urb(pDevice->pControlURB, pDevice->usb,
+-			 usb_sndctrlpipe(pDevice->usb , 0), (char *) &pDevice->sUsbCtlRequest,
+-			 pbyBuffer, wLength, s_nsControlInUsbIoCompleteWrite, pDevice);
++	mutex_unlock(&pDevice->usb_lock);
+ 
+-	ntStatus = usb_submit_urb(pDevice->pControlURB, GFP_ATOMIC);
+-	if (ntStatus != 0) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"control send request submission failed: %d\n",
+-				ntStatus);
+-		MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
+-		mutex_unlock(&pDevice->usb_lock);
++	if (ntStatus < (int)wLength)
+ 		return STATUS_FAILURE;
+-	}
+-
+-    for (ii = 0; ii <= USB_CTL_WAIT; ii ++) {
+-
+-	if (pDevice->Flags & fMP_CONTROL_WRITES)
+-		mdelay(1);
+-        else
+-		break;
+-
+-        if (ii >= USB_CTL_WAIT) {
+-		DBG_PRT(MSG_LEVEL_DEBUG,
+-			KERN_INFO "control send request submission timeout\n");
+-            MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
+-	    mutex_unlock(&pDevice->usb_lock);
+-            return STATUS_FAILURE;
+-        }
+-    }
+-
+-	mutex_unlock(&pDevice->usb_lock);
+ 
+-    return STATUS_SUCCESS;
++	return STATUS_SUCCESS;
+ }
+ 
+ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+@@ -188,9 +139,6 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+     if (pDevice->Flags & fMP_CONTROL_READS)
+ 	return STATUS_FAILURE;
+ 
+-	if (pDevice->Flags & fMP_CONTROL_WRITES)
+-		return STATUS_FAILURE;
+-
+ 	if (pDevice->pControlURB->hcpriv)
+ 		return STATUS_FAILURE;
+ 
+@@ -239,27 +187,6 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+     return ntStatus;
+ }
+ 
+-static void s_nsControlInUsbIoCompleteWrite(struct urb *urb)
+-{
+-	struct vnt_private *pDevice = (struct vnt_private *)urb->context;
+-
+-	pDevice = urb->context;
+-	switch (urb->status) {
+-	case 0:
+-		break;
+-	case -EINPROGRESS:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status EINPROGRESS%d\n", urb->status);
+-		break;
+-	case -ENOENT:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status ENOENT %d\n", urb->status);
+-		break;
+-	default:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status %d\n", urb->status);
+-	}
+-
+-    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
+-}
+-
+ /*
+  * Description:
+  *      Complete function of usb Control callback
+-- 
+1.9.1
 
-You missed my point, you just did not rename something you went and
-then made this new unused flag you introduced be used in tons of
-locations, that'd introduce tons of regressions.
-
-> Not sure how this can hurt old
-> regdb situations though. The new flags are not used in any rules
-> there.
-
-Exactly, you can't expect the rules to work then.
-
-  Luis
