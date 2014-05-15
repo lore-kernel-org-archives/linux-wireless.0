@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42908 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750811AbaEGRF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 13:05:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Wed,  7 May 2014 20:05:12 +0300
-Message-Id: <1399482312-20151-1-git-send-email-luca@coelho.fi> (sfid-20140507_190530_115263_81DA4FA8)
-Subject: [PATCH] mac80211: fix sparse warning caused by __ieee80211_channel_switch()
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:41936 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756079AbaEOVvt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2014 17:51:49 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x12so4031058wgg.6
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:48 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH rebased 09/15] staging: vt6656: lock changes: vRunCommand nsDMA_tx_packet
+Date: Thu, 15 May 2014 22:49:18 +0100
+Message-Id: <1400190564-5135-9-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235153_137680_AADB9129)
+In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+vRunCommand is nolonger atomic add lock for nsDMA_tx_packet.
 
-Commit 59af6928 (mac80211: fix CSA tx queue stopping) introduced a
-sparse warning:
-
-net/mac80211/cfg.c:3274:5: warning: symbol '__ieee80211_channel_switch' was not declared. Should it be static?
-
-Fix it by declaring the function static.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/cfg.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/staging/vt6656/wcmd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0c87c8c..3f8f005 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3271,8 +3271,9 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index d51cc90..66d59d5 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -279,6 +279,7 @@ void vRunCommand(struct work_struct *work)
+ 	int ii;
+ 	u8 byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+ 	u8 byData;
++	unsigned long flags;
  
--int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
--			       struct cfg80211_csa_settings *params)
-+static int
-+__ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-+			   struct cfg80211_csa_settings *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
+ 	if (pDevice->Flags & fMP_DISCONNECTED)
+ 		return;
+@@ -667,9 +668,13 @@ void vRunCommand(struct work_struct *work)
+ 					pDevice->bMoreData = true;
+ 				}
+ 
++				spin_lock_irqsave(&pDevice->lock, flags);
++
+ 				if (nsDMA_tx_packet(pDevice, skb) != 0)
+ 					DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Multicast ps tx fail\n");
+ 
++				spin_unlock_irqrestore(&pDevice->lock, flags);
++
+ 				pMgmt->sNodeDBTable[0].wEnQueueCnt--;
+ 			}
+ 		}
+@@ -690,9 +695,13 @@ void vRunCommand(struct work_struct *work)
+ 						pDevice->bMoreData = true;
+ 					}
+ 
++					spin_lock_irqsave(&pDevice->lock, flags);
++
+ 					if (nsDMA_tx_packet(pDevice, skb) != 0)
+ 						DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "sta ps tx fail\n");
+ 
++					spin_unlock_irqrestore(&pDevice->lock, flags);
++
+ 					pMgmt->sNodeDBTable[ii].wEnQueueCnt--;
+ 					// check if sta ps enable, wait next pspoll
+ 					// if sta ps disable, send all pending buffers.
 -- 
-2.0.0.rc0
+1.9.1
 
