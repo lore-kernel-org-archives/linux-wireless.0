@@ -1,34 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53243 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948AbaEKQlT (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:52659 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606AbaEORFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2014 12:41:19 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uz6so7030814obc.5
-        for <linux-wireless@vger.kernel.org>; Sun, 11 May 2014 09:41:18 -0700 (PDT)
-Message-ID: <536FA82C.1040203@lwfinger.net> (sfid-20140511_184136_435815_3E8C29BD)
-Date: Sun, 11 May 2014 11:41:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Kernel binary for RTL8192EE
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 15 May 2014 13:05:03 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so1397976wes.15
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:01 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/24] iwlwifi: mvm: notify sched scan complete from stop routine
+Date: Thu, 15 May 2014 20:04:23 +0300
+Message-Id: <1400173481-9047-6-git-send-email-egrumbach@gmail.com> (sfid-20140515_190620_427288_D46BA40B)
+In-Reply-To: <5374F373.6040902@gmail.com>
+References: <5374F373.6040902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This mail is blind copied to everyone that has contacted me regarding a driver 
-for the RTL8192EE, and to the Realtek developers.
+From: David Spinadel <david.spinadel@intel.com>
 
-Although the patches needed to add this driver to the 3.14.X kernel were made 
-available earlier, not everyone has the expertise needed to build a kernel for 
-their system. As the Lenovo T440s is the only computer that currently is 
-shipping with this device, and Lenovo uses Ubuntu 14.04, I have built such a 
-patched kernel and I am making is available. This one uses the official 3.13.3 
-source currently in use by Ubuntu and includes all of their patches.
+Add an option to notify mac80211 about sched scan complete from
+iwl_mvm_stop_sched_scan(), to enable this notification when the
+stop was called from within the driver.
 
-The file is obtained at 
-http://www.lwfinger.com/realtek_drivers/linux-image-3.13.9_0.9_amd64.deb. At 
-present, I do not have a 32-bit version available. After downloading, this 
-kernel is installed using the command 'sudo dpkg -i <path_to_downloaded_deb_file>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 5 ++++-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 18d77e4..66fa21b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1542,7 +1542,7 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	switch (mvm->scan_status) {
+ 	case IWL_MVM_SCAN_SCHED:
+-		ret = iwl_mvm_sched_scan_stop(mvm);
++		ret = iwl_mvm_sched_scan_stop(mvm, true);
+ 		if (ret) {
+ 			ret = -EBUSY;
+ 			goto out;
+@@ -1882,7 +1882,7 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
+ 	int ret;
+ 
+ 	mutex_lock(&mvm->mutex);
+-	ret = iwl_mvm_sched_scan_stop(mvm);
++	ret = iwl_mvm_sched_scan_stop(mvm, false);
+ 	mutex_unlock(&mvm->mutex);
+ 	iwl_mvm_wait_for_async_handlers(mvm);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index a4909f3..78f3328 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -857,7 +857,7 @@ int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
+ 				       struct cfg80211_sched_scan_request *req);
+ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 			     struct cfg80211_sched_scan_request *req);
+-int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
++int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify);
+ int iwl_mvm_rx_sched_scan_results(struct iwl_mvm *mvm,
+ 				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 3e25af4..a7f6ae3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -936,7 +936,7 @@ static int iwl_mvm_send_sched_scan_abort(struct iwl_mvm *mvm)
+ 	return ret;
+ }
+ 
+-int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
++int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify)
+ {
+ 	int ret;
+ 	struct iwl_notification_wait wait_scan_done;
+@@ -974,5 +974,8 @@ int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
+ 	 */
+ 	mvm->scan_status = IWL_MVM_SCAN_NONE;
+ 
++	if (notify)
++		ieee80211_sched_scan_stopped(mvm->hw);
++
+ 	return 0;
+ }
+-- 
+1.8.3.2
+
