@@ -1,105 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:59156 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbaEIMbk (ORCPT
+Received: from mail-1.atlantis.sk ([80.94.52.57]:48791 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756937AbaEPSC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 08:31:40 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so2630732eei.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:31:39 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] ath10k: clean up start() callback
-Date: Fri,  9 May 2014 14:15:45 +0200
-Message-Id: <1399637749-13489-2-git-send-email-michal.kazior@tieto.com> (sfid-20140509_143143_008698_15AEF71A)
-In-Reply-To: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 16 May 2014 14:02:29 -0400
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] [RESEND] orinoco_usb: Fix broken firmware load error checking
+Cc: Kumar Amit Mehta <gmate.amit@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>
+From: Ondrej Zary <linux@rainbow-software.org>
+Date: Fri, 16 May 2014 20:01:59 +0200
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201405162001.59695.linux@rainbow-software.org> (sfid-20140516_200232_794567_EFEEDAB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes failpath when override AC pdev param
-setup fails and makes other pdev params setting
-fail as well.
+The check of ezusb_firmware_download() return value (added by commit
+488ec878034eccb852267b0e27ce9d511f75c587) is broken because
+ezusb_firmware_download() returns 1 on success.
+This causes the driver not to work with the following error:
+orinoco_usb: probe of 3-3:1.0 failed with error -14
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Check the return value only for negative values.
+
+This fix should be applied to -stable kernels too.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ drivers/net/wireless/orinoco/orinoco_usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e2c01dc..eef9104 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2339,22 +2339,19 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	if (ar->state != ATH10K_STATE_OFF &&
- 	    ar->state != ATH10K_STATE_RESTARTING) {
- 		ret = -EINVAL;
--		goto exit;
-+		goto out;
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index f9805c9..1cbb783 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1687,7 +1687,7 @@ static int ezusb_probe(struct usb_interface *interface,
+ 		firmware.code = fw_entry->data;
  	}
- 
- 	ret = ath10k_hif_power_up(ar);
- 	if (ret) {
- 		ath10k_err("Could not init hif: %d\n", ret);
--		ar->state = ATH10K_STATE_OFF;
--		goto exit;
-+		goto err_off;
- 	}
- 
- 	ret = ath10k_core_start(ar);
- 	if (ret) {
- 		ath10k_err("Could not init core: %d\n", ret);
--		ath10k_hif_power_down(ar);
--		ar->state = ATH10K_STATE_OFF;
--		goto exit;
-+		goto err_power_down;
- 	}
- 
- 	if (ar->state == ATH10K_STATE_OFF)
-@@ -2363,12 +2360,16 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		ar->state = ATH10K_STATE_RESTARTED;
- 
- 	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->pmf_qos, 1);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to enable PMF QOS: %d\n", ret);
-+		goto err_core_stop;
-+	}
- 
- 	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->dynamic_bw, 1);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to enable dynamic BW: %d\n", ret);
-+		goto err_core_stop;
-+	}
- 
- 	/*
- 	 * By default FW set ARP frames ac to voice (6). In that case ARP
-@@ -2384,14 +2385,21 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	if (ret) {
- 		ath10k_warn("failed to set arp ac override parameter: %d\n",
- 			    ret);
--		goto exit;
-+		goto err_core_stop;
- 	}
- 
- 	ar->num_started_vdevs = 0;
- 	ath10k_regd_update(ar);
- 	ret = 0;
-+	goto out;
- 
--exit:
-+err_core_stop:
-+	ath10k_core_stop(ar);
-+err_power_down:
-+	ath10k_hif_power_down(ar);
-+err_off:
-+	ar->state = ATH10K_STATE_OFF;
-+out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
+ 	if (firmware.size && firmware.code) {
+-		if (ezusb_firmware_download(upriv, &firmware))
++		if (ezusb_firmware_download(upriv, &firmware) < 0)
+ 			goto error;
+ 	} else {
+ 		err("No firmware to download");
 -- 
-1.8.5.3
-
+Ondrej Zary
