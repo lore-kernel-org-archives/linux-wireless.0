@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:57042 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932296AbaEQIxK (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35525 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757375AbaEPOLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 04:53:10 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so5952122wgh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:53:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/22] staging: vt6656: Remove unused variable byRevId.
-Date: Sat, 17 May 2014 09:50:31 +0100
-Message-Id: <1400316639-4430-14-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105317_464498_3E212FE6)
-In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
-References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 16 May 2014 10:11:12 -0400
+Message-ID: <53761C7F.80505@candelatech.com> (sfid-20140516_161115_655390_9B62D00A)
+Date: Fri, 16 May 2014 07:11:11 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k:  improve vdev map handling.
+References: <1398882179-17100-1-git-send-email-greearb@candelatech.com> <878uq16e08.fsf@kamboji.qca.qualcomm.com> <53761A35.2000308@candelatech.com> <87bnux4y42.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87bnux4y42.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 2 --
- drivers/staging/vt6656/main_usb.c | 7 +------
- 2 files changed, 1 insertion(+), 8 deletions(-)
+On 05/16/2014 07:06 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> On 05/16/2014 06:37 AM, Kalle Valo wrote:
+>>
+>>>> -	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
+>>>> +	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
+>>>
+>>> Why remove the BIT()? Not that it matters much, I just think it's easier
+>>> to read when BIT() macro is used. Would be good to convert all cases to
+>>> use BIT anyway, but that's for a separate patch.
+>>
+>> BIT doesn't work on 64-bit numbers (ie, if vdev_id > 31)
+> 
+> Oh, I didn't know that. Too bad, but then removing it makes sense.
+> 
+>> and it takes a long time to figure out exactly what it does (try
+>> grepping for BIT). Open-coding means much easier to fully understand
+>> the code.
+> 
+> All Linux engineers should know what BIT() does. If not, they should
+> learn that ;)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 59d3828..aefbe93 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -409,8 +409,6 @@ struct vnt_private {
- 
- 	u32 rx_bytes;
- 
--	u8 byRevId;
--
- 	u32 flags;
- 	unsigned long Flags;
- 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 1b58cca..68ae97c 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -387,7 +387,7 @@ static int device_init_registers(struct vnt_private *pDevice)
- 
- 	pDevice->byTopOFDMBasicRate = RATE_24M;
- 	pDevice->byTopCCKBasicRate = RATE_1M;
--	pDevice->byRevId = 0;
-+
- 	/* target to IF pin while programming to RF chip */
- 	pDevice->byCurPwr = 0xFF;
- 
-@@ -508,11 +508,6 @@ static int device_init_registers(struct vnt_private *pDevice)
- 	/* get RFType */
- 	pDevice->byRFType = init_rsp->rf_type;
- 
--	if ((pDevice->byRFType & RF_EMU) != 0) {
--		/* force change RevID for VT3253 emu */
--		pDevice->byRevId = 0x80;
--	}
--
- 	/* load vt3266 calibration parameters in EEPROM */
- 	if (pDevice->byRFType == RF_VT3226D0) {
- 		if ((pDevice->abyEEPROM[EEP_OFS_MAJOR_VER] == 0x1) &&
+Yeah, but see your comment above :P
+
+Pain in the ass to track down the difference between (1 << x) and (1LLU << x),
+and even worse when it's hidden behind a macro.
+
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
