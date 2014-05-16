@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17570 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751158AbaESEcz (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23138 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932754AbaEPOGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 00:32:55 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 12/13] brcmsmac: make return of 0 explicit
-Date: Mon, 19 May 2014 06:31:14 +0200
-Message-Id: <1400473875-22228-13-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140519_063325_138421_F0E83F8A)
-In-Reply-To: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
+	Fri, 16 May 2014 10:06:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k:  improve vdev map handling.
+References: <1398882179-17100-1-git-send-email-greearb@candelatech.com>
+	<878uq16e08.fsf@kamboji.qca.qualcomm.com>
+	<53761A35.2000308@candelatech.com>
+Date: Fri, 16 May 2014 17:06:05 +0300
+In-Reply-To: <53761A35.2000308@candelatech.com> (Ben Greear's message of "Fri,
+	16 May 2014 07:01:25 -0700")
+Message-ID: <87bnux4y42.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_160632_904282_51530BC4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Ben Greear <greearb@candelatech.com> writes:
 
-Delete unnecessary local variable whose value is always 0 and that hides
-the fact that the result is always 0.
+> On 05/16/2014 06:37 AM, Kalle Valo wrote:
+>
+>>> -	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
+>>> +	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
+>> 
+>> Why remove the BIT()? Not that it matters much, I just think it's easier
+>> to read when BIT() macro is used. Would be good to convert all cases to
+>> use BIT anyway, but that's for a separate patch.
+>
+> BIT doesn't work on 64-bit numbers (ie, if vdev_id > 31)
 
-A simplified version of the semantic patch that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Oh, I didn't know that. Too bad, but then removing it makes sense.
 
-// <smpl>
-@r exists@
-local idexpression ret;
-expression e;
-position p;
-@@
+> and it takes a long time to figure out exactly what it does (try
+> grepping for BIT). Open-coding means much easier to fully understand
+> the code.
 
--ret = 0;
-... when != ret = e
-return 
-- ret
-+ 0
-  ;
-// </smpl>
+All Linux engineers should know what BIT() does. If not, they should
+learn that ;)
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>>> -	ar->free_vdev_map |= 1 << (arvif->vdev_id);
+>>> +	ar->free_vdev_map |= (1 << arvif->vdev_id);
+>> 
+>> Do we need the parenthesis?
+>
+> No, though I like them visually.  It's at least more useful than
+> the previous placement.
+>
+> I can respin the patch w/out them and with the == 0 and such.
 
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Thanks.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 9417cb5..3054725 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4875,9 +4875,6 @@ static int brcms_b_detach(struct brcms_c_info *wlc)
- 	uint i;
- 	struct brcms_hw_band *band;
- 	struct brcms_hardware *wlc_hw = wlc->hw;
--	int callbacks;
--
--	callbacks = 0;
- 
- 	brcms_b_detach_dmapio(wlc_hw);
- 
-@@ -4901,7 +4898,7 @@ static int brcms_b_detach(struct brcms_c_info *wlc)
- 		wlc_hw->sih = NULL;
- 	}
- 
--	return callbacks;
-+	return 0;
- 
- }
- 
-
+-- 
+Kalle Valo
