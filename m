@@ -1,103 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01-fr.bfs.de ([193.174.231.67]:51161 "EHLO mx01-fr.bfs.de"
+Received: from mx1.redhat.com ([209.132.183.28]:13352 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752955AbaESHnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 03:43:37 -0400
-Message-ID: <5379B61D.7070501@bfs.de> (sfid-20140519_094357_238414_F8EA7F92)
-Date: Mon, 19 May 2014 09:43:25 +0200
-From: walter harms <wharms@bfs.de>
-Reply-To: wharms@bfs.de
+	id S932390AbaEPOST convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2014 10:18:19 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jim Davis <jim.epost@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Larry.Finger@lwfinger.net,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel <devel@driverdev.osuosl.org>
+Subject: Re: randconfig build error with next-20140516, in drivers/staging/rtl8723au/core/rtw_cmd.c
+References: <CA+r1Zhh8=cjcheZEzS_cn0-n11s2RoXzHZS65U7XN4bbozKrCA@mail.gmail.com>
+Date: Fri, 16 May 2014 16:18:09 +0200
+In-Reply-To: <CA+r1Zhh8=cjcheZEzS_cn0-n11s2RoXzHZS65U7XN4bbozKrCA@mail.gmail.com>
+	(Jim Davis's message of "Fri, 16 May 2014 06:42:59 -0700")
+Message-ID: <wrfjha4px0wu.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140516_161835_988213_5BEB40D7)
 MIME-Version: 1.0
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
-References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jim Davis <jim.epost@gmail.com> writes:
+> Building with the attached random configuration file,
+>
+> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘c2h_evt_hdl’:
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1315:4: error: implicit declaration of
+> function ‘c2h_handler_8723a’ [-Werror=implicit-function-declaration]
+>     ret = c2h_handler_8723a(adapter, c2h_evt);
+>     ^
+> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘rtw_evt_work’:
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1349:2: error: implicit declaration of
+> function ‘c2h_id_filter_ccx_8723a’ [-Werror=implicit-function-declaration]
+>   if (c2h_id_filter_ccx_8723a(ework->u.c2h_evt.id) == true) {
+>   ^
+> cc1: some warnings being treated as errors
 
+Thanks for the report, I'll have a look.
 
-Am 19.05.2014 06:31, schrieb Julia Lawall:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> Delete unnecessary local variable whose value is always 0 and that hides
-> the fact that the result is always 0.
-> 
-> A simplified version of the semantic patch that fixes this problem is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r exists@
-> local idexpression ret;
-> expression e;
-> position p;
-> @@
-> 
-> -ret = 0;
-> ... when != ret = e
-> return 
-> - ret
-> + 0
->   ;
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
-> Alternatively, was an error code intended in the bad length case, as is
-> done in process_brxed_802_11_packet?
-> 
->  drivers/net/wireless/libertas/rx.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-> index c7366b0..807c5b8 100644
-> --- a/drivers/net/wireless/libertas/rx.c
-> +++ b/drivers/net/wireless/libertas/rx.c
-> @@ -55,7 +55,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
->   */
->  int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
->  {
-> -	int ret = 0;
->  	struct net_device *dev = priv->dev;
->  	struct rxpackethdr *p_rx_pkt;
->  	struct rxpd *p_rx_pd;
-> @@ -86,7 +85,6 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
->  	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
->  		lbs_deb_rx("rx err: frame received with bad length\n");
->  		dev->stats.rx_length_errors++;
-> -		ret = 0;
->  		dev_kfree_skb(skb);
->  		goto done;
->  	}
-> @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
->  	else
->  		netif_rx_ni(skb);
->  
-> -	ret = 0;
->  done:
-> -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
-> -	return ret;
-> +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
-> +	return 0;
->  }
-
-i guess lbs_deb_leave_args() is obsolet now.
-
-re,
- wh
-
-
->  EXPORT_SYMBOL_GPL(lbs_process_rxed_packet);
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Jes
