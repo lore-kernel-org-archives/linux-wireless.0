@@ -1,77 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:42495 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932344AbaEGKCW convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:64191 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbaEPEJF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 06:02:22 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so750116wgg.24
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 03:02:20 -0700 (PDT)
+	Fri, 16 May 2014 00:09:05 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so2016833wes.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 21:09:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1399455657.6800.4.camel@dubbel>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	<1399455657.6800.4.camel@dubbel>
-Date: Wed, 7 May 2014 12:02:20 +0200
-Message-ID: <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com> (sfid-20140507_120228_921509_D3B8A530)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
+In-Reply-To: <5374F638.6000505@dewberryfields.co.uk>
+References: <5346DED8.2030704@free.fr>
+	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
+	<53480138.2080805@free.fr>
+	<53733AB4.7010500@free.fr>
+	<20140514215126.GA15419@us.netrek.org>
+	<CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
+	<5374F638.6000505@dewberryfields.co.uk>
+Date: Fri, 16 May 2014 09:39:03 +0530
+Message-ID: <CAJwzM1mvK1i3ENrQyVZNoiwYFiopWGRaOVe5iGTr61TQVXdaMQ@mail.gmail.com> (sfid-20140516_060917_264601_819B7D09)
+Subject: Re: Mwifiex driver on Globalscale Mirabox
+From: Avinash Patil <avinashapatil@gmail.com>
+To: Michael Howard <mike@dewberryfields.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2014 11:40, Luca Coelho <luca@coelho.fi> wrote:
-> On Wed, 2014-05-07 at 10:07 +0200, Johannes Berg wrote:
->> On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
->>
->> > Hmm... Now that I think about the atomic swap - it actually becomes a
->> > little bit of an issue in some cases.
->> >
->> > For one you might need to overcommit number of chanctx since swapping
->> > requires both chanctx (old and new) to exist but that's the least of
->> > the eproblem. If you have more than one interface you end up with
->> > temporarily breaking interface combinations from driver point of view
->> > while switching (first swap breaks it, last swap fixes it). Driver
->> > won't know whether given swap is first/last unless we somehow pass it
->> > through the switch_vif_chanctx(). IOW we actually need a "chanctx
->> > transaction" (sort of a start-stop) that can batch up a couple of
->> > chanctx switches for different vifs as an atomic op.
->>
->> Hmmm. Don't you already have that problem? Or you don't because you'd do
->>
->> for_each_affected_vif: unassign
->> del chanctx [optional depending on reservation]
->> add chanctx [ditto]
->> for_each_affected_vif: assign
->>
->> right now?
->>
->> I suppose a sort of transaction API, if designed the right way, would
->> also work somehow - Luca?
+Hi Michael,
+
+This is different issue. We are trying to download 11AC_CFG command on
+SD8787 where 11ac is not supported.
+Thanks for reporting this; we are looking into it.
+
+Thanks,
+Avinash
+
+On Thu, May 15, 2014 at 10:45 PM, Michael Howard
+<mike@dewberryfields.co.uk> wrote:
 >
-> Yeah, I think this is a good idea.  If we have an atomic transaction API
-> towards the driver, we can solve the problems of switching several vifs
-> at once.
-
-Hmm.. I assume all chanctx calls would be subject to the transaction
-API, i.e. add_chanctx/remove_chanctx/switch_vif_chanctx/change_chanctx.
-Then all calls except begin/commit would return void - I guess this
-could make handling errors a little saner.
-
-Another approach would be to merge all separate chanctx ops into a
-single one. This would have the benefit of providing driver all
-information in one place and possibly making it easier to handle
-errors internally (due to single function flow instead of having stuff
-all over the place). But I imagine this could become a little
-ambiguous in some parameter combinations. Any thoughts?
-
-
-Michał
+> On 15/05/2014 15:06, Avinash Patil wrote:
+>>
+>> Hi James/Anthony,
+>>
+>> If an unsupported command is downloaded to FW, it results into command
+>> response not supported - code 0x2.
+>> It wouldnt result into command timeout.
+>> According to our internal discussions, this issue is seen only on
+>> Globalscale mirabox where SDIO controller is mvsdio.
+>>
+>> "On Mirabox the SDIO controller is mvsdio. It polls for interrupts but
+>> polling itself doesn’t seem to be the problem.
+>> In the log, I got from another person it seems that there is no
+>> SDIO_INT bit in controller “intr” register after scan command is sent.
+>> Other commands are fine, only scan commands fail. I don’t why scan
+>> (0x06 or 0x107) is special in this case."
+>>
+>> Hi Anthony,
+>>
+>> Could you please enable dynamic debug on mwifiex, mwifiex_sdio &
+>> mvsdio driver; this will confirm if this is same issue.
+>>
+>> Thanks,
+>> Avinash.
+>>
+> Using kernel 3.15.0-rc5, starting hostapd results in;
+>
+> May 15 17:11:04 mirabox kernel: mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd
+> 0x112 error, result=0x2
+>
+> hostapd runs but there in no AP.
+>
+> If I can be of any help testing/debugging just say so.
+>
+> Cheers,
+> Mike.
+>
+> --
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
