@@ -1,59 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:38321 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbaEZJht (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:52708 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221AbaEPGpV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 05:37:49 -0400
-Received: by mail-qc0-f172.google.com with SMTP id l6so11849408qcy.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 02:37:49 -0700 (PDT)
+	Fri, 16 May 2014 02:45:21 -0400
+Received: by mail-lb0-f171.google.com with SMTP id 10so1579342lbg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 23:45:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj987H_aVYyAH0jtOSe4Jbwx-Af=-8Fw+U5dC5=mmVZKy4AA@mail.gmail.com>
-References: <3893194.GDQagdLGN9@desktop.local> <20140522192720.GA13440@localhost>
- <CAGnRvuqUkebLhvqY1Y28NtRyp3uUdbrpOSb4dOX2+ZSg6qineg@mail.gmail.com>
- <CAEFj9850c9aD5gKz2B-e=hPnS2vNdY+a4uc9D_+psryE0ywDVA@mail.gmail.com>
- <CAGnRvuo_ydU-HwtyTeKP50GPjEiNQy1EoVMR5_Dg-qTrFjYkPg@mail.gmail.com>
- <20140523205717.GB6585@localhost> <CAEFj987H_aVYyAH0jtOSe4Jbwx-Af=-8Fw+U5dC5=mmVZKy4AA@mail.gmail.com>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Mon, 26 May 2014 11:37:28 +0200
-Message-ID: <CAGnRvuqyrP=e6g1sJY9xiWUbT68N4syUkUDw9Xz+-paSPrudfA@mail.gmail.com> (sfid-20140526_113752_962985_B0584406)
-Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@noack.us>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <5374F84E.1090208@candelatech.com>
+References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
+	<5374F84E.1090208@candelatech.com>
+Date: Fri, 16 May 2014 08:45:19 +0200
+Message-ID: <CALhHN=oUaP7rQB+hP8iyjEPiVqbbXY8_o5g=JwBcQpt36AJO2Q@mail.gmail.com> (sfid-20140516_084524_826554_8392FF55)
+Subject: Re: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I think this would require to know the mac addresses of the remote
-nodes... but maybe I will look into changing the timeout value.
-
-Henning Rogge
-
-On Mon, May 26, 2014 at 8:47 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> For disable HWMP, in additional to disable frame forwarding and set
-> mesh TTL to 1, you can force specific mpath using "iw mesh0 mpath set
-> <MACx> next_hop <MACx>". In this case, you will disable the path
-> refresh.
+On 15 May 2014 19:24, Ben Greear <greearb@candelatech.com> wrote:
+> I have a few questions on this patch (long since accepted upstream).
 >
-> ----
-> Chun-Yeow
+> First, why do you only memset the rx_status if START_VALID is set,
+> and why do you not set:
 >
-> On Sat, May 24, 2014 at 4:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Fri, May 23, 2014 at 12:52:57PM +0200, Henning Rogge wrote:
->>> Hi,
->>>
->>> I will have another look at the codebase next week, there was a lot of
->>> similar code for both tables that could be simplified without throwing
->>> them together.
->>>
->>> The feeling I get here is that four new nl80211 commands
->>> (set/get/del/dump mpp_paths) are the right way to export these values?
+> rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL
+>
+> in an else clause if START_VALID is not set?
+>
+> The patch definitely helps, but I'm still getting less accuracy than expected
+> (as compared to ath9k going through a similar rate vs range test).
+>
+
+>From START_VALID to END_VALID we have same RSSI/RATES like reported
+when START_VALID.
+We could wait to get all packets from START_VALID to END_VALID and
+after that report them to upper
+layer. But currently we don't do that and report what we have and have
+to remember RSSI/RATES.
+
+BTW there is still a problem with TSF which is valid only when
+END_VALID. So in current implementation we don't report this correctly
+for packets we report when only START_VALID.
+
+BR
+Janusz
+
+>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> @@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
 >>
->> That approach would be fine by me.  Thanks for working on this!
+>>       lockdep_assert_held(&htt->rx_ring.lock);
 >>
->> --
->> Bob Copeland %% www.bobcopeland.com
+>> -     memset(rx_status, 0, sizeof(*rx_status));
+>> -
+>>       fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
+>>       fw_desc = (u8 *)&rx->fw_desc;
+>>
+>> @@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+>>       mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+>>
+>>       /* Fill this once, while this is per-ppdu */
+>> -     rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+>> -     rx_status->signal += rx->ppdu.combined_rssi;
+>> +     if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
+>> +             memset(rx_status, 0, sizeof(*rx_status));
+>> +             rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
+>> +                                  rx->ppdu.combined_rssi;
+>> +     }
+>>
+>>       if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+>>               /* TSF available only in 32-bit */
+>>
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
