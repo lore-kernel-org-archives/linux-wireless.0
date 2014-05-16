@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27876 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbaEWHQc (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34850 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881AbaEPN0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 03:16:32 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	<87ppj5wyri.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmxGEFSxyw84wQUrkbyq55UqMgwR2Vt+1nd29sTn=g7kQ@mail.gmail.com>
-Date: Fri, 23 May 2014 10:16:27 +0300
-In-Reply-To: <CA+BoTQmxGEFSxyw84wQUrkbyq55UqMgwR2Vt+1nd29sTn=g7kQ@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 23 May 2014 09:13:09 +0200")
-Message-ID: <874n0hvub8.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_091636_557793_D4DBECFB)
+	Fri, 16 May 2014 09:26:05 -0400
+Message-ID: <537611EB.9050208@candelatech.com> (sfid-20140516_152609_669994_73B60461)
+Date: Fri, 16 May 2014 06:26:03 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k:  improve vdev map handling.
+References: <1398882179-17100-1-git-send-email-greearb@candelatech.com> <87fvk96ewc.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87fvk96ewc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
->>> --- a/drivers/net/wireless/ath/ath10k/pci.c
->>> +++ b/drivers/net/wireless/ath/ath10k/pci.c
->>> @@ -2758,8 +2758,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
->>>       if (!ar_pci)
->>>               return;
->>>
->>> -     tasklet_kill(&ar_pci->msi_fw_err);
+
+On 05/16/2014 06:18 AM, Kalle Valo wrote:
+> greearb@candelatech.com writes:
+>
+>> From: Ben Greear <greearb@candelatech.com>
 >>
->> Why this? That's not obvious to me.
+>> Check vdev map has space before calling ffs,
+>> fix invalid cleanup in failure to create vdev
+>> case.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
 >
-> It might end up not being initialized: If you, say, quickly insert and
-> eject a device you might not even initialize the tasklet (it's done
-> elsewhere; I suppose we could move it too) before ath10k_pci_remove()
-> is called. Also the tasklet is already killed elsewhere on the
-> teardown code path.
+> Why? What motivated you to write this? If you saw a bug, it would be
+> good to document the bug in the commit log.
 >
-> I'll split it into a separate patch that simply removes this line as
-> it's meaningless to call it here in the first place.
+>> This is compile-tested only.
+>
+> It's two weeks since you posted this, sorry for taking so long. But have
+> you managed to test this by now?
 
-Yeah, it's a good idea to have a separate patch for this.
+The code is cleaner with my patch, and it makes it easier to
+use the 64-bit version of ffs.
+
+I have tested this extensively in my tree with the 64-bit version
+of ffs so that I can have more than 32 vdevs.
+
+It does fix a problem I found through code inspection as well,
+when it did not properly release a slot in a failure path.
+
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
