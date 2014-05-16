@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60524 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60011 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbaE0J31 (ORCPT
+	with ESMTP id S1756355AbaEPOh2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 05:29:27 -0400
+	Fri, 16 May 2014 10:37:28 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
 To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/5] ath10k: recovery fixes 2014-05-09
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
 References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
 	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 27 May 2014 12:29:19 +0300
-In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 15 May 2014 10:41:59 +0200")
-Message-ID: <87sinvbmds.fsf@kamboji.qca.qualcomm.com> (sfid-20140527_112930_743111_0050105A)
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87k39n89jm.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 16 May 2014 17:37:23 +0300
+In-Reply-To: <87k39n89jm.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Thu, 15 May 2014 16:18:37 +0300")
+Message-ID: <87tx8p3i3g.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_163742_537027_5AB58BFD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Hi,
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
-> Here's is a bunch of fixes for recovery/hw
-> restart. This notably fixes a bug Ben has hit some
-> time ago.
+>> This makes sure no further tx requests are
+>> submitted to HTT before driver teardown.
+>>
+>> This should prevent invalid pointer/NULL
+>> dereference on htt tx pool in ath10k_htt_tx() in
+>> some cases of heavy traffic.
+>>
+>> Reported-By: Ben Greear <greearb@candelatech.com>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 >
-> I also have some improvements for recovery code as
-> well in a follow up patchset that I'll be sending
-> separately.
+> For some reason I'm not receiving buildbot emails anymore, but I noticed
+> via the kbuild-all archives that this patch has a warning:
 >
-> v2:
->  * minor code style adjustments
->  * extra comment
->  * sanity check in wep key worker
+>    drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_drain_tx':
+>>> drivers/net/wireless/ath/ath10k/mac.c:2442:2: error: implicit
+> declaration of function 'lockdep_is_held'
+> [-Werror=implicit-function-declaration]
 >
->
-> Michal Kazior (5):
->   ath10k: clean up start() callback
->   ath10k: perform hw restart lazily
->   ath10k: drain tx before restarting hw
->   ath10k: protect wep tx key setup
->   ath10k: dont configure bssid for ap mode
+> https://lists.01.org/pipermail/kbuild-all/2014-May/004387.html
 
-Thanks, all five patches applied.
+I fixed it with this:
+
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -19,6 +19,7 @@
+ 
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
++#include <linux/lockdep.h>
+ 
+ #include "hif.h"
+ #include "core.h"
+
+Let's see if buildbot is happier now.
 
 -- 
 Kalle Valo
