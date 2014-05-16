@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:33140 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934191AbaE3Q4j (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4545 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbaEPNrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 12:56:39 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [RFC 3/4] nl80211: Do not ignore 5/10MHz wide channels in nl80211_send_chandef()
-Date: Fri, 30 May 2014 18:56:23 +0200
-Message-Id: <1401468984-24575-4-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185756_983802_99AF5242)
-In-Reply-To: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Fri, 16 May 2014 09:47:16 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: Fix spelling mistake in comments.
+References: <1399499440-32365-1-git-send-email-greearb@candelatech.com>
+Date: Fri, 16 May 2014 16:47:09 +0300
+In-Reply-To: <1399499440-32365-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Wed, 7 May 2014 14:50:39
+	-0700")
+Message-ID: <87zjih4yzm.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_154738_952070_247AE6B0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
----
- net/wireless/nl80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+greearb@candelatech.com writes:
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 79bae31..3a50d1a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2281,6 +2281,8 @@ static int nl80211_send_chandef(struct sk_buff *msg,
- 			chandef->chan->center_freq))
- 		return -ENOBUFS;
- 	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 	case NL80211_CHAN_WIDTH_20:
- 	case NL80211_CHAN_WIDTH_40:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Simple typo fix.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+
+Thanks, patch 1 applied with a cosmetic change to the title.
+
+Patch 2 dropped as there's a new version in the queue.
+
 -- 
-2.0.0.rc4
-
+Kalle Valo
