@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56022 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54838 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbaEFTAK (ORCPT
+	with ESMTP id S1757061AbaEPSPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 15:00:10 -0400
-Date: Tue, 6 May 2014 14:48:39 -0400
+	Fri, 16 May 2014 14:15:13 -0400
+Date: Fri, 16 May 2014 14:10:55 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Ashish Patro <patro@cs.wisc.edu>
-Cc: linux-wireless@vger.kernel.org, linux@rempel-privat.de
-Subject: Re: [PATCH 0/3] Refactoring spectral scan code and adding spectral
- scan support for ath9k_htc
-Message-ID: <20140506184839.GH3518@tuxdriver.com> (sfid-20140506_210015_128926_FC2A56D3)
-References: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-wireless@vger.kernel.org,
+	Kumar Amit Mehta <gmate.amit@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] [RESEND] orinoco_usb: Fix broken firmware load error
+ checking
+Message-ID: <20140516181054.GF3431@tuxdriver.com> (sfid-20140516_201521_778277_E97AF8EC)
+References: <201405162001.59695.linux@rainbow-software.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu>
+In-Reply-To: <201405162001.59695.linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any comments from the ath9k guys on this patchset?
+This is already merged in wireless-next...
 
-Also, could you post your patches with more concise subject lines
-and possibly more verbose changelog entries?
+commit fe5d96246e9c4d266c4a8dca99f82ad82f2305b5
+Author: Ondrej Zary <linux@rainbow-software.org>
+Date:   Fri May 9 18:10:34 2014 +0200
 
-John
+    orinoco_usb: Fix broken firmware load error checking
+    
+    The check of ezusb_firmware_download() return value (added by commit
+    488ec878034eccb852267b0e27ce9d511f75c587) is broken because
+    ezusb_firmware_download() returns 1 on success.
+    This causes the driver not to work with the following error:
+    orinoco_usb: probe of 3-3:1.0 failed with error -14
+    
+    Check the return value only for negative values.
+    
+    This fix should be applied to -stable kernels too.
+    
+    Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-On Wed, Apr 30, 2014 at 10:11:20AM -0500, Ashish Patro wrote:
-> These patches move the common components of spectral scan funcationality to common-spectral.c.
+On Fri, May 16, 2014 at 08:01:59PM +0200, Ondrej Zary wrote:
+> The check of ezusb_firmware_download() return value (added by commit
+> 488ec878034eccb852267b0e27ce9d511f75c587) is broken because
+> ezusb_firmware_download() returns 1 on success.
+> This causes the driver not to work with the following error:
+> orinoco_usb: probe of 3-3:1.0 failed with error -14
 > 
-> Also added spectral scan support to ath9k_htc using the same mechanism to collect spectral scan data as used by ath9k driver.
+> Check the return value only for negative values.
 > 
-> This work was done at the Wisconsin Wireless and NetworkinG Systems (WiNGS) Lab at the University of Wisconsin Madison.
+> This fix should be applied to -stable kernels too.
 > 
-> I've also worked with Oleksij Rempel (linux@rempel-privat.de) to get these patches tested and verified with a AR9271 chipset device.
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> ---
+>  drivers/net/wireless/orinoco/orinoco_usb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> Ashish Patro (3):
->   Moving the ath9k specific spectral functions to ath9k.h from
->     spectral.h. Renamed spectral.h to common-spectral.h
->   Refactoring the ath9k driver to move common spectral functions to
->     common-spectral.c
->   Update spectral scan calls to support both ath9k and ath9k_htc.
->     Adding spectral scan functionality to ath9k_htc driver. Tested
->     using a AR9271 WiFi card.
-> 
->  drivers/net/wireless/ath/ath9k/Makefile           |    3 +-
->  drivers/net/wireless/ath/ath9k/ar9002_phy.c       |   11 +-
->  drivers/net/wireless/ath/ath9k/ath9k.h            |    9 +-
->  drivers/net/wireless/ath/ath9k/common-spectral.c  |  213 +++++++++++++
->  drivers/net/wireless/ath/ath9k/common-spectral.h  |  199 ++++++++++++
->  drivers/net/wireless/ath/ath9k/htc.h              |   13 +
->  drivers/net/wireless/ath/ath9k/htc_drv_debug.c    |    3 +
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c     |    8 +
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c     |   75 +++++
->  drivers/net/wireless/ath/ath9k/htc_drv_spectral.c |  353 +++++++++++++++++++++
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c     |   17 +
->  drivers/net/wireless/ath/ath9k/recv.c             |    7 +-
->  drivers/net/wireless/ath/ath9k/spectral.c         |  187 -----------
->  drivers/net/wireless/ath/ath9k/spectral.h         |  212 ------------
->  14 files changed, 905 insertions(+), 405 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.c
->  create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.h
->  create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_spectral.c
->  delete mode 100644 drivers/net/wireless/ath/ath9k/spectral.h
-> 
+> diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+> index f9805c9..1cbb783 100644
+> --- a/drivers/net/wireless/orinoco/orinoco_usb.c
+> +++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+> @@ -1687,7 +1687,7 @@ static int ezusb_probe(struct usb_interface *interface,
+>  		firmware.code = fw_entry->data;
+>  	}
+>  	if (firmware.size && firmware.code) {
+> -		if (ezusb_firmware_download(upriv, &firmware))
+> +		if (ezusb_firmware_download(upriv, &firmware) < 0)
+>  			goto error;
+>  	} else {
+>  		err("No firmware to download");
 > -- 
-> 1.7.5.4
-> 
+> Ondrej Zary
 > 
 
 -- 
