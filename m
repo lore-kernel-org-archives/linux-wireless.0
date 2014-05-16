@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40368 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbaE0Oqt (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20291 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaEPPyg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 10:46:49 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 4/7] wil6210: improve debug for WMI receive
-Date: Tue, 27 May 2014 17:46:45 +0300
-Message-ID: <1417278.VSQeiOskQO@lx-wigig-72> (sfid-20140527_164652_721601_3E66D4FA)
-In-Reply-To: <1401200106.20587.0.camel@joe-AO725>
-References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1835954.xHumgOahYl@lx-wigig-72> <1401200106.20587.0.camel@joe-AO725>
+	Fri, 16 May 2014 11:54:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	Luca Coelho <luca@coelho.fi>, <michal.kazior@tieto.com>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath9k/ath10k: remove unnecessary channel_switch_beacon callbacks
+References: <1400248534-16763-1-git-send-email-luca@coelho.fi>
+	<87y4y13im2.fsf@kamboji.qca.qualcomm.com>
+	<20140516153441.GD3431@tuxdriver.com>
+Date: Fri, 16 May 2014 18:54:29 +0300
+In-Reply-To: <20140516153441.GD3431@tuxdriver.com> (John W. Linville's message
+	of "Fri, 16 May 2014 11:34:41 -0400")
+Message-ID: <87iop53eiy.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_175439_380769_825E2B83)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, May 27, 2014 07:15:06 AM Joe Perches wrote:
-> Then is it an error?
-> Maybe use dev_notice instead.
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Well, it is not an error, but rather some indication of the
-firmware issue. I tend to agree with you and demote it
-to the 'debug' category; I use dynamic printk for this and it is
-convenient enough for both used and developer.
+>> John, I'm planning to take this as I think we will get less conflicts
+>> that way. But let me know if you want it instead.
+>
+> No, that's good.  You will take the ath9k part too, right?
 
-So, I'll resubmit shortly
+Yes. I'll take the full patch.
 
-John: can you apply other patches? I verified there are no
-conflicts if you drop this one. Or, do you want me to re-submit
-whole set? What works better for you?
-
-Thanks, Vladimir
+-- 
+Kalle Valo
