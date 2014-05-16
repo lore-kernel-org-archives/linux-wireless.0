@@ -1,110 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:57900 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756585AbaEQIwk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40067 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118AbaEPMek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 04:52:40 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x12so6010179wgg.9
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:39 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/22] staging: vt6656: usbpipe: get rid of in/out debug messages.
-Date: Sat, 17 May 2014 09:50:19 +0100
-Message-Id: <1400316639-4430-2-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105245_265776_847F3D08)
-In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
-References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 16 May 2014 08:34:40 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<apenwarr@gmail.com>
+Subject: Re: [PATCH 0/3] ath10k: pci fixes 2014-05-15
+References: <1400158139-13836-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 16 May 2014 15:34:34 +0300
+In-Reply-To: <1400158139-13836-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 15 May 2014 14:48:56 +0200")
+Message-ID: <878uq17vhh.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_143443_006994_E6015F3F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove all in/out debug messages.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/usbpipe.c | 20 --------------------
- 1 file changed, 20 deletions(-)
+> Hi,
+>
+> Patches 1 and 2 were made as a result of analysing
+> `ath10k firmware crash after 4 hours of heavy TCP
+> traffic` bug reported by Avery.
+>
+> Patch 3 fixes a bug reported by Avery that was
+> apparently related to missing memory barriers on
+> his ARM test system. @Avery, can you take a look
+> or test it, please? I was never able to reproduce
+> this but it just seems like the right thing to do.
+> Or you can simply post your patch and I'll drop
+> mine then.
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 433edca..8d0705d 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -126,9 +126,6 @@ int PIPEnsInterruptRead(struct vnt_private *priv)
- {
- 	int status = STATUS_FAILURE;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"---->s_nsStartInterruptUsbRead()\n");
--
- 	if (priv->int_buf.in_use == true)
- 		return STATUS_FAILURE;
- 
-@@ -150,9 +147,6 @@ int PIPEnsInterruptRead(struct vnt_private *priv)
- 		priv->int_buf.in_use = false;
- 	}
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--		"<----s_nsStartInterruptUsbRead Return(%x)\n", status);
--
- 	return status;
- }
- 
-@@ -176,9 +170,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 	struct vnt_private *priv = urb->context;
- 	int status;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"---->s_nsInterruptUsbIoCompleteRead\n");
--
- 	switch (urb->status) {
- 	case 0:
- 	case -ETIMEDOUT:
-@@ -194,9 +185,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 
- 	status = urb->status;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--		"s_nsInterruptUsbIoCompleteRead Status %d\n", status);
--
- 	if (status != STATUS_SUCCESS) {
- 		priv->int_buf.in_use = false;
- 
-@@ -236,8 +224,6 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
- 	int status = 0;
- 	struct urb *urb;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsStartBulkInUsbRead\n");
--
- 	if (priv->Flags & fMP_DISCONNECTED)
- 		return STATUS_FAILURE;
- 
-@@ -290,8 +276,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 	unsigned long flags;
- 	int re_alloc_skb = false;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkInUsbIoCompleteRead\n");
--
- 	switch (urb->status) {
- 	case 0:
- 		break;
-@@ -351,8 +335,6 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- 
- 	priv->bPWBitOn = false;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_nsSendBulkOut\n");
--
- 	if (!(MP_IS_READY(priv) && priv->Flags & fMP_POST_WRITES)) {
- 		context->in_use = false;
- 		return STATUS_RESOURCES;
-@@ -413,8 +395,6 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	struct vnt_private *priv = context->priv;
- 	u8 context_type = context->type;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
--
- 	switch (urb->status) {
- 	case 0:
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+I think it would be good still to wait a while with patch 3 as
+apparently Avery is still seeing some odd firmware crashes. Once we are
+confident that the memory barrier issues are handled we come up with a
+final patch.
+
 -- 
-1.9.1
-
+Kalle Valo
