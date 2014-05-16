@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.horizon.com ([71.41.210.147]:31671 "HELO ns.horizon.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752034AbaEOBPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 21:15:53 -0400
-Date: 14 May 2014 21:15:51 -0400
-Message-ID: <20140515011551.26781.qmail@ns.horizon.com> (sfid-20140515_031622_901212_336E217B)
-From: "George Spelvin" <linux@horizon.com>
-To: hpa@zytor.com, linux@horizon.com, pavel@ucw.cz
-Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
-Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-In-Reply-To: <53740C42.3000906@zytor.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7079 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757532AbaEPNxe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2014 09:53:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	<johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2 V3] ath10k: Fix pmf for action frames
+References: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
+	<1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com>
+Date: Fri, 16 May 2014 16:53:27 +0300
+In-Reply-To: <1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com>
+	(Marek Kwaczynski's message of "Mon, 14 Apr 2014 11:27:22 +0200")
+Message-ID: <87fvk94yp4.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_155341_509346_7A1E5582)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-H. Peter Anvin wrote:
-> If the whole point of this is to use it for MMC/SD cards, why not just
-> also subsume the OR 1 and call it crc7_mmc() or something like that.
+Marek Kwaczynski <marek.kwaczynski@tieto.com> writes:
+
+> Fix sending and receiveing protected managment frames.
+> Lack of protected flag for received protected action frames
+> causes report these frames as unprotected robust action frames.
+> If the driver in AP mode sent frame with protected flag and
+> CCMP header using IEEE80211_KEY_FLAG_SW_MGMT_TX flag,
+> the FW encrypted frames once again. From user side all
+> received SA Query Requests and Responses were skipped and
+> all protected action frames were sent as malformed packets.
 >
-> (Which I'm all for doing... I don't know of any other crc7 users.)
+> Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 
-You'll find all users in my patch series.  2/3 updates the MMC
-card, while 3/3 hits drivers/net/wireless/ti/wl1251/spi.c and
-drivers/net/wireless/ti/wlcore/spi.c (which I'm pretty sure aren't
-MMC/SPI cards).
+Thanks, applied.
 
-Now, it turns out that they *also* set the lsbit (calling it
-WSPI_INIT_CMD_END).  However, it's not possible to put that into the CRC
-table (it would mess up all bytes but the last), so an explicitly coded
-"| 1" is required at the end.  Thic ends up being no saving at all to
-execution path length, and only moves one instruction from three drivers
-to shared code.  While making it harder to read the drivers.
-
-A microscopic space saving (if and only if you have more than one of these
-drivers loaded) and no performance improvement didn't seem worth it to me.
+-- 
+Kalle Valo
