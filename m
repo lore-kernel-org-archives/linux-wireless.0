@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38138 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750958AbaEVFCu (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:38204 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932160AbaEQIwx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 01:02:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/5] mwifiex: set TDLS flags for AMSDU packets
-Date: Wed, 21 May 2014 22:02:30 -0700
-Message-ID: <1400734951-6851-4-git-send-email-bzhao@marvell.com> (sfid-20140522_070253_340809_626E1869)
-In-Reply-To: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
-References: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 May 2014 04:52:53 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n15so2024756wiw.14
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/22] staging: vt6656: PIPEnsControlOut remove camel case.
+Date: Sat, 17 May 2014 09:50:21 +0100
+Message-Id: <1400316639-4430-4-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105302_060973_A808D3AE)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Camel case changes
+pDevice, byRequest,  wValue, wIndex, wLength, pbyBuffer, ntStatus
 
-This patch fixes an issue where AMSDU packets for TDLS link
-would flow over infra link. This happened because we were
-missing setting TDLS flag in TxPD on AMSDU packets.
+->
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+priv, request, value, index, length, buffer, status
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/staging/vt6656/usbpipe.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index 860dfe7..5b32106 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -100,6 +100,7 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
- 			    struct sk_buff *skb)
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 5a466653..76fa19e 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -61,23 +61,23 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+ 
+-int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+-		u16 wIndex, u16 wLength, u8 *pbyBuffer)
++int PIPEnsControlOut(struct vnt_private *priv, u8 request, u16 value,
++		u16 index, u16 length, u8 *buffer)
  {
- 	struct txpd *local_tx_pd;
-+	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+-	int ntStatus = 0;
++	int status = 0;
  
- 	skb_push(skb, sizeof(*local_tx_pd));
+-	if (pDevice->Flags & fMP_DISCONNECTED)
++	if (priv->Flags & fMP_DISCONNECTED)
+ 		return STATUS_FAILURE;
  
-@@ -118,6 +119,9 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
- 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
- 						 sizeof(*local_tx_pd));
+-	mutex_lock(&pDevice->usb_lock);
++	mutex_lock(&priv->usb_lock);
  
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
-+		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_TDLS_PACKET;
-+
- 	if (local_tx_pd->tx_control == 0)
- 		/* TxCtrl set by user or default */
- 		local_tx_pd->tx_control = cpu_to_le32(priv->pkt_tx_ctrl);
-@@ -183,6 +187,9 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+-	ntStatus = usb_control_msg(pDevice->usb,
+-		usb_sndctrlpipe(pDevice->usb, 0), byRequest, 0x40, wValue,
+-			wIndex, pbyBuffer, wLength, USB_CTL_WAIT);
++	status = usb_control_msg(priv->usb,
++		usb_sndctrlpipe(priv->usb, 0), request, 0x40, value,
++			index, buffer, length, USB_CTL_WAIT);
  
- 	tx_info_aggr->bss_type = tx_info_src->bss_type;
- 	tx_info_aggr->bss_num = tx_info_src->bss_num;
-+
-+	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
-+		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
- 	skb_aggr->priority = skb_src->priority;
+-	mutex_unlock(&pDevice->usb_lock);
++	mutex_unlock(&priv->usb_lock);
  
- 	do_gettimeofday(&tv);
+-	if (ntStatus < (int)wLength)
++	if (status < (int)length)
+ 		return STATUS_FAILURE;
+ 
+ 	return STATUS_SUCCESS;
 -- 
-1.8.2.3
+1.9.1
 
