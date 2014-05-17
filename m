@@ -1,90 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:63648 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934726AbaE3WYN (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:57042 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296AbaEQIxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 18:24:13 -0400
-Received: by mail-wi0-f178.google.com with SMTP id cc10so1846602wib.11
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:12 -0700 (PDT)
+	Sat, 17 May 2014 04:53:10 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so5952122wgh.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:53:09 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/8] staging: vt6656: rename CARDvUpdateNextTBTT to vnt_update_next_tbtt
-Date: Fri, 30 May 2014 23:22:51 +0100
-Message-Id: <1401488574-16508-5-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002426_324467_B26E6D5D)
-In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
-References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 14/22] staging: vt6656: Remove unused variable byRevId.
+Date: Sat, 17 May 2014 09:50:31 +0100
+Message-Id: <1400316639-4430-14-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105317_464498_3E212FE6)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop card and rename to vnt_update_next_tbtt
-
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/card.c | 4 ++--
- drivers/staging/vt6656/card.h | 3 +--
- drivers/staging/vt6656/wmgr.c | 4 ++--
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/staging/vt6656/device.h   | 2 --
+ drivers/staging/vt6656/main_usb.c | 7 +------
+ 2 files changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 7cb7bbc..9ecf189 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -32,7 +32,7 @@
-  *      vnt_get_current_tsf - Read Current NIC TSF counter
-  *      vnt_get_next_tbtt - Calculate Next Beacon TSF counter
-  *      vnt_reset_next_tbtt - Set NIC Beacon time
-- *      CARDvUpdateNextTBTT - Sync. NIC Beacon time
-+ *      vnt_update_next_tbtt - Sync. NIC Beacon time
-  *      CARDbRadioPowerOff - Turn Off NIC Radio Power
-  *      CARDbRadioPowerOn - Turn On NIC Radio Power
-  *      CARDbSetWEPMode - Set NIC Wep mode
-@@ -728,7 +728,7 @@ void vnt_reset_next_tbtt(struct vnt_private *priv, u16 beacon_interval)
-  * Return Value: none
-  *
-  */
--void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 tsf,
-+void vnt_update_next_tbtt(struct vnt_private *priv, u64 tsf,
- 			u16 beacon_interval)
- {
- 	u8 data[8];
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index 768515c..d5f7c68 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -55,8 +55,7 @@ void vnt_adjust_tsf(struct vnt_private *, u8, u64, u64);
- bool vnt_get_current_tsf(struct vnt_private *, u64 *);
- bool vnt_clear_current_tsf(struct vnt_private *);
- void vnt_reset_next_tbtt(struct vnt_private *, u16);
--void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
--			 u16 wBeaconInterval);
-+void vnt_update_next_tbtt(struct vnt_private *, u64, u16);
- u64 vnt_get_next_tbtt(u64, u16);
- u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
- int CARDbRadioPowerOff(struct vnt_private *pDevice);
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 28112ec..1646aaf 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -1917,7 +1917,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 59d3828..aefbe93 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -409,8 +409,6 @@ struct vnt_private {
  
-                      MACvWriteBeaconInterval(pDevice, pMgmt->wCurrBeaconPeriod);
- 		     vnt_adjust_tsf(pDevice, pRxPacket->byRxRate, qwTimestamp, pRxPacket->qwLocalTSF);
--                     CARDvUpdateNextTBTT(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
-+		     vnt_update_next_tbtt(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
+ 	u32 rx_bytes;
  
-                      // Turn off bssid filter to avoid filter others adhoc station which bssid is different.
-                      MACvWriteBSSIDAddress(pDevice, pMgmt->abyCurrBSSID);
-@@ -1947,7 +1947,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
- 	vnt_get_current_tsf(pDevice, &qwCurrTSF);
- 	vnt_adjust_tsf(pDevice, pRxPacket->byRxRate, qwTimestamp , pRxPacket->qwLocalTSF);
- 	vnt_get_current_tsf(pDevice, &qwCurrTSF);
--        CARDvUpdateNextTBTT(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
-+	vnt_update_next_tbtt(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
-     }
+-	u8 byRevId;
+-
+ 	u32 flags;
+ 	unsigned long Flags;
  
-     return;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 1b58cca..68ae97c 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -387,7 +387,7 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 
+ 	pDevice->byTopOFDMBasicRate = RATE_24M;
+ 	pDevice->byTopCCKBasicRate = RATE_1M;
+-	pDevice->byRevId = 0;
++
+ 	/* target to IF pin while programming to RF chip */
+ 	pDevice->byCurPwr = 0xFF;
+ 
+@@ -508,11 +508,6 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 	/* get RFType */
+ 	pDevice->byRFType = init_rsp->rf_type;
+ 
+-	if ((pDevice->byRFType & RF_EMU) != 0) {
+-		/* force change RevID for VT3253 emu */
+-		pDevice->byRevId = 0x80;
+-	}
+-
+ 	/* load vt3266 calibration parameters in EEPROM */
+ 	if (pDevice->byRFType == RF_VT3226D0) {
+ 		if ((pDevice->abyEEPROM[EEP_OFS_MAJOR_VER] == 0x1) &&
 -- 
 1.9.1
 
