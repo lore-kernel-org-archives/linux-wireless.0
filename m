@@ -1,55 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:40883 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbaEUGvY (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:36683 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbaEQIww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 02:51:24 -0400
-Received: by mail-qg0-f52.google.com with SMTP id a108so2460694qge.25
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 23:51:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
-References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
- <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
- <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com>
- <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com> <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Wed, 21 May 2014 08:51:03 +0200
-Message-ID: <CAGnRvuraX7OgXmWOedxHGhytx0OL2LPs05+HQ4L6ApsnHWBrLg@mail.gmail.com> (sfid-20140521_085127_553728_08AFAAAB)
-Subject: Re: 802.11s mode without HWMP
-To: Thomas Pedersen <thomas@noack.us>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 May 2014 04:52:52 -0400
+Received: by mail-wg0-f42.google.com with SMTP id y10so5789933wgg.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:51 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/22] staging: vt6656: usbpipe: replace debug messsages.
+Date: Sat, 17 May 2014 09:50:20 +0100
+Message-Id: <1400316639-4430-3-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105256_849914_38752ADE)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 7:36 PM, Thomas Pedersen <thomas@noack.us> wrote:
-> Hi Henning,
-> mac80211 keeps a separate table for bridged endpoints (mpp_paths).
-> Unfortunately this table currently isn't exported by the cfg80211
-> mpath_dump API. If you really need access to this information from
-> cfg80211 / userspace, then the quickest thing for now would be to hack
-> in support for iterating over both tables.
->
-> I'm not really sure why the decision was made to go with 2 different
-> path tables (see 79617dee for the initial implementation), but it
-> seems the cleaner approach would be to merge these and stick with the
-> existing mpath_dump commands.
+Replace all DBG_PRT wiht dev_dbg
 
-After looking at both tables (especially the m***_path_add()
-functions) I think the two tables could be joined.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 39 +++++++++++++++------------------------
+ 1 file changed, 15 insertions(+), 24 deletions(-)
 
-Mesh-nodes could be just a special case where mpp and dst is the same
-address. The alternative would be to have a flag that states the same
-thing.
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 8d0705d..5a466653 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -51,9 +51,6 @@
+ //endpoint 2: read bulk
+ //endpoint 3: write bulk
+ 
+-//static int          msglevel                =MSG_LEVEL_DEBUG;
+-static int          msglevel                =MSG_LEVEL_INFO;
+-
+ #define USB_CTL_WAIT   500 //ms
+ 
+ #ifndef URB_ASYNC_UNLINK
+@@ -142,8 +139,7 @@ int PIPEnsInterruptRead(struct vnt_private *priv)
+ 
+ 	status = usb_submit_urb(priv->pInterruptURB, GFP_ATOMIC);
+ 	if (status) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"Submit int URB failed %d\n", status);
++		dev_dbg(&priv->usb->dev, "Submit int URB failed %d\n", status);
+ 		priv->int_buf.in_use = false;
+ 	}
+ 
+@@ -188,16 +184,14 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
+ 	if (status != STATUS_SUCCESS) {
+ 		priv->int_buf.in_use = false;
+ 
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"IntUSBIoCompleteControl STATUS = %d\n", status);
++		dev_dbg(&priv->usb->dev, "%s status = %d\n", __func__, status);
+ 	} else {
+ 		INTnsProcessData(priv);
+ 	}
+ 
+ 	status = usb_submit_urb(priv->pInterruptURB, GFP_ATOMIC);
+ 	if (status) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"Submit int URB failed %d\n", status);
++		dev_dbg(&priv->usb->dev, "Submit int URB failed %d\n", status);
+ 	} else {
+ 		priv->int_buf.in_use = true;
+ 	}
+@@ -229,7 +223,7 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
+ 
+ 	urb = rcb->pUrb;
+ 	if (rcb->skb == NULL) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"rcb->skb is null\n");
++		dev_dbg(&priv->usb->dev, "rcb->skb is null\n");
+ 		return status;
+ 	}
+ 
+@@ -243,8 +237,7 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
+ 
+ 	status = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (status != 0) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"Submit Rx URB failed %d\n", status);
++		dev_dbg(&priv->usb->dev, "Submit Rx URB failed %d\n", status);
+ 		return STATUS_FAILURE ;
+ 	}
+ 
+@@ -285,8 +278,7 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 		return;
+ 	case -ETIMEDOUT:
+ 	default:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"BULK In failed %d\n", urb->status);
++		dev_dbg(&priv->usb->dev, "BULK In failed %d\n", urb->status);
+ 		break;
+ 	}
+ 
+@@ -301,8 +293,9 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 
+ 	rcb->Ref--;
+ 	if (rcb->Ref == 0) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeNormal %d\n",
+-							priv->NumRecvFreeList);
++		dev_dbg(&priv->usb->dev,
++				"RxvFreeNormal %d\n", priv->NumRecvFreeList);
++
+ 		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		RXvFreeRCB(rcb, re_alloc_skb);
+@@ -352,8 +345,8 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
+ 
+ 	status = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (status != 0) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"Submit Tx URB failed %d\n", status);
++		dev_dbg(&priv->usb->dev, "Submit Tx URB failed %d\n", status);
++
+ 		context->in_use = false;
+ 		return STATUS_FAILURE;
+ 	}
+@@ -397,8 +390,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 
+ 	switch (urb->status) {
+ 	case 0:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"Write %d bytes\n", context->buf_len);
++		dev_dbg(&priv->usb->dev, "Write %d bytes\n", context->buf_len);
+ 		break;
+ 	case -ECONNRESET:
+ 	case -ENOENT:
+@@ -407,8 +399,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 		return;
+ 	case -ETIMEDOUT:
+ 	default:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"BULK Out failed %d\n", urb->status);
++		dev_dbg(&priv->usb->dev, "BULK Out failed %d\n", urb->status);
+ 		break;
+ 	}
+ 
+@@ -419,8 +410,8 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 		if (context->skb != NULL) {
+ 			dev_kfree_skb_irq(context->skb);
+ 			context->skb = NULL;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"tx  %d bytes\n", context->buf_len);
++			dev_dbg(&priv->usb->dev,
++					"tx  %d bytes\n", context->buf_len);
+ 		}
+ 
+ 		priv->dev->trans_start = jiffies;
+-- 
+1.9.1
 
-I don't even think this would slow down the path_lookup that much,
-because normally the proxied destinations should be in different hash
-buckets than the normal ones.
-
-Of course cfg80211 would have to deliver both mpp and dst to
-userspace, I am not quite sure how to do this without breaking
-compatibility in the output. Maybe an additional netlink command (dump
-"full" mpath?) would be better than putting more output into the
-existing one.
-
-Henning Rogge
