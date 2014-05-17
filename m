@@ -1,79 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48501 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbaEGGjx (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:39371 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932279AbaEQIw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 02:39:53 -0400
-Message-ID: <1399444778.5038.3.camel@jlt4.sipsolutions.net> (sfid-20140507_083956_903969_68B8B77C)
-Subject: Re: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Wed, 07 May 2014 08:39:38 +0200
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	 <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 17 May 2014 04:52:57 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so3579512wes.34
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:55 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/22] staging: vt6656: device_cfg.h remove dead code.
+Date: Sat, 17 May 2014 09:50:23 +0100
+Message-Id: <1400316639-4430-6-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105304_967921_10A8A398)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 06:08 +0000, Peer, Ilan wrote:
+Also unneeded #ifndef
 
-> > I'm not really sure why you have this - it seems that in this case the interface
-> > will be stopped so you'll get a STOP_AP or DISCONNECT or whatever other
-> > notification. This may not actually be completely true right now (I seem to
-> > remember a fix in this area but can't seem to find it in my tree!!) but we'll
-> > have to fix that part anyway. Not really sure why then that couldn't be used
-> > instead of this notification? The userspace code is going to have to worry
-> > about that anyway, I'd think.
-> > 
-> 
-> At least for AP/GO, there are cases that a failed channel switch
-> should not necessarily trigger a STOP_AP flow. For example, in case
-> that multi-channel is supported, wpa_supplicant might request a
-> channel switch to try to switch an AP/GO interface to a channel used
-> by a station interface (to avoid multi channel operation), but in case
-> that such a transition fails, it is still a valid to continue to use
-> current channel and do not stop the GO. In such a case, it would be
-> useful to get a failure notification. Generally, I think that since
-> hostapd/wpa_supplicant have started the channel switch, it might be
-> better to have them handle a notification and take the appropriate
-> action (if needed stop the AP/GO ...). 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device_cfg.h | 45 -------------------------------------
+ 1 file changed, 45 deletions(-)
 
-I don't understand this - there are two ways the channel switch can
-fail:
-
- * the request fails
-   this just returns an error code to userspace during the request,
-there's no
-   notification even with these patches
- * the request succeeds, but real switch fails
-   we beacon with the CSA, counting it down etc., but when it comes to
-actually
-   switching, the switch fails. This should hopefully be rather
-unlikely, but if
-   it really happens the only thing we can do to recover (and actually
-do now
-   after Michal's patches) is to STOP_AP
-
-In the first case, there's no notification, nor any need for it. In the
-second case, the scenario you suggest doesn't apply, and STOP_AP has to
-happen anyway because the state is completely messed up, clients will be
-in the process of switching etc.
-
-> Other than that, a STOP_AP might introduce some races, as
-> wpa_supplicant/hostap will not know if the stop_ap was due to the
-> failed CS or due to some other reason.
-
-I don't see why that would matter - even if the STOP_AP *was* for some
-other reason, but happened in the middle of the CS flow, the reaction
-would presumably be the same?
-
-johannes
+diff --git a/drivers/staging/vt6656/device_cfg.h b/drivers/staging/vt6656/device_cfg.h
+index 0b9d834..b018339 100644
+--- a/drivers/staging/vt6656/device_cfg.h
++++ b/drivers/staging/vt6656/device_cfg.h
+@@ -27,61 +27,16 @@
+ #ifndef __DEVICE_CONFIG_H
+ #define __DEVICE_CONFIG_H
+ 
+-#include <linux/types.h>
+-
+-typedef
+-struct _version {
+-    unsigned char   major;
+-    unsigned char   minor;
+-    unsigned char   build;
+-} version_t, *pversion_t;
+-
+-#ifndef false
+-#define false   (0)
+-#endif
+-
+-#ifndef true
+-#define true    (!(false))
+-#endif
+-
+-#define VID_TABLE_SIZE      64
+-#define MCAST_TABLE_SIZE    64
+-#define MCAM_SIZE           32
+-#define VCAM_SIZE           32
+-#define TX_QUEUE_NO         8
+-
+ #define DEVICE_NAME         "vt6656"
+ #define DEVICE_FULL_DRV_NAM "VIA Networking Wireless LAN USB Driver"
+ 
+-#ifndef MAJOR_VERSION
+-#define MAJOR_VERSION       1
+-#endif
+-
+-#ifndef MINOR_VERSION
+-#define MINOR_VERSION       13
+-#endif
+-
+-#ifndef DEVICE_VERSION
+ #define DEVICE_VERSION       "1.19_12"
+-#endif
+ 
+ #define MAX_RATE	12
+ 
+-/* config file */
+-#include <linux/fs.h>
+-#include <linux/fcntl.h>
+-#ifndef CONFIG_PATH
+ #define CONFIG_PATH            "/etc/vntconfiguration.dat"
+-#endif
+-
+-/* Max: 2378 = 2312 Payload + 30HD + 4CRC + 2Padding + 4Len + 8TSF + 4RSR */
+-#define PKT_BUF_SZ          2390
+ 
+ #define MAX_UINTS           8
+ #define OPTION_DEFAULT      { [0 ... MAX_UINTS-1] = -1}
+ 
+-typedef enum  _chip_type {
+-    VT3184 = 1
+-} CHIP_TYPE, *PCHIP_TYPE;
+-
+ #endif
+-- 
+1.9.1
 
