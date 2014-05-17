@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:61321 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbaEUMMr convert rfc822-to-8bit (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:37283 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964774AbaEQQnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 08:12:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140521110143.GA2375@qca.qualcomm.com>
-References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
- <20140521110143.GA2375@qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 21 May 2014 22:12:26 +1000
-Message-ID: <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com> (sfid-20140521_141310_847503_33473AD6)
-Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in drivers/net/wireless/ath/ath9k/dfs.c
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: Jim Davis <jim.epost@gmail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next <linux-next@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 May 2014 12:43:07 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv3 2/4] cfg80211: export expected throughput via nl80211 (GET_STATION)
+Date: Sat, 17 May 2014 18:41:44 +0200
+Message-Id: <1400344906-27984-3-git-send-email-antonio@meshcoding.com> (sfid-20140517_184318_391743_6B095094)
+In-Reply-To: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
+References: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rajkumar,
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-On Wed, May 21, 2014 at 9:01 PM, Rajkumar Manoharan
-<rmanohar@qti.qualcomm.com> wrote:
-> On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
->> Building with the attached random configuration file,
->>
->> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
->>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
->>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
->> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
->> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
->> has no member named ‘debug’
->>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
->>               ^
->> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
->> macro ‘ath_dbg’
->>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
->>                                          ^
->> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
->> has no member named ‘debug’
->>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
->>      ^
->> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
->
-> Please select CONFIG_ATH9K_DEBUGFS.
+Send the expected throughput when replying to a GET_STATION
+command via nl80211.
 
-The point of randconfig builds is to ensure that there it's really
-unlikely that there are any config combinations that don't build, even
-if they're utterly insane.
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 4 ++++
+ 2 files changed, 7 insertions(+)
 
-You should really change the ath9k Kconfig rules or move or add ifdefs
-to prevent this from being possible.
-
-Thanks,
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 0cfa827..2964948 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2199,6 +2199,8 @@ enum nl80211_sta_bss_param {
+  *	Contains a nested array of signal strength attributes (u8, dBm)
+  * @NL80211_STA_INFO_CHAIN_SIGNAL_AVG: per-chain signal strength average
+  *	Same format as NL80211_STA_INFO_CHAIN_SIGNAL.
++ * @NL80211_STA_EXPECTED_THROUGHPUT: expected throughput (considering also the
++ *	802.11 header) expressed in kbps
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2230,6 +2232,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_TX_BYTES64,
+ 	NL80211_STA_INFO_CHAIN_SIGNAL,
+ 	NL80211_STA_INFO_CHAIN_SIGNAL_AVG,
++	NL80211_STA_INFO_EXPECTED_THROUGHPUT,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ca19b15..9631648 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3650,6 +3650,10 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+ 	    nla_put_u32(msg, NL80211_STA_INFO_TX_FAILED,
+ 			sinfo->tx_failed))
+ 		goto nla_put_failure;
++	if ((sinfo->filled & STATION_INFO_EXPECTED_THROUGHPUT) &&
++	    nla_put_u32(msg, NL80211_STA_INFO_EXPECTED_THROUGHPUT,
++			sinfo->expected_throughput))
++		goto nla_put_failure;
+ 	if ((sinfo->filled & STATION_INFO_BEACON_LOSS_COUNT) &&
+ 	    nla_put_u32(msg, NL80211_STA_INFO_BEACON_LOSS,
+ 			sinfo->beacon_loss_count))
 -- 
-Julian Calaby
+1.8.5.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
