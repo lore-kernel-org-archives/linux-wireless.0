@@ -1,78 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:60175 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933752AbaE3Q4g (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:60989 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932330AbaEQIxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 12:56:36 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [RFC 0/4 v2] cfg80211/mac80211: Add new interface type for OCB (Outside the Context of a BSS) mode
-Date: Fri, 30 May 2014 18:56:20 +0200
-Message-Id: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185741_263175_32418E74)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 May 2014 04:53:23 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so3171403wib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:53:21 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 22/22] staging: vt6656: Remove always true bUpdateBBVGA
+Date: Sat, 17 May 2014 09:50:39 +0100
+Message-Id: <1400316639-4430-22-git-send-email-tvboxspy@gmail.com> (sfid-20140517_112147_637682_A60547BF)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE 802.11p amendment defines a procedure for data frames
-transmission by an STA that is not a member of a BSS. Such data
-frames are defined as being transmitted "outside the context of a
-BSS" (this is allowed only if the MIB variable dot11OCBActivated is
-true).  This patchset adds new interface type (NL80211_IFTYPE_OCB)
-for an STA in the OCB mode.
+Remove true if statements.
 
-When an OCB mode is used, all the STAs communicate with each other
-without the need for a coordinator. In such case no beacons are
-sent and BSSID is set to wildcard (all 1's). Every STA receives all
-frames from every STA in range and transmits to every STA tuned to
-the same channel. The communication is taking place in a reserved
-frequency band (5.9 GHz).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/bssdb.c    | 29 ++++++++++++-----------------
+ drivers/staging/vt6656/device.h   |  1 -
+ drivers/staging/vt6656/main_usb.c |  9 +++------
+ drivers/staging/vt6656/wcmd.c     | 17 +++++++----------
+ drivers/staging/vt6656/wmgr.c     |  3 +--
+ 5 files changed, 23 insertions(+), 36 deletions(-)
 
-This patchset presents work in progress. Patches adding *_leave_ocb()
-functions and modifying RX/TX path in mac80211 to work with OCB
-mode will come in near future.
-
-
-Changes v1 --> v2:
-* Added proper (__)cfg80211_join_ocb function
-* Removed the infrastructure for ocb_housekeeping
-  (has to be reworked and added in the future)
-* OCB_ONLY channel flags are checked in __cfg80211_join_ocb()
-
-Rostislav Lisovy (4):
-  cfg80211: Add channel flags limiting availability to OCB mode only
-  cfg80211: Add new interface type for OCB mode
-  nl80211: Do not ignore 5/10MHz wide channels in nl80211_send_chandef()
-  mac80211: OCB mode interface configuration
-
- include/net/cfg80211.h       |  9 ++++++
- include/uapi/linux/nl80211.h |  8 +++++
- net/mac80211/Makefile        |  3 +-
- net/mac80211/cfg.c           | 22 +++++++++++++
- net/mac80211/chan.c          |  1 +
- net/mac80211/driver-ops.h    |  3 +-
- net/mac80211/ieee80211_i.h   |  3 ++
- net/mac80211/iface.c         | 22 +++++++++++++
- net/mac80211/ocb.c           | 22 +++++++++++++
- net/mac80211/util.c          |  5 +++
- net/wireless/Makefile        |  2 +-
- net/wireless/chan.c          |  2 ++
- net/wireless/core.h          |  8 +++++
- net/wireless/nl80211.c       |  6 ++++
- net/wireless/ocb.c           | 75 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 11 +++++++
- net/wireless/reg.c           |  2 ++
- net/wireless/trace.h         | 17 ++++++++++
- net/wireless/util.c          |  5 ++-
- 19 files changed, 222 insertions(+), 4 deletions(-)
- create mode 100644 net/mac80211/ocb.c
- create mode 100644 net/wireless/ocb.c
-
+diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+index 7e8e67a..de60c99 100644
+--- a/drivers/staging/vt6656/bssdb.c
++++ b/drivers/staging/vt6656/bssdb.c
+@@ -455,16 +455,14 @@ int BSSbInsertToBSSList(struct vnt_private *pDevice,
+ 		}
+ 	}
+ 
+-	if (pDevice->bUpdateBBVGA) {
+-		/* Monitor if RSSI is too strong. */
+-		pBSSList->byRSSIStatCnt = 0;
+-		RFvRSSITodBm(pDevice, (u8) (pRxPacket->uRSSI),
++	/* Monitor if RSSI is too strong. */
++	pBSSList->byRSSIStatCnt = 0;
++	RFvRSSITodBm(pDevice, (u8) (pRxPacket->uRSSI),
+ 			     &pBSSList->ldBmMAX);
+-		pBSSList->ldBmAverage[0] = pBSSList->ldBmMAX;
+-		pBSSList->ldBmAverRange = pBSSList->ldBmMAX;
+-		for (ii = 1; ii < RSSI_STAT_COUNT; ii++)
+-			pBSSList->ldBmAverage[ii] = 0;
+-	}
++	pBSSList->ldBmAverage[0] = pBSSList->ldBmMAX;
++	pBSSList->ldBmAverRange = pBSSList->ldBmMAX;
++	for (ii = 1; ii < RSSI_STAT_COUNT; ii++)
++		pBSSList->ldBmAverage[ii] = 0;
+ 
+ 	pBSSList->uIELength = uIELength;
+ 	if (pBSSList->uIELength > WLAN_BEACON_FR_MAXLEN)
+@@ -998,10 +996,8 @@ void BSSvSecondCallBack(struct work_struct *work)
+ 
+ 		if (pMgmt->sNodeDBTable[0].bActive) { /* Assoc with BSS */
+ 
+-			if (pDevice->bUpdateBBVGA) {
+-				s_vCheckSensitivity(pDevice);
+-				s_vCheckPreEDThreshold(pDevice);
+-			}
++			s_vCheckSensitivity(pDevice);
++			s_vCheckPreEDThreshold(pDevice);
+ 
+ 			if (pMgmt->sNodeDBTable[0].uInActiveCount >=
+ 							(LOST_BEACON_COUNT/2) &&
+@@ -1118,10 +1114,9 @@ void BSSvSecondCallBack(struct work_struct *work)
+ 		}
+ 		if (pMgmt->eCurrState == WMAC_STATE_JOINTED) {
+ 
+-			if (pDevice->bUpdateBBVGA) {
+-				s_vCheckSensitivity(pDevice);
+-				s_vCheckPreEDThreshold(pDevice);
+-			}
++			s_vCheckSensitivity(pDevice);
++			s_vCheckPreEDThreshold(pDevice);
++
+ 			if (pMgmt->sNodeDBTable[0].uInActiveCount >=
+ 						ADHOC_LOST_BEACON_COUNT) {
+ 				DBG_PRT(MSG_LEVEL_NOTICE,
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index ee3fb0b..606ca9f 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -660,7 +660,6 @@ struct vnt_private {
+ 	int bRxMICFail;
+ 
+ 	/* For Update BaseBand VGA Gain Offset */
+-	int bUpdateBBVGA;
+ 	u32 uBBVGADiffCount;
+ 	u8 byBBVGANew;
+ 	u8 byBBVGACurrent;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index a9d9cc8..3a576fa 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -262,7 +262,6 @@ device_set_options(struct vnt_private *pDevice) {
+     pDevice->byBBType = BBP_TYPE_DEF;
+     pDevice->byPacketType = pDevice->byBBType;
+     pDevice->byAutoFBCtrl = AUTO_FB_0;
+-    pDevice->bUpdateBBVGA = true;
+     pDevice->byPreambleType = 0;
+     pDevice->bExistSWNetAddr = false;
+     /* pDevice->bDiversityRegCtlON = true; */
+@@ -566,12 +565,10 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 	BBvSetShortSlotTime(pDevice);
+ 	CARDvSetBSSMode(pDevice);
+ 
+-	if (pDevice->bUpdateBBVGA) {
+-		pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
+-		pDevice->byBBVGANew = pDevice->byBBVGACurrent;
++	pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
++	pDevice->byBBVGANew = pDevice->byBBVGACurrent;
+ 
+-		BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
+-	}
++	BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
+ 
+ 	pDevice->byRadioCtl = pDevice->abyEEPROM[EEP_OFS_RADIOCTL];
+ 	pDevice->bHWRadioOff = false;
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 8fecb34..b742460 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -344,11 +344,10 @@ void vRunCommand(struct work_struct *work)
+ 			CARDbSetMediaChannel(pDevice, pMgmt->uScanChannel);
+ 			// Set Baseband to be more sensitive.
+ 
+-			if (pDevice->bUpdateBBVGA) {
+-				BBvSetShortSlotTime(pDevice);
+-				BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
+-				BBvUpdatePreEDThreshold(pDevice, true);
+-			}
++			BBvSetShortSlotTime(pDevice);
++			BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
++			BBvUpdatePreEDThreshold(pDevice, true);
++
+ 			pMgmt->uScanChannel++;
+ 
+ 			while (!ChannelValid(pDevice->byZoneType, pMgmt->uScanChannel) &&
+@@ -381,11 +380,9 @@ void vRunCommand(struct work_struct *work)
+ 			CARDvSetBSSMode(pDevice);
+ 		}
+ 
+-		if (pDevice->bUpdateBBVGA) {
+-			BBvSetShortSlotTime(pDevice);
+-			BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
+-			BBvUpdatePreEDThreshold(pDevice, false);
+-		}
++		BBvSetShortSlotTime(pDevice);
++		BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
++		BBvUpdatePreEDThreshold(pDevice, false);
+ 
+ 		// Set channel back
+ 		vAdHocBeaconRestart(pDevice);
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index d08f290..e6eec7f 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -2653,8 +2653,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+     pMgmt->uCurrChannel = pCurr->uChannel;
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "<----s_bSynchBSS Set Channel [%d]\n", pCurr->uChannel);
+ 
+-    if ((pDevice->bUpdateBBVGA) &&
+-        (pDevice->byBBVGACurrent != pDevice->abyBBVGA[0])) {
++    if (pDevice->byBBVGACurrent != pDevice->abyBBVGA[0]) {
+         pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
+         BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
+         BBvSetShortSlotTime(pDevice);
 -- 
-2.0.0.rc4
+1.9.1
 
