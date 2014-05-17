@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:59598 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbaEPEVM (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:44600 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964788AbaEQQnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 00:21:12 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f8so305920wiw.10
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 21:21:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140515214105.GG15430@us.netrek.org>
-References: <5346DED8.2030704@free.fr>
-	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
-	<53480138.2080805@free.fr>
-	<53733AB4.7010500@free.fr>
-	<20140514215126.GA15419@us.netrek.org>
-	<CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
-	<20140515214105.GG15430@us.netrek.org>
-Date: Fri, 16 May 2014 09:51:11 +0530
-Message-ID: <CAJwzM1k4ysc0BGefqPWB1_-7moE=4z_hjrB=--xRj8iWma5krQ@mail.gmail.com> (sfid-20140516_062116_007271_AE093D20)
-Subject: Re: Mwifiex driver on Globalscale Mirabox
-From: Avinash Patil <avinashapatil@gmail.com>
-To: James Cameron <quozl@laptop.org>
-Cc: WebAV <webav@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 May 2014 12:43:07 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv3 4/4] cfg80211: implement cfg80211_get_station cfg80211 API
+Date: Sat, 17 May 2014 18:41:46 +0200
+Message-Id: <1400344906-27984-5-git-send-email-antonio@meshcoding.com> (sfid-20140517_184321_104980_0C5CAE2B)
+In-Reply-To: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
+References: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-Yes; extended scan command 0x107 is supported on SD8787 p96 FW.
+Implement and export the new cfg80211_get_station() API.
+This utility can be used by other kernel modules to obtain
+detailed information about a given wireless station.
 
-Thanks,
-Avinash
+It will be in particular useful to batman-adv which will
+implement a wireless rate based metric.
 
-On Fri, May 16, 2014 at 3:11 AM, James Cameron <quozl@laptop.org> wrote:
-> On Thu, May 15, 2014 at 07:36:29PM +0530, Avinash Patil wrote:
->> If an unsupported command is downloaded to FW, it results into
->> command response not supported - code 0x2.
->
-> Thanks.  Is 0x107 supported on 14.66.9.p96?
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ include/net/cfg80211.h | 13 +++++++++++++
+ net/wireless/util.c    | 18 ++++++++++++++++++
+ 2 files changed, 31 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 394189e..5917919 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1075,6 +1075,19 @@ struct station_info {
+ };
+ 
+ /**
++ * cfg80211_get_station - retrieve information about a given station
++ * @dev: the device where the station is supposed to be connected to
++ * @mac_addr: the mac address of the station of interest
++ * @sinfo: pointer to the structure to fill with the information
++ *
++ * Returns 0 on success and sinfo is filled with the available information
++ * otherwise returns a negative error code and the content of sinfo has to be
++ * considered undefined.
++ */
++int cfg80211_get_station(struct net_device *dev, u8 *mac_addr,
++			 struct station_info *sinfo);
++
++/**
+  * enum monitor_flags - monitor flags
+  *
+  * Monitor interface configuration flags. Note that these must be the bits
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 8c61d5c..6380e55 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1545,6 +1545,24 @@ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy)
+ }
+ EXPORT_SYMBOL(ieee80211_get_num_supported_channels);
+ 
++int cfg80211_get_station(struct net_device *dev, u8 *mac_addr,
++			 struct station_info *sinfo)
++{
++	struct cfg80211_registered_device *rdev;
++	struct wireless_dev *wdev;
++
++	wdev = dev->ieee80211_ptr;
++	if (!wdev)
++		return -EOPNOTSUPP;
++
++	rdev = wiphy_to_rdev(wdev->wiphy);
++	if (!rdev->ops->get_station)
++		return -EOPNOTSUPP;
++
++	return rdev_get_station(rdev, dev, mac_addr, sinfo);
++}
++EXPORT_SYMBOL(cfg80211_get_station);
++
+ /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
+ /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
+ const unsigned char rfc1042_header[] __aligned(2) =
+-- 
+1.8.5.5
+
