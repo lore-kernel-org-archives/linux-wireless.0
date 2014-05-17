@@ -1,95 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49198 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972AbaECU4D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2014 16:56:03 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.15] cfg80211: allow restricting supported dfs regions
-Date: Sat,  3 May 2014 22:55:55 +0200
-Message-Id: <1399150555-36041-1-git-send-email-nbd@openwrt.org> (sfid-20140503_225608_008935_7171835B)
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:44692 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756585AbaEQIwi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 May 2014 04:52:38 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hm4so1999344wib.16
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:37 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/22] staging: vt6656: rf.c additional power.
+Date: Sat, 17 May 2014 09:50:18 +0100
+Message-Id: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105242_928654_028AED92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At the moment, the ath9k/ath10k DFS module only supports detecting ETSI
-radar patterns.
-Add a bitmap in the interface combinations, indicating which DFS regions
-are supported by the detector. If unset, support for all regions is
-assumed.
+Provides extra power on weak RSSI.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The values orginate from the vendors driver.
+
+It is applied later in RFbRawSetPower to simplify and check that it doesn't
+exceed the max power.
+
+Vendor driver VT6656_Linux_src_v1.21.03_x86_11.04.zip
+http://www.viaembedded.com/servlet/downloadSvl?id=1890&download_file_id=14704
+This is GPL-licensed code.
+
+vendors code
+...
+if (pDevice->byRFType == RF_VT3226D0) {
+	if (lRSSI == 0){
+		lAdditionalPower = 7;
+	}
+	else if ((lRSSI < -60) && (lRSSI >= -65)){
+		lAdditionalPower = 5;
+		//lAdditionalPower = 9;
+	}
+	else if ((lRSSI < -65) && (lRSSI >= -70)){
+		lAdditionalPower = 7;
+		//lAdditionalPower = 9;
+	}
+	else if ((lRSSI < -70) && (lRSSI >= -80)){
+		lAdditionalPower = 9;
+		}
+	else if (lRSSI < -80) {
+		lAdditionalPower = 9;
+	}
+}
+else {
+	if (lRSSI == 0){
+		lAdditionalPower = 7;
+	}
+	else if ((lRSSI < -70) && (lRSSI >= -75)){
+		lAdditionalPower = 5;
+	}
+	else if ((lRSSI < -75) && (lRSSI >= -80)){
+			lAdditionalPower = 7;
+		}
+		else if (lRSSI < -80) {
+			lAdditionalPower = 9;
+		}
+	}
+
+...
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/cfg80211.h |  2 ++
- net/wireless/util.c    | 14 ++++++++++++++
- 2 files changed, 16 insertions(+)
+ drivers/staging/vt6656/rf.c | 30 ++++++++++++++++++++++++++++++
+ drivers/staging/vt6656/rf.h |  2 ++
+ 2 files changed, 32 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f3539a1..96975fb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2618,6 +2618,7 @@ struct ieee80211_iface_limit {
-  *	between infrastructure and AP types must match. This is required
-  *	only in special cases.
-  * @radar_detect_widths: bitmap of channel widths supported for radar detection
-+ * @radar_detect_regions: bitmap of regions supported for radar detection
-  *
-  * With this structure the driver can describe which interface
-  * combinations it supports concurrently.
-@@ -2675,6 +2676,7 @@ struct ieee80211_iface_combination {
- 	u8 n_limits;
- 	bool beacon_int_infra_match;
- 	u8 radar_detect_widths;
-+	u8 radar_detect_regions;
- };
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 1e8f64b..64632e9 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -769,6 +769,32 @@ int RFbSetPower(struct vnt_private *priv, u32 rate, u32 channel)
+ 	return ret;
+ }
  
- struct ieee80211_txrx_stypes {
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index e5872ff..b2fb12a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1275,6 +1275,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 enum cfg80211_chan_mode chanmode,
- 				 u8 radar_detect)
- {
-+	const struct ieee80211_regdomain *regdom;
- 	struct wireless_dev *wdev_iter;
- 	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
-@@ -1283,6 +1284,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	struct ieee80211_channel *ch;
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
-+	enum nl80211_dfs_regions region = 0;
- 	int total = 1;
- 	int i, j;
- 
-@@ -1301,6 +1303,14 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 		return 0;
- 	}
- 
-+	if (radar_detect) {
-+		rcu_read_lock();
-+		regdom = rcu_dereference(cfg80211_regdomain);
-+		if (regdom)
-+			region = regdom->dfs_region;
-+		rcu_read_unlock();
++static u8 vnt_rf_addpower(struct vnt_private *priv)
++{
++	s32 rssi = -priv->uCurrRSSI;
++
++	if (!rssi)
++		return 7;
++
++	if (priv->byRFType == RF_VT3226D0) {
++		if (rssi < -70)
++			return 9;
++		else if (rssi < -65)
++			return 7;
++		else if (rssi < -60)
++			return 5;
++	} else {
++		if (rssi < -80)
++			return 9;
++		else if (rssi < -75)
++			return 7;
++		else if (rssi < -70)
++			return 5;
 +	}
 +
- 	memset(num, 0, sizeof(num));
- 	memset(used_channels, 0, sizeof(used_channels));
- 
-@@ -1408,6 +1418,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 		if (radar_detect && !(c->radar_detect_widths & radar_detect))
- 			goto cont;
- 
-+		if (radar_detect && c->radar_detect_regions &&
-+		    !(c->radar_detect_regions & BIT(region)))
-+			goto cont;
++	return 0;
++}
 +
- 		/*
- 		 * Finally check that all iftypes that we're currently
- 		 * using are actually part of this combination. If they
+ /*
+  * Description: Set Tx power
+  *
+@@ -788,6 +814,10 @@ int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
+ 	u32 power_setting = 0;
+ 	int ret = true;
+ 
++	power += vnt_rf_addpower(priv);
++	if (power > VNT_RF_MAX_POWER)
++		power = VNT_RF_MAX_POWER;
++
+ 	if (priv->byCurPwr == power)
+ 		return true;
+ 
+diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
+index de5c613..e9a01fe 100644
+--- a/drivers/staging/vt6656/rf.h
++++ b/drivers/staging/vt6656/rf.h
+@@ -53,6 +53,8 @@
+ #define RF_EMU              0x80
+ #define RF_MASK             0x7F
+ 
++#define VNT_RF_MAX_POWER    0x3f
++
+ extern const u8 RFaby11aChannelIndex[200];
+ 
+ int IFRFbWriteEmbedded(struct vnt_private *, u32 dwData);
 -- 
-1.8.5.2 (Apple Git-48)
+1.9.1
 
