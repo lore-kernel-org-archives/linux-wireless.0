@@ -1,89 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54319 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbaEOKsV (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61566 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbaEQIw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 06:48:21 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: improve warm reset reliability
-References: <1400050658-2763-1-git-send-email-michal.kazior@tieto.com>
-	<1400050658-2763-2-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 15 May 2014 13:48:16 +0300
-In-Reply-To: <1400050658-2763-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 14 May 2014 08:57:37 +0200")
-Message-ID: <87r43v9v2n.fsf@kamboji.qca.qualcomm.com> (sfid-20140515_124837_196604_6AB98441)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 17 May 2014 04:52:58 -0400
+Received: by mail-we0-f174.google.com with SMTP id k48so3509502wev.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:57 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/22] staging: vt6656: device_cfg.h Move macros to device.h
+Date: Sat, 17 May 2014 09:50:24 +0100
+Message-Id: <1400316639-4430-7-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105308_039507_1A2B216B)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Remove device_cfg.h
 
-> Warm reset is now able to recover after device
-> crashes which required a cold reset before.
->
-> This should greatly reduce chances of getting data
-> bus errors or host system freezes due to buggy
-> cold reset on some chips.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h     | 13 +++++++++++-
+ drivers/staging/vt6656/device_cfg.h | 42 -------------------------------------
+ 2 files changed, 12 insertions(+), 43 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/device_cfg.h
 
-Awesome! This is very much needed. I just have a cosmetic comment:
-
-> +/* this function effectively clears target memory controller assert line */
-> +static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
-> +{
-> +	u32 val;
-> +
-> +	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> +				SOC_RESET_CONTROL_ADDRESS);
-> +	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-> +			   val | SOC_RESET_CONTROL_SI0_RST_MASK);
-> +	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> +				SOC_RESET_CONTROL_ADDRESS);
-
-We do have the ath10k_pci_soc_ functions for accessing SOC registers, I
-would prefer to use those here. I now modified your patch with the diff
-below. Is that ok to you?
-
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1807,20 +1807,18 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
- {
-        u32 val;
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 410e028..3c2c4ce 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -60,11 +60,12 @@
+ #define RT_DOWNDEV_EVENT_FLAG                        0x0105
+ #define RT_RMMOD_EVENT_FLAG                              0x0106
  
--       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--                               SOC_RESET_CONTROL_ADDRESS);
--       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
--                          val | SOC_RESET_CONTROL_SI0_RST_MASK);
--       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--                               SOC_RESET_CONTROL_ADDRESS);
-+       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-+       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
-+                              val | SOC_RESET_CONTROL_SI0_RST_MASK);
-+       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
++#define MAX_RATE			12
 +
-        msleep(10);
+ /*
+  * device specific
+  */
  
--       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--                               SOC_RESET_CONTROL_ADDRESS);
--       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
--                          val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
--       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--                               SOC_RESET_CONTROL_ADDRESS);
-+       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
-+       ath10k_pci_soc_write32(ar, SOC_RESET_CONTROL_ADDRESS,
-+                              val & ~SOC_RESET_CONTROL_SI0_RST_MASK);
-+       val = ath10k_pci_soc_read32(ar, SOC_RESET_CONTROL_ADDRESS);
+-#include "device_cfg.h"
+ #include "80211hdr.h"
+ #include "tether.h"
+ #include "wmgr.h"
+@@ -79,6 +80,16 @@
+ #define VNT_USB_VENDOR_ID                     0x160a
+ #define VNT_USB_PRODUCT_ID                    0x3184
+ 
++#define DEVICE_NAME			"vt6656"
++#define DEVICE_FULL_DRV_NAM		"VIA Networking Wireless LAN USB Driver"
 +
-        msleep(10);
- }
-
-Full patch here:
-
-https://github.com/kvalo/ath/commit/7b52054308a371d479a9e686e1d8411d19a90fd7
-
++#define DEVICE_VERSION			"1.19_12"
++
++#define CONFIG_PATH			"/etc/vntconfiguration.dat"
++
++#define MAX_UINTS			8
++#define OPTION_DEFAULT			{ [0 ... MAX_UINTS-1] = -1}
++
+ #define MAC_MAX_CONTEXT_REG     (256+128)
+ 
+ #define MAX_MULTICAST_ADDRESS_NUM       32
+diff --git a/drivers/staging/vt6656/device_cfg.h b/drivers/staging/vt6656/device_cfg.h
+deleted file mode 100644
+index b018339..0000000
+--- a/drivers/staging/vt6656/device_cfg.h
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: device_cfg.h
+- *
+- * Purpose: Driver configuration header
+- * Author: Lyndon Chen
+- *
+- * Date: Dec 9, 2005
+- *
+- */
+-#ifndef __DEVICE_CONFIG_H
+-#define __DEVICE_CONFIG_H
+-
+-#define DEVICE_NAME         "vt6656"
+-#define DEVICE_FULL_DRV_NAM "VIA Networking Wireless LAN USB Driver"
+-
+-#define DEVICE_VERSION       "1.19_12"
+-
+-#define MAX_RATE	12
+-
+-#define CONFIG_PATH            "/etc/vntconfiguration.dat"
+-
+-#define MAX_UINTS           8
+-#define OPTION_DEFAULT      { [0 ... MAX_UINTS-1] = -1}
+-
+-#endif
 -- 
-Kalle Valo
+1.9.1
+
