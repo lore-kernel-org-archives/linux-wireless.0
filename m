@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26478 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755383AbaENNyb (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:47869 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932330AbaEQIxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 09:54:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
-References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
-	<87oaz0fprm.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmytFM-YxXCMdhZ8J3OhK2udRrAtuWrY0rrLrHbASjGgA@mail.gmail.com>
-Date: Wed, 14 May 2014 16:54:24 +0300
-In-Reply-To: <CA+BoTQmytFM-YxXCMdhZ8J3OhK2udRrAtuWrY0rrLrHbASjGgA@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 14 May 2014 15:43:11 +0200")
-Message-ID: <87fvkcfotr.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_155435_533400_AC8DBA90)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 17 May 2014 04:53:19 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so5811923wgh.31
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:53:18 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 20/22] staging: vt6656: vnt_private remove dead variables
+Date: Sat, 17 May 2014 09:50:37 +0100
+Message-Id: <1400316639-4430-20-git-send-email-tvboxspy@gmail.com> (sfid-20140517_112148_224366_B66A4346)
+In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+byFOETuning
+byAutoPwrTunning
 
-> On 14 May 2014 15:34, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
->>>> Hi,
->>>>
->>>> This depends on my `ath10k: recovery fixes
->>>> 2014-05-09`.
->>>>
->>>> Hopefully the split makes it a little saner to
->>>> review.
->>>>
->>>> Please note: `ath10k: make wmi timeout trigger hw
->>>> restart` effectively hides the mgmt tx / htc
->>>> credit starvation issue that was discussed
->>>> recently. My intention is to make the driver more
->>>> robust and as a side effect it makes the
->>>> starvation issue less painful. If desired so
->>>> the patch can be easily ignored in the series as
->>>> nothing depends on it.
->>>>
->>>>
->>>> Michal Kazior (7):
->>>>   ath10k: move restart_work call
->>>>   ath10k: introduce core restart symbol
->>>
->>>
->>>>   ath10k: drain wmi quickly upon hw restart
->>>>   ath10k: wake up everything on core restart
->>>
->>> These 2 are harmful as they are. In case of early fw crash
->>> uninitialized structures are accessed. I'll re-spin later.
->>
->> So I can drop the whole series, right?
->
-> Correct.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   | 6 ------
+ drivers/staging/vt6656/main_usb.c | 2 --
+ 2 files changed, 8 deletions(-)
 
-Thanks. I dropped the series from my queue now.
-
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index f3072dd..a8637ec 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -672,12 +672,6 @@ struct vnt_private {
+ 
+ 	int bRadioCmd;
+ 
+-	/* For FOE Tuning */
+-	u8  byFOETuning;
+-
+-	/* For Auto Power Tunning */
+-	u8  byAutoPwrTunning;
+-
+ 	/* BaseBand Loopback Use */
+ 	u8 byBBCR4d;
+ 	u8 byBBCRc9;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index c00a16c..a9d9cc8 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -263,8 +263,6 @@ device_set_options(struct vnt_private *pDevice) {
+     pDevice->byPacketType = pDevice->byBBType;
+     pDevice->byAutoFBCtrl = AUTO_FB_0;
+     pDevice->bUpdateBBVGA = true;
+-    pDevice->byFOETuning = 0;
+-    pDevice->byAutoPwrTunning = 0;
+     pDevice->byPreambleType = 0;
+     pDevice->bExistSWNetAddr = false;
+     /* pDevice->bDiversityRegCtlON = true; */
 -- 
-Kalle Valo
+1.9.1
+
