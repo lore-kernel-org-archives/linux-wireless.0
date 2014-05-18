@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37731 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753584AbaE1N1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 09:27:50 -0400
-Message-ID: <1401283656.8146.17.camel@jlt4.sipsolutions.net> (sfid-20140528_152753_836225_CF78D711)
-Subject: Re: [RFC Patch v2] Unify mpp/mesh_path handling for Mac 802.11s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	Thomas Pedersen <thomas@noack.us>
-Date: Wed, 28 May 2014 15:27:36 +0200
-In-Reply-To: <CAGnRvuq1By_dZZnv3Vcm+JRxpkyZwv8NfEv4cM-1QChwX-+eqA@mail.gmail.com> (sfid-20140528_152112_142547_62B180BF)
-References: <2083629.VLZzpqGjAs@desktop.local>
-	 <1401283040.8146.15.camel@jlt4.sipsolutions.net>
-	 <CAGnRvuq1By_dZZnv3Vcm+JRxpkyZwv8NfEv4cM-1QChwX-+eqA@mail.gmail.com>
-	 (sfid-20140528_152112_142547_62B180BF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:46170 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbaERLlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 May 2014 07:41:45 -0400
+Received: by mail-ee0-f49.google.com with SMTP id e53so2748854eek.36
+        for <linux-wireless@vger.kernel.org>; Sun, 18 May 2014 04:41:44 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: make B43_PCMCIA and B43_SDIO depend on B43_SSB
+Date: Sun, 18 May 2014 13:41:33 +0200
+Message-Id: <1400413293-25973-1-git-send-email-zajec5@gmail.com> (sfid-20140518_134332_718591_5DADE127)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-28 at 15:20 +0200, Henning Rogge wrote:
-> On Wed, May 28, 2014 at 3:17 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Can you not do everything in one patch? :)
-> >
-> > Also - I think reporting the MPPs to userspace like the mesh paths is
-> > probably not a good idea? And I think that happens now since you didn't
-> > touch the code in cfg?
-> 
-> The current patch ONLY unifies the mpp_path_add() and mesh_path_add()
-> function. But I could factor out the addition of the atomic counter
-> for mpp_paths into a patch of its own.
+These are extra configs specific to the SSB. Lack of this dependency and
+CONFIG_B43=y
+CONFIG_B43_BUSES_BCMA=y
+CONFIG_SSB=m
+would result in:
+> drivers/built-in.o: In function `b43_sdio_remove':
+> sdio.c:(.text+0x14657f): undefined reference to `ssb_bus_unregister'
+> drivers/built-in.o: In function `b43_sdio_probe':
+> sdio.c:(.text+0x14672f): undefined reference to `ssb_bus_sdiobus_register'
 
-Please.
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> I kept the "exporting mpp" thing for a followup patch, I first wanted
-> to hear if the whole cleanup is worth the effort.
-
-Ok. Also, please read CodingStyle.
-
-johannes
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 1c7d27b..e3f67b8 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -73,7 +73,7 @@ config B43_PCICORE_AUTOSELECT
+ 
+ config B43_PCMCIA
+ 	bool "Broadcom 43xx PCMCIA device support"
+-	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
++	depends on B43 && B43_SSB && SSB_PCMCIAHOST_POSSIBLE
+ 	select SSB_PCMCIAHOST
+ 	---help---
+ 	  Broadcom 43xx PCMCIA device support.
+@@ -93,7 +93,7 @@ config B43_PCMCIA
+ 
+ config B43_SDIO
+ 	bool "Broadcom 43xx SDIO device support"
+-	depends on B43 && SSB_SDIOHOST_POSSIBLE
++	depends on B43 && B43_SSB && SSB_SDIOHOST_POSSIBLE
+ 	select SSB_SDIOHOST
+ 	---help---
+ 	  Broadcom 43xx device support for Soft-MAC SDIO devices.
+-- 
+1.8.4.5
 
