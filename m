@@ -1,58 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:64286 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270AbaEIMmw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 08:42:52 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so2604067eei.33
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:42:51 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
-Date: Fri,  9 May 2014 14:35:50 +0200
-Message-Id: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com> (sfid-20140509_144255_713431_61C6B753)
+Received: from mga03.intel.com ([143.182.124.21]:40629 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750891AbaERHKU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 May 2014 03:10:20 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "andrea.merello@gmail.com" <andrea.merello@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"oku@masqmail.cx" <oku@masqmail.cx>,
+	"joerg.albert@gmx.de" <joerg.albert@gmx.de>,
+	"alex@foogod.com" <alex@foogod.com>,
+	"n0_5p4m_p13453@hotmail.com" <n0_5p4m_p13453@hotmail.com>,
+	"proski@gnu.org" <proski@gnu.org>,
+	"agx@sigxcpu.org" <agx@sigxcpu.org>,
+	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
+	"sesmo@gmx.net" <sesmo@gmx.net>,
+	John Linville <linville@tuxdriver.com>
+Subject: RE: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216..
+ and RX path involved in scan
+Date: Sun, 18 May 2014 07:10:08 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DF6AA5@HASMSX103.ger.corp.intel.com> (sfid-20140518_091331_943726_058EA62D)
+References: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
+In-Reply-To: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-This depends on my `ath10k: recovery fixes
-2014-05-09`.
-
-Hopefully the split makes it a little saner to
-review.
-
-Please note: `ath10k: make wmi timeout trigger hw
-restart` effectively hides the mgmt tx / htc
-credit starvation issue that was discussed
-recently. My intention is to make the driver more
-robust and as a side effect it makes the
-starvation issue less painful. If desired so
-the patch can be easily ignored in the series as
-nothing depends on it.
-
-
-Michal Kazior (7):
-  ath10k: move restart_work call
-  ath10k: introduce core restart symbol
-  ath10k: drain wmi quickly upon hw restart
-  ath10k: wake up everything on core restart
-  ath10k: reduce timeout values
-  ath10k: make wmi timeout trigger hw restart
-  ath10k: remove old unused defines
-
- drivers/net/wireless/ath/ath10k/core.c | 27 +++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/core.h |  7 +++++--
- drivers/net/wireless/ath/ath10k/htt.c  |  2 +-
- drivers/net/wireless/ath/ath10k/mac.c  |  8 +++-----
- drivers/net/wireless/ath/ath10k/pci.c  |  3 +--
- drivers/net/wireless/ath/ath10k/txrx.c |  2 +-
- drivers/net/wireless/ath/ath10k/wmi.c  | 17 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h  |  4 ++--
- 8 files changed, 54 insertions(+), 16 deletions(-)
-
--- 
-1.8.5.3
-
+PiBIZWxsbywNCj4gDQo+IEl0IGhhcHBlbmVkIHRoYXQgc2luY2UgRW1tYW51ZWwncyBjb21taXQN
+Cj4gM2FmYzIxNjdmNjBhMzI3YTJjMWUxZTI2MDBlZjIwOWEzYzJiNzViNyAoY2ZnODAyMTEvbWFj
+ODAyMTE6IGlnbm9yZQ0KPiBzaWduYWwgaWYgdGhlIGZyYW1lIHdhcyBoZWFyZCBvbiB3cm9uZyBj
+aGFubmVsKSBteSBhdG1lbC1iYXNlZCB3aWZpDQo+IGRldmljZSBjb3VsZG4ndCBzY2FuIGFueW1v
+cmUuDQo+IA0KPiBJIGxvb2tlZCBhdCB0aGlzIGlzc3VlIGFuZCBJIGZvdW5kIHRoZSBjYXVzZSwg
+YnV0IGN1cnJlbnRseSBJIGhhdmUNCj4gc29tZSBkb3VidHMsIGFuZCBJIHdvdWxkIGxpa2UgYXNr
+aW5nIGZvciBjbGFyaWZpY2F0aW9uIGFuZCBjb21tZW50cywNCj4gYmVmb3JlIHRyeWluZyB0byBw
+YXRjaCB0aGUgZHJpdmVyIG9yIG1hYzgwMjExIGl0c2VsZi4uLi4NCj4gDQo+IFRoZSBwcm9ibGVt
+IGlzIHRyaWdnZXJlZCBiZWNhdXNlIHRoZSBhdDc2eDUweC11c2IgZHJpdmVyIGRvZXMgbm90DQo+
+IHByb3ZpZGUgZnJlcXVlbmN5IGluZm9ybWF0aW9uIGluIHJ4X3N0YXR1cyAoYW5kIEFGQUlLIGl0
+IGRpZmZpY3VsdGx5DQo+IGNvdWxkIGRvIHRoYXQgZHVyaW5nIHNjYW4gcmlnaHQgbm93KS4NCg0K
+SSdkIHNheSB0aGlzIGlzIGEgYmFkIGJlaGF2aW9yLCBidXQgSSBhbSBub3QgdGhlIGF1dGhvcml0
+YXRpdmUgb3BpbmlvbiBoZXJlIDopDQoNCj4gDQo+IEVtbWFudWVsJ3MgY29tbWl0IG1ha2UgY2Vy
+dGFpbiBtYWM4MDIxMSBmdW5jdGlvbnMgc3RvcCBnZXR0aW5nIHRoZQ0KPiBjaGFubmVsIGluZm9y
+bWF0aW9uIGZyb20gdGhlIGJlYWNvbi9wcm9iZSByZXNwb25zZSwgYW5kIHN0YXJ0IGdldHRpbmcN
+Cj4gaXQgZnJvbSByeF9zdGF0dXMsIGJ1dCB0aGUgY2hhbm5lbCByZXN1bHRzIG5vdyBOVUxMLCBh
+bmQgdGhlIGZyYW1lIGlzDQo+IGRpc2NhcmRlZC4NCj4gVGhlIHJlbGV2YW50IGNoZWNrIGlzIGRv
+bmUgaW4gbWxtZS5jLCBpZWVlODAyMTFfcnhfYnNzX2luZm8NCj4gaWYgKCFjaGFubmVsKQ0KPiAg
+ICAgcmV0dXJuOw0KPiBqdXN0IGFmdGVyIEVtbWFudWVsJ3MgY2hhbmdlLg0KPiANCj4gU28gbXkg
+Zmlyc3QgcXVlc3Rpb24gaXM6DQo+IEFyZSBtYWM4MDIxMSBkcml2ZXJzIG9ibGlnYXRlZCB0byBy
+ZXBvcnQgdGhpcyBpbmZvcm1hdGlvbj8NCj4gRG9lcyB0aGlzIGNvbW1pdCBqdXN0IHJlbHkgb24g
+c29tZXRoaW5nIHRoYXQgc2hvdWxkIGJlIGFscmVhZHkgaW4gdGhhdA0KPiB3YXkgKGFuZCB0aGUg
+YXQ3OTUweC11c2IgZHJpdmVyIGlzIHNpbXBseSBidWdneSBub3QgZG9pbmcgdGhpcyk/DQo+IFJl
+YWRpbmcgRW1tYW51ZWwncyBjb21taXQgbWVzc2FnZSBpdCBzZWVtcyBoZSBkaWRuJ3QgaGF2ZSBh
+bnkNCj4gaW50ZW50aW9uIHRvIGludHJvZHVjZSB0aGlzIGNvbnN0cmFpbnQgbm93Lg0KDQpSaWdo
+dCAtIGJ1dCB0aGUgYXQ3OTUweC11c2IgZG9lc24ndCBwcm92aWRlIHRoaXMgaW5mb3JtYXRpb24s
+IHRoZW4gdGhlIGNoYW5uZWwgaXMgdGFrZW4gZnJvbSB0aGUgRFMgSUUgLSBvbmx5IGlmIGl0IGV4
+aXN0cywgc28gd2hhdCBpZiB0aGlzIElFIGRvZXNuJ3QgZXhpc3Q/DQoNCj4gDQo+IFNhaWQgdGhh
+dCwgSSBkaWcgaW4gbWFjODAyMTEgY29kZSwgYW5kIEkgc2F3IEVtbWFudWVsIGNvbW1pdCBkb2Vz
+DQo+IGFmZmVjdCBmcmFtZXMgcHJvY2Vzc2VkIGluIHN0YSAoYW5kIGlic3MsIGJ1dCBpIGRpZG4n
+dCBsb29rIGF0IHRoaXMpDQo+IHJ4IHBhdGguDQo+IA0KPiBTdW1tYXJpemluZyBpdCBhIGJpdCwg
+dGhlIGNhbGwgcGF0aCBzaG91bGQgYmU6DQo+ICBfX2llZWU4MDIxMV9yeF9oYW5kbGVfcGFja2V0
+KCkNCj4gaWVlZTgwMjExX2ludm9rZV9yeF9oYW5kbGVycygpDQo+IGllZWU4MDIxMV9yeF9oX21n
+bXQoKQ0KPiAtLSB3b3JrIHF1ZXVlIC0tDQo+IGllZWU4MDIxMV9pZmFjZV93b3JrKCkNCj4gaWVl
+ZTgwMjExX3N0YV9yeF9xdWV1ZWRfbWdtdCgpDQo+IGllZWU4MDIxMV9yeF9ic3NfaW5mbygpIC0g
+cGF0Y2hlZCB0byBnZXQgY2hhbm5lbCBmcm9tIGRyaXZlcidzIHJ4X3N0YXR1cy4NCj4gQW5kIGZp
+bmFsbHkNCj4gaWVlZTgwMjExX2Jzc19pbmZvX3VwZGF0ZSgpDQo+IA0KPiBpcyB0aGlzIHJpZ2h0
+Pw0KPiANCj4gV2hhdCBpcyBzdXJwcmlzaW5nIGZvciBtZSBpcyB0aGF0DQo+ICBfX2llZWU4MDIx
+MV9yeF9oYW5kbGVfcGFja2V0KCkNCj4gY29udGFpbnMgYSBzaG9ydGVyIHBhdGggZm9yIHVwZGF0
+aW5nIEJTUyBpbmZvcm1hdGlvbiBieQ0KPiBpZWVlODAyMTFfc2Nhbl9yeCgpIHRoYXQgZGlyZWN0
+bHkgY2FsbHMNCj4gaWVlZTgwMjExX2Jzc19pbmZvX3VwZGF0ZSgpDQoNClllcyAtIHRoZSBmcmFt
+ZSBjb21lcyB0byB0aGUgYnNzIHVwZGF0ZSBmcm9tIDIgcGF0aHMgd2hlbiB3ZSBhcmUgc2Nhbm5p
+bmcuDQoNCj4gDQo+IFRoZSBpbnRlcmVzdGluZyB0aGluZyBpcyB0aGF0IGllZWU4MDIxMV9zY2Fu
+X3J4IHdhcyBhbHJlYWR5IHdyaXR0ZW4gaW4NCj4gdGhlIHdheSBFbW1hbnVlbCdzIHBhdGNoZWQg
+aWVlZTgwMjExX3J4X2Jzc19pbmZvKCk6IEl0IGdldCBjaGFubmVsDQo+IGluZm8gZnJvbSByeF9z
+dGF0dXMuDQo+IA0KPiBUaGlzIHN1Z2dlc3RzIHRoYXQgdGhlIGF0NzljNTB4LXVzYiBkcml2ZXIs
+IHByaW9yIHRvIEVtbWFudWVsJ3MNCj4gY29tbWl0LCB3YXMgYWJsZSB0byBzY2FuIGJ5IGdldHRp
+bmcgbWdtdCBmcmFtZXMgcHJvY2Vzc2VkIGJ5IHRoZQ0KPiBmb3JtZXIsIGxvbmdlciwgUlggcGF0
+aCwgYW5kIHRoYXQgdGhlIGllZWU4MDIxMV9zY2FuX3J4KCkgcGF0aCB3YXMNCj4gbmV2ZXIgcmVh
+bGx5IHVzZWQuDQoNClllcC4NCg0KPiANCj4gSWYgdGhpcyBpcyBjb3JyZWN0LCBteSBxdWVzdGlv
+biBpczoNCj4gSXNuJ3QgdGhpcyBhIHJlZHVuZGFudCBwYXRoIGR1cGxpY2F0aW9uIChwcm92aWRl
+ZCB0aGF0IGRyaXZlcnMNCj4gc3VwcGxpZXMgY2hhbm5lbCBpbmZvcm1hdGlvbik/DQoNClRoaXMg
+aGFzIGJlZW4gZGlzY3Vzc2VkIGluIHRoZSBtYWlsaW5nIGxpc3QgYWxyZWFkeSwgYnV0IHllcy4N
+Cg0KPiANCj4gVGhpcyBzZWVtcyB0byBiZSBjb25maXJtZWQgYnkgdGhlIGZhY3QgdGhhdCBpZiBJ
+IG1vZGlmeSBtYWM4MDIxMSB0bw0KPiBhdm9pZCBkaXNjYXJkaW5nIGZyYW1lIHdpdGhvdXQgY2hh
+bm5lbCBpbmZvcm1hdGlvbiAoYnkgcHV0dGluZyBhIHZhbGlkDQo+IGNoYW5uZWwgaW5mb3JtYXRp
+b24gZGlyZWN0bHkgaW4gbWFjODAyMTEganVzdCBiZWZvcmUgdGhlIGNoZWNrIGZvcg0KPiBOVUxM
+KSwgdGhlIHNjYW4gd29ya3MgYnkgZWl0aGVyIGRvaW5nIHRoaXMgaW4gaWVlZTgwMjExX3NjYW5f
+cngoKSBvcg0KPiBpbiBpZWVlODAyMTFfcnhfYnNzX2luZm8oKSAocmV2ZXJ0aW5nIEVtbWFudWVs
+IGNoYW5nZSBpbiBtbG1lLmMpLg0KDQpDYW4geW91IHRyeSB0aGlzOg0KDQpkaWZmIC0tZ2l0IGEv
+bmV0L21hYzgwMjExL21sbWUuYyBiL25ldC9tYWM4MDIxMS9tbG1lLmMNCmluZGV4IDNmYjA3ZTku
+LjlkMmYwZDAgMTAwNjQ0DQotLS0gYS9uZXQvbWFjODAyMTEvbWxtZS5jDQorKysgYi9uZXQvbWFj
+ODAyMTEvbWxtZS5jDQpAQCAtMjc5MSw4ICsyNzkxLDEzIEBAIHN0YXRpYyB2b2lkIGllZWU4MDIx
+MV9yeF9ic3NfaW5mbyhzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCiAgICAg
+ICAgc2RhdGFfYXNzZXJ0X2xvY2soc2RhdGEpOw0KIA0KICAgICAgICBjaGFubmVsID0gaWVlZTgw
+MjExX2dldF9jaGFubmVsKGxvY2FsLT5ody53aXBoeSwgcnhfc3RhdHVzLT5mcmVxKTsNCi0gICAg
+ICAgaWYgKCFjaGFubmVsKQ0KLSAgICAgICAgICAgICAgIHJldHVybjsNCisgICAgICAgaWYgKCFj
+aGFubmVsICYmIGVsZW1zLT5kc19wYXJhbXMpIHsNCisgICAgICAgICAgICAgICBpbnQgZnJlcSA9
+IGllZWU4MDIxMV9jaGFubmVsX3RvX2ZyZXF1ZW5jeShlbGVtcy0+ZHNfcGFyYW1zWzBdLA0KKyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJ4
+X3N0YXR1cy0+YmFuZCk7DQorICAgICAgICAgICAgICAgY2hhbm5lbCA9IGllZWU4MDIxMV9nZXRf
+Y2hhbm5lbChsb2NhbC0+aHcud2lwaHksIGZyZXEpOw0KKyAgICAgICAgICAgICAgIGlmICghY2hh
+bm5lbCB8fCBjaGFubmVsLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0RJU0FCTEVEKQ0KKyAgICAg
+ICAgICAgICAgICAgICAgICAgcmV0dXJuOw0KKyAgICAgICB9DQogDQogICAgICAgIGJzcyA9IGll
+ZWU4MDIxMV9ic3NfaW5mb191cGRhdGUobG9jYWwsIHJ4X3N0YXR1cywgbWdtdCwgbGVuLCBlbGVt
+cywNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjaGFubmVsKTsNCg0K
+PiANCj4gRmluYWxseSBteSBsYXRlc3QgcXVlc3Rpb24gaXM6DQo+IEVtbWFudWVsJ3MgcGF0Y2gg
+bWFrZXMgY2ZnODAyMTFfaW5mb3JtX2Jzc193aWR0aF9mcmFtZSgpIGNvbXBhcmUgdGhlDQo+IFJY
+IGNoYW5uZWwgYW5kIHRoZSBhY3R1YWwgQlNTIGNoYW5uZWwgKGtub3duIGZyb20gYmVhY29uL3By
+b2JlDQo+IHJlc3BvbnNlKSwgYW5kIGl0IGRvZXMgdGhpcyBieSBjb21wYXJpbmcgdGhlIHR3byBw
+b2ludGVycy4NCj4gDQo+IEFyZSB3ZSBndWFyYW50ZWVkIHRoYXQgb25seSBvbmUgaW5zdGFuY2Ug
+b2YgZXZlcnkgY2hhbm5lbCBvYmplY3QgZG9lcw0KPiBleGlzdHMgPyBpc24ndCBpdCBzYWZlciB0
+byBjb21wYXJlIHRoZSBmcmVxdWVuY3kgZmllbGQgdmFsdWU/DQoNCk5vIC0gdGhpcyBpcyBmaW5l
+LiBXZSBkbyB0aGF0IGFsbCBvdmVyIHRoZSBzdGFjay4NCg0KDQo=
