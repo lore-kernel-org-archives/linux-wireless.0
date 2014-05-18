@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30425 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756441AbaEPXEc convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:50455 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750743AbaERKSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 19:04:32 -0400
-From: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] cfg80211/mac80211: Add support for Proxy ARP
-Date: Fri, 16 May 2014 23:04:56 +0000
-Message-ID: <E3DE377D7E4999489B304A8FF33FC0D103A211C0@nasanexd01g.na.qualcomm.com> (sfid-20140517_010435_724114_C25F56E4)
-References: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com>
- <53751630.2030501@candelatech.com>
-In-Reply-To: <53751630.2030501@candelatech.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 18 May 2014 06:18:35 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i7so4985114oag.9
+        for <linux-wireless@vger.kernel.org>; Sun, 18 May 2014 03:18:34 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <537880A4.1040102@hauke-m.de>
+References: <1400365358-19604-1-git-send-email-zajec5@gmail.com>
+	<537880A4.1040102@hauke-m.de>
+Date: Sun, 18 May 2014 12:18:34 +0200
+Message-ID: <CACna6ryoHtc7tLNUwynJKP70VyqGtKk0PsMqw83cfDzsRnOg3A@mail.gmail.com> (sfid-20140518_121850_209060_DD1C56CD)
+Subject: Re: [PATCH] ssb: sprom: add dev_id field for value overriding
+ standard ID
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On 18 May 2014 11:43, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> There is also a vendid var which should be used. See this code from
+> brcmsmac:
+> http://lxr.free-electrons.com/source/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c?v=3.0#L660
 
-> > +#define STA_IPV4_HASH_SIZE 32
-> > +#define STA_IPV4_HASH(ipv4) (((u8 *)&ipv4)[3] & 0x1F)
-> 
-> This should be a better hash I think.  Use an existing hash
-> method or at least mix in the higher bits manually?
+You're right, but is this used anywhere?
 
-I assume that there is an existing IP address hash function
-somewhere in the TCP/IP stack. I have a hard time finding
-an externally available API that does this for me. Could you
-point me to it?
+I can't reliably follow brcmsmac code, it copies the same data over
+and over. Simple grepping for "vendorid" shows copying from "vendorid"
+to "vendorid" of various structs, no real usage.
+The one exception is "sha_params.vid = wlc_hw->vendorid;. However grepping with:
+grep -R "\.vid" ./*
+grep -R "\->vid" ./*
+doesn't reveal any usage neither.
 
-Thanks!
-
-Kyeyoon
+Seems like a dead code.
