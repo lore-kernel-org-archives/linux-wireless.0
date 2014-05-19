@@ -1,63 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47420 "EHLO sipsolutions.net"
+Received: from mx01-fr.bfs.de ([193.174.231.67]:51161 "EHLO mx01-fr.bfs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751039AbaEWIoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 04:44:34 -0400
-Message-ID: <1400834656.4358.1.camel@jlt4.sipsolutions.net> (sfid-20140523_104439_742749_6C5714D5)
-Subject: Re: [PATCH v6 4/6] mac80211: use chanctx reservation for AP CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Date: Fri, 23 May 2014 10:44:16 +0200
-In-Reply-To: <CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com> (sfid-20140523_084951_567483_00C06FBF)
-References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
-	 <1400767676-15994-5-git-send-email-michal.kazior@tieto.com>
-	 <1400770484.4174.35.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com>
-	 (sfid-20140523_084951_567483_00C06FBF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752955AbaESHnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 03:43:37 -0400
+Message-ID: <5379B61D.7070501@bfs.de> (sfid-20140519_094357_238414_F8EA7F92)
+Date: Mon, 19 May 2014 09:43:25 +0200
+From: walter harms <wharms@bfs.de>
+Reply-To: wharms@bfs.de
+MIME-Version: 1.0
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
+References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-23 at 08:49 +0200, Michal Kazior wrote:
 
-> > But you'll WARN_ON() if they're actually not at the same time and you
-> > grab a beacon (or for the template case, call csa_update) in the
-> > meantime, right? I'd really like to have all those driver requirements
-> > (e.g. to stop beaconing) better documented.
+
+Am 19.05.2014 06:31, schrieb Julia Lawall:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
 > 
-> Good point. I suppose it should be stated in the docs that once you
-> reach ieee80211_csa_is_complete() being true you must not call
-> ieee80211_beacon_get() nor ieee80211_csa_update_counter(). ath9k and
-> ath10k conform to this.
-
-Right, it's still a bit strange that you just have to stop beaconing.
-Dunno. I guess I don't care all that much since our driver won't support
-multiple AP interfaces anyway :-)
-
-> I wonder what driver should be supposed to look at before starting to
-> beacon again? csa_active isn't well protected to be depended upon. If
-> we should create a ieee80211_csa_is_active() that just checks if
-> beacon->csa_counter_offset[0] != 0 (assuming my other csa counter
-> patches are applied) then it's still racy:
->  a) rcu_dereference() across ieee80211_csa_is_active(), _is_complete()
-> and _beacon_get() can yield different beacon pointers
->  b) cs_count <= 1 yields no beacon update (thus no counters/offsets,
-> meaning both _csa_is_complete and _csa_is_active() are `false` thus
-> suggesting driver can beacon as if nothing happened)
+> Delete unnecessary local variable whose value is always 0 and that hides
+> the fact that the result is always 0.
 > 
-> We could fix (b) by simply not treating cs_count <= 1 so special and
-> update the beacon anyway. For (a) to work we'd need either make a
-> single-call do-all function or introduce an additional call and a
-> generic pointer/structure to be passed to other functions so that a
-> beacon pointer is consistent across calls.
+> A simplified version of the semantic patch that fixes this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @r exists@
+> local idexpression ret;
+> expression e;
+> position p;
+> @@
+> 
+> -ret = 0;
+> ... when != ret = e
+> return 
+> - ret
+> + 0
+>   ;
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> ---
+> Alternatively, was an error code intended in the bad length case, as is
+> done in process_brxed_802_11_packet?
+> 
+>  drivers/net/wireless/libertas/rx.c |    7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+> index c7366b0..807c5b8 100644
+> --- a/drivers/net/wireless/libertas/rx.c
+> +++ b/drivers/net/wireless/libertas/rx.c
+> @@ -55,7 +55,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+>   */
+>  int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+>  {
+> -	int ret = 0;
+>  	struct net_device *dev = priv->dev;
+>  	struct rxpackethdr *p_rx_pkt;
+>  	struct rxpd *p_rx_pd;
+> @@ -86,7 +85,6 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+>  	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
+>  		lbs_deb_rx("rx err: frame received with bad length\n");
+>  		dev->stats.rx_length_errors++;
+> -		ret = 0;
+>  		dev_kfree_skb(skb);
+>  		goto done;
+>  	}
+> @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+>  	else
+>  		netif_rx_ni(skb);
+>  
+> -	ret = 0;
+>  done:
+> -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+> -	return ret;
+> +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
+> +	return 0;
+>  }
 
-You could technically just return NULL in this period, but I don't know
-how well drivers would cope with that (though technically they have to
-cope with it due to memory allocation failures anyway)
+i guess lbs_deb_leave_args() is obsolet now.
 
-johannes
+re,
+ wh
 
 
+>  EXPORT_SYMBOL_GPL(lbs_process_rxed_packet);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
