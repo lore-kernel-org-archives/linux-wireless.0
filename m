@@ -1,147 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34880 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbaETWN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 18:13:29 -0400
-Date: Wed, 21 May 2014 00:13:19 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [3.16] NFC update
-Message-ID: <20140520221319.GA15540@zurbaran> (sfid-20140521_001333_589659_4ABDC64A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-we0-f170.google.com ([74.125.82.170]:54711 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932240AbaESTe1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 15:34:27 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so6088350wes.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:26 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/20] staging: vt6656: BBvCalculateParameter remove camel case
+Date: Mon, 19 May 2014 20:33:02 +0100
+Message-Id: <1400527992-3061-10-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213432_559349_BC9C75D9)
+In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Camel case changes
+pDevice, cbFrameLength, wRate, byPacketType, cbBitCount, cbUsCount
+cbTmp, bExtBit, byPreambleType
 
-This is the NFC pull request for 3.16. We have:
+->
 
-- STMicroeectronics st21nfca support. The st21nfca is an HCI chipset and
-  thus relies on the HCI stack. This submission provides support for tag
-  redaer/writer mode (including Type 5) and device tree bindings.
+priv, frame_length, tx_rate, pkt_type, bit_count, count,
+tmp,  ext_bit, preamble_type
 
-- PM runtime support and a bunch of bug fixes for TI's trf7970a.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 82 +++++++++++++++++++--------------------
+ drivers/staging/vt6656/baseband.h |  4 +-
+ 2 files changed, 43 insertions(+), 43 deletions(-)
 
-- Device tree support for NXP's pn544. Legacy platform data support is
-  obviously kept intact.
-
-- NFC Tag type 4B support to the NFC Digital stack.
-
-- SOCK_RAW type support to the raw NFC socket, and allow NCI
-  sniffing from that. This can be extended to report HCI frames and also
-  proprietarry ones like e.g. the pn533 ones.
-
-Thanks in advance for pulling those in.
-
-The following changes since commit 321d03c86732e45f5f33ad0db5b68e2e1364acb9:
-
-  Merge branch 'misc' of git://git.kernel.org/pub/scm/linux/kernel/git/mmarek/kbuild (2014-04-12 18:22:27 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git nfc-next-3.16-1
-
-for you to fetch changes up to 7974728094d35f38775417a26d8f30ea3602496a:
-
-  NFC: st21nfca: Add ISO15693 Reader/Writer support (2014-05-20 00:48:28 +0200)
-
-----------------------------------------------------------------
-Christophe Ricard (22):
-      NFC: ST21NFCA: Add driver for STMicroelectronics ST21NFCA NFC Chip
-      NFC: hci: Extend command execution delay
-      NFC: hci: Add load_session HCI operand
-      NFC: st21nfca: Implement load_session HCI hook
-      NFC: st21nfca: Fix sparse: cast to restricted __be16
-      NFC: hci: Fix sparse: cast to restricted __be16
-      NFC: st21nfca: Fix warning: array subscript is above array bounds
-      NFC: st21nfca: Remove sporadic wait_tab variable from functions.
-      NFC: st21nfca: Add __packed to struct st21nfca_pipe_info
-      NFC: st21nfca: st21nfca_hci_i2c_probe returns st21nfca_hci_probe result.
-      NFC: st21nfca: Reworked st21nfca_request_resources
-      NFC: st21nfca: Improve st21nfca initialization by handling reboot properly
-      NFC: st21nfca: Remove few useless include
-      NFC: st21nfca: Fix incorrect byte stuffing revocation
-      NFC: st21nfca: Fix st21nfca_hci_remove_len_crc tail room handling
-      NFC: st21nfca: Improved i2c Rx data correctness check
-      NFC: st21nfca: Synchronize i2c Tx and Rx path
-      NFC: st21nfca: Free buffer when a bad frame is detected
-      NFC: dts: st21nfca: Add device-tree (Open Firmware) support to st21nfca
-      NFC: dts: st21nfca_i2c: Add DTS Documentation
-      NFC: st21nfca: Improve load_session
-      NFC: st21nfca: Add ISO15693 Reader/Writer support
-
-Clement Perrochaud (3):
-      NFC: pn544: i2c: Add device-tree (Open Firmware) support to PN544
-      NFC: pn544: i2c: Add DTS Documentation
-      NFC: pn544_i2c: Fix null pointer exception when not using platform data
-
-Hiren Tandel (3):
-      NFC: NCI: No need to reverse ATR_RES Response
-      NFC: Add RAW socket type support for SOCKPROTO_RAW
-      NFC: NCI: Send all NCI frames to raw sockets
-
-Mark A. Greer (18):
-      NFC: trf7970a: Increase TRF7970A_WAIT_FOR_RX_DATA_TIMEOUT to 20 ms
-      NFC: trf7970a: Only abort a command if one is active
-      NFC: trf7970a: Clear 'NFC Target Detection Level' register
-      NFC: trf7970a: Reset FIFO when 'End of TX' Interrupt Occurs
-      NFC: trf7970a: Only write 'ISO Control' when its changing
-      NFC: trf7970a: Set 'Modulator and SYS_CLK Control' after 'ISO Control'
-      NFC: trf7970a: Allow different Modulator and SYS_CLK Control register values
-      NFC: trf7970a: Set correct Vin voltage in Chip Status Control register
-      NFC: trf7970a: Turn RF on after hardware is configured
-      NFC: trf7970a: Add pm_runtime support
-      NFC: trf7970a: Don't return value from trf7970a_switch_rf_on()
-      NFC: trf7970a: Add 'autosuspend-delay' DTS property
-      NFC: trf7970a: Document the 'autosuspend-delay' DTS property
-      NFC: digital: Add macros for the ISO/IEC 14443-B Protocol
-      NFC: digital: Add support for ISO/IEC 14443-B Protocol
-      NFC: trf7970a: Add support for the ISO/IEC 14443-B and Type 4B tags
-      NFC: digital: SENSF_RES excludes RD when SENSF_REQ RC is zero
-      NFC: digital: Handle multiple SENSF_REQ frames
-
- .../devicetree/bindings/net/nfc/pn544.txt          |  35 +
- .../devicetree/bindings/net/nfc/st21nfca.txt       |  33 +
- .../devicetree/bindings/net/nfc/trf7970a.txt       |   2 +
- drivers/nfc/Kconfig                                |   1 +
- drivers/nfc/Makefile                               |   1 +
- drivers/nfc/pn544/i2c.c                            | 154 ++++-
- drivers/nfc/st21nfca/Kconfig                       |  23 +
- drivers/nfc/st21nfca/Makefile                      |   8 +
- drivers/nfc/st21nfca/i2c.c                         | 724 +++++++++++++++++++++
- drivers/nfc/st21nfca/st21nfca.c                    | 698 ++++++++++++++++++++
- drivers/nfc/st21nfca/st21nfca.h                    |  87 +++
- drivers/nfc/trf7970a.c                             | 252 +++++--
- include/linux/platform_data/st21nfca.h             |  32 +
- include/net/nfc/digital.h                          |   4 +
- include/net/nfc/hci.h                              |   1 +
- include/net/nfc/nfc.h                              |   3 +
- include/uapi/linux/nfc.h                           |  16 +-
- net/nfc/digital.h                                  |   1 +
- net/nfc/digital_core.c                             |  20 +-
- net/nfc/digital_technology.c                       | 230 ++++++-
- net/nfc/hci/command.c                              |   6 +-
- net/nfc/hci/core.c                                 |  47 +-
- net/nfc/llcp_commands.c                            |   2 +-
- net/nfc/llcp_core.c                                |  11 +-
- net/nfc/nci/core.c                                 |   9 +
- net/nfc/nci/ntf.c                                  |   7 +-
- net/nfc/nfc.h                                      |   6 +
- net/nfc/rawsock.c                                  |  94 ++-
- 28 files changed, 2368 insertions(+), 139 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/pn544.txt
- create mode 100644 Documentation/devicetree/bindings/net/nfc/st21nfca.txt
- create mode 100644 drivers/nfc/st21nfca/Kconfig
- create mode 100644 drivers/nfc/st21nfca/Makefile
- create mode 100644 drivers/nfc/st21nfca/i2c.c
- create mode 100644 drivers/nfc/st21nfca/st21nfca.c
- create mode 100644 drivers/nfc/st21nfca/st21nfca.h
- create mode 100644 include/linux/platform_data/st21nfca.h
-
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 9f435c5..0bdc814 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -710,9 +710,9 @@ unsigned int BBuGetFrameTime(u8 preamble_type, u8 pkt_type,
+  *
+  * Parameters:
+  *  In:
+- *      pDevice         - Device Structure
+- *      cbFrameLength   - Tx Frame Length
+- *      wRate           - Tx Rate
++ *      priv         - Device Structure
++ *      frame_length   - Tx Frame Length
++ *      tx_rate           - Tx Rate
+  *  Out:
+  *	struct vnt_phy_field *phy
+  * 			- pointer to Phy Length field
+@@ -722,135 +722,135 @@ unsigned int BBuGetFrameTime(u8 preamble_type, u8 pkt_type,
+  * Return Value: none
+  *
+  */
+-void BBvCalculateParameter(struct vnt_private *pDevice, u32 cbFrameLength,
+-	u16 wRate, u8 byPacketType, struct vnt_phy_field *phy)
++void BBvCalculateParameter(struct vnt_private *priv, u32 frame_length,
++	u16 tx_rate, u8 pkt_type, struct vnt_phy_field *phy)
+ {
+-	u32 cbBitCount;
+-	u32 cbUsCount = 0;
+-	u32 cbTmp;
+-	int bExtBit;
+-	u8 byPreambleType = pDevice->byPreambleType;
++	u32 bit_count;
++	u32 count = 0;
++	u32 tmp;
++	int ext_bit;
++	u8 preamble_type = priv->byPreambleType;
+ 
+-	cbBitCount = cbFrameLength * 8;
+-	bExtBit = false;
++	bit_count = frame_length * 8;
++	ext_bit = false;
+ 
+-	switch (wRate) {
++	switch (tx_rate) {
+ 	case RATE_1M:
+-		cbUsCount = cbBitCount;
++		count = bit_count;
+ 
+ 		phy->signal = 0x00;
+ 
+ 		break;
+ 	case RATE_2M:
+-		cbUsCount = cbBitCount / 2;
++		count = bit_count / 2;
+ 
+-		if (byPreambleType == 1)
++		if (preamble_type == 1)
+ 			phy->signal = 0x09;
+ 		else
+ 			phy->signal = 0x01;
+ 
+ 		break;
+ 	case RATE_5M:
+-		cbUsCount = (cbBitCount * 10) / 55;
+-		cbTmp = (cbUsCount * 55) / 10;
++		count = (bit_count * 10) / 55;
++		tmp = (count * 55) / 10;
+ 
+-		if (cbTmp != cbBitCount)
+-			cbUsCount++;
++		if (tmp != bit_count)
++			count++;
+ 
+-		if (byPreambleType == 1)
++		if (preamble_type == 1)
+ 			phy->signal = 0x0a;
+ 		else
+ 			phy->signal = 0x02;
+ 
+ 		break;
+ 	case RATE_11M:
+-		cbUsCount = cbBitCount / 11;
+-		cbTmp = cbUsCount * 11;
++		count = bit_count / 11;
++		tmp = count * 11;
+ 
+-		if (cbTmp != cbBitCount) {
+-			cbUsCount++;
++		if (tmp != bit_count) {
++			count++;
+ 
+-			if ((cbBitCount - cbTmp) <= 3)
+-				bExtBit = true;
++			if ((bit_count - tmp) <= 3)
++				ext_bit = true;
+ 		}
+ 
+-		if (byPreambleType == 1)
++		if (preamble_type == 1)
+ 			phy->signal = 0x0b;
+ 		else
+ 			phy->signal = 0x03;
+ 
+ 		break;
+ 	case RATE_6M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9b;
+ 		else
+ 			phy->signal = 0x8b;
+ 
+ 		break;
+ 	case RATE_9M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9f;
+ 		else
+ 			phy->signal = 0x8f;
+ 
+ 		break;
+ 	case RATE_12M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9a;
+ 		else
+ 			phy->signal = 0x8a;
+ 
+ 		break;
+ 	case RATE_18M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9e;
+ 		else
+ 			phy->signal = 0x8e;
+ 
+ 		break;
+ 	case RATE_24M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x99;
+ 		else
+ 			phy->signal = 0x89;
+ 
+ 		break;
+ 	case RATE_36M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9d;
+ 		else
+ 			phy->signal = 0x8d;
+ 
+ 		break;
+ 	case RATE_48M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x98;
+ 		else
+ 			phy->signal = 0x88;
+ 
+ 		break;
+ 	case RATE_54M:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9c;
+ 		else
+ 			phy->signal = 0x8c;
+ 		break;
+ 	default:
+-		if (byPacketType == PK_TYPE_11A)
++		if (pkt_type == PK_TYPE_11A)
+ 			phy->signal = 0x9c;
+ 		else
+ 			phy->signal = 0x8c;
+ 		break;
+ 	}
+ 
+-	if (byPacketType == PK_TYPE_11B) {
++	if (pkt_type == PK_TYPE_11B) {
+ 		phy->service = 0x00;
+-		if (bExtBit)
++		if (ext_bit)
+ 			phy->service |= 0x80;
+-		phy->len = cpu_to_le16((u16)cbUsCount);
++		phy->len = cpu_to_le16((u16)count);
+ 	} else {
+ 		phy->service = 0x00;
+-		phy->len = cpu_to_le16((u16)cbFrameLength);
++		phy->len = cpu_to_le16((u16)frame_length);
+ 	}
+ }
+ 
+diff --git a/drivers/staging/vt6656/baseband.h b/drivers/staging/vt6656/baseband.h
+index da5520c..005b94c 100644
+--- a/drivers/staging/vt6656/baseband.h
++++ b/drivers/staging/vt6656/baseband.h
+@@ -91,8 +91,8 @@ struct vnt_phy_field {
+ unsigned int BBuGetFrameTime(u8 preamble_type, u8 pkt_type,
+ 	unsigned int frame_length, u16 tx_rate);
+ 
+-void BBvCalculateParameter(struct vnt_private *, u32 cbFrameLength,
+-	u16 wRate, u8 byPacketType, struct vnt_phy_field *);
++void BBvCalculateParameter(struct vnt_private *, u32 frame_length,
++	u16 tx_rate, u8 pkt_type, struct vnt_phy_field *);
+ 
+ /* timer for antenna diversity */
+ 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.9.1
+
