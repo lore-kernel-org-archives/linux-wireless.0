@@ -1,69 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34592 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752415AbaE0P6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 11:58:13 -0400
-Message-ID: <1401206274.8146.8.camel@jlt4.sipsolutions.net> (sfid-20140527_175817_457981_2344D16E)
-Subject: Re: [PATCH V2] regdb: Generalize the mW to dBm power conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: chaitanya.mgit@gmail.com
-Cc: linville@tuxdriver.com, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-Date: Tue, 27 May 2014 17:57:54 +0200
-In-Reply-To: <1401107504-11385-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140526_143219_846087_559DD3B4)
-References: <1401107504-11385-1-git-send-email-chaitanya.mgit@gmail.com>
-	 (sfid-20140526_143219_846087_559DD3B4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.neomailbox.net ([178.209.62.157]:7479 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932616AbaESTye (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 15:54:34 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv4 3/3] cfg80211: implement cfg80211_get_station cfg80211 API
+Date: Mon, 19 May 2014 21:53:21 +0200
+Message-Id: <1400529201-31500-4-git-send-email-antonio@meshcoding.com> (sfid-20140519_215439_873016_4ADF9676)
+In-Reply-To: <1400529201-31500-1-git-send-email-antonio@meshcoding.com>
+References: <1400529201-31500-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-05-26 at 18:01 +0530, chaitanya.mgit@gmail.com wrote:
-> Generalize the power conversion from mW to dBm 
-> using log. This should fix the below compilation
-> error for country NO which adds a new power value
-> 2000mW which is not handled earlier.
-> 
->  CC [M]  net/wireless/wext-sme.o
->  CC [M]  net/wireless/regdb.o
-> net/wireless/regdb.c:1130:1: error: Unknown undeclared here (not in
-> a function)
-> net/wireless/regdb.c:1130:9: error: expected } before power
-> make[2]: *** [net/wireless/regdb.o] Error 1
-> make[1]: *** [net/wireless] Error 2
-> make: *** [net] Error 2
-> 
-> Reported-By:  John Walker <john@x109.net>
-> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> 
-> ---
->  net/wireless/genregdb.awk |   12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-> index 4119833..949ee38 100644
-> --- a/net/wireless/genregdb.awk
-> +++ b/net/wireless/genregdb.awk
-> @@ -68,17 +68,7 @@ function parse_reg_rule()
->  	sub(/,/, "", units)
->  	dfs_cac = $9
->  	if (units == "mW") {
-> -		if (power == 100) {
-> -			power = 20
-> -		} else if (power == 200) {
-> -			power = 23
-> -		} else if (power == 500) {
-> -			power = 27
-> -		} else if (power == 1000) {
-> -			power = 30
-> -		} else {
-> -			print "Unknown power value in database!"
-> -		}
-> +		power = 10 * (log(power)/log(10))
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-This patch is wrong :-)
-Bonus points for those who can figure it out without looking at the one
-I'm committing ;-)
+Implement and export the new cfg80211_get_station() API.
+This utility can be used by other kernel modules to obtain
+detailed information about a given wireless station.
 
-johannes
+It will be in particular useful to batman-adv which will
+implement a wireless rate based metric.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ include/net/cfg80211.h  | 13 +++++++++++++
+ net/wireless/rdev-ops.h |  2 +-
+ net/wireless/util.c     | 18 ++++++++++++++++++
+ 3 files changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 857d647..a75fabd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1075,6 +1075,19 @@ struct station_info {
+ };
+ 
+ /**
++ * cfg80211_get_station - retrieve information about a given station
++ * @dev: the device where the station is supposed to be connected to
++ * @mac_addr: the mac address of the station of interest
++ * @sinfo: pointer to the structure to fill with the information
++ *
++ * Returns 0 on success and sinfo is filled with the available information
++ * otherwise returns a negative error code and the content of sinfo has to be
++ * considered undefined.
++ */
++int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
++			 struct station_info *sinfo);
++
++/**
+  * enum monitor_flags - monitor flags
+  *
+  * Monitor interface configuration flags. Note that these must be the bits
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 00cdf73..d95bbe3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -199,7 +199,7 @@ static inline int rdev_change_station(struct cfg80211_registered_device *rdev,
+ }
+ 
+ static inline int rdev_get_station(struct cfg80211_registered_device *rdev,
+-				   struct net_device *dev, u8 *mac,
++				   struct net_device *dev, const u8 *mac,
+ 				   struct station_info *sinfo)
+ {
+ 	int ret;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index fa61ac9..728f1c0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1546,6 +1546,24 @@ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy)
+ }
+ EXPORT_SYMBOL(ieee80211_get_num_supported_channels);
+ 
++int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
++			 struct station_info *sinfo)
++{
++	struct cfg80211_registered_device *rdev;
++	struct wireless_dev *wdev;
++
++	wdev = dev->ieee80211_ptr;
++	if (!wdev)
++		return -EOPNOTSUPP;
++
++	rdev = wiphy_to_rdev(wdev->wiphy);
++	if (!rdev->ops->get_station)
++		return -EOPNOTSUPP;
++
++	return rdev_get_station(rdev, dev, mac_addr, sinfo);
++}
++EXPORT_SYMBOL(cfg80211_get_station);
++
+ /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
+ /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
+ const unsigned char rfc1042_header[] __aligned(2) =
+-- 
+1.8.5.5
 
