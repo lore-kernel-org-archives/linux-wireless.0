@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64483 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaEVHYG (ORCPT
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:43533 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333AbaESOO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 03:24:06 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so3093204wes.29
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:03 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/11] iwlwifi: mvm: update power after phy_ctxt is NULL when unassigning chanctx
-Date: Thu, 22 May 2014 10:23:45 +0300
-Message-Id: <1400743435-702-1-git-send-email-egrumbach@gmail.com> (sfid-20140522_092725_536928_296F8E97)
-In-Reply-To: <537DA58C.5050003@gmail.com>
-References: <537DA58C.5050003@gmail.com>
+	Mon, 19 May 2014 10:14:58 -0400
+Received: by mail-qg0-f52.google.com with SMTP id a108so8790151qge.39
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 07:14:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140519131832.GA6198@localhost>
+References: <CAGnRvurDvRqeNZYHZQG63=6FQv2XnFOR+J9K4-Dk=F77c6SdKQ@mail.gmail.com>
+ <20140519131832.GA6198@localhost>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Mon, 19 May 2014 16:14:36 +0200
+Message-ID: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com> (sfid-20140519_161501_707481_64EAE420)
+Subject: Re: 802.11s mode without HWMP
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Mon, May 19, 2014 at 3:18 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Mon, May 19, 2014 at 11:00:53AM +0200, Henning Rogge wrote:
+>> Is there an easy way to stop HWMP in the 802.11s implementation?
+>
+> If I understand your use case, you want to basically remove the
+> resolving part of mesh_nexthop_resolve()?  I don't believe the
+> current implementation has a way to turn that off.  In principle,
+> you can specify a vendor-specific path selection protocol when
+> joining, but glancing at the existing code, we don't really do
+> anything with that field except use it for peering fitness checks.
 
-iwl_mvm_power_update_mac() (more specifically
-iwl_mvm_power_iterator()) relies on the phy_ctxt setting to decide
-whether the vif is active or not.  When unassigning a chanctx, we
-should therefore call iwl_mvm_power_update_mac() after setting
-phy_chanctx to NULL.
+I have an IP router connected via ethernet to a radio with a single
+wifi card, using the wifi card as a bridged radio. Its a great way to
+build routers with lots of Wifi links because you can mount the
+wifi-cards itself on the antenna and keep the router in a central
+place.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't want to use layer-2 forwarding in the mesh because this
+increases the broad-/multicast domain size and spams the available
+frequencies even more.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 22a445f..1c932e9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2299,10 +2299,10 @@ static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	}
- 
- 	iwl_mvm_binding_remove_vif(mvm, vif);
--	iwl_mvm_power_update_mac(mvm, vif);
- 
- out_unlock:
- 	mvmvif->phy_ctxt = NULL;
-+	iwl_mvm_power_update_mac(mvm, vif);
- 	mutex_unlock(&mvm->mutex);
- }
- 
--- 
-1.8.3.2
+> If all you want to do is force the paths, you can do so with the
+> NL80211_CMD_SET_MESH_PATH API; such paths would override any selected
+> by HWMP.  But you'd still generate PREQ/PREPs and get multihop
+> communication in that case, it just wouldn't be subject to the
+> airtime link metric.
+>
+> Perhaps we should skip resolve in case ifmsh->mesh_pp_id != 1
+> and assume paths are somehow set up out of band or something?
 
+I want to force 802.11s only to connect to other stations one layer-2
+hop away. So no forwarding by intermediate stations.
+
+Does the "mesh_fwding" parameter maybe help? Or can I set a "TTL" for
+the PREQ messages to 1?
+
+Henning Rogge
