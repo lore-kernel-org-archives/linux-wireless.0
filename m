@@ -1,184 +1,973 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:51549 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbaETKh0 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:58712 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbaESTeL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 06:37:26 -0400
-Received: by mail-wi0-f179.google.com with SMTP id bs8so666438wib.12
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 03:37:24 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] iwlwifi: mvm: don't filter out the first beacon
-Date: Tue, 20 May 2014 13:37:18 +0300
-Message-Id: <1400582238-18601-1-git-send-email-egrumbach@gmail.com> (sfid-20140520_123729_514530_4981B18D)
-In-Reply-To: <537B2FF7.5070908@gmail.com>
-References: <537B2FF7.5070908@gmail.com>
+	Mon, 19 May 2014 15:34:11 -0400
+Received: by mail-wi0-f175.google.com with SMTP id f8so4747965wiw.2
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/20] staging: vt6656: Remove dead code hostap.
+Date: Mon, 19 May 2014 20:32:53 +0100
+Message-Id: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213417_148092_8DE4BFE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+It is based on viawget, proprietary version of wpa supplicant.
 
-Enabling beacon filtering should be done only after a beacon
-has been received. Doing that too early will cause
-disconnections.
-This has already been fixed, but the fix didn't take care
-about the case where the beacon is received after the
-association, it waited only for association which is not
-enough.
+The code is not compatible with the current version of hostapd.
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+It may be possible to implement when the driver is fully converted
+to mac80211.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 13 +++---
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  5 ---
- drivers/net/wireless/iwlwifi/mvm/power.c    | 63 +++++++++--------------------
- 3 files changed, 27 insertions(+), 54 deletions(-)
+ drivers/staging/vt6656/Makefile   |   1 -
+ drivers/staging/vt6656/dpc.c      |   1 -
+ drivers/staging/vt6656/hostap.c   | 781 --------------------------------------
+ drivers/staging/vt6656/hostap.h   |  58 ---
+ drivers/staging/vt6656/iwctl.c    |   1 -
+ drivers/staging/vt6656/main_usb.c |  12 -
+ drivers/staging/vt6656/rxtx.c     |   1 -
+ 7 files changed, 855 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/hostap.c
+ delete mode 100644 drivers/staging/vt6656/hostap.h
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index b41dc84..712d460 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1350,9 +1350,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		IWL_DEBUG_MAC80211(mvm, "cqm info_changed");
- 		/* reset cqm events tracking */
- 		mvmvif->bf_data.last_cqm_event = 0;
--		ret = iwl_mvm_update_beacon_filter(mvm, vif, false, CMD_SYNC);
--		if (ret)
--			IWL_ERR(mvm, "failed to update CQM thresholds\n");
-+		if (mvmvif->bf_data.bf_enabled) {
-+			ret = iwl_mvm_enable_beacon_filter(mvm, vif, CMD_SYNC);
-+			if (ret)
-+				IWL_ERR(mvm,
-+					"failed to update CQM thresholds\n");
-+		}
- 	}
- 
- 	if (changes & BSS_CHANGED_ARP_FILTER) {
-@@ -1708,9 +1711,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
- 		/* enable beacon filtering */
--		if (vif->bss_conf.dtim_period)
--			WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif,
--							     CMD_SYNC));
-+		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, CMD_SYNC));
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
- 		   new_state == IEEE80211_STA_ASSOC) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index f1ec098..f8c376a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -971,11 +971,6 @@ int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 				  u32 flags);
- int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
- 				struct ieee80211_vif *vif, bool enable);
--int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 bool force,
--				 u32 flags);
+diff --git a/drivers/staging/vt6656/Makefile b/drivers/staging/vt6656/Makefile
+index 1d829b4..47b6075 100644
+--- a/drivers/staging/vt6656/Makefile
++++ b/drivers/staging/vt6656/Makefile
+@@ -19,7 +19,6 @@ vt6656_stage-y +=	main_usb.o \
+ 			rc4.o \
+ 			tether.o \
+ 			tcrc.o \
+-			hostap.o \
+ 			wpa.o \
+ 			key.o \
+ 			tkip.o \
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index 156399d..2596fce 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -50,7 +50,6 @@
+ #include "tkip.h"
+ #include "tcrc.h"
+ #include "wctl.h"
+-#include "hostap.h"
+ #include "rf.h"
+ #include "iowpa.h"
+ #include "aes_ccmp.h"
+diff --git a/drivers/staging/vt6656/hostap.c b/drivers/staging/vt6656/hostap.c
+deleted file mode 100644
+index 2a5b7c8..0000000
+--- a/drivers/staging/vt6656/hostap.c
++++ /dev/null
+@@ -1,781 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: hostap.c
+- *
+- * Purpose: handle hostap daemon ioctl input/out functions
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: Oct. 20, 2003
+- *
+- * Functions:
+- *
+- * Revision History:
+- *
+- */
 -
- /* SMPS */
- void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				enum iwl_mvm_smps_type_request req_type,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 6b636ea..3634237 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -123,28 +123,6 @@ void iwl_mvm_beacon_filter_set_cqm_params(struct iwl_mvm *mvm,
- 	cmd->ba_enable_beacon_abort = cpu_to_le32(mvmvif->bf_data.ba_enabled);
- }
- 
--int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
--				struct ieee80211_vif *vif, bool enable)
+-#include "hostap.h"
+-#include "iocmd.h"
+-#include "mac.h"
+-#include "card.h"
+-#include "baseband.h"
+-#include "wpactl.h"
+-#include "key.h"
+-#include "datarate.h"
+-
+-#define VIAWGET_HOSTAPD_MAX_BUF_SIZE 1024
+-#define HOSTAP_CRYPT_FLAG_SET_TX_KEY BIT0
+-#define HOSTAP_CRYPT_ERR_UNKNOWN_ADDR 3
+-#define HOSTAP_CRYPT_ERR_KEY_SET_FAILED 5
+-
+-static int          msglevel                =MSG_LEVEL_INFO;
+-
+-/*
+- * Description:
+- *      register net_device (AP) for hostap daemon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_enable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
 -{
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_beacon_filter_cmd cmd = {
--		IWL_BF_CMD_CONFIG_DEFAULTS,
--		.bf_enable_beacon_filter = cpu_to_le32(1),
--		.ba_enable_beacon_abort = cpu_to_le32(enable),
+-	struct vnt_private *apdev_priv;
+-	struct net_device *dev = pDevice->dev;
+-	int ret;
+-	const struct net_device_ops apdev_netdev_ops = {
+-		.ndo_start_xmit = pDevice->tx_80211,
 -	};
 -
--	if (!mvmvif->bf_data.bf_enabled)
--		return 0;
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: Enabling hostapd mode\n", dev->name);
 -
--	if (mvm->cur_ucode == IWL_UCODE_WOWLAN)
--		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
+-	pDevice->apdev = kzalloc(sizeof(struct net_device), GFP_KERNEL);
+-	if (pDevice->apdev == NULL)
+-		return -ENOMEM;
 -
--	mvmvif->bf_data.ba_enabled = enable;
--	iwl_mvm_beacon_filter_set_cqm_params(mvm, vif, &cmd);
--	iwl_mvm_beacon_filter_debugfs_parameters(vif, &cmd);
--	return iwl_mvm_beacon_filter_send_cmd(mvm, &cmd, CMD_SYNC);
--}
+-    apdev_priv = netdev_priv(pDevice->apdev);
+-    *apdev_priv = *pDevice;
+-	memcpy(pDevice->apdev->dev_addr, dev->dev_addr, ETH_ALEN);
 -
- static void iwl_mvm_power_log(struct iwl_mvm *mvm,
- 			      struct iwl_mac_power_cmd *cmd)
- {
-@@ -790,7 +768,7 @@ static int _iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int ret;
- 
--	if (mvmvif != mvm->bf_allowed_vif ||
-+	if (mvmvif != mvm->bf_allowed_vif || !vif->bss_conf.dtim_period ||
- 	    vif->type != NL80211_IFTYPE_STATION || vif->p2p)
- 		return 0;
- 
-@@ -818,6 +796,25 @@ int iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, flags, false);
- }
- 
-+int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
-+				struct ieee80211_vif *vif, bool enable)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_beacon_filter_cmd cmd = {
-+		IWL_BF_CMD_CONFIG_DEFAULTS,
-+		.bf_enable_beacon_filter = cpu_to_le32(1),
-+	};
-+
-+	if (!mvmvif->bf_data.bf_enabled)
-+		return 0;
-+
-+	if (mvm->cur_ucode == IWL_UCODE_WOWLAN)
-+		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
-+
-+	mvmvif->bf_data.ba_enabled = enable;
-+	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, 0, false);
-+}
-+
- int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 				  struct ieee80211_vif *vif,
- 				  u32 flags)
-@@ -895,26 +892,6 @@ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
- 	return ret;
- }
- 
--int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 bool force,
--				 u32 flags)
--{
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	pDevice->apdev->netdev_ops = &apdev_netdev_ops;
 -
--	if (mvmvif != mvm->bf_allowed_vif)
--		return 0;
+-	pDevice->apdev->type = ARPHRD_IEEE80211;
 -
--	if (!mvmvif->bf_data.bf_enabled) {
--		/* disable beacon filtering explicitly if force is true */
--		if (force)
--			return iwl_mvm_disable_beacon_filter(mvm, vif, flags);
--		return 0;
+-	pDevice->apdev->base_addr = dev->base_addr;
+-	pDevice->apdev->irq = dev->irq;
+-	pDevice->apdev->mem_start = dev->mem_start;
+-	pDevice->apdev->mem_end = dev->mem_end;
+-	sprintf(pDevice->apdev->name, "%sap", dev->name);
+-	if (rtnl_locked)
+-		ret = register_netdevice(pDevice->apdev);
+-	else
+-		ret = register_netdev(pDevice->apdev);
+-	if (ret) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: register_netdevice(AP) failed!\n",
+-		       dev->name);
+-		return -1;
 -	}
 -
--	return iwl_mvm_enable_beacon_filter(mvm, vif, flags);
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: Registered netdevice %s for AP management\n",
+-	       dev->name, pDevice->apdev->name);
+-
+-    KeyvInitTable(pDevice,&pDevice->sKey);
+-
+-	return 0;
 -}
 -
- int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm)
+-/*
+- * Description:
+- *      unregister net_device(AP)
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_disable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
+-{
+-
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: disabling hostapd mode\n", pDevice->dev->name);
+-
+-    if (pDevice->apdev && pDevice->apdev->name && pDevice->apdev->name[0]) {
+-		if (rtnl_locked)
+-			unregister_netdevice(pDevice->apdev);
+-		else
+-			unregister_netdev(pDevice->apdev);
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: Netdevice %s unregistered\n",
+-		       pDevice->dev->name, pDevice->apdev->name);
+-	}
+-	if (pDevice->apdev)
+-		free_netdev(pDevice->apdev);
+-	pDevice->apdev = NULL;
+-    pDevice->bEnable8021x = false;
+-    pDevice->bEnableHostWEP = false;
+-    pDevice->bEncryptionEnable = false;
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      Set enable/disable hostapd mode
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-int vt6656_hostap_set_hostapd(struct vnt_private *pDevice,
+-	int val, int rtnl_locked)
+-{
+-	if (val < 0 || val > 1)
+-		return -EINVAL;
+-
+-	if (pDevice->bEnableHostapd == val)
+-		return 0;
+-
+-	pDevice->bEnableHostapd = val;
+-
+-	if (val)
+-		return hostap_enable_hostapd(pDevice, rtnl_locked);
+-	else
+-		return hostap_disable_hostapd(pDevice, rtnl_locked);
+-}
+-
+-/*
+- * Description:
+- *      remove station function supported for hostap daemon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_remove_sta(struct vnt_private *pDevice,
+-	struct viawget_hostapd_param *param)
+-{
+-	unsigned int uNodeIndex;
+-
+-    if (BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &uNodeIndex)) {
+-        BSSvRemoveOneNode(pDevice, uNodeIndex);
+-    }
+-    else {
+-        return -ENOENT;
+-    }
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      add a station from hostap daemon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_add_sta(struct vnt_private *pDevice,
+-	struct viawget_hostapd_param *param)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	unsigned int uNodeIndex;
+-
+-	if (!BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &uNodeIndex))
+-		BSSvCreateOneNode(pDevice, &uNodeIndex);
+-
+-    memcpy(pMgmt->sNodeDBTable[uNodeIndex].abyMACAddr, param->sta_addr, WLAN_ADDR_LEN);
+-    pMgmt->sNodeDBTable[uNodeIndex].eNodeState = NODE_ASSOC;
+-    pMgmt->sNodeDBTable[uNodeIndex].wCapInfo = param->u.add_sta.capability;
+-// TODO listenInterval
+-//    pMgmt->sNodeDBTable[uNodeIndex].wListenInterval = 1;
+-    pMgmt->sNodeDBTable[uNodeIndex].bPSEnable = false;
+-    pMgmt->sNodeDBTable[uNodeIndex].bySuppRate = param->u.add_sta.tx_supp_rates;
+-
+-    // set max tx rate
+-    pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
+-           pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
+-    // set max basic rate
+-    pMgmt->sNodeDBTable[uNodeIndex].wMaxBasicRate = RATE_2M;
+-    // Todo: check sta preamble, if ap can't support, set status code
+-    pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
+-            WLAN_GET_CAP_INFO_SHORTPREAMBLE(pMgmt->sNodeDBTable[uNodeIndex].wCapInfo);
+-
+-    pMgmt->sNodeDBTable[uNodeIndex].wAID = (u16)param->u.add_sta.aid;
+-
+-    pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer = jiffies;
+-
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Add STA AID= %d \n", pMgmt->sNodeDBTable[uNodeIndex].wAID);
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "MAC=%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X \n",
+-               param->sta_addr[0],
+-               param->sta_addr[1],
+-               param->sta_addr[2],
+-               param->sta_addr[3],
+-               param->sta_addr[4],
+-               param->sta_addr[5]
+-              ) ;
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Max Support rate = %d \n",
+-               pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate);
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      get station info
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_get_info_sta(struct vnt_private *pDevice,
+-	struct viawget_hostapd_param *param)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	unsigned int uNodeIndex;
+-
+-    if (BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &uNodeIndex)) {
+-	    param->u.get_info_sta.inactive_sec =
+-	        (jiffies - pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer) / HZ;
+-
+-	    //param->u.get_info_sta.txexc = pMgmt->sNodeDBTable[uNodeIndex].uTxAttempts;
+-	}
+-	else {
+-	    return -ENOENT;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      set station flag
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_flags_sta(struct vnt_private *pDevice,
+-		struct viawget_hostapd_param *param)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	unsigned int uNodeIndex;
+-
+-    if (BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &uNodeIndex)) {
+-		pMgmt->sNodeDBTable[uNodeIndex].dwFlags |= param->u.set_flags_sta.flags_or;
+-		pMgmt->sNodeDBTable[uNodeIndex].dwFlags &= param->u.set_flags_sta.flags_and;
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " dwFlags = %x\n",
+-			(unsigned int) pMgmt->sNodeDBTable[uNodeIndex].dwFlags);
+-	}
+-	else {
+-	    return -ENOENT;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      set generic element (wpa ie)
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_generic_element(struct vnt_private *pDevice,
+-					struct viawget_hostapd_param *param)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-
+-    memcpy( pMgmt->abyWPAIE,
+-            param->u.generic_elem.data,
+-            param->u.generic_elem.len
+-           );
+-
+-    pMgmt->wWPAIELen = 	param->u.generic_elem.len;
+-
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"pMgmt->wWPAIELen = %d\n",  pMgmt->wWPAIELen);
+-
+-    // disable wpa
+-    if (pMgmt->wWPAIELen == 0) {
+-        pMgmt->eAuthenMode = WMAC_AUTH_OPEN;
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " No WPAIE, Disable WPA \n");
+-    } else  {
+-        // enable wpa
+-        if ((pMgmt->abyWPAIE[0] == WLAN_EID_RSN_WPA) ||
+-             (pMgmt->abyWPAIE[0] == WLAN_EID_RSN)) {
+-              pMgmt->eAuthenMode = WMAC_AUTH_WPANONE;
+-               DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Set WPAIE enable WPA\n");
+-        } else
+-            return -EINVAL;
+-    }
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      flush station nodes table.
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static void hostap_flush_sta(struct vnt_private *pDevice)
+-{
+-    // reserved node index =0 for multicast node.
+-    BSSvClearNodeDBTable(pDevice, 1);
+-    pDevice->uAssocCount = 0;
+-
+-    return;
+-}
+-
+-/*
+- * Description:
+- *      set each stations encryption key
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_encryption(struct vnt_private *pDevice,
+-	struct viawget_hostapd_param *param, int param_len)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	u32 dwKeyIndex = 0;
+-	u8 abyKey[MAX_KEY_LEN];
+-	u8 abySeq[MAX_KEY_LEN];
+-	NDIS_802_11_KEY_RSC   KeyRSC;
+-	u8 byKeyDecMode = KEY_CTL_WEP;
+-	int ret = 0;
+-	s32 iNodeIndex = -1;
+-	int ii;
+-	bool bKeyTableFull = false;
+-	u16 wKeyCtl = 0;
+-
+-	param->u.crypt.err = 0;
+-
+-	if (param->u.crypt.alg > WPA_ALG_CCMP)
+-		return -EINVAL;
+-
+-	if ((param->u.crypt.idx > 3) || (param->u.crypt.key_len > MAX_KEY_LEN)) {
+-		param->u.crypt.err = HOSTAP_CRYPT_ERR_KEY_SET_FAILED;
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " HOSTAP_CRYPT_ERR_KEY_SET_FAILED\n");
+-		return -EINVAL;
+-	}
+-
+-	if (is_broadcast_ether_addr(param->sta_addr)) {
+-		if (param->u.crypt.idx >= MAX_GROUP_KEY)
+-			return -EINVAL;
+-        iNodeIndex = 0;
+-
+-	} else {
+-	    if (BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &iNodeIndex) == false) {
+-	        param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
+-	        return -EINVAL;
+-	    }
+-	}
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " hostap_set_encryption: sta_index %d \n", iNodeIndex);
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " hostap_set_encryption: alg %d \n", param->u.crypt.alg);
+-
+-	if (param->u.crypt.alg == WPA_ALG_NONE) {
+-
+-        if (pMgmt->sNodeDBTable[iNodeIndex].bOnFly == true) {
+-            if (KeybRemoveKey( pDevice,
+-                               &(pDevice->sKey),
+-                               param->sta_addr,
+-                               pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex
+-                              ) == false) {
+-                DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "KeybRemoveKey fail \n");
+-            }
+-            pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-        }
+-        pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
+-        pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = 0;
+-        memset(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-                0,
+-                MAX_KEY_LEN
+-               );
+-
+-        return ret;
+-	}
+-
+-    memcpy(abyKey, param->u.crypt.key, param->u.crypt.key_len);
+-    // copy to node key tbl
+-    pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = param->u.crypt.idx;
+-    pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = param->u.crypt.key_len;
+-    memcpy(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-            param->u.crypt.key,
+-            param->u.crypt.key_len
+-           );
+-
+-    dwKeyIndex = (u32)(param->u.crypt.idx);
+-    if (param->u.crypt.flags & HOSTAP_CRYPT_FLAG_SET_TX_KEY) {
+-        pDevice->byKeyIndex = (u8)dwKeyIndex;
+-        pDevice->bTransmitKey = true;
+-        dwKeyIndex |= (1 << 31);
+-    }
+-
+-	if (param->u.crypt.alg == WPA_ALG_WEP) {
+-
+-        if ((pDevice->bEnable8021x == false) || (iNodeIndex == 0)) {
+-            KeybSetDefaultKey(  pDevice,
+-                                &(pDevice->sKey),
+-                                dwKeyIndex & ~(BIT30 | USE_KEYRSC),
+-                                param->u.crypt.key_len,
+-                                NULL,
+-                                abyKey,
+-                                KEY_CTL_WEP
+-                             );
+-
+-        } else {
+-            // 8021x enable, individual key
+-            dwKeyIndex |= (1 << 30); // set pairwise key
+-		if (KeybSetKey(pDevice, &(pDevice->sKey),
+-			&param->sta_addr[0],
+-			dwKeyIndex & ~(USE_KEYRSC),
+-			param->u.crypt.key_len,
+-			&KeyRSC, (u8 *)abyKey,
+-			KEY_CTL_WEP
+-                           ) == true) {
+-
+-                pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-            } else {
+-                // Key Table Full
+-                pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-                bKeyTableFull = true;
+-            }
+-        }
+-        pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
+-        pDevice->bEncryptionEnable = true;
+-        pMgmt->byCSSPK = KEY_CTL_WEP;
+-        pMgmt->byCSSGK = KEY_CTL_WEP;
+-        pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = KEY_CTL_WEP;
+-        pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
+-        return ret;
+-	}
+-
+-	if (param->u.crypt.seq) {
+-	    memcpy(&abySeq, param->u.crypt.seq, 8);
+-		for (ii = 0 ; ii < 8 ; ii++)
+-			KeyRSC |= (unsigned long)abySeq[ii] << (ii * 8);
+-
+-		dwKeyIndex |= 1 << 29;
+-		pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = KeyRSC;
+-	}
+-
+-	if (param->u.crypt.alg == WPA_ALG_TKIP) {
+-	    if (param->u.crypt.key_len != MAX_KEY_LEN)
+-	        return -EINVAL;
+-	    pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
+-        byKeyDecMode = KEY_CTL_TKIP;
+-        pMgmt->byCSSPK = KEY_CTL_TKIP;
+-        pMgmt->byCSSGK = KEY_CTL_TKIP;
+-	}
+-
+-	if (param->u.crypt.alg == WPA_ALG_CCMP) {
+-	    if ((param->u.crypt.key_len != AES_KEY_LEN) ||
+-	        (pDevice->byLocalID <= REV_ID_VT3253_A1))
+-	        return -EINVAL;
+-        pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
+-        byKeyDecMode = KEY_CTL_CCMP;
+-        pMgmt->byCSSPK = KEY_CTL_CCMP;
+-        pMgmt->byCSSGK = KEY_CTL_CCMP;
+-    }
+-
+-    if (iNodeIndex == 0) {
+-       KeybSetDefaultKey(  pDevice,
+-                           &(pDevice->sKey),
+-                           dwKeyIndex,
+-                           param->u.crypt.key_len,
+-			&KeyRSC,
+-                           abyKey,
+-                           byKeyDecMode
+-                          );
+-       pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-    } else {
+-        dwKeyIndex |= (1 << 30); // set pairwise key
+-        if (KeybSetKey(pDevice,
+-                       &(pDevice->sKey),
+-                       &param->sta_addr[0],
+-                       dwKeyIndex,
+-                       param->u.crypt.key_len,
+-			&KeyRSC,
+-                       (u8 *)abyKey,
+-                        byKeyDecMode
+-                       ) == true) {
+-
+-            pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-        } else {
+-            // Key Table Full
+-            pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-            bKeyTableFull = true;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " Key Table Full\n");
+-        }
+-
+-    }
+-
+-    if (bKeyTableFull == true) {
+-        wKeyCtl &= 0x7F00;              // clear all key control filed
+-        wKeyCtl |= (byKeyDecMode << 4);
+-        wKeyCtl |= (byKeyDecMode);
+-        wKeyCtl |= 0x0044;              // use group key for all address
+-        wKeyCtl |= 0x4000;              // disable KeyTable[MAX_KEY_TABLE-1] on-fly to genernate rx int
+-// Todo.. xxxxxx
+-        //MACvSetDefaultKeyCtl(pDevice->PortOffset, wKeyCtl, MAX_KEY_TABLE-1, pDevice->byLocalID);
+-    }
+-
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " Set key sta_index= %d \n", iNodeIndex);
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " tx_index=%d len=%d \n", param->u.crypt.idx,
+-               param->u.crypt.key_len );
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " key=%x-%x-%x-%x-%x-xxxxx \n",
+-               pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-               pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[1],
+-               pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[2],
+-               pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[3],
+-               pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[4]
+-              );
+-
+-	// set wep key
+-    pDevice->bEncryptionEnable = true;
+-    pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = byKeyDecMode;
+-    pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
+-    pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
+-    pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
+-
+-	return ret;
+-}
+-
+-/*
+- * Description:
+- *      get each stations encryption key
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_get_encryption(struct vnt_private *pDevice,
+-				       struct viawget_hostapd_param *param,
+-				       int param_len)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	int ret = 0;
+-	int ii;
+-	s32 iNodeIndex = 0;
+-
+-	param->u.crypt.err = 0;
+-
+-	if (is_broadcast_ether_addr(param->sta_addr)) {
+-        iNodeIndex = 0;
+-	} else {
+-	    if (BSSbIsSTAInNodeDB(pDevice, param->sta_addr, &iNodeIndex) == false) {
+-	        param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "hostap_get_encryption: HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
+-	        return -EINVAL;
+-	    }
+-	}
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "hostap_get_encryption: %d\n", iNodeIndex);
+-    memset(param->u.crypt.seq, 0, 8);
+-    for (ii = 0 ; ii < 8 ; ii++) {
+-        param->u.crypt.seq[ii] = (u8)pMgmt->sNodeDBTable[iNodeIndex].KeyRSC >> (ii * 8);
+-    }
+-
+-	return ret;
+-}
+-
+-/*
+- * Description:
+- *      vt6656_hostap_ioctl main function supported for hostap daemon.
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      iw_point  -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-int vt6656_hostap_ioctl(struct vnt_private *pDevice, struct iw_point *p)
+-{
+-	struct viawget_hostapd_param *param;
+-	int ret = 0;
+-	int ap_ioctl = 0;
+-
+-	if (p->length < sizeof(struct viawget_hostapd_param) ||
+-	    p->length > VIAWGET_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
+-		return -EINVAL;
+-
+-	param = kmalloc((int)p->length, GFP_KERNEL);
+-	if (param == NULL)
+-		return -ENOMEM;
+-
+-	if (copy_from_user(param, p->pointer, p->length)) {
+-		ret = -EFAULT;
+-		goto out;
+-	}
+-
+-	switch (param->cmd) {
+-	case VIAWGET_HOSTAPD_SET_ENCRYPTION:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_SET_ENCRYPTION \n");
+-
+-		ret = hostap_set_encryption(pDevice, param, p->length);
+-
+-		break;
+-	case VIAWGET_HOSTAPD_GET_ENCRYPTION:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_GET_ENCRYPTION \n");
+-        spin_lock_irq(&pDevice->lock);
+-		ret = hostap_get_encryption(pDevice, param, p->length);
+-        spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR \n");
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	case VIAWGET_HOSTAPD_FLUSH:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_FLUSH \n");
+-        spin_lock_irq(&pDevice->lock);
+-    	hostap_flush_sta(pDevice);
+-        spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_ADD_STA:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_ADD_STA \n");
+-         spin_lock_irq(&pDevice->lock);
+-		 ret = hostap_add_sta(pDevice, param);
+-         spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_REMOVE_STA:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_REMOVE_STA \n");
+-         spin_lock_irq(&pDevice->lock);
+-		 ret = hostap_remove_sta(pDevice, param);
+-         spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_GET_INFO_STA:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_GET_INFO_STA \n");
+-		 ret = hostap_get_info_sta(pDevice, param);
+-		 ap_ioctl = 1;
+-		break;
+-	case VIAWGET_HOSTAPD_SET_FLAGS_STA:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_SET_FLAGS_STA \n");
+-		 ret = hostap_set_flags_sta(pDevice, param);
+-		break;
+-
+-	case VIAWGET_HOSTAPD_MLME:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_MLME \n");
+-	    ret = -EOPNOTSUPP;
+-	    goto out;
+-
+-	case VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT \n");
+-		ret = hostap_set_generic_element(pDevice, param);
+-		break;
+-
+-	case VIAWGET_HOSTAPD_SCAN_REQ:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_SCAN_REQ \n");
+-	    ret = -EOPNOTSUPP;
+-	    goto out;
+-
+-	case VIAWGET_HOSTAPD_STA_CLEAR_STATS:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_HOSTAPD_STA_CLEAR_STATS \n");
+-	    ret = -EOPNOTSUPP;
+-	    goto out;
+-	default:
+-	    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "vt6656_hostap_ioctl: unknown cmd=%d\n",
+-		       (int)param->cmd);
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	if ((ret == 0) && ap_ioctl) {
+-		if (copy_to_user(p->pointer, param, p->length)) {
+-			ret = -EFAULT;
+-			goto out;
+-		}
+-	}
+-
+- out:
+-	kfree(param);
+-
+-	return ret;
+-}
+-
+diff --git a/drivers/staging/vt6656/hostap.h b/drivers/staging/vt6656/hostap.h
+deleted file mode 100644
+index 6a68f7e..0000000
+--- a/drivers/staging/vt6656/hostap.h
++++ /dev/null
+@@ -1,58 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: hostap.h
+- *
+- * Purpose:
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 21, 2003
+- *
+- */
+-
+-#ifndef __HOSTAP_H__
+-#define __HOSTAP_H__
+-
+-#include "device.h"
+-
+-#define WLAN_RATE_1M    BIT0
+-#define WLAN_RATE_2M    BIT1
+-#define WLAN_RATE_5M5   BIT2
+-#define WLAN_RATE_11M   BIT3
+-#define WLAN_RATE_6M    BIT4
+-#define WLAN_RATE_9M    BIT5
+-#define WLAN_RATE_12M   BIT6
+-#define WLAN_RATE_18M   BIT7
+-#define WLAN_RATE_24M   BIT8
+-#define WLAN_RATE_36M   BIT9
+-#define WLAN_RATE_48M   BIT10
+-#define WLAN_RATE_54M   BIT11
+-
+-#ifndef ETH_P_PAE
+-#define ETH_P_PAE 0x888E /* Port Access Entity (IEEE 802.1X) */
+-#endif /* ETH_P_PAE */
+-
+-#ifndef ARPHRD_IEEE80211
+-#define ARPHRD_IEEE80211 801
+-#endif
+-
+-int vt6656_hostap_set_hostapd(struct vnt_private *, int val, int rtnl_locked);
+-int vt6656_hostap_ioctl(struct vnt_private *, struct iw_point *p);
+-
+-#endif /* __HOSTAP_H__ */
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 38739fa..a148ced 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -34,7 +34,6 @@
+ #include "iwctl.h"
+ #include "mac.h"
+ #include "card.h"
+-#include "hostap.h"
+ #include "power.h"
+ #include "rf.h"
+ #include "iowpa.h"
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 3a576fa..b38be8d 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -60,7 +60,6 @@
+ #include "tcrc.h"
+ #include "rxtx.h"
+ #include "bssdb.h"
+-#include "hostap.h"
+ #include "wpactl.h"
+ #include "iwctl.h"
+ #include "dpc.h"
+@@ -1391,20 +1390,9 @@ static struct net_device_stats *device_get_stats(struct net_device *dev)
+ 
+ static int device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
  {
- 	struct iwl_powertable_cmd cmd = {
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	struct iwreq *wrq = (struct iwreq *) rq;
+ 	int rc = 0;
+ 
+ 	switch (cmd) {
+-
+-	case IOCTL_CMD_HOSTAPD:
+-
+-		if (!(pDevice->flags & DEVICE_FLAGS_OPENED))
+-			rc = -EFAULT;
+-
+-		rc = vt6656_hostap_ioctl(pDevice, &wrq->u.data);
+-		break;
+-
+ 	case SIOCETHTOOL:
+ 		return ethtool_ioctl(dev, rq);
+ 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 4ec79c4..8e0045a 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -56,7 +56,6 @@
+ #include "tkip.h"
+ #include "tcrc.h"
+ #include "wctl.h"
+-#include "hostap.h"
+ #include "rf.h"
+ #include "datarate.h"
+ #include "usbpipe.h"
 -- 
-1.8.3.2
+1.9.1
 
