@@ -1,54 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33947 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759AbaEMTpJ (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17570 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750727AbaESEcu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 15:45:09 -0400
-Date: Tue, 13 May 2014 15:42:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] rsi: Changed the return value to enable BA set-up
-Message-ID: <20140513194235.GH21204@tuxdriver.com> (sfid-20140513_214513_032148_D60943CF)
-References: <53709FC4.3070700@redpinesignals.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53709FC4.3070700@redpinesignals.com>
+	Mon, 19 May 2014 00:32:50 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: brcm80211-dev-list@broadcom.com
+Cc: kernel-janitors@vger.kernel.org, alsa-devel@alsa-project.org,
+	coreteam@netfilter.org, netfilter@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-raid@vger.kernel.org, oprofile-list@lists.sf.net,
+	linux-s390@vger.kernel.org
+Subject: [PATCH 0/13] make return of 0 explicit
+Date: Mon, 19 May 2014 06:31:02 +0200
+Message-Id: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140519_063347_467977_640E1548)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please format you patches so that they can be applied with 'patch -p1'...
+Sometimes a local variable is used as a return value in a case where the
+return value is always 0.  The result is more apparent if this variable is
+just replaced by 0.  This is done by the following semantic patch, although
+some cleanups may be needed. (http://coccinelle.lip6.fr/)
 
-I'll fix-up this one and merge it.
+// <smpl>
+@r exists@
+local idexpression ret;
+identifier reti;
+expression e;
+position p;
+@@
 
-On Mon, May 12, 2014 at 03:47:40PM +0530, Jahnavi Meher wrote:
-> From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-> 
-> Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-> ---
-> 
-> rsi_91x_mac80211.c |    1 +
-> 1 file changed, 1 insertion(+)
-> 
-> diff -uprN a/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> --- a/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c	2014-05-10 01:40:52.000000000 +0530
-> +++ b/linux-3.15-rc5/drivers/net/wireless/rsi/rsi_91x_mac80211.c	2014-05-12 15:15:42.272468987 +0530
-> @@ -656,6 +656,7 @@ static int rsi_mac80211_ampdu_action(str
->  	case IEEE80211_AMPDU_TX_START:
->  		common->vif_info[ii].seq_start = seq_no;
->  		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-> +		status = 0;
->  		break;
->  
->  	case IEEE80211_AMPDU_TX_STOP_CONT:
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+ret@reti = 0;
+... when != \(ret = e\|ret &= e\|ret |= e\|ret += e\|ret -= e\|ret *= e\|ret ^= e\)
+    when != \(++ret\|--ret\|ret++\|ret--\)
+    when != &ret
+return ret;@p
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+@bad1 exists@
+expression e != 0;
+local idexpression r.ret;
+position r.p;
+@@
+
+ \(ret = e\|ret &= e\|ret |= e\|ret += e\|ret -= e\|ret *= e\|ret ^= e\|++ret\|--ret\|ret++\|ret--\|&ret\)
+ ...
+ return ret;@p
+
+@bad2 exists@
+identifier r.reti;
+position r.p;
+identifier f;
+type T;
+@@
+
+f(...,T reti,...) {
+ ...
+ return reti;@p
+}
+
+@change depends on !bad1 && !bad2@
+position r.p;
+local idexpression r.ret;
+identifier f;
+@@
+
+f(...) { <+...
+return 
+-ret
++0
+;@p
+...+> }
+
+@rewrite@
+local idexpression r.ret;
+expression e;
+position p;
+identifier change.f;
+@@
+
+f(...) { <+...
+ \(ret@p = e\|&ret@p\)
+...+> }
+
+@depends on change@
+local idexpression r.ret;
+position p != rewrite.p;
+identifier change.f;
+@@
+
+f(...) { <+...
+(
+break;
+|
+ret = 0;
+... when exists
+ret@p
+... when any
+|
+- ret = 0;
+)
+...+> }
+
+@depends on change@
+identifier r.reti;
+type T;
+constant C;
+identifier change.f;
+@@
+
+f(...) { ... when any
+-T reti = C;
+ ... when != reti
+     when strict
+ }
+
+@depends on change@
+identifier r.reti;
+type T;
+identifier change.f;
+@@
+
+f(...) { ... when any
+-T reti;
+ ... when != reti
+     when strict
+ }
+// </smpl>
+
+The first four rules detect cases where only 0 reaches a return.  The
+remaining rules clean up any variable initializations or declarations that
+are made unnecessary by this change.
+
