@@ -1,577 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:61057 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932470AbaESTep (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 15:34:45 -0400
-Received: by mail-wi0-f182.google.com with SMTP id r20so4758968wiv.9
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:44 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 20/20] staging: vt6656: clean up BBvUpdatePreEDThreshold
-Date: Mon, 19 May 2014 20:33:12 +0100
-Message-Id: <1400527992-3061-20-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213452_760711_BD5DB317)
-In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
-References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+Received: from mout.gmx.net ([212.227.17.22]:51478 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750764AbaESWAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 18:00:39 -0400
+Message-ID: <537A7EEA.7040009@rempel-privat.de> (sfid-20140520_000042_823903_1969F9B8)
+Date: Tue, 20 May 2014 00:00:10 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: use 'struct ath_htc_rx_status
+ *' in call to ath9k_htc_err_stat_rx
+References: <1400533670-23340-1-git-send-email-linville@tuxdriver.com> <537A778A.5050205@rempel-privat.de> <20140519214146.GM7650@tuxdriver.com>
+In-Reply-To: <20140519214146.GM7650@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="cqqnh2exuEJ6W2aKT8RimLi1Hd4fVRbrH"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-pDevice -> priv
-bScanning -> scanning
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--cqqnh2exuEJ6W2aKT8RimLi1Hd4fVRbrH
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-White space cleanup
+Am 19.05.2014 23:41, schrieb John W. Linville:
+> On Mon, May 19, 2014 at 11:28:42PM +0200, Oleksij Rempel wrote:
+>> Am 19.05.2014 23:07, schrieb John W. Linville:
+>>>   CC [M]  drivers/net/wireless/ath/ath9k/htc_drv_txrx.o
+>>> drivers/net/wireless/ath/ath9k/htc_drv_txrx.c: In function =E2=80=98a=
+th9k_rx_prepare=E2=80=99:
+>>> drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1006:2: warning: passin=
+g argument 2 of =E2=80=98ath9k_htc_err_stat_rx=E2=80=99 from incompatible=
+ pointer type [enabled by default]
+>>>   ath9k_htc_err_stat_rx(priv, &rx_stats);
+>>>   ^
+>>> In file included from drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1=
+7:0:
+>>> drivers/net/wireless/ath/ath9k/htc.h:380:20: note: expected =E2=80=98=
+struct ath_htc_rx_status *=E2=80=99 but argument is of type =E2=80=98stru=
+ct ath_rx_status *=E2=80=99
+>>>  static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv=
+,
+>>>
+>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> ---
+>>> Compile-test only...seems reasonable?
+>>
+>> Hm... that is incorrect. Some missing patch?
+>> "[PATCH 06/10] ath9k & ath9k_htc: move ath_rx_stats to cmn" did correc=
+t
+>> change.
+>> your patch will brake it.
+>=20
+> The patch you mention is in wireless-next and wireless-testing.
+> The warning only shows-up in my wireless-testing build, although the
+> configs are slightly different.
+>=20
+> Would you be interested in tracking down the problem?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 504 +++++++++++++++++++-------------------
- drivers/staging/vt6656/baseband.h |   2 +-
- 2 files changed, 249 insertions(+), 257 deletions(-)
+Ok, thank you for the tip, i found it. Will send patch ASAP.
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index b308a7d..88682c0 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -1408,277 +1408,269 @@ void TimerSQ3Tmax3CallBack(struct vnt_private *pDevice)
-     spin_unlock_irq(&pDevice->lock);
- }
- 
--void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
-+void BBvUpdatePreEDThreshold(struct vnt_private *priv, int scanning)
- {
- 	u8 cr_201 = 0x0, cr_206 = 0x0;
--	u8 ed_inx = pDevice->byBBPreEDIndex;
--
--    switch(pDevice->byRFType)
--    {
--        case RF_AL2230:
--        case RF_AL2230S:
--        case RF_AIROHA7230:
--            //RobertYu:20060627, update new table
--
--            if( bScanning )
--            {   // need Max sensitivity //RSSI -69, -70,....
--		ed_inx = 0;
--		cr_206 = 0x30;
--                break;
--            }
-+	u8 ed_inx = priv->byBBPreEDIndex;
-+
-+	switch (priv->byRFType) {
-+	case RF_AL2230:
-+	case RF_AL2230S:
-+	case RF_AIROHA7230:
-+		if (scanning) { /* Max sensitivity */
-+			ed_inx = 0;
-+			cr_206 = 0x30;
-+			break;
-+		}
- 
--            if(pDevice->byBBPreEDRSSI <= 45) { // RSSI 0, -1,-2,....-45
--		ed_inx = 20;
--		cr_201 = 0xff;
--            } else if(pDevice->byBBPreEDRSSI <= 46)  { //RSSI -46
--		ed_inx = 19;
--		cr_201 = 0x1a;
--            } else if(pDevice->byBBPreEDRSSI <= 47)  { //RSSI -47
--		ed_inx = 18;
--		cr_201 = 0x15;
--            } else if(pDevice->byBBPreEDRSSI <= 49)  { //RSSI -48, -49
--		ed_inx = 17;
--		cr_201 = 0xe;
--            } else if(pDevice->byBBPreEDRSSI <= 51)  { //RSSI -50, -51
--		ed_inx = 16;
--		cr_201 = 0x9;
--            } else if(pDevice->byBBPreEDRSSI <= 53)  { //RSSI -52, -53
--		ed_inx = 15;
--		cr_201 = 0x6;
--            } else if(pDevice->byBBPreEDRSSI <= 55)  { //RSSI -54, -55
--		ed_inx = 14;
--		cr_201 = 0x3;
--            } else if(pDevice->byBBPreEDRSSI <= 56)  { //RSSI -56
--		ed_inx = 13;
--		cr_201 = 0x2;
--		cr_206 = 0xa0;
--            } else if(pDevice->byBBPreEDRSSI <= 57)  { //RSSI -57
--		ed_inx = 12;
--		cr_201 = 0x2;
--		cr_206 = 0x20;
--            } else if(pDevice->byBBPreEDRSSI <= 58)  { //RSSI -58
--		ed_inx = 11;
--		cr_201 = 0x1;
--		cr_206 = 0xa0;
--            } else if(pDevice->byBBPreEDRSSI <= 59)  { //RSSI -59
--		ed_inx = 10;
--		cr_201 = 0x1;
--		cr_206 = 0x54;
--            } else if(pDevice->byBBPreEDRSSI <= 60)  { //RSSI -60
--		ed_inx = 9;
--		cr_201 = 0x1;
--		cr_206 = 0x18;
--            } else if(pDevice->byBBPreEDRSSI <= 61)  { //RSSI -61
--		ed_inx = 8;
--		cr_206 = 0xe3;
--            } else if(pDevice->byBBPreEDRSSI <= 62)  { //RSSI -62
--		ed_inx = 7;
--		cr_206 = 0xb9;
--            } else if(pDevice->byBBPreEDRSSI <= 63)  { //RSSI -63
--		ed_inx = 6;
--		cr_206 = 0x93;
--            } else if(pDevice->byBBPreEDRSSI <= 64)  { //RSSI -64
--		ed_inx = 5;
--		cr_206 = 0x79;
--            } else if(pDevice->byBBPreEDRSSI <= 65)  { //RSSI -65
--		ed_inx = 4;
--		cr_206 = 0x62;
--            } else if(pDevice->byBBPreEDRSSI <= 66)  { //RSSI -66
--		ed_inx = 3;
--		cr_206 = 0x51;
--            } else if(pDevice->byBBPreEDRSSI <= 67)  { //RSSI -67
--		ed_inx = 2;
--		cr_206 = 0x43;
--            } else if(pDevice->byBBPreEDRSSI <= 68)  { //RSSI -68
--		ed_inx = 1;
--		cr_206 = 0x36;
--            } else { //RSSI -69, -70,....
--		ed_inx = 0;
--		cr_206 = 0x30;
--            }
--            break;
-+		if (priv->byBBPreEDRSSI <= 45) {
-+			ed_inx = 20;
-+			cr_201 = 0xff;
-+		} else if (priv->byBBPreEDRSSI <= 46) {
-+			ed_inx = 19;
-+			cr_201 = 0x1a;
-+		} else if (priv->byBBPreEDRSSI <= 47) {
-+			ed_inx = 18;
-+			cr_201 = 0x15;
-+		} else if (priv->byBBPreEDRSSI <= 49) {
-+			ed_inx = 17;
-+			cr_201 = 0xe;
-+		} else if (priv->byBBPreEDRSSI <= 51) {
-+			ed_inx = 16;
-+			cr_201 = 0x9;
-+		} else if (priv->byBBPreEDRSSI <= 53) {
-+			ed_inx = 15;
-+			cr_201 = 0x6;
-+		} else if (priv->byBBPreEDRSSI <= 55) {
-+			ed_inx = 14;
-+			cr_201 = 0x3;
-+		} else if (priv->byBBPreEDRSSI <= 56) {
-+			ed_inx = 13;
-+			cr_201 = 0x2;
-+			cr_206 = 0xa0;
-+		} else if (priv->byBBPreEDRSSI <= 57) {
-+			ed_inx = 12;
-+			cr_201 = 0x2;
-+			cr_206 = 0x20;
-+		} else if (priv->byBBPreEDRSSI <= 58) {
-+			ed_inx = 11;
-+			cr_201 = 0x1;
-+			cr_206 = 0xa0;
-+		} else if (priv->byBBPreEDRSSI <= 59) {
-+			ed_inx = 10;
-+			cr_201 = 0x1;
-+			cr_206 = 0x54;
-+		} else if (priv->byBBPreEDRSSI <= 60) {
-+			ed_inx = 9;
-+			cr_201 = 0x1;
-+			cr_206 = 0x18;
-+		} else if (priv->byBBPreEDRSSI <= 61) {
-+			ed_inx = 8;
-+			cr_206 = 0xe3;
-+		} else if (priv->byBBPreEDRSSI <= 62) {
-+			ed_inx = 7;
-+			cr_206 = 0xb9;
-+		} else if (priv->byBBPreEDRSSI <= 63) {
-+			ed_inx = 6;
-+			cr_206 = 0x93;
-+		} else if (priv->byBBPreEDRSSI <= 64) {
-+			ed_inx = 5;
-+			cr_206 = 0x79;
-+		} else if (priv->byBBPreEDRSSI <= 65) {
-+			ed_inx = 4;
-+			cr_206 = 0x62;
-+		} else if (priv->byBBPreEDRSSI <= 66) {
-+			ed_inx = 3;
-+			cr_206 = 0x51;
-+		} else if (priv->byBBPreEDRSSI <= 67) {
-+			ed_inx = 2;
-+			cr_206 = 0x43;
-+		} else if (priv->byBBPreEDRSSI <= 68) {
-+			ed_inx = 1;
-+			cr_206 = 0x36;
-+		} else {
-+			ed_inx = 0;
-+			cr_206 = 0x30;
-+		}
-+		break;
- 
--        case RF_VT3226:
--        case RF_VT3226D0:
--            //RobertYu:20060627, update new table
-+	case RF_VT3226:
-+	case RF_VT3226D0:
-+		if (scanning)	{ /* Max sensitivity */
-+			ed_inx = 0;
-+			cr_206 = 0x24;
-+			break;
-+		}
- 
--            if( bScanning )
--            {   // need Max sensitivity  //RSSI -69, -70, ...
--		ed_inx = 0;
--		cr_206 = 0x24;
--                break;
--            }
-+		if (priv->byBBPreEDRSSI <= 41) {
-+			ed_inx = 22;
-+			cr_201 = 0xff;
-+		} else if (priv->byBBPreEDRSSI <= 42) {
-+			ed_inx = 21;
-+			cr_201 = 0x36;
-+		} else if (priv->byBBPreEDRSSI <= 43) {
-+			ed_inx = 20;
-+			cr_201 = 0x26;
-+		} else if (priv->byBBPreEDRSSI <= 45) {
-+			ed_inx = 19;
-+			cr_201 = 0x18;
-+		} else if (priv->byBBPreEDRSSI <= 47) {
-+			ed_inx = 18;
-+			cr_201 = 0x11;
-+		} else if (priv->byBBPreEDRSSI <= 49) {
-+			ed_inx = 17;
-+			cr_201 = 0xa;
-+		} else if (priv->byBBPreEDRSSI <= 51) {
-+			ed_inx = 16;
-+			cr_201 = 0x7;
-+		} else if (priv->byBBPreEDRSSI <= 53) {
-+			ed_inx = 15;
-+			cr_201 = 0x4;
-+		} else if (priv->byBBPreEDRSSI <= 55) {
-+			ed_inx = 14;
-+			cr_201 = 0x2;
-+			cr_206 = 0xc0;
-+		} else if (priv->byBBPreEDRSSI <= 56) {
-+			ed_inx = 13;
-+			cr_201 = 0x2;
-+			cr_206 = 0x30;
-+		} else if (priv->byBBPreEDRSSI <= 57) {
-+			ed_inx = 12;
-+			cr_201 = 0x1;
-+			cr_206 = 0xb0;
-+		} else if (priv->byBBPreEDRSSI <= 58) {
-+			ed_inx = 11;
-+			cr_201 = 0x1;
-+			cr_206 = 0x70;
-+		} else if (priv->byBBPreEDRSSI <= 59) {
-+			ed_inx = 10;
-+			cr_201 = 0x1;
-+			cr_206 = 0x30;
-+		} else if (priv->byBBPreEDRSSI <= 60) {
-+			ed_inx = 9;
-+			cr_206 = 0xea;
-+		} else if (priv->byBBPreEDRSSI <= 61) {
-+			ed_inx = 8;
-+			cr_206 = 0xc0;
-+		} else if (priv->byBBPreEDRSSI <= 62) {
-+			ed_inx = 7;
-+			cr_206 = 0x9c;
-+		} else if (priv->byBBPreEDRSSI <= 63) {
-+			ed_inx = 6;
-+			cr_206 = 0x80;
-+		} else if (priv->byBBPreEDRSSI <= 64) {
-+			ed_inx = 5;
-+			cr_206 = 0x68;
-+		} else if (priv->byBBPreEDRSSI <= 65) {
-+			ed_inx = 4;
-+			cr_206 = 0x52;
-+		} else if (priv->byBBPreEDRSSI <= 66) {
-+			ed_inx = 3;
-+			cr_206 = 0x43;
-+		} else if (priv->byBBPreEDRSSI <= 67) {
-+			ed_inx = 2;
-+			cr_206 = 0x36;
-+		} else if (priv->byBBPreEDRSSI <= 68) {
-+			ed_inx = 1;
-+			cr_206 = 0x2d;
-+		} else {
-+			ed_inx = 0;
-+			cr_206 = 0x24;
-+		}
-+		break;
- 
--            if(pDevice->byBBPreEDRSSI <= 41) { // RSSI 0, -1,-2,....-41
--		ed_inx = 22;
--		cr_201 = 0xff;
--            } else if(pDevice->byBBPreEDRSSI <= 42)  { //RSSI -42
--		ed_inx = 21;
--		cr_201 = 0x36;
--            } else if(pDevice->byBBPreEDRSSI <= 43)  { //RSSI -43
--		ed_inx = 20;
--		cr_201 = 0x26;
--            } else if(pDevice->byBBPreEDRSSI <= 45)  { //RSSI -44, -45
--		ed_inx = 19;
--		cr_201 = 0x18;
--            } else if(pDevice->byBBPreEDRSSI <= 47)  { //RSSI -46, -47
--		ed_inx = 18;
--		cr_201 = 0x11;
--            } else if(pDevice->byBBPreEDRSSI <= 49)  { //RSSI -48, -49
--		ed_inx = 17;
--		cr_201 = 0xa;
--            } else if(pDevice->byBBPreEDRSSI <= 51)  { //RSSI -50, -51
--		ed_inx = 16;
--		cr_201 = 0x7;
--            } else if(pDevice->byBBPreEDRSSI <= 53)  { //RSSI -52, -53
--		ed_inx = 15;
--		cr_201 = 0x4;
--            } else if(pDevice->byBBPreEDRSSI <= 55)  { //RSSI -54, -55
--		ed_inx = 14;
--		cr_201 = 0x2;
--		cr_206 = 0xc0;
--            } else if(pDevice->byBBPreEDRSSI <= 56)  { //RSSI -56
--		ed_inx = 13;
--		cr_201 = 0x2;
--		cr_206 = 0x30;
--            } else if(pDevice->byBBPreEDRSSI <= 57)  { //RSSI -57
--		ed_inx = 12;
--		cr_201 = 0x1;
--		cr_206 = 0xb0;
--            } else if(pDevice->byBBPreEDRSSI <= 58)  { //RSSI -58
--		ed_inx = 11;
--		cr_201 = 0x1;
--		cr_206 = 0x70;
--            } else if(pDevice->byBBPreEDRSSI <= 59)  { //RSSI -59
--		ed_inx = 10;
--		cr_201 = 0x1;
--		cr_206 = 0x30;
--            } else if(pDevice->byBBPreEDRSSI <= 60)  { //RSSI -60
--		ed_inx = 9;
--		cr_206 = 0xea;
--            } else if(pDevice->byBBPreEDRSSI <= 61)  { //RSSI -61
--		ed_inx = 8;
--		cr_206 = 0xc0;
--            } else if(pDevice->byBBPreEDRSSI <= 62)  { //RSSI -62
--		ed_inx = 7;
--		cr_206 = 0x9c;
--            } else if(pDevice->byBBPreEDRSSI <= 63)  { //RSSI -63
--		ed_inx = 6;
--		cr_206 = 0x80;
--            } else if(pDevice->byBBPreEDRSSI <= 64)  { //RSSI -64
--		ed_inx = 5;
--		cr_206 = 0x68;
--            } else if(pDevice->byBBPreEDRSSI <= 65)  { //RSSI -65
--		ed_inx = 4;
--		cr_206 = 0x52;
--            } else if(pDevice->byBBPreEDRSSI <= 66)  { //RSSI -66
--		ed_inx = 3;
--		cr_206 = 0x43;
--            } else if(pDevice->byBBPreEDRSSI <= 67)  { //RSSI -67
--		ed_inx = 2;
--		cr_206 = 0x36;
--            } else if(pDevice->byBBPreEDRSSI <= 68)  { //RSSI -68
--		ed_inx = 1;
--		cr_206 = 0x2d;
--            } else { //RSSI -69, -70, ...
--		ed_inx = 0;
--		cr_206 = 0x24;
--            }
--            break;
--
--        case RF_VT3342A0: //RobertYu:20060627, testing table
--            if( bScanning )
--            {   // need Max sensitivity  //RSSI -67, -68, ...
--		ed_inx = 0;
--		cr_206 = 0x38;
--                break;
--            }
-+	case RF_VT3342A0:
-+		if (scanning) { /* need Max sensitivity */
-+			ed_inx = 0;
-+			cr_206 = 0x38;
-+			break;
-+		}
- 
--            if(pDevice->byBBPreEDRSSI <= 41) { // RSSI 0, -1,-2,....-41
--		ed_inx = 20;
--		cr_201 = 0xff;
--            } else if(pDevice->byBBPreEDRSSI <= 42)  { //RSSI -42
--		ed_inx = 19;
--		cr_201 = 0x36;
--            } else if(pDevice->byBBPreEDRSSI <= 43)  { //RSSI -43
--		ed_inx = 18;
--		cr_201 = 0x26;
--            } else if(pDevice->byBBPreEDRSSI <= 45)  { //RSSI -44, -45
--		ed_inx = 17;
--		cr_201 = 0x18;
--            } else if(pDevice->byBBPreEDRSSI <= 47)  { //RSSI -46, -47
--		ed_inx = 16;
--		cr_201 = 0x11;
--            } else if(pDevice->byBBPreEDRSSI <= 49)  { //RSSI -48, -49
--		ed_inx = 15;
--		cr_201 = 0xa;
--            } else if(pDevice->byBBPreEDRSSI <= 51)  { //RSSI -50, -51
--		ed_inx = 14;
--		cr_201 = 0x7;
--            } else if(pDevice->byBBPreEDRSSI <= 53)  { //RSSI -52, -53
--		ed_inx = 13;
--		cr_201 = 0x4;
--            } else if(pDevice->byBBPreEDRSSI <= 55)  { //RSSI -54, -55
--		ed_inx = 12;
--		cr_201 = 0x2;
--		cr_206 = 0xc0;
--            } else if(pDevice->byBBPreEDRSSI <= 56)  { //RSSI -56
--		ed_inx = 11;
--		cr_201 = 0x2;
--		cr_206 = 0x30;
--            } else if(pDevice->byBBPreEDRSSI <= 57)  { //RSSI -57
--		ed_inx = 10;
--		cr_201 = 0x1;
--		cr_206 = 0xb0;
--            } else if(pDevice->byBBPreEDRSSI <= 58)  { //RSSI -58
--		ed_inx = 9;
--		cr_201 = 0x1;
--		cr_206 = 0x70;
--            } else if(pDevice->byBBPreEDRSSI <= 59)  { //RSSI -59
--		ed_inx = 8;
--		cr_201 = 0x1;
--		cr_206 = 0x30;
--            } else if(pDevice->byBBPreEDRSSI <= 60)  { //RSSI -60
--		ed_inx = 7;
--		cr_206 = 0xea;
--            } else if(pDevice->byBBPreEDRSSI <= 61)  { //RSSI -61
--		ed_inx = 6;
--		cr_206 = 0xc0;
--            } else if(pDevice->byBBPreEDRSSI <= 62)  { //RSSI -62
--		ed_inx = 5;
--		cr_206 = 0x9c;
--            } else if(pDevice->byBBPreEDRSSI <= 63)  { //RSSI -63
--		ed_inx = 4;
--		cr_206 = 0x80;
--            } else if(pDevice->byBBPreEDRSSI <= 64)  { //RSSI -64
--		ed_inx = 3;
--		cr_206 = 0x68;
--            } else if(pDevice->byBBPreEDRSSI <= 65)  { //RSSI -65
--		ed_inx = 2;
--		cr_206 = 0x52;
--            } else if(pDevice->byBBPreEDRSSI <= 66)  { //RSSI -66
--		ed_inx = 1;
--		cr_206 = 0x43;
--            } else { //RSSI -67, -68, ...
--		ed_inx = 0;
--		cr_206 = 0x38;
--            }
--            break;
-+		if (priv->byBBPreEDRSSI <= 41) {
-+			ed_inx = 20;
-+			cr_201 = 0xff;
-+		} else if (priv->byBBPreEDRSSI <= 42) {
-+			ed_inx = 19;
-+			cr_201 = 0x36;
-+		} else if (priv->byBBPreEDRSSI <= 43) {
-+			ed_inx = 18;
-+			cr_201 = 0x26;
-+		} else if (priv->byBBPreEDRSSI <= 45) {
-+			ed_inx = 17;
-+			cr_201 = 0x18;
-+		} else if (priv->byBBPreEDRSSI <= 47) {
-+			ed_inx = 16;
-+			cr_201 = 0x11;
-+		} else if (priv->byBBPreEDRSSI <= 49) {
-+			ed_inx = 15;
-+			cr_201 = 0xa;
-+		} else if (priv->byBBPreEDRSSI <= 51) {
-+			ed_inx = 14;
-+			cr_201 = 0x7;
-+		} else if (priv->byBBPreEDRSSI <= 53) {
-+			ed_inx = 13;
-+			cr_201 = 0x4;
-+		} else if (priv->byBBPreEDRSSI <= 55) {
-+			ed_inx = 12;
-+			cr_201 = 0x2;
-+			cr_206 = 0xc0;
-+		} else if (priv->byBBPreEDRSSI <= 56) {
-+			ed_inx = 11;
-+			cr_201 = 0x2;
-+			cr_206 = 0x30;
-+		} else if (priv->byBBPreEDRSSI <= 57) {
-+			ed_inx = 10;
-+			cr_201 = 0x1;
-+			cr_206 = 0xb0;
-+		} else if (priv->byBBPreEDRSSI <= 58) {
-+			ed_inx = 9;
-+			cr_201 = 0x1;
-+			cr_206 = 0x70;
-+		} else if (priv->byBBPreEDRSSI <= 59) {
-+			ed_inx = 8;
-+			cr_201 = 0x1;
-+			cr_206 = 0x30;
-+		} else if (priv->byBBPreEDRSSI <= 60) {
-+			ed_inx = 7;
-+			cr_206 = 0xea;
-+		} else if (priv->byBBPreEDRSSI <= 61) {
-+			ed_inx = 6;
-+			cr_206 = 0xc0;
-+		} else if (priv->byBBPreEDRSSI <= 62) {
-+			ed_inx = 5;
-+			cr_206 = 0x9c;
-+		} else if (priv->byBBPreEDRSSI <= 63) {
-+			ed_inx = 4;
-+			cr_206 = 0x80;
-+		} else if (priv->byBBPreEDRSSI <= 64) {
-+			ed_inx = 3;
-+			cr_206 = 0x68;
-+		} else if (priv->byBBPreEDRSSI <= 65) {
-+			ed_inx = 2;
-+			cr_206 = 0x52;
-+		} else if (priv->byBBPreEDRSSI <= 66) {
-+			ed_inx = 1;
-+			cr_206 = 0x43;
-+		} else {
-+			ed_inx = 0;
-+			cr_206 = 0x38;
-+		}
-+		break;
- 
--    }
-+	}
- 
--	if (ed_inx == pDevice->byBBPreEDIndex && !bScanning)
-+	if (ed_inx == priv->byBBPreEDIndex && !scanning)
- 		return;
- 
--	pDevice->byBBPreEDIndex = ed_inx;
-+	priv->byBBPreEDIndex = ed_inx;
- 
--	dev_dbg(&pDevice->usb->dev, "%s byBBPreEDRSSI %d\n",
--					__func__, pDevice->byBBPreEDRSSI);
-+	dev_dbg(&priv->usb->dev, "%s byBBPreEDRSSI %d\n",
-+					__func__, priv->byBBPreEDRSSI);
- 
- 	if (!cr_201 && !cr_206)
- 		return;
- 
--	ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xc9, cr_201);
--	ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xce, cr_206);
-+	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0xc9, cr_201);
-+	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0xce, cr_206);
- }
- 
-diff --git a/drivers/staging/vt6656/baseband.h b/drivers/staging/vt6656/baseband.h
-index 005b94c..eda0d8a 100644
---- a/drivers/staging/vt6656/baseband.h
-+++ b/drivers/staging/vt6656/baseband.h
-@@ -107,6 +107,6 @@ void BBvSetAntennaMode(struct vnt_private *, u8 byAntennaMode);
- int BBbVT3184Init(struct vnt_private *);
- void BBvSetDeepSleep(struct vnt_private *);
- void BBvExitDeepSleep(struct vnt_private *);
--void BBvUpdatePreEDThreshold(struct vnt_private *, int bScanning);
-+void BBvUpdatePreEDThreshold(struct vnt_private *, int scanning);
- 
- #endif /* __BASEBAND_H__ */
--- 
-1.9.1
 
+--=20
+Regards,
+Oleksij
+
+
+--cqqnh2exuEJ6W2aKT8RimLi1Hd4fVRbrH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iF4EAREIAAYFAlN6fvAACgkQHwImuRkmbWnB7AD/YMQz/xRuCfN/KTPxEKimRA45
+Pfvt7FWrir5YKroc0m0A/iV0QcMcXBGPgHOJr65j+zDsdbKAPwWLgobv3T8mn+HM
+=+nDY
+-----END PGP SIGNATURE-----
+
+--cqqnh2exuEJ6W2aKT8RimLi1Hd4fVRbrH--
