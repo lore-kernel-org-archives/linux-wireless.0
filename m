@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.horizon.com ([71.41.210.147]:44350 "HELO ns.horizon.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1758068AbaEKKFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2014 06:05:05 -0400
-Date: 11 May 2014 06:05:02 -0400
-Message-ID: <20140511100502.1491.qmail@ns.horizon.com> (sfid-20140511_120525_085485_B2BCA2D5)
-From: "George Spelvin" <linux@horizon.com>
-To: linux@horizon.com, pavel@ucw.cz
-Subject: [PATCH 2/3] drivers/mmc/host/mmc_spi.c: Use get/put_unaligned_be32
-Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-In-Reply-To: <20140511100211.1334.qmail@ns.horizon.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30327 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbaESKkl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 06:40:41 -0400
+Date: Mon, 19 May 2014 13:40:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
+	devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change
+ rtw_alloc_stainfo23a to use gfp_t instead if int
+Message-ID: <20140519104012.GP16255@mwanda> (sfid-20140519_124058_522374_4DD76B44)
+References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
+ <20140519101855.GU15585@mwanda>
+ <wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Very minor source and binary size reduction.
+On Mon, May 19, 2014 at 12:25:13PM +0200, Jes Sorensen wrote:
+> Dan,
+> 
+> Calm down, I haven't been bombarding the list, due to the sheer volume
+> of commits.  If you want me to spam the list, tell me where and I'll add
+> that to the CC list next time.
 
-Signed-off-by: George Spelvin <linux@horizon.com>
----
-I spotted this while making the previous crc7 change.
+We provide the scripts/get_maintainer.pl script for that.  You can leave
+linux-kernel off if you want because they don't care about staging
+drivers.  The staging list is devel@driverdev.osuosl.org.
 
-This looks simple enough, but I don't actually have one of these devices to test.
-At least one other careful desk-check is solicited.
-
- drivers/mmc/host/mmc_spi.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/mmc/host/mmc_spi.c b/drivers/mmc/host/mmc_spi.c
-index 338e2202ea..cc8d4a6099 100644
---- a/drivers/mmc/host/mmc_spi.c
-+++ b/drivers/mmc/host/mmc_spi.c
-@@ -448,7 +448,6 @@ mmc_spi_command_send(struct mmc_spi_host *host,
- {
- 	struct scratch		*data = host->data;
- 	u8			*cp = data->status;
--	u32			arg = cmd->arg;
- 	int			status;
- 	struct spi_transfer	*t;
- 
-@@ -465,14 +464,12 @@ mmc_spi_command_send(struct mmc_spi_host *host,
- 	 * We init the whole buffer to all-ones, which is what we need
- 	 * to write while we're reading (later) response data.
- 	 */
--	memset(cp++, 0xff, sizeof(data->status));
-+	memset(cp, 0xff, sizeof(data->status));
- 
--	*cp++ = 0x40 | cmd->opcode;
--	*cp++ = (u8)(arg >> 24);
--	*cp++ = (u8)(arg >> 16);
--	*cp++ = (u8)(arg >> 8);
--	*cp++ = (u8)arg;
--	*cp++ = crc7_be(0, &data->status[1], 5) | 0x01;
-+	cp[1] = 0x40 | cmd->opcode;
-+	put_unaligned_be32(cmd->arg, cp+2);
-+	cp[6] = crc7_be(0, cp+1, 5) | 0x01;
-+	cp += 7;
- 
- 	/* Then, read up to 13 bytes (while writing all-ones):
- 	 *  - N(CR) (== 1..8) bytes of all-ones
-@@ -711,10 +708,7 @@ mmc_spi_writeblock(struct mmc_spi_host *host, struct spi_transfer *t,
- 	 * so we have to cope with this situation and check the response
- 	 * bit-by-bit. Arggh!!!
- 	 */
--	pattern  = scratch->status[0] << 24;
--	pattern |= scratch->status[1] << 16;
--	pattern |= scratch->status[2] << 8;
--	pattern |= scratch->status[3];
-+	pattern = get_unaligned_be32(scratch->status);
- 
- 	/* First 3 bit of pattern are undefined */
- 	pattern |= 0xE0000000;
--- 
-1.9.2
+regards,
+dan carpenter
 
