@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:60926 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbaEaQal (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:42787 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701AbaESGRF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 12:30:41 -0400
-Received: by mail-we0-f175.google.com with SMTP id p10so3346025wes.34
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 09:30:39 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH 3/3] rtl818x_pci: fix possible RX descriptor invalid data read
-Date: Sat, 31 May 2014 18:30:26 +0200
-Message-Id: <1401553826-7696-1-git-send-email-andrea.merello@gmail.com> (sfid-20140531_183044_612069_9FA73DA5)
+	Mon, 19 May 2014 02:17:05 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so3540322wiw.4
+        for <linux-wireless@vger.kernel.org>; Sun, 18 May 2014 23:17:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87fvkb89f5.fsf@kamboji.qca.qualcomm.com>
+References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+	<1399638957-20449-5-git-send-email-michal.kazior@tieto.com>
+	<87fvkb89f5.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 19 May 2014 08:17:04 +0200
+Message-ID: <CA+BoTQkTiiSeiDfJku-jGmBFB_J2_+fqCCq0mvLLGpOkWKVGQQ@mail.gmail.com> (sfid-20140519_081710_323161_C0B179C5)
+Subject: Re: [PATCH 4/7] ath10k: wake up everything on core restart
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RX descriptor data must be read only if the descriptor has been fully
-updated by HW.
-There is a "ownership" flag in the descriptor itself to test this.
+On 15 May 2014 15:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> It makes sense to finish completions as they may
+>> be waited for while holding conf_mutex thus
+>> delaying hw restart.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++++
+>>  1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+>> index 3f4d28f..bf7c323 100644
+>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>> @@ -709,6 +709,18 @@ void ath10k_core_restart(struct ath10k *ar)
+>>       spin_lock_bh(&ar->data_lock);
+>>       ar->wmi.drop = true;
+>>       wake_up(&ar->wmi.tx_credits_wq);
+>> +
+>> +     complete(&ar->target_suspend);
+>> +     complete(&ar->debug.event_stats_compl);
+>
+> We dropped this patchset already, but for the future, this patch
+> introduces a new warning:
+>
+>    drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_restart':
+>>> drivers/net/wireless/ath/ath10k/core.c:714:14: error: 'struct ath10k'
+>>> has no member named 'debug'
+>      complete(&ar->debug.event_stats_compl);
+>                  ^
 
-The driver code contains a read for the "ownership" flag and, after
-it, other read access for descriptor data.
+Good catch. I completely forgot ar->debug is inside an #ifdef DEBUG.
 
-This is in DMA coherent memory, that is _not_ guaranteed to be immune
-to instruction reordering, thus it is possible that the descriptor
-data is read _before_ the "ownership" flag.
 
-This can theoretically lead to a DMA/CPU race that may end up with the
-driver reading the data when it is still not valid, and the "ownership"
-bit just after enough time that the HW make the whole descriptor valid.
-The driver will in this case believe the data is valid, but it will use
-the invalid data read earlier.
+> Maybe that complete call should be in debug.c?
 
-In order to avoid this, this patch adds a rmb() to force the "ownership"
-bit read to be issued before other descriptor data reads are attempted.
+Well, either we add an ifdef here (core.c @ L714), or an ifdef in
+debug.h + debug.c..
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index cd8c090..1e25929 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -222,12 +222,20 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 			struct rtl8187se_rx_desc *desc = entry;
- 
- 			flags = le32_to_cpu(desc->flags);
-+			/* if ownership flag is set, then we can trust the
-+			 * HW has written other fields. We must not trust
-+			 * other descriptor data read before we checked (read)
-+			 * the ownership flag
-+			 */
-+			rmb();
- 			flags2 = le32_to_cpu(desc->flags2);
- 			tsft = le64_to_cpu(desc->tsft);
- 		} else {
- 			struct rtl8180_rx_desc *desc = entry;
- 
- 			flags = le32_to_cpu(desc->flags);
-+			/* same as above */
-+			rmb();
- 			flags2 = le32_to_cpu(desc->flags2);
- 			tsft = le64_to_cpu(desc->tsft);
- 		}
--- 
-1.9.1
-
+Michał
