@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45877 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755440AbaENNnQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55575 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbaESUaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 09:43:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
-	<linux-wireless@vger.kernel.org>, <apenwarr@gmail.com>
-Subject: Re: [PATCH 0/2] ath10k: 2014-05-07 fixes
-References: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 14 May 2014 16:43:08 +0300
-In-Reply-To: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 7 May 2014 14:33:24 +0200")
-Message-ID: <87k39ofpcj.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_154318_791134_2F809B33)
+	Mon, 19 May 2014 16:30:12 -0400
+Date: Mon, 19 May 2014 16:29:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: How to disable beacon filtering in iwlwifi in 3.13 and 3.14
+Message-ID: <20140519202913.GJ7650@tuxdriver.com> (sfid-20140519_223022_936585_C6D9A721)
+References: <CANUX_P2MSK_rUMyN2xa8A9dZwuPSKh+eiOr10KG6PocCQdVhvA@mail.gmail.com>
+ <20140519194156.GA5991@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140519194156.GA5991@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, May 19, 2014 at 12:41:56PM -0700, Greg KH wrote:
+> On Mon, May 19, 2014 at 01:40:34PM +0300, Emmanuel Grumbach wrote:
+> > Hi,
+> > 
+> > I need to disable a feature on 3.13 and 3.14. But I don't have any
+> > patch upstream that I can point to as the patch that needs to be
+> > backported.
+> > We have a feature that is buggy in 3.13 and 3.14. We refactored (and
+> > fixed) this feature in 3.15 but the refactor is really not stable
+> > material, so basically, I can't backport the fix to 3.13 / 3.14. A
+> > user reported that disabling the feature solved (part of) his issues:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=72601.
+> > OTOH, I don't have any patch in linux.git that could be backported to
+> > do what I want in 3.13 / 3.14 - i.e. disable the feature.
+> > What is the right process here? I understand that this isn't covered
+> > by the "stable rules". So what should I do here?
+> 
+> Get the maintainer's approval to apply this patch and I can queue it up.
 
-> These 2 patches address kernel panics reported by
-> Avery recently. One of them was most likely
-> reported by Ben some time ago already.
->
-> I've never seen these panics myself. It'd be great
-> if you guys could give it a try and (assuming
-> you're capable of reproducing) see if it actually
-> helps.
->
->
-> Michal Kazior (2):
->   ath10k: fix htt rx ring clean up
->   ath10k: fix handling of wierd MSDU chaining cases
-
-Thanks, applied.
-
-I didn't see any reports if these help or not, but the patches looked
-good and I applied them anyway.
+Seems ok to me.
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
