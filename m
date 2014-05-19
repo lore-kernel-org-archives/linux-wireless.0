@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:52385 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801AbaETU0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 16:26:25 -0400
-Message-ID: <537BBA5C.6000705@rempel-privat.de> (sfid-20140520_222628_847496_E8D1C6DD)
-Date: Tue, 20 May 2014 22:26:04 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: fixup "ath9k_htc: fix build with disabled debug"
-References: <1400614697-25844-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1400614697-25844-1-git-send-email-linville@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="tHJKITu1OJK7c41alB9wDJ6t5gXw2hDku"
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:64868 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964780AbaESTee (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 15:34:34 -0400
+Received: by mail-wg0-f46.google.com with SMTP id n12so8445825wgh.29
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:33 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/20] staging: vt6656: BBvSetVGAGainOffset remove camel case
+Date: Mon, 19 May 2014 20:33:06 +0100
+Message-Id: <1400527992-3061-14-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213439_459054_F6437DB2)
+In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---tHJKITu1OJK7c41alB9wDJ6t5gXw2hDku
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+pDevice -> priv
+byData -> data
 
-Am 20.05.2014 21:38, schrieb John W. Linville:
-> Apparently Oleksij's compile testing was no better than mine initially
-> was... :-(
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Face palm. There is really no excuse for me :(
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index e440823..466abd9 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -1102,18 +1102,18 @@ void BBvSetShortSlotTime(struct vnt_private *priv)
+ 	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x0a, priv->byBBRxConf);
+ }
+ 
+-void BBvSetVGAGainOffset(struct vnt_private *pDevice, u8 byData)
++void BBvSetVGAGainOffset(struct vnt_private *priv, u8 data)
+ {
+ 
+-    ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xE7, byData);
++	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0xE7, data);
+ 
+-    // patch for 3253B0 Baseband with Cardbus module
+-	if (pDevice->bShortSlotTime)
+-		pDevice->byBBRxConf &= 0xDF; /* 1101 1111 */
++	/* patch for 3253B0 Baseband with Cardbus module */
++	if (priv->bShortSlotTime)
++		priv->byBBRxConf &= 0xdf; /* 1101 1111 */
+ 	else
+-		pDevice->byBBRxConf |= 0x20; /* 0010 0000 */
++		priv->byBBRxConf |= 0x20; /* 0010 0000 */
+ 
+-    ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x0A, pDevice->byBBRxConf);//CR10
++	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x0a, priv->byBBRxConf);
+ }
+ 
+ /*
+-- 
+1.9.1
 
---=20
-Regards,
-Oleksij
-
-
---tHJKITu1OJK7c41alB9wDJ6t5gXw2hDku
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlN7umMACgkQHwImuRkmbWmCxAEAkL3Ol0AS9aJJRbAZC5YBDHGZ
-GFQu60mxakZtA8Ezj6cA/iajXyDGWB19T61j3wliUD3i5wS8219AslyEpJR0SIAe
-=lSZY
------END PGP SIGNATURE-----
-
---tHJKITu1OJK7c41alB9wDJ6t5gXw2hDku--
