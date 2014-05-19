@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12498 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751013AbaEWEMx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 00:12:53 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 May 2014 21:12:30 -0700
-Subject: RE: [RFC] mwifiex: block work queue while suspended
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5DCA2@SC-VEXCH1.marvell.com> (sfid-20140523_061305_405492_CF4D11AE)
-References: <20140516012439.GI15430@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
- <20140522054618.GL6184@us.netrek.org>
-In-Reply-To: <20140522054618.GL6184@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:50631 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbaESOtO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 10:49:14 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [RFC 0/2] mac80211: Add new interface type for OCB (Outside the Context of a BSS) mode
+Date: Mon, 19 May 2014 16:49:03 +0200
+Message-Id: <1400510945-24868-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140519_164957_912817_377158CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+The IEEE 802.11p amendment defines a procedure for data frames
+transmission by an STA that is not a member of a BSS. Such data
+frames are defined as being transmitted "outside the context of a
+BSS" (this is allowed only if the MIB variable dot11OCBActivated
+is true).  This patchset adds new interface type (NL80211_IFTYPE_OCB)
+for an STA in the OCB mode.
 
-> > > [ 1302.923009] mmc0: Timeout waiting for hardware interrupt.
-> > > [ 1302.923050] ------------[ cut here ]------------
-> > > [ 1302.923075] WARNING: at drivers/net/wireless/mwifiex/sdio.c:688
-> mwifiex_sdio_interrupt+0xcc/0x21c
-> > > [mwifiex_sdio]()
-> > > [ 1302.923204] [<bf0c089c>] (mwifiex_sdio_interrupt+0xcc/0x21c [mwifiex_sdio])
-> > > [ 1302.923218] [<c0302be4>] (sdio_irq_thread+0x178/0x2f0)
-> > > [ 1302.923218] [<c00464d0>] (kthread+0x9c/0xac)
-> > > [ 1302.923235] ---[ end trace 7e9f40af36cc200c ]---
-> > > [ 1302.923240] mwifiex_sdio mmc0:0001:1: read mp_regs failed, will retry ...
-> > > [ 1302.923291] mwifiex_sdio mmc0:0001:1: read mp_regs worked on retry
-> >
-> > I guess the driver and firmware are out of sync here. If firmware is
-> > sleeping we will get this failure.
-> 
-> I'm a little alarmed at this possibility.  What you say implies an
-> interrupt from the device arrives after the firmware is in host sleep
-> mode, yet the device is not available to take the read mp_regs
-> transaction.  Have I understood correctly?
+When an OCB mode is used, all the STAs communicate with each
+other without the need for a coordinator. In such case no beacons
+are sent and BSSID is set to wildcard (all 1's). Every STA receives
+all frames from every STA in range and transmits to every STA tuned
+to the same channel. The communication is taking place in a reserved
+frequency band (5.9 GHz).
 
-No, that depends on that wakeup (device to host) is through GPIO or SDIO interface.
-In case of SDIO wakeup, does the MMC call driver's interrupt routing first or resume handler first?
-If MMC calls driver's ISR first, we will see an interrupt arrives after firmware is in host sleep mode.
+Rostislav Lisovy (2):
+  cfg80211: Add channel flags limiting availability to OCB mode only
+  mac80211: Add new interface type for OCB mode
 
-> 
-> We never see this "mmc0: Timeout ..." _except_ when the host has gone
-> through suspend and resume, so it seemed more likely to be caused by
-> SDHCI.
+ include/net/cfg80211.h       |   2 +
+ include/uapi/linux/nl80211.h |   8 +++
+ net/mac80211/Makefile        |   3 +-
+ net/mac80211/cfg.c           |   1 +
+ net/mac80211/chan.c          |   2 +
+ net/mac80211/driver-ops.h    |   3 +-
+ net/mac80211/ieee80211_i.h   |  38 ++++++++++++++
+ net/mac80211/iface.c         |  28 +++++++++++
+ net/mac80211/ocb.c           | 115 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/util.c          |   5 ++
+ net/wireless/nl80211.c       |   3 ++
+ net/wireless/reg.c           |   2 +
+ net/wireless/util.c          |   1 +
+ 13 files changed, 209 insertions(+), 2 deletions(-)
+ create mode 100644 net/mac80211/ocb.c
 
-I overlooked this SDHCI error. So it could be the reason why read mp_regs failed.
-
-> > > @@ -833,6 +833,8 @@ static void mwifiex_main_work_queue(struct work_struct *work)
-> > >
-> > >  	if (adapter->surprise_removed)
-> > >  		return;
-> > > +	if (adapter->is_suspended)
-> > > +		return;
-> >
-> > If we can find the root cause and fix it, this change won't be
-> > necessary.
-> 
-> Okay.  How will the work queue not be executed?
-
-Actually I can take this change before we figure out what the real problem is.
-For other users without this problem this code shouldn't get executed during suspended.
-Please resend it as a [PATCH].
-
-Thanks,
-Bing
-
+-- 
+2.0.0.rc0
 
