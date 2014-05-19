@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46124 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:9888 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000AbaEOJwB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 05:52:01 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"eliad@wizery.com" <eliad@wizery.com>
-Subject: Re: [PATCH] cfg80211: fix start_radar_detection issue
-Date: Thu, 15 May 2014 09:51:54 +0000
-Message-ID: <1400147514.4521.10.camel@dubbel> (sfid-20140515_115205_847210_DFD46FD9)
-References: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1400078561.4759.12.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEcixQDE7FbvJ2k3jw501BjS2_LkKG72zYok6WbmzCxq5A@mail.gmail.com>
-	 (sfid-20140515_112846_166140_C2756793)
- <1400146757.4146.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1400146757.4146.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	id S1750874AbaESKZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 06:25:23 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
+	devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change rtw_alloc_stainfo23a to use gfp_t instead if int
+References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
+	<20140519101855.GU15585@mwanda>
+Date: Mon, 19 May 2014 12:25:13 +0200
+In-Reply-To: <20140519101855.GU15585@mwanda> (Dan Carpenter's message of "Mon,
+	19 May 2014 13:18:56 +0300")
+Message-ID: <wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140519_122543_271949_5A44FFAB)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE0LTA1LTE1IGF0IDExOjM5ICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBUaHUsIDIwMTQtMDUtMTUgYXQgMTI6MjggKzAzMDAsIEVsaWFkIFBlbGxlciB3cm90ZToN
-Cj4gPiBPbiBXZWQsIE1heSAxNCwgMjAxNCBhdCA1OjQyIFBNLCBKb2hhbm5lcyBCZXJnDQo+ID4g
-PGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOg0KPiA+ID4gT24gV2VkLCAyMDE0LTA1
-LTE0IGF0IDEzOjI1ICswMjAwLCBKYW51c3ogRHppZWR6aWMgd3JvdGU6DQo+ID4gPj4gQWZ0ZXIg
-cGF0Y2g6DQo+ID4gPj4gY2ZnODAyMTEvbWFjODAyMTE6IHJlZmFjdG9yIGNmZzgwMjExX2NoYW5k
-ZWZfZGZzX3JlcXVpcmVkKCkNCj4gPiA+Pg0KPiA+ID4+IHN0YXJ0X3JhZGFyX2RldGVjdGlvbiBh
-bHdheXMgZmFpbCB3aXRoIC1FSU5WQUwuDQo+ID4gPg0KPiA+ID4gQXBwbGllZCwgdGhhbmtzLg0K
-PiA+ID4NCj4gPiBwcm9iYWJseSBhIGJpdCBsYXRlLCBidXQgaSBkb24ndCByZWFsbHkgc2VlIHdo
-eSBwYXNzaW5nDQo+ID4gTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQgYXQgYWxsLCBpbnN0ZWFk
-IG9mIHRoZSBpZnR5cGU/DQo+IA0KPiBJIGRpZCBicmllZmx5IHdvbmRlciBhYm91dCB0aGUgc2Ft
-ZSwgYnV0IGRlY2lkZWQgTHVjYSBwcm9iYWJseSBrbmV3DQo+IGJldHRlciA6KQ0KDQpBY3R1YWxs
-eSBJIGFsc28gdGhvdWdodCB0aGUgc2FtZSB0aGluZywgYnV0IGhhZCB0aGUgaW1wcmVzc2lvbiB0
-aGF0DQp0aGVyZSB3ZXJlIGNhc2VzIHdoZW4gd2Ugd291bGRuJ3QgaGF2ZSB0aGUgaWZ0eXBlIHdo
-ZW4gY2FsbGluZyB0aGlzLg0KQnV0IG5vdyBJIGNoZWNrZWQgYm90aCBjYXNlcyB3aGVyZSB3ZSB1
-c2UgTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQgYW5kDQppdCBzZWVtcyB0aGF0IHdlIHJlYWxs
-eSBkb24ndCBuZWVkIGl0Lg0KDQpJJ2xsIHNlbmQgYSBwYXRjaCB0byBmaXggdGhpcyBhbmQgcmV2
-ZXJ0IEphbnVzeidzIGNoYW5nZSAodW5sZXNzDQpKb2hhbm5lcyB3YW50cyB0byByZWJhc2UgdGhl
-IG1hYzgwMjExLW5leHQgdHJlZSkuDQoNClNvcnJ5IGZvciB0aGUgdHJvdWJsZS4NCg0KLS0NCkx1
-Y2EuDQo=
+Dan Carpenter <dan.carpenter@oracle.com> writes:
+> On Sun, May 18, 2014 at 07:39:23AM +0100, Karim Raslan wrote:
+>> This should fix a few sparse warnings like the following:
+>> 
+>>   CHECK   drivers/staging/rtl8723au/core/rtw_ap.c
+>> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45: warning: incorrect
+>> type in argument 3 (different base types)
+>> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    expected int [signed] gfp
+>> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    got restricted gfp_t
+>> 
+>
+> Thanks, Karim, looks good.
+>
+> Jes's patch which added this never went to the list so I didn't review
+> it.  This annoys me.
+>
+> I try to be fair when I review code.  I try to allow lots of patches in
+> and let people send fix up patches for minor stuff.  But, obviously, you
+> should be running Sparse as part of the review process so if I made you
+> redo this patch it's because your process is broken.  When I review
+> patches I am trying to help you.
+
+Dan,
+
+Calm down, I haven't been bombarding the list, due to the sheer volume
+of commits.  If you want me to spam the list, tell me where and I'll add
+that to the CC list next time.
+
+This particular case isn't exactly a real problem either.
+
+Jes
