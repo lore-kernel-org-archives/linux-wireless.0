@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:53242 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750741AbaETVyg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 17:54:36 -0400
-Message-ID: <1400622868.25946.12.camel@dubbel> (sfid-20140520_235440_913878_5DB3B6FF)
-From: Luca Coelho <luca@coelho.fi>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 May 2014 00:54:28 +0300
-In-Reply-To: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-References: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] nl80211: Provide TDLS link state
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:65295 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932240AbaESTed (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 15:34:33 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so4761469wiw.10
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/20] staging: vt6656: BBvSetShortSlotTime remove camel case.
+Date: Mon, 19 May 2014 20:33:05 +0100
+Message-Id: <1400527992-3061-13-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213455_628137_33A6E079)
+In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+pDevice -> priv
+byBBVGA -> bb_vga
 
-On Tue, 2014-05-20 at 13:27 -0700, Paul Stewart wrote:
-> Provide a method to query TDLS state in drivers that use the
-> NL80211_CMD_TDLS_OPER method for link setup.
-> 
-> Signed-off-by: Paul Stewart <pstew@chromium.org>
-> ---
->  include/uapi/linux/nl80211.h | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 9922b9b..4f163f9 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -3866,6 +3866,7 @@ enum nl80211_pmksa_candidate_attr {
->   * @NL80211_TDLS_TEARDOWN: Teardown a TDLS link which is already established
->   * @NL80211_TDLS_ENABLE_LINK: Enable TDLS link
->   * @NL80211_TDLS_DISABLE_LINK: Disable TDLS link
-> + * @NL80211_TDLS_QUERY_LINK: Query TDLS link status
->   */
->  enum nl80211_tdls_operation {
->  	NL80211_TDLS_DISCOVERY_REQ,
-> @@ -3873,6 +3874,19 @@ enum nl80211_tdls_operation {
->  	NL80211_TDLS_TEARDOWN,
->  	NL80211_TDLS_ENABLE_LINK,
->  	NL80211_TDLS_DISABLE_LINK,
-> +	NL80211_TDLS_QUERY_LINK,
-> +};
-> +
-> +/**
-> + * enum nl80211_tdls_link_state - values returned fo %NL80211_TDLS_QUERY_LINK
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-Small typo here.  s/fo/for/ ?
-
---
-Luca.
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 03ecde8..e440823 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -1078,27 +1078,28 @@ int BBbVT3184Init(struct vnt_private *priv)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice     - Device Structure
++ *	priv	- Device Structure
+  *  Out:
+  *      none
+  *
+  * Return Value: none
+  *
+  */
+-void BBvSetShortSlotTime(struct vnt_private *pDevice)
++void BBvSetShortSlotTime(struct vnt_private *priv)
+ {
+-    u8 byBBVGA=0;
++	u8 bb_vga = 0;
+ 
+-	if (pDevice->bShortSlotTime)
+-        pDevice->byBBRxConf &= 0xDF;//1101 1111
++	if (priv->bShortSlotTime)
++		priv->byBBRxConf &= 0xdf;
+ 	else
+-        pDevice->byBBRxConf |= 0x20;//0010 0000
++		priv->byBBRxConf |= 0x20;
++
++	ControlvReadByte(priv, MESSAGE_REQUEST_BBREG, 0xe7, &bb_vga);
+ 
+-    ControlvReadByte (pDevice, MESSAGE_REQUEST_BBREG, 0xE7, &byBBVGA);
+-	if (byBBVGA == pDevice->abyBBVGA[0])
+-        pDevice->byBBRxConf |= 0x20;//0010 0000
++	if (bb_vga == priv->abyBBVGA[0])
++		priv->byBBRxConf |= 0x20;
+ 
+-    ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x0A, pDevice->byBBRxConf);
++	ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x0a, priv->byBBRxConf);
+ }
+ 
+ void BBvSetVGAGainOffset(struct vnt_private *pDevice, u8 byData)
+-- 
+1.9.1
 
