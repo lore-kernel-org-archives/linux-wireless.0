@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42315 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbaETSPO (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37778 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbaESPnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 14:15:14 -0400
-Date: Tue, 20 May 2014 14:08:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-Message-ID: <20140520180832.GD13981@tuxdriver.com> (sfid-20140520_201518_644762_1B148A19)
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
- <20140520142453.GB13981@tuxdriver.com>
- <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+	Mon, 19 May 2014 11:43:05 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so4369854wib.17
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 08:43:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <1400510950.4273.9.camel@jlt4.sipsolutions.net>
+References: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
+ <1400509775.4273.8.camel@jlt4.sipsolutions.net> <1400510950.4273.9.camel@jlt4.sipsolutions.net>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Mon, 19 May 2014 17:42:43 +0200
+Message-ID: <CAN8YU5OdpxQ0F7RMEFeQWC6PNzppHu6bDEt7Tv6dKntEUMy-9A@mail.gmail.com> (sfid-20140519_174309_723582_5C22A357)
+Subject: Re: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216..
+ and RX path involved in scan
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: emmanuel.grumbach@intel.com,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	joerg.albert@gmx.de, Alex Stewart <alex@foogod.com>,
+	n0_5p4m_p13453@hotmail.com, Pavel Roskin <proski@gnu.org>,
+	agx@sigxcpu.org, Kalle Valo <kalle.valo@iki.fi>, sesmo@gmx.net,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 08:01:31PM +0200, Janusz Dziedzic wrote:
-> On 20 May 2014 16:24, John W. Linville <linville@tuxdriver.com> wrote:
-> > On Tue, May 20, 2014 at 12:33:51AM -0700, Luis R. Rodriguez wrote:
-> >> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
-> >> <janusz.dziedzic@tieto.com> wrote:
-> >> > Introduce support for setting DFS CAC time
-> >> > in milliseconds.
-> >> >
-> >> > Eg.
-> >> > (5250 - 5330 @ AUTO), (20), (60000), DFS
-> >> >
-> >> > will setup CAC 60 seconds CAC time.
-> >>
-> >> Can you elaborate whether or not this will require a bump on CRDA  and
-> >> issuing of two new wireless-regdb files for the different versions on
-> >> the commit log?
-> >
-> > I would really prefer not to manage two regdb binary releases.
-> > Fear of that is what has kept me from merging this patch.
-> >
-> I can add support for version 19 and 20 in one crda. I am not sure
-> this is the best option.
-> BTW what about versions < 19? How do we handle this this days?
+Emmanuel, Johannes,
+Thank you for your answer.
 
-What about older CRDA with newer wireless-regdb?  Do we need to worry about that?
+Now that it has been clearly stated that driver must report this
+information, I obviously throw away the idea of modifying mac80211 :)
+BTW FYI what emmanuel suggested in the last mail seems very similar to
+what I tried to do as experiment, and that made the scan works again
+:)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+About Johannes patch.. Looks good :) But I already tried to do almost
+the same thing in the at79 driver, but I failed, because despite
+setting the single channel and performing a bunch of HW scan (one for
+each ch), it happened that my HW did several full scans disregarding
+the channel setting.
+
+But it might be MY bug! I hope it :)
+I saw the driver uses the same idea for implementing "monitor mode",
+so I thought it should work (but I have not tried yet with "monitor
+mode")...
+
+As soon as I have time I'll try Johannes patch (and FYI I will also
+try to finish some patches about WEP broken and DMA from stack memory)
+and I will post results..
+
+Thank you all :)
+Andrea
+
+
+On Mon, May 19, 2014 at 4:49 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2014-05-19 at 16:29 +0200, Johannes Berg wrote:
+>
+>> Since there's no "rx channel" information in this driver, but there does
+>> seem to be a (currently unused) channel field in the scan request, maybe
+>> we can make the driver request up to 14 single-channel scans (rather
+>> than a single full scan), and then it can keep track of the current
+>> channel in software and assign the pointer properly.
+>>
+>> This would also allow implementing regulatory for scan properly, which
+>> seems like a good idea as well.
+>
+> Maybe something like this works?
+>
+> http://p.sipsolutions.net/fa75caf17c54747a.txt
+>
+> johannes
+>
