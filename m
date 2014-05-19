@@ -1,62 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49607 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbaENNBU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 09:01:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Hold tx-lock while detaching htt.
-References: <1397695357-14028-1-git-send-email-greearb@candelatech.com>
-	<CA+BoTQ=Q3s6_9tXq02_3S0=q5qv4U4V1F_qHoN1X1pfWV9CKBA@mail.gmail.com>
-	<878uq4h690.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnPznQ_yFGVSvZY9PUsSGZmwPSsQcorpMYmNBgJ0vZOsQ@mail.gmail.com>
-Date: Wed, 14 May 2014 16:01:11 +0300
-In-Reply-To: <CA+BoTQnPznQ_yFGVSvZY9PUsSGZmwPSsQcorpMYmNBgJ0vZOsQ@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 14 May 2014 14:59:09 +0200")
-Message-ID: <874n0sh5uw.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_150123_432714_2E141C8B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:46832 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932733AbaESR0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 13:26:22 -0400
+Message-ID: <1400520341.3819.15.camel@dcbw.local> (sfid-20140519_192705_138648_0D6B13C5)
+Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
+From: Dan Williams <dcbw@redhat.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 19 May 2014 12:25:41 -0500
+In-Reply-To: <5379FCD0.2030506@cogentembedded.com>
+References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
+	 <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr>
+	 <5379FCD0.2030506@cogentembedded.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2014-05-19 at 16:45 +0400, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 19-05-2014 8:31, Julia Lawall wrote:
+> 
+> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> > Delete unnecessary local variable whose value is always 0 and that hides
+> > the fact that the result is always 0.
+> 
+> > A simplified version of the semantic patch that fixes this problem is as
+> > follows: (http://coccinelle.lip6.fr/)
+> 
+> > // <smpl>
+> > @r exists@
+> > local idexpression ret;
+> > expression e;
+> > position p;
+> > @@
+> >
+> > -ret = 0;
+> > ... when != ret = e
+> > return
+> > - ret
+> > + 0
+> >    ;
+> > // </smpl>
+> 
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> > ---
+> > Alternatively, was an error code intended in the bad length case, as is
+> > done in process_brxed_802_11_packet?
+> 
+> >   drivers/net/wireless/libertas/rx.c |    7 ++-----
+> >   1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> > diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+> > index c7366b0..807c5b8 100644
+> > --- a/drivers/net/wireless/libertas/rx.c
+> > +++ b/drivers/net/wireless/libertas/rx.c
+> [...]
+> > @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+> >   	else
+> >   		netif_rx_ni(skb);
+> >
+> > -	ret = 0;
+> >   done:
+> > -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+> > -	return ret;
+> > +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
+> 
+>     Why not just "ret 0"?
 
-> On 14 May 2014 14:52, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> On 17 April 2014 02:42,  <greearb@candelatech.com> wrote:
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> And check for null pool in the tx path (which would
->>>> indicate we are detaching).
->>>
->>> Shouldn't we just make sure tx is stopped before we try to detach htt?
->>> Stoping mac80211 queues and synchronize_net() should be sufficient I
->>> think.
->>>
->>>
->>>> @@ -403,6 +412,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
->>>>                 goto err;
->>>>
->>>>         spin_lock_bh(&htt->tx_lock);
->>>> +
->>>> +       /* Check if we are detached... */
->>>> +       if (! htt->tx_pool) {
->>>> +               spin_unlock_bh(&htt->tx_lock);
->>>
->>> Setting `res` would be nice to indicate an error. And there's a space after !.
->>
->> Ben, are you planning to send v2? Or what should we do with this patch?
->
-> My patchset `ath10k: recovery fixes 2014-05-09` fixes the problem by
-> avoiding the tx to happen when it shouldn't in the first place so
-> Ben's patch isn't necessary anymore I suppose.
+I think instead we want:
 
-Ah, that's great. I'll drop this patch then.
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index c7366b0..e446fed 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -67,30 +67,32 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 
+ 	lbs_deb_enter(LBS_DEB_RX);
+ 
+ 	BUG_ON(!skb);
+ 
+ 	skb->ip_summed = CHECKSUM_NONE;
+ 
+-	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
+-		return process_rxed_802_11_packet(priv, skb);
++	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
++		ret = process_rxed_802_11_packet(priv, skb);
++		goto done;
++	}
+ 
+ 	p_rx_pd = (struct rxpd *) skb->data;
+ 	p_rx_pkt = (struct rxpackethdr *) ((u8 *)p_rx_pd +
+ 		le32_to_cpu(p_rx_pd->pkt_ptr));
+ 
+ 	dev = lbs_mesh_set_dev(priv, dev, p_rx_pd);
+ 
+ 	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
+ 		 min_t(unsigned int, skb->len, 100));
+ 
+ 	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
+ 		lbs_deb_rx("rx err: frame received with bad length\n");
+ 		dev->stats.rx_length_errors++;
+-		ret = 0;
++		ret = -EINVAL;
+ 		dev_kfree_skb(skb);
+ 		goto done;
+ 	}
+ 
+ 	lbs_deb_rx("rx data: skb->len - pkt_ptr = %d-%zd = %zd\n",
+ 		skb->len, (size_t)le32_to_cpu(p_rx_pd->pkt_ptr),
+ 		skb->len - (size_t)le32_to_cpu(p_rx_pd->pkt_ptr));
 
--- 
-Kalle Valo
+Since that (a) preserves the enter/leave balance when monitor mode is
+enabled, and (b) fixes the return code that has been 0 since the driver
+was added to the tree in early 2007.  Dave Woodhouse fixed the
+process_rxed_802_11_packet() return code for EINVAL case in commit
+7bf02c29 from late 2007, and I think the normal codepath should do
+EINVAL too.  (though it turns out nothing cares about the return code
+anyway, we should still fix it)
+
+Dan
+
+
