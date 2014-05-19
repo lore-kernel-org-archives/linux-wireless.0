@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:61741 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaEXNiN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 09:38:13 -0400
-Received: by mail-wi0-f175.google.com with SMTP id f8so2114284wiw.14
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:11 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/14] staging: vt6656: CARDbClearCurrentTSF remove camel case
-Date: Sat, 24 May 2014 14:37:03 +0100
-Message-Id: <1400938630-2850-7-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153825_407596_635C2911)
-In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
-References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33735 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752631AbaESOvS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 10:51:18 -0400
+Message-ID: <1400511063.4273.10.camel@jlt4.sipsolutions.net> (sfid-20140519_165134_780257_363A9B8B)
+Subject: Re: [RFC 1/2] cfg80211: Add channel flags limiting availability to
+ OCB mode only
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Mon, 19 May 2014 16:51:03 +0200
+In-Reply-To: <1400510945-24868-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140519_164914_781166_025BC930)
+References: <1400510945-24868-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1400510945-24868-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140519_164914_781166_025BC930)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pDevice -> priv
+On Mon, 2014-05-19 at 16:49 +0200, Rostislav Lisovy wrote:
+> IEEE 802.11p operates in its own 5.9GHz band. When there will
+> be a record for the 5.9GHz band in the regulatory daemon,
+> it must be limited to the OCB mode only -- using the newly
+> added flags.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+This patch is fine, but insufficient - you should also do something with
+the new flags?
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index b904b20..bb06f59 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -636,17 +636,17 @@ bool CARDbGetCurrentTSF(struct vnt_private *priv, u64 *current_tsf)
-  *
-  * Parameters:
-  *  In:
-- *      pDevice         - The adapter to be read
-+ *      priv	- The adapter to be read
-  *
-  * Return Value: true if success; otherwise false
-  *
-  */
--bool CARDbClearCurrentTSF(struct vnt_private *pDevice)
-+bool CARDbClearCurrentTSF(struct vnt_private *priv)
- {
- 
--	MACvRegBitsOn(pDevice, MAC_REG_TFTCTL, TFTCTL_TSFCNTRST);
-+	MACvRegBitsOn(priv, MAC_REG_TFTCTL, TFTCTL_TSFCNTRST);
- 
--	pDevice->qwCurrTSF = 0;
-+	priv->qwCurrTSF = 0;
- 
- 	return true;
- }
--- 
-1.9.1
+johannes
 
