@@ -1,39 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:45772 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbaEIAVW convert rfc822-to-8bit (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17570 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750706AbaESEcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 20:21:22 -0400
-Received: by mail-oa0-f44.google.com with SMTP id i11so4062772oag.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 17:21:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1398125395-5579-1-git-send-email-notasas@gmail.com>
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
-Date: Fri, 9 May 2014 03:21:21 +0300
-Message-ID: <CANOLnOO0xPH9kfZuqdbpYkdQrOFAOvL-4H0QmfAUVKCwg0ot2Q@mail.gmail.com> (sfid-20140509_022126_818267_DD6AAD96)
-Subject: Re: [PATCH 0/4] wl1251 IBSS fixes
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 19 May 2014 00:32:48 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/13] libertas: make return of 0 explicit
+Date: Mon, 19 May 2014 06:31:03 +0200
+Message-Id: <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140519_063714_702849_ABDC16B6)
+In-Reply-To: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 22, 2014 at 3:09 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> IBSS mode is currently advertised by wl1251 driver but is totally broken.
-> First there is a disconnect hack for monitor mode that was recently merged,
-> it abuses mac80211 and causes corruption in IBSS mode, so I think should be
-> reverted. Then there are several cases of station-only mac80211 functions
-> called carelessly, what is also fixed.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Ping.
-This driver is orphan and hardware carrying it is outdated, so acks /
-tested-bys are unlikely..
+Delete unnecessary local variable whose value is always 0 and that hides
+the fact that the result is always 0.
 
+A simplified version of the semantic patch that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
--- 
-Gražvydas
+// <smpl>
+@r exists@
+local idexpression ret;
+expression e;
+position p;
+@@
+
+-ret = 0;
+... when != ret = e
+return 
+- ret
++ 0
+  ;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+Alternatively, was an error code intended in the bad length case, as is
+done in process_brxed_802_11_packet?
+
+ drivers/net/wireless/libertas/rx.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index c7366b0..807c5b8 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -55,7 +55,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+  */
+ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ {
+-	int ret = 0;
+ 	struct net_device *dev = priv->dev;
+ 	struct rxpackethdr *p_rx_pkt;
+ 	struct rxpd *p_rx_pd;
+@@ -86,7 +85,6 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
+ 		lbs_deb_rx("rx err: frame received with bad length\n");
+ 		dev->stats.rx_length_errors++;
+-		ret = 0;
+ 		dev_kfree_skb(skb);
+ 		goto done;
+ 	}
+@@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 	else
+ 		netif_rx_ni(skb);
+ 
+-	ret = 0;
+ done:
+-	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+-	return ret;
++	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(lbs_process_rxed_packet);
+ 
+
