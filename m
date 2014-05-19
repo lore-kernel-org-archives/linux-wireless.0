@@ -1,44 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:42651 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbaETHiN (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:51042 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283AbaESTe0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 03:38:13 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 19 May 2014 15:34:26 -0400
+Received: by mail-we0-f179.google.com with SMTP id q59so5956592wes.38
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 12:34:24 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@meshcoding.com>
-Subject: [PATCH] mac80211: avoid "uninitialised variable" warning
-Date: Tue, 20 May 2014 09:36:54 +0200
-Message-Id: <1400571414-19116-1-git-send-email-antonio@meshcoding.com> (sfid-20140520_093820_763857_ADB5F62F)
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/20] staging: vt6656: checkpatch cleanup BBvCalculateParameter.
+Date: Mon, 19 May 2014 20:33:01 +0100
+Message-Id: <1400527992-3061-9-git-send-email-tvboxspy@gmail.com> (sfid-20140519_213431_175166_81B5DBCA)
+In-Reply-To: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
+References: <1400527992-3061-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc is not able to correlate chan_pwr and have_chan_pwr
-in ieee80211_handle_pwr_constr(), therefore it throws a
-warning about chan_pwr being potentially used uninitialised
-even if this is not true.
+White space clean up.
 
-However, initialise chan_pwr to 0 to silent the warning.
-
-Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6656/baseband.c | 218 ++++++++++++++++++--------------------
+ 1 file changed, 103 insertions(+), 115 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7f073ef..43a2a7c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1146,7 +1146,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_country_ie_triplet *triplet;
- 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
--	int i, chan_pwr, chan_increment, new_ap_level;
-+	int i, chan_pwr = 0, chan_increment, new_ap_level;
- 	bool have_chan_pwr = false;
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 36977f0..9f435c5 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -731,129 +731,117 @@ void BBvCalculateParameter(struct vnt_private *pDevice, u32 cbFrameLength,
+ 	int bExtBit;
+ 	u8 byPreambleType = pDevice->byPreambleType;
  
- 	/* Invalid IE */
+-    cbBitCount = cbFrameLength * 8;
+-    bExtBit = false;
+-
+-    switch (wRate) {
+-    case RATE_1M :
+-        cbUsCount = cbBitCount;
+-	phy->signal = 0x00;
+-        break;
+-
+-    case RATE_2M :
+-        cbUsCount = cbBitCount / 2;
+-        if (byPreambleType == 1)
+-		phy->signal = 0x09;
+-        else // long preamble
+-		phy->signal = 0x01;
+-        break;
+-
+-    case RATE_5M :
+-        cbUsCount = (cbBitCount * 10) / 55;
+-        cbTmp = (cbUsCount * 55) / 10;
+-        if (cbTmp != cbBitCount)
+-            cbUsCount ++;
+-        if (byPreambleType == 1)
+-		phy->signal = 0x0a;
+-        else // long preamble
+-		phy->signal = 0x02;
+-        break;
+-
+-    case RATE_11M :
+-        cbUsCount = cbBitCount / 11;
+-        cbTmp = cbUsCount * 11;
+-        if (cbTmp != cbBitCount) {
+-            cbUsCount ++;
+-            if ((cbBitCount - cbTmp) <= 3)
+-                bExtBit = true;
+-        }
+-        if (byPreambleType == 1)
+-		phy->signal = 0x0b;
+-        else // long preamble
+-		phy->signal = 0x03;
+-        break;
+-
+-    case RATE_6M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9b;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8b;
+-        }
+-        break;
++	cbBitCount = cbFrameLength * 8;
++	bExtBit = false;
+ 
+-    case RATE_9M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9f;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8f;
+-        }
+-        break;
++	switch (wRate) {
++	case RATE_1M:
++		cbUsCount = cbBitCount;
+ 
+-    case RATE_12M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9a;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8a;
+-        }
+-        break;
++		phy->signal = 0x00;
+ 
+-    case RATE_18M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9e;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8e;
+-        }
+-        break;
++		break;
++	case RATE_2M:
++		cbUsCount = cbBitCount / 2;
+ 
+-    case RATE_24M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x99;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x89;
+-        }
+-        break;
++		if (byPreambleType == 1)
++			phy->signal = 0x09;
++		else
++			phy->signal = 0x01;
+ 
+-    case RATE_36M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9d;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8d;
+-        }
+-        break;
++		break;
++	case RATE_5M:
++		cbUsCount = (cbBitCount * 10) / 55;
++		cbTmp = (cbUsCount * 55) / 10;
+ 
+-    case RATE_48M :
+-        if(byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x98;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x88;
+-        }
+-        break;
++		if (cbTmp != cbBitCount)
++			cbUsCount++;
+ 
+-    case RATE_54M :
+-        if (byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9c;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8c;
+-        }
+-        break;
++		if (byPreambleType == 1)
++			phy->signal = 0x0a;
++		else
++			phy->signal = 0x02;
+ 
+-    default :
+-        if (byPacketType == PK_TYPE_11A) {//11a, 5GHZ
+-		phy->signal = 0x9c;
+-        }
+-        else {//11g, 2.4GHZ
+-		phy->signal = 0x8c;
+-        }
+-        break;
+-    }
++		break;
++	case RATE_11M:
++		cbUsCount = cbBitCount / 11;
++		cbTmp = cbUsCount * 11;
++
++		if (cbTmp != cbBitCount) {
++			cbUsCount++;
++
++			if ((cbBitCount - cbTmp) <= 3)
++				bExtBit = true;
++		}
++
++		if (byPreambleType == 1)
++			phy->signal = 0x0b;
++		else
++			phy->signal = 0x03;
++
++		break;
++	case RATE_6M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9b;
++		else
++			phy->signal = 0x8b;
++
++		break;
++	case RATE_9M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9f;
++		else
++			phy->signal = 0x8f;
++
++		break;
++	case RATE_12M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9a;
++		else
++			phy->signal = 0x8a;
++
++		break;
++	case RATE_18M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9e;
++		else
++			phy->signal = 0x8e;
++
++		break;
++	case RATE_24M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x99;
++		else
++			phy->signal = 0x89;
++
++		break;
++	case RATE_36M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9d;
++		else
++			phy->signal = 0x8d;
++
++		break;
++	case RATE_48M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x98;
++		else
++			phy->signal = 0x88;
++
++		break;
++	case RATE_54M:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9c;
++		else
++			phy->signal = 0x8c;
++		break;
++	default:
++		if (byPacketType == PK_TYPE_11A)
++			phy->signal = 0x9c;
++		else
++			phy->signal = 0x8c;
++		break;
++	}
+ 
+ 	if (byPacketType == PK_TYPE_11B) {
+ 		phy->service = 0x00;
 -- 
-1.8.5.5
+1.9.1
 
