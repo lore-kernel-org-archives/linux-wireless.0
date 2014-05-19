@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:56323 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaEOVvr (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:22848 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815AbaESKTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:47 -0400
-Received: by mail-we0-f182.google.com with SMTP id t60so1745132wes.13
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:46 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 08/15] staging: vt6656: lock changes: bMgrPrepareBeaconToSend add lock.
-Date: Thu, 15 May 2014 22:49:17 +0100
-Message-Id: <1400190564-5135-8-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235150_789021_ED53733D)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 19 May 2014 06:19:17 -0400
+Date: Mon, 19 May 2014 13:18:56 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Karim Raslan <karim.allah.ahmed@gmail.com>
+Cc: devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change
+ rtw_alloc_stainfo23a to use gfp_t instead if int
+Message-ID: <20140519101855.GU15585@mwanda> (sfid-20140519_121935_497040_18EF4A17)
+References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bMgrPrepareBeaconToSend is nolonger atomic
+On Sun, May 18, 2014 at 07:39:23AM +0100, Karim Raslan wrote:
+> This should fix a few sparse warnings like the following:
+> 
+>   CHECK   drivers/staging/rtl8723au/core/rtw_ap.c
+> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45: warning: incorrect type in argument 3 (different base types)
+> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    expected int [signed] gfp
+> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    got restricted gfp_t
+> 
 
-csBeacon_xmit must be locked add spin lock.
+Thanks, Karim, looks good.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wmgr.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Jes's patch which added this never went to the list so I didn't review
+it.  This annoys me.
 
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 0d69719..cce67cd 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -4058,6 +4058,7 @@ int bMgrPrepareBeaconToSend(struct vnt_private *pDevice,
- 	struct vnt_manager *pMgmt)
- {
- 	struct vnt_tx_mgmt *pTxPacket;
-+	unsigned long flags;
- 
- //    pDevice->bBeaconBufReady = false;
-     if (pDevice->bEncryptionEnable || pDevice->bEnable8021x){
-@@ -4084,8 +4085,13 @@ int bMgrPrepareBeaconToSend(struct vnt_private *pDevice,
-         (pMgmt->abyCurrBSSID[0] == 0))
-         return false;
- 
--    csBeacon_xmit(pDevice, pTxPacket);
--    MACvRegBitsOn(pDevice, MAC_REG_TCR, TCR_AUTOBCNTX);
-+	spin_lock_irqsave(&pDevice->lock, flags);
-+
-+	csBeacon_xmit(pDevice, pTxPacket);
-+
-+	spin_unlock_irqrestore(&pDevice->lock, flags);
-+
-+	MACvRegBitsOn(pDevice, MAC_REG_TCR, TCR_AUTOBCNTX);
- 
-     return true;
- }
--- 
-1.9.1
+I try to be fair when I review code.  I try to allow lots of patches in
+and let people send fix up patches for minor stuff.  But, obviously, you
+should be running Sparse as part of the review process so if I made you
+redo this patch it's because your process is broken.  When I review
+patches I am trying to help you.
+
+regards,
+dan carpenter
 
