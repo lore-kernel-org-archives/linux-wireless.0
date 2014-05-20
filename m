@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:55074 "EHLO ozlabs.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37976 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753310AbaE2Xkf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 19:40:35 -0400
-Date: Fri, 30 May 2014 09:40:25 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: abdoulaye berthe <berthe.ab@gmail.com>
-Cc: David Daney <ddaney.cavm@gmail.com>, devel@driverdev.osuosl.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	patches@opensource.wolfsonmicro.com, linux-mips@linux-mips.org,
-	netdev@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>,
-	linux-sh@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	spear-devel@list.st.com, linux-samsungsoc@vger.kernel.org,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-leds@vger.kernel.org, m@bues.ch, linux-input@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
-Subject: Re: [PATCH] gpio: removes all usage of gpiochip_remove retval
-Message-ID: <20140530094025.3b78301e@canb.auug.org.au> (sfid-20140530_014044_340331_D3C60C85)
-In-Reply-To: <CABprBybQ-Jyk95zCqnoWjjyzhNyHVbsbEhb=vA5d=ZYp95_bFA@mail.gmail.com>
-References: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
-	<5387B149.20408@gmail.com>
-	<CABprBybQ-Jyk95zCqnoWjjyzhNyHVbsbEhb=vA5d=ZYp95_bFA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/852XE2D+8ii.R+aAPw7pJ16"; protocol="application/pgp-signature"
+	id S1751755AbaETSY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 14:24:58 -0400
+Message-ID: <1400610273.4474.6.camel@jlt4.sipsolutions.net> (sfid-20140520_202501_013531_F1DDC756)
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 20 May 2014 20:24:33 +0200
+In-Reply-To: <20140520180832.GD13981@tuxdriver.com> (sfid-20140520_201518_644762_1B148A19)
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+	 <20140520142453.GB13981@tuxdriver.com>
+	 <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+	 <20140520180832.GD13981@tuxdriver.com>
+	 (sfid-20140520_201518_644762_1B148A19)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/852XE2D+8ii.R+aAPw7pJ16
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2014-05-20 at 14:08 -0400, John W. Linville wrote:
 
-Hi abdoulaye,
+> > I can add support for version 19 and 20 in one crda. I am not sure
+> > this is the best option.
+> > BTW what about versions < 19? How do we handle this this days?
+> 
+> What about older CRDA with newer wireless-regdb?  Do we need to worry about that?
 
-On Fri, 30 May 2014 01:16:22 +0200 abdoulaye berthe <berthe.ab@gmail.com> w=
-rote:
->
-> The aim of this patch is to make gpiochip_remove() behavior consistent,
-> especially when issuing a remove request while the chipio chip is
-> still requested. A patch has been submitted to change the return value of
-> gpiochip_remove() from int to void. This one updates users of the return
-> value:
+I think we should, but if we can't then at least can we cut to an
+extensible format?
 
-Then you need to keep these two patch in a series with this one first
-to make sure that the other patch is not applied without this one.
+(and yeah, I know I was part of defining the format ...)
 
-And you should add the above explanation to the changelog for this
-patch.
+johannes
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Sig_/852XE2D+8ii.R+aAPw7pJ16
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJTh8VuAAoJEMDTa8Ir7ZwV8iEQAICWaN/UMPsdzewqsMiXXSMh
-C5svkPpUj+qDUSm6Z89xsBlSrNn5iaa06uiZllN8KLoLbhGpZ5xdGqmMalys33zc
-Bh2lJNCtozIbI1fMW63+W94wMtWNSnUAbX4szSpxbbaZQ3ig9ixXegji8nvONTqw
-QWNjGORnMPvzrCsTrv8/hNYlmeT/9WZwAwVLr9++ldM0fow/SfF251WvmNjheAcq
-2YCd1vEk7ZZ9aFDr463CKP3eeTKDtWaSrdoXLdIvs627tRtfhSuqQF1q6d8B1Vbk
-HR9xx3bANosgA/Fa7rHcWxw8lLr5EDXeaHJieT0I05kXPM1rSIh9tTGAeXivG/LH
-j+FWHe7P3v2qN+mvgqRHIndi1axUhm4ZbqG3Wcg8uAV+rGxemlmkZMWzdMPwzcRA
-YJKTVoc+LbLp4Yb1HpZ4hYbKvxu7iEf8OQJsb9bY3lnm8Rnax4VhQtn15aKn2fLr
-b8xSfM9iGeL1bgEyh5pK4BVgE1+N7Z/7qGfD95EAT9v5cX7di9y+eU8zXb0fmXRh
-V1rV2n9RfrbH3wE8DoR4yC2SeDcQl5F/CwII/zHkymzWTgGvpN4mhk06q0CPhxxO
-nZD317b7OuLQbDbZJ+o/92/XMlOt6Sanno1I27C19ahUMynJAo32O+xHIDdv5AKI
-Dom8qI4Ex3DKkwqflJzw
-=RG4V
------END PGP SIGNATURE-----
-
---Sig_/852XE2D+8ii.R+aAPw7pJ16--
