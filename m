@@ -1,68 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:33411 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065AbaE0UIS (ORCPT
+Received: from smtprelay0075.hostedemail.com ([216.40.44.75]:53106 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751244AbaETTOJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 16:08:18 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so10338988wes.29
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:08:17 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] b43: N-PHY: optimize radio switching on/off
-Date: Tue, 27 May 2014 22:07:33 +0200
-Message-Id: <1401221253-4135-3-git-send-email-zajec5@gmail.com> (sfid-20140527_220828_436329_E7D71E54)
-In-Reply-To: <1401221253-4135-1-git-send-email-zajec5@gmail.com>
-References: <1401221253-4135-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 May 2014 15:14:09 -0400
+Message-ID: <1400613243.26709.26.camel@joe-AO725> (sfid-20140520_211413_216813_2B28B9E0)
+Subject: [PATCH] staging: realtek: Convert /n to \n
+From: Joe Perches <joe@perches.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 20 May 2014 12:14:03 -0700
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom's wl 6.30.223.141 has some optimizations for radios 0x205[67].
+Use proper line terminations.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/b43/main.c  | 4 +++-
- drivers/net/wireless/b43/phy_n.c | 6 ++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/staging/rtl8188eu/hal/usb_ops_linux.c | 2 +-
+ drivers/staging/rtl8188eu/os_dep/usb_intf.c   | 2 +-
+ drivers/staging/rtl8723au/hal/usb_ops_linux.c | 4 ++--
+ drivers/staging/rtl8723au/os_dep/usb_intf.c   | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index bf27917..32538ac 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3742,7 +3742,9 @@ static int b43_switch_band(struct b43_wldev *dev,
- 	b43dbg(dev->wl, "Switching to %s GHz band\n",
- 	       band_to_string(chan->band));
+diff --git a/drivers/staging/rtl8188eu/hal/usb_ops_linux.c b/drivers/staging/rtl8188eu/hal/usb_ops_linux.c
+index d8fc747..d9f60ab 100644
+--- a/drivers/staging/rtl8188eu/hal/usb_ops_linux.c
++++ b/drivers/staging/rtl8188eu/hal/usb_ops_linux.c
+@@ -558,7 +558,7 @@ static void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
+ 			rtw_read_port(adapt, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
+ 			break;
+ 		case -EINPROGRESS:
+-			DBG_88E("ERROR: URB IS IN PROGRESS!/n");
++			DBG_88E("ERROR: URB IS IN PROGRESS!\n");
+ 			break;
+ 		default:
+ 			break;
+diff --git a/drivers/staging/rtl8188eu/os_dep/usb_intf.c b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+index 8ed2ac8..c63e263 100644
+--- a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+@@ -88,7 +88,7 @@ static u8 rtw_init_intf_priv(struct dvobj_priv *dvobj)
  
--	b43_software_rfkill(dev, true);
-+	/* Some new devices don't need disabling radio for band switching */
-+	if (!(phy->type == B43_PHYTYPE_N && phy->rev >= 3))
-+		b43_software_rfkill(dev, true);
- 
- 	phy->gmode = gmode;
- 	b43_phy_put_into_reset(dev);
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 98ff806..86569f6 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -5707,10 +5707,12 @@ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
- 		}
- 	} else {
- 		if (dev->phy.rev >= 7) {
--			b43_radio_2057_init(dev);
-+			if (!dev->phy.radio_on)
-+				b43_radio_2057_init(dev);
- 			b43_switch_channel(dev, dev->phy.channel);
- 		} else if (dev->phy.rev >= 3) {
--			b43_radio_init2056(dev);
-+			if (!dev->phy.radio_on)
-+				b43_radio_init2056(dev);
- 			b43_switch_channel(dev, dev->phy.channel);
- 		} else {
- 			b43_radio_init2055(dev);
--- 
-1.8.4.5
+ 	dvobj->usb_alloc_vendor_req_buf = rtw_zmalloc(MAX_USB_IO_CTL_SIZE);
+ 	if (dvobj->usb_alloc_vendor_req_buf == NULL) {
+-		DBG_88E("alloc usb_vendor_req_buf failed... /n");
++		DBG_88E("alloc usb_vendor_req_buf failed...\n");
+ 		rst = _FAIL;
+ 		goto exit;
+ 	}
+diff --git a/drivers/staging/rtl8723au/hal/usb_ops_linux.c b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+index 73b49ac..df2e884 100644
+--- a/drivers/staging/rtl8723au/hal/usb_ops_linux.c
++++ b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+@@ -439,7 +439,7 @@ urb_submit:
+ 		case -EPROTO:
+ 			break;
+ 		case -EINPROGRESS:
+-			DBG_8723A("ERROR: URB IS IN PROGRESS!/n");
++			DBG_8723A("ERROR: URB IS IN PROGRESS!\n");
+ 			break;
+ 		default:
+ 			break;
+@@ -734,7 +734,7 @@ static void usb_read_port_complete(struct urb *purb)
+ 					    precvbuf);
+ 			break;
+ 		case -EINPROGRESS:
+-			DBG_8723A("ERROR: URB IS IN PROGRESS!/n");
++			DBG_8723A("ERROR: URB IS IN PROGRESS!\n");
+ 			break;
+ 		default:
+ 			break;
+diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+index d00ccdc..f78be19 100644
+--- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+@@ -107,7 +107,7 @@ static int rtw_init_intf_priv(struct dvobj_priv *dvobj)
+ 	dvobj->usb_alloc_vendor_req_buf = kzalloc(MAX_USB_IO_CTL_SIZE,
+ 						  GFP_KERNEL);
+ 	if (dvobj->usb_alloc_vendor_req_buf == NULL) {
+-		DBG_8723A("alloc usb_vendor_req_buf failed... /n");
++		DBG_8723A("alloc usb_vendor_req_buf failed...\n");
+ 		rst = _FAIL;
+ 		goto exit;
+ 	}
+
 
