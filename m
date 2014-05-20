@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21880 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753618AbaESNRa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 09:17:30 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
-	devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change rtw_alloc_stainfo23a to use gfp_t instead if int
-References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
-	<20140519101855.GU15585@mwanda>
-	<wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org>
-	<20140519104012.GP16255@mwanda>
-	<wrfjlhtyrqlc.fsf@ultrasam.lan.trained-monkey.org>
-	<20140519114000.GW15585@mwanda>
-Date: Mon, 19 May 2014 15:10:29 +0200
-In-Reply-To: <20140519114000.GW15585@mwanda> (Dan Carpenter's message of "Mon,
-	19 May 2014 14:40:00 +0300")
-Message-ID: <wrfj8upxsym2.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140519_151750_476775_E242D05B)
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:43318
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750758AbaETAbb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2014 20:31:31 -0400
+Date: Tue, 20 May 2014 08:30:46 +0800 (SGT)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
+In-Reply-To: <5379FCD0.2030506@cogentembedded.com>
+Message-ID: <alpine.DEB.2.10.1405200829390.2723@hadrien> (sfid-20140520_023153_911006_E7479365)
+References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr> <5379FCD0.2030506@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> On Mon, May 19, 2014 at 12:49:03PM +0200, Jes Sorensen wrote:
->> You should be running your tools against the staging tree automatically,
->> that way you catch it before it hits the mainline tree.
->>
->> Just flooding mailing lists for the sake of flooding them doesn't add
->> any value either.
+
+
+On Mon, 19 May 2014, Sergei Shtylyov wrote:
+
+> Hello.
 >
-> We are used to handling the traffic.  Heh.  Don't worry about us.  ;)
+> On 19-05-2014 8:31, Julia Lawall wrote:
+>
+> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> > Delete unnecessary local variable whose value is always 0 and that hides
+> > the fact that the result is always 0.
+>
+> > A simplified version of the semantic patch that fixes this problem is as
+> > follows: (http://coccinelle.lip6.fr/)
+>
+> > // <smpl>
+> > @r exists@
+> > local idexpression ret;
+> > expression e;
+> > position p;
+> > @@
+> >
+> > -ret = 0;
+> > ... when != ret = e
+> > return
+> > - ret
+> > + 0
+> >    ;
+> > // </smpl>
+>
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> > ---
+> > Alternatively, was an error code intended in the bad length case, as is
+> > done in process_brxed_802_11_packet?
+>
+> >   drivers/net/wireless/libertas/rx.c |    7 ++-----
+> >   1 file changed, 2 insertions(+), 5 deletions(-)
+>
+> > diff --git a/drivers/net/wireless/libertas/rx.c
+> > b/drivers/net/wireless/libertas/rx.c
+> > index c7366b0..807c5b8 100644
+> > --- a/drivers/net/wireless/libertas/rx.c
+> > +++ b/drivers/net/wireless/libertas/rx.c
+> [...]
+> > @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv,
+> > struct sk_buff *skb)
+> >   	else
+> >   		netif_rx_ni(skb);
+> >
+> > -	ret = 0;
+> >   done:
+> > -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+> > -	return ret;
+> > +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
+>
+>    Why not just "ret 0"?
 
-I know how the traffic works, and I know I don't particularly like
-flooding that I don't need to receive. I'll add
-devel@driverdev.osuosl.org to the CC list next time.
+OK, I wasn't sure if it was useful to keep the same number of arguments.
+But I will update it, since from the definition of lbs_deb_leave_args it
+seems ok.
 
-> I don't actually run static analysis on staging patches until they hit
-> linux-next, I only review the mailing list patches manually.  My review
-> process is built around mailing lists so creating a special process for
-> rtl8723au makes my life harder instead of easier.  Every subsystem has a
-> review process, it's not that we are treating you unfairly by asking you
-> to send your patches for review.
-
-I am not suggesting you do it for the rtl8723au driver, I suggest you do
-it as a general thing. I don't read devel@driverdev.osuosl.org either,
-and like many other developers, I mostly gave up on lkml as well.
-
-> Btw, Greg doesn't rebase the staging tree so, once a patch is merged,
-> then it means it will hit mainline.  At that point, it is too late to
-> send a second version of the patch.
-
-I know, but I also know that I am not going to rebase my tree and
-resubmit the full set, unless there is a strong reason for doing so.
-As long as something sits in staging it's not really a showstopper if a
-minor issue slips past and gets fixed up in a follow-on commit.
-
-Jes
+julia
