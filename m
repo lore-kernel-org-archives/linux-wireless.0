@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:56196 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933630AbaEFCTc (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:48545 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719AbaETHeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 22:19:32 -0400
-Received: by mail-pa0-f53.google.com with SMTP id kp14so6076824pab.12
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 19:19:32 -0700 (PDT)
-Date: Tue, 6 May 2014 10:19:15 +0800
-From: Adam Lee <adam.lee@canonical.com>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/3] rtlwifi: make MSI support a module parameter
-Message-ID: <20140506021915.GA3624@adam-laptop> (sfid-20140506_041936_521152_AE303041)
-References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
- <5367A690.7010305@lwfinger.net>
- <20140505154037.19620ac2@nehalam.linuxnetplumber.net>
+	Tue, 20 May 2014 03:34:12 -0400
+Received: by mail-lb0-f171.google.com with SMTP id 10so59459lbg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 00:34:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140505154037.19620ac2@nehalam.linuxnetplumber.net>
+In-Reply-To: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 20 May 2014 00:33:51 -0700
+Message-ID: <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com> (sfid-20140520_093430_714384_61099EB9)
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 05, 2014 at 03:40:37PM -0700, Stephen Hemminger wrote:
-> On Mon, 05 May 2014 09:56:16 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
-> > On 05/05/2014 03:33 AM, Adam Lee wrote:
-> > > This makes MSI support a module parameter, for debugging and workaround
-> > > convenience.
-> > >
-> > > Signed-off-by: Adam Lee <adam.lee@canonical.com>  
-> > 
-> > Acked-by: Larry Finger <Larry.Finger@lwfinger.net> (for all 3 patches)
-> > 
-> > I would have made the default for the MSI option to be true, but that is a 
-> > matter of preference, and only experience would show which default leads to the 
-> > fewer failures. On my laptop, both rtl8188ee and rtl8723be work either way. I am 
-> > now working on a driver for the RTL8192EE that also can use MSI - that has only 
-> > been tested with the option on.
-> > 
-> > Larry
-> 
-> Standard practice is to assume MSI is available, and let the quirks
-> in the PCI subsystem reject the request to enable MSI.
-> 
-> Also other drivers have a 'disable_msi' module parameter why not follow
-> their example.
-> 
+On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Introduce support for setting DFS CAC time
+> in milliseconds.
+>
+> Eg.
+> (5250 - 5330 @ AUTO), (20), (60000), DFS
+>
+> will setup CAC 60 seconds CAC time.
 
-Because some submodule's MSI causes an regression, and other submodules
-of rtlwifi are not fully tested under MSI, we need to disable it by
-default(regression has higher priority) and have an 'enable_msi' module
-parameter for some certain users.
+Can you elaborate whether or not this will require a bump on CRDA  and
+issuing of two new wireless-regdb files for the different versions on
+the commit log?
 
--- 
-Adam Lee
+ Luis
