@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13496 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbaEZJka (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:57437 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753188AbaETN0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 05:40:30 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 26 May 2014 12:40:21 +0300
-In-Reply-To: <1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 15 May 2014 10:42:02 +0200")
-Message-ID: <87y4xoswsa.fsf@kamboji.qca.qualcomm.com> (sfid-20140526_114034_867135_91E90331)
+	Tue, 20 May 2014 09:26:50 -0400
+Received: by mail-la0-f42.google.com with SMTP id el20so394164lab.29
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 06:26:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+Date: Tue, 20 May 2014 15:26:48 +0200
+Message-ID: <CALhHN=rLpBt-aTNDSbO6BO-TwFYuHf79=rpsTetysBrW_D47cA@mail.gmail.com> (sfid-20140520_152703_370909_DC8595CD)
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> This makes sure no further tx requests are
-> submitted to HTT before driver teardown.
+On 20 May 2014 09:33, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> Introduce support for setting DFS CAC time
+>> in milliseconds.
+>>
+>> Eg.
+>> (5250 - 5330 @ AUTO), (20), (60000), DFS
+>>
+>> will setup CAC 60 seconds CAC time.
 >
-> This should prevent invalid pointer/NULL
-> dereference on htt tx pool in ath10k_htt_tx() in
-> some cases of heavy traffic.
+> Can you elaborate whether or not this will require a bump on CRDA  and
+> issuing of two new wireless-regdb files for the different versions on
+> the commit log?
 >
-> Reported-By: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 30 ++++++++++++++++++++++++------
->  1 file changed, 24 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index b5d75b8..577a3a5 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2289,6 +2289,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
->  /*
->   * Initialize various parameters with default vaules.
->   */
-> +static void ath10k_drain_tx(struct ath10k *ar)
-> +{
-> +	/* workers can hold conf_mutex -- avoid deadlock */
-> +	WARN_ON(lockdep_is_held(&ar->conf_mutex));
+Yes, sure - will add this.
 
-Based on the discussion I modified the function to this now. Are you ok
-with that?
+BTW, probably you know, why we decide to split usermode regulatory
+code into crda, regdb? This required binary interface between them and
+a lot of "not needed" code? Why we don't simply zip/sign db.tx code
+and parse this direrctly in crda and use just one user mode project
+for that.
+What was the reason for have regulatory in binary file?
 
-/* Must not be called with conf_mutex held as workers can use that also. */
-static void ath10k_drain_tx(struct ath10k *ar)
-{
-	/* make sure rcu-protected mac80211 tx path itself is drained */
-	synchronize_net();
-
-	ath10k_offchan_tx_purge(ar);
-	ath10k_mgmt_over_wmi_tx_purge(ar);
-
-	cancel_work_sync(&ar->offchan_tx_work);
-	cancel_work_sync(&ar->wmi_mgmt_tx_work);
-}
-
-Full patch:
-
-https://github.com/kvalo/ath/commit/e3c513cd03802e75802a6ce5efbadaa0dbf04b27
-
--- 
-Kalle Valo
+BR
+Janusz
