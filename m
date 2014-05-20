@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49293 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756785AbaEPO0U (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38877 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704AbaETOaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 10:26:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Luca Coelho <luca@coelho.fi>
-CC: <ath10k@lists.infradead.org>, <ath9k-devel@venema.h4ckr.net>,
-	<linux-wireless@vger.kernel.org>, <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath9k/ath10k: remove unnecessary channel_switch_beacon callbacks
-References: <1400248534-16763-1-git-send-email-luca@coelho.fi>
-Date: Fri, 16 May 2014 17:26:13 +0300
-In-Reply-To: <1400248534-16763-1-git-send-email-luca@coelho.fi> (Luca Coelho's
-	message of "Fri, 16 May 2014 16:55:34 +0300")
-Message-ID: <87y4y13im2.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_162627_890778_69DD5806)
+	Tue, 20 May 2014 10:30:14 -0400
+Date: Tue, 20 May 2014 10:24:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+Message-ID: <20140520142453.GB13981@tuxdriver.com> (sfid-20140520_163021_237489_C57542FF)
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+ <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Tue, May 20, 2014 at 12:33:51AM -0700, Luis R. Rodriguez wrote:
+> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+> > Introduce support for setting DFS CAC time
+> > in milliseconds.
+> >
+> > Eg.
+> > (5250 - 5330 @ AUTO), (20), (60000), DFS
+> >
+> > will setup CAC 60 seconds CAC time.
+> 
+> Can you elaborate whether or not this will require a bump on CRDA  and
+> issuing of two new wireless-regdb files for the different versions on
+> the commit log?
 
-> From: Luciano Coelho <luciano.coelho@intel.com>
->
-> The channel_switch_beacon callback is optional, so it doesn't have to
-> be defined if it's not going to do anything useful with it.  Both
-> ath9k and ath10k define the callback and just returns.  This commit
-> removes them.
->
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> ---
->
-> I'm plannnig to remove the channel_switch_beacon callback (actually,
-> replace it with a more generic one that can be used for STA and other
-> iftypes too) and ath9k/ath10k are the only (non) users of it. ;)
+I would really prefer not to manage two regdb binary releases.
+Fear of that is what has kept me from merging this patch.
 
-John, I'm planning to take this as I think we will get less conflicts
-that way. But let me know if you want it instead.
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
