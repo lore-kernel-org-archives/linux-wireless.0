@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11576 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbaENO0X (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:40285 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699AbaETGGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 10:26:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: fixes 2014-05-14
-References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 14 May 2014 17:26:15 +0300
-In-Reply-To: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 14 May 2014 14:16:24 +0200")
-Message-ID: <8738gcfnco.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_162626_674518_09D9B6BB)
+	Tue, 20 May 2014 02:06:42 -0400
+Received: by mail-qg0-f41.google.com with SMTP id j5so4438qga.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 23:06:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
+References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
+ <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Tue, 20 May 2014 08:06:21 +0200
+Message-ID: <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com> (sfid-20140520_080645_597407_785190B2)
+Subject: Re: 802.11s mode without HWMP
+To: etienne.champetier@free.fr
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> This is another pair of patches.
+On Mon, May 19, 2014 at 9:38 PM,  <etienne.champetier@free.fr> wrote:
+> Hi,
 >
-> It fixes a crash recently reported by Ben, but..
+> I'm curious, what are you using for your L3 mesh/can you give details on the network?
 >
-> I've been able to find only a single code path
-> that called free_irq() twice in upstream code.
-> However it doesn't match the call trace reported
-> by Ben. I have to assume this is related to his
-> local patches or this is a very wierd case of
-> recovery race between userspace/mac80211/driver.
->
->
-> Michal Kazior (2):
->   ath10k: fix core start sequence
->   ath10k: prevent hif_stop being called twice
+> Thanks in advance
+> Etienne
 
-The patches don't apply anymore and the conflict was not trivial enough
-for me to fix it. Can you rebase, please?
+I am using the Olsr.org codebase for routing... I have spent the last
+~2 years to do a clean rewrite of the codebase for an OLSRv2
+implementation.
 
-(This is the thread I was supposed to reply, sorry for the confusion.)
+I am not directly involved in one special mesh network.
 
--- 
-Kalle Valo
+1st, I am involved in the Olsr.org project, which is one of the
+routing protocols used in lots of cities in Europe to build large
+city-wide mesh networks with a mixture of wifi links, some of them
+with hundreds of nodes.
+
+2nd, I am working for Fraunhofer FKIE in mesh related research
+(currently as part of the EU CONFINE project, see
+www.confine-project.eu) and we are interested in using mesh networks
+both for civil usecases (police, fire brigade, disaster recovery like
+earthquakes) and military ones.
+
+Some networks running with OLSR.org routing software have hundreds of
+nodes, most are smaller.
+
+My interest in the "bridging adhoc mode" is also related to the IETF
+DLEP draft (http://tools.ietf.org/html/draft-ietf-manet-dlep-05),
+which contains the concept of the "ethernet attached briding radio"
+and a communication protocol between local router and radio.
+
+I think a "802.11s without HWMP" mode would make a perfect candidate
+for a DLEP style radio, at the moment I am using IBSS mode and a hack
+with the mac addresses.
+
+I hope this answers your question.
+
+Henning Rogge
