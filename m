@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:44790 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388AbaEGTxz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:55 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so1982008wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:54 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/23] iwlwifi: mvm: fix bug in parse_nvm_sections
-Date: Wed,  7 May 2014 22:52:51 +0300
-Message-Id: <1399492380-12050-14-git-send-email-egrumbach@gmail.com> (sfid-20140507_215410_353912_BC237054)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36326 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674AbaETHtx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 03:49:53 -0400
+Message-ID: <1400572176.4474.0.camel@jlt4.sipsolutions.net> (sfid-20140520_094957_475603_CFC74E96)
+Subject: Re: [PATCH] mac80211: avoid "uninitialised variable" warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 May 2014 09:49:36 +0200
+In-Reply-To: <1400571414-19116-1-git-send-email-antonio@meshcoding.com>
+References: <1400571414-19116-1-git-send-email-antonio@meshcoding.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Tue, 2014-05-20 at 09:36 +0200, Antonio Quartulli wrote:
+> gcc is not able to correlate chan_pwr and have_chan_pwr
+> in ieee80211_handle_pwr_constr(), therefore it throws a
+> warning about chan_pwr being potentially used uninitialised
+> even if this is not true.
+> 
+> However, initialise chan_pwr to 0 to silent the warning.
 
-The old code checks if hw_section_num is valid while the
-right thing to do is to check if section[hw_section_num].data
-is valid.
+I don't see any warnings (even with -Wmaybe-uninitialized added
+manually) and don't like gratuitous initializations, so I'll drop this.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/nvm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index 6d0e659..6b88c29 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -246,7 +246,7 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 			return NULL;
- 		}
- 		/* MAC_OVERRIDE or at least HW section must exist */
--		if (!mvm->cfg->nvm_hw_section_num &&
-+		if (!mvm->nvm_sections[mvm->cfg->nvm_hw_section_num].data &&
- 		    !mvm->nvm_sections[NVM_SECTION_TYPE_MAC_OVERRIDE].data) {
- 			IWL_ERR(mvm,
- 				"Can't parse mac_address, empty sections\n");
--- 
-1.8.3.2
+johannes
 
