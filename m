@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:44053 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754757AbaEORFA (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:39166 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750894AbaETAgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:00 -0400
-Received: by mail-we0-f181.google.com with SMTP id w61so1343335wes.26
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:04:59 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/24] iwlwifi: mvm: add channel 14 to the low band list
-Date: Thu, 15 May 2014 20:04:22 +0300
-Message-Id: <1400173481-9047-5-git-send-email-egrumbach@gmail.com> (sfid-20140515_190510_738357_592CDC16)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+	Mon, 19 May 2014 20:36:32 -0400
+Date: Tue, 20 May 2014 08:36:24 +0800 (SGT)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/13] libertas: make return of 0 explicit
+In-Reply-To: <5379FCD0.2030506@cogentembedded.com>
+Message-ID: <alpine.DEB.2.10.1405200835490.2723@hadrien> (sfid-20140520_023635_653037_3E7F1436)
+References: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> <1400473875-22228-2-git-send-email-Julia.Lawall@lip6.fr> <5379FCD0.2030506@cogentembedded.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
 
-in family 8000: additional channel 14 added to the low
-band list. now the number of channels in the low band
-is 15.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Dor Shaish <dor.shaish@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon, 19 May 2014, Sergei Shtylyov wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 49963e4..85eee79 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -128,7 +128,7 @@ static const u8 iwl_nvm_channels[] = {
- 
- static const u8 iwl_nvm_channels_family_8000[] = {
- 	/* 2.4 GHz */
--	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
- 	/* 5 GHz */
- 	36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92,
- 	96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
-@@ -138,7 +138,7 @@ static const u8 iwl_nvm_channels_family_8000[] = {
- #define IWL_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
- #define IWL_NUM_CHANNELS_FAMILY_8000	ARRAY_SIZE(iwl_nvm_channels_family_8000)
- #define NUM_2GHZ_CHANNELS		14
--#define NUM_2GHZ_CHANNELS_FAMILY_8000	13
-+#define NUM_2GHZ_CHANNELS_FAMILY_8000	14
- #define FIRST_2GHZ_HT_MINUS		5
- #define LAST_2GHZ_HT_PLUS		9
- #define LAST_5GHZ_HT			161
--- 
-1.8.3.2
+> Hello.
+>
+> On 19-05-2014 8:31, Julia Lawall wrote:
+>
+> > From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> > Delete unnecessary local variable whose value is always 0 and that hides
+> > the fact that the result is always 0.
+>
+> > A simplified version of the semantic patch that fixes this problem is as
+> > follows: (http://coccinelle.lip6.fr/)
+>
+> > // <smpl>
+> > @r exists@
+> > local idexpression ret;
+> > expression e;
+> > position p;
+> > @@
+> >
+> > -ret = 0;
+> > ... when != ret = e
+> > return
+> > - ret
+> > + 0
+> >    ;
+> > // </smpl>
+>
+> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> > ---
+> > Alternatively, was an error code intended in the bad length case, as is
+> > done in process_brxed_802_11_packet?
+>
+> >   drivers/net/wireless/libertas/rx.c |    7 ++-----
+> >   1 file changed, 2 insertions(+), 5 deletions(-)
+>
+> > diff --git a/drivers/net/wireless/libertas/rx.c
+> > b/drivers/net/wireless/libertas/rx.c
+> > index c7366b0..807c5b8 100644
+> > --- a/drivers/net/wireless/libertas/rx.c
+> > +++ b/drivers/net/wireless/libertas/rx.c
+> [...]
+> > @@ -154,10 +152,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv,
+> > struct sk_buff *skb)
+> >   	else
+> >   		netif_rx_ni(skb);
+> >
+> > -	ret = 0;
+> >   done:
+> > -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+> > -	return ret;
+> > +	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", 0);
+>
+>    Why not just "ret 0"?
 
+Oops, I won't make any change here, because Dan Williams has proposed
+another patch that makes the ret variable useful.
+
+julia
