@@ -1,79 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34798 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755156AbaE3Jow (ORCPT
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:57136 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753144AbaETMc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 05:44:52 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n15so782890wiw.14
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 02:44:51 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] mac80211: allow tx via monitor iface when DFS
-Date: Fri, 30 May 2014 11:44:41 +0200
-Message-Id: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140530_114509_286876_E47E2FBA)
+	Tue, 20 May 2014 08:32:29 -0400
+Received: by mail-qg0-f51.google.com with SMTP id q107so578591qgd.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 05:32:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com>
+References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
+ <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net> <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Tue, 20 May 2014 14:32:08 +0200
+Message-ID: <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com> (sfid-20140520_143232_873771_39875C41)
+Subject: Re: 802.11s mode without HWMP
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow send frames using monitor interface
-when DFS chandef and we pass CAC (beaconing
-allowed).
+Hi,
 
-This fix problem when old kernel and new backports used,
-in such case hostapd create/use also monitor interface.
-Before this patch all frames hostapd send using monitor
-were dropped when AP was configured on DFS channel.
+after spending a day reading through the 802.11s implementation of
+Linux I have to admit I am lost...
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/mac80211/tx.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+I am using 802.11s bridged to ethernet on both wlan interfaces and it
+works very well.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5214686..a32ca9b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1618,12 +1618,12 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_chanctx_conf *chanctx_conf;
--	struct ieee80211_channel *chan;
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
-+	struct cfg80211_chan_def chandef;
- 	u16 len_rthdr;
- 	int hdrlen;
- 
-@@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	}
- 
- 	if (chanctx_conf)
--		chan = chanctx_conf->def.chan;
-+		chandef = chanctx_conf->def;
- 	else if (!local->use_chanctx)
--		chan = local->_oper_chandef.chan;
-+		chandef = local->_oper_chandef;
- 	else
- 		goto fail_rcu;
- 
-@@ -1743,10 +1743,11 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * radar detection by itself. We can do that later by adding a
- 	 * monitor flag interfaces used for AP support.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
-+	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef,
-+				     sdata->vif.type))
- 		goto fail_rcu;
- 
--	ieee80211_xmit(sdata, skb, chan->band);
-+	ieee80211_xmit(sdata, skb, chandef.chan->band);
- 	rcu_read_unlock();
- 
- 	return NETDEV_TX_OK;
--- 
-1.7.9.5
+Unfortunately the cfg802.11 is not telling me which ethernet mac
+address is behind which wifi mac address, something that has to be
+known to the kernel to forward the bridged ethernet frames.
 
+Is there a trick to get this information or is this just a missing
+functionality in the cfg80211 API (or the "iw <mesh-if> mpath ..."
+commands) ?
+
+Henning Rogge
