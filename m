@@ -1,102 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58738 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241AbaEWPPL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 11:15:11 -0400
-Date: Fri, 23 May 2014 11:07:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2014-05-23
-Message-ID: <20140523150733.GC13311@tuxdriver.com> (sfid-20140523_171543_728934_F462D775)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:36421 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751878AbaETI1r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 04:27:47 -0400
+Message-ID: <1400574452.4474.2.camel@jlt4.sipsolutions.net> (sfid-20140520_102754_352186_4ADCC9FA)
+Subject: Re: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still
+ being compiled?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 May 2014 10:27:32 +0200
+In-Reply-To: <alpine.LFD.2.11.1405200342050.10462@localhost> (sfid-20140520_101149_157876_1874D563)
+References: <alpine.LFD.2.11.1405200342050.10462@localhost>
+	 (sfid-20140520_101149_157876_1874D563)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Tue, 2014-05-20 at 03:49 -0400, Robert P. J. Day wrote:
+>   quite possibly a silly question (which has never stopped me before),
+> but in perusing the PCIE code in the kernel source, i was looking for
+> sample code to demo in a classroom setting and picked on
+> drivers/net/wireless/iwlwifi/pcie, which i was *assuming* was
+> PCIE-dependent -- specifically, i was going to demo the Advanced-N
+> 6235 PCIE wifi card on an intel galileo board.
+> 
+>   but i thought it was a bit strange that the pcie/ subdirectory there
+> doesn't seem to depend on PCIEPORTBUS. as a test, i deselected
+> PCIEPORTBUS in a configuration and did a rebuild, and the source in
+> the pcie/ directory was recompiled.
+> 
+>   am i misunderstanding the function of the kernel config variable
+> PCIEPORTBUS? i notice that .../iwlwifi/Makefile includes the line:
+> 
+>   iwlwifi-objs  += pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+> 
+> which simply compiles those files with no regard to dependency. can
+> someone clarify this? thanks.
 
-I have two more fixes intended for the 3.15 stream...
+The whole driver depends on CONFIG_PCI, maybe it should depend on
+something more PCIe specific, but that wasn't easy to sort out, and the
+APIs it needs aren't PCIe specific afaict.
 
-For the iwlwifi one, Emmanuel says:
+johannes
 
-"A race has been discovered in the beacon filtering code. Since the
-fix is too big for 3.15, I disable here the feature."
 
-For the bluetooth one, Gustavo says:
-
-"This pull request contains a very important fix for 3.15. Here we fix the
-permissions of a debugfs file that would otherwise allow unauthorized users
-to write content to it."
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-The following changes since commit b6ed5498601df40489606dbc14a9c7011c16630b:
-
-  batman: fix a bogus warning from batadv_is_on_batman_iface() (2014-05-22 17:23:00 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-
-for you to fetch changes up to 5ca2504ea36df1da815029a9e9277c08540042eb:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2014-05-23 10:55:58 -0400)
-
-----------------------------------------------------------------
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: disable beacon filtering
-
-John W. Linville (3):
-      Merge branch 'master' of git://git.kernel.org/.../bluetooth/bluetooth
-      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
-
-Samuel Ortiz (1):
-      Bluetooth: Fix L2CAP LE debugfs entries permissions
-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- net/bluetooth/l2cap_core.c                  | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index b41dc84e9431..8735ef1f44ae 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -826,7 +826,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out_remove_mac;
- 
--	if (!mvm->bf_allowed_vif &&
-+	if (!mvm->bf_allowed_vif && false &&
- 	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
- 	    mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BF_UPDATED){
- 		mvm->bf_allowed_vif = mvmvif;
-diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c
-index a1e5bb7d06e8..dc4d301d3a72 100644
---- a/net/bluetooth/l2cap_core.c
-+++ b/net/bluetooth/l2cap_core.c
-@@ -7519,9 +7519,9 @@ int __init l2cap_init(void)
- 	l2cap_debugfs = debugfs_create_file("l2cap", 0444, bt_debugfs,
- 					    NULL, &l2cap_debugfs_fops);
- 
--	debugfs_create_u16("l2cap_le_max_credits", 0466, bt_debugfs,
-+	debugfs_create_u16("l2cap_le_max_credits", 0644, bt_debugfs,
- 			   &le_max_credits);
--	debugfs_create_u16("l2cap_le_default_mps", 0466, bt_debugfs,
-+	debugfs_create_u16("l2cap_le_default_mps", 0644, bt_debugfs,
- 			   &le_default_mps);
- 
- 	bt_6lowpan_init();
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
