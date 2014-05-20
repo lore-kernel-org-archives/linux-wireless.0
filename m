@@ -1,258 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:29840 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964810AbaEQQnI (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:54868 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbaETI1J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 12:43:08 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCHv3 3/4] mac80211: export the expected throughput
-Date: Sat, 17 May 2014 18:41:45 +0200
-Message-Id: <1400344906-27984-4-git-send-email-antonio@meshcoding.com> (sfid-20140517_184320_395268_DA5D9922)
-In-Reply-To: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
-References: <1400344906-27984-1-git-send-email-antonio@meshcoding.com>
+	Tue, 20 May 2014 04:27:09 -0400
+Received: by mail-la0-f44.google.com with SMTP id hr17so105390lab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 01:27:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com> <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 20 May 2014 01:26:45 -0700
+Message-ID: <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com> (sfid-20140520_102725_976074_22309144)
+Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Sun, May 11, 2014 at 1:50 AM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+>
+> Allow setting bandwidth related regulatory flags. These flags are mapped
+> to the corresponding channel flags in the specified range.
+> Make sure the new flags are consulted when calculating the maximum
+> bandwidth allowed by a regulatory-rule.
+>
+> Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
+> channel.
+>
+> Change-Id: I1b0506ab332cdd268cbf4b02e03574f5c30ba5c0
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  include/uapi/linux/nl80211.h | 12 ++++++++++++
+>  net/wireless/reg.c           | 30 ++++++++++++++++++++++++++++--
+>  2 files changed, 40 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 406010d..f332231 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -2558,6 +2558,11 @@ enum nl80211_sched_scan_match_attr {
+>   * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
+>   *     base on contiguous rules and wider channels will be allowed to cross
+>   *     multiple contiguous/overlapping frequency ranges.
+> + * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
+> + * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
+> + * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
+> + * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
+> + * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
+>   */
+>  enum nl80211_reg_rule_flags {
+>         NL80211_RRF_NO_OFDM             = 1<<0,
+> @@ -2570,11 +2575,18 @@ enum nl80211_reg_rule_flags {
+>         NL80211_RRF_NO_IR               = 1<<7,
+>         __NL80211_RRF_NO_IBSS           = 1<<8,
+>         NL80211_RRF_AUTO_BW             = 1<<11,
+> +       NL80211_RRF_GO_CONCURRENT       = 1<<12,
+> +       NL80211_RRF_NO_HT40MINUS        = 1<<13,
+> +       NL80211_RRF_NO_HT40PLUS         = 1<<14,
+> +       NL80211_RRF_NO_80MHZ            = 1<<15,
+> +       NL80211_RRF_NO_160MHZ           = 1<<16,
+>  };
 
-Add get_expected_throughput() API to mac80211 so that each
-driver can implement its own version based on the RC
-algorithm they are using (might be using an HW RC algo).
-The API returns a value expressed in Kbps.
+Automatic calculation on max bandwidth scales better, I'd much prefer
+these only be used and properly documented to only be used in cases
+where we want to be explicit about this, I don't think this should be
+the automatic behavior, or at least your patch in no way explains any
+justification as to why the move is being done, so I cannot guess what
+the logic was here.
 
-Also, add the new get_expected_throughput() member
-to the rate_control_ops structure in order to be
-able to query the RC algorithm (this patch provides an
-implementation of this API for both minstrel and
-minstrel_ht).
+>  #define NL80211_RRF_PASSIVE_SCAN       NL80211_RRF_NO_IR
+>  #define NL80211_RRF_NO_IBSS            NL80211_RRF_NO_IR
+>  #define NL80211_RRF_NO_IR              NL80211_RRF_NO_IR
+> +#define NL80211_RRF_NO_HT40            (NL80211_RRF_NO_HT40MINUS |\
+> +                                        NL80211_RRF_NO_HT40PLUS)
+>
+>  /* For backport compatibility with older userspace */
+>  #define NL80211_RRF_NO_IR_ALL          (NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 558b0e3..efd6d0d 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -572,8 +572,9 @@ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+>         return get_cfg80211_regdom();
+>  }
+>
+> -unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+> -                                  const struct ieee80211_reg_rule *rule)
+> +static unsigned int
+> +reg_get_max_bandwidth_from_range(const struct ieee80211_regdomain *rd,
+> +                                const struct ieee80211_reg_rule *rule)
 
-The related member in the station_info object is now
-filled accordingly when dumping a station.
+This change is renaming a routine we used heavily to something tucked
+in the closet and then introducing the usage of the new flags, which
+have no justifications nor proper regdb updates, this also doesn't
+even account for the old regdb situations so I'll have to provide a
+huge NACK for all these reasons.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- include/net/mac80211.h             |  7 +++++++
- net/mac80211/cfg.c                 | 19 +++++++++++++++++++
- net/mac80211/driver-ops.h          | 13 +++++++++++++
- net/mac80211/rc80211_minstrel.c    | 12 ++++++++++++
- net/mac80211/rc80211_minstrel_ht.c | 17 +++++++++++++++++
- net/mac80211/trace.h               | 32 ++++++++++++++++++++++++++++++++
- 6 files changed, 100 insertions(+)
+You want to consider wireless-regdb / CRDA when making these changes.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 982d2cd..81efbc7 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2769,6 +2769,10 @@ enum ieee80211_roc_type {
-  *	information in bss_conf is set up and the beacon can be retrieved. A
-  *	channel context is bound before this is called.
-  * @leave_ibss: Leave the IBSS again.
-+ *
-+ * @get_expected_throughput: extract the expected throughput towards the
-+ *	specified station. The returned value is expressed in Kbps. It returns 0
-+ *	if the RC algorithm does not have proper data to provide.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -2962,6 +2966,7 @@ struct ieee80211_ops {
- 
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
- };
- 
- /**
-@@ -4534,6 +4539,8 @@ struct rate_control_ops {
- 	void (*add_sta_debugfs)(void *priv, void *priv_sta,
- 				struct dentry *dir);
- 	void (*remove_sta_debugfs)(void *priv, void *priv_sta);
-+
-+	u32 (*get_expected_throughput)(void *priv_sta);
- };
- 
- static inline int rate_supported(struct ieee80211_sta *sta,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bfd2534..d739409 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -472,8 +472,12 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
-+	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
- 	struct timespec uptime;
- 	u64 packets = 0;
-+	u32 thr = 0;
- 	int i, ac;
- 
- 	sinfo->generation = sdata->local->sta_generation;
-@@ -587,6 +591,21 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
-+
-+	/* check if the driver has a SW RC implementation */
-+	if (ref && ref->ops->get_expected_throughput) {
-+		band = ieee80211_get_sdata_band(sta->sdata);
-+		sband = sta->local->hw.wiphy->bands[band];
-+
-+		thr = ref->ops->get_expected_throughput(sta->rate_ctrl_priv);
-+	} else {
-+		thr = drv_get_expected_throughput(local, &sta->sta);
-+	}
-+
-+	if (thr != 0) {
-+		sinfo->filled |= STATION_INFO_EXPECTED_THROUGHPUT;
-+		sinfo->expected_throughput = thr;
-+	}
- }
- 
- static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index df1d502..696ef78 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1156,4 +1156,17 @@ static inline void drv_leave_ibss(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline u32 drv_get_expected_throughput(struct ieee80211_local *local,
-+					      struct ieee80211_sta *sta)
-+{
-+	u32 ret = 0;
-+
-+	trace_drv_get_expected_throughput(sta);
-+	if (local->ops->get_expected_throughput)
-+		ret = local->ops->get_expected_throughput(sta);
-+	trace_drv_return_u32(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 26fd94f..1c1469c 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -657,6 +657,17 @@ minstrel_free(void *priv)
- 	kfree(priv);
- }
- 
-+static u32 minstrel_get_expected_throughput(void *priv_sta)
-+{
-+	struct minstrel_sta_info *mi = priv_sta;
-+	int idx = mi->max_tp_rate[0];
-+
-+	/* convert pkt per sec in kbps (1200 is the average pkt size used for
-+	 * computing cur_tp
-+	 */
-+	return MINSTREL_TRUNC(mi->r[idx].cur_tp) * 1200 * 8 / 1024;
-+}
-+
- const struct rate_control_ops mac80211_minstrel = {
- 	.name = "minstrel",
- 	.tx_status = minstrel_tx_status,
-@@ -670,6 +681,7 @@ const struct rate_control_ops mac80211_minstrel = {
- 	.add_sta_debugfs = minstrel_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_remove_sta_debugfs,
- #endif
-+	.get_expected_throughput = minstrel_get_expected_throughput,
- };
- 
- int __init
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index bccaf85..949fb01 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1031,6 +1031,22 @@ minstrel_ht_free(void *priv)
- 	mac80211_minstrel.free(priv);
- }
- 
-+static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
-+{
-+	struct minstrel_ht_sta_priv *msp = priv_sta;
-+	struct minstrel_ht_sta *mi = &msp->ht;
-+	int i, j;
-+
-+	if (!msp->is_ht)
-+		return mac80211_minstrel.get_expected_throughput(priv_sta);
-+
-+	i = mi->max_tp_rate / MCS_GROUP_RATES;
-+	j = mi->max_tp_rate % MCS_GROUP_RATES;
-+
-+	/* convert cur_tp from pkt per second in kbps */
-+	return mi->groups[i].rates[j].cur_tp * AVG_PKT_SIZE * 8 / 1024;
-+}
-+
- static const struct rate_control_ops mac80211_minstrel_ht = {
- 	.name = "minstrel_ht",
- 	.tx_status = minstrel_ht_tx_status,
-@@ -1045,6 +1061,7 @@ static const struct rate_control_ops mac80211_minstrel_ht = {
- 	.add_sta_debugfs = minstrel_ht_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_ht_remove_sta_debugfs,
- #endif
-+	.get_expected_throughput = minstrel_ht_get_expected_throughput,
- };
- 
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index a0b0aea..942f64b 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -184,6 +184,20 @@ TRACE_EVENT(drv_return_bool,
- 		  "true" : "false")
- );
- 
-+TRACE_EVENT(drv_return_u32,
-+	TP_PROTO(struct ieee80211_local *local, u32 ret),
-+	TP_ARGS(local, ret),
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u32, ret)
-+	),
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->ret = ret;
-+	),
-+	TP_printk(LOCAL_PR_FMT " - %u", LOCAL_PR_ARG, __entry->ret)
-+);
-+
- TRACE_EVENT(drv_return_u64,
- 	TP_PROTO(struct ieee80211_local *local, u64 ret),
- 	TP_ARGS(local, ret),
-@@ -1499,6 +1513,24 @@ DEFINE_EVENT(local_sdata_evt, drv_leave_ibss,
- 	TP_ARGS(local, sdata)
- );
- 
-+TRACE_EVENT(drv_get_expected_throughput,
-+	TP_PROTO(struct ieee80211_sta *sta),
-+
-+	TP_ARGS(sta),
-+
-+	TP_STRUCT__entry(
-+		STA_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		STA_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		STA_PR_FMT, STA_PR_ARG
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
--- 
-1.8.5.5
-
+  Luis
