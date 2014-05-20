@@ -1,75 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:38384 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbaE0QMD (ORCPT
+Received: from mx1.redhat.com ([209.132.183.28]:20968 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbaETPYN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 12:12:03 -0400
-Received: by mail-wi0-f171.google.com with SMTP id cc10so2083810wib.10
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 09:12:01 -0700 (PDT)
+	Tue, 20 May 2014 11:24:13 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jim Davis <jim.epost@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"Larry.Finger" <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devel <devel@driverdev.osuosl.org>
+Subject: Re: randconfig build error with next-20140520, in drivers/staging/rtl8723au/core/rtw_cmd.c
+References: <CA+r1ZhhhL5CB5_e_0g--biDfmqHEsC-C9RKg7uPSupYtSNLiQw@mail.gmail.com>
+Date: Tue, 20 May 2014 17:23:56 +0200
+In-Reply-To: <CA+r1ZhhhL5CB5_e_0g--biDfmqHEsC-C9RKg7uPSupYtSNLiQw@mail.gmail.com>
+	(Jim Davis's message of "Tue, 20 May 2014 06:47:18 -0700")
+Message-ID: <wrfj8upwpj77.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140520_172432_060928_052EAD33)
 MIME-Version: 1.0
-In-Reply-To: <1401206274.8146.8.camel@jlt4.sipsolutions.net>
-References: <1401107504-11385-1-git-send-email-chaitanya.mgit@gmail.com> <1401206274.8146.8.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 27 May 2014 21:41:40 +0530
-Message-ID: <CABPxzYK+fhSdEwka9cU3O+VEsJpABViCg9OgdEJ=3t27OLyYTw@mail.gmail.com> (sfid-20140527_181235_438611_5A27529A)
-Subject: Re: [PATCH V2] regdb: Generalize the mW to dBm power conversion
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Luis Rodriguez <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2014 at 9:27 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+Jim Davis <jim.epost@gmail.com> writes:
+> Building with the attached random configuration file,
 >
-> On Mon, 2014-05-26 at 18:01 +0530, chaitanya.mgit@gmail.com wrote:
-> > Generalize the power conversion from mW to dBm
-> > using log. This should fix the below compilation
-> > error for country NO which adds a new power value
-> > 2000mW which is not handled earlier.
-> >
-> >  CC [M]  net/wireless/wext-sme.o
-> >  CC [M]  net/wireless/regdb.o
-> > net/wireless/regdb.c:1130:1: error: Unknown undeclared here (not in
-> > a function)
-> > net/wireless/regdb.c:1130:9: error: expected } before power
-> > make[2]: *** [net/wireless/regdb.o] Error 1
-> > make[1]: *** [net/wireless] Error 2
-> > make: *** [net] Error 2
-> >
-> > Reported-By:  John Walker <john@x109.net>
-> > Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> >
-> > ---
-> >  net/wireless/genregdb.awk |   12 +-----------
-> >  1 file changed, 1 insertion(+), 11 deletions(-)
-> >
-> > diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-> > index 4119833..949ee38 100644
-> > --- a/net/wireless/genregdb.awk
-> > +++ b/net/wireless/genregdb.awk
-> > @@ -68,17 +68,7 @@ function parse_reg_rule()
-> >       sub(/,/, "", units)
-> >       dfs_cac = $9
-> >       if (units == "mW") {
-> > -             if (power == 100) {
-> > -                     power = 20
-> > -             } else if (power == 200) {
-> > -                     power = 23
-> > -             } else if (power == 500) {
-> > -                     power = 27
-> > -             } else if (power == 1000) {
-> > -                     power = 30
-> > -             } else {
-> > -                     print "Unknown power value in database!"
-> > -             }
-> > +             power = 10 * (log(power)/log(10))
->
-> This patch is wrong :-)
-> Bonus points for those who can figure it out without looking at the one
-> I'm committing ;-)
->
-Forgot to handle the print to the file. (Looked at the commit :-))
-Thanks Johannes and John.
+> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘dynamic_chk_wk_hdl’:
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1036:2: error: implicit declaration of
+> function ‘rtl8723a_sreset_xmit_status_check’ [-Werror=implicit-function-declarat
+> ion]
+>   rtl8723a_sreset_xmit_status_check(padapter);
+>   ^
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1041:2: error: implicit declaration of
+> function ‘rtl8723a_HalDmWatchDog’ [-Werror=implicit-function-declaration]
+>   rtl8723a_HalDmWatchDog(padapter);
+>   ^
+> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘c2h_evt_hdl’:
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1314:4: error: implicit
+> declaration of function ‘c2h_handler_8723a’
+> [-Werror=implicit-function-declaration]
+>     ret = c2h_handler_8723a(adapter, c2h_evt);
+>     ^
+> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘rtw_evt_work’:
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1348:2: error: implicit
+> declaration of function ‘c2h_id_filter_ccx_8723a’
+> [-Werror=implicit-function-declaration]
+>   if (c2h_id_filter_ccx_8723a(ework->u.c2h_evt.id) == true) {
+>   ^
+>   CC      drivers/staging/rtl8188eu/hal/HalHWImg8188E_MAC.o
+> cc1: some warnings being treated as errors
+> make[3]: *** [drivers/staging/rtl8723au/core/rtw_cmd.o] Error 1
+
+Jim,
+
+Thanks for the report.
+
+I already pushed a fix for the CONFIG_8723AU_BT_COEXIST=n problem, and
+the CONFIG_8723AU_AP_MODE=n case isn't causing build problems in my tree
+at this point. I believe this is due to moving a number of functions
+around. There were some warnings about unused functions which I fixed up
+here, but nothing breaking the build.
+
+If you don't mind, I prefer to push it all out with my next batch of
+changes rather than trying to fix up this build case.
+
+Cheers,
+Jes
