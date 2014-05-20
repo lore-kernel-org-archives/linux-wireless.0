@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4310 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331AbaENMn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 08:43:57 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: fix start_radar_detection issue
-Date: Wed, 14 May 2014 12:43:49 +0000
-Message-ID: <1400071429.4521.6.camel@dubbel> (sfid-20140514_144401_233136_DA1F0267)
-References: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1400066704-7286-1-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:29930 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbaETJ2f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 05:28:35 -0400
+Message-ID: <537B203E.4030501@broadcom.com> (sfid-20140520_112838_984741_545815A6)
+Date: Tue, 20 May 2014 11:28:30 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] cfg80211: constify MAC addresses in cfg80211 ops
+References: <1400514847-17594-1-git-send-email-johannes@sipsolutions.net>	 <537B0EBD.5080900@broadcom.com> <1400573741.4474.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1400573741.4474.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE0LTA1LTE0IGF0IDEzOjI1ICswMjAwLCBKYW51c3ogRHppZWR6aWMgd3JvdGU6
-DQo+IEFmdGVyIHBhdGNoOg0KPiBjZmc4MDIxMS9tYWM4MDIxMTogcmVmYWN0b3IgY2ZnODAyMTFf
-Y2hhbmRlZl9kZnNfcmVxdWlyZWQoKQ0KPiANCj4gc3RhcnRfcmFkYXJfZGV0ZWN0aW9uIGFsd2F5
-cyBmYWlsIHdpdGggLUVJTlZBTC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEphbnVzeiBEemllZHpp
-YyA8amFudXN6LmR6aWVkemljQHRpZXRvLmNvbT4NCj4gLS0tDQo+ICBuZXQvd2lyZWxlc3MvY2hh
-bi5jIHwgICAgMiArLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0
-aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvbmV0L3dpcmVsZXNzL2NoYW4uYyBiL25ldC93aXJl
-bGVzcy9jaGFuLmMNCj4gaW5kZXggODRkNjg2ZS4uN2E2NzlhNiAxMDA2NDQNCj4gLS0tIGEvbmV0
-L3dpcmVsZXNzL2NoYW4uYw0KPiArKysgYi9uZXQvd2lyZWxlc3MvY2hhbi5jDQo+IEBAIC0zNDAs
-NiArMzQwLDcgQEAgaW50IGNmZzgwMjExX2NoYW5kZWZfZGZzX3JlcXVpcmVkKHN0cnVjdCB3aXBo
-eSAqd2lwaHksDQo+ICAJY2FzZSBOTDgwMjExX0lGVFlQRV9BUDoNCj4gIAljYXNlIE5MODAyMTFf
-SUZUWVBFX1AyUF9HTzoNCj4gIAljYXNlIE5MODAyMTFfSUZUWVBFX01FU0hfUE9JTlQ6DQo+ICsJ
-Y2FzZSBOTDgwMjExX0lGVFlQRV9VTlNQRUNJRklFRDoNCj4gIAkJd2lkdGggPSBjZmc4MDIxMV9j
-aGFuZGVmX2dldF93aWR0aChjaGFuZGVmKTsNCj4gIAkJaWYgKHdpZHRoIDwgMCkNCj4gIAkJCXJl
-dHVybiAtRUlOVkFMOw0KPiBAQCAtMzcwLDcgKzM3MSw2IEBAIGludCBjZmc4MDIxMV9jaGFuZGVm
-X2Rmc19yZXF1aXJlZChzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiAgCWNhc2UgTkw4MDIxMV9JRlRZ
-UEVfQVBfVkxBTjoNCj4gIAljYXNlIE5MODAyMTFfSUZUWVBFX1dEUzoNCj4gIAljYXNlIE5MODAy
-MTFfSUZUWVBFX1AyUF9ERVZJQ0U6DQo+IC0JY2FzZSBOTDgwMjExX0lGVFlQRV9VTlNQRUNJRklF
-RDoNCj4gIAkJYnJlYWs7DQo+ICAJY2FzZSBOVU1fTkw4MDIxMV9JRlRZUEVTOg0KPiAgCQlXQVJO
-X09OKDEpOw0KDQpZZXAsIG15IG1pc3Rha2UuIDooDQoNCkkgZ3Vlc3MgdGhpcyB3aWxsIGZpeCBj
-Zmc4MDIxMV9yZWdfY2FuX2JlYWNvbigpIGFzIHdlbGwuLi4NCg0KQWNrZWQtYnk6IEx1Y2lhbm8g
-Q29lbGhvIDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+DQoNCi0tDQpMdWNhLg0K
+On 05/20/14 10:15, Johannes Berg wrote:
+> On Tue, 2014-05-20 at 10:13 +0200, Arend van Spriel wrote:
+>> On 05/19/14 17:54, Johannes Berg wrote:
+>>> From: Johannes Berg<johannes.berg@intel.com>
+>>>
+>>> This propagates through all the drivers and mac80211.
+>>>
+>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
+>>> ---
+>>
+>> Should this also be done for the macaddr field in struct vif_params?
+>
+> That'd be difficult to do since it's a real value, not just a pointer,
+> so it must be filled by something :)
+
+True. It should have to use a cast to do that, but that would make the 
+change rather pointless. Please forget I ever mentioned it :-p
+
+Gr. AvS
