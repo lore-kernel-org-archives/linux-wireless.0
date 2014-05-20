@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:46103 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964776AbaEQQnH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42315 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbaETSPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 12:43:07 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@meshcoding.com>
-Subject: [PATCHv3 0/6] Export the expected throughput towards a peer
-Date: Sat, 17 May 2014 18:41:42 +0200
-Message-Id: <1400344906-27984-1-git-send-email-antonio@meshcoding.com> (sfid-20140517_184319_057162_D09E882F)
+	Tue, 20 May 2014 14:15:14 -0400
+Date: Tue, 20 May 2014 14:08:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+Message-ID: <20140520180832.GD13981@tuxdriver.com> (sfid-20140520_201518_644762_1B148A19)
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+ <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+ <20140520142453.GB13981@tuxdriver.com>
+ <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes since v2:
-- fix throughput computation in minstrel
-- squash minstrel patches
+On Tue, May 20, 2014 at 08:01:31PM +0200, Janusz Dziedzic wrote:
+> On 20 May 2014 16:24, John W. Linville <linville@tuxdriver.com> wrote:
+> > On Tue, May 20, 2014 at 12:33:51AM -0700, Luis R. Rodriguez wrote:
+> >> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
+> >> <janusz.dziedzic@tieto.com> wrote:
+> >> > Introduce support for setting DFS CAC time
+> >> > in milliseconds.
+> >> >
+> >> > Eg.
+> >> > (5250 - 5330 @ AUTO), (20), (60000), DFS
+> >> >
+> >> > will setup CAC 60 seconds CAC time.
+> >>
+> >> Can you elaborate whether or not this will require a bump on CRDA  and
+> >> issuing of two new wireless-regdb files for the different versions on
+> >> the commit log?
+> >
+> > I would really prefer not to manage two regdb binary releases.
+> > Fear of that is what has kept me from merging this patch.
+> >
+> I can add support for version 19 and 20 in one crda. I am not sure
+> this is the best option.
+> BTW what about versions < 19? How do we handle this this days?
 
-Changes since v1:
-- add expected throughput nl80211 attribute to the GET_STATION reply
-  message
-- the unit of the exported value has been changed to kbps
-- the way the exported value was computed in minstrel and minstrel_ht has been
-  changed after having really understood what minstrel is doing (thanks
-  Johannes!)
-- the number of arguments of the RC api have been reduced
-- allow the API result to be 0 if the underlying layer does not know what to
-  report
-- squash ex patch 2/3/4
-- use wiphy_to_rdev() where needed
+What about older CRDA with newer wireless-regdb?  Do we need to worry about that?
 
-
-Antonio Quartulli (4):
-  cfg80211: export expected throughput through get_station()
-  cfg80211: export expected throughput via nl80211 (GET_STATION)
-  mac80211: export the expected throughput
-  cfg80211: implement cfg80211_get_station cfg80211 API
-
- include/net/cfg80211.h             | 75 ++++++++++++++++++++++++--------------
- include/net/mac80211.h             |  7 ++++
- include/uapi/linux/nl80211.h       |  3 ++
- net/mac80211/cfg.c                 | 19 ++++++++++
- net/mac80211/driver-ops.h          | 13 +++++++
- net/mac80211/rc80211_minstrel.c    | 12 ++++++
- net/mac80211/rc80211_minstrel_ht.c | 17 +++++++++
- net/mac80211/trace.h               | 32 ++++++++++++++++
- net/wireless/nl80211.c             |  4 ++
- net/wireless/util.c                | 18 +++++++++
- 10 files changed, 172 insertions(+), 28 deletions(-)
-
+John
 -- 
-1.8.5.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
