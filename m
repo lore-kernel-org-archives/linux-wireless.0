@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:60499 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbaEWI6d convert rfc822-to-8bit (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:46971 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbaETUX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 04:58:33 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so4574719wgh.35
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 01:58:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1400834656.4358.1.camel@jlt4.sipsolutions.net>
-References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
-	<1400767676-15994-5-git-send-email-michal.kazior@tieto.com>
-	<1400770484.4174.35.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com>
-	<1400834656.4358.1.camel@jlt4.sipsolutions.net>
-Date: Fri, 23 May 2014 10:58:31 +0200
-Message-ID: <CA+BoTQnLPEqTnyr98TmDETP_iBOAza_XLZ53Jd+GdG6sRc3=5Q@mail.gmail.com> (sfid-20140523_105837_759655_314BB643)
-Subject: Re: [PATCH v6 4/6] mac80211: use chanctx reservation for AP CSA
-From: Michal Kazior <michal.kazior@tieto.com>
+	Tue, 20 May 2014 16:23:56 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH] mac80211: remove unused variables
+Date: Tue, 20 May 2014 22:22:45 +0200
+Message-Id: <1400617365-16573-1-git-send-email-antonio@meshcoding.com> (sfid-20140520_222359_369040_504F99E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 May 2014 10:44, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-05-23 at 08:49 +0200, Michal Kazior wrote:
->
->> > But you'll WARN_ON() if they're actually not at the same time and you
->> > grab a beacon (or for the template case, call csa_update) in the
->> > meantime, right? I'd really like to have all those driver requirements
->> > (e.g. to stop beaconing) better documented.
->>
->> Good point. I suppose it should be stated in the docs that once you
->> reach ieee80211_csa_is_complete() being true you must not call
->> ieee80211_beacon_get() nor ieee80211_csa_update_counter(). ath9k and
->> ath10k conform to this.
->
-> Right, it's still a bit strange that you just have to stop beaconing.
-> Dunno. I guess I don't care all that much since our driver won't support
-> multiple AP interfaces anyway :-)
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-If you keep on beaconing for too long on a DFS channel after detecting
-a radar you risk breaking local law (ETSI and FCC specify quiescing
-periods).
+9dbd32e7dd9600b03c5a955980205446f3db0dfb accidentally
+introduced two variables that are assigned but never used.
 
+Remove them.
 
->> I wonder what driver should be supposed to look at before starting to
->> beacon again? csa_active isn't well protected to be depended upon. If
->> we should create a ieee80211_csa_is_active() that just checks if
->> beacon->csa_counter_offset[0] != 0 (assuming my other csa counter
->> patches are applied) then it's still racy:
->>  a) rcu_dereference() across ieee80211_csa_is_active(), _is_complete()
->> and _beacon_get() can yield different beacon pointers
->>  b) cs_count <= 1 yields no beacon update (thus no counters/offsets,
->> meaning both _csa_is_complete and _csa_is_active() are `false` thus
->> suggesting driver can beacon as if nothing happened)
->>
->> We could fix (b) by simply not treating cs_count <= 1 so special and
->> update the beacon anyway. For (a) to work we'd need either make a
->> single-call do-all function or introduce an additional call and a
->> generic pointer/structure to be passed to other functions so that a
->> beacon pointer is consistent across calls.
->
-> You could technically just return NULL in this period, but I don't know
-> how well drivers would cope with that (though technically they have to
-> cope with it due to memory allocation failures anyway)
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ net/mac80211/cfg.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-Sounds good to me.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9e86dd5..d7513a5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -473,8 +473,6 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct rate_control_ref *ref = local->rate_ctrl;
+-	struct ieee80211_supported_band *sband;
+-	enum ieee80211_band band;
+ 	struct timespec uptime;
+ 	u64 packets = 0;
+ 	u32 thr = 0;
+@@ -593,14 +591,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
+ 
+ 	/* check if the driver has a SW RC implementation */
+-	if (ref && ref->ops->get_expected_throughput) {
+-		band = ieee80211_get_sdata_band(sta->sdata);
+-		sband = sta->local->hw.wiphy->bands[band];
+-
++	if (ref && ref->ops->get_expected_throughput)
+ 		thr = ref->ops->get_expected_throughput(sta->rate_ctrl_priv);
+-	} else {
++	else
+ 		thr = drv_get_expected_throughput(local, &sta->sta);
+-	}
+ 
+ 	if (thr != 0) {
+ 		sinfo->filled |= STATION_INFO_EXPECTED_THROUGHPUT;
+-- 
+1.8.5.5
 
-I guess you'd use ieee80211_csa_is_complete (or
-ieee80211_csa_update_counter) for template-based drivers to stop
-beaconing.
-
-
-Michał
