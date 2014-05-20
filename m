@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50050 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932441AbaEPNu6 (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:34940 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbaETJzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 09:50:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: get rid of pci_assign_resource() call from pci_probe
-References: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Fri, 16 May 2014 16:50:50 +0300
-In-Reply-To: <1400068627-4076-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 14 May 2014 13:57:07 +0200")
-Message-ID: <87k39l4yth.fsf@kamboji.qca.qualcomm.com> (sfid-20140516_155106_570257_F02EE620)
+	Tue, 20 May 2014 05:55:20 -0400
+Received: by mail-lb0-f181.google.com with SMTP id q8so182901lbi.26
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 02:55:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+XVXfcJ4H32D6ZABZ9tSC2JO0Dv3c3uuHkEC-m0P4q0JJcdgQ@mail.gmail.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
+ <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com>
+ <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com>
+ <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com> <CA+XVXfcJ4H32D6ZABZ9tSC2JO0Dv3c3uuHkEC-m0P4q0JJcdgQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 20 May 2014 02:54:58 -0700
+Message-ID: <CAB=NE6UtCkxvQ=4ZnwnsEQY6kMdx-x+-YUgu636z0OTbOiNPcw@mail.gmail.com> (sfid-20140520_115524_043758_4DB3B100)
+Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
-
-> On ARM-based (MSM mach), the pci_assign_resource() is passing
-> some invalid pointers and leading to L2 cache errors,
-> what prevents the PCI communication completly.
+On Tue, May 20, 2014 at 2:25 AM, Arik Nemtsov <arik@wizery.com> wrote:
 >
-> So far I have not found this funtion to be directly called by
-> any other wifi driver and did not found this assigning needed
-> on any other platform. So removing it completly.
+> Why won't old regdb rules work? The NL80211_RRF_NO_160MHZ for instance
+> is not used anywhere in old or new regdbs.
+> So all the new code in reg_get_max_bandwidth is ignored in current or
+> older crda/regdb flows.
 >
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> What am I missing?
 
-Thanks, applied.
+It will also be ignored on newer kernels using old wireless-regdb.
 
--- 
-Kalle Valo
+ Luis
