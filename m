@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47564 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbaEHKJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 06:09:10 -0400
-Message-ID: <1399543730.9163.6.camel@jlt4.sipsolutions.net> (sfid-20140508_120914_276064_DB349BE0)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Thu, 08 May 2014 12:08:50 +0200
-In-Reply-To: <CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com> (sfid-20140507_150310_863492_9BF461EB)
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	 <1399455657.6800.4.camel@dubbel>
-	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	 <1399457760.6800.7.camel@dubbel>
-	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	 <1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	 <1399464536.6800.11.camel@dubbel>
-	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	 <1399465244.6800.13.camel@dubbel>
-	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com>
-	 <1399467225.10517.35.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQn0LR9SMzY3zQQXwuPOdkBUgMpADOrHucMKxjouRcap8Q@mail.gmail.com>
-	 (sfid-20140507_150310_863492_9BF461EB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.neomailbox.net ([178.209.62.157]:42651 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171AbaETHiN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 03:38:13 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@meshcoding.com>
+Subject: [PATCH] mac80211: avoid "uninitialised variable" warning
+Date: Tue, 20 May 2014 09:36:54 +0200
+Message-Id: <1400571414-19116-1-git-send-email-antonio@meshcoding.com> (sfid-20140520_093820_763857_ADB5F62F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 15:03 +0200, Michal Kazior wrote:
+gcc is not able to correlate chan_pwr and have_chan_pwr
+in ieee80211_handle_pwr_constr(), therefore it throws a
+warning about chan_pwr being potentially used uninitialised
+even if this is not true.
 
-> I think Luca and I have something like this in mind:
-> 
->   drv_chanctx_update(hw,
->     { .type = CHANCTX_NEW_CHANCTX,
->       .chanctx = ctx2,
->     },
->     {
->       .type = CHANCTX_BIND,
->       .vif = vif1,
->       .chanctx_old = ctx1,
->       .chanctx_new = ctx2,
->     },
->     { 0 });
-> 
-> The driver would be free to re-order this internally to fulfill the
-> entire update request.
+However, initialise chan_pwr to 0 to silent the warning.
 
-Yeah, that's just a little complex maybe? And we don't really allow
-*arbitrary* transactions, so we'd have to impose limits on the
-transactions etc.
+Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
+---
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-In fact, I'd argue that you shouldn't even have the
-create/destroy/bind/unbind stuff listed here since that makes it more
-difficult for the driver - having this whole "swap()" thing should be
-easier to implement.
-
-> Chanctx lifecycle is:
-> 
->  drv_add_chanctx()
->  drv_assign_vif_chanctx()
->  // .. more assign/unassign .. possibly drv_change_chanctx()
->  drv_unassign_vif_chanctx()
->  drv_remove_chanctx()
-> 
-> What I meant by "chanctx allocations" is drv_add_chanctx.
-> 
-> In particular when I write "chanctx overcommit" I refer to
-> drv_add_chanctx() being called when in-driver chanctx count is already
-> at peak for given interface combinations.
-> 
-> Or should we just simply assume this isn't a problem and drivers
-> should *always* accept empty chanctx? Why bother with a return value
-> then?
-
-No, we shouldn't do that and assume that the driver would reject that.
-
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7f073ef..43a2a7c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1146,7 +1146,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_country_ie_triplet *triplet;
+ 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
+-	int i, chan_pwr, chan_increment, new_ap_level;
++	int i, chan_pwr = 0, chan_increment, new_ap_level;
+ 	bool have_chan_pwr = false;
+ 
+ 	/* Invalid IE */
+-- 
+1.8.5.5
 
