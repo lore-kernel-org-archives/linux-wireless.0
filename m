@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:44578 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbaEGHXM (ORCPT
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:50182 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754319AbaETRlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 03:23:12 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so374807eei.5
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 00:23:11 -0700 (PDT)
-From: David Herrmann <dh.herrmann@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ath9k-devel@lists.ath9k.org,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH] ath9k: fix NULL-deref in hw_per_calibration() for ar9002
-Date: Wed,  7 May 2014 09:22:58 +0200
-Message-Id: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com> (sfid-20140507_092316_904231_00DDF297)
+	Tue, 20 May 2014 13:41:51 -0400
+Received: by mail-qc0-f171.google.com with SMTP id x13so1299433qcv.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 10:41:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
+References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
+ <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
+ <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com>
+ <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com> <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Tue, 20 May 2014 19:41:30 +0200
+Message-ID: <CAGnRvup1oBzKTgzMttY+JMoAN242L2yy+fojrmenMGsXEQh9wg@mail.gmail.com> (sfid-20140520_194154_629051_0EAE36E1)
+Subject: Re: 802.11s mode without HWMP
+To: Thomas Pedersen <thomas@noack.us>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ah->caldata may be NULL if no channel is selected. Check for that before
-accessing it.
+I am not convinced merging them is a good idea, because they contain
+different information.
 
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
----
-Hi
+One of them is the list of AODV ("HWMP") capable MACs, the other is
+"attached/bridged" MACs.
 
-This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
-is freed while we run in hw_per_calibration(). However, this patch fixes serious
-kernel panics with wifi-P2P on my machine.
+I will have a look at both tables and see what I can do with them,
+maybe a second netlink command is necessary in cfg80211.
 
-I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
-correct fix would be to synchronously stop any running hw-calibration before
-setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
-this small workaround.
+Thank you for the tip.
 
-Thanks
-David
+Henning Rogge
 
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index cdc7400..4667ab9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -99,14 +99,16 @@ static bool ar9002_hw_per_calibration(struct ath_hw *ah,
- 				}
- 
- 				currCal->calData->calPostProc(ah, numChains);
--				caldata->CalValid |= currCal->calData->calType;
-+				if (caldata)
-+					caldata->CalValid |= currCal->calData->calType;
-+
- 				currCal->calState = CAL_DONE;
- 				iscaldone = true;
- 			} else {
- 				ar9002_hw_setup_calibration(ah, currCal);
- 			}
- 		}
--	} else if (!(caldata->CalValid & currCal->calData->calType)) {
-+	} else if (caldata && !(caldata->CalValid & currCal->calData->calType)) {
- 		ath9k_hw_reset_calibration(ah, currCal);
- 	}
- 
--- 
-1.9.2
-
+On Tue, May 20, 2014 at 7:36 PM, Thomas Pedersen <thomas@noack.us> wrote:
+> Hi Henning,
+>
+> On Tue, May 20, 2014 at 5:32 AM, Henning Rogge <hrogge@gmail.com> wrote:
+>> Hi,
+>>
+>> after spending a day reading through the 802.11s implementation of
+>> Linux I have to admit I am lost...
+>>
+>> I am using 802.11s bridged to ethernet on both wlan interfaces and it
+>> works very well.
+>>
+>> Unfortunately the cfg802.11 is not telling me which ethernet mac
+>> address is behind which wifi mac address, something that has to be
+>> known to the kernel to forward the bridged ethernet frames.
+>>
+>> Is there a trick to get this information or is this just a missing
+>> functionality in the cfg80211 API (or the "iw <mesh-if> mpath ..."
+>> commands) ?
+>
+> mac80211 keeps a separate table for bridged endpoints (mpp_paths).
+> Unfortunately this table currently isn't exported by the cfg80211
+> mpath_dump API. If you really need access to this information from
+> cfg80211 / userspace, then the quickest thing for now would be to hack
+> in support for iterating over both tables.
+>
+> I'm not really sure why the decision was made to go with 2 different
+> path tables (see 79617dee for the initial implementation), but it
+> seems the cleaner approach would be to merge these and stick with the
+> existing mpath_dump commands.
+>
+> --
+> thomas
