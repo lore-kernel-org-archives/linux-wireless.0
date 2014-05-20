@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:34066 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862AbaEORFX (ORCPT
+Received: from astoria.ccjclearline.com ([64.235.106.9]:58080 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895AbaETILn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:23 -0400
-Received: by mail-we0-f182.google.com with SMTP id t60so1406776wes.13
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:22 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 20 May 2014 04:11:43 -0400
+Received: from [99.240.204.5] (port=35556 helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.80)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1Wmeq1-0003sF-P6
+	for linux-wireless@vger.kernel.org; Tue, 20 May 2014 03:51:53 -0400
+Date: Tue, 20 May 2014 03:49:21 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/24] iwlwifi: mvm: enable RX chain diversity if needed
-Date: Thu, 15 May 2014 20:04:35 +0300
-Message-Id: <1400173481-9047-18-git-send-email-egrumbach@gmail.com> (sfid-20140515_190607_636067_2B6506F6)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+Subject: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still being
+ compiled?
+Message-ID: <alpine.LFD.2.11.1405200342050.10462@localhost> (sfid-20140520_101149_157876_1874D563)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-In some situations (see comment) it makes sense to enable both
-chains (if available) to get better throughput by having chain
-diversity available.
+  quite possibly a silly question (which has never stopped me before),
+but in perusing the PCIE code in the kernel source, i was looking for
+sample code to demo in a classroom setting and picked on
+drivers/net/wireless/iwlwifi/pcie, which i was *assuming* was
+PCIE-dependent -- specifically, i was going to demo the Advanced-N
+6235 PCIE wifi card on an intel galileo board.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+  but i thought it was a bit strange that the pcie/ subdirectory there
+doesn't seem to depend on PCIEPORTBUS. as a test, i deselected
+PCIEPORTBUS in a configuration and did a rebuild, and the source in
+the pcie/ directory was recompiled.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-index 4902f3b..acb79af 100644
---- a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-@@ -156,6 +156,19 @@ static void iwl_mvm_phy_ctxt_cmd_data(struct iwl_mvm *mvm,
- 	idle_cnt = chains_static;
- 	active_cnt = chains_dynamic;
- 
-+	/* In scenarios where we only ever use a single-stream rates,
-+	 * i.e. legacy 11b/g/a associations, single-stream APs or even
-+	 * static SMPS, enable both chains to get diversity, improving
-+	 * the case where we're far enough from the AP that attenuation
-+	 * between the two antennas is sufficiently different to impact
-+	 * performance.
-+	 */
-+	if (active_cnt == 1 && num_of_ant(mvm->fw->valid_rx_ant) > 1 &&
-+	    !mvm->cfg->rx_with_siso_diversity) {
-+		idle_cnt = 2;
-+		active_cnt = 2;
-+	}
-+
- 	cmd->rxchain_info = cpu_to_le32(mvm->fw->valid_rx_ant <<
- 					PHY_RX_CHAIN_VALID_POS);
- 	cmd->rxchain_info |= cpu_to_le32(idle_cnt << PHY_RX_CHAIN_CNT_POS);
+  am i misunderstanding the function of the kernel config variable
+PCIEPORTBUS? i notice that .../iwlwifi/Makefile includes the line:
+
+  iwlwifi-objs  += pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+
+which simply compiles those files with no regard to dependency. can
+someone clarify this? thanks.
+
+rday
+
 -- 
-1.8.3.2
 
+========================================================================
+Robert P. J. Day                                 Ottawa, Ontario, CANADA
+                        http://crashcourse.ca
+
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
