@@ -1,109 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:35121 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaEOVvj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:39 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so1742440wes.14
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:38 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 04/15] staging: vt6656: lock changes: vRunCommand remove locks.
-Date: Thu, 15 May 2014 22:49:13 +0100
-Message-Id: <1400190564-5135-4-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235142_538635_3FC0A1B2)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36752 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196AbaETKVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 06:21:14 -0400
+Message-ID: <1400581259.4474.3.camel@jlt4.sipsolutions.net> (sfid-20140520_122117_133272_BE4EBEA9)
+Subject: Re: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still
+ being compiled?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 May 2014 12:20:59 +0200
+In-Reply-To: <alpine.LFD.2.11.1405200526530.12158@localhost>
+References: <alpine.LFD.2.11.1405200342050.10462@localhost>
+	  (sfid-20140520_101149_157876_1874D563) <1400574452.4474.2.camel@jlt4.sipsolutions.net>
+	 <alpine.LFD.2.11.1405200526530.12158@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing atomic locked paths to usbpipe.c PIPEnsControlOut and PIPEnsControlIn
+On Tue, 2014-05-20 at 05:28 -0400, Robert P. J. Day wrote:
 
-This function will nolonger need any locking.
+> > The whole driver depends on CONFIG_PCI, maybe it should depend on
+> > something more PCIe specific, but that wasn't easy to sort out, and
+> > the APIs it needs aren't PCIe specific afaict.
+> 
+>   ok, i'll have to think about that for a few minutes. am i at least
+> correct in my understanding that, technically, the kernel config
+> option PCIEPORTBUS is supposed to control whether one wants basic PCIE
+> support or not?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wcmd.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+I don't know, sorry.
 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index de7e808..d51cc90 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -286,8 +286,6 @@ void vRunCommand(struct work_struct *work)
- 	if (pDevice->bCmdRunning != true)
- 		return;
- 
--	spin_lock_irq(&pDevice->lock);
--
- 	switch (pDevice->eCommandState) {
- 
- 	case WLAN_CMD_SCAN_START:
-@@ -365,11 +363,9 @@ void vRunCommand(struct work_struct *work)
- 			if ((pMgmt->b11hEnable == false) ||
- 			    (pMgmt->uScanChannel < CB_MAX_CHANNEL_24G)) {
- 				s_vProbeChannel(pDevice);
--				spin_unlock_irq(&pDevice->lock);
- 				vCommandTimerWait((void *) pDevice, 100);
- 				return;
- 			} else {
--				spin_unlock_irq(&pDevice->lock);
- 				vCommandTimerWait((void *) pDevice, WCMD_PASSIVE_SCAN_TIME);
- 				return;
- 			}
-@@ -504,7 +500,6 @@ void vRunCommand(struct work_struct *work)
- 				pDevice->byLinkWaitCount = 0;
- 				pDevice->eCommandState = WLAN_AUTHENTICATE_WAIT;
- 				vCommandTimerWait((void *) pDevice, AUTHENTICATE_TIMEOUT);
--				spin_unlock_irq(&pDevice->lock);
- 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Set eCommandState = WLAN_AUTHENTICATE_WAIT\n");
- 				return;
- 			}
-@@ -578,7 +573,6 @@ void vRunCommand(struct work_struct *work)
- 				pDevice->byLinkWaitCount = 0;
- 				pDevice->eCommandState = WLAN_ASSOCIATE_WAIT;
- 				vCommandTimerWait((void *) pDevice, ASSOCIATE_TIMEOUT);
--				spin_unlock_irq(&pDevice->lock);
- 				return;
- 			}
- 		} else if (pMgmt->eCurrState < WMAC_STATE_AUTHPENDING) {
-@@ -587,7 +581,6 @@ void vRunCommand(struct work_struct *work)
- 			//mike add:wait another 2 sec if authenticated_frame delay!
- 			pDevice->byLinkWaitCount++;
- 			printk("WLAN_AUTHENTICATE_WAIT:wait %d times!!\n", pDevice->byLinkWaitCount);
--			spin_unlock_irq(&pDevice->lock);
- 			vCommandTimerWait((void *) pDevice, AUTHENTICATE_TIMEOUT/2);
- 			return;
- 		}
-@@ -622,7 +615,6 @@ void vRunCommand(struct work_struct *work)
- 			//mike add:wait another 2 sec if associated_frame delay!
- 			pDevice->byLinkWaitCount++;
- 			printk("WLAN_ASSOCIATE_WAIT:wait %d times!!\n", pDevice->byLinkWaitCount);
--			spin_unlock_irq(&pDevice->lock);
- 			vCommandTimerWait((void *) pDevice, ASSOCIATE_TIMEOUT/2);
- 			return;
- 		}
-@@ -752,9 +744,9 @@ void vRunCommand(struct work_struct *work)
- 
- 				pDevice->byKeyIndex = 0;
- 				pDevice->bTransmitKey = false;
--				spin_unlock_irq(&pDevice->lock);
-+
- 				KeyvInitTable(pDevice, &pDevice->sKey);
--				spin_lock_irq(&pDevice->lock);
-+
- 				pMgmt->byCSSPK = KEY_CTL_NONE;
- 				pMgmt->byCSSGK = KEY_CTL_NONE;
- 
-@@ -882,7 +874,6 @@ void vRunCommand(struct work_struct *work)
- 
- 	s_bCommandComplete(pDevice);
- 
--	spin_unlock_irq(&pDevice->lock);
- 	return;
- }
- 
--- 
-1.9.1
+johannes
+
 
