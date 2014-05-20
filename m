@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:61330 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588AbaEZKKU (ORCPT
+Received: from astoria.ccjclearline.com ([64.235.106.9]:59010 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888AbaETK2z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 06:10:20 -0400
-Received: by mail-wg0-f46.google.com with SMTP id n12so7783823wgh.5
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 03:10:19 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, apenwarr@gmail.com,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] ath10k: protect src_ring state with ce_lock in tx_sg()
-Date: Mon, 26 May 2014 12:02:58 +0200
-Message-Id: <1401098579-31842-2-git-send-email-michal.kazior@tieto.com> (sfid-20140526_121025_732358_B7583710)
-In-Reply-To: <1401098579-31842-1-git-send-email-michal.kazior@tieto.com>
-References: <1400158139-13836-1-git-send-email-michal.kazior@tieto.com>
- <1401098579-31842-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 20 May 2014 06:28:55 -0400
+Date: Tue, 20 May 2014 06:26:24 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still
+ being compiled?
+In-Reply-To: <1400581259.4474.3.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1405200625520.3646@localhost> (sfid-20140520_122858_194819_4C6E41FA)
+References: <alpine.LFD.2.11.1405200342050.10462@localhost>   (sfid-20140520_101149_157876_1874D563) <1400574452.4474.2.camel@jlt4.sipsolutions.net>  <alpine.LFD.2.11.1405200526530.12158@localhost> <1400581259.4474.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible to read invalid state of CE ring
-buffer indexes. This could lead to scatter-gather
-transfer failure in mid-way and crash firmware
-later by leaving garbage data on the ring.
+On Tue, 20 May 2014, Johannes Berg wrote:
 
-Reported-By: Avery Pennarun <apenwarr@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+> On Tue, 2014-05-20 at 05:28 -0400, Robert P. J. Day wrote:
+>
+> > > The whole driver depends on CONFIG_PCI, maybe it should depend on
+> > > something more PCIe specific, but that wasn't easy to sort out, and
+> > > the APIs it needs aren't PCIe specific afaict.
+> >
+> >   ok, i'll have to think about that for a few minutes. am i at least
+> > correct in my understanding that, technically, the kernel config
+> > option PCIEPORTBUS is supposed to control whether one wants basic PCIE
+> > support or not?
+>
+> I don't know, sorry.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 71ab110..b1eb915 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -762,13 +762,17 @@ static int ath10k_pci_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
- 	struct ath10k_pci_pipe *pci_pipe = &ar_pci->pipe_info[pipe_id];
- 	struct ath10k_ce_pipe *ce_pipe = pci_pipe->ce_hdl;
- 	struct ath10k_ce_ring *src_ring = ce_pipe->src_ring;
--	unsigned int nentries_mask = src_ring->nentries_mask;
--	unsigned int sw_index = src_ring->sw_index;
--	unsigned int write_index = src_ring->write_index;
-+	unsigned int nentries_mask;
-+	unsigned int sw_index;
-+	unsigned int write_index;
- 	int err, i;
- 
- 	spin_lock_bh(&ar_pci->ce_lock);
- 
-+	nentries_mask = src_ring->nentries_mask;
-+	sw_index = src_ring->sw_index;
-+	write_index = src_ring->write_index;
-+
- 	if (unlikely(CE_RING_DELTA(nentries_mask,
- 				   write_index, sw_index - 1) < n_items)) {
- 		err = -ENOBUFS;
+  ok, i think i'll go hassle people on the linux-pci list about this,
+thanks for your patience.
+
+rday
+
 -- 
-1.8.5.3
 
+========================================================================
+Robert P. J. Day                                 Ottawa, Ontario, CANADA
+                        http://crashcourse.ca
+
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
