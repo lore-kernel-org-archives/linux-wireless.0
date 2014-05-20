@@ -1,138 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:48812 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756148AbaEOVv7 (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:64928 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbaETIpC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:59 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so1740140wes.15
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 15/15] staging: vt6656: Remove PIPEnsControlOutAsyn/CONTROLnsRequestOutAsyn
-Date: Thu, 15 May 2014 22:49:24 +0100
-Message-Id: <1400190564-5135-15-git-send-email-tvboxspy@gmail.com> (sfid-20140516_002147_630988_096C3ADE)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 20 May 2014 04:45:02 -0400
+Received: by mail-lb0-f173.google.com with SMTP id 10so120680lbg.32
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 01:45:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1399798250-20987-4-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com> <1399798250-20987-4-git-send-email-emmanuel.grumbach@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 20 May 2014 01:44:40 -0700
+Message-ID: <CAB=NE6Wwv0y1cOZrpLe+yjZqHLmZpdJ3dYaLhLro==x4-t9UzA@mail.gmail.com> (sfid-20140520_104516_680802_558B8C9F)
+Subject: Re: [PATCH 3/7] cfg80211: allow drivers to provide regulatory settings
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This now the same as PIPEnsControlOut.
+On Sun, May 11, 2014 at 1:50 AM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+>
+> Define a new wiphy callback allowing drivers to provide regulatory
+> settings.
+>
+> Only The first wiphy registered with this callback will be able to provide
+> regulatory domain info. If such a wiphy exists, it takes precedence over
+> other data sources.
+>
+> Change-Id: I7c7e368e200c1414b53e3a86e131de24adc62b93
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  include/net/cfg80211.h | 17 +++++++++++++
+>  net/wireless/reg.c     | 65 +++++++++++++++++++++++++++++++++++++++++++++-----
+>  2 files changed, 76 insertions(+), 6 deletions(-)
+>
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index f2c3186..3c96b62 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3008,6 +3008,23 @@ struct wiphy {
+>         void (*reg_notifier)(struct wiphy *wiphy,
+>                              struct regulatory_request *request);
+>
+> +       /*
+> +        * Indicates this wiphy can provide regulatory information.
+> +        * Must be set before the wiphy is registered. Only the first
+> +        * wiphy with this callback will be called to provide a regdomain
+> +        * on country-code changes. The alpha2 in the returned regdomain
+> +        * information can be different from the one given via argument,
+> +        * if the argument contains the "99" alpha2, meaning unknown.
+> +        * If an ERR_PTR is returned the regulatory core will consult other
+> +        * sources for the regdomain info (internal regdb and CRDA).
+> +        * Returning NULL will cause the regdomain to remain the same.
+> +        * The callee will return a struct allocated with kmalloc(). After
+> +        * the struct is returned, the regulatory core is responsible
+> +        * for freeing it.
+> +        */
 
-Replace with PIPEnsControlOut/CONTROLnsRequestOut.
+Use kdoc instead of this long documentation blob.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/control.h  |  3 ---
- drivers/staging/vt6656/firmware.c |  2 +-
- drivers/staging/vt6656/mac.c      |  2 +-
- drivers/staging/vt6656/usbpipe.c  | 38 --------------------------------------
- drivers/staging/vt6656/usbpipe.h  |  2 --
- 5 files changed, 2 insertions(+), 45 deletions(-)
+> +       struct ieee80211_regdomain * (*get_regd)(struct wiphy *wiphy,
+> +                                                const char *alpha2);
+> +
+>         /* fields below are read-only, assigned by cfg80211 */
+>
+>         const struct ieee80211_regdomain __rcu *regd;
 
-diff --git a/drivers/staging/vt6656/control.h b/drivers/staging/vt6656/control.h
-index 9da9b96..4658910 100644
---- a/drivers/staging/vt6656/control.h
-+++ b/drivers/staging/vt6656/control.h
-@@ -36,9 +36,6 @@
- #define CONTROLnsRequestOut(Device, Request, Value, Index, Length, Buffer) \
- 	PIPEnsControlOut(Device, Request, Value, Index, Length, Buffer)
- 
--#define CONTROLnsRequestOutAsyn(Device, Request, Value, Index, Length, Buffer) \
--	PIPEnsControlOutAsyn(Device, Request, Value, Index, Length, Buffer)
--
- #define CONTROLnsRequestIn(Device, Request, Value, Index, Length, Buffer) \
- 	PIPEnsControlIn(Device, Request, Value, Index, Length, Buffer)
- 
-diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
-index 7a4a972..e03f1f9 100644
---- a/drivers/staging/vt6656/firmware.c
-+++ b/drivers/staging/vt6656/firmware.c
-@@ -71,7 +71,7 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
- 		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
- 		memcpy(pBuffer, fw->data + ii, wLength);
- 
--		NdisStatus = CONTROLnsRequestOutAsyn(pDevice,
-+		NdisStatus = CONTROLnsRequestOut(pDevice,
- 						0,
- 						0x1200+ii,
- 						0x0000,
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 3ce19dd..8bd3ab0 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -75,7 +75,7 @@ void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
-  */
- void MACbShutdown(struct vnt_private *pDevice)
- {
--    CONTROLnsRequestOutAsyn(pDevice,
-+	CONTROLnsRequestOut(pDevice,
-                         MESSAGE_TYPE_MACSHUTDOWN,
-                         0,
-                         0,
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 9946bfd..433edca 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -64,44 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
- 
--int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
--	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
--{
--	int ntStatus;
--
--    if (pDevice->Flags & fMP_DISCONNECTED)
--        return STATUS_FAILURE;
--
--    if (in_interrupt()) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
--        return STATUS_FAILURE;
--    }
--
--	mutex_lock(&pDevice->usb_lock);
--
--    ntStatus = usb_control_msg(
--                            pDevice->usb,
--                            usb_sndctrlpipe(pDevice->usb , 0),
--                            byRequest,
--                            0x40, // RequestType
--                            wValue,
--                            wIndex,
--			    (void *) pbyBuffer,
--                            wLength,
--                            HZ
--                          );
--    if (ntStatus >= 0) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe ntStatus= %d\n", ntStatus);
--        ntStatus = 0;
--    } else {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"usb_sndctrlpipe fail, ntStatus= %d\n", ntStatus);
--    }
--
--	mutex_unlock(&pDevice->usb_lock);
--
--    return ntStatus;
--}
--
- int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
- {
-diff --git a/drivers/staging/vt6656/usbpipe.h b/drivers/staging/vt6656/usbpipe.h
-index f537703..42ad4f7 100644
---- a/drivers/staging/vt6656/usbpipe.h
-+++ b/drivers/staging/vt6656/usbpipe.h
-@@ -34,8 +34,6 @@
- 
- int PIPEnsControlOut(struct vnt_private *, u8 byRequest, u16 wValue,
- 		u16 wIndex, u16 wLength, u8 *pbyBuffer);
--int PIPEnsControlOutAsyn(struct vnt_private *, u8 byRequest,
--	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer);
- int PIPEnsControlIn(struct vnt_private *, u8 byRequest, u16 wValue,
- 	u16 wIndex, u16 wLength,  u8 *pbyBuffer);
- 
--- 
-1.9.1
+The driver should be able to dump a regdomain it needs when it needs
+it and use the internal callbacks wiphy_apply_custom_regulatory()
+which tons of drivers already use when it needs to upon
+initialization. As for country IE data you can ignore country IEs,
+there's a flag for this, and do what you want on firmware just as that
+crappy non-upstream vendor qualcomm driver does. Apart from that its
+unclear in this patch why instead any delta observed on wireless-regdb
+is addressed publicly I'd like for this to be considered as a sane
+alternative. Additionally keeping regulatory data in firmware is very
+bug prone and it also doesn't let us grow mature the architecture on
+cfg80211, Intel's firmware has historically only had a few world
+regulatory domains, and historically this is why not much
+contributions from Intel have gone into wireless-regdb, if there is a
+need to support specific countries now on firmware I'd encourage the
+firmware bloat strategy to be seriously reconsidered in light of the
+issues that could arise.
 
+  Luis
