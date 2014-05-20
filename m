@@ -1,27 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39435 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37213 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910AbaEMSjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 14:39:12 -0400
-Message-ID: <1400006337.4137.28.camel@jlt4.sipsolutions.net> (sfid-20140513_203915_380977_471CF6AF)
-Subject: Re: [PATCH 3.15] nl80211: fix
- NL80211_FEATURE_P2P_DEVICE_NEEDS_CHANNEL API
+	id S1753125AbaETNVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 09:21:52 -0400
+Message-ID: <1400592103.4474.5.camel@jlt4.sipsolutions.net> (sfid-20140520_152155_280183_265067AA)
+Subject: Re: [PATCH 1/7] cfg80211: don't set reg timeout for user-handled
+ hint
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 May 2014 20:38:57 +0200
-In-Reply-To: <20140513173959.GF21204@tuxdriver.com>
-References: <1399988848-13185-1-git-send-email-johannes@sipsolutions.net>
-	 <20140513173959.GF21204@tuxdriver.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Date: Tue, 20 May 2014 15:21:43 +0200
+In-Reply-To: <1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com>
+References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-13 at 13:39 -0400, John W. Linville wrote:
-> Do we need to preserve the API compatibility?
+On Sun, 2014-05-11 at 11:50 +0300, Emmanuel Grumbach wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> Otherwise every "indoor" setting by usermode will cause a regdomain reset.
 
-Well, yes. Even iw uses this, and compiling it fails without it.
+Applied this one :)
 
 johannes
 
