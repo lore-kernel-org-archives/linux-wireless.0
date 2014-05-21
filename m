@@ -1,184 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45710 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755459AbaELVAQ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34991 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbaEUL3C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 17:00:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC] wireless: add cfg80211 ethtool infrastructure for firmware dumps
-Date: Mon, 12 May 2014 16:59:27 -0400
-Message-Id: <1399928367-306-1-git-send-email-linville@tuxdriver.com> (sfid-20140512_230022_577558_3D9056B9)
+	Wed, 21 May 2014 07:29:02 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2] ath9k: Handle multiple keys while setting tx filters
+Date: Wed, 21 May 2014 16:59:19 +0530
+Message-ID: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140521_132908_961867_73324612)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is all boilerplate based upon the existing ethtool support in cfg80211.
+The keycache index is used to abort transmission for given station
+when it goes to sleep state. But the commit "ath9k_hw: Abort transmission
+for sleeping station" is not handling multi-key station. Fix that.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
-Compile-tested only!
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/main.c  | 52 +++++++++++++++++++++++++++-------
+ 2 files changed, 42 insertions(+), 11 deletions(-)
 
-This basically just passes the ethtool call down to the hardware
-driver.  What else would/should it do?
-
-I think that I did the bare minimum on the tracing part.  What else
-does it need?
-
- include/net/cfg80211.h  | 10 ++++++++++
- net/wireless/ethtool.c  | 33 +++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h | 40 ++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h    | 15 +++++++++++++++
- 4 files changed, 98 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7eae46ccec01..89381650a45e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2506,6 +2506,16 @@ struct cfg80211_ops {
- 				struct ethtool_stats *stats, u64 *data);
- 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
- 				  u32 sset, u8 *data);
-+	int	(*set_et_dump)(struct wiphy *wiphy,
-+			       struct net_device *dev,
-+			       struct ethtool_dump *dump);
-+	int	(*get_et_dump_flag)(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    struct ethtool_dump *dump);
-+	int	(*get_et_dump_data)(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    struct ethtool_dump *dump,
-+				    void *buffer);
- 
- 	int	(*get_channel)(struct wiphy *wiphy,
- 			       struct wireless_dev *wdev,
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-index d4860bfc020e..5bc9221b2c2a 100644
---- a/net/wireless/ethtool.c
-+++ b/net/wireless/ethtool.c
-@@ -93,6 +93,36 @@ static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
- 		rdev_get_et_strings(rdev, dev, sset, data);
- }
- 
-+static int cfg80211_set_dump(struct net_device *dev, struct ethtool_dump *dump)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	if (rdev->ops->set_et_dump)
-+		return rdev_set_et_dump(rdev, dev, dump);
-+	return -EOPNOTSUPP;
-+}
-+
-+static int cfg80211_get_dump_flag(struct net_device *dev,
-+				  struct ethtool_dump *dump)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	if (rdev->ops->get_et_dump_flag)
-+		return rdev_get_et_dump_flag(rdev, dev, dump);
-+	return -EOPNOTSUPP;
-+}
-+
-+static int cfg80211_get_dump_data(struct net_device *dev,
-+				  struct ethtool_dump *dump,
-+				  void *buffer)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	if (rdev->ops->get_et_dump_data)
-+		return rdev_get_et_dump_data(rdev, dev, dump, buffer);
-+	return -EOPNOTSUPP;
-+}
-+
- const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_drvinfo = cfg80211_get_drvinfo,
- 	.get_regs_len = cfg80211_get_regs_len,
-@@ -103,4 +133,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_strings = cfg80211_get_strings,
- 	.get_ethtool_stats = cfg80211_get_stats,
- 	.get_sset_count = cfg80211_get_sset_count,
-+	.set_dump = cfg80211_set_dump,
-+	.get_dump_flag = cfg80211_get_dump_flag,
-+	.get_dump_data = cfg80211_get_dump_data,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 20dd344..b204694 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -274,6 +274,7 @@ struct ath_node {
+ #ifdef CONFIG_ATH9K_STATION_STATISTICS
+ 	struct ath_rx_rate_stats rx_rate_stats;
+ #endif
++	u8 key_idx[4];
  };
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 00cdf73ba6c4..32ffa8af361c 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -963,4 +963,44 @@ rdev_set_ap_chanwidth(struct cfg80211_registered_device *rdev,
- 	return ret;
+ 
+ struct ath_tx_control {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 47d442a..89be123 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -421,6 +421,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	an->sc = sc;
+ 	an->sta = sta;
+ 	an->vif = vif;
++	memset(&an->key_idx, 0, sizeof(an->key_idx));
+ 
+ 	ath_tx_node_init(sc, an);
+ }
+@@ -1461,8 +1462,10 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
+ 		return 0;
+ 
+ 	key = ath_key_config(common, vif, sta, &ps_key);
+-	if (key > 0)
++	if (key > 0) {
+ 		an->ps_key = key;
++		an->key_idx[0] = key;
++	}
+ 
+ 	return 0;
+ }
+@@ -1480,6 +1483,7 @@ static void ath9k_del_ps_key(struct ath_softc *sc,
+ 
+ 	ath_key_delete(common, &ps_key);
+ 	an->ps_key = 0;
++	an->key_idx[0] = 0;
  }
  
-+static inline int
-+rdev_set_et_dump(struct cfg80211_registered_device *rdev,
-+		 struct net_device *dev, struct ethtool_dump *dump)
-+{
-+	int ret;
-+
-+	trace_rdev_set_et_dump(&rdev->wiphy, dev);
-+	ret = rdev->ops->set_et_dump(&rdev->wiphy, dev, dump);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+
-+	return ret;
-+}
-+
-+static inline int
-+rdev_get_et_dump_flag(struct cfg80211_registered_device *rdev,
-+		      struct net_device *dev, struct ethtool_dump *dump)
-+{
-+	int ret;
-+
-+	trace_rdev_get_et_dump_flag(&rdev->wiphy, dev);
-+	ret = rdev->ops->get_et_dump_flag(&rdev->wiphy, dev, dump);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+
-+	return ret;
-+}
-+
-+static inline int
-+rdev_get_et_dump_data(struct cfg80211_registered_device *rdev,
-+		      struct net_device *dev, struct ethtool_dump *dump,
-+		      void *buffer)
-+{
-+	int ret;
-+
-+	trace_rdev_get_et_dump_data(&rdev->wiphy, dev);
-+	ret = rdev->ops->get_et_dump_data(&rdev->wiphy, dev, dump, buffer);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index f3c13ff4d04c..e933f2fcabdb 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -585,6 +585,21 @@ DEFINE_EVENT(wiphy_netdev_evt, rdev_get_et_stats,
- 	TP_ARGS(wiphy, netdev)
- );
+ static int ath9k_sta_remove(struct ieee80211_hw *hw,
+@@ -1494,6 +1498,19 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_set_et_dump,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
++static inline void ath9k_sta_set_tx_filter(struct ath_hw *ah,
++					   struct ath_node *an,
++					   bool set)
++{
++	int i;
 +
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_get_et_dump_flag,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
++	for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
++		if (!an->key_idx[i])
++			continue;
++		ath9k_hw_set_tx_filter(ah, an->key_idx[i], set);
++	}
++}
 +
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_get_et_dump_data,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
-+
- DEFINE_EVENT(wiphy_netdev_evt, rdev_sched_scan_stop,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
- 	TP_ARGS(wiphy, netdev)
+ static void ath9k_sta_notify(struct ieee80211_hw *hw,
+ 			 struct ieee80211_vif *vif,
+ 			 enum sta_notify_cmd cmd,
+@@ -1506,12 +1523,10 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
+ 	case STA_NOTIFY_SLEEP:
+ 		an->sleeping = true;
+ 		ath_tx_aggr_sleep(sta, sc, an);
+-		if (an->ps_key > 0)
+-			ath9k_hw_set_tx_filter(sc->sc_ah, an->ps_key, true);
++		ath9k_sta_set_tx_filter(sc->sc_ah, an, true);
+ 		break;
+ 	case STA_NOTIFY_AWAKE:
+-		if (an->ps_key > 0)
+-			ath9k_hw_set_tx_filter(sc->sc_ah, an->ps_key, false);
++		ath9k_sta_set_tx_filter(sc->sc_ah, an, false);
+ 		an->sleeping = false;
+ 		ath_tx_aggr_wakeup(sc, an);
+ 		break;
+@@ -1567,7 +1582,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	int ret = 0;
++	struct ath_node *an = NULL;
++	int ret = 0, i;
+ 
+ 	if (ath9k_modparam_nohwcrypt)
+ 		return -ENOSPC;
+@@ -1589,7 +1605,9 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+-	ath_dbg(common, CONFIG, "Set HW Key\n");
++	ath_dbg(common, CONFIG, "Set HW Key %d\n", cmd);
++	if (sta)
++		an = (struct ath_node *)sta->drv_priv;
+ 
+ 	switch (cmd) {
+ 	case SET_KEY:
+@@ -1597,8 +1615,6 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 			ath9k_del_ps_key(sc, vif, sta);
+ 
+ 		ret = ath_key_config(common, vif, sta, key);
+-		if (sta && (ret > 0))
+-			((struct ath_node *)sta->drv_priv)->ps_key = ret;
+ 		if (ret >= 0) {
+ 			key->hw_key_idx = ret;
+ 			/* push IV and Michael MIC generation to stack */
+@@ -1610,11 +1626,25 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+ 			ret = 0;
+ 		}
++		if (an && key->hw_key_idx) {
++			for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
++				if (an->key_idx[i])
++					continue;
++				an->key_idx[i] = key->hw_key_idx;
++			}
++			WARN_ON(i == ARRAY_SIZE(an->key_idx));
++		}
+ 		break;
+ 	case DISABLE_KEY:
+ 		ath_key_delete(common, key);
+-		if (sta)
+-			((struct ath_node *)sta->drv_priv)->ps_key = 0;
++		if (!an)
++			break;
++		for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
++			if (an->key_idx[i] != key->hw_key_idx)
++				continue;
++			an->key_idx[i] = 0;
++			break;
++		}
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
 -- 
-1.9.0
+1.9.3
 
