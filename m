@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:40787 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbaEZMcQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 08:32:16 -0400
-Received: by mail-we0-f172.google.com with SMTP id k48so8112393wev.31
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 05:32:15 -0700 (PDT)
-From: chaitanya.mgit@gmail.com
-To: linville@tuxdriver.com, mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH V2] regdb: Generalize the mW to dBm power conversion
-Date: Mon, 26 May 2014 18:01:44 +0530
-Message-Id: <1401107504-11385-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140526_143219_846087_559DD3B4)
+Received: from nbd.name ([46.4.11.11]:43711 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752066AbaEUUw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 16:52:26 -0400
+Message-ID: <537D1200.1020700@openwrt.org> (sfid-20140521_225229_180558_64971C17)
+Date: Wed, 21 May 2014 22:52:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: Handle multiple keys while setting tx filters
+References: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com> <537C9B84.7000002@openwrt.org> <20140521141632.GA5922@qca.qualcomm.com>
+In-Reply-To: <20140521141632.GA5922@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generalize the power conversion from mW to dBm 
-using log. This should fix the below compilation
-error for country NO which adds a new power value
-2000mW which is not handled earlier.
+On 2014-05-21 16:16, Rajkumar Manoharan wrote:
+> On Wed, May 21, 2014 at 02:26:44PM +0200, Felix Fietkau wrote:
+>> On 2014-05-21 13:29, Rajkumar Manoharan wrote:
+>> > The keycache index is used to abort transmission for given station
+>> > when it goes to sleep state. But the commit "ath9k_hw: Abort transmission
+>> > for sleeping station" is not handling multi-key station. Fix that.
+>> > 
+>> > Cc: Felix Fietkau <nbd@openwrt.org>
+>> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>> > ---
+>> >  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+>> >  drivers/net/wireless/ath/ath9k/main.c  | 52 +++++++++++++++++++++++++++-------
+>> >  2 files changed, 42 insertions(+), 11 deletions(-)
+>> > 
+>> > @@ -1610,11 +1626,25 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+>> >  				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+>> >  			ret = 0;
+>> >  		}
+>> > +		if (an && key->hw_key_idx) {
+>> > +			for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
+>> > +				if (an->key_idx[i])
+>> > +					continue;
+>> > +				an->key_idx[i] = key->hw_key_idx;
+>> I think this should be moved inside the ret >= 0 test.
+> Since key->hw_key_idx is valid only when ret > 0, this change is moved
+> out of ret check to avoid additional indentation.
+That's my point. key->hw_key_idx is valid only when ret >= 0, are you
+sure that it's always zero before attempting to set it in hw?
 
- CC [M]  net/wireless/wext-sme.o
- CC [M]  net/wireless/regdb.o
-net/wireless/regdb.c:1130:1: error: Unknown undeclared here (not in
-a function)
-net/wireless/regdb.c:1130:9: error: expected } before power
-make[2]: *** [net/wireless/regdb.o] Error 1
-make[1]: *** [net/wireless] Error 2
-make: *** [net] Error 2
+Not sure if a key can be disabled from mac80211 and then enabled again,
+but that's one scenario I can come up with, where hw_key_idx might be stale.
 
-Reported-By:  John Walker <john@x109.net>
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+It might be a good idea to initialize it to zero if adding the key
+failed (and also when disabling it).
 
----
- net/wireless/genregdb.awk |   12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
-
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 4119833..949ee38 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -68,17 +68,7 @@ function parse_reg_rule()
- 	sub(/,/, "", units)
- 	dfs_cac = $9
- 	if (units == "mW") {
--		if (power == 100) {
--			power = 20
--		} else if (power == 200) {
--			power = 23
--		} else if (power == 500) {
--			power = 27
--		} else if (power == 1000) {
--			power = 30
--		} else {
--			print "Unknown power value in database!"
--		}
-+		power = 10 * (log(power)/log(10))
- 	} else {
- 		dfs_cac = $8
- 	}
+- Felix
