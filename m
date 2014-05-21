@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44422 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754041AbaEILWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 07:22:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Fri,  9 May 2014 14:21:56 +0300
-Message-Id: <1399634516-13089-1-git-send-email-luca@coelho.fi> (sfid-20140509_132212_674110_CD90A686)
-Subject: [PATCH] cfg80211: fix compilation error in cfg80211
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:53959 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbaEUBWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2014 21:22:46 -0400
+Received: by mail-vc0-f177.google.com with SMTP id if17so1630787vcb.22
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 18:22:45 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 21 May 2014 09:22:45 +0800
+Message-ID: <CAEFj984H4HvwgdLyWo3=7xcFysgz=cbepdp7tUPpGztpzO-dOw@mail.gmail.com> (sfid-20140521_032249_794941_AB9ACBD9)
+Subject: Re: 802.11s mode without HWMP
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	hrogge@gmail.com, Thomas Pedersen <thomas@noack.us>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+> I will have a look at both tables and see what I can do with them,
+> maybe a second netlink command is necessary in cfg80211.
 
-Commit 0be035a2 (mac80211: handle failed restart/resume better) broke
-compilation:
+You can probably take a look on patches by Shinoda submitted to o11s
+mailing list:
+http://lists.open80211s.org/pipermail/devel/2012-September/002112.html
 
-net/wireless/core.c: In function 'cfg80211_shutdown_all_interfaces':
-net/wireless/core.c:215:9: error: implicit declaration of function 'wiphy_to_dev' [-Werror=implicit-function-declaration]
-  struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-         ^
+It extends the support of mpath dump to show the MAC address behind
+the proxy mesh gate.
 
-This is due to the function name change from wiphy_to_dev() to
-wiphy_to_rdev().
+In additional to this, as mentioned in IEEE 802.11-2012 section
+13.11.4.3, the proxy mesh gate can generate a PXU element to others to
+inform external stations proxied by the proxy mesh gate. But o11s has
+not implemented yet.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-
-Feel free to squash this into your last commit, if you prefer to
-rebase your mac80211-next/master branch.
-
- net/wireless/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c95fddf..3978871 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -212,7 +212,7 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
- 
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
- {
--	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct wireless_dev *wdev;
- 
- 	ASSERT_RTNL();
--- 
-2.0.0.rc0
-
+----
+Chun-Yeow
