@@ -1,54 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56028 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbaEFTAM (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:49172 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879AbaEUUKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 15:00:12 -0400
-Date: Tue, 6 May 2014 14:46:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Stephen Warren <swarren@nvidia.com>
-Subject: Re: pull-request: mac80211-next rfkill-gpio-cleanup
-Message-ID: <20140506184645.GG3518@tuxdriver.com> (sfid-20140506_210018_121862_B3B87304)
-References: <1398787858.29719.3.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398787858.29719.3.camel@jlt4.sipsolutions.net>
+	Wed, 21 May 2014 16:10:42 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so3296004wiw.16
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2014 13:10:41 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/6] staging: vt6656: iowpa.h removed dead code.
+Date: Wed, 21 May 2014 21:09:40 +0100
+Message-Id: <1400702984-3221-2-git-send-email-tvboxspy@gmail.com> (sfid-20140521_221045_643809_9779BFF3)
+In-Reply-To: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
+References: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 29, 2014 at 06:10:58PM +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> Something I forgot in my other pull request, but better if you pull it
-> separately anyway...
-> 
-> Here I just have Heikki's rfkill GPIO cleanups.
-> 
-> The ARM/tegra patch is OK with the maintainer (Stephen). Let me know of
-> any problems.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit cd6362befe4cc7bf589a5236d2a780af2d47bcc9:
-> 
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-04-02 20:53:45 -0700)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git rfkill-gpio-cleanups
-> 
-> for you to fetch changes up to 781d4e0fb73379e251d1ac1562fe9892da711760:
-> 
->   net: rfkill: gpio: hard-code the gpio names (2014-04-11 09:29:22 +0200)
+Remove dead strutures
 
-Pulling now...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/iowpa.h | 53 ------------------------------------------
+ 1 file changed, 53 deletions(-)
 
+diff --git a/drivers/staging/vt6656/iowpa.h b/drivers/staging/vt6656/iowpa.h
+index 97af32e..98f2b21 100644
+--- a/drivers/staging/vt6656/iowpa.h
++++ b/drivers/staging/vt6656/iowpa.h
+@@ -31,43 +31,6 @@
+ 
+ #define WPA_IE_LEN 64
+ 
+-//WPA related
+-/*
+-typedef enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
+-typedef enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
+-	       CIPHER_WEP104 } wpa_cipher;
+-typedef enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
+-	       KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE } wpa_key_mgmt;
+-*/
+-
+-enum {
+-	VIAWGET_SET_WPA = 1,
+-	VIAWGET_SET_KEY = 2,
+-	VIAWGET_SET_SCAN = 3,
+-	VIAWGET_GET_SCAN = 4,
+-	VIAWGET_GET_SSID = 5,
+-	VIAWGET_GET_BSSID = 6,
+-	VIAWGET_SET_DROP_UNENCRYPT = 7,
+-	VIAWGET_SET_DEAUTHENTICATE = 8,
+-	VIAWGET_SET_ASSOCIATE = 9,
+-	VIAWGET_SET_DISASSOCIATE = 10
+-};
+-
+-enum {
+-	VIAWGET_ASSOC_MSG = 1,
+-	VIAWGET_DISASSOC_MSG = 2,
+-	VIAWGET_PTK_MIC_MSG = 3,
+-	VIAWGET_GTK_MIC_MSG = 4,
+-	VIAWGET_CCKM_ROAM_MSG = 5,
+-	VIAWGET_DEVICECLOSE_MSG = 6
+-};
+-
+-typedef struct viawget_wpa_header {
+-	u8 type;
+-	u16 req_ie_len;
+-	u16 resp_ie_len;
+-} __packed viawget_wpa_header;
+-
+ struct viawget_wpa_param {
+ 	u32 cmd;
+ 	u8 addr[6];
+@@ -109,20 +72,4 @@ struct viawget_wpa_param {
+ 	} u;
+ } __packed;
+ 
+-struct viawget_scan_result {
+-	u8 bssid[6];
+-	u8 ssid[32];
+-	u16 ssid_len;
+-	u8 wpa_ie[WPA_IE_LEN];
+-	u16 wpa_ie_len;
+-	u8 rsn_ie[WPA_IE_LEN];
+-	u16 rsn_ie_len;
+-	int freq; // MHz
+-	int caps; // e.g. privacy
+-	int qual; // signal quality
+-	int noise;
+-	int level;
+-	int maxrate;
+-} __packed;
+-
+ #endif /* __IOWPA_H__ */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
