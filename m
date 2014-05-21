@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:64893 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932070AbaETRgo (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50078 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254AbaEULBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 13:36:44 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so891542wes.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 10:36:43 -0700 (PDT)
+	Wed, 21 May 2014 07:01:11 -0400
+Date: Wed, 21 May 2014 16:31:45 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Jim Davis <jim.epost@gmail.com>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>, netdev <netdev@vger.kernel.org>
+Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in
+ drivers/net/wireless/ath/ath9k/dfs.c
+Message-ID: <20140521110143.GA2375@qca.qualcomm.com> (sfid-20140521_130142_123606_D7F60D11)
+References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com>
-References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
- <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
- <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com> <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com>
-From: Thomas Pedersen <thomas@noack.us>
-Date: Tue, 20 May 2014 10:36:23 -0700
-Message-ID: <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com> (sfid-20140520_193647_812763_698927EA)
-Subject: Re: 802.11s mode without HWMP
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henning,
+On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
+> Building with the attached random configuration file,
+> 
+> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
+>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
+>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
+> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
+> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
+> has no member named ‘debug’
+>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
+>               ^
+> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
+> macro ‘ath_dbg’
+>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
+>                                          ^
+> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
+> has no member named ‘debug’
+>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
+>      ^
+> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
 
-On Tue, May 20, 2014 at 5:32 AM, Henning Rogge <hrogge@gmail.com> wrote:
-> Hi,
->
-> after spending a day reading through the 802.11s implementation of
-> Linux I have to admit I am lost...
->
-> I am using 802.11s bridged to ethernet on both wlan interfaces and it
-> works very well.
->
-> Unfortunately the cfg802.11 is not telling me which ethernet mac
-> address is behind which wifi mac address, something that has to be
-> known to the kernel to forward the bridged ethernet frames.
->
-> Is there a trick to get this information or is this just a missing
-> functionality in the cfg80211 API (or the "iw <mesh-if> mpath ..."
-> commands) ?
+Please select CONFIG_ATH9K_DEBUGFS.
 
-mac80211 keeps a separate table for bridged endpoints (mpp_paths).
-Unfortunately this table currently isn't exported by the cfg80211
-mpath_dump API. If you really need access to this information from
-cfg80211 / userspace, then the quickest thing for now would be to hack
-in support for iterating over both tables.
-
-I'm not really sure why the decision was made to go with 2 different
-path tables (see 79617dee for the initial implementation), but it
-seems the cleaner approach would be to merge these and stick with the
-existing mpath_dump commands.
-
--- 
-thomas
+-Rajkumar
