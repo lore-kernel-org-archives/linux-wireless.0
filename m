@@ -1,170 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34991 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753015AbaEUL3C (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:43000 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbaEUUKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 07:29:02 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2] ath9k: Handle multiple keys while setting tx filters
-Date: Wed, 21 May 2014 16:59:19 +0530
-Message-ID: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140521_132908_961867_73324612)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 21 May 2014 16:10:46 -0400
+Received: by mail-wg0-f49.google.com with SMTP id m15so2455467wgh.8
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2014 13:10:45 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/6] staging: vt6656: s_vSWencryption replace CRCdwGetCrc32Ex
+Date: Wed, 21 May 2014 21:09:42 +0100
+Message-Id: <1400702984-3221-4-git-send-email-tvboxspy@gmail.com> (sfid-20140521_221050_294716_842AA3D5)
+In-Reply-To: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
+References: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The keycache index is used to abort transmission for given station
-when it goes to sleep state. But the commit "ath9k_hw: Abort transmission
-for sleeping station" is not handling multi-key station. Fix that.
+Replace with ether_crc_le which gives the same result.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 52 +++++++++++++++++++++++++++-------
- 2 files changed, 42 insertions(+), 11 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 20dd344..b204694 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -274,6 +274,7 @@ struct ath_node {
- #ifdef CONFIG_ATH9K_STATION_STATISTICS
- 	struct ath_rx_rate_stats rx_rate_stats;
- #endif
-+	u8 key_idx[4];
- };
- 
- struct ath_tx_control {
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 47d442a..89be123 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -421,6 +421,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	an->sc = sc;
- 	an->sta = sta;
- 	an->vif = vif;
-+	memset(&an->key_idx, 0, sizeof(an->key_idx));
- 
- 	ath_tx_node_init(sc, an);
- }
-@@ -1461,8 +1462,10 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 		return 0;
- 
- 	key = ath_key_config(common, vif, sta, &ps_key);
--	if (key > 0)
-+	if (key > 0) {
- 		an->ps_key = key;
-+		an->key_idx[0] = key;
-+	}
- 
- 	return 0;
- }
-@@ -1480,6 +1483,7 @@ static void ath9k_del_ps_key(struct ath_softc *sc,
- 
- 	ath_key_delete(common, &ps_key);
- 	an->ps_key = 0;
-+	an->key_idx[0] = 0;
- }
- 
- static int ath9k_sta_remove(struct ieee80211_hw *hw,
-@@ -1494,6 +1498,19 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static inline void ath9k_sta_set_tx_filter(struct ath_hw *ah,
-+					   struct ath_node *an,
-+					   bool set)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
-+		if (!an->key_idx[i])
-+			continue;
-+		ath9k_hw_set_tx_filter(ah, an->key_idx[i], set);
-+	}
-+}
-+
- static void ath9k_sta_notify(struct ieee80211_hw *hw,
- 			 struct ieee80211_vif *vif,
- 			 enum sta_notify_cmd cmd,
-@@ -1506,12 +1523,10 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
- 	case STA_NOTIFY_SLEEP:
- 		an->sleeping = true;
- 		ath_tx_aggr_sleep(sta, sc, an);
--		if (an->ps_key > 0)
--			ath9k_hw_set_tx_filter(sc->sc_ah, an->ps_key, true);
-+		ath9k_sta_set_tx_filter(sc->sc_ah, an, true);
- 		break;
- 	case STA_NOTIFY_AWAKE:
--		if (an->ps_key > 0)
--			ath9k_hw_set_tx_filter(sc->sc_ah, an->ps_key, false);
-+		ath9k_sta_set_tx_filter(sc->sc_ah, an, false);
- 		an->sleeping = false;
- 		ath_tx_aggr_wakeup(sc, an);
- 		break;
-@@ -1567,7 +1582,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	int ret = 0;
-+	struct ath_node *an = NULL;
-+	int ret = 0, i;
- 
- 	if (ath9k_modparam_nohwcrypt)
- 		return -ENOSPC;
-@@ -1589,7 +1605,9 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
--	ath_dbg(common, CONFIG, "Set HW Key\n");
-+	ath_dbg(common, CONFIG, "Set HW Key %d\n", cmd);
-+	if (sta)
-+		an = (struct ath_node *)sta->drv_priv;
- 
- 	switch (cmd) {
- 	case SET_KEY:
-@@ -1597,8 +1615,6 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 			ath9k_del_ps_key(sc, vif, sta);
- 
- 		ret = ath_key_config(common, vif, sta, key);
--		if (sta && (ret > 0))
--			((struct ath_node *)sta->drv_priv)->ps_key = ret;
- 		if (ret >= 0) {
- 			key->hw_key_idx = ret;
- 			/* push IV and Michael MIC generation to stack */
-@@ -1610,11 +1626,25 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
- 			ret = 0;
- 		}
-+		if (an && key->hw_key_idx) {
-+			for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
-+				if (an->key_idx[i])
-+					continue;
-+				an->key_idx[i] = key->hw_key_idx;
-+			}
-+			WARN_ON(i == ARRAY_SIZE(an->key_idx));
-+		}
- 		break;
- 	case DISABLE_KEY:
- 		ath_key_delete(common, key);
--		if (sta)
--			((struct ath_node *)sta->drv_priv)->ps_key = 0;
-+		if (!an)
-+			break;
-+		for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
-+			if (an->key_idx[i] != key->hw_key_idx)
-+				continue;
-+			an->key_idx[i] = 0;
-+			break;
-+		}
- 		break;
- 	default:
- 		ret = -EINVAL;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 2b0ae06..0509672 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -304,7 +304,7 @@ static void s_vSWencryption(struct vnt_private *pDevice,
+     if (pTransmitKey->byCipherSuite == KEY_CTL_WEP) {
+         //=======================================================================
+         // Append ICV after payload
+-        dwICV = CRCdwGetCrc32Ex(pbyPayloadHead, wPayloadSize, dwICV);//ICV(Payload)
++	dwICV = ether_crc_le(wPayloadSize, pbyPayloadHead);
+         pdwICV = (u32 *)(pbyPayloadHead + wPayloadSize);
+         // finally, we must invert dwCRC to get the correct answer
+         *pdwICV = cpu_to_le32(~dwICV);
+@@ -315,7 +315,7 @@ static void s_vSWencryption(struct vnt_private *pDevice,
+     } else if (pTransmitKey->byCipherSuite == KEY_CTL_TKIP) {
+         //=======================================================================
+         //Append ICV after payload
+-        dwICV = CRCdwGetCrc32Ex(pbyPayloadHead, wPayloadSize, dwICV);//ICV(Payload)
++	dwICV = ether_crc_le(wPayloadSize, pbyPayloadHead);
+         pdwICV = (u32 *)(pbyPayloadHead + wPayloadSize);
+         // finally, we must invert dwCRC to get the correct answer
+         *pdwICV = cpu_to_le32(~dwICV);
 -- 
-1.9.3
+1.9.1
 
