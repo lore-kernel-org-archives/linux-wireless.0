@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50038 "EHLO purkki.adurom.net"
+Received: from mga02.intel.com ([134.134.136.20]:53190 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbaELGrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 02:47:05 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Subject: Re: [PATCH 1/7] cfg80211: don't set reg timeout for user-handled hint
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com>
-Date: Mon, 12 May 2014 09:47:00 +0300
-In-Reply-To: <1399798250-20987-2-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Sun, 11 May 2014 11:50:44 +0300")
-Message-ID: <87egzz4hp7.fsf@purkki.adurom.net> (sfid-20140512_084709_874164_95DDF823)
+	id S1751749AbaEUGXX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 02:23:23 -0400
+From: "Altman, Avri" <avri.altman@intel.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] iwlwifi: mvm: don't filter out the first beacon
+Date: Wed, 21 May 2014 06:22:26 +0000
+Message-ID: <9CFF011E602B7C40B0F8B7D0336B60FC15A859FA@HASMSX106.ger.corp.intel.com> (sfid-20140521_082327_649451_C73C5755)
+References: <537B2FF7.5070908@gmail.com>
+	<1400582238-18601-1-git-send-email-egrumbach@gmail.com>
+	<20140520143226.GC13981@tuxdriver.com>
+ <CAB3XZEe_xVq_Rq1OT7fvx4wZn1-uxL8c=5AavH4Buq5wUEdVbA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DF96F8@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DF96F8@HASMSX103.ger.corp.intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+SGksDQpEbyB5b3Ugd2FudCBtZSB0byByZXZlcnQgdGhlIHBhdGNoIGFuZCBmb2xsb3cgRWxpYWQn
+cyBzdWdnZXN0aW9uID8NCk1heWJlIGRvIHNvbWUgdGVzdGluZyBpZiBpbmRlZWQgaXQgc2xvd3Mg
+ZG93biBhc3NvY2lhdGlvbiA/DQpSZWdhcmRzLA0KQXZyaQ0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KRnJvbTogR3J1bWJhY2gsIEVtbWFudWVsIA0KU2VudDogVHVlc2RheSwgTWF5IDIw
+LCAyMDE0IDc6MzkgUE0NClRvOiBFbGlhZCBQZWxsZXI7IEpvaG4gVy4gTGludmlsbGUNCkNjOiBF
+bW1hbnVlbCBHcnVtYmFjaDsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBBbHRtYW4s
+IEF2cmkNClN1YmplY3Q6IFJFOiBbUEFUQ0hdIGl3bHdpZmk6IG12bTogZG9uJ3QgZmlsdGVyIG91
+dCB0aGUgZmlyc3QgYmVhY29uDQoNCj4gDQo+IE9uIFR1ZSwgTWF5IDIwLCAyMDE0IGF0IDU6MzIg
+UE0sIEpvaG4gVy4gTGludmlsbGUgPGxpbnZpbGxlQHR1eGRyaXZlci5jb20+DQo+IHdyb3RlOg0K
+PiA+IE9uIFR1ZSwgTWF5IDIwLCAyMDE0IGF0IDAxOjM3OjE4UE0gKzAzMDAsIEVtbWFudWVsIEdy
+dW1iYWNoIHdyb3RlOg0KPiA+PiBGcm9tOiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRtYW5AaW50ZWwu
+Y29tPg0KPiA+Pg0KPiA+PiBFbmFibGluZyBiZWFjb24gZmlsdGVyaW5nIHNob3VsZCBiZSBkb25l
+IG9ubHkgYWZ0ZXIgYSBiZWFjb24gaGFzIGJlZW4NCj4gPj4gcmVjZWl2ZWQuIERvaW5nIHRoYXQg
+dG9vIGVhcmx5IHdpbGwgY2F1c2UgZGlzY29ubmVjdGlvbnMuDQo+ID4+IFRoaXMgaGFzIGFscmVh
+ZHkgYmVlbiBmaXhlZCwgYnV0IHRoZSBmaXggZGlkbid0IHRha2UgY2FyZSBhYm91dCB0aGUNCj4g
+Pj4gY2FzZSB3aGVyZSB0aGUgYmVhY29uIGlzIHJlY2VpdmVkIGFmdGVyIHRoZSBhc3NvY2lhdGlv
+biwgaXQgd2FpdGVkDQo+ID4+IG9ubHkgZm9yIGFzc29jaWF0aW9uIHdoaWNoIGlzIG5vdCBlbm91
+Z2guDQo+ID4+DQo+ID4+IFNpZ25lZC1vZmYtYnk6IEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkBp
+bnRlbC5jb20+DQo+ID4+IFJldmlld2VkLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJn
+QGludGVsLmNvbT4NCj4gPj4gU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFu
+dWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gPj4gLS0tDQo+ID4+ICBkcml2ZXJzL25ldC93aXJl
+bGVzcy9pd2x3aWZpL212bS9tYWM4MDIxMS5jIHwgMTMgKysrLS0tDQo+ID4+ICBkcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL212bS9tdm0uaCAgICAgIHwgIDUgLS0tDQo+ID4+ICBkcml2ZXJz
+L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9wb3dlci5jICAgIHwgNjMgKysrKysrKysrLS0tLS0t
+LS0tLS0tLS0NCj4gLS0tLS0tDQo+ID4+ICAzIGZpbGVzIGNoYW5nZWQsIDI3IGluc2VydGlvbnMo
+KyksIDU0IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gSXQgaXMgdmVyeSBsYXRlIGluIHRoZSByZWxl
+YXNlIGN5Y2xlIGZvciBhIGZpeCBvZiB0aGlzIHNpemUuDQo+ID4gSG93IHNlcmlvdXMgaXMgdGhl
+IGlzc3VlPyAgQSByYW5kb20gZGlzY29ubmVjdCBkb2Vzbid0IHNlZW0gbGlrZSBhDQo+ID4gaHVn
+ZSBwcm9ibGVtIHNvIGxvbmcgYXMgaXQgaXNuJ3QgY29tbW9uLi4uPw0KPiA+DQo+IGZ3aXcsIGl0
+IGxvb2tzIGxpa2UgeW91IGNhbiBzaW1wbHkgd29ya2Fyb3VuZCB0aGUgaXNzdWUgYnkgc2V0dGlu
+ZyB0aGUNCj4gSUVFRTgwMjExX0hXX05FRURfRFRJTV9CRUZPUkVfQVNTT0MgZmxhZy4NCj4gDQoN
+ClRoYXQgd291bGQgc2xvdyBkb3duIHRoZSBjb25uZWN0aW9uLiBJJ2QgcmF0aGVyIGRpc2FibGUg
+dGhlIGJlYWNvbiBmaWx0ZXJpbmcgYWx0b2dldGhlci4NClRoZSBpcm9ueSBpcyB0aGF0IEkgc2Vu
+dCBhIG1haWwgdG8gR3JlZyBhc2tpbmcgaG93IHRvIGRpc2FibGUgaXQgaW4gMy4xMyAvIDMuMTQg
+d2l0aG91dCBkaXNhYmxpbmcgaXQgaW4gMy4xNSBiZWNhdXNlIEkgdGhvdWdoIHRoaXMgcGF0Y2gg
+d291bGQgbWFrZSBpdCB0byAzLjE1LiBOb3cgSSBmaW5kIG15c2VsZiBkaXNhYmxpbmcgdGhlIGZl
+YXR1cmUgZm9yIDMuMTUgdG9vLi4uIEFueXdheS4uLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkEgbWVtYmVyIG9m
+IHRoZSBJbnRlbCBDb3Jwb3JhdGlvbiBncm91cCBvZiBjb21wYW5pZXMKClRoaXMgZS1tYWlsIGFu
+ZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0
+aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBk
+aXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUg
+bm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5k
+IGRlbGV0ZSBhbGwgY29waWVzLgo=
 
-> From: Arik Nemtsov <arik@wizery.com>
->
-> Otherwise every "indoor" setting by usermode will cause a regdomain reset.
->
-> Change-Id: I3225325d9fb956174458d386d4dd0f4e069deb58
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-All the patches in the series have the useless Change-Id tag.
-
--- 
-Kalle Valo
