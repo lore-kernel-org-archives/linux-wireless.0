@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14392 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757008AbaE2Gsj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 02:48:39 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath9k: Fix interface combinations for multi-channel concurrency
-Date: Thu, 29 May 2014 12:19:01 +0530
-Message-ID: <1401346141-9888-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140529_084854_679239_BCCFAF5C)
+Received: from mout.gmx.net ([212.227.17.20]:54487 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750770AbaEUFRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 01:17:50 -0400
+Message-ID: <537C36EC.10503@rempel-privat.de> (sfid-20140521_071830_233336_651D697D)
+Date: Wed, 21 May 2014 07:17:32 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: fixup "ath9k_htc: fix build with disabled debug"
+References: <1400614697-25844-1-git-send-email-linville@tuxdriver.com> <537BBA5C.6000705@rempel-privat.de>
+In-Reply-To: <537BBA5C.6000705@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Dg5scPBCn84NrcKROelR2PSEgABJX9Btd"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 does not support WDS and DFS with channel context
-drivers. So advertise these features only when the driver is not
-supporting channel context and modparam "use_chanctx" is introduced
-for preparing channel context support in ath9k.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Dg5scPBCn84NrcKROelR2PSEgABJX9Btd
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+Am 20.05.2014 22:26, schrieb Oleksij Rempel:
+> Am 20.05.2014 21:38, schrieb John W. Linville:
+>> Apparently Oleksij's compile testing was no better than mine initially=
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1af7708..765a3c0 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -61,6 +61,10 @@ static int ath9k_ps_enable;
- module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
-+static int ath9k_use_chanctx;
-+module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
-+MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
-+
- bool is_ath9k_unloaded;
- 
- #ifdef CONFIG_MAC80211_LEDS
-@@ -646,8 +650,7 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- }
- 
- static const struct ieee80211_iface_limit if_limits[] = {
--	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_WDS) },
-+	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) },
- 	{ .max = 8,	.types =
- #ifdef CONFIG_MAC80211_MESH
- 				 BIT(NL80211_IFTYPE_MESH_POINT) |
-@@ -657,6 +660,10 @@ static const struct ieee80211_iface_limit if_limits[] = {
- 				 BIT(NL80211_IFTYPE_P2P_GO) },
- };
- 
-+static const struct ieee80211_iface_limit wds_limits[] = {
-+	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_WDS) },
-+};
-+
- static const struct ieee80211_iface_limit if_dfs_limits[] = {
- 	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) |
- #ifdef CONFIG_MAC80211_MESH
-@@ -673,6 +680,13 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
- 	},
-+	{
-+		.limits = wds_limits,
-+		.n_limits = ARRAY_SIZE(if_limits),
-+		.max_interfaces = 2048,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+	},
- #ifdef CONFIG_ATH9K_DFS_CERTIFIED
- 	{
- 		.limits = if_dfs_limits,
-@@ -722,12 +736,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			BIT(NL80211_IFTYPE_P2P_GO) |
- 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			BIT(NL80211_IFTYPE_AP) |
--			BIT(NL80211_IFTYPE_WDS) |
- 			BIT(NL80211_IFTYPE_STATION) |
- 			BIT(NL80211_IFTYPE_ADHOC) |
- 			BIT(NL80211_IFTYPE_MESH_POINT);
- 		hw->wiphy->iface_combinations = if_comb;
--		hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+		if (!ath9k_use_chanctx) {
-+			hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+			hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_WDS);
-+		} else
-+			hw->wiphy->n_iface_combinations = 1;
- 	}
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
--- 
-1.9.3
+>> was... :-(
+>=20
+> Face palm. There is really no excuse for me :(
 
+Hi John,
+
+i won't to create my testsystem to make at least good compile tests. Can
+you share your experience? Do you use some thing like
+http://jenkins-ci.org/ or have your own scripts? If scripts, can you
+please share them?
+
+--=20
+Regards,
+Oleksij
+
+
+--Dg5scPBCn84NrcKROelR2PSEgABJX9Btd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iF4EAREIAAYFAlN8NvcACgkQHwImuRkmbWmfewD/U4W64ir5VDnYQ9P0r9cOyLHo
+WtZbMaFZGyg0EZmlosUBAI4sEUDCfnGrVsY8hRaqWMHTn034JsunArP9Al35ryof
+=L0RI
+-----END PGP SIGNATURE-----
+
+--Dg5scPBCn84NrcKROelR2PSEgABJX9Btd--
