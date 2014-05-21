@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42322 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932261AbaEGJlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 05:41:06 -0400
-Message-ID: <1399455657.6800.4.camel@dubbel> (sfid-20140507_114110_995067_577FE7AF)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 07 May 2014 12:40:57 +0300
-In-Reply-To: <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 (sfid-20140507_080520_858946_318E5B7B) <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:40883 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbaEUGvY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 02:51:24 -0400
+Received: by mail-qg0-f52.google.com with SMTP id a108so2460694qge.25
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 23:51:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
+References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
+ <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
+ <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com>
+ <CAGnRvup8OVnkTxxJzV5Pe88XNUFXXVh21tpgygS=f27Hux=uiQ@mail.gmail.com> <CAMEF0p_sywFDC_PVa-7sAGvgJ=cRNSTZpVaE4EauV_9Zgmui6g@mail.gmail.com>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Wed, 21 May 2014 08:51:03 +0200
+Message-ID: <CAGnRvuraX7OgXmWOedxHGhytx0OL2LPs05+HQ4L6ApsnHWBrLg@mail.gmail.com> (sfid-20140521_085127_553728_08AFAAAB)
+Subject: Re: 802.11s mode without HWMP
+To: Thomas Pedersen <thomas@noack.us>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 10:07 +0200, Johannes Berg wrote:
-> On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
-> 
-> > Hmm... Now that I think about the atomic swap - it actually becomes a
-> > little bit of an issue in some cases.
-> > 
-> > For one you might need to overcommit number of chanctx since swapping
-> > requires both chanctx (old and new) to exist but that's the least of
-> > the eproblem. If you have more than one interface you end up with
-> > temporarily breaking interface combinations from driver point of view
-> > while switching (first swap breaks it, last swap fixes it). Driver
-> > won't know whether given swap is first/last unless we somehow pass it
-> > through the switch_vif_chanctx(). IOW we actually need a "chanctx
-> > transaction" (sort of a start-stop) that can batch up a couple of
-> > chanctx switches for different vifs as an atomic op.
-> 
-> Hmmm. Don't you already have that problem? Or you don't because you'd do
-> 
-> for_each_affected_vif: unassign
-> del chanctx [optional depending on reservation]
-> add chanctx [ditto]
-> for_each_affected_vif: assign
-> 
-> right now?
-> 
-> I suppose a sort of transaction API, if designed the right way, would
-> also work somehow - Luca?
+On Tue, May 20, 2014 at 7:36 PM, Thomas Pedersen <thomas@noack.us> wrote:
+> Hi Henning,
+> mac80211 keeps a separate table for bridged endpoints (mpp_paths).
+> Unfortunately this table currently isn't exported by the cfg80211
+> mpath_dump API. If you really need access to this information from
+> cfg80211 / userspace, then the quickest thing for now would be to hack
+> in support for iterating over both tables.
+>
+> I'm not really sure why the decision was made to go with 2 different
+> path tables (see 79617dee for the initial implementation), but it
+> seems the cleaner approach would be to merge these and stick with the
+> existing mpath_dump commands.
 
-Yeah, I think this is a good idea.  If we have an atomic transaction API
-towards the driver, we can solve the problems of switching several vifs
-at once.
+After looking at both tables (especially the m***_path_add()
+functions) I think the two tables could be joined.
 
---
-Luca.
+Mesh-nodes could be just a special case where mpp and dst is the same
+address. The alternative would be to have a flag that states the same
+thing.
 
+I don't even think this would slow down the path_lookup that much,
+because normally the proxied destinations should be in different hash
+buckets than the normal ones.
+
+Of course cfg80211 would have to deliver both mpp and dst to
+userspace, I am not quite sure how to do this without breaking
+compatibility in the output. Maybe an additional netlink command (dump
+"full" mpath?) would be better than putting more output into the
+existing one.
+
+Henning Rogge
