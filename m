@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:52681 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206AbaEZMFv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 08:05:51 -0400
-Received: by mail-qc0-f178.google.com with SMTP id l6so11845113qcy.23
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 05:05:51 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:34489 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751724AbaEUM0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 08:26:53 -0400
+Message-ID: <537C9B84.7000002@openwrt.org> (sfid-20140521_142707_893495_95081DB6)
+Date: Wed, 21 May 2014 14:26:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Date: Mon, 26 May 2014 14:05:51 +0200
-Message-ID: <CALhHN=qvsT0SFRnQUvt+XusOymVBh9NV2WRc9jx9xV5rqJkQ6g@mail.gmail.com> (sfid-20140526_140555_209050_516E1E21)
-Subject: regulatory - issue after intersection
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=UTF-8
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: Handle multiple keys while setting tx filters
+References: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 2014-05-21 13:29, Rajkumar Manoharan wrote:
+> The keycache index is used to abort transmission for given station
+> when it goes to sleep state. But the commit "ath9k_hw: Abort transmission
+> for sleeping station" is not handling multi-key station. Fix that.
+> 
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+>  drivers/net/wireless/ath/ath9k/main.c  | 52 +++++++++++++++++++++++++++-------
+>  2 files changed, 42 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 47d442a..89be123 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1494,6 +1498,19 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
+>  	return 0;
+>  }
+>  
+> +static inline void ath9k_sta_set_tx_filter(struct ath_hw *ah,
+> +					   struct ath_node *an,
+> +					   bool set)
+I'd suggest dropping the 'inline' - just let the compiler figure out if
+it's worth inlining.
 
-This is scenario:
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
+> +		if (!an->key_idx[i])
+> +			continue;
+> +		ath9k_hw_set_tx_filter(ah, an->key_idx[i], set);
+> +	}
+> +}
+> +
+>  static void ath9k_sta_notify(struct ieee80211_hw *hw,
+>  			 struct ieee80211_vif *vif,
+>  			 enum sta_notify_cmd cmd,
+> @@ -1610,11 +1626,25 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+>  				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+>  			ret = 0;
+>  		}
+> +		if (an && key->hw_key_idx) {
+> +			for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
+> +				if (an->key_idx[i])
+> +					continue;
+> +				an->key_idx[i] = key->hw_key_idx;
+I think this should be moved inside the ret >= 0 test.
+You also need to add a break here to avoid the WARN_ON below.
+Did you test this patch?
 
-1) insmod cfg80211.ko
-2) iw reg set FR
-3) modprobe ath10k_pci (default US will be registered)
-4) intersection here - is it as designed? Country "98"
-5) after that no way to setup new country using iw reg set (lock),
-always fail in such code:
+> +			}
+> +			WARN_ON(i == ARRAY_SIZE(an->key_idx));
+> +		}
+>  		break;
 
-__reg_process_hint_user(...)
-        if ((lr->initiator == NL80211_REGDOM_SET_BY_CORE ||
-             lr->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
-             lr->initiator == NL80211_REGDOM_SET_BY_USER) &&
-             regdom_changes(lr->alpha2))
-               return REG_REQ_IGNORE;
-
-Last request still have "US" - shouldn't be "98" like we set in intersection?
-
-Such patch setup same alpha2 for last request (also in case of we will
-change this in intersection)
-@Luis could you check this patch, I am not sure this is best fix for that?
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1219a07..df70db7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -271,6 +271,7 @@ static void reset_regdomains(bool full_reset,
-                             const struct ieee80211_regdomain *new_regdom)
- {
-        const struct ieee80211_regdomain *r;
-+       struct regulatory_request *lr;
-
-        ASSERT_RTNL();
-
-@@ -284,6 +285,12 @@ static void reset_regdomains(bool full_reset,
-        if (r == &world_regdom)
-                r = NULL;
-
-+       lr = get_last_request();
-+       if (lr && new_regdom) {
-+               lr->alpha2[0] = new_regdom->alpha2[0];
-+               lr->alpha2[1] = new_regdom->alpha2[1];
-+       }
-+
-        rcu_free_regdom(r);
-        rcu_free_regdom(cfg80211_world_regdom);
-
-
-BR
-Janusz
