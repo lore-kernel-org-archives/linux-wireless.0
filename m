@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60933 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752900AbaESJ2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 05:28:08 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Antonio Quartulli <antonio@open-mesh.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: minstrel-ht: small clarifications
-Date: Mon, 19 May 2014 11:27:50 +0200
-Message-Id: <1400491670-17865-1-git-send-email-johannes@sipsolutions.net> (sfid-20140519_112812_517344_55D117CB)
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:61321 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbaEUMMr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 08:12:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140521110143.GA2375@qca.qualcomm.com>
+References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
+ <20140521110143.GA2375@qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 21 May 2014 22:12:26 +1000
+Message-ID: <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com> (sfid-20140521_141310_847503_33473AD6)
+Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in drivers/net/wireless/ath/ath9k/dfs.c
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: Jim Davis <jim.epost@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Rajkumar,
 
-Antonio and I were looking over this code and some things
-didn't immediately make sense, so we came up with two small
-clarifications.
+On Wed, May 21, 2014 at 9:01 PM, Rajkumar Manoharan
+<rmanohar@qti.qualcomm.com> wrote:
+> On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
+>> Building with the attached random configuration file,
+>>
+>> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
+>>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
+>>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
+>> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
+>> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
+>> has no member named ‘debug’
+>>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
+>>               ^
+>> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
+>> macro ‘ath_dbg’
+>>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
+>>                                          ^
+>> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
+>> has no member named ‘debug’
+>>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
+>>      ^
+>> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
+>
+> Please select CONFIG_ATH9K_DEBUGFS.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+The point of randconfig builds is to ensure that there it's really
+unlikely that there are any config combinations that don't build, even
+if they're utterly insane.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index bccaf854a309..4e916ad51a20 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -22,7 +22,7 @@
- #define MCS_NBITS (AVG_PKT_SIZE << 3)
- 
- /* Number of symbols for a packet with (bps) bits per symbol */
--#define MCS_NSYMS(bps) ((MCS_NBITS + (bps) - 1) / (bps))
-+#define MCS_NSYMS(bps) DIV_ROUND_UP(MCS_NBITS, (bps))
- 
- /* Transmission time (nanoseconds) for a packet containing (syms) symbols */
- #define MCS_SYMBOL_TIME(sgi, syms)					\
-@@ -226,8 +226,9 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
- 		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
- 
- 	nsecs += minstrel_mcs_groups[group].duration[rate];
--	tp = 1000000 * ((prob * 1000) / nsecs);
- 
-+	/* prob is scaled - see MINSTREL_FRAC above */
-+	tp = 1000000 * ((prob * 1000) / nsecs);
- 	mr->cur_tp = MINSTREL_TRUNC(tp);
- }
- 
+You should really change the ath9k Kconfig rules or move or add ifdefs
+to prevent this from being possible.
+
+Thanks,
+
 -- 
-2.0.0.rc0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
