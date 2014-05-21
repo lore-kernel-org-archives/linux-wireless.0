@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:47580 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaEYUiT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 May 2014 16:38:19 -0400
-Received: by mail-we0-f176.google.com with SMTP id q59so7205565wes.35
-        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 13:38:18 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/8] staging; vt6656: swGetCCKControlRate remove camel case
-Date: Sun, 25 May 2014 21:36:23 +0100
-Message-Id: <1401050189-3249-2-git-send-email-tvboxspy@gmail.com> (sfid-20140525_223823_717044_854ACF89)
-In-Reply-To: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
-References: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41205 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751018AbaEUQER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 12:04:17 -0400
+Message-ID: <1400688233.4136.8.camel@jlt4.sipsolutions.net> (sfid-20140521_180421_260091_F7282561)
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 21 May 2014 18:03:53 +0200
+In-Reply-To: <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com> (sfid-20140520_204832_656990_FF6AC676)
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+	 <20140520142453.GB13981@tuxdriver.com>
+	 <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+	 <20140520180832.GD13981@tuxdriver.com>
+	 <1400610273.4474.6.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
+	 (sfid-20140520_204832_656990_FF6AC676)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-wRateIdx -> rate_idx
+On Tue, 2014-05-20 at 11:48 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> > I think we should, but if we can't then at least can we cut to an
+> > extensible format?
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index f025010..c162ce4 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -123,20 +123,20 @@ void CARDbSetMediaChannel(struct vnt_private *priv, u32 connection_channel)
-  *
-  * Parameters:
-  *  In:
-- *      pDevice             - The adapter to be set
-- *      wRateIdx            - Receiving data rate
-+ *      priv		- The adapter to be set
-+ *      rate_idx	- Receiving data rate
-  *  Out:
-  *      none
-  *
-  * Return Value: response Control frame rate
-  *
-  */
--static u16 swGetCCKControlRate(struct vnt_private *pDevice, u16 wRateIdx)
-+static u16 swGetCCKControlRate(struct vnt_private *priv, u16 rate_idx)
- {
--	u16 ui = wRateIdx;
-+	u16 ui = rate_idx;
- 
- 	while (ui > RATE_1M) {
--		if (pDevice->wBasicRate & (1 << ui))
-+		if (priv->wBasicRate & (1 << ui))
- 			return ui;
- 		ui--;
- 	}
--- 
-1.9.1
+I don't see any way to extend the format right now.
+
+There's a wrinkle with making it more extensible too though - if we do
+that then we must be extremely careful that future older crda versions
+(i.e. the next version that we're about to write) will not parse a newer
+extended file more permissively, so our extensions are limited anyway.
+
+Looks like the format update really is needed, which probably means we
+should change the scripts to generate two databases and change the
+filename, or so?
+
+johannes
 
