@@ -1,114 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:62638 "EHLO isis.lip6.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752209AbaEVNN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 09:13:56 -0400
-From: Benoit Taine <benoit.taine@lip6.fr>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: benoit.taine@lip6.fr, Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: Use kmemdup() instead of memcpy() to duplicate memory
-Date: Thu, 22 May 2014 15:08:33 +0200
-Message-Id: <1400764113-15933-1-git-send-email-benoit.taine@lip6.fr> (sfid-20140522_151359_976600_00AA9015)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57369 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350AbaEUSP0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2014 14:15:26 -0400
+Date: Wed, 21 May 2014 14:00:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
+Message-ID: <20140521180020.GA13656@tuxdriver.com> (sfid-20140521_201529_758384_A7477342)
+References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
+ <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
+ <20140520142453.GB13981@tuxdriver.com>
+ <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
+ <20140520180832.GD13981@tuxdriver.com>
+ <1400610273.4474.6.camel@jlt4.sipsolutions.net>
+ <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
+ <1400688233.4136.8.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400688233.4136.8.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This issue was reported by coccicheck using the semantic patch 
-at scripts/coccinelle/api/memdup.cocci, and tested by compilation.
+On Wed, May 21, 2014 at 06:03:53PM +0200, Johannes Berg wrote:
+> On Tue, 2014-05-20 at 11:48 -0700, Luis R. Rodriguez wrote:
+> 
+> > > I think we should, but if we can't then at least can we cut to an
+> > > extensible format?
+> 
+> I don't see any way to extend the format right now.
+> 
+> There's a wrinkle with making it more extensible too though - if we do
+> that then we must be extremely careful that future older crda versions
+> (i.e. the next version that we're about to write) will not parse a newer
+> extended file more permissively, so our extensions are limited anyway.
+> 
+> Looks like the format update really is needed, which probably means we
+> should change the scripts to generate two databases and change the
+> filename, or so?
 
-Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
----
- drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |    3 +--
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c |   17 +++++++----------
- 2 files changed, 8 insertions(+), 12 deletions(-)
+The 'do not parse more permissively' would seem to be a problem if
+we still produce an older format too, no?  I mean, wouldn't we have
+to simply drop new rules to produce an older binary?  Even worse if
+we left the old binary in place, since then you could never update
+any rules for old crda installations at all.
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-index e2d426a..f917edd 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-@@ -339,12 +339,11 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
- 		rtStatus = _FAIL;
- 		goto Exit;
- 	}
--	firmware_buf = kzalloc(fw->size, GFP_KERNEL);
-+	firmware_buf = kmemdup(fw->data, fw->size, GFP_KERNEL);
- 	if (!firmware_buf) {
- 		rtStatus = _FAIL;
- 		goto Exit;
- 	}
--	memcpy(firmware_buf, fw->data, fw->size);
- 	buf = firmware_buf;
- 	fw_size = fw->size;
- 	release_firmware(fw);
-diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-index 182f57c..c88a416 100644
---- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-@@ -1426,14 +1426,14 @@ static int rtw_cfg80211_set_probe_req_wpsp2pie(struct rtw_adapter *padapter,
- 				pmlmepriv->wps_probe_req_ie = NULL;
- 			}
- 
--			pmlmepriv->wps_probe_req_ie =
--				kmalloc(wps_ielen, GFP_KERNEL);
-+			pmlmepriv->wps_probe_req_ie = kmemdup(wps_ie,
-+							      wps_ielen,
-+							      GFP_KERNEL);
- 			if (pmlmepriv->wps_probe_req_ie == NULL) {
- 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
- 					  __func__, __LINE__);
- 				return -EINVAL;
- 			}
--			memcpy(pmlmepriv->wps_probe_req_ie, wps_ie, wps_ielen);
- 			pmlmepriv->wps_probe_req_ie_len = wps_ielen;
- 		}
- 	}
-@@ -1697,12 +1697,11 @@ static int rtw_cfg80211_set_wpa_ie(struct rtw_adapter *padapter, const u8 *pie,
- 		ret = -EINVAL;
- 		goto exit;
- 	}
--	buf = kzalloc(ielen, GFP_KERNEL);
-+	buf = kmemdup(pie, ielen, GFP_KERNEL);
- 	if (buf == NULL) {
- 		ret = -ENOMEM;
- 		goto exit;
- 	}
--	memcpy(buf, pie, ielen);
- 
- 	/* dump */
- 	DBG_8723A("set wpa_ie(length:%zu):\n", ielen);
-@@ -3178,14 +3177,13 @@ static int rtw_cfg80211_set_beacon_wpsp2pie(struct net_device *ndev, char *buf,
- 				pmlmepriv->wps_beacon_ie = NULL;
- 			}
- 
--			pmlmepriv->wps_beacon_ie =
--				kmalloc(wps_ielen, GFP_KERNEL);
-+			pmlmepriv->wps_beacon_ie = kmemdup(wps_ie, wps_ielen,
-+							   GFP_KERNEL);
- 			if (pmlmepriv->wps_beacon_ie == NULL) {
- 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
- 					  __func__, __LINE__);
- 				return -EINVAL;
- 			}
--			memcpy(pmlmepriv->wps_beacon_ie, wps_ie, wps_ielen);
- 			pmlmepriv->wps_beacon_ie_len = wps_ielen;
- 
- #ifdef CONFIG_8723AU_AP_MODE
-@@ -3270,14 +3268,13 @@ static int rtw_cfg80211_set_assoc_resp_wpsp2pie(struct net_device *net,
- 			pmlmepriv->wps_assoc_resp_ie = NULL;
- 		}
- 
--		pmlmepriv->wps_assoc_resp_ie = kmalloc(len, GFP_KERNEL);
-+		pmlmepriv->wps_assoc_resp_ie = kmemdup(buf, len, GFP_KERNEL);
- 		if (pmlmepriv->wps_assoc_resp_ie == NULL) {
- 			DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
- 				  __func__, __LINE__);
- 			return -EINVAL;
- 
- 		}
--		memcpy(pmlmepriv->wps_assoc_resp_ie, buf, len);
- 		pmlmepriv->wps_assoc_resp_ie_len = len;
- 	}
- 
+It seems like forcing a crda update to use any new format-breaking
+rules might just be the right thing.  Can we make crda choke and die
+loudly when it sees an unknown format?  Will the current crda do that?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
