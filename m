@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:52296 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbaEZVGF (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:56344 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403AbaEUXb5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 17:06:05 -0400
-Received: by mail-oa0-f45.google.com with SMTP id l6so8756111oag.32
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 14:06:04 -0700 (PDT)
-Message-ID: <5383ACB9.2060904@lwfinger.net> (sfid-20140526_230609_737684_9EE50619)
-Date: Mon, 26 May 2014 16:06:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 21 May 2014 19:31:57 -0400
 MIME-Version: 1.0
-To: stefan.krueger@vodafone.de
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: Re: Kernel binary for RTL8192EE
-References: <8fb8a514-da1c-40ad-9fe1-235aaf21b52c@email.android.com> <1e5e57d0-46cb-4bbc-9463-22bafad445d8@email.android.com>
-In-Reply-To: <1e5e57d0-46cb-4bbc-9463-22bafad445d8@email.android.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20140521143832.GA9563@qca.qualcomm.com>
+References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com>
+ <20140521110143.GA2375@qca.qualcomm.com> <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com>
+ <20140521143832.GA9563@qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 22 May 2014 09:31:36 +1000
+Message-ID: <CAGRGNgW2kdG=CUdWpEbpxaVLhVvVg3MzHwkS_M=_Wmaju+q8dw@mail.gmail.com> (sfid-20140522_013218_644569_C76C7930)
+Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in drivers/net/wireless/ath/ath9k/dfs.c
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: Jim Davis <jim.epost@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2014 03:09 PM, stefan.krueger@vodafone.de wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
+Hi Rajkumar,
+
+On Thu, May 22, 2014 at 12:38 AM, Rajkumar Manoharan
+<rmanohar@qti.qualcomm.com> wrote:
+> On Wed, May 21, 2014 at 10:12:26PM +1000, Julian Calaby wrote:
+>> Hi Rajkumar,
+>>
+>> On Wed, May 21, 2014 at 9:01 PM, Rajkumar Manoharan
+>> <rmanohar@qti.qualcomm.com> wrote:
+>> > On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
+>> >> Building with the attached random configuration file,
+>> >>
+>> >> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
+>> >>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
+>> >>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
+>> >> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
+>> >> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
+>> >> has no member named ‘debug’
+>> >>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
+>> >>               ^
+>> >> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
+>> >> macro ‘ath_dbg’
+>> >>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
+>> >>                                          ^
+>> >> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
+>> >> has no member named ‘debug’
+>> >>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
+>> >>      ^
+>> >> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
+>> >
+>> > Please select CONFIG_ATH9K_DEBUGFS.
+>>
+>> The point of randconfig builds is to ensure that there it's really
+>> unlikely that there are any config combinations that don't build, even
+>> if they're utterly insane.
+>>
+>> You should really change the ath9k Kconfig rules or move or add ifdefs
+>> to prevent this from being possible.
+>>
+> Completely agree. But ath9k Kconfig has proper dependecy for
+> ATH9K_DFS_DEBUGFS. I am wondering how it is selected w/o ATH9K_DEBUGFS.
 >
-> Hello Larry,
+> config ATH9K_DFS_DEBUGFS
+>         def_bool y
+>         depends on ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED
 >
-> do you habe an (good) news for me to get working my wifi?
+> Should it be like this?
+>
+> config ATH9K_DFS_DEBUGFS
+>         def_bool y if (ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED)
 
-No. None of your logs indicate why it refuses to connect for you. No one else 
-has this complaint.
+Zefir already posted a patch to fix this particular issue.
 
-I worked about 15 hours a day getting this driver ready to be submitted to the 
-kernel. That happened last Wednesday. After that, I was exhausted and took some 
-time off. Now I have to go out of town, and it will be at least 10 days before I 
-will have any time.
+Judging by the patch, not all of the debugfs using code was properly
+enclosed in #ifdefs.
 
-Larry
+Thanks,
 
+-- 
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
