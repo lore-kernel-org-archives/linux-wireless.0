@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26315 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756511AbaE2JcY (ORCPT
+Received: from mail.neratec.com ([46.140.151.2]:11161 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751145AbaEUNz6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 05:32:24 -0400
-Date: Thu, 29 May 2014 15:03:03 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Fix interface combinations for multi-channel
- concurrency
-Message-ID: <20140529093301.GA13680@qca.qualcomm.com> (sfid-20140529_113228_164992_8E5D1222)
-References: <1401346141-9888-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CAGRGNgWo8AvT=hUmhR2AKr6xksw5CFFApj3eEX1nd+J=RrENpw@mail.gmail.com>
+	Wed, 21 May 2014 09:55:58 -0400
+Message-ID: <537CB066.1070803@neratec.com> (sfid-20140521_155601_688116_B4892EB2)
+Date: Wed, 21 May 2014 15:55:50 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAGRGNgWo8AvT=hUmhR2AKr6xksw5CFFApj3eEX1nd+J=RrENpw@mail.gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: Jim Davis <jim.epost@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [ath9k-devel] randconfig build error with next-20140519, in drivers/net/wireless/ath/ath9k/dfs.c
+References: <CA+r1ZhiM7EK08Y4kriXMugMc1Mbj5VDUPwKMq8-_k8Q8qhwPtw@mail.gmail.com> <20140521110143.GA2375@qca.qualcomm.com> <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com>
+In-Reply-To: <CAGRGNgXuS-ksFBAtmo8nLAPqPFKo2gHGDCsTcranU-k2-K3rfg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 29, 2014 at 05:18:54PM +1000, Julian Calaby wrote:
+Hi,
+
+sorry, I posted a related patch today ('[PATCH] ath9k: fix build error with
+disabled debug'), but seems did not manage to set the correct in-reply-to field.
+
+
+On 05/21/2014 02:12 PM, Julian Calaby wrote:
 > Hi Rajkumar,
 > 
-> On Thu, May 29, 2014 at 4:49 PM, Rajkumar Manoharan
+> On Wed, May 21, 2014 at 9:01 PM, Rajkumar Manoharan
 > <rmanohar@qti.qualcomm.com> wrote:
-> > Currently mac80211 does not support WDS and DFS with channel context
-> > drivers. So advertise these features only when the driver is not
-> > supporting channel context and modparam "use_chanctx" is introduced
-> > for preparing channel context support in ath9k.
-> >
-> > @@ -722,12 +736,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
-> >                         BIT(NL80211_IFTYPE_P2P_GO) |
-> >                         BIT(NL80211_IFTYPE_P2P_CLIENT) |
-> >                         BIT(NL80211_IFTYPE_AP) |
-> > -                       BIT(NL80211_IFTYPE_WDS) |
-> >                         BIT(NL80211_IFTYPE_STATION) |
-> >                         BIT(NL80211_IFTYPE_ADHOC) |
-> >                         BIT(NL80211_IFTYPE_MESH_POINT);
-> >                 hw->wiphy->iface_combinations = if_comb;
-> > -               hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-> > +               if (!ath9k_use_chanctx) {
-> > +                       hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-> > +                       hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_WDS);
-> > +               } else
-> > +                       hw->wiphy->n_iface_combinations = 1;
+>> On Mon, May 19, 2014 at 09:31:16AM -0700, Jim Davis wrote:
+>>> Building with the attached random configuration file,
+>>>
+>>> In file included from drivers/net/wireless/ath/ath9k/eeprom.h:22:0,
+>>>                  from drivers/net/wireless/ath/ath9k/hw.h:27,
+>>>                  from drivers/net/wireless/ath/ath9k/dfs.c:18:
+>>> drivers/net/wireless/ath/ath9k/dfs.c: In function ‘ath9k_dfs_process_phyerr’:
+>>> drivers/net/wireless/ath/ath9k/dfs.c:185:14: error: ‘struct ath_softc’
+>>> has no member named ‘debug’
+>>>     pe.ts - sc->debug.stats.dfs_stats.last_ts);
+>>>               ^
+>>> drivers/net/wireless/ath/ath9k/../ath.h:273:41: note: in definition of
+>>> macro ‘ath_dbg’
+>>>    ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__); \
+>>>                                          ^
+>>> drivers/net/wireless/ath/ath9k/dfs.c:186:5: error: ‘struct ath_softc’
+>>> has no member named ‘debug’
+>>>    sc->debug.stats.dfs_stats.last_ts = pe.ts;
+>>>      ^
+>>> make[5]: *** [drivers/net/wireless/ath/ath9k/dfs.o] Error 1
+>>
+>> Please select CONFIG_ATH9K_DEBUGFS.
 > 
-> Is that right?
+> The point of randconfig builds is to ensure that there it's really
+> unlikely that there are any config combinations that don't build, even
+> if they're utterly insane.
 > 
-Julian,
+> You should really change the ath9k Kconfig rules or move or add ifdefs
+> to prevent this from being possible.
+> 
+> Thanks,
+> 
 
-Right now mcc support is not implemented in ath9k and am working on that.
-Once all channel context callbacks are added, iface_combinations will
-refer to right interface set.
-
--Rajkumar
