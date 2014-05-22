@@ -1,84 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58629 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbaEVTqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 15:46:53 -0400
-Message-ID: <537E542C.7000802@candelatech.com> (sfid-20140522_214656_549306_4F117531)
-Date: Thu, 22 May 2014 12:46:52 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on regulatory settings.
-References: <537E2ABB.6030302@candelatech.com> <537E36E3.6040205@candelatech.com> <20140522183007.GE12779@tuxdriver.com>
-In-Reply-To: <20140522183007.GE12779@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([5.9.151.49]:44000 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750906AbaEVKqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 06:46:31 -0400
+Message-ID: <1400755577.4174.10.camel@jlt4.sipsolutions.net> (sfid-20140522_124635_206502_2997F38C)
+Subject: Re: wireless network interfaces and network namespaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hannes Raddatz <hannesraddatz@t-online.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 22 May 2014 12:46:17 +0200
+In-Reply-To: <loom.20140522T103749-45@post.gmane.org> (sfid-20140522_110010_318489_4E08B72C)
+References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
+	  <1385817282.5056.0.camel@jlt4.sipsolutions.net>
+	  <CAGXs5wVt3okeE6oA_pNV5WnQLv51+bf+n+52s5d7tQkXq_qvNw@mail.gmail.com>
+	  (sfid-20131130_145812_659093_751E3F17) <1385840149.4267.1.camel@jlt4.sipsolutions.net>
+	 <loom.20140522T103749-45@post.gmane.org>
+	 (sfid-20140522_110010_318489_4E08B72C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2014 11:30 AM, John W. Linville wrote:
-> On Thu, May 22, 2014 at 10:41:55AM -0700, Ben Greear wrote:
->> On 05/22/2014 09:50 AM, Ben Greear wrote:
->>> Hello!
->>>
->>> I'm having issues where when we add several ath10k NICs to a system,
->>> the regulatory domain goes quite restricted..  There is an ath9k NIC
->>> with eeprom over-ride hack, and user-space sets regdomain to 'US'.
->>>
->>> Later, when registering ath10k, at least one of those NICs registeres
->>> as 'TW'.  The ending domain looks like this:
->>>
->>> [root@lf1011-13060017 ~]# iw reg get
->>> country 98: DFS-UNSET
->>> 	(2402 - 2472 @ 40), (N/A, 30)
->>> 	(5270 - 5330 @ 40), (N/A, 17), DFS
->>> 	(5735 - 5835 @ 80), (N/A, 30)
->>>
->>>
->>> I tried adding a hack to ath10k to zero out the ar->ath_common.regulatory.current_rd,
->>> but in fact it seems to be reported as zero to begin with.
->>>
->>> I am obviously missing something.  Either my hacks to ath10k are not
->>> sufficient, or possibly the system is getting regulatory info from
->>> somewhere else?
->>>
->>> Any ideas where else it might be getting the idea it should be in TW
->>> domain?  Can it get this from beacons from other systems?
+On Thu, 2014-05-22 at 08:54 +0000, Hannes Raddatz wrote:
+> I would like to dig this thread out, 
+> because there might be a bug regarding this topic.
 > 
-> FWIW, yes it can get this information from beacons.
-> 
->> Ahh, sneaky nasty code....it was being set based on the timezone
->> of all things!
-> 
-> You're welcome... ;-)
-> 
->> Looks like you can override this behaviour with the command
->> below if you are of a mind to do so:
->>
->> echo COUNTRY=US > /etc/sysconfig/regdomain
-> 
-> I don't know any better way to set a reasonable default for the
-> regulatory domain.  If you have other suggestions, I'd be interested
-> in hearing them.
+> Using ubuntu 12.10, the move of virtual wirless devices (hwsim) to a 
+> namespace and 
+> configuring them inside the namespace with iw wasn't a problem. 
+> But since ubuntu 14.04 I can't 
+> access the devices inside the namespace with iw.
+> The same problem occurs while using 
+> ubuntu 12.10 with newest backports installed.
+> Has something changed with the namespaces in 
+> the new linux kernels or is it a bug?
 
-It would be nice to have something in the logs detailing the source/reason
-of the configuration setting.  I mostly got lucky when searching for
-the problem...even with adding a WARN_ON(1) in the kernel to catch
-it, you only see that 'iw' made the change...hard to know what called iw.
+No idea. Works fine for me on kernel 3.14+mac80211-next.
 
-I don't have a better suggestion for default config, except that maybe
-if it were manually set with 'iw' already then you would not set it
-again based on the timezone.  That probably wouldn't have helped me
-anyway since the automated thing will be faster than any normal user,
-though.
-
-Thanks,
-Ben
-
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
