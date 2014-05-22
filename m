@@ -1,107 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:51241 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaEVHYI (ORCPT
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:43464 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbaEVTbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 03:24:08 -0400
-Received: by mail-we0-f171.google.com with SMTP id w62so3056386wes.16
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:06 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/11] iwlwifi: mvm: don't allow diversity if BT Coex / TT forbid it
-Date: Thu, 22 May 2014 10:23:47 +0300
-Message-Id: <1400743435-702-3-git-send-email-egrumbach@gmail.com> (sfid-20140522_092726_819837_7542CD4E)
-In-Reply-To: <537DA58C.5050003@gmail.com>
-References: <537DA58C.5050003@gmail.com>
+	Thu, 22 May 2014 15:31:31 -0400
+Received: by mail-qg0-f47.google.com with SMTP id j107so6457010qga.6
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 12:31:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140522192720.GA13440@localhost>
+References: <3893194.GDQagdLGN9@desktop.local> <20140522192720.GA13440@localhost>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Thu, 22 May 2014 21:31:09 +0200
+Message-ID: <CAGnRvuqUkebLhvqY1Y28NtRyp3uUdbrpOSb4dOX2+ZSg6qineg@mail.gmail.com> (sfid-20140522_213134_553523_6B3773AC)
+Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@noack.us>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+I first had planned to just throw them together... but it didn't
+worked out and I assume that there is some time where you can have two
+entries with the same destination, one of them a normal path
+(request), the other one the mapped destination.
 
-We should not allow diversity when BT Coex needs the second
-antenna. Thermal Throttling can also request to stop using
-the second antenna. Honour those requests.
+Henning Rogge
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c |  3 +--
- drivers/net/wireless/iwlwifi/mvm/utils.c    | 33 +++++++++++++++++++++++++++++
- 3 files changed, 35 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 5d2effb..4a5db07 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1008,6 +1008,7 @@ int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
- void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				enum iwl_mvm_smps_type_request req_type,
- 				enum ieee80211_smps_mode smps_request);
-+bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm);
- 
- /* Low latency */
- int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-index acb79af..539f3a9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
-@@ -163,8 +163,7 @@ static void iwl_mvm_phy_ctxt_cmd_data(struct iwl_mvm *mvm,
- 	 * between the two antennas is sufficiently different to impact
- 	 * performance.
- 	 */
--	if (active_cnt == 1 && num_of_ant(mvm->fw->valid_rx_ant) > 1 &&
--	    !mvm->cfg->rx_with_siso_diversity) {
-+	if (active_cnt == 1 && iwl_mvm_rx_diversity_allowed(mvm)) {
- 		idle_cnt = 2;
- 		active_cnt = 2;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index b269f1e..42cea32 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -650,6 +650,39 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	ieee80211_request_smps(vif, smps_mode);
- }
- 
-+static void iwl_mvm_diversity_iter(void *_data, u8 *mac,
-+				   struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	bool *result = _data;
-+	int i;
-+
-+	for (i = 0; i < NUM_IWL_MVM_SMPS_REQ; i++) {
-+		if (mvmvif->smps_requests[i] == IEEE80211_SMPS_STATIC ||
-+		    mvmvif->smps_requests[i] == IEEE80211_SMPS_DYNAMIC)
-+			*result = false;
-+	}
-+}
-+
-+bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
-+{
-+	bool result = true;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	if (num_of_ant(mvm->fw->valid_rx_ant) == 1)
-+		return false;
-+
-+	if (!mvm->cfg->rx_with_siso_diversity)
-+		return false;
-+
-+	ieee80211_iterate_active_interfaces_atomic(
-+			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			iwl_mvm_diversity_iter, &result);
-+
-+	return result;
-+}
-+
- int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			       bool value)
- {
--- 
-1.8.3.2
-
+On Thu, May 22, 2014 at 9:27 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Thu, May 22, 2014 at 05:06:21PM +0200, Henning Rogge wrote:
+>> From: Henning Rogge <hrogge@gmail.com>
+>>
+>> This patch is a preparation for exporting the MPP data of the 802.11s
+>> implementation via netlink to userspace. It unifies the content of the
+>> mesh_paths and mpp_paths tables in mesh_pathtbl.c without changing
+>> the behavior of the code.
+>>
+>> Signed-off-by: Henning Rogge <hrogge@gmail.com>
+>
+> I think I fall on the side of your earlier assessment that they
+> hold different things and should stay in different tables, even though
+> there are 200 lines of identical code here.  Maybe some bits could
+> be shared without sharing the data and changing the API?
+>
+>> -static struct mesh_path *mpath_lookup(struct mesh_table *tbl, const u8 *dst,
+>> -                                   struct ieee80211_sub_if_data *sdata)
+>> +/**
+>> + * mesh_path_lookup - look up a path in the mesh path table
+>> + * @sdata: local subif
+>> + * @dst: hardware address (ETH_ALEN length) of destination
+>> + * @is_proxied: true to lookup mpp entries, false otherwise
+>
+> Also, I don't like adding random boolean variables to water down what
+> this function does.  It means when looking at the caller you have to go
+> back to the definition to see just what is going on here.
+>
+> We do mpp_path_lookup exactly twice so it seems weird to have to
+> change all of the mpath_lookup callers too.
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
