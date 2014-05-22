@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51488 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45050 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbaENTpO (ORCPT
+	with ESMTP id S1751435AbaEVSAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 15:45:14 -0400
-Date: Wed, 14 May 2014 15:40:29 -0400
+	Thu, 22 May 2014 14:00:13 -0400
+Date: Thu, 22 May 2014 13:57:56 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20140514
-Message-ID: <20140514194029.GE14183@tuxdriver.com> (sfid-20140514_214520_540080_B9C7F88F)
-References: <87zjikfqus.fsf@kamboji.qca.qualcomm.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.16] NFC update
+Message-ID: <20140522175755.GB12779@tuxdriver.com> (sfid-20140522_200017_673799_2B7630C5)
+References: <20140520221319.GA15540@zurbaran>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87zjikfqus.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <20140520221319.GA15540@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Were you hoping for 3.15 for these?
-
-On Wed, May 14, 2014 at 04:10:35PM +0300, Kalle Valo wrote:
+On Wed, May 21, 2014 at 12:13:19AM +0200, Samuel Ortiz wrote:
 > Hi John,
 > 
-> small pull request this time. I'll promise next one will be bigger ;)
+> This is the NFC pull request for 3.16. We have:
 > 
-> Changelog for the request:
+> - STMicroeectronics st21nfca support. The st21nfca is an HCI chipset and
+>   thus relies on the HCI stack. This submission provides support for tag
+>   redaer/writer mode (including Type 5) and device tree bindings.
 > 
-> For ath10k Michal did various small fixes on how we handle
-> hardware/firmware problems and he also fixed two memory leaks.
+> - PM runtime support and a bunch of bug fixes for TI's trf7970a.
 > 
-> Please let me know if there are any problems.
+> - Device tree support for NXP's pn544. Legacy platform data support is
+>   obviously kept intact.
 > 
-> The following changes since commit 644aa4d62096039a79987e13062c6fc656ea380c:
+> - NFC Tag type 4B support to the NFC Digital stack.
 > 
->   b43: remove list of IEEE 802.11 devices (2014-04-22 15:06:34 -0400)
+> - SOCK_RAW type support to the raw NFC socket, and allow NCI
+>   sniffing from that. This can be extended to report HCI frames and also
+>   proprietarry ones like e.g. the pn533 ones.
+> 
+> Thanks in advance for pulling those in.
+> 
+> The following changes since commit 321d03c86732e45f5f33ad0db5b68e2e1364acb9:
+> 
+>   Merge branch 'misc' of git://git.kernel.org/pub/scm/linux/kernel/git/mmarek/kbuild (2014-04-12 18:22:27 -0700)
 > 
 > are available in the git repository at:
 > 
->   git://github.com/kvalo/ath.git for-linville
 > 
-> for you to fetch changes up to d9bc4b9b693d52dc14dc1de5dfec760634067d8c:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git nfc-next-3.16-1
 > 
->   ath10k: fix firmware recovery with ap interface (2014-04-24 09:23:03 +0300)
+> for you to fetch changes up to 7974728094d35f38775417a26d8f30ea3602496a:
 > 
-> ----------------------------------------------------------------
-> Michal Kazior (7):
->       ath10k: differentiate between target init failures
->       ath10k: don't wait for device init if it crashed
->       ath10k: skip suspending when recovering
->       ath10k: make sure to not leak beacon dma mapping
->       ath10k: make sure to not use invalid beacon pointer
->       ath10k: prevent beacon memory leak
->       ath10k: fix firmware recovery with ap interface
-> 
->  drivers/net/wireless/ath/ath10k/core.c |    6 ++++--
->  drivers/net/wireless/ath/ath10k/mac.c  |   16 ++++++++++++++++
->  drivers/net/wireless/ath/ath10k/pci.c  |   18 +++++++++++++++++-
->  drivers/net/wireless/ath/ath10k/wmi.c  |    2 ++
->  4 files changed, 39 insertions(+), 3 deletions(-)
-> 
-> -- 
-> Kalle Valo
-> 
+>   NFC: st21nfca: Add ISO15693 Reader/Writer support (2014-05-20 00:48:28 +0200)
+
+Pulling now...
 
 -- 
 John W. Linville		Someday the world will need a hero, and you
