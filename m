@@ -1,65 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:63002 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753478AbaEWRBK (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:51241 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbaEVHYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:10 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi2so1399322wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/20] staging: vt6656: camel case cleanup MACvRegBitsOff
-Date: Fri, 23 May 2014 18:00:05 +0100
-Message-Id: <1400864419-8327-6-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190117_423203_75711F5F)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 22 May 2014 03:24:08 -0400
+Received: by mail-we0-f171.google.com with SMTP id w62so3056386wes.16
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:06 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/11] iwlwifi: mvm: don't allow diversity if BT Coex / TT forbid it
+Date: Thu, 22 May 2014 10:23:47 +0300
+Message-Id: <1400743435-702-3-git-send-email-egrumbach@gmail.com> (sfid-20140522_092726_819837_7542CD4E)
+In-Reply-To: <537DA58C.5050003@gmail.com>
+References: <537DA58C.5050003@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-byRegOfs -> reg_ofs
-byBits -> bits
-pbyData -> data
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+We should not allow diversity when BT Coex needs the second
+antenna. Thermal Throttling can also request to stop using
+the second antenna. Honour those requests.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/mac.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c |  3 +--
+ drivers/net/wireless/iwlwifi/mvm/utils.c    | 33 +++++++++++++++++++++++++++++
+ 3 files changed, 35 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index c6bddf5..2edbaf9 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -181,20 +181,15 @@ void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 5d2effb..4a5db07 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1008,6 +1008,7 @@ int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
+ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				enum iwl_mvm_smps_type_request req_type,
+ 				enum ieee80211_smps_mode smps_request);
++bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm);
  
+ /* Low latency */
+ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
+index acb79af..539f3a9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
+@@ -163,8 +163,7 @@ static void iwl_mvm_phy_ctxt_cmd_data(struct iwl_mvm *mvm,
+ 	 * between the two antennas is sufficiently different to impact
+ 	 * performance.
+ 	 */
+-	if (active_cnt == 1 && num_of_ant(mvm->fw->valid_rx_ant) > 1 &&
+-	    !mvm->cfg->rx_with_siso_diversity) {
++	if (active_cnt == 1 && iwl_mvm_rx_diversity_allowed(mvm)) {
+ 		idle_cnt = 2;
+ 		active_cnt = 2;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index b269f1e..42cea32 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -650,6 +650,39 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	ieee80211_request_smps(vif, smps_mode);
  }
  
--void MACvRegBitsOff(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
-+void MACvRegBitsOff(struct vnt_private *priv, u8 reg_ofs, u8 bits)
++static void iwl_mvm_diversity_iter(void *_data, u8 *mac,
++				   struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	bool *result = _data;
++	int i;
++
++	for (i = 0; i < NUM_IWL_MVM_SMPS_REQ; i++) {
++		if (mvmvif->smps_requests[i] == IEEE80211_SMPS_STATIC ||
++		    mvmvif->smps_requests[i] == IEEE80211_SMPS_DYNAMIC)
++			*result = false;
++	}
++}
++
++bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
++{
++	bool result = true;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	if (num_of_ant(mvm->fw->valid_rx_ant) == 1)
++		return false;
++
++	if (!mvm->cfg->rx_with_siso_diversity)
++		return false;
++
++	ieee80211_iterate_active_interfaces_atomic(
++			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
++			iwl_mvm_diversity_iter, &result);
++
++	return result;
++}
++
+ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			       bool value)
  {
--	u8 pbyData[2];
-+	u8 data[2];
- 
--    pbyData[0] = 0;
--    pbyData[1] = byBits;
-+	data[0] = 0;
-+	data[1] = bits;
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE_MASK,
--                        byRegOfs,
--                        MESSAGE_REQUEST_MACREG,
--			ARRAY_SIZE(pbyData),
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
-+		reg_ofs, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
- }
- 
- void MACvRegBitsOn(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
 -- 
-1.9.1
+1.8.3.2
 
