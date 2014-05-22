@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60629 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751616AbaELSnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 14:43:42 -0400
-Message-ID: <53711646.1030909@openwrt.org> (sfid-20140512_204345_700326_53CB7022)
-Date: Mon, 12 May 2014 20:43:18 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:1873 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751203AbaEVFCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 01:02:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/5] mwifiex: delete TDLS link upon Teardown event
+Date: Wed, 21 May 2014 22:02:29 -0700
+Message-ID: <1400734951-6851-3-git-send-email-bzhao@marvell.com> (sfid-20140522_070257_097213_9F21AE2F)
+In-Reply-To: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
+References: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: David Herrmann <dh.herrmann@gmail.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in hw_per_calibration()
- for ar9002
-References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com> <20140507195435.GF20432@tuxdriver.com> <536A9479.8010201@openwrt.org> <20140512174910.GM17022@tuxdriver.com>
-In-Reply-To: <20140512174910.GM17022@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-05-12 19:49, John W. Linville wrote:
-> On Wed, May 07, 2014 at 10:15:53PM +0200, Felix Fietkau wrote:
->> On 2014-05-07 21:54, John W. Linville wrote:
->> > On Wed, May 07, 2014 at 09:22:58AM +0200, David Herrmann wrote:
->> >> ah->caldata may be NULL if no channel is selected. Check for that before
->> >> accessing it.
->> >> 
->> >> Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
->> >> ---
->> >> Hi
->> >> 
->> >> This is _definitely_ only a workaround, given that no-one guarantees ah->caldata
->> >> is freed while we run in hw_per_calibration(). However, this patch fixes serious
->> >> kernel panics with wifi-P2P on my machine.
->> >> 
->> >> I'm not sure why ah->caldata can be NULL, but it definitely is. I think the
->> >> correct fix would be to synchronously stop any running hw-calibration before
->> >> setting ah->caldata to NULL. I don't know whether/where that is done, so I wrote
->> >> this small workaround.
->> >> 
->> >> Thanks
->> >> David
->> > 
->> > Is there any hope for getting a more complete fix from the ath9k guys
->> > in short order?
->> This looks easy to fix. I'll send a patch soon.
-> 
-> Ping?
-I looked into it again, the scenario where I assumed that this problem
-could occur didn't turn out to be true. I have no idea how this crash
-can occur.
+From: Avinash Patil <patila@marvell.com>
 
-- Felix
+If userspace application does not take care of TDLS teardown
+event, TDLS link would be present in driver database and thus
+driver would send such packets on direct link while peer has
+already severed link causing data traffic failure. Disable TDLS
+link upon teardown event so as to ensure this does not happen.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_event.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 5aea719..f6395ef 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -137,6 +137,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
+ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
+ 				    struct sk_buff *event_skb)
+ {
++	int ret = 0;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct mwifiex_sta_node *sta_ptr;
+ 	struct mwifiex_tdls_generic_event *tdls_evt =
+@@ -162,12 +163,15 @@ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
+ 					   NL80211_TDLS_TEARDOWN,
+ 					   le16_to_cpu(tdls_evt->u.reason_code),
+ 					   GFP_KERNEL);
++		ret = mwifiex_tdls_oper(priv, tdls_evt->peer_mac,
++					MWIFIEX_TDLS_DISABLE_LINK);
++		queue_work(adapter->workqueue, &adapter->main_work);
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ /*
+-- 
+1.8.2.3
+
