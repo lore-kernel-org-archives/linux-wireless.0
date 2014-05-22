@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45615 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756852AbaEFOmj (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:33926 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272AbaEVOPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 10:42:39 -0400
-Message-ID: <1399387345.4218.44.camel@jlt4.sipsolutions.net> (sfid-20140506_164245_485780_3891C1DE)
-Subject: Re: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
-Date: Tue, 06 May 2014 16:42:25 +0200
-In-Reply-To: <1397051137-26201-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155154_888951_7A1A150A)
-References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-	 <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
-	 <1397051137-26201-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140409_155154_888951_7A1A150A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 22 May 2014 10:15:13 -0400
+Received: by mail-ee0-f47.google.com with SMTP id c13so2682600eek.20
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 07:15:12 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v6 6/6] cfg80211: remove channel_switch combination check
+Date: Thu, 22 May 2014 16:07:56 +0200
+Message-Id: <1400767676-15994-7-git-send-email-michal.kazior@tieto.com> (sfid-20140522_161523_302237_02026465)
+In-Reply-To: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 15:45 +0200, Michal Kazior wrote:
-> Channel switch finalization is now 2-step. First
-> step is when driver calls csa_finish(), the other
-> is when reservation is actually finalized (which
-> be defered for in-place reservation).
+Make the driver responsible for making sure it is
+capable of performing the switch. It might as well
+accept a request but then disconnect an interface
+if some requirements are not met.
 
-"which be defered"? should that be "can be"?
+In that case userspace should be prepared for an
+appropriate event (AP/IBSS/mesh being stopped/left).
 
-> +	if (sdata->reserved_chanctx) {
-> +		/*
-> +		 * with multi-vif csa driver may call ieee80211_csa_finish()
-> +		 * many times while waiting for other interfaces to use their
-> +		 * reservations
-> +		 */
-> +		if (sdata->reserved_ready)
-> +			return 0;
-> +
-> +		err = ieee80211_vif_use_reserved_context(sdata);
-> +		if (err)
-> +			return err;
-> +
-> +		return 0;
->  	}
->  
-> +	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
-> +					&sdata->csa_chandef))
-> +		return -EINVAL;
-> +
->  	sdata->vif.csa_active = false;
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/nl80211.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
-Should csa_active really stay true in the reserved_chanctx case?
-Wouldn't that leave it beaconing, with potentially suddenly negative
-(due to underflow) CSA counter, or something?
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 49adf58..d290afd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6001,17 +6001,6 @@ skip_beacons:
+ 		params.radar_required = true;
+ 	}
+ 
+-	/* TODO: I left this here for now.  With channel switch, the
+-	 * verification is a bit more complicated, because we only do
+-	 * it later when the channel switch really happens.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   params.chandef.chan,
+-					   CHAN_MODE_SHARED,
+-					   radar_detect_width);
+-	if (err)
+-		return err;
+-
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
+ 
+-- 
+1.8.5.3
 
