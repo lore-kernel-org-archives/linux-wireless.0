@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45661 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbaEVIlI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 04:41:08 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath9k: fix sleep timer during suspend
-Date: Thu, 22 May 2014 14:11:41 +0530
-Message-ID: <1400748101-1832-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140522_104113_500236_F1F86263)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:44674 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750729AbaEVO5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 10:57:08 -0400
+Message-ID: <1400770624.4174.36.camel@jlt4.sipsolutions.net> (sfid-20140522_165712_132819_75E757EF)
+Subject: Re: [PATCH v6 6/6] cfg80211: remove channel_switch combination check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Thu, 22 May 2014 16:57:04 +0200
+In-Reply-To: <1400767676-15994-7-git-send-email-michal.kazior@tieto.com> (sfid-20140522_161513_340862_ECE2D308)
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+	 <1400767676-15994-7-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140522_161513_340862_ECE2D308)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On idle state, sleep timer is scheduled to put the chip into fullsleep.
-But during suspend, this timer is scheduled after the chip is moved to
-fullsleep forcibily. This is causing below unnecessary error messages
-in kernel log during suspend.
+On Thu, 2014-05-22 at 16:07 +0200, Michal Kazior wrote:
+> Make the driver responsible for making sure it is
+> capable of performing the switch. It might as well
+> accept a request but then disconnect an interface
+> if some requirements are not met.
 
-ath: phy2: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000
-!= 0x00000000
-ath: phy2: RX failed to go idle in 10 ms RXSM=0xdeadbeef
-ath: phy2: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
-DMADBG_7=0xdeadbeef
+Care to elaborate? I'd really like to avoid this case as much as
+possible, so just mentioning here that it would be valid seems like a
+bad idea.
 
-Reported-by: Arkh4mKn1ght <arkh4mkn1ght@gmail.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c1e82f7..4dec09e 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -914,6 +914,7 @@ static int ath_pci_suspend(struct device *device)
- 	 */
- 	ath9k_stop_btcoex(sc);
- 	ath9k_hw_disable(sc->sc_ah);
-+	del_timer_sync(&sc->sleep_timer);
- 	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
- 
- 	return 0;
--- 
-1.9.3
+johannes
 
