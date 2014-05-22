@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:49825 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757805AbaEKIFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2014 04:05:19 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 05/10] ath9k: reorder or remove some includes
-Date: Sun, 11 May 2014 10:04:35 +0200
-Message-Id: <1399795480-7459-6-git-send-email-linux@rempel-privat.de> (sfid-20140511_100532_901253_755C5F05)
-In-Reply-To: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
-References: <1399795480-7459-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:48081 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbaEVTLy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 15:11:54 -0400
+Received: by mail-qg0-f52.google.com with SMTP id a108so6540180qge.11
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 12:11:54 -0700 (PDT)
+Message-ID: <537E4C81.3060001@gmail.com> (sfid-20140522_211158_823750_17E04A7C)
+Date: Thu, 22 May 2014 15:14:09 -0400
+From: Rick Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Question on regulatory settings.
+References: <537E2ABB.6030302@candelatech.com> <537E36E3.6040205@candelatech.com> <20140522183007.GE12779@tuxdriver.com>
+In-Reply-To: <20140522183007.GE12779@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to fix compile errors
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
- drivers/net/wireless/ath/ath9k/hw.c    | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 33a2ae7..20dd344 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -23,8 +23,8 @@
- #include <linux/leds.h>
- #include <linux/completion.h>
- 
--#include "debug.h"
- #include "common.h"
-+#include "debug.h"
- #include "mci.h"
- #include "dfs.h"
- #include "spectral.h"
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index dffefee..2a8ed83 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -26,7 +26,6 @@
- #include "ar9003_mac.h"
- #include "ar9003_mci.h"
- #include "ar9003_phy.h"
--#include "debug.h"
- #include "ath9k.h"
- 
- static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
--- 
-1.9.1
+On 05/22/2014 02:30 PM, John W. Linville wrote:
+> On Thu, May 22, 2014 at 10:41:55AM -0700, Ben Greear wrote:
+>> On 05/22/2014 09:50 AM, Ben Greear wrote:
+>>> Hello!
+>>>
+>>> I'm having issues where when we add several ath10k NICs to a system,
+>>> the regulatory domain goes quite restricted..  There is an ath9k NIC
+>>> with eeprom over-ride hack, and user-space sets regdomain to 'US'.
+>>>
+>>> Later, when registering ath10k, at least one of those NICs registeres
+>>> as 'TW'.  The ending domain looks like this:
+>>>
+>>> [root@lf1011-13060017 ~]# iw reg get
+>>> country 98: DFS-UNSET
+>>> 	(2402 - 2472 @ 40), (N/A, 30)
+>>> 	(5270 - 5330 @ 40), (N/A, 17), DFS
+>>> 	(5735 - 5835 @ 80), (N/A, 30)
+>>>
+>>>
+>>> I tried adding a hack to ath10k to zero out the ar->ath_common.regulatory.current_rd,
+>>> but in fact it seems to be reported as zero to begin with.
+>>>
+>>> I am obviously missing something.  Either my hacks to ath10k are not
+>>> sufficient, or possibly the system is getting regulatory info from
+>>> somewhere else?
+>>>
+>>> Any ideas where else it might be getting the idea it should be in TW
+>>> domain?  Can it get this from beacons from other systems?
+> 
+> FWIW, yes it can get this information from beacons.
+> 
+>> Ahh, sneaky nasty code....it was being set based on the timezone
+>> of all things!
+> 
+> You're welcome... ;-)
 
+To be fair, when I travel I rarely set my timezone at all, and when I do
+I normally make sure the offset is right and not much else.  It's easily
+possible to have timezone set for a country you aren't in just because
+the offset matches.
+
+I'm not saying I have a better idea, but I am saying that timezone is
+very unreliable to determine position.
+
+Thanks,
+Zero_Chaos
+> 
+>> Looks like you can override this behaviour with the command
+>> below if you are of a mind to do so:
+>>
+>> echo COUNTRY=US > /etc/sysconfig/regdomain
+> 
+> I don't know any better way to set a reasonable default for the
+> regulatory domain.  If you have other suggestions, I'd be interested
+> in hearing them.
+> 
+> Thanks,
+> 
+> John
+> 
