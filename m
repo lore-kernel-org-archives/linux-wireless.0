@@ -1,83 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:55966 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbaEJM2s (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:50708 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbaEVHYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2014 08:28:48 -0400
-Received: by mail-wi0-f179.google.com with SMTP id bs8so2502986wib.12
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 05:28:47 -0700 (PDT)
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Subject: Re: [PATCH 0/4] wl1251 IBSS fixes
-Date: Sat, 10 May 2014 14:28:45 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	David Gnedt <david.gnedt@davizone.at>, freemangordon@abv.bg
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com> <CANOLnOO0xPH9kfZuqdbpYkdQrOFAOvL-4H0QmfAUVKCwg0ot2Q@mail.gmail.com> <201405092203.00729@pali>
-In-Reply-To: <201405092203.00729@pali>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3512066.ny6NrNLymF";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201405101428.45185@pali> (sfid-20140510_142852_220658_A2C5FDBC)
+	Thu, 22 May 2014 03:24:15 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so2942834wgh.2
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:13 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/11] iwlwifi: mvm: pass force_assoc_off all the way down to avoid hacks
+Date: Thu, 22 May 2014 10:23:51 +0300
+Message-Id: <1400743435-702-7-git-send-email-egrumbach@gmail.com> (sfid-20140522_092728_686274_0B52F9FA)
+In-Reply-To: <537DA58C.5050003@gmail.com>
+References: <537DA58C.5050003@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3512066.ny6NrNLymF
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-On Friday 09 May 2014 22:03:00 Pali Roh=C3=A1r wrote:
-> On Friday 09 May 2014 02:21:21 Grazvydas Ignotas wrote:
-> > On Tue, Apr 22, 2014 at 3:09 AM, Grazvydas Ignotas
->=20
-> <notasas@gmail.com> wrote:
-> > > IBSS mode is currently advertised by wl1251 driver but is
-> > > totally broken. First there is a disconnect hack for
-> > > monitor mode that was recently merged, it abuses mac80211
-> > > and causes corruption in IBSS mode, so I think should be
-> > > reverted. Then there are several cases of station-only
-> > > mac80211 functions called carelessly, what is also fixed.
-> >=20
-> > Ping.
-> > This driver is orphan and hardware carrying it is outdated,
-> > so acks / tested-bys are unlikely..
->=20
-> Now I'm testing these patches on wireless-testing git tree
-> from year 2010 compiled against patched maemo 2.6.28 kernel.
->=20
-> Reason for using these historical wireless-testing version is
-> that this version can be compiled against kernel which working
-> with default Maemo system in Nokia N900.
->=20
-> It looks like your patches fixed some kernel oops when
-> iwconfig changing mode to ad-hoc.
+In some cases, we need to force the association to be off in the
+MAC_CONTEXT_CMD command we send to the firmware.  Instead of having to
+hack the vif->bss_conf.assoc value, pass it all the way down the call
+chain.
 
-Looks like everything working fine except power save mode. In=20
-dmesg I see only these message:
+Additionally, for the iwl_mvm_mac_ctxt_add() case, we *always* set
+forced_assoc_off to true, so we can remove the hack in the d3 code
+that was forcing it to off by hacking the bss_conf.assoc value.
 
-wl1251: ERROR Power save entry failed, giving up
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c       |  6 ++----
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 13 ++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++++++------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  3 ++-
+ 4 files changed, 18 insertions(+), 16 deletions(-)
 
-If you are OK with fact that I tested your patches with older=20
-kernel (not last upstream), you can add my Tested-by.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 7dc71f3..48c192d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -663,10 +663,8 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	if (WARN_ON(!vif->bss_conf.assoc))
+ 		return -EINVAL;
+-	/* hack */
+-	vif->bss_conf.assoc = false;
++
+ 	ret = iwl_mvm_mac_ctxt_add(mvm, vif);
+-	vif->bss_conf.assoc = true;
+ 	if (ret)
+ 		return ret;
+ 
+@@ -702,7 +700,7 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		return ret;
+ 	rcu_assign_pointer(mvm->fw_id_to_mac_id[mvmvif->ap_sta_id], ap_sta);
+ 
+-	ret = iwl_mvm_mac_ctxt_changed(mvm, vif);
++	ret = iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index fed012f..8b53027 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1109,12 +1109,12 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ }
+ 
+ static int iwl_mvm_mac_ctx_send(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-				u32 action)
++				u32 action, bool force_assoc_off)
+ {
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		return iwl_mvm_mac_ctxt_cmd_sta(mvm, vif, action,
+-						action == FW_CTXT_ACTION_ADD);
++						force_assoc_off);
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		if (!vif->p2p)
+@@ -1144,7 +1144,8 @@ int iwl_mvm_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		      vif->addr, ieee80211_vif_type_p2p(vif)))
+ 		return -EIO;
+ 
+-	ret = iwl_mvm_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_ADD);
++	ret = iwl_mvm_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_ADD,
++				   true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1155,7 +1156,8 @@ int iwl_mvm_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	return 0;
+ }
+ 
+-int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			     bool force_assoc_off)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 
+@@ -1163,7 +1165,8 @@ int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		      vif->addr, ieee80211_vif_type_p2p(vif)))
+ 		return -EIO;
+ 
+-	return iwl_mvm_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_MODIFY);
++	return iwl_mvm_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_MODIFY,
++				    force_assoc_off);
+ }
+ 
+ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7411f12..1146cfb 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1271,7 +1271,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc)
+ 		iwl_mvm_mac_ctxt_recalc_tsf_id(mvm, vif);
+ 
+-	ret = iwl_mvm_mac_ctxt_changed(mvm, vif);
++	ret = iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 	if (ret)
+ 		IWL_ERR(mvm, "failed to update MAC %pM\n", vif->addr);
+ 
+@@ -1431,7 +1431,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 
+ 	/* Need to update the P2P Device MAC (only GO, IBSS is single vif) */
+ 	if (vif->p2p && mvm->p2p_device_vif)
+-		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif);
++		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif, false);
+ 
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_AP_IBSS);
+ 
+@@ -1471,7 +1471,7 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
+ 
+ 	/* Need to update the P2P Device MAC (only GO, IBSS is single vif) */
+ 	if (vif->p2p && mvm->p2p_device_vif)
+-		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif);
++		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif, false);
+ 
+ 	iwl_mvm_update_quotas(mvm, NULL);
+ 	iwl_mvm_send_rm_bcast_sta(mvm, &mvmvif->bcast_sta);
+@@ -1498,7 +1498,7 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
+ 
+ 	if (changes & (BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_HT |
+ 		       BSS_CHANGED_BANDWIDTH) &&
+-	    iwl_mvm_mac_ctxt_changed(mvm, vif))
++	    iwl_mvm_mac_ctxt_changed(mvm, vif, false))
+ 		IWL_ERR(mvm, "failed to update MAC %pM\n", vif->addr);
+ 
+ 	/* Need to send a new beacon template to the FW */
+@@ -1799,7 +1799,7 @@ static int iwl_mvm_mac_conf_tx(struct ieee80211_hw *hw,
+ 		int ret;
+ 
+ 		mutex_lock(&mvm->mutex);
+-		ret = iwl_mvm_mac_ctxt_changed(mvm, vif);
++		ret = iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 		mutex_unlock(&mvm->mutex);
+ 		return ret;
+ 	}
+@@ -2255,7 +2255,7 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 	/* Handle binding during CSA */
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+ 		iwl_mvm_update_quotas(mvm, vif);
+-		iwl_mvm_mac_ctxt_changed(mvm, vif);
++		iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 	}
+ 
+ 	goto out_unlock;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 6ccc88b..da8dc14 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -814,7 +814,8 @@ void iwl_mvm_phy_ctxt_unref(struct iwl_mvm *mvm,
+ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ void iwl_mvm_mac_ctxt_release(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+-int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			     bool force_assoc_off);
+ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ u32 iwl_mvm_mac_get_queues_mask(struct iwl_mvm *mvm,
+ 				struct ieee80211_vif *vif);
+-- 
+1.8.3.2
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart3512066.ny6NrNLymF
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlNuG30ACgkQi/DJPQPkQ1IQ2QCcC1TPlhgLta3z3ReMgPXgPgKl
-2QYAoI+/1DGiH3vQfma8rMuJvEMaljKt
-=aWHl
------END PGP SIGNATURE-----
-
---nextPart3512066.ny6NrNLymF--
