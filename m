@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9511 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31282 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750878AbaE1Eju (ORCPT
+	by vger.kernel.org with ESMTP id S1751521AbaEVFDF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 00:39:50 -0400
+	Thu, 22 May 2014 01:03:05 -0400
 From: Bing Zhao <bzhao@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: "John W. Linville" <linville@tuxdriver.com>,
@@ -11,39 +11,60 @@ CC: "John W. Linville" <linville@tuxdriver.com>,
 	Amitkumar Karwar <akarwar@marvell.com>,
 	Maithili Hinge <maithili@marvell.com>,
 	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/3] mwifiex: change hscfg gap parameter to avoid potential firmware deadlock
-Date: Tue, 27 May 2014 21:39:34 -0700
-Message-ID: <1401251974-18738-3-git-send-email-bzhao@marvell.com> (sfid-20140528_063953_468774_CF8F528F)
-In-Reply-To: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
-References: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
+Subject: [PATCH 2/5] mwifiex: silence TDLS link delete failure for nonexistent link
+Date: Wed, 21 May 2014 22:02:28 -0700
+Message-ID: <1400734951-6851-2-git-send-email-bzhao@marvell.com> (sfid-20140522_070310_423309_B7E2A82C)
+In-Reply-To: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
+References: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If host sleep parameter gap is set to 0xff, firmware will wait
-for an ack from host to confirm the success of host wakeup.
-This prevents firmware from uploading data packet before host
-actually wakes up.
+From: Avinash Patil <patila@marvell.com>
 
+If TDLS link delete command fails because of non-existent peer
+or TDLS peer is absent from driver's entry, it means link was
+already deleted. In such case print debug messages with lower
+severity.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
 Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mwifiex/fw.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 42eaeda..3175dd0 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -405,7 +405,7 @@ enum P2P_MODES {
- #define HS_CFG_CANCEL			0xffffffff
- #define HS_CFG_COND_DEF			0x00000000
- #define HS_CFG_GPIO_DEF			0xff
--#define HS_CFG_GAP_DEF			0
-+#define HS_CFG_GAP_DEF			0xff
- #define HS_CFG_COND_BROADCAST_DATA	0x00000001
- #define HS_CFG_COND_UNICAST_DATA	0x00000002
- #define HS_CFG_COND_MAC_EVENT		0x00000004
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index bfebb01..577f297 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -865,14 +865,20 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
+ 
+ 	switch (action) {
+ 	case ACT_TDLS_DELETE:
+-		if (reason)
+-			dev_err(priv->adapter->dev,
+-				"TDLS link delete for %pM failed: reason %d\n",
+-				cmd_tdls_oper->peer_mac, reason);
+-		else
++		if (reason) {
++			if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
++				dev_dbg(priv->adapter->dev,
++					"TDLS link delete for %pM failed: reason %d\n",
++					cmd_tdls_oper->peer_mac, reason);
++			else
++				dev_err(priv->adapter->dev,
++					"TDLS link delete for %pM failed: reason %d\n",
++					cmd_tdls_oper->peer_mac, reason);
++		} else {
+ 			dev_dbg(priv->adapter->dev,
+-				"TDLS link config for %pM successful\n",
++				"TDLS link delete for %pM successful\n",
+ 				cmd_tdls_oper->peer_mac);
++		}
+ 		break;
+ 	case ACT_TDLS_CREATE:
+ 		if (reason) {
 -- 
 1.8.2.3
 
