@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44430 "EHLO sipsolutions.net"
+Received: from purkki.adurom.net ([80.68.90.206]:38545 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752481AbaEVNnT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 09:43:19 -0400
-Message-ID: <1400766195.4174.13.camel@jlt4.sipsolutions.net> (sfid-20140522_154322_565641_11B9A7DB)
-Subject: Re: [PATCH 1/3] mac80211: move csa counters from sdata to
- beacon/presp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 May 2014 15:43:15 +0200
-In-Reply-To: <1400765294-14732-2-git-send-email-michal.kazior@tieto.com> (sfid-20140522_153529_435766_85FBB99B)
-References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
-	 <1400765294-14732-2-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140522_153529_435766_85FBB99B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752863AbaEVNPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 09:15:34 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jim.epost@gmail.com
+Subject: Re: [PATCH] ath9k: fix build error with disabled debug
+References: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
+Date: Thu, 22 May 2014 16:15:31 +0300
+In-Reply-To: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
+	(Zefir Kurtisi's message of "Wed, 21 May 2014 12:40:35 +0200")
+Message-ID: <877g5e3qfg.fsf@purkki.adurom.net> (sfid-20140522_151544_864477_08AA8075)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-05-22 at 15:28 +0200, Michal Kazior wrote:
-> Having csa counters part of beacon and probe_resp
-> structures makes it easier to get rid of possible
-> reaces between setting a beacon and updating
-> counters on SMP systems by guaranteeing counters
-> are always consistent against given beacon struct.
+Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
 
-This makes a lot of sense.
+> DFS pulse interval printing is only available
+> when CONFIG_ATH9K_DEBUGFS is set.
+>
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
->  static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
-> -				   struct cfg80211_beacon_data *params)
-> +				   struct cfg80211_beacon_data *params,
-> +				   const u16 *csa_counter_offset_beacon,
-> +				   int n_csa_counter_offset_beacon,
-> +				   const u16 *csa_counter_offset_presp,
-> +				   int n_csa_counter_offset_presp,
-> +				   u8 csa_count)
+[...]
 
-But that seems overkill. Maybe those CSA-related arguments could be in
-some new struct so you don't have to pass "..., NULL, 0, NULL, 0, 0"?
+> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> @@ -178,12 +178,14 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+>  	pe.ts = mactime;
+>  	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
+>  		struct dfs_pattern_detector *pd = sc->dfs_detector;
+> +#ifdef CONFIG_ATH9K_DEBUGFS
 
-johannes
+IMHO config_enabled() is much nicer than ifdef.
 
+-- 
+Kalle Valo
