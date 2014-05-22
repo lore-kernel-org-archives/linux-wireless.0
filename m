@@ -1,115 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:61566 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaEQIw6 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38138 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750958AbaEVFCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 04:52:58 -0400
-Received: by mail-we0-f174.google.com with SMTP id k48so3509502wev.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:52:57 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/22] staging: vt6656: device_cfg.h Move macros to device.h
-Date: Sat, 17 May 2014 09:50:24 +0100
-Message-Id: <1400316639-4430-7-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105308_039507_1A2B216B)
-In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
-References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 22 May 2014 01:02:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/5] mwifiex: set TDLS flags for AMSDU packets
+Date: Wed, 21 May 2014 22:02:30 -0700
+Message-ID: <1400734951-6851-4-git-send-email-bzhao@marvell.com> (sfid-20140522_070253_340809_626E1869)
+In-Reply-To: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
+References: <1400734951-6851-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove device_cfg.h
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This patch fixes an issue where AMSDU packets for TDLS link
+would flow over infra link. This happened because we were
+missing setting TDLS flag in TxPD on AMSDU packets.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/vt6656/device.h     | 13 +++++++++++-
- drivers/staging/vt6656/device_cfg.h | 42 -------------------------------------
- 2 files changed, 12 insertions(+), 43 deletions(-)
- delete mode 100644 drivers/staging/vt6656/device_cfg.h
+ drivers/net/wireless/mwifiex/11n_aggr.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 410e028..3c2c4ce 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -60,11 +60,12 @@
- #define RT_DOWNDEV_EVENT_FLAG                        0x0105
- #define RT_RMMOD_EVENT_FLAG                              0x0106
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 860dfe7..5b32106 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -100,6 +100,7 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ 			    struct sk_buff *skb)
+ {
+ 	struct txpd *local_tx_pd;
++	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
  
-+#define MAX_RATE			12
-+
- /*
-  * device specific
-  */
+ 	skb_push(skb, sizeof(*local_tx_pd));
  
--#include "device_cfg.h"
- #include "80211hdr.h"
- #include "tether.h"
- #include "wmgr.h"
-@@ -79,6 +80,16 @@
- #define VNT_USB_VENDOR_ID                     0x160a
- #define VNT_USB_PRODUCT_ID                    0x3184
+@@ -118,6 +119,9 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
+ 						 sizeof(*local_tx_pd));
  
-+#define DEVICE_NAME			"vt6656"
-+#define DEVICE_FULL_DRV_NAM		"VIA Networking Wireless LAN USB Driver"
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
++		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_TDLS_PACKET;
 +
-+#define DEVICE_VERSION			"1.19_12"
-+
-+#define CONFIG_PATH			"/etc/vntconfiguration.dat"
-+
-+#define MAX_UINTS			8
-+#define OPTION_DEFAULT			{ [0 ... MAX_UINTS-1] = -1}
-+
- #define MAC_MAX_CONTEXT_REG     (256+128)
+ 	if (local_tx_pd->tx_control == 0)
+ 		/* TxCtrl set by user or default */
+ 		local_tx_pd->tx_control = cpu_to_le32(priv->pkt_tx_ctrl);
+@@ -183,6 +187,9 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  
- #define MAX_MULTICAST_ADDRESS_NUM       32
-diff --git a/drivers/staging/vt6656/device_cfg.h b/drivers/staging/vt6656/device_cfg.h
-deleted file mode 100644
-index b018339..0000000
---- a/drivers/staging/vt6656/device_cfg.h
-+++ /dev/null
-@@ -1,42 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: device_cfg.h
-- *
-- * Purpose: Driver configuration header
-- * Author: Lyndon Chen
-- *
-- * Date: Dec 9, 2005
-- *
-- */
--#ifndef __DEVICE_CONFIG_H
--#define __DEVICE_CONFIG_H
--
--#define DEVICE_NAME         "vt6656"
--#define DEVICE_FULL_DRV_NAM "VIA Networking Wireless LAN USB Driver"
--
--#define DEVICE_VERSION       "1.19_12"
--
--#define MAX_RATE	12
--
--#define CONFIG_PATH            "/etc/vntconfiguration.dat"
--
--#define MAX_UINTS           8
--#define OPTION_DEFAULT      { [0 ... MAX_UINTS-1] = -1}
--
--#endif
+ 	tx_info_aggr->bss_type = tx_info_src->bss_type;
+ 	tx_info_aggr->bss_num = tx_info_src->bss_num;
++
++	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
++		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+ 	skb_aggr->priority = skb_src->priority;
+ 
+ 	do_gettimeofday(&tv);
 -- 
-1.9.1
+1.8.2.3
 
