@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:46949 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbaEEId4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 04:33:56 -0400
-Received: by mail-pa0-f54.google.com with SMTP id lf10so9066472pab.27
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 01:33:56 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] rtlwifi: rtl8188ee: add msi module parameter
-Date: Mon,  5 May 2014 16:33:37 +0800
-Message-Id: <1399278818-19152-2-git-send-email-adam.lee@canonical.com> (sfid-20140505_103407_815687_8C71E01D)
-In-Reply-To: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
-References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44564 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751271AbaEVOjK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 10:39:10 -0400
+Message-ID: <1400769536.4174.24.camel@jlt4.sipsolutions.net> (sfid-20140522_163914_184130_3779CBDB)
+Subject: Re: [PATCH 1/3] mac80211: move csa counters from sdata to
+ beacon/presp
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 22 May 2014 16:38:56 +0200
+In-Reply-To: <1400769454.4174.22.camel@jlt4.sipsolutions.net> (sfid-20140522_163747_967070_FC75DEAE)
+References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
+	 <1400765294-14732-2-git-send-email-michal.kazior@tieto.com>
+	 <1400766195.4174.13.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmw6taxwxHtK99BQXgGugu6aDrGUOCz+-MvUo52JoWrpw@mail.gmail.com>
+	 (sfid-20140522_155348_321691_FA0123D1) <1400769454.4174.22.camel@jlt4.sipsolutions.net>
+	 (sfid-20140522_163747_967070_FC75DEAE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The msi module parameter offers an option to enable or disable MSI
-interrupts mode. For now, some users report RTL8188EE works only with
-MSI on their certain platforms, some others report it works only without
-MSI, this parameter will help.
+On Thu, 2014-05-22 at 16:37 +0200, Johannes Berg wrote:
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> You could use "struct cfg80211_csa_settings" here I suppose, but I think
+> a new struct is perfectly reasonable.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-index 347af1e..79792d4 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-@@ -93,6 +93,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 	u8 tid;
- 
- 	rtl8188ee_bt_reg_init(hw);
-+	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
- 
- 	rtlpriv->dm.dm_initialgain_enable = 1;
- 	rtlpriv->dm.dm_flag = 0;
-@@ -266,6 +267,7 @@ static struct rtl_mod_params rtl88ee_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
-+	.msi_support = false,
- 	.debug = DBG_EMERG,
- };
- 
-@@ -382,10 +384,12 @@ module_param_named(debug, rtl88ee_mod_params.debug, int, 0444);
- module_param_named(ips, rtl88ee_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl88ee_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl88ee_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(msi, rtl88ee_mod_params.msi_support, bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
- 
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
--- 
-2.0.0.rc0
+Actually I don't think that's a terribly good idea - there are a lot of
+temporary pointers so you can't copy the struct, and it has a lot of
+unnecessary baggage too.
+
+johannes
 
