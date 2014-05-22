@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49614 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbaESVQE (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56546 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbaEVQuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 17:16:04 -0400
-Date: Mon, 19 May 2014 14:15:53 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: How to disable beacon filtering in iwlwifi in 3.13 and 3.14
-Message-ID: <20140519211553.GA32321@kroah.com> (sfid-20140519_231608_697733_A1E5F7DE)
-References: <CANUX_P2MSK_rUMyN2xa8A9dZwuPSKh+eiOr10KG6PocCQdVhvA@mail.gmail.com>
- <20140519194156.GA5991@kroah.com>
- <537A685E.3040500@gmail.com>
+	Thu, 22 May 2014 12:50:04 -0400
+Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 06E2540B146
+	for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 09:50:03 -0700 (PDT)
+Message-ID: <537E2ABB.6030302@candelatech.com> (sfid-20140522_185013_712352_393A10EC)
+Date: Thu, 22 May 2014 09:50:03 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <537A685E.3040500@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Question on regulatory settings.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2014 at 11:23:58PM +0300, Emmanuel Grumbach wrote:
-> 
-> 
-> On 05/19/2014 10:41 PM, Greg KH wrote:
-> > On Mon, May 19, 2014 at 01:40:34PM +0300, Emmanuel Grumbach wrote:
-> >> Hi,
-> >>
-> >> I need to disable a feature on 3.13 and 3.14. But I don't have any
-> >> patch upstream that I can point to as the patch that needs to be
-> >> backported.
-> >> We have a feature that is buggy in 3.13 and 3.14. We refactored (and
-> >> fixed) this feature in 3.15 but the refactor is really not stable
-> >> material, so basically, I can't backport the fix to 3.13 / 3.14. A
-> >> user reported that disabling the feature solved (part of) his issues:
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=72601.
-> >> OTOH, I don't have any patch in linux.git that could be backported to
-> >> do what I want in 3.13 / 3.14 - i.e. disable the feature.
-> >> What is the right process here? I understand that this isn't covered
-> >> by the "stable rules". So what should I do here?
-> > 
-> > Get the maintainer's approval to apply this patch and I can queue it up.
-> 
-> Ok - thanks. It might be worthwhile to add this "exception path" in the Documentation :)
+Hello!
 
-No, it's such a rare exception, I don't want to "encourage" anyone to
-ever do it by documenting it.
+I'm having issues where when we add several ath10k NICs to a system,
+the regulatory domain goes quite restricted..  There is an ath9k NIC
+with eeprom over-ride hack, and user-space sets regdomain to 'US'.
 
-thanks,
+Later, when registering ath10k, at least one of those NICs registeres
+as 'TW'.  The ending domain looks like this:
 
-greg k-h
+[root@lf1011-13060017 ~]# iw reg get
+country 98: DFS-UNSET
+	(2402 - 2472 @ 40), (N/A, 30)
+	(5270 - 5330 @ 40), (N/A, 17), DFS
+	(5735 - 5835 @ 80), (N/A, 30)
+
+
+I tried adding a hack to ath10k to zero out the ar->ath_common.regulatory.current_rd,
+but in fact it seems to be reported as zero to begin with.
+
+I am obviously missing something.  Either my hacks to ath10k are not
+sufficient, or possibly the system is getting regulatory info from
+somewhere else?
+
+Any ideas where else it might be getting the idea it should be in TW
+domain?  Can it get this from beacons from other systems?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
