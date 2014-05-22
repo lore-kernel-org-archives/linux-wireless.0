@@ -1,44 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:35602 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964966AbaE2Rwx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 13:52:53 -0400
-Received: by mail-vc0-f182.google.com with SMTP id id10so796108vcb.13
-        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 10:52:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
-References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com>
- <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Thu, 29 May 2014 10:52:32 -0700
-Message-ID: <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> (sfid-20140529_195258_544494_1E306A01)
-Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from isis.lip6.fr ([132.227.60.2]:62638 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752209AbaEVNN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 09:13:56 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: benoit.taine@lip6.fr, Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: Use kmemdup() instead of memcpy() to duplicate memory
+Date: Thu, 22 May 2014 15:08:33 +0200
+Message-Id: <1400764113-15933-1-git-send-email-benoit.taine@lip6.fr> (sfid-20140522_151359_976600_00AA9015)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> +ath10k@lists.infradead.org
->
-> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
->> It dies with 'otp calibration failed: 2'.
->>
->> Some older version of the driver seemed to work fine.
->
-> ath10k did not verify otp result before so it could load successfully
-> despite errors.
->
-> Someone raised this problem yesterday on IRC. I'm not really sure how
-> we should deal with this properly.
->
+This issue was reported by coccicheck using the semantic patch 
+at scripts/coccinelle/api/memdup.cocci, and tested by compilation.
 
-Ideally, someone from Atheros could figure out what the error is.
-Barring that, the card seems to work okay without otp (I don't even
-know what otp is), so just warning and continuing to load might be
-better than bailing.
+Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |    3 +--
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c |   17 +++++++----------
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
---Andy
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+index e2d426a..f917edd 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+@@ -339,12 +339,11 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
+ 		rtStatus = _FAIL;
+ 		goto Exit;
+ 	}
+-	firmware_buf = kzalloc(fw->size, GFP_KERNEL);
++	firmware_buf = kmemdup(fw->data, fw->size, GFP_KERNEL);
+ 	if (!firmware_buf) {
+ 		rtStatus = _FAIL;
+ 		goto Exit;
+ 	}
+-	memcpy(firmware_buf, fw->data, fw->size);
+ 	buf = firmware_buf;
+ 	fw_size = fw->size;
+ 	release_firmware(fw);
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index 182f57c..c88a416 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -1426,14 +1426,14 @@ static int rtw_cfg80211_set_probe_req_wpsp2pie(struct rtw_adapter *padapter,
+ 				pmlmepriv->wps_probe_req_ie = NULL;
+ 			}
+ 
+-			pmlmepriv->wps_probe_req_ie =
+-				kmalloc(wps_ielen, GFP_KERNEL);
++			pmlmepriv->wps_probe_req_ie = kmemdup(wps_ie,
++							      wps_ielen,
++							      GFP_KERNEL);
+ 			if (pmlmepriv->wps_probe_req_ie == NULL) {
+ 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 					  __func__, __LINE__);
+ 				return -EINVAL;
+ 			}
+-			memcpy(pmlmepriv->wps_probe_req_ie, wps_ie, wps_ielen);
+ 			pmlmepriv->wps_probe_req_ie_len = wps_ielen;
+ 		}
+ 	}
+@@ -1697,12 +1697,11 @@ static int rtw_cfg80211_set_wpa_ie(struct rtw_adapter *padapter, const u8 *pie,
+ 		ret = -EINVAL;
+ 		goto exit;
+ 	}
+-	buf = kzalloc(ielen, GFP_KERNEL);
++	buf = kmemdup(pie, ielen, GFP_KERNEL);
+ 	if (buf == NULL) {
+ 		ret = -ENOMEM;
+ 		goto exit;
+ 	}
+-	memcpy(buf, pie, ielen);
+ 
+ 	/* dump */
+ 	DBG_8723A("set wpa_ie(length:%zu):\n", ielen);
+@@ -3178,14 +3177,13 @@ static int rtw_cfg80211_set_beacon_wpsp2pie(struct net_device *ndev, char *buf,
+ 				pmlmepriv->wps_beacon_ie = NULL;
+ 			}
+ 
+-			pmlmepriv->wps_beacon_ie =
+-				kmalloc(wps_ielen, GFP_KERNEL);
++			pmlmepriv->wps_beacon_ie = kmemdup(wps_ie, wps_ielen,
++							   GFP_KERNEL);
+ 			if (pmlmepriv->wps_beacon_ie == NULL) {
+ 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 					  __func__, __LINE__);
+ 				return -EINVAL;
+ 			}
+-			memcpy(pmlmepriv->wps_beacon_ie, wps_ie, wps_ielen);
+ 			pmlmepriv->wps_beacon_ie_len = wps_ielen;
+ 
+ #ifdef CONFIG_8723AU_AP_MODE
+@@ -3270,14 +3268,13 @@ static int rtw_cfg80211_set_assoc_resp_wpsp2pie(struct net_device *net,
+ 			pmlmepriv->wps_assoc_resp_ie = NULL;
+ 		}
+ 
+-		pmlmepriv->wps_assoc_resp_ie = kmalloc(len, GFP_KERNEL);
++		pmlmepriv->wps_assoc_resp_ie = kmemdup(buf, len, GFP_KERNEL);
+ 		if (pmlmepriv->wps_assoc_resp_ie == NULL) {
+ 			DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 				  __func__, __LINE__);
+ 			return -EINVAL;
+ 
+ 		}
+-		memcpy(pmlmepriv->wps_assoc_resp_ie, buf, len);
+ 		pmlmepriv->wps_assoc_resp_ie_len = len;
+ 	}
+ 
+
