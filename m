@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:37782 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbaEWU5W (ORCPT
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:63314 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbaEVPVg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 16:57:22 -0400
-Received: by mail-ig0-f173.google.com with SMTP id hn18so1153324igb.6
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 13:57:21 -0700 (PDT)
-Date: Fri, 23 May 2014 16:57:17 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@noack.us>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
-Message-ID: <20140523205717.GB6585@localhost> (sfid-20140523_225725_523825_5510A876)
-References: <3893194.GDQagdLGN9@desktop.local>
- <20140522192720.GA13440@localhost>
- <CAGnRvuqUkebLhvqY1Y28NtRyp3uUdbrpOSb4dOX2+ZSg6qineg@mail.gmail.com>
- <CAEFj9850c9aD5gKz2B-e=hPnS2vNdY+a4uc9D_+psryE0ywDVA@mail.gmail.com>
- <CAGnRvuo_ydU-HwtyTeKP50GPjEiNQy1EoVMR5_Dg-qTrFjYkPg@mail.gmail.com>
+	Thu, 22 May 2014 11:21:36 -0400
+Received: by mail-qg0-f50.google.com with SMTP id z60so5826890qgd.23
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 08:21:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGnRvuo_ydU-HwtyTeKP50GPjEiNQy1EoVMR5_Dg-qTrFjYkPg@mail.gmail.com>
+In-Reply-To: <1400771757.4174.37.camel@jlt4.sipsolutions.net>
+References: <3893194.GDQagdLGN9@desktop.local> <1400771757.4174.37.camel@jlt4.sipsolutions.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Thu, 22 May 2014 17:21:15 +0200
+Message-ID: <CAGnRvur6zFrUUbSLzC=PddHqO46k5RbQM+RY19o_hqZxbQnzHw@mail.gmail.com> (sfid-20140522_172139_577216_2B3002F3)
+Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Thomas Pedersen <thomas@noack.us>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 23, 2014 at 12:52:57PM +0200, Henning Rogge wrote:
-> Hi,
-> 
-> I will have another look at the codebase next week, there was a lot of
-> similar code for both tables that could be simplified without throwing
-> them together.
-> 
-> The feeling I get here is that four new nl80211 commands
-> (set/get/del/dump mpp_paths) are the right way to export these values?
+Ups...
 
-That approach would be fine by me.  Thanks for working on this!
+I thought I had found all this "stupid whitespace mistakes, I will
+remove them in the next version of the patch... but I wanted a comment
+if this is a good direction to go before we discuss how to change the
+netlink interface to export the data of the former mpp_paths table.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Henning Rogge
+
+On Thu, May 22, 2014 at 5:15 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 17:06 +0200, Henning Rogge wrote:
+>> From: Henning Rogge <hrogge@gmail.com>
+>>
+>> This patch is a preparation for exporting the MPP data of the 802.11s
+>> implementation via netlink to userspace. It unifies the content of the
+>> mesh_paths and mpp_paths tables in mesh_pathtbl.c without changing
+>> the behavior of the code.
+>
+> Code removal always *seems* good, but I can't really say much about
+> this :-)
+>
+>>  void ieee80211s_stop(void);
+>> +
+>>  #else
+>
+> This I'd rather avoid though.
+>
+> johannes
+>
