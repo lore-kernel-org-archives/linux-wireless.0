@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49432 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755610AbaEGLKC (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:7810 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751093AbaEVE7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 07:10:02 -0400
-Message-ID: <1399460994.10517.13.camel@jlt4.sipsolutions.net> (sfid-20140507_131010_915250_8667BDE4)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 07 May 2014 13:09:54 +0200
-In-Reply-To: <1399454858.6800.1.camel@dubbel>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399454858.6800.1.camel@dubbel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 22 May 2014 00:59:45 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Michael Howard <mike@dewberryfields.co.uk>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 21 May 2014 21:59:41 -0700
+Subject: RE: Mwifiex driver on Globalscale Mirabox
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5D909@SC-VEXCH1.marvell.com> (sfid-20140522_065949_048939_5C1BBC27)
+References: <5346DED8.2030704@free.fr>
+	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
+	<53480138.2080805@free.fr>	<53733AB4.7010500@free.fr>
+	<20140514215126.GA15419@us.netrek.org>
+	<CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
+	<5374F638.6000505@dewberryfields.co.uk>
+	<CAJwzM1mvK1i3ENrQyVZNoiwYFiopWGRaOVe5iGTr61TQVXdaMQ@mail.gmail.com>
+ <CAJwzM1mg5KVZFev4Gs9Qw43H5OwiLF3fmhwv8-3y9mEvWM6b6g@mail.gmail.com>
+ <537774B4.2000905@dewberryfields.co.uk>
+In-Reply-To: <537774B4.2000905@dewberryfields.co.uk>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 12:27 +0300, Luca Coelho wrote:
-
-> > > It's a separate issue really - but sure: the iwlwifi firmware API will
-> > > likely not allow doing such trickery in the IBSS case, so we should have
-> > > a bitmap of supported interface types (e.g. BIT(NL80211_IFTYPE_STATION)
-> > > | ...) for the channel switch operation.
-> > 
-> > Ah, I get it now. Thanks.
-> 
-> I guess this should be done when the actual support for AP, STATION and
-> so on is added? For example, add the station flag with the "mac80211:
-> use chanctx reservation for STA CSA" patch and so on...
-
-I don't know if we really want separate flags, rather than maybe a new
-field with an interface types supported bitmap?
-
-johannes
-
+SGkgTWljaGFlbCwNCg0KPiByb290QG1pcmFib3g6L2V0Yy9pbml0LmQjIC4vaG9zdGFwZCBzdGFy
+dA0KPiBbLi4uLl0gU3RhcnRpbmcgYWR2YW5jZWQgSUVFRSA4MDIuMTEgbWFuYWdlbWVudDogaG9z
+dGFwZGRldmljZSB1YXAwDQo+IGVudGVyZWQgcHJvbWlzY3VvdXMgbW9kZQ0KPiBicjA6IHBvcnQg
+Mih1YXAwKSBlbnRlcmVkIGxpc3RlbmluZyBzdGF0ZQ0KPiBicjA6IHBvcnQgMih1YXAwKSBlbnRl
+cmVkIGxpc3RlbmluZyBzdGF0ZQ0KPiBtd2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IENNRF9SRVNQ
+OiBjbWQgMHgxMTIgZXJyb3IsIHJlc3VsdD0weDINCg0KVGhhdCdzIG9kZC4gY21kIDB4MTEyIGlz
+IDExYWMgc3BlY2lmaWMgY29tbWFuZC4gODc4NyBkb2Vzbid0IHN1cHBvcnQgMTFhYy4NCkNvdWxk
+IHlvdSBwcmludCBvdXQgdGhlIGZvbGxvd2luZyBmbGFncz8NCg0KZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L213aWZpZXgvY2ZnODAyMTEuYw0KaW5kZXggMjFlZTI3YS4uZDE5ZTY2YiAxMDA2NDQNCi0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYw0KKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jDQpAQCAtMTQ3Myw2ICsxNDczLDggQEAgc3Rh
+dGljIGludCBtd2lmaWV4X2NmZzgwMjExX3N0YXJ0X2FwKHN0cnVjdCB3aXBoeSAqd2lwaHksDQoN
+CiAgICAgICAgbXdpZmlleF9zZXRfaHRfcGFyYW1zKHByaXYsIGJzc19jZmcsIHBhcmFtcyk7DQoN
+CisgICAgICAgd2lwaHlfZXJyKHdpcGh5LCAiaXNfaHdfMTFhY19jYXBhYmxlPSUjeFxuIiwNCisg
+ICAgICAgICAgICAgICAgIHByaXYtPmFkYXB0ZXItPmlzX2h3XzExYWNfY2FwYWJsZSk7DQogICAg
+ICAgIGlmIChwcml2LT5hZGFwdGVyLT5pc19od18xMWFjX2NhcGFibGUpIHsNCiAgICAgICAgICAg
+ICAgICBtd2lmaWV4X3NldF92aHRfcGFyYW1zKHByaXYsIGJzc19jZmcsIHBhcmFtcyk7DQogICAg
+ICAgICAgICAgICAgbXdpZmlleF9zZXRfdmh0X3dpZHRoKHByaXYsIHBhcmFtcy0+Y2hhbmRlZi53
+aWR0aCwNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5j
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYw0KaW5kZXggOGRlZTZjOC4u
+ODgyM2FkNSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0
+LmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMNCkBAIC0xNTA4
+LDYgKzE1MDgsOCBAQCBpbnQgbXdpZmlleF9yZXRfZ2V0X2h3X3NwZWMoc3RydWN0IG13aWZpZXhf
+cHJpdmF0ZSAqcHJpdiwNCiAgICAgICAgYWRhcHRlci0+ZndfYXBpX3ZlciA9IChhZGFwdGVyLT5m
+d19yZWxlYXNlX251bWJlciA+PiAxNikgJiAweGZmOw0KICAgICAgICBhZGFwdGVyLT5udW1iZXJf
+b2ZfYW50ZW5uYSA9IGxlMTZfdG9fY3B1KGh3X3NwZWMtPm51bWJlcl9vZl9hbnRlbm5hKTsNCg0K
+KyAgICAgICBkZXZfaW5mbyhhZGFwdGVyLT5kZXYsICJkb3RfMTFhY19kZXZfY2FwPSUjeFxuIiwN
+CisgICAgICAgICAgICAgICAgbGUzMl90b19jcHUoaHdfc3BlYy0+ZG90XzExYWNfZGV2X2NhcCkp
+Ow0KICAgICAgICBpZiAobGUzMl90b19jcHUoaHdfc3BlYy0+ZG90XzExYWNfZGV2X2NhcCkpIHsN
+CiAgICAgICAgICAgICAgICBhZGFwdGVyLT5pc19od18xMWFjX2NhcGFibGUgPSB0cnVlOw0KDQpU
+aGFua3MsDQpCaW5nDQoNCg==
