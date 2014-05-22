@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:34222 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753448AbaEHL2t (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48973 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078AbaEVQmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 07:28:49 -0400
-Received: by mail-ig0-f175.google.com with SMTP id uq10so6478029igb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 04:28:48 -0700 (PDT)
+	Thu, 22 May 2014 12:42:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: make core registering async
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 22 May 2014 19:42:41 +0300
+In-Reply-To: <1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 22 May 2014 16:12:35 +0200")
+Message-ID: <87ppj5wyri.fsf@kamboji.qca.qualcomm.com> (sfid-20140522_184250_049427_54D6C2B3)
 MIME-Version: 1.0
-In-Reply-To: <1399447711-12441-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1399447711-12441-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Thu, 8 May 2014 13:28:48 +0200
-Message-ID: <CAGXE3d8C8+qOc0xETnQv1dD1sUkrxvzt04pFSwnw4AwcnHS2SA@mail.gmail.com> (sfid-20140508_132852_775895_63206DB0)
-Subject: Re: [PATCH] ath9k: Allow platform override without EEPROM override
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@openwrt.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 7, 2014 at 9:28 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Add a new platform data flag "use_eeprom" that indicates that the eeprom
-> found on the card itself should be used instead of the one present in
-> the platform data.
->
-> This allows to override the MAC address of a PCI card while preserving
-> the eeprom data from the card itself.
->
-> The default behavior is preserved.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-John, please hold on this one. I'll send a v2.
-Helmut
+> If ath10k was built into the kernel it could stall
+> booting for 120 seconds by default (60 seconds for
+> each firmware API variant) waiting for firmware
+> files before userspace was ready or filesystems
+> mounted.
+>
+> Fix this by making the core registering
+> asynchronous.
+>
+> This also shoves off about 1 second from boot time
+> on most systems since the driver is now mostly
+> initialized in a worker and modprobe takes very
+> little time to complete.
+>
+> As a side effect there's no way to propagate
+> registering errors to the pci subsystem but this
+> probably isn't really necessary.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+[...]
+
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2758,8 +2758,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+>  	if (!ar_pci)
+>  		return;
+>  
+> -	tasklet_kill(&ar_pci->msi_fw_err);
+
+Why this? That's not obvious to me.
+
+-- 
+Kalle Valo
