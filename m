@@ -1,48 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55110 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756626AbaEPSaL (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:48167 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751397AbaEVOTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2014 14:30:11 -0400
-Date: Fri, 16 May 2014 14:19:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Subject: Re: pull  request iwlwifi-next 2014-05-15
-Message-ID: <20140516181907.GH3431@tuxdriver.com> (sfid-20140516_203018_154650_A82264F1)
-References: <5374F373.6040902@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5374F373.6040902@gmail.com>
+	Thu, 22 May 2014 10:19:46 -0400
+Received: by mail-ee0-f43.google.com with SMTP id d17so2677801eek.16
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 07:19:45 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: relocate core create/destroy functions
+Date: Thu, 22 May 2014 16:12:34 +0200
+Message-Id: <1400767955-16313-2-git-send-email-michal.kazior@tieto.com> (sfid-20140522_161951_199055_E9C8DE67)
+In-Reply-To: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 15, 2014 at 08:03:47PM +0300, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> This is *not* the last pull request for 3.16 :)
-> I have just enough content for a pull request and prefer to send it now, and have another (smaller) one later (not too late).
-> Again, I had to merge iwlwifi-fixes.git to avoid a merge conflict.
-> 
-> Avri continues to work on the power code and Eran is improving the NVM handling as a preparations for new devices on which he works with Liad. Luca cleans up a bit the code while working on CSA. I have the regular BT Coex stuff and a small lockdep fix. Johannes has his regular amount of clean ups and improvements, the main one is the ability to leave 2 chains open to improve diversity and hence the throughput in high attenuation scenarios.
-> 
-> Please pull, thanks.
-> 
-> The following changes since commit 1c4abec0baf25ffb92a28cc99d4231feeaa4d3f3:
-> 
->   iwlwifi: mvm: fix setting channel in monitor mode (2014-05-11 13:10:08 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git master
-> 
-> for you to fetch changes up to af7c603eb476216f1c27d82b802f0ce879c54ab3:
-> 
->   iwlwifi: fix LED support Kconfig dependencies (2014-05-15 19:56:18 +0300)
+This will avoid unnecessary forward declaration of
+any kind in the future.
 
-Pulling now...
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 128 ++++++++++++++++-----------------
+ 1 file changed, 64 insertions(+), 64 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 75b3dfb..bd4d1cc 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -701,70 +701,6 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+-struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+-				  const struct ath10k_hif_ops *hif_ops)
+-{
+-	struct ath10k *ar;
+-
+-	ar = ath10k_mac_create();
+-	if (!ar)
+-		return NULL;
+-
+-	ar->ath_common.priv = ar;
+-	ar->ath_common.hw = ar->hw;
+-
+-	ar->p2p = !!ath10k_p2p;
+-	ar->dev = dev;
+-
+-	ar->hif.priv = hif_priv;
+-	ar->hif.ops = hif_ops;
+-
+-	init_completion(&ar->scan.started);
+-	init_completion(&ar->scan.completed);
+-	init_completion(&ar->scan.on_channel);
+-	init_completion(&ar->target_suspend);
+-
+-	init_completion(&ar->install_key_done);
+-	init_completion(&ar->vdev_setup_done);
+-
+-	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
+-
+-	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
+-	if (!ar->workqueue)
+-		goto err_wq;
+-
+-	mutex_init(&ar->conf_mutex);
+-	spin_lock_init(&ar->data_lock);
+-
+-	INIT_LIST_HEAD(&ar->peers);
+-	init_waitqueue_head(&ar->peer_mapping_wq);
+-
+-	init_completion(&ar->offchan_tx_completed);
+-	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
+-	skb_queue_head_init(&ar->offchan_tx_queue);
+-
+-	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
+-	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+-
+-	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+-
+-	return ar;
+-
+-err_wq:
+-	ath10k_mac_destroy(ar);
+-	return NULL;
+-}
+-EXPORT_SYMBOL(ath10k_core_create);
+-
+-void ath10k_core_destroy(struct ath10k *ar)
+-{
+-	flush_workqueue(ar->workqueue);
+-	destroy_workqueue(ar->workqueue);
+-
+-	ath10k_mac_destroy(ar);
+-}
+-EXPORT_SYMBOL(ath10k_core_destroy);
+-
+ int ath10k_core_start(struct ath10k *ar)
+ {
+ 	int status;
+@@ -1058,6 +994,70 @@ void ath10k_core_unregister(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_core_unregister);
+ 
++struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
++				  const struct ath10k_hif_ops *hif_ops)
++{
++	struct ath10k *ar;
++
++	ar = ath10k_mac_create();
++	if (!ar)
++		return NULL;
++
++	ar->ath_common.priv = ar;
++	ar->ath_common.hw = ar->hw;
++
++	ar->p2p = !!ath10k_p2p;
++	ar->dev = dev;
++
++	ar->hif.priv = hif_priv;
++	ar->hif.ops = hif_ops;
++
++	init_completion(&ar->scan.started);
++	init_completion(&ar->scan.completed);
++	init_completion(&ar->scan.on_channel);
++	init_completion(&ar->target_suspend);
++
++	init_completion(&ar->install_key_done);
++	init_completion(&ar->vdev_setup_done);
++
++	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
++
++	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
++	if (!ar->workqueue)
++		goto err_wq;
++
++	mutex_init(&ar->conf_mutex);
++	spin_lock_init(&ar->data_lock);
++
++	INIT_LIST_HEAD(&ar->peers);
++	init_waitqueue_head(&ar->peer_mapping_wq);
++
++	init_completion(&ar->offchan_tx_completed);
++	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
++	skb_queue_head_init(&ar->offchan_tx_queue);
++
++	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
++	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
++
++	INIT_WORK(&ar->restart_work, ath10k_core_restart);
++
++	return ar;
++
++err_wq:
++	ath10k_mac_destroy(ar);
++	return NULL;
++}
++EXPORT_SYMBOL(ath10k_core_create);
++
++void ath10k_core_destroy(struct ath10k *ar)
++{
++	flush_workqueue(ar->workqueue);
++	destroy_workqueue(ar->workqueue);
++
++	ath10k_mac_destroy(ar);
++}
++EXPORT_SYMBOL(ath10k_core_destroy);
++
+ MODULE_AUTHOR("Qualcomm Atheros");
+ MODULE_DESCRIPTION("Core module for QCA988X PCIe devices.");
+ MODULE_LICENSE("Dual BSD/GPL");
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
