@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:53325 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaEWHvY convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13790 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751946AbaEVS5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 03:51:24 -0400
-Received: by mail-we0-f177.google.com with SMTP id x48so4508800wes.36
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 00:51:22 -0700 (PDT)
+	Thu, 22 May 2014 14:57:49 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 May 2014 11:57:40 -0700
+Subject: RE: [PATCH] mwifiex: use 'const' qualifier for 2nd arg of
+ mwifiex_tdls_add_ht_oper
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5DAD1@SC-VEXCH1.marvell.com> (sfid-20140522_205756_150706_12A621FB)
+References: <1400783038-10174-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1400783038-10174-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1400813392.25946.35.camel@dubbel>
-References: <1400769938.4174.29.camel@jlt4.sipsolutions.net>
-	<1400812703-15685-1-git-send-email-luca@coelho.fi>
-	<1400813392.25946.35.camel@dubbel>
-Date: Fri, 23 May 2014 09:51:22 +0200
-Message-ID: <CA+BoTQkqh6Zvn0pPsR7hsWeoqhcJOY-mEzV6u1Nf+ZUtniTgoA@mail.gmail.com> (sfid-20140523_095127_442748_C5AE9343)
-Subject: Re: [PATCH] mac80211: add a single-transaction driver op to switch contexts
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 May 2014 04:49, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2014-05-23 at 05:38 +0300, Luca Coelho wrote:
->> From: Luciano Coelho <luciano.coelho@intel.com>
->>
->> In some cases, when the driver is already using all the channel
->> contexts it can handle at once, we have to do an in-place switch
->> (ie. we cannot afford using an extra context temporarily for the
->> transaction).  But some drivers may not support switching the channel
->> context assigned to a vif on the fly (ie. without unassigning and
->> assigning it) while others may only work if the context is changed on
->> the fly, without unassigning it first.
->>
->> To allow these different scenarios, add a new driver operation that
->> let's the driver decide how to handle an in-place switch.
->>
->> Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
->> since we never change a running context directly anymore.
->>
->> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
->> ---
->
-> So, this is what I had cooked up.  Sorry Michal, I should have synced
-> with you.  Actually I tried to ping you on IRC, but you were not there,
-> and then I forgot to sync by email.
-
-Thanks for explaining. That's not much of a problem.
-
-
-Michał
+SGkgSm9obiwNCg0KPiBGaXhlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmc6DQo+IA0KPiAgIENDICAg
+ICAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLm8NCj4gZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbXdpZmlleC90ZGxzLmM6IEluIGZ1bmN0aW9uIOKAmG13aWZpZXhfcHJlcF90ZGxzX2Vu
+Y2FwX2RhdGHigJk6DQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jOjQ3NTo0
+OiB3YXJuaW5nOiBwYXNzaW5nIGFyZ3VtZW50IDIgb2Yg4oCYbXdpZmlleF90ZGxzX2FkZF9odF9v
+cGVy4oCZDQo+IGRpc2NhcmRzIOKAmGNvbnN04oCZIHF1YWxpZmllciBmcm9tIHBvaW50ZXIgdGFy
+Z2V0IHR5cGUgW2VuYWJsZWQgYnkNCj4gZGVmYXVsdF0NCj4gICAgIHJldCA9IG13aWZpZXhfdGRs
+c19hZGRfaHRfb3Blcihwcml2LCBwZWVyLCAxLCBza2IpOw0KPiAgICAgXg0KPiBkcml2ZXJzL25l
+dC93aXJlbGVzcy9td2lmaWV4L3RkbHMuYzoxOTA6MTogbm90ZTogZXhwZWN0ZWQg4oCYdTggKuKA
+mSBidXQgYXJndW1lbnQgaXMgb2YgdHlwZSDigJhjb25zdCB1OCAq4oCZDQo+ICBtd2lmaWV4X3Rk
+bHNfYWRkX2h0X29wZXIoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdTggKm1hYywNCj4g
+IF4NCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLmM6NDgxOjQ6IHdhcm5pbmc6
+IHBhc3NpbmcgYXJndW1lbnQgMiBvZiDigJhtd2lmaWV4X3RkbHNfYWRkX2h0X29wZXLigJkNCj4g
+ZGlzY2FyZHMg4oCYY29uc3TigJkgcXVhbGlmaWVyIGZyb20gcG9pbnRlciB0YXJnZXQgdHlwZSBb
+ZW5hYmxlZCBieQ0KPiBkZWZhdWx0XQ0KPiAgICAgcmV0ID0gbXdpZmlleF90ZGxzX2FkZF9odF9v
+cGVyKHByaXYsIHBlZXIsIDAsIHNrYik7DQo+ICAgICBeDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNz
+L213aWZpZXgvdGRscy5jOjE5MDoxOiBub3RlOiBleHBlY3RlZCDigJh1OCAq4oCZIGJ1dCBhcmd1
+bWVudCBpcyBvZiB0eXBlIOKAmGNvbnN0IHU4ICrigJkNCj4gIG13aWZpZXhfdGRsc19hZGRfaHRf
+b3BlcihzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1OCAqbWFjLA0KPiAgXg0KPiANCj4g
+U2lnbmVkLW9mZi1ieTogSm9obiBXLiBMaW52aWxsZSA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4N
+Cg0KQWNrZWQtYnk6IEJpbmcgWmhhbyA8YnpoYW9AbWFydmVsbC5jb20+DQoNClJlZ2FyZHMsDQpC
+aW5nDQoNCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3RkbHMuYyB8IDIg
+Ky0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiAN
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLmMNCj4gaW5kZXggZTE0ZmJiNWRlNDliLi5l
+NzMwMzRmYmJkZTkgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
+dGRscy5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jDQo+IEBA
+IC0xODcsNyArMTg3LDcgQEAgc3RhdGljIGludCBtd2lmaWV4X3RkbHNfYWRkX3ZodF9jYXBhYihz
+dHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAgfQ0KPiANCj4gIHN0YXRpYyBpbnQNCj4g
+LW13aWZpZXhfdGRsc19hZGRfaHRfb3BlcihzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1
+OCAqbWFjLA0KPiArbXdpZmlleF90ZGxzX2FkZF9odF9vcGVyKHN0cnVjdCBtd2lmaWV4X3ByaXZh
+dGUgKnByaXYsIGNvbnN0IHU4ICptYWMsDQo+ICAJCQkgdTggdmh0X2VuYWJsZWQsIHN0cnVjdCBz
+a19idWZmICpza2IpDQo+ICB7DQo+ICAJc3RydWN0IGllZWU4MDIxMV9odF9vcGVyYXRpb24gKmh0
+X29wZXI7DQo+IC0tDQo+IDEuOS4wDQoNCg==
