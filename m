@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:34390 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbaEZK0P (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:57158 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbaEVN7H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 06:26:15 -0400
-Received: by mail-ve0-f180.google.com with SMTP id db12so8857276veb.25
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 03:26:14 -0700 (PDT)
+	Thu, 22 May 2014 09:59:07 -0400
+Received: by mail-wg0-f52.google.com with SMTP id l18so3403474wgh.23
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 06:59:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAGnRvuqyrP=e6g1sJY9xiWUbT68N4syUkUDw9Xz+-paSPrudfA@mail.gmail.com>
-References: <3893194.GDQagdLGN9@desktop.local>
-	<20140522192720.GA13440@localhost>
-	<CAGnRvuqUkebLhvqY1Y28NtRyp3uUdbrpOSb4dOX2+ZSg6qineg@mail.gmail.com>
-	<CAEFj9850c9aD5gKz2B-e=hPnS2vNdY+a4uc9D_+psryE0ywDVA@mail.gmail.com>
-	<CAGnRvuo_ydU-HwtyTeKP50GPjEiNQy1EoVMR5_Dg-qTrFjYkPg@mail.gmail.com>
-	<20140523205717.GB6585@localhost>
-	<CAEFj987H_aVYyAH0jtOSe4Jbwx-Af=-8Fw+U5dC5=mmVZKy4AA@mail.gmail.com>
-	<CAGnRvuqyrP=e6g1sJY9xiWUbT68N4syUkUDw9Xz+-paSPrudfA@mail.gmail.com>
-Date: Mon, 26 May 2014 18:26:14 +0800
-Message-ID: <CAEFj985aoqGn0zWaEp7T6XPYhFfGiQda3swrfie+e=1042XkAg@mail.gmail.com> (sfid-20140526_122623_400113_0BA70360)
-Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@noack.us>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1400766356.4174.14.camel@jlt4.sipsolutions.net>
+References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
+	<1400765294-14732-3-git-send-email-michal.kazior@tieto.com>
+	<1400766356.4174.14.camel@jlt4.sipsolutions.net>
+Date: Thu, 22 May 2014 15:59:05 +0200
+Message-ID: <CA+BoTQn4nkKAAwi_M6zp_jjaG8681enfEM+vr3EXUg2uH0B33g@mail.gmail.com> (sfid-20140522_155911_533028_787A7273)
+Subject: Re: [PATCH 2/3] mac80211: use csa counter offsets instead of csa_active
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, mpath set is only valid after peering. So you will have the MAC
-address then.
-
-----
-Chun-Yeow
-
-On Mon, May 26, 2014 at 5:37 PM, Henning Rogge <hrogge@gmail.com> wrote:
-> Hi,
->
-> I think this would require to know the mac addresses of the remote
-> nodes... but maybe I will look into changing the timeout value.
->
-> Henning Rogge
->
-> On Mon, May 26, 2014 at 8:47 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> For disable HWMP, in additional to disable frame forwarding and set
->> mesh TTL to 1, you can force specific mpath using "iw mesh0 mpath set
->> <MACx> next_hop <MACx>". In this case, you will disable the path
->> refresh.
+On 22 May 2014 15:45, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 15:28 +0200, Michal Kazior wrote:
+>> vif->csa_active is protected by mutexes only. This
+>> means it is unreliable to depend on it on codeflow
+>> in non-sleepable beacon and CSA code. There was no
+>> guarantee to have vif->csa_active update be
+>> visible before beacons are updated on SMP systems.
 >>
->> ----
->> Chun-Yeow
->>
->> On Sat, May 24, 2014 at 4:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
->>> On Fri, May 23, 2014 at 12:52:57PM +0200, Henning Rogge wrote:
->>>> Hi,
->>>>
->>>> I will have another look at the codebase next week, there was a lot of
->>>> similar code for both tables that could be simplified without throwing
->>>> them together.
->>>>
->>>> The feeling I get here is that four new nl80211 commands
->>>> (set/get/del/dump mpp_paths) are the right way to export these values?
->>>
->>> That approach would be fine by me.  Thanks for working on this!
->>>
->>> --
->>> Bob Copeland %% www.bobcopeland.com
+>> Using csa counter offsets which are embedded in
+>> beacon struct (and thus are protected with single
+>> RCU assignment) is much safer.
+>
+> This seems reasonable, but many uses of csa_active remain, no? hwsim for
+> example seems to access it without locking as well.
+
+Since the problem could be split I went with fixing things step-by-step.
+
+I was trying to tackle csa_active issue as well but I'm yet to arrive
+at a satisfactory solution. It's probably best to kill it and
+introduce a drv_switch_beacon_done().
+
+With my patchset csa_active isn't as critical for decision making in the code.
+
+
+Michał
