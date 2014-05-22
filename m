@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.horizon.com ([71.41.210.147]:46649 "HELO ns.horizon.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751180AbaEOCCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 22:02:42 -0400
-Date: 14 May 2014 22:02:38 -0400
-Message-ID: <20140515020238.32013.qmail@ns.horizon.com> (sfid-20140515_040300_452793_11396DE7)
-From: "George Spelvin" <linux@horizon.com>
-To: hpa@zytor.com, linux@horizon.com, pavel@ucw.cz
-Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
-Cc: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-In-Reply-To: <2e076c13-84aa-4da4-a443-7e8fcc462fc9@email.android.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:48375 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbaEVT1h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 15:27:37 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so8046203igb.8
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 12:27:36 -0700 (PDT)
+Date: Thu, 22 May 2014 15:27:20 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Thomas Pedersen <thomas@noack.us>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
+Message-ID: <20140522192720.GA13440@localhost> (sfid-20140522_212740_772937_52EA880A)
+References: <3893194.GDQagdLGN9@desktop.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3893194.GDQagdLGN9@desktop.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-H. Peter Anvin wrote:
-> Seems to me to make the code easier to read, not harder. That was the
-> whole point.
+On Thu, May 22, 2014 at 05:06:21PM +0200, Henning Rogge wrote:
+> From: Henning Rogge <hrogge@gmail.com>
+> 
+> This patch is a preparation for exporting the MPP data of the 802.11s
+> implementation via netlink to userspace. It unifies the content of the
+> mesh_paths and mpp_paths tables in mesh_pathtbl.c without changing
+> the behavior of the code.
+> 
+> Signed-off-by: Henning Rogge <hrogge@gmail.com>
 
-I thought it made it harder by moving the terminating 1 bit out of the
-driver proper, where it has a symbolic name.  Thus someone comparing
-the driver to the spec has to read another source file to figure out
-how the driver gets that bit set.
+I think I fall on the side of your earlier assessment that they
+hold different things and should stay in different tables, even though
+there are 200 lines of identical code here.  Maybe some bits could
+be shared without sharing the data and changing the API?
 
-As it is, the straight-line code in the driver corresponds very simply
-with the packet as illustrated in the data sheets.
+> -static struct mesh_path *mpath_lookup(struct mesh_table *tbl, const u8 *dst,
+> -				      struct ieee80211_sub_if_data *sdata)
+> +/**
+> + * mesh_path_lookup - look up a path in the mesh path table
+> + * @sdata: local subif
+> + * @dst: hardware address (ETH_ALEN length) of destination
+> + * @is_proxied: true to lookup mpp entries, false otherwise
 
-I agree it's really really minor either way, but so is the saving
-we're going for.
+Also, I don't like adding random boolean variables to water down what
+this function does.  It means when looking at the caller you have to go
+back to the definition to see just what is going on here.
 
-Since it's not *clearly* an improvement, I err on the side of not
-messing with a driver I can't test.
+We do mpp_path_lookup exactly twice so it seems weird to have to
+change all of the mpath_lookup callers too.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
