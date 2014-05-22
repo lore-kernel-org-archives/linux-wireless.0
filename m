@@ -1,109 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:46769 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbaECOTu (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:39735 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbaEVNxt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2014 10:19:50 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi5so3460776wib.4
-        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2014 07:19:48 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/13] staging: vt6656: lock changes: vRunCommand remove locks
-Date: Sat,  3 May 2014 15:17:23 +0100
-Message-Id: <1399126654-2663-2-git-send-email-tvboxspy@gmail.com> (sfid-20140503_161953_612273_97AA8A31)
-In-Reply-To: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
-References: <1399126654-2663-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 22 May 2014 09:53:49 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so3490377wes.34
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 06:53:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1400766195.4174.13.camel@jlt4.sipsolutions.net>
+References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
+	<1400765294-14732-2-git-send-email-michal.kazior@tieto.com>
+	<1400766195.4174.13.camel@jlt4.sipsolutions.net>
+Date: Thu, 22 May 2014 15:53:47 +0200
+Message-ID: <CA+BoTQmw6taxwxHtK99BQXgGugu6aDrGUOCz+-MvUo52JoWrpw@mail.gmail.com> (sfid-20140522_155352_561137_B50D3412)
+Subject: Re: [PATCH 1/3] mac80211: move csa counters from sdata to beacon/presp
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing atomic locked paths to usbpipe.c PIPEnsControlOut and PIPEnsControlIn
+On 22 May 2014 15:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 15:28 +0200, Michal Kazior wrote:
+>> Having csa counters part of beacon and probe_resp
+>> structures makes it easier to get rid of possible
+>> reaces between setting a beacon and updating
 
-This function will nolonger need any locking.
+>> reaces
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wcmd.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+-_- grr
 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index de7e808..d51cc90 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -286,8 +286,6 @@ void vRunCommand(struct work_struct *work)
- 	if (pDevice->bCmdRunning != true)
- 		return;
- 
--	spin_lock_irq(&pDevice->lock);
--
- 	switch (pDevice->eCommandState) {
- 
- 	case WLAN_CMD_SCAN_START:
-@@ -365,11 +363,9 @@ void vRunCommand(struct work_struct *work)
- 			if ((pMgmt->b11hEnable == false) ||
- 			    (pMgmt->uScanChannel < CB_MAX_CHANNEL_24G)) {
- 				s_vProbeChannel(pDevice);
--				spin_unlock_irq(&pDevice->lock);
- 				vCommandTimerWait((void *) pDevice, 100);
- 				return;
- 			} else {
--				spin_unlock_irq(&pDevice->lock);
- 				vCommandTimerWait((void *) pDevice, WCMD_PASSIVE_SCAN_TIME);
- 				return;
- 			}
-@@ -504,7 +500,6 @@ void vRunCommand(struct work_struct *work)
- 				pDevice->byLinkWaitCount = 0;
- 				pDevice->eCommandState = WLAN_AUTHENTICATE_WAIT;
- 				vCommandTimerWait((void *) pDevice, AUTHENTICATE_TIMEOUT);
--				spin_unlock_irq(&pDevice->lock);
- 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Set eCommandState = WLAN_AUTHENTICATE_WAIT\n");
- 				return;
- 			}
-@@ -578,7 +573,6 @@ void vRunCommand(struct work_struct *work)
- 				pDevice->byLinkWaitCount = 0;
- 				pDevice->eCommandState = WLAN_ASSOCIATE_WAIT;
- 				vCommandTimerWait((void *) pDevice, ASSOCIATE_TIMEOUT);
--				spin_unlock_irq(&pDevice->lock);
- 				return;
- 			}
- 		} else if (pMgmt->eCurrState < WMAC_STATE_AUTHPENDING) {
-@@ -587,7 +581,6 @@ void vRunCommand(struct work_struct *work)
- 			//mike add:wait another 2 sec if authenticated_frame delay!
- 			pDevice->byLinkWaitCount++;
- 			printk("WLAN_AUTHENTICATE_WAIT:wait %d times!!\n", pDevice->byLinkWaitCount);
--			spin_unlock_irq(&pDevice->lock);
- 			vCommandTimerWait((void *) pDevice, AUTHENTICATE_TIMEOUT/2);
- 			return;
- 		}
-@@ -622,7 +615,6 @@ void vRunCommand(struct work_struct *work)
- 			//mike add:wait another 2 sec if associated_frame delay!
- 			pDevice->byLinkWaitCount++;
- 			printk("WLAN_ASSOCIATE_WAIT:wait %d times!!\n", pDevice->byLinkWaitCount);
--			spin_unlock_irq(&pDevice->lock);
- 			vCommandTimerWait((void *) pDevice, ASSOCIATE_TIMEOUT/2);
- 			return;
- 		}
-@@ -752,9 +744,9 @@ void vRunCommand(struct work_struct *work)
- 
- 				pDevice->byKeyIndex = 0;
- 				pDevice->bTransmitKey = false;
--				spin_unlock_irq(&pDevice->lock);
-+
- 				KeyvInitTable(pDevice, &pDevice->sKey);
--				spin_lock_irq(&pDevice->lock);
-+
- 				pMgmt->byCSSPK = KEY_CTL_NONE;
- 				pMgmt->byCSSGK = KEY_CTL_NONE;
- 
-@@ -882,7 +874,6 @@ void vRunCommand(struct work_struct *work)
- 
- 	s_bCommandComplete(pDevice);
- 
--	spin_unlock_irq(&pDevice->lock);
- 	return;
- }
- 
--- 
-1.9.1
 
+>> counters on SMP systems by guaranteeing counters
+>> are always consistent against given beacon struct.
+>
+> This makes a lot of sense.
+>
+>>  static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+>> -                                struct cfg80211_beacon_data *params)
+>> +                                struct cfg80211_beacon_data *params,
+>> +                                const u16 *csa_counter_offset_beacon,
+>> +                                int n_csa_counter_offset_beacon,
+>> +                                const u16 *csa_counter_offset_presp,
+>> +                                int n_csa_counter_offset_presp,
+>> +                                u8 csa_count)
+>
+> But that seems overkill. Maybe those CSA-related arguments could be in
+> some new struct so you don't have to pass "..., NULL, 0, NULL, 0, 0"?
+
+I didn't want to invent a structure just to pass a bunch of arguments.
+
+Hmm.. maybe we can move counter offsets into cfg80211_beacon_data?
+This would apply to cfg80211_csa_settings as well.
+
+
+Michał
