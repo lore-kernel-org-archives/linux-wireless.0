@@ -1,99 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52040 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755958AbaE2Jkc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 05:40:32 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2] ath9k: Fix interface combinations for multi-channel concurrency
-Date: Thu, 29 May 2014 15:11:09 +0530
-Message-ID: <1401356469-14619-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140529_114037_291002_2FE40BA9)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:39747 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750982AbaEVJAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2014 05:00:05 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1WnOr5-0001Xp-Jy
+	for linux-wireless@vger.kernel.org; Thu, 22 May 2014 11:00:03 +0200
+Received: from 222-146.wlan.uni-rostock.de ([139.30.222.146])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 11:00:03 +0200
+Received: from hannesraddatz by 222-146.wlan.uni-rostock.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 11:00:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Hannes Raddatz <hannesraddatz@t-online.de>
+Subject: Re: wireless network interfaces and network namespaces
+Date: Thu, 22 May 2014 08:54:22 +0000 (UTC)
+Message-ID: <loom.20140522T103749-45@post.gmane.org> (sfid-20140522_110010_318489_4E08B72C)
+References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>  <1385817282.5056.0.camel@jlt4.sipsolutions.net>  <CAGXs5wVt3okeE6oA_pNV5WnQLv51+bf+n+52s5d7tQkXq_qvNw@mail.gmail.com>  (sfid-20131130_145812_659093_751E3F17) <1385840149.4267.1.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 does not support WDS and DFS with channel context
-drivers. So advertise these features only when the driver is not
-supporting channel context and modparam "use_chanctx" is introduced
-for preparing channel context support in ath9k.
+I would like to dig this thread out, 
+because there might be a bug regarding this topic.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+Using ubuntu 12.10, the move of virtual wirless devices (hwsim) to a 
+namespace and 
+configuring them inside the namespace with iw wasn't a problem. 
+But since ubuntu 14.04 I can't 
+access the devices inside the namespace with iw.
+The same problem occurs while using 
+ubuntu 12.10 with newest backports installed.
+Has something changed with the namespaces in 
+the new linux kernels or is it a bug?
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1af7708..0246b99 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -61,6 +61,10 @@ static int ath9k_ps_enable;
- module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
-+static int ath9k_use_chanctx;
-+module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
-+MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
-+
- bool is_ath9k_unloaded;
- 
- #ifdef CONFIG_MAC80211_LEDS
-@@ -646,8 +650,7 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- }
- 
- static const struct ieee80211_iface_limit if_limits[] = {
--	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_WDS) },
-+	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) },
- 	{ .max = 8,	.types =
- #ifdef CONFIG_MAC80211_MESH
- 				 BIT(NL80211_IFTYPE_MESH_POINT) |
-@@ -657,6 +660,10 @@ static const struct ieee80211_iface_limit if_limits[] = {
- 				 BIT(NL80211_IFTYPE_P2P_GO) },
- };
- 
-+static const struct ieee80211_iface_limit wds_limits[] = {
-+	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_WDS) },
-+};
-+
- static const struct ieee80211_iface_limit if_dfs_limits[] = {
- 	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) |
- #ifdef CONFIG_MAC80211_MESH
-@@ -673,6 +680,13 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
- 	},
-+	{
-+		.limits = wds_limits,
-+		.n_limits = ARRAY_SIZE(wds_limits),
-+		.max_interfaces = 2048,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+	},
- #ifdef CONFIG_ATH9K_DFS_CERTIFIED
- 	{
- 		.limits = if_dfs_limits,
-@@ -722,12 +736,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			BIT(NL80211_IFTYPE_P2P_GO) |
- 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			BIT(NL80211_IFTYPE_AP) |
--			BIT(NL80211_IFTYPE_WDS) |
- 			BIT(NL80211_IFTYPE_STATION) |
- 			BIT(NL80211_IFTYPE_ADHOC) |
- 			BIT(NL80211_IFTYPE_MESH_POINT);
- 		hw->wiphy->iface_combinations = if_comb;
--		hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+		if (!ath9k_use_chanctx) {
-+			hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+			hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_WDS);
-+		} else
-+			hw->wiphy->n_iface_combinations = 1;
- 	}
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
--- 
-1.9.3
+br,
+Hannes
 
