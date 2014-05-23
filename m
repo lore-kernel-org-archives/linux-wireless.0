@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:35891 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752055AbaE2XZi (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:53734 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752596AbaEWRBF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 19:25:38 -0400
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 04D0C20F07
-	for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 19:25:37 -0400 (EDT)
-Date: Thu, 29 May 2014 16:25:34 -0700
-From: Greg KH <greg@kroah.com>
-To: abdoulaye berthe <berthe.ab@gmail.com>
-Cc: linus.walleij@linaro.org, gnurou@gmail.com, m@bues.ch,
-	linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	patches@opensource.wolfsonmicro.com, linux-input@vger.kernel.org,
-	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Subject: Re: [PATCH] gpio: removes all usage of gpiochip_remove retval
-Message-ID: <20140529232534.GA11741@kroah.com> (sfid-20140530_012601_193007_1FD50FE7)
-References: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
+	Fri, 23 May 2014 13:01:05 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so1222143wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:04 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/20] staging: vt6656: camel case clean up MACvSetBBType
+Date: Fri, 23 May 2014 18:00:02 +0100
+Message-Id: <1400864419-8327-3-git-send-email-tvboxspy@gmail.com> (sfid-20140523_192148_203630_BDED6333)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 29, 2014 at 11:54:52PM +0200, abdoulaye berthe wrote:
-> Signed-off-by: abdoulaye berthe <berthe.ab@gmail.com>
+Camel case changes
+pDevice -> priv
+byType -> type
+pbyData -> data
 
-Why?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index cc80c8e..0e14aab 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -77,20 +77,15 @@ void MACbShutdown(struct vnt_private *priv)
+ 	CONTROLnsRequestOut(priv, MESSAGE_TYPE_MACSHUTDOWN, 0, 0, 0, NULL);
+ }
+ 
+-void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
++void MACvSetBBType(struct vnt_private *priv, u8 type)
+ {
+-	u8 pbyData[2];
++	u8 data[2];
+ 
+-    pbyData[0] = byType;
+-    pbyData[1] = EnCFG_BBType_MASK;
++	data[0] = type;
++	data[1] = EnCFG_BBType_MASK;
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE_MASK,
+-                        MAC_REG_ENCFG0,
+-                        MESSAGE_REQUEST_MACREG,
+-			ARRAY_SIZE(pbyData),
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK, MAC_REG_ENCFG0,
++		MESSAGE_REQUEST_MACREG,	ARRAY_SIZE(data), data);
+ }
+ 
+ /*
+-- 
+1.9.1
+
