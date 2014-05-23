@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20968 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaETPYN convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5882 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbaEWIBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 11:24:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jim Davis <jim.epost@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next <linux-next@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"Larry.Finger" <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	devel <devel@driverdev.osuosl.org>
-Subject: Re: randconfig build error with next-20140520, in drivers/staging/rtl8723au/core/rtw_cmd.c
-References: <CA+r1ZhhhL5CB5_e_0g--biDfmqHEsC-C9RKg7uPSupYtSNLiQw@mail.gmail.com>
-Date: Tue, 20 May 2014 17:23:56 +0200
-In-Reply-To: <CA+r1ZhhhL5CB5_e_0g--biDfmqHEsC-C9RKg7uPSupYtSNLiQw@mail.gmail.com>
-	(Jim Davis's message of "Tue, 20 May 2014 06:47:18 -0700")
-Message-ID: <wrfj8upwpj77.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140520_172432_060928_052EAD33)
+	Fri, 23 May 2014 04:01:40 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/2] ath10k: fixes 2014-05-14
+References: <1400069786-9764-1-git-send-email-michal.kazior@tieto.com>
+	<1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 23 May 2014 11:01:35 +0300
+In-Reply-To: <1400136521-11184-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 15 May 2014 08:48:39 +0200")
+Message-ID: <87sio0vs80.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_100149_532886_C1D7B960)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jim Davis <jim.epost@gmail.com> writes:
-> Building with the attached random configuration file,
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> This is another pair of patches.
 >
-> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘dynamic_chk_wk_hdl’:
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1036:2: error: implicit declaration of
-> function ‘rtl8723a_sreset_xmit_status_check’ [-Werror=implicit-function-declarat
-> ion]
->   rtl8723a_sreset_xmit_status_check(padapter);
->   ^
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1041:2: error: implicit declaration of
-> function ‘rtl8723a_HalDmWatchDog’ [-Werror=implicit-function-declaration]
->   rtl8723a_HalDmWatchDog(padapter);
->   ^
-> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘c2h_evt_hdl’:
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1314:4: error: implicit
-> declaration of function ‘c2h_handler_8723a’
-> [-Werror=implicit-function-declaration]
->     ret = c2h_handler_8723a(adapter, c2h_evt);
->     ^
-> drivers/staging/rtl8723au/core/rtw_cmd.c: In function ‘rtw_evt_work’:
-> drivers/staging/rtl8723au/core/rtw_cmd.c:1348:2: error: implicit
-> declaration of function ‘c2h_id_filter_ccx_8723a’
-> [-Werror=implicit-function-declaration]
->   if (c2h_id_filter_ccx_8723a(ework->u.c2h_evt.id) == true) {
->   ^
->   CC      drivers/staging/rtl8188eu/hal/HalHWImg8188E_MAC.o
-> cc1: some warnings being treated as errors
-> make[3]: *** [drivers/staging/rtl8723au/core/rtw_cmd.o] Error 1
+> It fixes a crash recently reported by Ben, but..
+>
+> I've been able to find only a single code path
+> that called free_irq() twice in upstream code.
+> However it doesn't match the call trace reported
+> by Ben. I have to assume this is related to his
+> local patches or this is a very wierd case of
+> recovery race between userspace/mac80211/driver.
+>
+> v2:
+>  * rebase to latest github.com/kvalo/ath-next-test
+>
+>
+> Michal Kazior (2):
+>   ath10k: fix core start sequence
+>   ath10k: prevent hif_stop being called twice
 
-Jim,
+Thanks, both patches applied.
 
-Thanks for the report.
-
-I already pushed a fix for the CONFIG_8723AU_BT_COEXIST=n problem, and
-the CONFIG_8723AU_AP_MODE=n case isn't causing build problems in my tree
-at this point. I believe this is due to moving a number of functions
-around. There were some warnings about unused functions which I fixed up
-here, but nothing breaking the build.
-
-If you don't mind, I prefer to push it all out with my next batch of
-changes rather than trying to fix up this build case.
-
-Cheers,
-Jes
+-- 
+Kalle Valo
