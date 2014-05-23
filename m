@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41205 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018AbaEUQER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 12:04:17 -0400
-Message-ID: <1400688233.4136.8.camel@jlt4.sipsolutions.net> (sfid-20140521_180421_260091_F7282561)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 21 May 2014 18:03:53 +0200
-In-Reply-To: <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com> (sfid-20140520_204832_656990_FF6AC676)
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-	 <20140520142453.GB13981@tuxdriver.com>
-	 <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
-	 <20140520180832.GD13981@tuxdriver.com>
-	 <1400610273.4474.6.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
-	 (sfid-20140520_204832_656990_FF6AC676)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f175.google.com ([74.125.82.175]:48651 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822AbaEWRBD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 13:01:03 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so5093530wes.20
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:01 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/20] staging: vt6656: remove camel case  MACvWriteMultiAddr
+Date: Fri, 23 May 2014 18:00:00 +0100
+Message-Id: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190107_246447_571011D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-05-20 at 11:48 -0700, Luis R. Rodriguez wrote:
+Camel case changes.
+pDevice -> priv
 
-> > I think we should, but if we can't then at least can we cut to an
-> > extensible format?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I don't see any way to extend the format right now.
-
-There's a wrinkle with making it more extensible too though - if we do
-that then we must be extremely careful that future older crda versions
-(i.e. the next version that we're about to write) will not parse a newer
-extended file more permissively, so our extensions are limited anyway.
-
-Looks like the format update really is needed, which probably means we
-should change the scripts to generate two databases and change the
-filename, or so?
-
-johannes
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 8298a9e..22dd653 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -53,11 +53,11 @@ static int          msglevel                =MSG_LEVEL_INFO;
+  * Return Value: none
+  *
+  */
+-void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
++void MACvWriteMultiAddr(struct vnt_private *priv, u64 mc_filter)
+ {
+ 	__le64 le_mc = cpu_to_le64(mc_filter);
+ 
+-	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_WRITE, MAC_REG_MAR0,
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_MAR0,
+ 		MESSAGE_REQUEST_MACREG, sizeof(le_mc), (u8 *)&le_mc);
+ }
+ 
+-- 
+1.9.1
 
