@@ -1,136 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17570 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750727AbaESEcu (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:38354 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035AbaEWRBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 00:32:50 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: brcm80211-dev-list@broadcom.com
-Cc: kernel-janitors@vger.kernel.org, alsa-devel@alsa-project.org,
-	coreteam@netfilter.org, netfilter@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-raid@vger.kernel.org, oprofile-list@lists.sf.net,
-	linux-s390@vger.kernel.org
-Subject: [PATCH 0/13] make return of 0 explicit
-Date: Mon, 19 May 2014 06:31:02 +0200
-Message-Id: <1400473875-22228-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140519_063347_467977_640E1548)
+	Fri, 23 May 2014 13:01:09 -0400
+Received: by mail-wg0-f42.google.com with SMTP id y10so4988076wgg.25
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:07 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/20] staging: vt6656: camel case clean up MACvDisableKeyEntry
+Date: Fri, 23 May 2014 18:00:04 +0100
+Message-Id: <1400864419-8327-5-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190115_092220_AE058152)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes a local variable is used as a return value in a case where the
-return value is always 0.  The result is more apparent if this variable is
-just replaced by 0.  This is done by the following semantic patch, although
-some cleanups may be needed. (http://coccinelle.lip6.fr/)
+Camel case changes
+pDevice -> priv
+uEntryIdx -> entry_idx
 
-// <smpl>
-@r exists@
-local idexpression ret;
-identifier reti;
-expression e;
-position p;
-@@
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-ret@reti = 0;
-... when != \(ret = e\|ret &= e\|ret |= e\|ret += e\|ret -= e\|ret *= e\|ret ^= e\)
-    when != \(++ret\|--ret\|ret++\|ret--\)
-    when != &ret
-return ret;@p
-
-@bad1 exists@
-expression e != 0;
-local idexpression r.ret;
-position r.p;
-@@
-
- \(ret = e\|ret &= e\|ret |= e\|ret += e\|ret -= e\|ret *= e\|ret ^= e\|++ret\|--ret\|ret++\|ret--\|&ret\)
- ...
- return ret;@p
-
-@bad2 exists@
-identifier r.reti;
-position r.p;
-identifier f;
-type T;
-@@
-
-f(...,T reti,...) {
- ...
- return reti;@p
-}
-
-@change depends on !bad1 && !bad2@
-position r.p;
-local idexpression r.ret;
-identifier f;
-@@
-
-f(...) { <+...
-return 
--ret
-+0
-;@p
-...+> }
-
-@rewrite@
-local idexpression r.ret;
-expression e;
-position p;
-identifier change.f;
-@@
-
-f(...) { <+...
- \(ret@p = e\|&ret@p\)
-...+> }
-
-@depends on change@
-local idexpression r.ret;
-position p != rewrite.p;
-identifier change.f;
-@@
-
-f(...) { <+...
-(
-break;
-|
-ret = 0;
-... when exists
-ret@p
-... when any
-|
-- ret = 0;
-)
-...+> }
-
-@depends on change@
-identifier r.reti;
-type T;
-constant C;
-identifier change.f;
-@@
-
-f(...) { ... when any
--T reti = C;
- ... when != reti
-     when strict
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index a341eab..c6bddf5 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -102,16 +102,10 @@ void MACvSetBBType(struct vnt_private *priv, u8 type)
+  * Return Value: none
+  *
+  */
+-void MACvDisableKeyEntry(struct vnt_private *pDevice, u8 uEntryIdx)
++void MACvDisableKeyEntry(struct vnt_private *priv, u8 entry_idx)
+ {
+-    //issue write misc fifo command to device
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_CLRKEYENTRY,
+-                        0,
+-                        0,
+-			sizeof(uEntryIdx),
+-			&uEntryIdx
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_CLRKEYENTRY, 0, 0,
++		sizeof(entry_idx), &entry_idx);
  }
-
-@depends on change@
-identifier r.reti;
-type T;
-identifier change.f;
-@@
-
-f(...) { ... when any
--T reti;
- ... when != reti
-     when strict
- }
-// </smpl>
-
-The first four rules detect cases where only 0 reaches a return.  The
-remaining rules clean up any variable initializations or declarations that
-are made unnecessary by this change.
+ 
+ /*
+-- 
+1.9.1
 
