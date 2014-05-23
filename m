@@ -1,146 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1127 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbaE0OVD (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:60319 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506AbaEWRBb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 10:21:03 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add implementation for configure max amsdu, ampdu
-References: <1400245332-6974-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Tue, 27 May 2014 17:20:55 +0300
-In-Reply-To: <1400245332-6974-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Fri, 16 May 2014 15:02:12 +0200")
-Message-ID: <87zji39ubc.fsf@kamboji.qca.qualcomm.com> (sfid-20140527_162208_422823_265B3C8D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 23 May 2014 13:01:31 -0400
+Received: by mail-we0-f178.google.com with SMTP id u56so5081121wes.37
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:30 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 17/20] staging: vt6656: camel case cleanup CARDvSetRSPINF
+Date: Fri, 23 May 2014 18:00:16 +0100
+Message-Id: <1400864419-8327-17-git-send-email-tvboxspy@gmail.com> (sfid-20140523_192149_269054_99126E66)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+camel case changes
+pDevice -> priv
+byBBType -> bb_type
 
-> Allow to setup maximum subframes for AMSDU and AMPDU aggregation,
-> using debugfs htt_max_amsdu_ampdu file.
->
-> Eg.
-> echo "2 64" > htt_max_amsdu_ampdu
-> will setup maximum amsdu subframes equal 2 and
-> maximum ampdu subframes equal to 64.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 179 +++++++++++++++++++-----------------------
+ drivers/staging/vt6656/card.h |   2 +-
+ 2 files changed, 80 insertions(+), 101 deletions(-)
 
-I saw two new warnings:
-
-drivers/net/wireless/ath/ath10k/debug.c:683: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/debug.c:685: WARNING: line over 80 characters
-
-> I wasn't sure we have to protect
-> debug.htt_max_amsdu, debug.htt_max_ampdu using conf_mutex.
-> Anyway I can add such protection if required.
-
-Yeah, we need to protect those variables.
-
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -671,6 +671,61 @@ static const struct file_operations fops_htt_stats_mask = {
->  	.llseek = default_llseek,
->  };
->  
-> +static ssize_t ath10k_read_htt_max_amsdu_ampdu(struct file *file,
-> +					       char __user *user_buf,
-> +					       size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	char buf[64];
-> +	unsigned int len;
-> +
-> +	if (!ar->debug.htt_max_amsdu || !ar->debug.htt_max_ampdu)
-> +		len = scnprintf(buf, sizeof(buf), "using FW default max subframes configuration: amsdu 3, ampdu 64\n");
-> +	else
-> +		len = scnprintf(buf, sizeof(buf), "max subframes amsdu %u, ampdu %d\n",
-> +				ar->debug.htt_max_amsdu,
-> +				ar->debug.htt_max_ampdu);
-> +
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +}
-
-I would prefer to have something more machine readable, for example
-something like this:
-
-if (ar->debug.htt_max_amsdu != 0) {
-        amsdu = ar->debug.htt_max_amsdu;
-} else {
-        amsdu = 3;
-        amsdu_default = " (default)";
-}
-
-len += scnprintf(buf + len, sizeof(buf) - len, 
-                "max subframes amsdu %u%s\n", amsdu, amsdu_default);
-
-And the same for ampdu. But I'm not actually sure if it makes any sense
-to print the default at all?
-
-Now I think more maybe we should just use the same format as we use as
-input ("%u %u"). That would follow the KISS principle.
-
-> @@ -757,6 +812,9 @@ void ath10k_debug_stop(struct ath10k *ar)
->  	 * warning from del_timer(). */
->  	if (ar->debug.htt_stats_mask != 0)
->  		cancel_delayed_work(&ar->debug.htt_stats_dwork);
-> +
-> +	ar->debug.htt_max_amsdu = 0;
-> +	ar->debug.htt_max_ampdu = 0;
->  }
-
-This is correct. But the problem now is that the value only is valid
-until the interface is put down or firmware crashes. That's a bit
-confusing for the user, but I guess we can fix that later if that will
-become a problem. Users should not use this command normally.
-
-> +int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
-> +				u8 max_subfrms_ampdu,
-> +				u8 max_subfrms_amsdu)
-> +{
-> +	struct htt_aggr_conf *aggr_conf;
-> +	struct sk_buff *skb;
-> +	struct htt_cmd *cmd;
-> +	int len;
-> +	int ret;
-> +
-> +	/* By default FW setup amsdu = 3 and ampdu = 64 */
-> +	if (max_subfrms_ampdu == 0 || max_subfrms_ampdu > 64)
-> +		return -EINVAL;
-
-I didn't immediately understand the comment above. Is it just to
-document what are the firmware defaults? In that case please add an
-empty line after the comment and clear up the wording. For example,
-"Firmware defaults are: amsdu = 3 and ampdu = 64 */".
-
-> +
-> +	if (max_subfrms_amsdu == 0 || max_subfrms_amsdu > 31)
-> +		return -EINVAL;
-> +
-> +	len = sizeof(cmd->hdr);
-> +	len += sizeof(cmd->aggr_conf);
-> +
-> +	skb = ath10k_htc_alloc_skb(len);
-> +	if (!skb)
-> +		return -ENOMEM;
-> +
-> +	skb_put(skb, len);
-> +	cmd = (struct htt_cmd *)skb->data;
-> +	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_AGGR_CFG;
-> +
-> +	aggr_conf = &cmd->aggr_conf;
-> +	aggr_conf->max_num_ampdu_subframes = max_subfrms_ampdu;
-> +	aggr_conf->max_num_amsdu_subframes = max_subfrms_amsdu;
-> +
-> +	ath10k_dbg(ATH10K_DBG_HTT, "htt h2t aggr cfg msg amsdu %d, ampdu %d",
-> +		   aggr_conf->max_num_amsdu_subframes,
-> +		   aggr_conf->max_num_ampdu_subframes);
-
-No comma in the debug message, please.
-
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 1674a6f..43554e0 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -293,112 +293,91 @@ void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
+  * Return Value: None.
+  *
+  */
+-void CARDvSetRSPINF(struct vnt_private *pDevice, u8 byBBType)
++
++void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
+ {
+ 	struct vnt_phy_field phy[4];
+-	u8 abyTxRate[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; /* For OFDM */
+-	u8 abyRsvTime[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+-	u8 abyData[34];
++	u8 tx_rate[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; /* For OFDM */
++	u8 rsv_time[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
++	u8 data[34];
+ 	int i;
+ 
+-    //RSPINF_b_1
+-	BBvCalculateParameter(pDevice, 14,
+-		swGetCCKControlRate(pDevice, RATE_1M), PK_TYPE_11B, &phy[0]);
+-
+-    ///RSPINF_b_2
+-	BBvCalculateParameter(pDevice, 14,
+-		swGetCCKControlRate(pDevice, RATE_2M), PK_TYPE_11B, &phy[1]);
+-
+-    //RSPINF_b_5
+-	BBvCalculateParameter(pDevice, 14,
+-		swGetCCKControlRate(pDevice, RATE_5M), PK_TYPE_11B, &phy[2]);
+-
+-    //RSPINF_b_11
+-	BBvCalculateParameter(pDevice, 14,
+-		swGetCCKControlRate(pDevice, RATE_11M), PK_TYPE_11B, &phy[3]);
+-
+-    //RSPINF_a_6
+-    CARDvCalculateOFDMRParameter (RATE_6M,
+-                                 byBBType,
+-                                 &abyTxRate[0],
+-                                 &abyRsvTime[0]);
+-
+-    //RSPINF_a_9
+-    CARDvCalculateOFDMRParameter (RATE_9M,
+-                                 byBBType,
+-                                 &abyTxRate[1],
+-                                 &abyRsvTime[1]);
+-
+-    //RSPINF_a_12
+-    CARDvCalculateOFDMRParameter (RATE_12M,
+-                                 byBBType,
+-                                 &abyTxRate[2],
+-                                 &abyRsvTime[2]);
+-
+-    //RSPINF_a_18
+-    CARDvCalculateOFDMRParameter (RATE_18M,
+-                                 byBBType,
+-                                 &abyTxRate[3],
+-                                 &abyRsvTime[3]);
+-
+-    //RSPINF_a_24
+-    CARDvCalculateOFDMRParameter (RATE_24M,
+-                                 byBBType,
+-                                 &abyTxRate[4],
+-                                 &abyRsvTime[4]);
+-
+-    //RSPINF_a_36
+-    CARDvCalculateOFDMRParameter (swGetOFDMControlRate(pDevice, RATE_36M),
+-                                 byBBType,
+-                                 &abyTxRate[5],
+-                                 &abyRsvTime[5]);
+-
+-    //RSPINF_a_48
+-    CARDvCalculateOFDMRParameter (swGetOFDMControlRate(pDevice, RATE_48M),
+-                                 byBBType,
+-                                 &abyTxRate[6],
+-                                 &abyRsvTime[6]);
+-
+-    //RSPINF_a_54
+-    CARDvCalculateOFDMRParameter (swGetOFDMControlRate(pDevice, RATE_54M),
+-                                 byBBType,
+-                                 &abyTxRate[7],
+-                                 &abyRsvTime[7]);
+-
+-    //RSPINF_a_72
+-    CARDvCalculateOFDMRParameter (swGetOFDMControlRate(pDevice, RATE_54M),
+-                                 byBBType,
+-                                 &abyTxRate[8],
+-                                 &abyRsvTime[8]);
+-
+-	put_unaligned(phy[0].len, (u16 *)&abyData[0]);
+-	abyData[2] = phy[0].signal;
+-	abyData[3] = phy[0].service;
+-
+-	put_unaligned(phy[1].len, (u16 *)&abyData[4]);
+-	abyData[6] = phy[1].signal;
+-	abyData[7] = phy[1].service;
+-
+-	put_unaligned(phy[2].len, (u16 *)&abyData[8]);
+-	abyData[10] = phy[2].signal;
+-	abyData[11] = phy[2].service;
+-
+-	put_unaligned(phy[3].len, (u16 *)&abyData[12]);
+-	abyData[14] = phy[3].signal;
+-	abyData[15] = phy[3].service;
+-
+-    for (i = 0; i < 9; i++) {
+-	abyData[16+i*2] = abyTxRate[i];
+-	abyData[16+i*2+1] = abyRsvTime[i];
+-    }
++	/*RSPINF_b_1*/
++	BBvCalculateParameter(priv, 14,
++		swGetCCKControlRate(priv, RATE_1M), PK_TYPE_11B, &phy[0]);
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE,
+-                        MAC_REG_RSPINF_B_1,
+-                        MESSAGE_REQUEST_MACREG,
+-                        34,
+-                        &abyData[0]);
++	/*RSPINF_b_2*/
++	BBvCalculateParameter(priv, 14,
++		swGetCCKControlRate(priv, RATE_2M), PK_TYPE_11B, &phy[1]);
++
++	/*RSPINF_b_5*/
++	BBvCalculateParameter(priv, 14,
++		swGetCCKControlRate(priv, RATE_5M), PK_TYPE_11B, &phy[2]);
++
++	/*RSPINF_b_11*/
++	BBvCalculateParameter(priv, 14,
++		swGetCCKControlRate(priv, RATE_11M), PK_TYPE_11B, &phy[3]);
++
++
++	/*RSPINF_a_6*/
++	CARDvCalculateOFDMRParameter(RATE_6M, bb_type,
++						&tx_rate[0], &rsv_time[0]);
++
++	/*RSPINF_a_9*/
++	CARDvCalculateOFDMRParameter(RATE_9M, bb_type,
++						&tx_rate[1], &rsv_time[1]);
++
++	/*RSPINF_a_12*/
++	CARDvCalculateOFDMRParameter(RATE_12M, bb_type,
++						&tx_rate[2], &rsv_time[2]);
++
++	/*RSPINF_a_18*/
++	CARDvCalculateOFDMRParameter(RATE_18M, bb_type,
++						&tx_rate[3], &rsv_time[3]);
++
++	/*RSPINF_a_24*/
++	CARDvCalculateOFDMRParameter(RATE_24M, bb_type,
++						&tx_rate[4], &rsv_time[4]);
++
++	/*RSPINF_a_36*/
++	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_36M),
++					bb_type, &tx_rate[5], &rsv_time[5]);
++
++	/*RSPINF_a_48*/
++	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_48M),
++					bb_type, &tx_rate[6], &rsv_time[6]);
++
++	/*RSPINF_a_54*/
++	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_54M),
++					bb_type, &tx_rate[7], &rsv_time[7]);
++
++	/*RSPINF_a_72*/
++	CARDvCalculateOFDMRParameter(swGetOFDMControlRate(priv, RATE_54M),
++					bb_type, &tx_rate[8], &rsv_time[8]);
++
++	put_unaligned(phy[0].len, (u16 *)&data[0]);
++	data[2] = phy[0].signal;
++	data[3] = phy[0].service;
++
++	put_unaligned(phy[1].len, (u16 *)&data[4]);
++	data[6] = phy[1].signal;
++	data[7] = phy[1].service;
++
++	put_unaligned(phy[2].len, (u16 *)&data[8]);
++	data[10] = phy[2].signal;
++	data[11] = phy[2].service;
++
++	put_unaligned(phy[3].len, (u16 *)&data[12]);
++	data[14] = phy[3].signal;
++	data[15] = phy[3].service;
++
++	for (i = 0; i < 9; i++) {
++		data[16 + i * 2] = tx_rate[i];
++		data[16 + i * 2 + 1] = rsv_time[i];
++	}
+ 
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE,
++		MAC_REG_RSPINF_B_1, MESSAGE_REQUEST_MACREG, 34, &data[0]);
+ }
+ 
+ /*
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index f843e50..6123c13 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -46,7 +46,7 @@ typedef enum _CARD_PHY_TYPE {
+ struct vnt_private;
+ 
+ void CARDbSetMediaChannel(struct vnt_private *pDevice, u32 uConnectionChannel);
+-void CARDvSetRSPINF(struct vnt_private *pDevice, u8 byBBType);
++void CARDvSetRSPINF(struct vnt_private *, u8);
+ void vUpdateIFS(struct vnt_private *pDevice);
+ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice);
+ void CARDbAddBasicRate(struct vnt_private *pDevice, u16 wRateIdx);
 -- 
-Kalle Valo
+1.9.1
+
