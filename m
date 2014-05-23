@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:57296 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932448AbaEEO4T (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:53325 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbaEWHvY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 10:56:19 -0400
-Message-ID: <5367A690.7010305@lwfinger.net> (sfid-20140505_165628_379509_274F5FFD)
-Date: Mon, 05 May 2014 09:56:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 23 May 2014 03:51:24 -0400
+Received: by mail-we0-f177.google.com with SMTP id x48so4508800wes.36
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 00:51:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/3] rtlwifi: make MSI support a module parameter
-References: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
-In-Reply-To: <1399278818-19152-1-git-send-email-adam.lee@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1400813392.25946.35.camel@dubbel>
+References: <1400769938.4174.29.camel@jlt4.sipsolutions.net>
+	<1400812703-15685-1-git-send-email-luca@coelho.fi>
+	<1400813392.25946.35.camel@dubbel>
+Date: Fri, 23 May 2014 09:51:22 +0200
+Message-ID: <CA+BoTQkqh6Zvn0pPsR7hsWeoqhcJOY-mEzV6u1Nf+ZUtniTgoA@mail.gmail.com> (sfid-20140523_095127_442748_C5AE9343)
+Subject: Re: [PATCH] mac80211: add a single-transaction driver op to switch contexts
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2014 03:33 AM, Adam Lee wrote:
-> This makes MSI support a module parameter, for debugging and workaround
-> convenience.
+On 23 May 2014 04:49, Luca Coelho <luca@coelho.fi> wrote:
+> On Fri, 2014-05-23 at 05:38 +0300, Luca Coelho wrote:
+>> From: Luciano Coelho <luciano.coelho@intel.com>
+>>
+>> In some cases, when the driver is already using all the channel
+>> contexts it can handle at once, we have to do an in-place switch
+>> (ie. we cannot afford using an extra context temporarily for the
+>> transaction).  But some drivers may not support switching the channel
+>> context assigned to a vif on the fly (ie. without unassigning and
+>> assigning it) while others may only work if the context is changed on
+>> the fly, without unassigning it first.
+>>
+>> To allow these different scenarios, add a new driver operation that
+>> let's the driver decide how to handle an in-place switch.
+>>
+>> Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
+>> since we never change a running context directly anymore.
+>>
+>> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+>> ---
 >
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+> So, this is what I had cooked up.  Sorry Michal, I should have synced
+> with you.  Actually I tried to ping you on IRC, but you were not there,
+> and then I forgot to sync by email.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net> (for all 3 patches)
+Thanks for explaining. That's not much of a problem.
 
-I would have made the default for the MSI option to be true, but that is a 
-matter of preference, and only experience would show which default leads to the 
-fewer failures. On my laptop, both rtl8188ee and rtl8723be work either way. I am 
-now working on a driver for the RTL8192EE that also can use MSI - that has only 
-been tested with the option on.
 
-Larry
-
-> ---
->   drivers/net/wireless/rtlwifi/wifi.h | 4 ++++
->   1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-> index 6965afd..eef93d1 100644
-> --- a/drivers/net/wireless/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -2030,6 +2030,10 @@ struct rtl_mod_params {
->
->   	/* default: 1 = using linked fw power save */
->   	bool fwctrl_lps;
-> +
-> +	/* default: 0 = not using MSI interrupts mode */
-> +	/* submodules should set their own defalut value */
-> +	bool msi_support;
->   };
->
->   struct rtl_hal_usbint_cfg {
->
-
+Michał
