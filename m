@@ -1,89 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:33525 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbaEWMXp convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:47347 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaEWKgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 08:23:45 -0400
-Received: by mail-we0-f181.google.com with SMTP id w61so4885666wes.12
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 05:23:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQk3stQoK34q6VcXhHm8+9Rh67UF4TTfgy5P1JY1o1dTFA@mail.gmail.com>
-References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
-	<1400767676-15994-3-git-send-email-michal.kazior@tieto.com>
-	<1400770304.4174.34.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk3stQoK34q6VcXhHm8+9Rh67UF4TTfgy5P1JY1o1dTFA@mail.gmail.com>
-Date: Fri, 23 May 2014 14:23:43 +0200
-Message-ID: <CA+BoTQ=gjJw1e2osxuemxK1M+bLQpFQKUD9qozOm5frbLiXB5Q@mail.gmail.com> (sfid-20140523_142349_030158_5550644A)
-Subject: Re: [PATCH v6 2/6] mac80211: implement multi-vif in-place reservations
+	Fri, 23 May 2014 06:36:00 -0400
+Received: by mail-ee0-f48.google.com with SMTP id e49so3501606eek.35
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:35:59 -0700 (PDT)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/3] ath10k: make core registering async
+Date: Fri, 23 May 2014 12:28:47 +0200
+Message-Id: <1400840927-14272-4-git-send-email-michal.kazior@tieto.com> (sfid-20140523_123653_447496_0E15ECB4)
+In-Reply-To: <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+ <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 May 2014 08:16, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 22 May 2014 16:51, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Thu, 2014-05-22 at 16:07 +0200, Michal Kazior wrote:
->>> +static int
->>> +ieee80211_vif_use_reserved_incompat(struct ieee80211_local *local,
->>> +                                 struct ieee80211_chanctx *ctx,
->>> +                                 const struct cfg80211_chan_def *chandef)
->>> +{
->>> +     struct ieee80211_sub_if_data *sdata, *tmp;
->>> +     struct ieee80211_chanctx *new_ctx;
->>> +     u32 changed = 0;
->>> +     int err;
->>> +
->>> +     lockdep_assert_held(&local->mtx);
->>> +     lockdep_assert_held(&local->chanctx_mtx);
->>> +
->>> +     if (!ieee80211_chanctx_all_reserved_vifs_ready(local, ctx))
->>> +             return 0;
->>> +
->>> +     if (ieee80211_chanctx_num_assigned(local, ctx) !=
->>> +         ieee80211_chanctx_num_reserved(local, ctx)) {
->>> +             wiphy_info(local->hw.wiphy,
->>> +                        "channel context reservation cannot be finalized because some interfaces aren't switching\n");
->>> +             err = -EBUSY;
->>> +             goto err;
->>>       }
->>
->> I don't think I understand that condition, it's it possible to switch
->> from two vifs using two channels to both using a single third one?
->
-> I assume you have a case where max number of different channels is
-> degraded (e.g. non-radar -> more restrictive radar combination) in
-> mind, right? In that case this won't work with this code. Now that I
-> think about it it also won't work with cross-swapping (2 chanctx are
-> being swapped and some vifs try to interchange between).
->
-> I'll have to re-think this a bit more.
+If ath10k was built into the kernel it could stall
+booting for 120 seconds by default (60 seconds for
+each firmware API variant) waiting for firmware
+files before userspace was ready or filesystems
+mounted.
 
-Actually I think I've just spotted a little problem. This is also
-related to the `[PATCH v6 6/6] cfg80211: remove channel_switch
-combination check` thread.
+Fix this by making the core registering
+asynchronous.
 
-Currently mac80211 verifies interface combinations in channel_switch.
-It has an implicit assumption that channel switch does not change the
-number of different channels (or at least it doesn't decrease it).
+This also shoves off about 1 second from boot time
+on most systems since the driver is now mostly
+initialized in a worker and modprobe takes very
+little time to complete.
 
-We were discussing degradation of number of different channels
-earlier, e.g. due to non-radar -> radar change (going from max 2
-channels to 1). With how things are now it's impossible to perform
-such a channel switch.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-Basically if we want to support this kind of channel switch we must
-remove interface combination checks from ieee80211_channel_switch
-because it's simply impossible to know the future (userspace may or
-may not submit subsequent requests to match an existing interface
-combination).
+Notes:
+    v2:
+     * use device_release_driver() [Johannes]
+     * update commit message (due to above)
+     * split tasklet_kill() removal to a separate patch [Kalle]
+     * add missing static keyword to worker function [Kalle]
 
-So while I still intend to rework the multi-vif reservation a little
-(to support cross-swapping at least) I'd like to know if I should
-invest my time implementing degradation of number of channels in
-multi-vif reservation or not.
+ drivers/net/wireless/ath/ath10k/core.c | 43 ++++++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/core.h |  2 ++
+ 2 files changed, 33 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index bd4d1cc..f922ef0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -941,22 +941,15 @@ static int ath10k_core_check_chip_id(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-int ath10k_core_register(struct ath10k *ar, u32 chip_id)
++static void ath10k_core_register_work(struct work_struct *work)
+ {
++	struct ath10k *ar = container_of(work, struct ath10k, register_work);
+ 	int status;
+ 
+-	ar->chip_id = chip_id;
+-
+-	status = ath10k_core_check_chip_id(ar);
+-	if (status) {
+-		ath10k_err("Unsupported chip id 0x%08x\n", ar->chip_id);
+-		return status;
+-	}
+-
+ 	status = ath10k_core_probe_fw(ar);
+ 	if (status) {
+ 		ath10k_err("could not probe fw (%d)\n", status);
+-		return status;
++		goto err;
+ 	}
+ 
+ 	status = ath10k_mac_register(ar);
+@@ -971,18 +964,43 @@ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
+ 		goto err_unregister_mac;
+ 	}
+ 
+-	return 0;
++	set_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags);
++	return;
+ 
+ err_unregister_mac:
+ 	ath10k_mac_unregister(ar);
+ err_release_fw:
+ 	ath10k_core_free_firmware_files(ar);
+-	return status;
++err:
++	device_release_driver(ar->dev);
++	return;
++}
++
++int ath10k_core_register(struct ath10k *ar, u32 chip_id)
++{
++	int status;
++
++	ar->chip_id = chip_id;
++
++	status = ath10k_core_check_chip_id(ar);
++	if (status) {
++		ath10k_err("Unsupported chip id 0x%08x\n", ar->chip_id);
++		return status;
++	}
++
++	queue_work(ar->workqueue, &ar->register_work);
++
++	return 0;
+ }
+ EXPORT_SYMBOL(ath10k_core_register);
+ 
+ void ath10k_core_unregister(struct ath10k *ar)
+ {
++	cancel_work_sync(&ar->register_work);
++
++	if (!test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags))
++		return;
++
+ 	/* We must unregister from mac80211 before we stop HTC and HIF.
+ 	 * Otherwise we will fail to submit commands to FW and mac80211 will be
+ 	 * unhappy about callback failures. */
+@@ -1039,6 +1057,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
+ 	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+ 
++	INIT_WORK(&ar->register_work, ath10k_core_register_work);
+ 	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+ 
+ 	return ar;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 2c1dfd7..7e33005 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -335,6 +335,7 @@ enum ath10k_dev_flags {
+ 	/* Indicates that ath10k device is during CAC phase of DFS */
+ 	ATH10K_CAC_RUNNING,
+ 	ATH10K_FLAG_FIRST_BOOT_DONE,
++	ATH10K_FLAG_CORE_REGISTERED,
+ };
+ 
+ struct ath10k {
+@@ -470,6 +471,7 @@ struct ath10k {
+ 
+ 	enum ath10k_state state;
+ 
++	struct work_struct register_work;
+ 	struct work_struct restart_work;
+ 
+ 	/* cycle count is reported twice for each visited channel during scan.
+-- 
+1.8.5.3
 
-Michał
