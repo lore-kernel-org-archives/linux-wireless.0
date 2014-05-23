@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:60188 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932730AbaE2GqQ (ORCPT
+Received: from kraftzwerg.no-carrier.info ([87.98.242.129]:44064 "EHLO
+	mail.no-carrier.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456AbaEWIuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 02:46:16 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f8so36828wiw.10
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 23:46:14 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Fri, 23 May 2014 04:50:17 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.no-carrier.info (Postfix) with ESMTP id 34A17204492
+	for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:44:04 +0200 (CEST)
+Received: from mail.no-carrier.info ([127.0.0.1])
+	by localhost (mail.no-carrier.info [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 3V71xiKhlFGn for <linux-wireless@vger.kernel.org>;
+	Fri, 23 May 2014 10:43:53 +0200 (CEST)
+Received: from [192.168.1.130] (p5490C414.dip0.t-ipconnect.de [84.144.196.20])
+	(Authenticated sender: mail@marc-stuermer.de)
+	by mail.no-carrier.info (Postfix) with ESMTPA id 74F442041D9
+	for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:43:53 +0200 (CEST)
+Message-ID: <537F0A21.5070102@marc-stuermer.de> (sfid-20140523_105028_893243_58CA2462)
+Date: Fri, 23 May 2014 10:43:13 +0200
+From: =?ISO-8859-15?Q?Marc_St=FCrmer?= <mail@marc-stuermer.de>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/2] mac80211: fix csa counters
-Date: Thu, 29 May 2014 08:38:53 +0200
-Message-Id: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com> (sfid-20140529_084624_055241_C09A09EE)
+Subject: Rtl8192CU: regular disconnect in managed mode after a short while
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Greetings,
 
-I was seeing strange WARN_ON splat loops and
-crashes while I was testing my multi-vif CSA.
+I've recently bought myself an USB device, based on the RTL8192CU 
+chipset, running under 64bit kernel 3.15.0-rc6 at the moment.
 
-CSA counters weren't properly reset and on some
-failpaths this caused a mess. There were also
-possible SMP inconsitencies/races.
+Firmware is installed where it should be.
 
+Debuglog of the kernel is here: http://pastebin.com/Eh6pBbra
 
-v2:
- * dropped the atomic counter patch
- * fix patch 1
+The problem is this: I am running the device in managed mode and let it 
+connect to my AP.
 
-Michal Kazior (2):
-  mac80211: move csa counters from sdata to beacon/presp
-  mac80211: use csa counter offsets instead of csa_active
+First all works as intended, but after a short while the device always 
+stops working altogether.
 
- net/mac80211/cfg.c         |  67 ++++++++++++++++++---------
- net/mac80211/ibss.c        |   2 +-
- net/mac80211/ieee80211_i.h |  16 +++++--
- net/mac80211/mesh.c        |   2 +-
- net/mac80211/tx.c          | 113 +++++++++++++++++++++++++--------------------
- 5 files changed, 122 insertions(+), 78 deletions(-)
+No output in the kernel log, not even about deauthenticating but it just 
+stops working at all, no traffic anymore, I've got to unplug it or 
+unload and reload the driver and then the same starts all over again.
 
--- 
-1.8.5.3
+This seems to be a long lasting regression 
+(https://www.google.com/#q=linux+rtl8192cu+disconnects+linux+) and 
+there's also a repository on Github containing the original Realtek 
+driver ported up to kernel version 3.11 
+(https://github.com/pvaret/rtl8192cu-fixes), because the kernel driver 
+seemed to be not working flawlessly until then.
 
+So my question is: what else could/should I do to get a stable, working 
+wifi connection with that device on my linux box that lasts more than 
+just a few minutes?
+
+Thanks in advance.
