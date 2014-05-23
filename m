@@ -1,84 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:46993 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbaE3LjQ (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:49522 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbaEWGtw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 07:39:16 -0400
+	Fri, 23 May 2014 02:49:52 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so4397824wgh.14
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 23:49:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1401449454-30895-2-git-send-email-berthe.ab@gmail.com>
-References: <20140530094025.3b78301e@canb.auug.org.au>
-	<1401449454-30895-1-git-send-email-berthe.ab@gmail.com>
-	<1401449454-30895-2-git-send-email-berthe.ab@gmail.com>
-Date: Fri, 30 May 2014 13:39:15 +0200
-Message-ID: <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com> (sfid-20140530_133928_304243_0D7DEC88)
-Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: abdoulaye berthe <berthe.ab@gmail.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	patches@opensource.wolfsonmicro.com,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>
+In-Reply-To: <1400770484.4174.35.camel@jlt4.sipsolutions.net>
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+	<1400767676-15994-5-git-send-email-michal.kazior@tieto.com>
+	<1400770484.4174.35.camel@jlt4.sipsolutions.net>
+Date: Fri, 23 May 2014 08:49:50 +0200
+Message-ID: <CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com> (sfid-20140523_084955_464052_AAB1A3C6)
+Subject: Re: [PATCH v6 4/6] mac80211: use chanctx reservation for AP CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 30, 2014 at 1:30 PM, abdoulaye berthe <berthe.ab@gmail.com> wrote:
-> --- a/drivers/gpio/gpiolib.c
-> +++ b/drivers/gpio/gpiolib.c
-> @@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
->   *
->   * A gpio_chip with any GPIOs still requested may not be removed.
->   */
-> -int gpiochip_remove(struct gpio_chip *chip)
-> +void gpiochip_remove(struct gpio_chip *chip)
->  {
->         unsigned long   flags;
-> -       int             status = 0;
->         unsigned        id;
+On 22 May 2014 16:54, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 16:07 +0200, Michal Kazior wrote:
+>> Channel switch finalization is now 2-step. First
+>> step is when driver calls csa_finish(), the other
+>> is when reservation is actually finalized (which
+>> be defered for in-place reservation).
+>>
+>> It is now safe to call ieee80211_csa_finish() more
+>> then once.
 >
->         acpi_gpiochip_remove(chip);
-> @@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
->         of_gpiochip_remove(chip);
->
->         for (id = 0; id < chip->ngpio; id++) {
-> -               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
-> -                       status = -EBUSY;
-> -                       break;
-> -               }
-> -       }
-> -       if (status == 0) {
-> -               for (id = 0; id < chip->ngpio; id++)
-> -                       chip->desc[id].chip = NULL;
-> -
-> -               list_del(&chip->list);
-> +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
-> +                       panic("gpio: removing gpiochip with gpios still requested\n");
+> But you'll WARN_ON() if they're actually not at the same time and you
+> grab a beacon (or for the template case, call csa_update) in the
+> meantime, right? I'd really like to have all those driver requirements
+> (e.g. to stop beaconing) better documented.
 
-panic?
+Good point. I suppose it should be stated in the docs that once you
+reach ieee80211_csa_is_complete() being true you must not call
+ieee80211_beacon_get() nor ieee80211_csa_update_counter(). ath9k and
+ath10k conform to this.
 
-Is this likely to happen?
+I wonder what driver should be supposed to look at before starting to
+beacon again? csa_active isn't well protected to be depended upon. If
+we should create a ieee80211_csa_is_active() that just checks if
+beacon->csa_counter_offset[0] != 0 (assuming my other csa counter
+patches are applied) then it's still racy:
+ a) rcu_dereference() across ieee80211_csa_is_active(), _is_complete()
+and _beacon_get() can yield different beacon pointers
+ b) cs_count <= 1 yields no beacon update (thus no counters/offsets,
+meaning both _csa_is_complete and _csa_is_active() are `false` thus
+suggesting driver can beacon as if nothing happened)
 
-Gr{oetje,eeting}s,
+We could fix (b) by simply not treating cs_count <= 1 so special and
+update the beacon anyway. For (a) to work we'd need either make a
+single-call do-all function or introduce an additional call and a
+generic pointer/structure to be passed to other functions so that a
+beacon pointer is consistent across calls.
 
-                        Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Michał
