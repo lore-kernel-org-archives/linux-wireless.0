@@ -1,384 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:34375 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932298AbaEaMf4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 08:35:56 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f8so2367011wiw.16
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 05:35:52 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/4] staging: vt6656: rxtx move vnt_usb_send_context into tx structure.
-Date: Sat, 31 May 2014 13:34:57 +0100
-Message-Id: <1401539700-3183-1-git-send-email-tvboxspy@gmail.com> (sfid-20140531_143604_604341_79F969B5)
+Received: from dedo.coelho.fi ([88.198.205.34]:44288 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752200AbaEWLdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 07:33:31 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net, michal.kazior@tieto.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 May 2014 14:33:13 +0300
+Message-Id: <1400844793-18069-2-git-send-email-luca@coelho.fi> (sfid-20140523_133336_081302_1C9BA4E9)
+In-Reply-To: <1400844793-18069-1-git-send-email-luca@coelho.fi>
+References: <1400838772.4358.22.camel@jlt4.sipsolutions.net>
+ <1400844793-18069-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 2/2] mac80211: use switch_vif_chanctx to change a running chanctx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing struct vnt_private.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Where struct vnt_private is needed pointer to priv is added.
+Instead of hammering a new channel into the running context, make use
+of the new switch_vif_chanctx to let the driver decide how to perform
+the switch.
 
-This allows to move tx signaling into vnt_usb_send_context.
+Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
+since we never change a running context directly anymore.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 108 +++++++++++++++++++++++++-----------------
- 1 file changed, 64 insertions(+), 44 deletions(-)
+ include/net/mac80211.h |  6 ----
+ net/mac80211/chan.c    | 77 +++++++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 67 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 704f4d3..fa04894 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -96,7 +96,7 @@ static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
- 
- static struct vnt_usb_send_context *s_vGetFreeContext(struct vnt_private *);
- 
--static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
-+static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
- 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
- 	int bNeedACK, struct ethhdr *psEthHeader, bool need_rts);
-@@ -119,11 +119,11 @@ static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
- static __le16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
- 	u8 rsv_type, u8 pkt_type, u32 frame_length, u16 current_rate);
- 
--static u16 s_vFillCTSHead(struct vnt_private *pDevice,
-+static u16 s_vFillCTSHead(struct vnt_usb_send_context *tx_context,
- 	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
- 	int bNeedAck, u16 wCurrentRate, u8 byFBOption);
- 
--static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-+static u16 s_vFillRTSHead(struct vnt_usb_send_context *tx_context, u8 byPktType,
- 	union vnt_tx_data_head *head, u32 cbFrameLength, int bNeedAck,
- 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption);
- 
-@@ -470,9 +470,13 @@ static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
- 	return cpu_to_le16((u16)uDurTime);
- }
- 
--static u16 vnt_rxtx_datahead_g(struct vnt_private *priv, u8 pkt_type, u16 rate,
--		struct vnt_tx_datahead_g *buf, u32 frame_len, int need_ack)
-+static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
-+		u8 pkt_type, u16 rate, struct vnt_tx_datahead_g *buf,
-+		u32 frame_len, int need_ack)
- {
-+
-+	struct vnt_private *priv = tx_context->priv;
-+
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->a);
- 	BBvCalculateParameter(priv, frame_len, priv->byTopCCKBasicRate,
-@@ -489,10 +493,12 @@ static u16 vnt_rxtx_datahead_g(struct vnt_private *priv, u8 pkt_type, u16 rate,
- 	return le16_to_cpu(buf->duration_a);
- }
- 
--static u16 vnt_rxtx_datahead_g_fb(struct vnt_private *priv, u8 pkt_type,
--		u16 rate, struct vnt_tx_datahead_g_fb *buf,
-+static u16 vnt_rxtx_datahead_g_fb(struct vnt_usb_send_context *tx_context,
-+		u8 pkt_type, u16 rate, struct vnt_tx_datahead_g_fb *buf,
- 		u32 frame_len, int need_ack)
- {
-+	struct vnt_private *priv = tx_context->priv;
-+
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->a);
- 
-@@ -513,10 +519,12 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_private *priv, u8 pkt_type,
- 	return le16_to_cpu(buf->duration_a);
- }
- 
--static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
--		u16 rate, struct vnt_tx_datahead_a_fb *buf,
-+static u16 vnt_rxtx_datahead_a_fb(struct vnt_usb_send_context *tx_context,
-+		u8 pkt_type, u16 rate, struct vnt_tx_datahead_a_fb *buf,
- 		u32 frame_len, int need_ack)
- {
-+	struct vnt_private *priv = tx_context->priv;
-+
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->a);
- 	/* Get Duration and TimeStampOff */
-@@ -530,10 +538,12 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
- 	return le16_to_cpu(buf->duration);
- }
- 
--static u16 vnt_rxtx_datahead_ab(struct vnt_private *priv, u8 pkt_type,
--		u16 rate, struct vnt_tx_datahead_ab *buf,
-+static u16 vnt_rxtx_datahead_ab(struct vnt_usb_send_context *tx_context,
-+		u8 pkt_type, u16 rate, struct vnt_tx_datahead_ab *buf,
- 		u32 frame_len, int need_ack)
- {
-+	struct vnt_private *priv = tx_context->priv;
-+
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->ab);
- 	/* Get Duration and TimeStampOff */
-@@ -566,11 +576,12 @@ static int vnt_fill_ieee80211_rts(struct vnt_private *priv,
- 	return 0;
- }
- 
--static u16 vnt_rxtx_rts_g_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_g_head(struct vnt_usb_send_context *tx_context,
- 	struct vnt_rts_g *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
- {
-+	struct vnt_private *priv = tx_context->priv;
- 	u16 rts_frame_len = 20;
- 
- 	BBvCalculateParameter(priv, rts_frame_len, priv->byTopCCKBasicRate,
-@@ -587,15 +598,16 @@ static u16 vnt_rxtx_rts_g_head(struct vnt_private *priv,
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration_aa);
- 
--	return vnt_rxtx_datahead_g(priv, pkt_type, current_rate,
-+	return vnt_rxtx_datahead_g(tx_context, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
- }
- 
--static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_g_fb_head(struct vnt_usb_send_context *tx_context,
- 	struct vnt_rts_g_fb *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
- {
-+	struct vnt_private *priv = tx_context->priv;
- 	u16 rts_frame_len = 20;
- 
- 	BBvCalculateParameter(priv, rts_frame_len, priv->byTopCCKBasicRate,
-@@ -623,15 +635,16 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration_aa);
- 
--	return vnt_rxtx_datahead_g_fb(priv, pkt_type, current_rate,
-+	return vnt_rxtx_datahead_g_fb(tx_context, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
- }
- 
--static u16 vnt_rxtx_rts_ab_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_ab_head(struct vnt_usb_send_context *tx_context,
- 	struct vnt_rts_ab *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
- {
-+	struct vnt_private *priv = tx_context->priv;
- 	u16 rts_frame_len = 20;
- 
- 	BBvCalculateParameter(priv, rts_frame_len,
-@@ -642,15 +655,16 @@ static u16 vnt_rxtx_rts_ab_head(struct vnt_private *priv,
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration);
- 
--	return vnt_rxtx_datahead_ab(priv, pkt_type, current_rate,
-+	return vnt_rxtx_datahead_ab(tx_context, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
- }
- 
--static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
- 	struct vnt_rts_a_fb *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
- {
-+	struct vnt_private *priv = tx_context->priv;
- 	u16 rts_frame_len = 20;
- 
- 	BBvCalculateParameter(priv, rts_frame_len,
-@@ -667,11 +681,11 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration);
- 
--	return vnt_rxtx_datahead_a_fb(priv, pkt_type, current_rate,
-+	return vnt_rxtx_datahead_a_fb(tx_context, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
- }
- 
--static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-+static u16 s_vFillRTSHead(struct vnt_usb_send_context *tx_context, u8 byPktType,
- 	union vnt_tx_data_head *head, u32 cbFrameLength, int bNeedAck,
- 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption)
- {
-@@ -688,23 +702,25 @@ static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 	case PK_TYPE_11GB:
- 	case PK_TYPE_11GA:
- 		if (byFBOption == AUTO_FB_NONE)
--			return vnt_rxtx_rts_g_head(pDevice, &head->rts_g,
-+			return vnt_rxtx_rts_g_head(tx_context, &head->rts_g,
- 				psEthHeader, byPktType, cbFrameLength,
- 				bNeedAck, wCurrentRate, byFBOption);
- 		else
--			return vnt_rxtx_rts_g_fb_head(pDevice, &head->rts_g_fb,
--				psEthHeader, byPktType, cbFrameLength,
--				bNeedAck, wCurrentRate, byFBOption);
-+			return vnt_rxtx_rts_g_fb_head(tx_context,
-+				&head->rts_g_fb, psEthHeader, byPktType,
-+				cbFrameLength, bNeedAck, wCurrentRate,
-+				byFBOption);
- 		break;
- 	case PK_TYPE_11A:
- 		if (byFBOption) {
--			return vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
--				psEthHeader, byPktType, cbFrameLength,
--				bNeedAck, wCurrentRate, byFBOption);
-+			return vnt_rxtx_rts_a_fb_head(tx_context,
-+				&head->rts_a_fb, psEthHeader, byPktType,
-+				cbFrameLength, bNeedAck, wCurrentRate,
-+				byFBOption);
- 			break;
- 		}
- 	case PK_TYPE_11B:
--		return vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
-+		return vnt_rxtx_rts_ab_head(tx_context, &head->rts_ab,
- 			psEthHeader, byPktType, cbFrameLength,
- 			bNeedAck, wCurrentRate, byFBOption);
- 	}
-@@ -712,10 +728,11 @@ static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 	return 0;
- }
- 
--static u16 s_vFillCTSHead(struct vnt_private *pDevice,
-+static u16 s_vFillCTSHead(struct vnt_usb_send_context *tx_context,
- 	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
- 	int bNeedAck, u16 wCurrentRate, u8 byFBOption)
- {
-+	struct vnt_private *pDevice = tx_context->priv;
- 	u32 uCTSFrameLen = 14;
- 
- 	if (!head)
-@@ -745,8 +762,9 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice,
- 
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
- 
--		return vnt_rxtx_datahead_g_fb(pDevice, byPktType, wCurrentRate,
--				&pBuf->data_head, cbFrameLength, bNeedAck);
-+		return vnt_rxtx_datahead_g_fb(tx_context, byPktType,
-+				wCurrentRate, &pBuf->data_head, cbFrameLength,
-+				bNeedAck);
- 	} else {
- 		struct vnt_cts *pBuf = &head->cts_g;
- 		/* Get SignalField,ServiceField,Length */
-@@ -763,7 +781,7 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice,
- 
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
- 
--		return vnt_rxtx_datahead_g(pDevice, byPktType, wCurrentRate,
-+		return vnt_rxtx_datahead_g(tx_context, byPktType, wCurrentRate,
- 				&pBuf->data_head, cbFrameLength, bNeedAck);
-         }
- 
-@@ -792,11 +810,12 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 236c5c3..38c10ea 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1601,11 +1601,6 @@ struct ieee80211_tx_control {
+  *	is not enabled the default action is to disconnect when getting the
+  *	CSA frame.
   *
- -*/
+- * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
+- *	channel context on-the-fly.  This is needed for channel switch
+- *	on single-channel hardware.  It can also be used as an
+- *	optimization in certain channel switch cases with
+- *	multi-channel.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1637,7 +1632,6 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
+ 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
+-	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
+ };
  
--static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
-+static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
- 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
- 	int bNeedACK, struct ethhdr *psEthHeader, bool need_rts)
+ /**
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 3702d64..7084c2b 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -928,10 +928,10 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chandef, mode);
+ 	if (!new_ctx) {
+ 		if (ieee80211_chanctx_refcount(local, curr_ctx) == 1 &&
+-		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
++		    local->ops->switch_vif_chanctx) {
+ 			/* if we're the only users of the chanctx and
+-			 * the driver supports changing a running
+-			 * context, reserve our current context
++			 * the driver supports chanctx switches
++			 * reserve our current context.
+ 			 */
+ 			new_ctx = curr_ctx;
+ 		} else if (ieee80211_can_create_new_chanctx(local)) {
+@@ -956,6 +956,64 @@ out:
+ 	return ret;
+ }
+ 
++static int
++ieee80211_vif_change_reserved_context(struct ieee80211_sub_if_data *sdata,
++				      struct ieee80211_chanctx *old_ctx)
++{
++	struct ieee80211_local *local = sdata->local;
++	const struct cfg80211_chan_def *chandef = &sdata->reserved_chandef;
++	struct ieee80211_chanctx *new_ctx;
++	struct ieee80211_vif_chanctx_switch vifs[1];
++	int err, changed;
++
++	lockdep_assert_held(&local->mtx);
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	new_ctx = ieee80211_alloc_chanctx(local, chandef, old_ctx->mode);
++	if (!new_ctx) {
++		err = -ENOMEM;
++		goto err;
++	}
++
++	vifs[0].vif = &sdata->vif;
++	vifs[0].old_ctx = &old_ctx->conf;
++	vifs[0].new_ctx = &new_ctx->conf;
++
++	/* turn idle off *before* setting channel -- some drivers need that */
++	changed = ieee80211_idle_off(local);
++	ieee80211_hw_config(local, changed);
++
++	err = drv_switch_vif_chanctx(local, vifs, 1,
++				     CHANCTX_SWMODE_SWAP_CONTEXTS);
++	if (err)
++		goto err_idle;
++
++	rcu_assign_pointer(sdata->vif.chanctx_conf, &new_ctx->conf);
++
++	list_del_rcu(&old_ctx->list);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
++
++	list_add_rcu(&new_ctx->list, &local->chanctx_list);
++	kfree_rcu(old_ctx, rcu_head);
++
++	ieee80211_recalc_txpower(sdata);
++	ieee80211_recalc_chanctx_chantype(local, new_ctx);
++	ieee80211_recalc_smps_chanctx(local, new_ctx);
++	ieee80211_recalc_radar_chanctx(local, new_ctx);
++	ieee80211_recalc_chanctx_min_def(local, new_ctx);
++	ieee80211_recalc_idle(local);
++
++	return 0;
++
++err_idle:
++	ieee80211_recalc_idle(local);
++	kfree_rcu(new_ctx, rcu_head);
++err:
++	return err;
++}
++
+ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 				       u32 *changed)
  {
-+	struct vnt_private *pDevice = tx_context->priv;
- 	struct vnt_tx_fifo_head *pFifoHead = &tx_buffer->fifo_head;
- 	union vnt_tx_data_head *head = NULL;
- 	u16 wFifoCtl;
-@@ -837,7 +856,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			}
+@@ -999,8 +1057,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
  
- 			/* Fill RTS */
--			return s_vFillRTSHead(pDevice, byPktType, head,
-+			return s_vFillRTSHead(tx_context, byPktType, head,
- 					cbFrameSize, bNeedACK, psEthHeader,
- 						wCurrentRate, byFBOption);
+ 	if (old_ctx == ctx) {
+ 		/* This is our own context, just change it */
+-		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
+-						     &tmp_changed);
++		ret = ieee80211_vif_change_reserved_context(sdata, old_ctx);
+ 		if (ret)
+ 			goto out;
+ 	} else {
+@@ -1016,14 +1073,14 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
  
-@@ -863,7 +882,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			}
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 			__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
++
++		ieee80211_recalc_chanctx_chantype(local, ctx);
++		ieee80211_recalc_smps_chanctx(local, ctx);
++		ieee80211_recalc_radar_chanctx(local, ctx);
++		ieee80211_recalc_chanctx_min_def(local, ctx);
+ 	}
  
- 			/* Fill CTS */
--			return s_vFillCTSHead(pDevice, byPktType,
-+			return s_vFillCTSHead(tx_context, byPktType,
- 				head, cbFrameSize, bNeedACK, wCurrentRate,
- 					byFBOption);
- 		}
-@@ -886,7 +905,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
- 
- 			/* Fill RTS */
--			return s_vFillRTSHead(pDevice, byPktType, head,
-+			return s_vFillRTSHead(tx_context, byPktType, head,
- 				cbFrameSize, bNeedACK, psEthHeader,
- 					wCurrentRate, byFBOption);
- 		} else {
-@@ -897,7 +916,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				PK_TYPE_11A, cbFrameSize,
- 					wCurrentRate, bNeedACK);
- 
--			return vnt_rxtx_datahead_a_fb(pDevice, byPktType,
-+			return vnt_rxtx_datahead_a_fb(tx_context, byPktType,
- 				wCurrentRate, &head->data_head_a_fb,
- 						cbFrameSize, bNeedACK);
- 		}
-@@ -921,7 +940,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 								bNeedACK);
- 
- 			/* Fill RTS */
--			return s_vFillRTSHead(pDevice, byPktType, head,
-+			return s_vFillRTSHead(tx_context, byPktType, head,
- 				cbFrameSize,
- 			bNeedACK, psEthHeader, wCurrentRate, byFBOption);
- 		} else {
-@@ -932,7 +951,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				PK_TYPE_11B, cbFrameSize,
- 					wCurrentRate, bNeedACK);
- 
--			return vnt_rxtx_datahead_ab(pDevice, byPktType,
-+			return vnt_rxtx_datahead_ab(tx_context, byPktType,
- 				wCurrentRate, &head->data_head_ab,
- 					cbFrameSize, bNeedACK);
- 		}
-@@ -946,12 +965,13 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
-     unsigned int  cbFragmentSize,//Hdr+payoad+FCS
- */
- 
--static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
--	struct vnt_tx_buffer *tx_buffer, int bNeedEncryption,
-+static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
-+	u8 byPktType, struct vnt_tx_buffer *tx_buffer, int bNeedEncryption,
- 	u32 uSkbPacketLen, struct ethhdr *psEthHeader,
- 	u8 *pPacket, PSKeyItem pTransmitKey, u32 uNodeIndex, u16 wCurrentRate,
- 	u32 *pcbHeaderLen, u32 *pcbTotalLen)
- {
-+	struct vnt_private *pDevice = tx_context->priv;
- 	struct vnt_tx_fifo_head *pTxBufHead = &tx_buffer->fifo_head;
- 	u32 cbFrameSize, cbFrameBodySize;
- 	u32 cb802_1_H_len;
-@@ -1146,7 +1166,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     //pTxBufHead = (PSTxBufHead) &(pTxBufHead->adwTxKey[0]);
- 
- 	/* Fill FIFO, RrvTime, RTS and CTS */
--	uDuration = s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
-+	uDuration = s_vGenerateTxParameter(tx_context, byPktType, wCurrentRate,
- 			tx_buffer, &pMICHDR, cbMICHDR,
- 			cbFrameSize, bNeedACK, psEthHeader, bRTS);
- 
-@@ -1518,7 +1538,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     pTxBufHead->wFragCtl |= (u16)FRAGCTL_NONFRAG;
- 
- 	/* Fill FIFO,RrvTime,RTS,and CTS */
--	uDuration = s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
-+	uDuration = s_vGenerateTxParameter(pContext, byPktType, wCurrentRate,
- 		pTX_Buffer, &pMICHDR, 0,
- 		cbFrameSize, bNeedACK, &sEthHeader, false);
- 
-@@ -2020,7 +2040,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
- 
- 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
- 
--    fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
-+	fConvertedPacket = s_bPacketToWirelessUsb(pContext, byPktType,
- 			pTX_Buffer, bNeedEncryption,
- 			skb->len, &pDevice->sTxEthHeader,
-                         (u8 *)skb->data, pTransmitKey, uNodeIndex,
+ 	*changed = tmp_changed;
+-
+-	ieee80211_recalc_chanctx_chantype(local, ctx);
+-	ieee80211_recalc_smps_chanctx(local, ctx);
+-	ieee80211_recalc_radar_chanctx(local, ctx);
+-	ieee80211_recalc_chanctx_min_def(local, ctx);
+ out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
 -- 
-1.9.1
+2.0.0.rc0
 
