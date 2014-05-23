@@ -1,49 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32151 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbaEVQk4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58738 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241AbaEWPPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 12:40:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 22 May 2014 19:40:50 +0300
-In-Reply-To: <1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 22 May 2014 16:12:35 +0200")
-Message-ID: <87tx8hwyul.fsf@kamboji.qca.qualcomm.com> (sfid-20140522_184100_170418_E80A81DE)
+	Fri, 23 May 2014 11:15:11 -0400
+Date: Fri, 23 May 2014 11:07:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2014-05-23
+Message-ID: <20140523150733.GC13311@tuxdriver.com> (sfid-20140523_171543_728934_F462D775)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Dave,
 
-> If ath10k was built into the kernel it could stall
-> booting for 120 seconds by default (60 seconds for
-> each firmware API variant) waiting for firmware
-> files before userspace was ready or filesystems
-> mounted.
->
-> Fix this by making the core registering
-> asynchronous.
->
-> This also shoves off about 1 second from boot time
-> on most systems since the driver is now mostly
-> initialized in a worker and modprobe takes very
-> little time to complete.
->
-> As a side effect there's no way to propagate
-> registering errors to the pci subsystem but this
-> probably isn't really necessary.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+I have two more fixes intended for the 3.15 stream...
 
-I see a new sparse warning with this patch:
+For the iwlwifi one, Emmanuel says:
 
-drivers/net/wireless/ath/ath10k/core.c:956:6: warning: symbol 'ath10k_core_register_work' was not declared. Should it be static?
+"A race has been discovered in the beacon filtering code. Since the
+fix is too big for 3.15, I disable here the feature."
 
+For the bluetooth one, Gustavo says:
+
+"This pull request contains a very important fix for 3.15. Here we fix the
+permissions of a debugfs file that would otherwise allow unauthorized users
+to write content to it."
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+The following changes since commit b6ed5498601df40489606dbc14a9c7011c16630b:
+
+  batman: fix a bogus warning from batadv_is_on_batman_iface() (2014-05-22 17:23:00 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+
+for you to fetch changes up to 5ca2504ea36df1da815029a9e9277c08540042eb:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2014-05-23 10:55:58 -0400)
+
+----------------------------------------------------------------
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: disable beacon filtering
+
+John W. Linville (3):
+      Merge branch 'master' of git://git.kernel.org/.../bluetooth/bluetooth
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
+
+Samuel Ortiz (1):
+      Bluetooth: Fix L2CAP LE debugfs entries permissions
+
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ net/bluetooth/l2cap_core.c                  | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index b41dc84e9431..8735ef1f44ae 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -826,7 +826,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out_remove_mac;
+ 
+-	if (!mvm->bf_allowed_vif &&
++	if (!mvm->bf_allowed_vif && false &&
+ 	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
+ 	    mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BF_UPDATED){
+ 		mvm->bf_allowed_vif = mvmvif;
+diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c
+index a1e5bb7d06e8..dc4d301d3a72 100644
+--- a/net/bluetooth/l2cap_core.c
++++ b/net/bluetooth/l2cap_core.c
+@@ -7519,9 +7519,9 @@ int __init l2cap_init(void)
+ 	l2cap_debugfs = debugfs_create_file("l2cap", 0444, bt_debugfs,
+ 					    NULL, &l2cap_debugfs_fops);
+ 
+-	debugfs_create_u16("l2cap_le_max_credits", 0466, bt_debugfs,
++	debugfs_create_u16("l2cap_le_max_credits", 0644, bt_debugfs,
+ 			   &le_max_credits);
+-	debugfs_create_u16("l2cap_le_default_mps", 0466, bt_debugfs,
++	debugfs_create_u16("l2cap_le_default_mps", 0644, bt_debugfs,
+ 			   &le_default_mps);
+ 
+ 	bt_6lowpan_init();
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
