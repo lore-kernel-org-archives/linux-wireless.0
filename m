@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:60292 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48214 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752476AbaEGGIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 02:08:23 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
+	id S1752445AbaEWNOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 09:14:51 -0400
+Message-ID: <1400850877.4358.38.camel@jlt4.sipsolutions.net> (sfid-20140523_151505_039274_4B004C61)
+Subject: Re: [PATCH v6 2/6] mac80211: implement multi-vif in-place
+ reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	Luca Coelho <luca@coelho.fi>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-Date: Wed, 7 May 2014 06:08:18 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com> (sfid-20140507_080830_407242_9F5D3988)
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
- <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Date: Fri, 23 May 2014 15:14:37 +0200
+In-Reply-To: <CA+BoTQ=gjJw1e2osxuemxK1M+bLQpFQKUD9qozOm5frbLiXB5Q@mail.gmail.com> (sfid-20140523_142344_776623_02D08AE8)
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+	 <1400767676-15994-3-git-send-email-michal.kazior@tieto.com>
+	 <1400770304.4174.34.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk3stQoK34q6VcXhHm8+9Rh67UF4TTfgy5P1JY1o1dTFA@mail.gmail.com>
+	 <CA+BoTQ=gjJw1e2osxuemxK1M+bLQpFQKUD9qozOm5frbLiXB5Q@mail.gmail.com>
+	 (sfid-20140523_142344_776623_02D08AE8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
-ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEpvaGFubmVzIEJlcmcNCj4gU2VudDogVHVlc2Rh
-eSwgTWF5IDA2LCAyMDE0IDEzOjQ3DQo+IFRvOiBMdWNhIENvZWxobw0KPiBDYzogbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBtaWNoYWwua2F6aW9yQHRpZXRvLmNvbTsgUGVlciwgSWxh
-bjsNCj4gT3RjaGVyZXRpYW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvNF0g
-Y2ZnODAyMTEvbmw4MDIxMTogYWRkIGNoYW5uZWwgc3dpdGNoIHN0YXJ0ZWQgYW5kDQo+IGZhaWxl
-ZCBub3RpZmljYXRpb25zDQo+IA0KPiBPbiBGcmksIDIwMTQtMDUtMDIgYXQgMTY6NDAgKzAzMDAs
-IEx1Y2EgQ29lbGhvIHdyb3RlOg0KPiANCj4gPiArICogQE5MODAyMTFfQ01EX0NIX1NXSVRDSF9T
-VEFSVEVEX05PVElGWTogTm90aWZ5IHRoYXQgYSBjaGFubmVsDQo+IHN3aXRjaA0KPiA+ICsgKglo
-YXMgYmVlbiBzdGFydGVkIG9uIGFuIGludGVyZmFjZSwgcmVnYXJkbGVzcyBvZiB0aGUgaW5pdGlh
-dG9yDQo+ID4gKyAqCShpZS4gd2hldGhlciBpdCB3YXMgcmVxdWVzdGVkIGZyb20gYSByZW1vdGUg
-ZGV2aWNlIG9yDQo+ID4gKyAqCWluaXRpYXRlZCBvbiBvdXIgb3duKS4gIEl0IGluZGljYXRlcyB0
-aGF0DQo+ID4gKyAqCSVOTDgwMjExX0FUVFJfSUZJTkRFWCB3aWxsIGJlIG9uICVOTDgwMjExX0FU
-VFJfV0lQSFlfRlJFUQ0KPiA+ICsgKglhZnRlciAlTkw4MDIxMV9BVFRSX0NIX1NXSVRDSF9DT1VO
-VCBUQlRUJ3MuDQo+IA0KPiBZb3UgZG9uJ3Qgc2VlbSB0byBoYXZlIHRoYXQgbm93LCBidXQgaXQg
-bWF5IG5vdCBhbHdheXMgYmUgbmVlZGVkLCBhbmQgd2UNCj4gY291bGQgYWRkIGl0IGxhdGVyICh1
-bmxlc3MgdXNlcnNwYWNlIG5lZWRzIHRvIHJlbHkgb24gaGF2aW5nIHRoZSBhdHRyaWJ1dGUgLQ0K
-PiBvdGhlcndpc2UgaXQgaGFzIHRvIGNoZWNrIGZvciBpdCkNCj4gDQo+IEFjdHVhbGx5IHRob3Vn
-aCwgbWF5YmUgeW91IGRvIG5lZWQgaXQsIHNvIHRoYXQgeW91IGNhbiBkZXRlcm1pbmUgd2hldGhl
-ciBpdA0KPiBtYWtlcyBzZW5zZSB0byB0cnkgYW55dGhpbmcgc21hcnQgLSBpZiB0aGUgY291bnQg
-aXMgMSBvciB5b3UgcmVjZWl2ZWQgYW4gYWN0aW9uDQo+IGZyYW1lIHRoZW4geW91IHByb2JhYmx5
-IGRvbid0IGhhdmUgdGltZSBhdCBhbGw/DQo+IA0KPiA+ICsgKiBATkw4MDIxMV9DTURfQ0hfU1dJ
-VENIX0ZBSUxFRF9OT1RJRlk6IE5vdGlmeSB0aGF0IGEgY2hhbm5lbA0KPiBzd2l0Y2gNCj4gPiAr
-ICoJaGFzIGZhaWxlZCBvbiAlTkw4MDIxMV9BVFRSX0lGSU5ERVguICBUaGlzIG5vdGlmaWNhdGlv
-biBjYW4NCj4gPiArICoJb25seSBiZSBzZW50IGFmdGVyIGEgQE5MODAyMTFfQ01EX0NIX1NXSVRD
-SF9TVEFSVEVEX05PVElGWQ0KPiBoYXMNCj4gPiArICoJYmVlbiBpc3N1ZWQuDQo+IA0KPiAoK0ls
-YW4sIEFuZHJlaSkNCj4gDQo+IEknbSBub3QgcmVhbGx5IHN1cmUgd2h5IHlvdSBoYXZlIHRoaXMg
-LSBpdCBzZWVtcyB0aGF0IGluIHRoaXMgY2FzZSB0aGUgaW50ZXJmYWNlDQo+IHdpbGwgYmUgc3Rv
-cHBlZCBzbyB5b3UnbGwgZ2V0IGEgU1RPUF9BUCBvciBESVNDT05ORUNUIG9yIHdoYXRldmVyIG90
-aGVyDQo+IG5vdGlmaWNhdGlvbi4gVGhpcyBtYXkgbm90IGFjdHVhbGx5IGJlIGNvbXBsZXRlbHkg
-dHJ1ZSByaWdodCBub3cgKEkgc2VlbSB0bw0KPiByZW1lbWJlciBhIGZpeCBpbiB0aGlzIGFyZWEg
-YnV0IGNhbid0IHNlZW0gdG8gZmluZCBpdCBpbiBteSB0cmVlISEpIGJ1dCB3ZSdsbA0KPiBoYXZl
-IHRvIGZpeCB0aGF0IHBhcnQgYW55d2F5LiBOb3QgcmVhbGx5IHN1cmUgd2h5IHRoZW4gdGhhdCBj
-b3VsZG4ndCBiZSB1c2VkDQo+IGluc3RlYWQgb2YgdGhpcyBub3RpZmljYXRpb24/IFRoZSB1c2Vy
-c3BhY2UgY29kZSBpcyBnb2luZyB0byBoYXZlIHRvIHdvcnJ5DQo+IGFib3V0IHRoYXQgYW55d2F5
-LCBJJ2QgdGhpbmsuDQo+IA0KDQpBdCBsZWFzdCBmb3IgQVAvR08sIHRoZXJlIGFyZSBjYXNlcyB0
-aGF0IGEgZmFpbGVkIGNoYW5uZWwgc3dpdGNoIHNob3VsZCBub3QgbmVjZXNzYXJpbHkgdHJpZ2dl
-ciBhIFNUT1BfQVAgZmxvdy4gRm9yIGV4YW1wbGUsIGluIGNhc2UgdGhhdCBtdWx0aS1jaGFubmVs
-IGlzIHN1cHBvcnRlZCwgd3BhX3N1cHBsaWNhbnQgbWlnaHQgcmVxdWVzdCBhIGNoYW5uZWwgc3dp
-dGNoIHRvIHRyeSB0byBzd2l0Y2ggYW4gQVAvR08gaW50ZXJmYWNlIHRvIGEgY2hhbm5lbCB1c2Vk
-IGJ5IGEgc3RhdGlvbiBpbnRlcmZhY2UgKHRvIGF2b2lkIG11bHRpIGNoYW5uZWwgb3BlcmF0aW9u
-KSwgYnV0IGluIGNhc2UgdGhhdCBzdWNoIGEgdHJhbnNpdGlvbiBmYWlscywgaXQgaXMgc3RpbGwg
-YSB2YWxpZCB0byBjb250aW51ZSB0byB1c2UgY3VycmVudCBjaGFubmVsIGFuZCBkbyBub3Qgc3Rv
-cCB0aGUgR08uIEluIHN1Y2ggYSBjYXNlLCBpdCB3b3VsZCBiZSB1c2VmdWwgdG8gZ2V0IGEgZmFp
-bHVyZSBub3RpZmljYXRpb24uIEdlbmVyYWxseSwgSSB0aGluayB0aGF0IHNpbmNlIGhvc3RhcGQv
-d3BhX3N1cHBsaWNhbnQgaGF2ZSBzdGFydGVkIHRoZSBjaGFubmVsIHN3aXRjaCwgaXQgbWlnaHQg
-YmUgYmV0dGVyIHRvIGhhdmUgdGhlbSBoYW5kbGUgYSBub3RpZmljYXRpb24gYW5kIHRha2UgdGhl
-IGFwcHJvcHJpYXRlIGFjdGlvbiAoaWYgbmVlZGVkIHN0b3AgdGhlIEFQL0dPIC4uLikuIA0KDQpP
-dGhlciB0aGFuIHRoYXQsIGEgU1RPUF9BUCBtaWdodCBpbnRyb2R1Y2Ugc29tZSByYWNlcywgYXMg
-d3BhX3N1cHBsaWNhbnQvaG9zdGFwIHdpbGwgbm90IGtub3cgaWYgdGhlIHN0b3BfYXAgd2FzIGR1
-ZSB0byB0aGUgZmFpbGVkIENTIG9yIGR1ZSB0byBzb21lIG90aGVyIHJlYXNvbi4NCg0KUmVnYXJk
-cywNCg0KSWxhbi4NCg0K
+On Fri, 2014-05-23 at 14:23 +0200, Michal Kazior wrote:
+
+> Actually I think I've just spotted a little problem. This is also
+> related to the `[PATCH v6 6/6] cfg80211: remove channel_switch
+> combination check` thread.
+> 
+> Currently mac80211 verifies interface combinations in channel_switch.
+> It has an implicit assumption that channel switch does not change the
+> number of different channels (or at least it doesn't decrease it).
+> 
+> We were discussing degradation of number of different channels
+> earlier, e.g. due to non-radar -> radar change (going from max 2
+> channels to 1). With how things are now it's impossible to perform
+> such a channel switch.
+
+Good point.
+
+> Basically if we want to support this kind of channel switch we must
+> remove interface combination checks from ieee80211_channel_switch
+> because it's simply impossible to know the future (userspace may or
+> may not submit subsequent requests to match an existing interface
+> combination).
+
+I guess this is a side effect of not having all the channel switches in
+the API in a single call, which I think you had originally? :-)
+
+> So while I still intend to rework the multi-vif reservation a little
+> (to support cross-swapping at least) I'd like to know if I should
+> invest my time implementing degradation of number of channels in
+> multi-vif reservation or not.
+
+It doesn't matter to me. If you don't need the feature now, don't
+implement it now. It's not like it restricts the API (much) making
+future implementation difficult.
+
+johannes
+
