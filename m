@@ -1,112 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:47729 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757036AbaEQIxG (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:50123 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbaEWJG1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 04:53:06 -0400
-Received: by mail-wi0-f175.google.com with SMTP id f8so2007590wiw.8
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 01:53:05 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/22] staging: vt6656: rndis.h remove dead code.
-Date: Sat, 17 May 2014 09:50:29 +0100
-Message-Id: <1400316639-4430-12-git-send-email-tvboxspy@gmail.com> (sfid-20140517_105314_268105_4F92CC9F)
-In-Reply-To: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
-References: <1400316639-4430-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 23 May 2014 05:06:27 -0400
+Received: by mail-wi0-f171.google.com with SMTP id cc10so491668wib.4
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 02:06:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
+	<87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 23 May 2014 11:06:25 +0200
+Message-ID: <CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com> (sfid-20140523_110633_993738_661A8280)
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove dead structures and macros.
+On 23 May 2014 10:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 23 May 2014 10:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>>
+>>>> +static void ath10k_drain_tx(struct ath10k *ar)
+>>>> +{
+>>>> +     /* workers can hold conf_mutex -- avoid deadlock */
+>>>> +     WARN_ON(lockdep_is_held(&ar->conf_mutex));
+>>>
+>>> If CONFIG_LOCKDEP is disabled this will fail with:
+>>>
+>>> drivers/net/wireless/ath/ath10k/mac.c:2301:2: error: implicit declaration of function 'lockdep_is_held' [-Werror=implicit-function-declaration]
+>>>
+>>> I wasn't able to come up with any other way than adding '#ifdef
+>>> CONFIG_LOCKDEP' which is quite ugly. What should we do?
+>>
+>> I guess we could define lockdep_assert_not_held() in debug.h?
+>
+> Sure, but I still think it's a bit ugly. The right way to fix this would
+> be to add it to include/lockdep.h, instead of adding custom checks to a
+> driver.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rndis.h | 64 ------------------------------------------
- 1 file changed, 64 deletions(-)
+Good point. I wonder if it's generic enough to justify.
 
-diff --git a/drivers/staging/vt6656/rndis.h b/drivers/staging/vt6656/rndis.h
-index 3661f82..cf4e0e0 100644
---- a/drivers/staging/vt6656/rndis.h
-+++ b/drivers/staging/vt6656/rndis.h
-@@ -64,21 +64,8 @@
- #define MESSAGE_REQUEST_RF_CH1          0x0C
- #define MESSAGE_REQUEST_RF_CH2          0x0D
- 
--#define VIAUSB20_PACKET_HEADER          0x04
--
- #define USB_REG4	0x604
- 
--typedef struct _CMD_MESSAGE
--{
--    u8        byData[256];
--} CMD_MESSAGE, *PCMD_MESSAGE;
--
--typedef struct _CMD_WRITE_MASK
--{
--    u8        byData;
--    u8        byMask;
--} CMD_WRITE_MASK, *PCMD_WRITE_MASK;
--
- struct vnt_cmd_card_init
- {
- 	u8 init_class;
-@@ -97,55 +84,4 @@ struct vnt_rsp_card_init
- 	u8 max_channel;
- };
- 
--typedef struct _CMD_SET_KEY
--{
--    u16        wKCTL;
--    u8        abyMacAddr[6];
--    u8        abyKey[16];
--} CMD_SET_KEY, *PCMD_SET_KEY;
--
--typedef struct _CMD_CLRKEY_ENTRY
--{
--    u8        abyKeyEntry[11];
--} CMD_CLRKEY_ENTRY, *PCMD_CLRKEY_ENTRY;
--
--typedef struct _CMD_WRITE_MISCFF
--{
--    u32       adwMiscFFData[22][4];  //a key entry has only 22 dwords
--} CMD_WRITE_MISCFF, *PCMD_WRITE_MISCFF;
--
--typedef struct _CMD_SET_TSFTBTT
--{
--    u8        abyTSF_TBTT[8];
--} CMD_SET_TSFTBTT, *PCMD_SET_TSFTBTT;
--
--typedef struct _CMD_SET_SSTIFS
--{
--    u8        bySIFS;
--    u8        byDIFS;
--    u8        byEIFS;
--    u8        bySlotTime;
--    u8        byCwMax_Min;
--    u8        byBBCR10;
--} CMD_SET_SSTIFS, *PCMD_SET_SSTIFS;
--
--typedef struct _CMD_CHANGE_BBTYPE
--{
--    u8        bySIFS;
--    u8        byDIFS;
--    u8        byEIFS;
--    u8        bySlotTime;
--    u8        byCwMax_Min;
--    u8        byBBCR10;
--    u8        byBB_BBType;    //CR88
--    u8        byMAC_BBType;
--    u32       dwRSPINF_b_1;
--    u32       dwRSPINF_b_2;
--    u32       dwRSPINF_b_55;
--    u32       dwRSPINF_b_11;
--    u16        wRSPINF_a[9];
--} CMD_CHANGE_BBTYPE, *PCMD_CHANGE_BBTYPE;
--
--#define EXCH_WORD(w) ((u16)((u16)(w)<<8) | (u16)((u16)(w)>>8))
--
- #endif /* _RNDIS_H_ */
--- 
-1.9.1
 
+> But does this check even make sense? There's nothing preventing
+> to another thread to take lock just after the WARN_ON(), right?
+
+There's nothing wrong with other thread holding it. Actually that's
+the reason for this very check.
+
+The point is to prevent ath10k_drain_tx() being called while caller
+(current thread) holds conf_mutex. If it were to hold conf_mutex then
+cancel_work_sync() can deadlock as both workers it tries to stop try
+to get a hold of the lock too.
+
+
+> Oh, and if we add it to debug.h we should name ath10k_assert_not_held().
+> We should not use lockdep's namespace for anything inside ath10k.
+
+Good point.
+
+
+Michał
