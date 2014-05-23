@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54050 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbaE0K4f (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:42150 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350AbaEWKf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 06:56:35 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/16] brcmfmac: make chandef_to_chanspec() function static
-Date: Tue, 27 May 2014 12:56:15 +0200
-Message-ID: <1401188188-16492-4-git-send-email-arend@broadcom.com> (sfid-20140527_125642_006298_B698D8AD)
-In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 23 May 2014 06:35:59 -0400
+Received: by mail-ee0-f53.google.com with SMTP id c13so3468956eek.40
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:35:58 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: remove unnecessary tasklet_kill()
+Date: Fri, 23 May 2014 12:28:46 +0200
+Message-Id: <1400840927-14272-3-git-send-email-michal.kazior@tieto.com> (sfid-20140523_123605_847730_1EE49A3B)
+In-Reply-To: <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+ <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function chandef_to_chanspec() was added by
+The tasklet is already guaranteed to be killed on
+the teardown path.
 
-    brcmfmac: determine chanspec from struct cfg80211_chan_def info
-
-    The struct cfg80211_chan_def contains additional info to derive the
-    bandwidth and side-band information of the chanspec. This patch adds
-    chandef_to_chanspec() function used in IBSS join and starting AP
-    operation.
-
-However, it introduced a sparse warning because the function
-is only called from within the source file wl_cfg80211.c.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index df42a10..d8fa276 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -341,8 +341,8 @@ static u8 brcmf_mw_to_qdbm(u16 mw)
- 	return qdbm;
- }
+Notes:
+    v2:
+     * split from another patch [Kalle]
+
+ drivers/net/wireless/ath/ath10k/pci.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 7d72b9c..dadf4ce 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2758,8 +2758,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	if (!ar_pci)
+ 		return;
  
--u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
--			struct cfg80211_chan_def *ch)
-+static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
-+			       struct cfg80211_chan_def *ch)
- {
- 	struct brcmu_chan ch_inf;
- 	s32 primary_offset;
+-	tasklet_kill(&ar_pci->msi_fw_err);
+-
+ 	ath10k_core_unregister(ar);
+ 	ath10k_pci_free_ce(ar);
+ 
 -- 
-1.7.9.5
+1.8.5.3
 
