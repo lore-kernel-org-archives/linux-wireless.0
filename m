@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:40285 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbaETGGm (ORCPT
+Received: from ems.wolfvision.net ([213.33.91.163]:10747 "EHLO
+	ems.wolfvision.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216AbaEWMc6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 02:06:42 -0400
-Received: by mail-qg0-f41.google.com with SMTP id j5so4438qga.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 23:06:41 -0700 (PDT)
+	Fri, 23 May 2014 08:32:58 -0400
+From: Matthias Fend <Matthias.Fend@wolfvision.net>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: rt2x00: Ralink RT5572 very high peak current consumption
+Date: Fri, 23 May 2014 12:25:01 +0000
+Message-ID: <CC2A85E271C1FB479D9C17305347F69A4479A6@WOLFSERVER19.wolfvision-at.intra> (sfid-20140523_143302_182423_321AFD82)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
-References: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com>
- <546412005.18351359.1400528308190.JavaMail.root@zimbra65-e11.priv.proxad.net>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Tue, 20 May 2014 08:06:21 +0200
-Message-ID: <CAGnRvurBpWcn6ToSVq5bJN=bOuz_8ej9QgcvX6SP97M1ndwCRA@mail.gmail.com> (sfid-20140520_080645_597407_785190B2)
-Subject: Re: 802.11s mode without HWMP
-To: etienne.champetier@free.fr
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2014 at 9:38 PM,  <etienne.champetier@free.fr> wrote:
-> Hi,
->
-> I'm curious, what are you using for your L3 mesh/can you give details on the network?
->
-> Thanks in advance
-> Etienne
+Hello Ralink experts,
 
-I am using the Olsr.org codebase for routing... I have spent the last
-~2 years to do a clean rewrite of the codebase for an OLSRv2
-implementation.
+I recognized spurious problems with Ralink RT5572 USB-dongles when using this dongles as access point in 5G band.
+The problems may appear as short usb disconnect-connect events or failed vendor request messages at different offsets with different error codes or will not appear for days ;)
+During error research I noticed that, most likely during the beacon send time (100ms interval), there are very high peak currents in the supply of the USB-dongle.
 
-I am not directly involved in one special mesh network.
+I tried it with two different dongles, the base current for all three is in the range of  ~200mA:
+Buffalo WI-U2-300D: Peak ~1A
+TP-Link TL-WDN3200: Peak ~1.2mA
 
-1st, I am involved in the Olsr.org project, which is one of the
-routing protocols used in lots of cities in Europe to build large
-city-wide mesh networks with a mixture of wifi links, some of them
-with hundreds of nodes.
+We could reproduce this issue on two different machines (x86 and arm), did test with kernel versions 3.10.19, 3.13.0 and 3.14.4 tried hostapd-2.0 and hostapd-2.1 and loaded chip firmware version V0.29, V0.33 and V0.35.
 
-2nd, I am working for Fraunhofer FKIE in mesh related research
-(currently as part of the EU CONFINE project, see
-www.confine-project.eu) and we are interested in using mesh networks
-both for civil usecases (police, fire brigade, disaster recovery like
-earthquakes) and military ones.
+As a comparison I also created an 5G access point setup with a windows7 machine - all with the latest drivers from the manufacturer webpage.
+Buffalo WI-U2-300D: Peak 330mA
+TP-Link TL-WDN3200: Peak 330mA
+Which seems more legit than the values from the linux setups.
 
-Some networks running with OLSR.org routing software have hundreds of
-nodes, most are smaller.
+The access point functionality itself worked with every tested combination, but there is definitively something wrong.
+I also started to grab the usb communication of the windows driver to see if there is an obvious difference in some of the written registers.
+But this kind of reverse engineering is not as easy since the windows driver does not write the same registers as the linux drivers but write some others - and of course I have no datasheet/register description.
 
-My interest in the "bridging adhoc mode" is also related to the IETF
-DLEP draft (http://tools.ietf.org/html/draft-ietf-manet-dlep-05),
-which contains the concept of the "ethernet attached briding radio"
-and a communication protocol between local router and radio.
+Until now the only interesting thing I found out is that the linux driver writes 0x00000082 to the TXOP_HLDR_ET (0x1608) register whereas the windows driver uses a value of 0x0000000a. Changing this register during runtime in a linux system reduces the current peaks to 50 percent of their previous value.
+But there is still something else wrong.
 
-I think a "802.11s without HWMP" mode would make a perfect candidate
-for a DLEP style radio, at the moment I am using IBSS mode and a hack
-with the mac addresses.
+So, in my despair I try to get help in any form (hints, datasheets/manuals, ideas, experience, ...).
 
-I hope this answers your question.
+Thanks,
+ ~Matthias
 
-Henning Rogge
