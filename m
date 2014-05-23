@@ -1,312 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegasos-out.vodafone.de ([80.84.1.38]:59561 "EHLO
-	pegasos-out.vodafone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715AbaENTPX (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:39963 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752038AbaEWKf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 15:15:23 -0400
-In-Reply-To: <536FA82C.1040203@lwfinger.net>
-References: <536FA82C.1040203@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: Kernel binary for RTL8192EE
-From: stefan.krueger@vodafone.de
-Date: Wed, 14 May 2014 21:07:27 +0200
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <df3e5118-086d-4590-9f47-f3f16ddf3b92@email.android.com> (sfid-20140514_211546_667943_602A1FDD)
+	Fri, 23 May 2014 06:35:58 -0400
+Received: by mail-ee0-f47.google.com with SMTP id c13so3548833eek.34
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:35:57 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/3] ath10k: relocate core create/destroy functions
+Date: Fri, 23 May 2014 12:28:45 +0200
+Message-Id: <1400840927-14272-2-git-send-email-michal.kazior@tieto.com> (sfid-20140523_123621_603888_37563193)
+In-Reply-To: <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+ <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+This will avoid unnecessary forward declaration of
+any kind in the future.
 
-Hello,
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 128 ++++++++++++++++-----------------
+ 1 file changed, 64 insertions(+), 64 deletions(-)
 
-i have try kernel 3.14 with you patches and i try you deb-file.
-With both kernel i have the same issue..
-
-i find the Router (in this case it is a Fritz-Box router, but its the same with other routers - i tried this), but i cant connect to this.. and i dont know why..
-
-
-here some logs, if you need more please tell me which one..
-
-
-uname -a
-Linux wheezy 3.13.9 #3 SMP Sat May 10 10:51:00 CDT 2014 x86_64 GNU/Linux
-
-
-lsmod |grep 8192
-r8192ee 495016 0
-mac80211 626194 1 r8192ee
-cfg80211 483865 2 mac80211,r8192ee
-
-
-/etc/init.d/network-manager stop
-[ ok ] Stopping network connection manager: NetworkManager.
-root@wheezy:/home/stefan# NetworkManager --log-level=DEBUG
-
-
-dmesg |egrep 'wlan0|8192'
-[ 0.000000] PERCPU: Embedded 29 pages/cpu @ffff88021f200000 s86336 r8192 d24256 u262144
-[ 0.000000] pcpu-alloc: s86336 r8192 d24256 u262144 alloc=1*2097152
-[ 4.534056] r8192ee: module is from the staging directory, the quality is unknown, you have been warned.
-[ 4.535081] r8192ee-0:stg_rtl_pci_probe():<0-0> mem mapped space: start: 0xf2400000 len:00004000 flags:00140204, after map:0xffffc90004eb8000
-[ 4.535099] r8192ee-0:_rtl_pci_find_adapter():<0-0> Pci Bridge Vendor is found index: 0
-[ 4.535102] r8192ee-0:_rtl_pci_find_adapter():<0-0> pcidev busnumber:devnumber:funcnumber:vendor:link_ctl 2:0:0:10ec:0
-[ 4.535103] r8192ee-0:_rtl_pci_find_adapter():<0-0> pci_bridge busnumber:devnumber:funcnumber:vendor:pcie_cap:link_ctl_reg:amd 0:28:1:8086:40:43:0
-[ 4.535139] r8192ee-0:rtl92ee_read_eeprom_info():<0-0> Boot from EFUSE
-[ 4.543354] r8192ee-0:_rtl92ee_read_adapter_info():<0-0> dev_addr: 54:35:30:0e:6c:8b
-[ 4.543359] r8192ee-0:_rtl92ee_hal_customized_behavior():<0-0> RT Customized ID: 0x12
-[ 5.028045] r8192ee 0000:02:00.0: irq 46 for MSI/MSI-X
-[ 12.495196] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[ 15.309062] wlan0: authenticate with bc:05:43:79:f9:47
-[ 15.325612] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 15.528819] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 15.733017] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 15.937246] wlan0: authentication with bc:05:43:79:f9:47 timed out
-[ 30.818085] wlan0: authenticate with bc:05:43:79:f9:47
-[ 30.834522] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 31.037817] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 31.242066] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 31.446289] wlan0: authentication with bc:05:43:79:f9:47 timed out
-[ 39.723989] wlan0: authenticate with bc:05:43:79:f9:47
-[ 39.740451] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 39.943682] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 40.147848] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 40.352083] wlan0: authentication with bc:05:43:79:f9:47 timed out
-
-[ 455.536392] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[ 457.435757] wlan0: authenticate with bc:05:43:79:f9:47
-[ 457.451936] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 457.655213] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 457.859404] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 458.063663] wlan0: authentication with bc:05:43:79:f9:47 timed out
-[ 459.749891] wlan0: authenticate with bc:05:43:79:f9:47
-[ 459.766582] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 459.969757] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 460.173983] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 460.378161] wlan0: authentication with bc:05:43:79:f9:47 timed out
-[ 475.255128] wlan0: authenticate with bc:05:43:79:f9:47
-[ 475.271622] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-[ 475.474812] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-[ 475.678994] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-[ 475.883266] wlan0: authentication with bc:05:43:79:f9:47 timed out
-
-
-egrep 'wlan0|8192' /var/log/syslog
-May 14 20:24:22 wheezy kernel: [ 0.000000] PERCPU: Embedded 29 pages/cpu @ffff88021f200000 s86336 r8192 d24256 u262144
-May 14 20:24:22 wheezy kernel: [ 0.000000] pcpu-alloc: s86336 r8192 d24256 u262144 alloc=1*2097152
-May 14 20:24:22 wheezy kernel: [ 4.534056] r8192ee: module is from the staging directory, the quality is unknown, you have been warned.
-May 14 20:24:22 wheezy kernel: [ 4.535081] r8192ee-0:stg_rtl_pci_probe():<0-0> mem mapped space: start: 0xf2400000 len:00004000 flags:00140204, after map:0xffffc90004eb8000
-May 14 20:24:22 wheezy kernel: [ 4.535099] r8192ee-0:_rtl_pci_find_adapter():<0-0> Pci Bridge Vendor is found index: 0
-May 14 20:24:22 wheezy kernel: [ 4.535102] r8192ee-0:_rtl_pci_find_adapter():<0-0> pcidev busnumber:devnumber:funcnumber:vendor:link_ctl 2:0:0:10ec:0
-May 14 20:24:22 wheezy kernel: [ 4.535103] r8192ee-0:_rtl_pci_find_adapter():<0-0> pci_bridge busnumber:devnumber:funcnumber:vendor:pcie_cap:link_ctl_reg:amd 0:28:1:8086:40:43:0
-May 14 20:24:22 wheezy kernel: [ 4.535139] r8192ee-0:rtl92ee_read_eeprom_info():<0-0> Boot from EFUSE
-May 14 20:24:22 wheezy kernel: [ 4.543354] r8192ee-0:_rtl92ee_read_adapter_info():<0-0> dev_addr: 54:35:30:0e:6c:8b
-May 14 20:24:22 wheezy kernel: [ 4.543359] r8192ee-0:_rtl92ee_hal_customized_behavior():<0-0> RT Customized ID: 0x12
-May 14 20:24:22 wheezy kernel: [ 5.028045] r8192ee 0000:02:00.0: irq 46 for MSI/MSI-X
-May 14 20:24:24 wheezy NetworkManager[3060]: SCPlugin-Ifupdown: devices added (path: /sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0/net/wlan0, iface: wlan0)
-May 14 20:24:24 wheezy NetworkManager[3060]: SCPlugin-Ifupdown: device added (path: /sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0/net/wlan0, iface: wlan0): no ifupdown configuration found.
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): using nl80211 for WiFi device control
-May 14 20:24:25 wheezy NetworkManager[3060]: <warn> (wlan0): driver supports Access Point (AP) mode
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): new 802.11 WiFi device (driver: 'r8192ee' ifindex: 3)
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): exported as /org/freedesktop/NetworkManager/Devices/1
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): now managed
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): device state change: unmanaged -> unavailable (reason 'managed') [10 20 2]
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): bringing up device.
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): preparing device.
-May 14 20:24:25 wheezy NetworkManager[3060]: <info> (wlan0): deactivating device (reason 'managed') [2]
-May 14 20:24:25 wheezy kernel: [ 12.495196] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-May 14 20:24:26 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: starting -> ready
-May 14 20:24:26 wheezy NetworkManager[3060]: <info> (wlan0): device state change: unavailable -> disconnected (reason 'supplicant-available') [20 30 42]
-May 14 20:24:26 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: ready -> inactive
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) starting connection 'zuHause'
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> (wlan0): device state change: disconnected -> prepare (reason 'none') [30 40 0]
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> (wlan0): device state change: prepare -> config (reason 'none') [40 50 0]
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0/wireless): connection 'zuHause' has security, and secrets exist. No new secrets needed.
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
-May 14 20:24:27 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: inactive -> scanning
-May 14 20:24:28 wheezy kernel: [ 15.309062] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:24:28 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:24:28 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:24:28 wheezy kernel: [ 15.325612] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:24:28 wheezy kernel: [ 15.528819] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:24:29 wheezy kernel: [ 15.733017] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:24:29 wheezy kernel: [ 15.937246] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:24:29 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:24:29 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May 14 20:24:44 wheezy kernel: [ 30.818085] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:24:44 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:24:44 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:24:44 wheezy kernel: [ 30.834522] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:24:44 wheezy kernel: [ 31.037817] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:24:44 wheezy kernel: [ 31.242066] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:24:44 wheezy kernel: [ 31.446289] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:24:44 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:24:44 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May 14 20:24:53 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:24:53 wheezy kernel: [ 39.723989] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:24:53 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:24:53 wheezy kernel: [ 39.740451] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:24:53 wheezy kernel: [ 39.943682] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:24:53 wheezy NetworkManager[3060]: <warn> Activation (wlan0/wireless): association took too long.
-May 14 20:24:53 wheezy NetworkManager[3060]: <info> (wlan0): device state change: config -> need-auth (reason 'none') [50 60 0]
-May 14 20:24:53 wheezy NetworkManager[3060]: <warn> Activation (wlan0/wireless): asking for new secrets
-May 14 20:24:53 wheezy NetworkManager[3060]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:24:53 wheezy kernel: [ 40.147848] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:24:53 wheezy kernel: [ 40.352083] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:26:53 wheezy NetworkManager[3060]: <info> (wlan0): device state change: need-auth -> failed (reason 'no-secrets') [60 120 7]
-May 14 20:26:53 wheezy NetworkManager[3060]: <warn> Activation (wlan0) failed for access point (FRITZ!Box Fon WLAN 7112)
-May 14 20:26:53 wheezy NetworkManager[3060]: <warn> Activation (wlan0) failed.
-May 14 20:26:53 wheezy NetworkManager[3060]: <info> (wlan0): device state change: failed -> disconnected (reason 'none') [120 30 0]
-May 14 20:26:53 wheezy NetworkManager[3060]: <info> (wlan0): deactivating device (reason 'none') [0]
-May 14 20:31:32 wheezy NetworkManager[3060]: <info> (wlan0): now unmanaged
-May 14 20:31:32 wheezy NetworkManager[3060]: <info> (wlan0): device state change: disconnected -> unmanaged (reason 'removed') [30 10 36]
-May 14 20:31:32 wheezy NetworkManager[3060]: <info> (wlan0): cleaning up...
-May 14 20:31:32 wheezy NetworkManager[3060]: <info> (wlan0): taking down device.
-May 14 20:31:47 wheezy NetworkManager[4773]: SCPlugin-Ifupdown: devices added (path: /sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0/net/wlan0, iface: wlan0)
-May 14 20:31:47 wheezy NetworkManager[4773]: SCPlugin-Ifupdown: device added (path: /sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0/net/wlan0, iface: wlan0): no ifupdown configuration found.
-May 14 20:31:47 wheezy NetworkManager[4773]: <debug> [1400092307.779457] [nm-device-wifi.c:297] constructor(): (wlan0): kernel ifindex 3
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): using nl80211 for WiFi device control
-May 14 20:31:47 wheezy NetworkManager[4773]: <warn> (wlan0): driver supports Access Point (AP) mode
-May 14 20:31:47 wheezy NetworkManager[4773]: <debug> [1400092307.779673] [nm-device-wifi.c:2626] real_update_initial_hw_address(): (wlan0): read initial MAC address 54:35:30:0E:6C:8B
-May 14 20:31:47 wheezy NetworkManager[4773]: <debug> [1400092307.779748] [nm-device-wifi.c:3213] real_set_enabled(): (wlan0): device now enabled
-May 14 20:31:47 wheezy NetworkManager[4773]: <debug> [1400092307.779756] [nm-device-wifi.c:3219] real_set_enabled(): (enable): wlan0 blocked by UNMANAGED state
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): new 802.11 WiFi device (driver: 'r8192ee' ifindex: 3)
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): exported as /org/freedesktop/NetworkManager/Devices/2
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): now managed
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): device state change: unmanaged -> unavailable (reason 'managed') [10 20 2]
-May 14 20:31:47 wheezy NetworkManager[4773]: <info> (wlan0): bringing up device.
-May 14 20:31:48 wheezy NetworkManager[4773]: <info> (wlan0): preparing device.
-May 14 20:31:48 wheezy NetworkManager[4773]: <info> (wlan0): deactivating device (reason 'managed') [2]
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443178] [nm-device-wifi.c:868] _set_hw_addr(): (wlan0): no MAC address change needed
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443239] [nm-system.c:1205] nm_system_iface_flush_routes(): (wlan0): flushing routes ifindex 3 family INET (2)
-May 14 20:31:48 wheezy kernel: [ 455.536392] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443368] [nm-system.c:196] sync_addresses(): (wlan0): syncing addresses (family 2)
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443481] [nm-supplicant-manager.c:88] nm_supplicant_manager_iface_get(): (wlan0): creating new supplicant interface
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443613] [nm-supplicant-interface.c:829] interface_add(): (wlan0): adding interface to supplicant
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443740] [nm-device-wifi.c:1308] real_is_available(): (wlan0): not available because supplicant interface not ready
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.443750] [nm-device.c:4334] nm_device_state_changed(): (wlan0): device not yet available for transition to DISCONNECTED
-May 14 20:31:48 wheezy NetworkManager[4773]: <debug> [1400092308.446310] [nm-supplicant-interface.c:658] interface_add_done(): (wlan0): interface added to supplicant
-May 14 20:31:48 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: starting -> ready
-May 14 20:31:48 wheezy NetworkManager[4773]: <info> (wlan0): device state change: unavailable -> disconnected (reason 'supplicant-available') [20 30 42]
-May 14 20:31:48 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: ready -> inactive
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) starting connection 'zuHause'
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> (wlan0): device state change: disconnected -> prepare (reason 'none') [30 40 0]
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> (wlan0): device state change: prepare -> config (reason 'none') [40 50 0]
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0/wireless): connection 'zuHause' has security, and secrets exist. No new secrets needed.
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
-May 14 20:31:49 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: inactive -> scanning
-May 14 20:31:50 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:31:50 wheezy kernel: [ 457.435757] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:31:50 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:31:50 wheezy kernel: [ 457.451936] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:31:50 wheezy kernel: [ 457.655213] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:31:50 wheezy kernel: [ 457.859404] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:31:50 wheezy kernel: [ 458.063663] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:31:50 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:31:51 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May 14 20:31:52 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:31:52 wheezy kernel: [ 459.749891] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:31:52 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:31:52 wheezy kernel: [ 459.766582] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:31:52 wheezy kernel: [ 459.969757] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:31:53 wheezy kernel: [ 460.173983] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:31:53 wheezy kernel: [ 460.378161] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:31:53 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:31:53 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May 14 20:32:08 wheezy wpa_supplicant[3283]: wlan0: SME: Trying to authenticate with bc:05:43:79:f9:47 (SSID='FRITZ!Box Fon WLAN 7112' freq=2412 MHz)
-May 14 20:32:08 wheezy kernel: [ 475.255128] wlan0: authenticate with bc:05:43:79:f9:47
-May 14 20:32:08 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-May 14 20:32:08 wheezy kernel: [ 475.271622] wlan0: direct probe to bc:05:43:79:f9:47 (try 1/3)
-May 14 20:32:08 wheezy kernel: [ 475.474812] wlan0: direct probe to bc:05:43:79:f9:47 (try 2/3)
-May 14 20:32:08 wheezy kernel: [ 475.678994] wlan0: direct probe to bc:05:43:79:f9:47 (try 3/3)
-May 14 20:32:08 wheezy kernel: [ 475.883266] wlan0: authentication with bc:05:43:79:f9:47 timed out
-May 14 20:32:08 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: authenticating -> disconnected
-May 14 20:32:08 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-May 14 20:32:14 wheezy NetworkManager[4773]: <warn> Activation (wlan0/wireless): association took too long.
-May 14 20:32:14 wheezy NetworkManager[4773]: <info> (wlan0): device state change: config -> need-auth (reason 'none') [50 60 0]
-May 14 20:32:14 wheezy NetworkManager[4773]: <warn> Activation (wlan0/wireless): asking for new secrets
-May 14 20:32:14 wheezy NetworkManager[4773]: <info> (wlan0): supplicant interface state: scanning -> disconnected
-May 14 20:34:14 wheezy NetworkManager[4773]: <info> (wlan0): device state change: need-auth -> failed (reason 'no-secrets') [60 120 7]
-May 14 20:34:14 wheezy NetworkManager[4773]: <warn> Activation (wlan0) failed for access point (FRITZ!Box Fon WLAN 7112)
-May 14 20:34:14 wheezy NetworkManager[4773]: <warn> Activation (wlan0) failed.
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745122] [nm-device.c:4404] nm_device_queue_state(): (wlan0): queued state change to disconnected (id 141)
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745268] [nm-device.c:4372] queued_set_state(): (wlan0): running queued state change to disconnected (id 141)
-May 14 20:34:14 wheezy NetworkManager[4773]: <info> (wlan0): device state change: failed -> disconnected (reason 'none') [120 30 0]
-May 14 20:34:14 wheezy NetworkManager[4773]: <info> (wlan0): deactivating device (reason 'none') [0]
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745297] [nm-firewall-manager.c:157] nm_firewall_manager_remove_from_zone(): (wlan0) firewall zone remove skipped (not running)
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745371] [nm-device-wifi.c:868] _set_hw_addr(): (wlan0): no MAC address change needed
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745473] [nm-system.c:1205] nm_system_iface_flush_routes(): (wlan0): flushing routes ifindex 3 family INET (2)
-May 14 20:34:14 wheezy NetworkManager[4773]: <debug> [1400092454.745622] [nm-system.c:196] sync_addresses(): (wlan0): syncing addresses (family 2)
-
-
-
-i hope you can help me!
-Thanks in advanced!
-
-best regards
-Stefan
-
-
-
-
-On 11. Mai 2014 18:41:16 MESZ, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->This mail is blind copied to everyone that has contacted me regarding a
->driver
->for the RTL8192EE, and to the Realtek developers.
->
->Although the patches needed to add this driver to the 3.14.X kernel
->were made
->available earlier, not everyone has the expertise needed to build a
->kernel for
->their system. As the Lenovo T440s is the only computer that currently
->is
->shipping with this device, and Lenovo uses Ubuntu 14.04, I have built
->such a
->patched kernel and I am making is available. This one uses the official
->3.13.3
->source currently in use by Ubuntu and includes all of their patches.
->
->The file is obtained at
->http://www.lwfinger.com/realtek_drivers/linux-image-3.13.9_0.9_amd64.deb.
->At
->present, I do not have a 32-bit version available. After downloading,
->this
->kernel is installed using the command 'sudo dpkg -i
-><path_to_downloaded_deb_file>
->
->Larry
-
-- --
-Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
------BEGIN PGP SIGNATURE-----
-Version: APG v1.1.1
-
-iQJIBAEBCgAyBQJTc77uKxxTdGVmYW4gS3L8Z2VyIDxzdGVmYW4ua3J1ZWdlckB2
-b2RhZm9uZS5kZT4ACgkQKfL7XZZDcf0BEA/+JFX8Ld8ZKLaoszpIKMxMyDVtO74O
-GSr6W0C74NT4GJf3fhkdOmvmGJPqunUDCt10O5xcxZDN9Ef6M3FEuWi/h07rCwp2
-paqTetWWpfANtaS73jtvPpuWgux07q8fEC5QUmcc0DglzXTSNOC71XmfCs2NBwN8
-6cWSIVekm5goLKUYzmlQWqiefIGMwkD22rG0TcXHlPhZuiodt7jK1oqfzLreU6OL
-gw8JFC+3Pi7e29zoSGhbhtNEb9QdW5y8GD+BvvSEQ5CPhUVS2UuN0MuS155VwV2M
-XIfkGrwpDJp608lmgjOeNUID21PrGrorhEzN/r5qfApbkSooV/s/LIPiQJaOQthe
-sdD+sNrV+n0ckzHWVo+V8VbTobnWK9tDdDO5YtMwZ2SvWrfrJBlzbSi6TlPPsHpd
-NeeomqebypYm0bUaSp7cKuDq3jMwm2W07e8pAoOksUElgiMQnoVL8qciO4GERkj/
-Dj779O/v1Gp1uVSR2KPB+n9iRlJLBV1FMD+bs9+RAFzoepnskvlL5FQjxnUgaXWD
-PjVogL0AjOmilpKTDMIcRd+uN8S/j/pEPAwhwpFZOos/FVj7jv635Oqu8gUxx2Vq
-0771kQDe3tCs+8qi5PwPtWStaGws4YhZkarKo51X32G5cKcNZVOjfvkHsGxLc7IR
-gJTevFzwMQ1UHAo=
-=E5JE
------END PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 75b3dfb..bd4d1cc 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -701,70 +701,6 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+-struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+-				  const struct ath10k_hif_ops *hif_ops)
+-{
+-	struct ath10k *ar;
+-
+-	ar = ath10k_mac_create();
+-	if (!ar)
+-		return NULL;
+-
+-	ar->ath_common.priv = ar;
+-	ar->ath_common.hw = ar->hw;
+-
+-	ar->p2p = !!ath10k_p2p;
+-	ar->dev = dev;
+-
+-	ar->hif.priv = hif_priv;
+-	ar->hif.ops = hif_ops;
+-
+-	init_completion(&ar->scan.started);
+-	init_completion(&ar->scan.completed);
+-	init_completion(&ar->scan.on_channel);
+-	init_completion(&ar->target_suspend);
+-
+-	init_completion(&ar->install_key_done);
+-	init_completion(&ar->vdev_setup_done);
+-
+-	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
+-
+-	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
+-	if (!ar->workqueue)
+-		goto err_wq;
+-
+-	mutex_init(&ar->conf_mutex);
+-	spin_lock_init(&ar->data_lock);
+-
+-	INIT_LIST_HEAD(&ar->peers);
+-	init_waitqueue_head(&ar->peer_mapping_wq);
+-
+-	init_completion(&ar->offchan_tx_completed);
+-	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
+-	skb_queue_head_init(&ar->offchan_tx_queue);
+-
+-	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
+-	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+-
+-	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+-
+-	return ar;
+-
+-err_wq:
+-	ath10k_mac_destroy(ar);
+-	return NULL;
+-}
+-EXPORT_SYMBOL(ath10k_core_create);
+-
+-void ath10k_core_destroy(struct ath10k *ar)
+-{
+-	flush_workqueue(ar->workqueue);
+-	destroy_workqueue(ar->workqueue);
+-
+-	ath10k_mac_destroy(ar);
+-}
+-EXPORT_SYMBOL(ath10k_core_destroy);
+-
+ int ath10k_core_start(struct ath10k *ar)
+ {
+ 	int status;
+@@ -1058,6 +994,70 @@ void ath10k_core_unregister(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_core_unregister);
+ 
++struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
++				  const struct ath10k_hif_ops *hif_ops)
++{
++	struct ath10k *ar;
++
++	ar = ath10k_mac_create();
++	if (!ar)
++		return NULL;
++
++	ar->ath_common.priv = ar;
++	ar->ath_common.hw = ar->hw;
++
++	ar->p2p = !!ath10k_p2p;
++	ar->dev = dev;
++
++	ar->hif.priv = hif_priv;
++	ar->hif.ops = hif_ops;
++
++	init_completion(&ar->scan.started);
++	init_completion(&ar->scan.completed);
++	init_completion(&ar->scan.on_channel);
++	init_completion(&ar->target_suspend);
++
++	init_completion(&ar->install_key_done);
++	init_completion(&ar->vdev_setup_done);
++
++	setup_timer(&ar->scan.timeout, ath10k_reset_scan, (unsigned long)ar);
++
++	ar->workqueue = create_singlethread_workqueue("ath10k_wq");
++	if (!ar->workqueue)
++		goto err_wq;
++
++	mutex_init(&ar->conf_mutex);
++	spin_lock_init(&ar->data_lock);
++
++	INIT_LIST_HEAD(&ar->peers);
++	init_waitqueue_head(&ar->peer_mapping_wq);
++
++	init_completion(&ar->offchan_tx_completed);
++	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
++	skb_queue_head_init(&ar->offchan_tx_queue);
++
++	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
++	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
++
++	INIT_WORK(&ar->restart_work, ath10k_core_restart);
++
++	return ar;
++
++err_wq:
++	ath10k_mac_destroy(ar);
++	return NULL;
++}
++EXPORT_SYMBOL(ath10k_core_create);
++
++void ath10k_core_destroy(struct ath10k *ar)
++{
++	flush_workqueue(ar->workqueue);
++	destroy_workqueue(ar->workqueue);
++
++	ath10k_mac_destroy(ar);
++}
++EXPORT_SYMBOL(ath10k_core_destroy);
++
+ MODULE_AUTHOR("Qualcomm Atheros");
+ MODULE_DESCRIPTION("Core module for QCA988X PCIe devices.");
+ MODULE_LICENSE("Dual BSD/GPL");
+-- 
+1.8.5.3
 
