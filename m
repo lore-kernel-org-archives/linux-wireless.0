@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:48098 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561AbaEUQRj (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:49852 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbaEWIiX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 12:17:39 -0400
-Received: by mail-ob0-f178.google.com with SMTP id va2so2424196obc.23
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2014 09:17:38 -0700 (PDT)
+	Fri, 23 May 2014 04:38:23 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so454265wib.17
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 01:38:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1400668890.4136.1.camel@jlt4.sipsolutions.net>
-References: <20140520203657.2C281E0300@pstew.mtv.corp.google.com>
-	<20140520223316.EFCF1E0007@pstew.mtv.corp.google.com>
-	<1400668890.4136.1.camel@jlt4.sipsolutions.net>
-Date: Wed, 21 May 2014 09:17:38 -0700
-Message-ID: <CAMcMvsiGJrJFee_nuGC1L8tRuTJLZR3nikU+4F-Zo1mgNeuNjw@mail.gmail.com> (sfid-20140521_181742_574452_C1A75048)
-Subject: Re: [PATCHv2] nl80211: Provide TDLS link state
-From: Paul Stewart <pstew@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
+In-Reply-To: <87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 23 May 2014 10:38:20 +0200
+Message-ID: <CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com> (sfid-20140523_103831_577790_8E0CCF53)
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2014 at 3:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On 23 May 2014 10:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
-> On Tue, 2014-05-20 at 13:27 -0700, Paul Stewart wrote:
-> > Provide a method to query TDLS state in drivers that use the
-> > NL80211_CMD_TDLS_OPER method for link setup.
+>> This makes sure no further tx requests are
+>> submitted to HTT before driver teardown.
+>>
+>> This should prevent invalid pointer/NULL
+>> dereference on htt tx pool in ath10k_htt_tx() in
+>> some cases of heavy traffic.
+>>
+>> Reported-By: Ben Greear <greearb@candelatech.com>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 >
-> Apart from the fact that your patch isn't very clear on how this was
-> intended to be used (some return value?) I don't really see why even
-> such a driver couldn't implement station operations
-> (get_station/dump_station) and get the same API for this that mac80211
-> already implements.
-
-
- I still think this might be too heavyweight in situations where the
-firmware handles TDLS links. Think about a system where the firmware
-is completely responsible for terminating incoming TDLS requests and
-offers no facility to notify the kernel as the TDLS link (initiated
-remotely) was established.  Unless the driver polls the firmware for
-ALL MAC addresses, there's no way for a station entry to magically
-appear.  I wan this method so we can directly ask the firmware "hey,
-is there a TDLS link to 02:00:00:00:01:00?"  This pre-supposes that
-user-space has some knowledge about this remote host (suppose we're
-streaming media to it) and we want to know whether in this case, for
-diagnostic reasons, whether TDLS was established between them at this
-time.
->
->
-> iw wlan0 station dump gives me
-> Station 02:00:00:00:01:00 (on wlan0)
->         inactive time:  450 ms
->         rx bytes:       3068
->         rx packets:     2
->         tx bytes:       3036
->         tx packets:     2
->         tx retries:     0
->         tx failed:      0
->         signal:         -30 dBm
->         signal avg:     -30 dBm
->         tx bitrate:     24.0 MBit/s
->         rx bitrate:     12.0 MBit/s
->         authorized:     yes
->         authenticated:  yes
->         preamble:       long
->         WMM/WME:        no
->         MFP:            no
->         TDLS peer:      yes
 > [...]
 >
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2289,6 +2289,21 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+>>  /*
+>>   * Initialize various parameters with default vaules.
+>>   */
+>> +static void ath10k_drain_tx(struct ath10k *ar)
+>> +{
+>> +     /* workers can hold conf_mutex -- avoid deadlock */
+>> +     WARN_ON(lockdep_is_held(&ar->conf_mutex));
 >
-> johannes
+> If CONFIG_LOCKDEP is disabled this will fail with:
 >
+> drivers/net/wireless/ath/ath10k/mac.c:2301:2: error: implicit declaration of function 'lockdep_is_held' [-Werror=implicit-function-declaration]
+>
+> I wasn't able to come up with any other way than adding '#ifdef
+> CONFIG_LOCKDEP' which is quite ugly. What should we do?
+
+I guess we could define lockdep_assert_not_held() in debug.h?
+
+
+Michał
