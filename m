@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:57567 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750882AbaEXGBT (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7571 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbaEWKbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 02:01:19 -0400
-Message-ID: <1400910366.31526.65.camel@x220> (sfid-20140524_080136_370781_73FD9177)
-Subject: [PATCH] rtlwifi: rtl8192cu: remove check for CONFIG_AUTOSUSPEND
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Sat, 24 May 2014 07:46:06 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 23 May 2014 06:31:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
+	<87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
+Date: Fri, 23 May 2014 13:31:01 +0300
+In-Reply-To: <CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 23 May 2014 11:06:25 +0200")
+Message-ID: <877g5cvlay.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_123112_393126_EFFFD5CF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A check for CONFIG_AUTOSUSPEND was included in this driver when it was
-added in v2.6.39. But that Kconfig symbol doesn't exist. Remove that
-check and the single line it hides.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Compile tested.
+>> Sure, but I still think it's a bit ugly. The right way to fix this would
+>> be to add it to include/lockdep.h, instead of adding custom checks to a
+>> driver.
+>
+> Good point. I wonder if it's generic enough to justify.
 
-It's hard to say whether or not the intention was to allow enabling
-usb's autosuspend functionality. But that functionality has been
-disabled (as leaving this member zero probably means) for three years
-now and I don't have access to this hardware. So I opted for safety.
+No idea. But no matter what it will take some time to get it accepted,
+so we need to solve this in a faster way so that I can apply this patch.
 
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 3 ---
- 1 file changed, 3 deletions(-)
+>> But does this check even make sense? There's nothing preventing
+>> to another thread to take lock just after the WARN_ON(), right?
+>
+> There's nothing wrong with other thread holding it. Actually that's
+> the reason for this very check.
+>
+> The point is to prevent ath10k_drain_tx() being called while caller
+> (current thread) holds conf_mutex. If it were to hold conf_mutex then
+> cancel_work_sync() can deadlock as both workers it tries to stop try
+> to get a hold of the lock too.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index c61311084d7e..361435f8608a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -395,9 +395,6 @@ static struct usb_driver rtl8192cu_driver = {
- 	/* .resume = rtl_usb_resume, */
- 	/* .reset_resume = rtl8192c_resume, */
- #endif /* CONFIG_PM */
--#ifdef CONFIG_AUTOSUSPEND
--	.supports_autosuspend = 1,
--#endif
- 	.disable_hub_initiated_lpm = 1,
- };
- 
+Ah, now I understand.
+
+What if we just drop the WARN_ON() from this patch just so that I can
+apply the patch and we add a proper code for checking the mutex in a
+followup patch? Are you ok with that?
+
+
 -- 
-1.9.0
-
+Kalle Valo
