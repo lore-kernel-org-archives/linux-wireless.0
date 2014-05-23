@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35614 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382AbaEaNmS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 09:42:18 -0400
-Date: Sat, 31 May 2014 16:42:02 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	kbuild@01.org
-Subject: Re: [PATCH] staging: vt6656: Fix vnt_rf_table_download
- __builtin_memcpy() addr* too small (3 vs 64).
-Message-ID: <20140531133839.GJ17724@mwanda> (sfid-20140531_154302_364945_F476D647)
-References: <1401541767-2940-1-git-send-email-tvboxspy@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401541767-2940-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47545 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751017AbaEWJa2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 05:30:28 -0400
+Message-ID: <1400837419.4358.17.camel@jlt4.sipsolutions.net> (sfid-20140523_113031_200744_AC708F4C)
+Subject: Re: [PATCH] mac80211: add a single-transaction driver op to switch
+ contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 23 May 2014 11:30:19 +0200
+In-Reply-To: <1400836483.25946.37.camel@dubbel>
+References: <1400769938.4174.29.camel@jlt4.sipsolutions.net>
+	 <1400812703-15685-1-git-send-email-luca@coelho.fi>
+	 <CA+BoTQkof_e_T=xegftVHdKK_XFeb2HegOQWmV5+PkCdLkzEyg@mail.gmail.com>
+	 (sfid-20140523_100116_761277_D988CC7D) <1400835498.4358.9.camel@jlt4.sipsolutions.net>
+	 <1400836483.25946.37.camel@dubbel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 31, 2014 at 02:09:27PM +0100, Malcolm Priestley wrote:
-> Fix following errors
-> drivers/staging/vt6656/rf.c:1060 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
-> drivers/staging/vt6656/rf.c:1078 vnt_rf_table_download() error: __builtin_memcpy() 'addr3' too small (3 vs 64)
-> drivers/staging/vt6656/rf.c:1094 vnt_rf_table_download() error: __builtin_memcpy() 'addr1' too small (3 vs 48)
-> drivers/staging/vt6656/rf.c:1108 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
-> 
+On Fri, 2014-05-23 at 12:14 +0300, Luca Coelho wrote:
 
-I guess I was confused where the 64 comes from in the:
+> What do you mean mine doesn't support tracing? Check the bottom of the
+> patch again. :) I don't think it's the most beautiful code, but it seems
+> to work. :)
 
-		if (length2 >= 64)
-			length = 64;
+Oh, I was going by the old version I guess! :)
 
-We only ever seem to use the first 64 bytes of "u8 array[256];" so my
-guess is that it was intended to be sizeof(array)?
+That tracing code looks OK to me, though I think that the vif name field
+is too short?
 
-regards,
-dan carpenter
+> Also, my patch *does* support multiple vifs.  But the code we have
+> doesn't support it, so I call the new op with a single-vif only.
+> Michal's patch doesn't call the new op (only on a later patch), so it's
+> pretty much the same.
+
+Right, ok. So it's a wash. Flip a coin? :)
+
+johannes
 
