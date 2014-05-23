@@ -1,94 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:43734 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbaEGNHO (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:62289 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbaEWGQM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 09:07:14 -0400
-Received: by mail-ee0-f44.google.com with SMTP id c41so722937eek.17
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 06:07:13 -0700 (PDT)
+	Fri, 23 May 2014 02:16:12 -0400
+Received: by mail-wg0-f48.google.com with SMTP id k14so125256wgh.7
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 23:16:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1400770304.4174.34.camel@jlt4.sipsolutions.net>
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+	<1400767676-15994-3-git-send-email-michal.kazior@tieto.com>
+	<1400770304.4174.34.camel@jlt4.sipsolutions.net>
+Date: Fri, 23 May 2014 08:16:10 +0200
+Message-ID: <CA+BoTQk3stQoK34q6VcXhHm8+9Rh67UF4TTfgy5P1JY1o1dTFA@mail.gmail.com> (sfid-20140523_081617_078189_A7F4F138)
+Subject: Re: [PATCH v6 2/6] mac80211: implement multi-vif in-place reservations
 From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, apenwarr@gmail.com,
-	greearb@candelatech.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: fix handling of wierd MSDU chaining cases
-Date: Wed,  7 May 2014 14:33:26 +0200
-Message-Id: <1399466006-5556-3-git-send-email-michal.kazior@tieto.com> (sfid-20140507_150721_740210_C22AFE7F)
-In-Reply-To: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
-References: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently firmware can sometimes report a
-sequence with the first rx descriptor saying it's
-not the last MSDU. In that case msdu_chaining
-value could be overwritten saying it's not a
-chained MSDU. This in turn led to skb_push panic
-as the frame could be treated as an A-MSDU instead
-of a chained MSDU.
+On 22 May 2014 16:51, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 16:07 +0200, Michal Kazior wrote:
+>
+>> This introduces a special hook
+>> ieee80211_vif_chanctx_reservation_complete(). This
+>> is currently an empty stub and will be filled in
+>> by AP/STA CSA code. This is required to implement
+>> 2-step CSA finalization.
+>
+> I really don't see any value in this - just put it into the patch
+> implementing it?
 
-Reported-By: Avery Pennarun <apenwarr@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Okay, I'll move it to the AP CSA patch then.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index db6c8af..ac6a5fe 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -312,6 +312,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 	int msdu_len, msdu_chaining = 0;
- 	struct sk_buff *msdu;
- 	struct htt_rx_desc *rx_desc;
-+	bool corrupted = false;
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
-@@ -405,7 +406,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		msdu_len = MS(__le32_to_cpu(rx_desc->msdu_start.info0),
- 			      RX_MSDU_START_INFO0_MSDU_LENGTH);
- 		msdu_chained = rx_desc->frag_info.ring2_more_count;
--		msdu_chaining = msdu_chained;
- 
- 		if (msdu_len_invalid)
- 			msdu_len = 0;
-@@ -433,11 +433,15 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 
- 			msdu->next = next;
- 			msdu = next;
-+			msdu_chaining = 1;
- 		}
- 
- 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
- 				RX_MSDU_END_INFO0_LAST_MSDU;
- 
-+		if (msdu_chaining && !last_msdu)
-+			corrupted = true;
-+
- 		if (last_msdu) {
- 			msdu->next = NULL;
- 			break;
-@@ -453,6 +457,20 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		msdu_chaining = -1;
- 
- 	/*
-+	 * Apparently FW sometimes reports weird chained MSDU sequences with
-+	 * more than one rx descriptor. This seems like a bug but needs more
-+	 * analyzing. For the time being fix it by dropping such sequences to
-+	 * avoid blowing up the host system.
-+	 */
-+	if (corrupted) {
-+		ath10k_warn("failed to pop chained msdus, dropping\n");
-+		ath10k_htt_rx_free_msdu_chain(*head_msdu);
-+		*head_msdu = NULL;
-+		*tail_msdu = NULL;
-+		msdu_chaining = -EINVAL;
-+	}
-+
-+	/*
- 	 * Don't refill the ring yet.
- 	 *
- 	 * First, the elements popped here are still in use - it is not
--- 
-1.8.5.3
 
+>> + *   The callback is optional for channel context based drivers but is
+>> + *   required to support channel switching. The callback and can sleep.
+>
+> That probably belongs to the previous patch, but isn't even true there
+> or here afaict.
+
+Ah, rebasing..
+
+
+>> +static int
+>> +ieee80211_vif_use_reserved_incompat(struct ieee80211_local *local,
+>> +                                 struct ieee80211_chanctx *ctx,
+>> +                                 const struct cfg80211_chan_def *chandef)
+>> +{
+>> +     struct ieee80211_sub_if_data *sdata, *tmp;
+>> +     struct ieee80211_chanctx *new_ctx;
+>> +     u32 changed = 0;
+>> +     int err;
+>> +
+>> +     lockdep_assert_held(&local->mtx);
+>> +     lockdep_assert_held(&local->chanctx_mtx);
+>> +
+>> +     if (!ieee80211_chanctx_all_reserved_vifs_ready(local, ctx))
+>> +             return 0;
+>> +
+>> +     if (ieee80211_chanctx_num_assigned(local, ctx) !=
+>> +         ieee80211_chanctx_num_reserved(local, ctx)) {
+>> +             wiphy_info(local->hw.wiphy,
+>> +                        "channel context reservation cannot be finalized because some interfaces aren't switching\n");
+>> +             err = -EBUSY;
+>> +             goto err;
+>>       }
+>
+> I don't think I understand that condition, it's it possible to switch
+> from two vifs using two channels to both using a single third one?
+
+I assume you have a case where max number of different channels is
+degraded (e.g. non-radar -> more restrictive radar combination) in
+mind, right? In that case this won't work with this code. Now that I
+think about it it also won't work with cross-swapping (2 chanctx are
+being swapped and some vifs try to interchange between).
+
+I'll have to re-think this a bit more.
+
+
+>> +     ieee80211_recalc_chanctx_chantype(local, new_ctx);
+>> +     ieee80211_recalc_smps_chanctx(local, new_ctx);
+>> +     ieee80211_recalc_chanctx_min_def(local, new_ctx);
+>
+> vs.
+>
+>> -     ieee80211_recalc_chanctx_chantype(local, ctx);
+>> -     ieee80211_recalc_smps_chanctx(local, ctx);
+>> -     ieee80211_recalc_radar_chanctx(local, ctx);
+>> -     ieee80211_recalc_chanctx_min_def(local, ctx);
+>
+> Did I miss something? Maybe it would be good to squeeze in that patch
+> that made a recalc_all() function to call all of these.
+
+The radar is now calculated in the _incompat manually because it
+should be saying "radar" before you call into
+switch_vif_chanctx/create new chanctx. I mean, you could initially
+bind a chanctx with ch52 without radar flag and then update it right
+away but it didn't sit right with me.
+
+
+Michał
