@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:64339 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251AbaEORFO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:14 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so1393977wes.32
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:13 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/24] iwlwifi: use dev_printk instead of dev_dbg for debug logs
-Date: Thu, 15 May 2014 20:04:30 +0300
-Message-Id: <1400173481-9047-13-git-send-email-egrumbach@gmail.com> (sfid-20140515_190527_596832_3A255C78)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47420 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751039AbaEWIoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 04:44:34 -0400
+Message-ID: <1400834656.4358.1.camel@jlt4.sipsolutions.net> (sfid-20140523_104439_742749_6C5714D5)
+Subject: Re: [PATCH v6 4/6] mac80211: use chanctx reservation for AP CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Date: Fri, 23 May 2014 10:44:16 +0200
+In-Reply-To: <CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com> (sfid-20140523_084951_567483_00C06FBF)
+References: <1400767676-15994-1-git-send-email-michal.kazior@tieto.com>
+	 <1400767676-15994-5-git-send-email-michal.kazior@tieto.com>
+	 <1400770484.4174.35.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmdNV3XMmiAmA=bP4ZQ7dRZOwX8=_NYqmZW+orEA=OysA@mail.gmail.com>
+	 (sfid-20140523_084951_567483_00C06FBF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Fri, 2014-05-23 at 08:49 +0200, Michal Kazior wrote:
 
-When calling IWL_DEBUG_*() dev_dbg() is currently used, and this
-could result in the log being ignored no matter the internal
-loglevel, since dev_dbg() may get turned on or off based on the
-dynamic debug mechanism.
+> > But you'll WARN_ON() if they're actually not at the same time and you
+> > grab a beacon (or for the template case, call csa_update) in the
+> > meantime, right? I'd really like to have all those driver requirements
+> > (e.g. to stop beaconing) better documented.
+> 
+> Good point. I suppose it should be stated in the docs that once you
+> reach ieee80211_csa_is_complete() being true you must not call
+> ieee80211_beacon_get() nor ieee80211_csa_update_counter(). ath9k and
+> ath10k conform to this.
 
-Replace the dev_dbg() with dev_printk() since dynamic printing
-is pointless as we use our own debug level mechanism and there
-is just a single dev_dbg() call in the code.
+Right, it's still a bit strange that you just have to stop beaconing.
+Dunno. I guess I don't care all that much since our driver won't support
+multiple AP interfaces anyway :-)
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-[rephrase commit message a bit]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> I wonder what driver should be supposed to look at before starting to
+> beacon again? csa_active isn't well protected to be depended upon. If
+> we should create a ieee80211_csa_is_active() that just checks if
+> beacon->csa_counter_offset[0] != 0 (assuming my other csa counter
+> patches are applied) then it's still racy:
+>  a) rcu_dereference() across ieee80211_csa_is_active(), _is_complete()
+> and _beacon_get() can yield different beacon pointers
+>  b) cs_count <= 1 yields no beacon update (thus no counters/offsets,
+> meaning both _csa_is_complete and _csa_is_active() are `false` thus
+> suggesting driver can beacon as if nothing happened)
+> 
+> We could fix (b) by simply not treating cs_count <= 1 so special and
+> update the beacon anyway. For (a) to work we'd need either make a
+> single-call do-all function or introduce an additional call and a
+> generic pointer/structure to be passed to other functions so that a
+> beacon pointer is consistent across calls.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.c b/drivers/net/wireless/iwlwifi/iwl-debug.c
-index 8a44f59..09feff4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
-@@ -61,8 +61,6 @@
-  *
-  *****************************************************************************/
- 
--#define DEBUG
--
- #include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/export.h>
-@@ -128,8 +126,8 @@ void __iwl_dbg(struct device *dev,
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (iwl_have_debug_level(level) &&
- 	    (!limit || net_ratelimit()))
--		dev_dbg(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
--			function, &vaf);
-+		dev_printk(KERN_DEBUG, dev, "%c %s %pV",
-+			   in_interrupt() ? 'I' : 'U', function, &vaf);
- #endif
- 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
- 	va_end(args);
--- 
-1.8.3.2
+You could technically just return NULL in this period, but I don't know
+how well drivers would cope with that (though technically they have to
+cope with it due to memory allocation failures anyway)
+
+johannes
+
 
