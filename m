@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41400 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752527AbaE0IKF (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:60973 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496AbaEWKhd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 04:10:05 -0400
-Date: Tue, 27 May 2014 10:09:52 +0200
-From: Maxime Ripard <maxime.ripard@free-electrons.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [PATCH 03/11] pinctrl: sunxi: Move setting of mux to irq type
- from unmask to set_type
-Message-ID: <20140527080952.GC4730@lukather> (sfid-20140527_101016_003315_F2DAE22F)
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
- <1401090486-4414-4-git-send-email-hdegoede@redhat.com>
+	Fri, 23 May 2014 06:37:33 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so629911wib.7
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 03:37:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="S1BNGpv0yoYahz37"
-In-Reply-To: <1401090486-4414-4-git-send-email-hdegoede@redhat.com>
+In-Reply-To: <877g5cvlay.fsf@kamboji.qca.qualcomm.com>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
+	<87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
+	<877g5cvlay.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 23 May 2014 12:37:32 +0200
+Message-ID: <CA+BoTQntX+hAXfR-BOxeKn_qjF6A17RT--Ohg89JhkrUOarsxA@mail.gmail.com> (sfid-20140523_123739_512714_BD7B62FA)
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 23 May 2014 12:31, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>>> Sure, but I still think it's a bit ugly. The right way to fix this would
+>>> be to add it to include/lockdep.h, instead of adding custom checks to a
+>>> driver.
+>>
+>> Good point. I wonder if it's generic enough to justify.
+>
+> No idea. But no matter what it will take some time to get it accepted,
+> so we need to solve this in a faster way so that I can apply this patch.
+>
+>>> But does this check even make sense? There's nothing preventing
+>>> to another thread to take lock just after the WARN_ON(), right?
+>>
+>> There's nothing wrong with other thread holding it. Actually that's
+>> the reason for this very check.
+>>
+>> The point is to prevent ath10k_drain_tx() being called while caller
+>> (current thread) holds conf_mutex. If it were to hold conf_mutex then
+>> cancel_work_sync() can deadlock as both workers it tries to stop try
+>> to get a hold of the lock too.
+>
+> Ah, now I understand.
+>
+> What if we just drop the WARN_ON() from this patch just so that I can
+> apply the patch and we add a proper code for checking the mutex in a
+> followup patch? Are you ok with that?
 
---S1BNGpv0yoYahz37
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm okay with this as long as we at least have a comment stating that
+conf_mutex must not be held while calling the function to avoid
+deadlocks.
 
-On Mon, May 26, 2014 at 09:47:58AM +0200, Hans de Goede wrote:
-> With level triggered interrupt mask / unmask will get called for each
-> interrupt, doing the somewhat expensive mux setting on each unmask thus is
-> not a good idea. Instead move it to the set_type callback, which is typic=
-ally
-> done only once for each irq.
 
-*This* is the bad idea. Nothing prevents you from calling
-gpio_get_value whenever you just got your interrupt, that will change
-the muxing, and never change it back, effectively breaking the
-interrupts.
-
-Maxime
-
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---S1BNGpv0yoYahz37
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJThEhQAAoJEBx+YmzsjxAgQTsQAKrsWJdiXydTdHjUYOcljtO2
-otV3vs/0qU2h/ZBUqUMcdlIIZAgLqR9VOeUhfmAuGOQQiJmHWludoHUm/a5Zjm4e
-sMPoBkVTm/UWoE704HxVfs+sOY9VXRtArfCwFWYpLLhMC8LG3Q5buD3hFlRhKK5k
-5gFSVuH+TJJoWbGQ4U94FjsBVOLUDTY71evz0q3NsehgDvi0KROJ/blG54ENlyK+
-n43EBnihRwNXqZCQjykxJbFKa3iFBOThdC4SDo49pwzfxdUafReB18JzkCeBtRCL
-2zBmpnv1f7rIihjn7R28KpbYPegdQlrOB5KICPKemtuvoZmachdFMnNIAgWsBW+K
-36NtOahj88t8/iXd+PmP5Z48ubnQSAm7U0BOQemn/jpYrl49xbK19mb/YBG6WM0O
-u+CN2ASpdObvVcUIfP5etPmie4+bjHQ1QWYTLd7XFIEYMFf0JtS7XLQCokVG4B29
-GhKvOLq9hhbd6NIi0DW5SQJMwPCFqgYKjUlmQR21XSOPh/ckzdi6cmaJ8gOEOkoM
-vzJtUyDq1iS900KsGzqS97/k1iOLmO9qjSpLxv8VOBfltaIx1bXBS+fWk24ViV1p
-T7zJ/6vaITBDNxQm13+QmScQT7QMXZCPYP8ywllV0iimUQtFW6Y0D3YBuVbHJR44
-OP5NihJyxyDI8pP1uxb2
-=Bho2
------END PGP SIGNATURE-----
-
---S1BNGpv0yoYahz37--
+Michał
