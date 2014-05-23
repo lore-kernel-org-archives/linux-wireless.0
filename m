@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:52876 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbaEGUDW (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:62654 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaEWRBP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 16:03:22 -0400
-Received: by mail-lb0-f170.google.com with SMTP id w7so2149887lbi.15
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 13:03:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140507195435.GF20432@tuxdriver.com>
-References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com> <20140507195435.GF20432@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Wed, 7 May 2014 13:03:00 -0700
-Message-ID: <CAB=NE6XLnK-YKigXs8-R-H72rDJ6oDyChQhRLFcqzchFgO+BZA@mail.gmail.com> (sfid-20140507_220325_150275_83A846E5)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in
- hw_per_calibration() for ar9002
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Herrmann <dh.herrmann@gmail.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	ath9k mailing list <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 23 May 2014 13:01:15 -0400
+Received: by mail-wg0-f42.google.com with SMTP id y10so5003217wgg.13
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:14 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/20] staging: vt6656: MACvWriteBSSIDAddress remove pbyData
+Date: Fri, 23 May 2014 18:00:08 +0100
+Message-Id: <1400864419-8327-9-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190122_543577_4D10AAA2)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 7, 2014 at 12:54 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Is there any hope for getting a more complete fix from the ath9k guys
-> in short order?
+Remove pbyData and point directly to pbyEtherAddr
 
-Wait, who are the ath9k folks now exactly ?
+The size is always ETH_ALEN (6)
 
-  Luis
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index a195703..31f54fb 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -216,21 +216,12 @@ void MACvWriteWord(struct vnt_private *priv, u8 reg_ofs, u16 word)
+ 
+ void MACvWriteBSSIDAddress(struct vnt_private *pDevice, u8 *pbyEtherAddr)
+ {
+-	u8 pbyData[6];
+-
+-    pbyData[0] = *((u8 *)pbyEtherAddr);
+-    pbyData[1] = *((u8 *)pbyEtherAddr+1);
+-    pbyData[2] = *((u8 *)pbyEtherAddr+2);
+-    pbyData[3] = *((u8 *)pbyEtherAddr+3);
+-    pbyData[4] = *((u8 *)pbyEtherAddr+4);
+-    pbyData[5] = *((u8 *)pbyEtherAddr+5);
+-
+     CONTROLnsRequestOut(pDevice,
+                         MESSAGE_TYPE_WRITE,
+                         MAC_REG_BSSID0,
+                         MESSAGE_REQUEST_MACREG,
+-			ARRAY_SIZE(pbyData),
+-                        pbyData
++			ETH_ALEN,
++			pbyEtherAddr
+                         );
+ }
+ 
+-- 
+1.9.1
+
