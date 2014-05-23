@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45039 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752350AbaEGVus (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:63002 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753478AbaEWRBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 17:50:48 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
+	Fri, 23 May 2014 13:01:10 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so1399322wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath10k: Fix spelling mistake in comments.
-Date: Wed,  7 May 2014 14:50:39 -0700
-Message-Id: <1399499440-32365-1-git-send-email-greearb@candelatech.com> (sfid-20140507_235059_040020_47034407)
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/20] staging: vt6656: camel case cleanup MACvRegBitsOff
+Date: Fri, 23 May 2014 18:00:05 +0100
+Message-Id: <1400864419-8327-6-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190117_423203_75711F5F)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+camel case changes
+pDevice -> priv
+byRegOfs -> reg_ofs
+byBits -> bits
+pbyData -> data
 
-Simple typo fix.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/vt6656/mac.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index fa31b23..71a4470 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2340,9 +2340,9 @@ struct wmi_pdev_param_map {
- #define WMI_PDEV_PARAM_UNSUPPORTED 0
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index c6bddf5..2edbaf9 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -181,20 +181,15 @@ void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
  
- enum wmi_pdev_param {
--	/* TX chian mask */
-+	/* TX chain mask */
- 	WMI_PDEV_PARAM_TX_CHAIN_MASK = 0x1,
--	/* RX chian mask */
-+	/* RX chain mask */
- 	WMI_PDEV_PARAM_RX_CHAIN_MASK,
- 	/* TX power limit for 2G Radio */
- 	WMI_PDEV_PARAM_TXPOWER_LIMIT2G,
+ }
+ 
+-void MACvRegBitsOff(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
++void MACvRegBitsOff(struct vnt_private *priv, u8 reg_ofs, u8 bits)
+ {
+-	u8 pbyData[2];
++	u8 data[2];
+ 
+-    pbyData[0] = 0;
+-    pbyData[1] = byBits;
++	data[0] = 0;
++	data[1] = bits;
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE_MASK,
+-                        byRegOfs,
+-                        MESSAGE_REQUEST_MACREG,
+-			ARRAY_SIZE(pbyData),
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE_MASK,
++		reg_ofs, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+ void MACvRegBitsOn(struct vnt_private *pDevice, u8 byRegOfs, u8 byBits)
 -- 
-1.7.11.7
+1.9.1
 
