@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7571 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbaEWKbI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 06:31:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
-	<87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
-Date: Fri, 23 May 2014 13:31:01 +0300
-In-Reply-To: <CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 23 May 2014 11:06:25 +0200")
-Message-ID: <877g5cvlay.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_123112_393126_EFFFD5CF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48242 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752511AbaEWN2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 09:28:19 -0400
+Message-ID: <1400851684.4358.41.camel@jlt4.sipsolutions.net> (sfid-20140523_152830_297880_56D4CFD5)
+Subject: Re: [PATCH 2/2] mac80211: use switch_vif_chanctx to change a
+ running chanctx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: michal.kazior@tieto.com, linux-wireless@vger.kernel.org
+Date: Fri, 23 May 2014 15:28:04 +0200
+In-Reply-To: <1400844793-18069-2-git-send-email-luca@coelho.fi>
+References: <1400838772.4358.22.camel@jlt4.sipsolutions.net>
+	 <1400844793-18069-1-git-send-email-luca@coelho.fi>
+	 <1400844793-18069-2-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, 2014-05-23 at 14:33 +0300, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> Instead of hammering a new channel into the running context, make use
+> of the new switch_vif_chanctx to let the driver decide how to perform
+> the switch.
+> 
+> Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
+> since we never change a running context directly anymore.
 
->> Sure, but I still think it's a bit ugly. The right way to fix this would
->> be to add it to include/lockdep.h, instead of adding custom checks to a
->> driver.
->
-> Good point. I wonder if it's generic enough to justify.
+This seems totally reasonable to me, but I'll wait to see what Michal
+does :)
 
-No idea. But no matter what it will take some time to get it accepted,
-so we need to solve this in a faster way so that I can apply this patch.
+johannes
 
->> But does this check even make sense? There's nothing preventing
->> to another thread to take lock just after the WARN_ON(), right?
->
-> There's nothing wrong with other thread holding it. Actually that's
-> the reason for this very check.
->
-> The point is to prevent ath10k_drain_tx() being called while caller
-> (current thread) holds conf_mutex. If it were to hold conf_mutex then
-> cancel_work_sync() can deadlock as both workers it tries to stop try
-> to get a hold of the lock too.
-
-Ah, now I understand.
-
-What if we just drop the WARN_ON() from this patch just so that I can
-apply the patch and we add a proper code for checking the mutex in a
-followup patch? Are you ok with that?
-
-
--- 
-Kalle Valo
