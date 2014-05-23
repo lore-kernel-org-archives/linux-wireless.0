@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19629 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750958AbaEVFCv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 01:02:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/5] mwifiex: avoid TDLS check for packets destined to AP
-Date: Wed, 21 May 2014 22:02:27 -0700
-Message-ID: <1400734951-6851-1-git-send-email-bzhao@marvell.com> (sfid-20140522_070255_802153_09474638)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:11320 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751637AbaEWPXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 11:23:09 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kvalo@adurom.com,
+	jim.epost@gmail.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: simplify DFS pulse interval debug printing
+Date: Fri, 23 May 2014 17:22:37 +0200
+Message-Id: <1400858557-21037-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20140523_172313_777274_FA712FA8)
+In-Reply-To: <20140523144058.GB13311@tuxdriver.com>
+References: <20140523144058.GB13311@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Make DFS pulse interval calculation independent
+from CONFIG_ATH9K_DEBUGFS.
 
-In station role if TDLS is supported, we traverse TDLS peer list
-to see if packet's destination address matches with TDLS peer.
-Packets destined to AP are not sent over TDLS link and hence
-avoid this list traversal for such packets.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/mwifiex/wmm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h     | 1 +
+ drivers/net/wireless/ath/ath9k/dfs.c       | 6 ++----
+ drivers/net/wireless/ath/ath9k/dfs_debug.h | 1 -
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 94b6c74..f364d5f 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -648,7 +648,7 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 		if (ntohs(eth_hdr->h_proto) == ETH_P_TDLS)
- 			dev_dbg(adapter->dev,
- 				"TDLS setup packet for %pM. Don't block\n", ra);
--		else
-+		else if (memcmp(priv->cfg_bssid, ra, ETH_ALEN))
- 			tdls_status = mwifiex_get_tdls_link_status(priv, ra);
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b204694..2ca8f7e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -770,6 +770,7 @@ struct ath_softc {
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
+ 	struct dfs_pattern_detector *dfs_detector;
++	u64 dfs_prev_pulse_ts;
+ 	u32 wow_enabled;
+ 	/* relay(fs) channel for spectral scan */
+ 	struct rchan *rfs_chan_spec_scan;
+diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+index e0c740d..726271c 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs.c
++++ b/drivers/net/wireless/ath/ath9k/dfs.c
+@@ -178,14 +178,12 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+ 	pe.ts = mactime;
+ 	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
+ 		struct dfs_pattern_detector *pd = sc->dfs_detector;
+-#ifdef CONFIG_ATH9K_DEBUGFS
+ 		ath_dbg(common, DFS,
+ 			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
+ 			"width=%d, rssi=%d, delta_ts=%llu\n",
+ 			pe.freq, pe.ts, pe.width, pe.rssi,
+-			pe.ts - sc->debug.stats.dfs_stats.last_ts);
+-		sc->debug.stats.dfs_stats.last_ts = pe.ts;
+-#endif
++			pe.ts - sc->dfs_prev_pulse_ts);
++		sc->dfs_prev_pulse_ts = pe.ts;
+ 		DFS_STAT_INC(sc, pulses_processed);
+ 		if (pd != NULL && pd->add_pulse(pd, &pe)) {
+ 			DFS_STAT_INC(sc, radar_detected);
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.h b/drivers/net/wireless/ath/ath9k/dfs_debug.h
+index d948686..7936c91 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_debug.h
++++ b/drivers/net/wireless/ath/ath9k/dfs_debug.h
+@@ -51,7 +51,6 @@ struct ath_dfs_stats {
+ 	/* pattern detection stats */
+ 	u32 pulses_processed;
+ 	u32 radar_detected;
+-	u64 last_ts;
+ };
  
+ #if defined(CONFIG_ATH9K_DFS_DEBUGFS)
 -- 
-1.8.2.3
+1.9.1
 
