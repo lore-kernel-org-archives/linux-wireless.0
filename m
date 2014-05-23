@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:34552 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756079AbaEOVvw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:52 -0400
-Received: by mail-we0-f175.google.com with SMTP id t61so1698659wes.20
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:51 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 11/15] staging: vt6656: lock changes: s_nsBulkInUsbIoCompleteRead.
-Date: Thu, 15 May 2014 22:49:20 +0100
-Message-Id: <1400190564-5135-11-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235157_364547_A6375374)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+Received: from nbd.name ([46.4.11.11]:51516 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbaEWSFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 14:05:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: reduce packet loss notifications under load
+Date: Fri, 23 May 2014 20:05:28 +0200
+Message-Id: <1400868328-78595-1-git-send-email-nbd@openwrt.org> (sfid-20140523_200631_656271_4606F067)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use spin_lock_irqsave/spin_unlock_irqrestore
+During strong signal fluctuations under high throughput, few consecutive
+failed A-MPDU transmissions can easily trigger packet loss notification,
+and thus (in AP mode) client disconnection.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reduce the number of false positives by checking the A-MPDU status flag
+and treating a failed A-MPDU as a single packet.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/vt6656/usbpipe.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/status.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 934d0a9..b707470 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -474,6 +474,7 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 60cb7a6..ba29ebc 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -541,6 +541,23 @@ static void ieee80211_tx_latency_end_msrmnt(struct ieee80211_local *local,
+  */
+ #define STA_LOST_PKT_THRESHOLD	50
+ 
++static void ieee80211_lost_packet(struct sta_info *sta, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	/* This packet was aggregated but doesn't carry status info */
++	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
++	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
++		return;
++
++	if (++sta->lost_packets < STA_LOST_PKT_THRESHOLD)
++		return;
++
++	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
++				    sta->lost_packets, GFP_ATOMIC);
++	sta->lost_packets = 0;
++}
++
+ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
  {
- 	struct vnt_rcb *rcb = urb->context;
- 	struct vnt_private *priv = rcb->pDevice;
-+	unsigned long flags;
- 	int re_alloc_skb = false;
+ 	struct sk_buff *skb2;
+@@ -680,12 +697,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			if (info->flags & IEEE80211_TX_STAT_ACK) {
+ 				if (sta->lost_packets)
+ 					sta->lost_packets = 0;
+-			} else if (++sta->lost_packets >= STA_LOST_PKT_THRESHOLD) {
+-				cfg80211_cqm_pktloss_notify(sta->sdata->dev,
+-							    sta->sta.addr,
+-							    sta->lost_packets,
+-							    GFP_ATOMIC);
+-				sta->lost_packets = 0;
++			} else {
++				ieee80211_lost_packet(sta, skb);
+ 			}
+ 		}
  
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkInUsbIoCompleteRead\n");
-@@ -493,23 +494,23 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 	}
- 
- 	if (urb->actual_length) {
--		spin_lock(&priv->lock);
-+		spin_lock_irqsave(&priv->lock, flags);
- 
- 		if (RXbBulkInProcessData(priv, rcb, urb->actual_length) == true)
- 			re_alloc_skb = true;
- 
--		spin_unlock(&priv->lock);
-+		spin_unlock_irqrestore(&priv->lock, flags);
- 	}
- 
- 	rcb->Ref--;
- 	if (rcb->Ref == 0) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeNormal %d\n",
- 							priv->NumRecvFreeList);
--		spin_lock(&priv->lock);
-+		spin_lock_irqsave(&priv->lock, flags);
- 
- 		RXvFreeRCB(rcb, re_alloc_skb);
- 
--		spin_unlock(&priv->lock);
-+		spin_unlock_irqrestore(&priv->lock, flags);
- 	}
- 
- 	return;
 -- 
-1.9.1
+1.8.5.2 (Apple Git-48)
 
