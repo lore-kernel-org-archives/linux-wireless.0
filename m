@@ -1,41 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44000 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750906AbaEVKqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 06:46:31 -0400
-Message-ID: <1400755577.4174.10.camel@jlt4.sipsolutions.net> (sfid-20140522_124635_206502_2997F38C)
-Subject: Re: wireless network interfaces and network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hannes Raddatz <hannesraddatz@t-online.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 May 2014 12:46:17 +0200
-In-Reply-To: <loom.20140522T103749-45@post.gmane.org> (sfid-20140522_110010_318489_4E08B72C)
-References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
-	  <1385817282.5056.0.camel@jlt4.sipsolutions.net>
-	  <CAGXs5wVt3okeE6oA_pNV5WnQLv51+bf+n+52s5d7tQkXq_qvNw@mail.gmail.com>
-	  (sfid-20131130_145812_659093_751E3F17) <1385840149.4267.1.camel@jlt4.sipsolutions.net>
-	 <loom.20140522T103749-45@post.gmane.org>
-	 (sfid-20140522_110010_318489_4E08B72C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from dedo.coelho.fi ([88.198.205.34]:44676 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751217AbaEWTav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 15:30:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com
+Date: Fri, 23 May 2014 22:30:35 +0300
+Message-Id: <1400873435-9687-1-git-send-email-luca@coelho.fi> (sfid-20140523_213055_144623_520C536B)
+Subject: [RFC] trace-cmd: plugin_mac80211: add parsing for the new drv_switch_vif_chanctx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-05-22 at 08:54 +0000, Hannes Raddatz wrote:
-> I would like to dig this thread out, 
-> because there might be a bug regarding this topic.
-> 
-> Using ubuntu 12.10, the move of virtual wirless devices (hwsim) to a 
-> namespace and 
-> configuring them inside the namespace with iw wasn't a problem. 
-> But since ubuntu 14.04 I can't 
-> access the devices inside the namespace with iw.
-> The same problem occurs while using 
-> ubuntu 12.10 with newest backports installed.
-> Has something changed with the namespaces in 
-> the new linux kernels or is it a bug?
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-No idea. Works fine for me on kernel 3.14+mac80211-next.
+This new command has a complex trace, with a variable number of struct
+elements in an array and needs special parsing.  Add a parsing
+function to handle it.
 
-johannes
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ I'm sending this to linux-wireless as an RFC before sending it to
+Steven to get some comments and because the new function hasn't yet
+gotten to linux-wireless/mainline.
+
+ plugin_mac80211.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
+
+diff --git a/plugin_mac80211.c b/plugin_mac80211.c
+index f35cb80..0b4835e 100644
+--- a/plugin_mac80211.c
++++ b/plugin_mac80211.c
+@@ -191,12 +191,105 @@ static int drv_config(struct trace_seq *s, struct pevent_record *record,
+ 	return 0;
+ }
+ 
++struct trace_vif_entry {
++	int vif_type;
++	bool p2p;
++	char vif_name[8];
++} __attribute__((packed));
++
++struct trace_chandef_entry {
++	unsigned int control_freq;
++	unsigned int chan_width;
++	unsigned int center_freq1;
++	unsigned int center_freq2;
++} __attribute__((packed));
++
++struct trace_switch_entry {
++	struct trace_vif_entry vif;
++	struct trace_chandef_entry old_chandef;
++	struct trace_chandef_entry new_chandef;
++} __attribute__((packed));
++
++static int drv_switch_vif_chanctx(struct trace_seq *s,
++				  struct pevent_record *record,
++				  struct event_format *event, void *context)
++{
++	struct format_field *f = pevent_find_field(event, "n_vifs");
++	unsigned int i, offset, len;
++	long long unsigned int n_vifs;
++	void *data = record->data;
++	struct trace_switch_entry *vifs;
++
++	if (!f) {
++		trace_seq_printf(s, "NOTFOUND: n_vifs");
++		return 0;
++	}
++
++	if (pevent_read_number_field(f, data, &n_vifs)) {
++		trace_seq_puts(s, "field-invalid: n_vifs");
++		return 0;
++	}
++
++	f = pevent_find_field(event, "vifs");
++
++	if (!f) {
++		trace_seq_printf(s, "NOTFOUND: vifs");
++		return 0;
++	}
++
++	offset = f->offset;
++	len = f->size;
++	if (f->flags & FIELD_IS_DYNAMIC) {
++		long long unsigned int val;
++
++		val = pevent_read_number(event->pevent, data + offset, len);
++		offset = val;
++		len = offset >> 16;
++		offset &= 0xffff;
++	}
++
++	if (len != sizeof(*vifs) * n_vifs) {
++		trace_seq_printf(s, "field-invalid: vifs");
++		return 0;
++	}
++
++	print_string(s, event, "wiphy_name", data);
++	pevent_print_num_field(s, " n_vifs:%d ", event, "n_vifs", record, 1);
++	print_enum(s, event, "mode", data,
++		   { 0, "REASSIGN_VIF" },
++		   { 1, "SWAP_CONTEXTS"} );
++
++	vifs = (void *) (char *) data + offset;
++
++	for (i = 0; i < n_vifs; i++) {
++		trace_seq_printf(s, "\n%*s\t", INDENT, "");
++		trace_seq_printf(s, "vif %d:\tname: %s type: %d p2p: %d",
++				 i, vifs[i].vif.vif_name, vifs[i].vif.vif_type,
++				 vifs[i].vif.p2p);
++		trace_seq_printf(s, "\n%*s\t\t", INDENT, "");
++		trace_seq_printf(s, "old_ctx: control_freq: %d chan_width: %d center_freq1: %d center_freq2: %d",
++				 vifs[i].old_chandef.control_freq,
++				 vifs[i].old_chandef.chan_width,
++				 vifs[i].old_chandef.center_freq1,
++				 vifs[i].old_chandef.center_freq2);
++		trace_seq_printf(s, "\n%*s\t\t", INDENT, "");
++		trace_seq_printf(s, "new_ctx: control_freq: %d chan_width: %d center_freq1: %d center_freq2: %d",
++				 vifs[i].new_chandef.control_freq,
++				 vifs[i].new_chandef.chan_width,
++				 vifs[i].new_chandef.center_freq1,
++				 vifs[i].new_chandef.center_freq2);
++	}
++
++	return 0;
++}
+ int PEVENT_PLUGIN_LOADER(struct pevent *pevent)
+ {
+ 	pevent_register_event_handler(pevent, -1, "mac80211", "drv_bss_info_changed",
+ 				      drv_bss_info_changed, NULL);
+ 	pevent_register_event_handler(pevent, -1, "mac80211", "drv_config",
+ 				      drv_config, NULL);
++	pevent_register_event_handler(pevent, -1, "mac80211", "drv_switch_vif_chanctx",
++				      drv_switch_vif_chanctx, NULL);
+ 
+ 	return 0;
+ }
+-- 
+2.0.0.rc0
 
