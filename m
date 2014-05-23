@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:61714 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbaEDPGx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2014 11:06:53 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo20so7444696obc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 04 May 2014 08:06:52 -0700 (PDT)
-Message-ID: <5366578B.6020501@lwfinger.net> (sfid-20140504_170711_647353_695DD0A8)
-Date: Sun, 04 May 2014 10:06:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.neratec.com ([46.140.151.2]:26202 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750909AbaEWIPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 04:15:16 -0400
+Message-ID: <537F038C.7050305@neratec.com> (sfid-20140523_101523_286617_2362063D)
+Date: Fri, 23 May 2014 10:15:08 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Lawrence Zhu <lawrencezjh@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Needs Help For Driver of RTL8192EE
-References: <CAPjrJ8+b+oPLF6nJg=iDK--B-LdAF9Hr7DUFU6iCyrvGLUmMcA@mail.gmail.com>
-In-Reply-To: <CAPjrJ8+b+oPLF6nJg=iDK--B-LdAF9Hr7DUFU6iCyrvGLUmMcA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Kalle Valo <kvalo@adurom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jim.epost@gmail.com
+Subject: Re: [PATCH] ath9k: fix build error with disabled debug
+References: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com> <877g5e3qfg.fsf@purkki.adurom.net>
+In-Reply-To: <877g5e3qfg.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/04/2014 02:31 AM, Lawrence Zhu wrote:
-> Hi Larry.
-> Thanks for your great contribution. I'm actually waiting for the stable driver
-> for Lenovo t440s' wireless driver, and I saw the message here
-> <http://marc.info/?l=linux-wireless&m=139648497105184> that I should contact you
-> directly for this driver. Could you please help me with it?
-> Thank you very much.
+On 05/22/2014 03:15 PM, Kalle Valo wrote:
+> Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+> 
+>> DFS pulse interval printing is only available
+>> when CONFIG_ATH9K_DEBUGFS is set.
+>>
+>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> 
+> [...]
+> 
+>> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+>> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+>> @@ -178,12 +178,14 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+>>  	pe.ts = mactime;
+>>  	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
+>>  		struct dfs_pattern_detector *pd = sc->dfs_detector;
+>> +#ifdef CONFIG_ATH9K_DEBUGFS
+> 
+> IMHO config_enabled() is much nicer than ifdef.
+> 
 
-I am only able to supply files to patch a standard kernel, not a complete kernel 
-deb file.
+Actually, I dislike both of them.
 
-To obtain these patches, download the following two files:
-
-http://www.lwfinger.com/realtek_drivers/0001-staging-r8192ee-Add-new-driver.patch
-http://www.lwfinger.com/realtek_drivers/0002-staging-r8192ee-Add-new-driver.patch
-
-Use these two files, in turn, to patch the standard 3.14.X kernel source and 
-then build the custom kernel for your computer.
-
-My efforts are on track to be able to supply this driver as a part of a standard 
-kernel version 3.16.
-
-Larry
+While this is for debug printing only, it is still a bad idea to use variables in
+debugfs dependent space and splatter source code with required checks. I'll move
+that into a different context and post a follow-up patch.
 
 
+John, please drop this one.
