@@ -1,35 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47451 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:43871 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257AbaEWI62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 04:58:28 -0400
-Message-ID: <1400835498.4358.9.camel@jlt4.sipsolutions.net> (sfid-20140523_105833_307916_05791DD3)
-Subject: Re: [PATCH] mac80211: add a single-transaction driver op to switch
- contexts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 23 May 2014 10:58:18 +0200
-In-Reply-To: <CA+BoTQkof_e_T=xegftVHdKK_XFeb2HegOQWmV5+PkCdLkzEyg@mail.gmail.com> (sfid-20140523_100116_761277_D988CC7D)
-References: <1400769938.4174.29.camel@jlt4.sipsolutions.net>
-	 <1400812703-15685-1-git-send-email-luca@coelho.fi>
-	 <CA+BoTQkof_e_T=xegftVHdKK_XFeb2HegOQWmV5+PkCdLkzEyg@mail.gmail.com>
-	 (sfid-20140523_100116_761277_D988CC7D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751813AbaEWRVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 13:21:45 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH] ath9k: avoid passing buffers to the hardware during flush
+Date: Fri, 23 May 2014 19:21:34 +0200
+Message-Id: <1400865694-47992-1-git-send-email-nbd@openwrt.org> (sfid-20140523_192148_322858_3E3C97A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-23 at 10:01 +0200, Michal Kazior wrote:
+The commit "ath9k: fix possible hang on flush" changed the receive code
+to always link rx descriptors of processed frames, even when flushing.
+In some cases, this leads to flushed rx buffers being passed to the
+hardware while rx is already stopped.
 
-> So.. which patch are we going forward with? Luca's or mine? Either way
-> is fine with me as long as we reach a conclusion :-)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-Looks like both are missing some things? Luca's doesn't have tracing,
-and supports just a single interface (which you'll not like :) ) but
-personally I liked the struct API a bit better than multiple double
-pointer arrays you had.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 43ae199..9105a92 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -34,7 +34,8 @@ static inline bool ath9k_check_auto_sleep(struct ath_softc *sc)
+  * buffer (or rx fifo). This can incorrectly acknowledge packets
+  * to a sender if last desc is self-linked.
+  */
+-static void ath_rx_buf_link(struct ath_softc *sc, struct ath_rxbuf *bf)
++static void ath_rx_buf_link(struct ath_softc *sc, struct ath_rxbuf *bf,
++			    bool flush)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -59,18 +60,19 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_rxbuf *bf)
+ 			     common->rx_bufsize,
+ 			     0);
+ 
+-	if (sc->rx.rxlink == NULL)
+-		ath9k_hw_putrxbuf(ah, bf->bf_daddr);
+-	else
++	if (sc->rx.rxlink)
+ 		*sc->rx.rxlink = bf->bf_daddr;
++	else if (!flush)
++		ath9k_hw_putrxbuf(ah, bf->bf_daddr);
+ 
+ 	sc->rx.rxlink = &ds->ds_link;
+ }
+ 
+-static void ath_rx_buf_relink(struct ath_softc *sc, struct ath_rxbuf *bf)
++static void ath_rx_buf_relink(struct ath_softc *sc, struct ath_rxbuf *bf,
++			      bool flush)
+ {
+ 	if (sc->rx.buf_hold)
+-		ath_rx_buf_link(sc, sc->rx.buf_hold);
++		ath_rx_buf_link(sc, sc->rx.buf_hold, flush);
+ 
+ 	sc->rx.buf_hold = bf;
+ }
+@@ -442,7 +444,7 @@ int ath_startrecv(struct ath_softc *sc)
+ 	sc->rx.buf_hold = NULL;
+ 	sc->rx.rxlink = NULL;
+ 	list_for_each_entry_safe(bf, tbf, &sc->rx.rxbuf, list) {
+-		ath_rx_buf_link(sc, bf);
++		ath_rx_buf_link(sc, bf, false);
+ 	}
+ 
+ 	/* We could have deleted elements so the list may be empty now */
+@@ -1118,12 +1120,12 @@ requeue_drop_frag:
+ requeue:
+ 		list_add_tail(&bf->list, &sc->rx.rxbuf);
+ 
+-		if (edma) {
+-			ath_rx_edma_buf_link(sc, qtype);
+-		} else {
+-			ath_rx_buf_relink(sc, bf);
++		if (!edma) {
++			ath_rx_buf_relink(sc, bf, flush);
+ 			if (!flush)
+ 				ath9k_hw_rxena(ah);
++		} else if (!flush) {
++			ath_rx_edma_buf_link(sc, qtype);
+ 		}
+ 
+ 		if (!budget--)
+-- 
+1.8.5.2 (Apple Git-48)
 
