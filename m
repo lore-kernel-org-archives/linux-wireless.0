@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:54825 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932836AbaESUYC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58213 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbaEWOpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 16:24:02 -0400
-Message-ID: <537A685E.3040500@gmail.com> (sfid-20140519_222431_542350_445D1E92)
-Date: Mon, 19 May 2014 23:23:58 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 23 May 2014 10:45:12 -0400
+Date: Fri, 23 May 2014 10:40:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
+	jim.epost@gmail.com
+Subject: Re: [PATCH] ath9k: fix build error with disabled debug
+Message-ID: <20140523144058.GB13311@tuxdriver.com> (sfid-20140523_164518_435744_8C5CA483)
+References: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
+ <877g5e3qfg.fsf@purkki.adurom.net>
+ <537F038C.7050305@neratec.com>
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "stable@vger.kernel.org" <stable@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: How to disable beacon filtering in iwlwifi in 3.13 and 3.14
-References: <CANUX_P2MSK_rUMyN2xa8A9dZwuPSKh+eiOr10KG6PocCQdVhvA@mail.gmail.com> <20140519194156.GA5991@kroah.com>
-In-Reply-To: <20140519194156.GA5991@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <537F038C.7050305@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 05/19/2014 10:41 PM, Greg KH wrote:
-> On Mon, May 19, 2014 at 01:40:34PM +0300, Emmanuel Grumbach wrote:
->> Hi,
->>
->> I need to disable a feature on 3.13 and 3.14. But I don't have any
->> patch upstream that I can point to as the patch that needs to be
->> backported.
->> We have a feature that is buggy in 3.13 and 3.14. We refactored (and
->> fixed) this feature in 3.15 but the refactor is really not stable
->> material, so basically, I can't backport the fix to 3.13 / 3.14. A
->> user reported that disabling the feature solved (part of) his issues:
->> https://bugzilla.kernel.org/show_bug.cgi?id=72601.
->> OTOH, I don't have any patch in linux.git that could be backported to
->> do what I want in 3.13 / 3.14 - i.e. disable the feature.
->> What is the right process here? I understand that this isn't covered
->> by the "stable rules". So what should I do here?
+On Fri, May 23, 2014 at 10:15:08AM +0200, Zefir Kurtisi wrote:
+> On 05/22/2014 03:15 PM, Kalle Valo wrote:
+> > Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+> > 
+> >> DFS pulse interval printing is only available
+> >> when CONFIG_ATH9K_DEBUGFS is set.
+> >>
+> >> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> > 
+> > [...]
+> > 
+> >> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> >> @@ -178,12 +178,14 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+> >>  	pe.ts = mactime;
+> >>  	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
+> >>  		struct dfs_pattern_detector *pd = sc->dfs_detector;
+> >> +#ifdef CONFIG_ATH9K_DEBUGFS
+> > 
+> > IMHO config_enabled() is much nicer than ifdef.
+> > 
 > 
-> Get the maintainer's approval to apply this patch and I can queue it up.
-
-Ok - thanks. It might be worthwhile to add this "exception path" in the Documentation :)
-
+> Actually, I dislike both of them.
 > 
->>
->> FYI: this is the patch:
->>
->> commit 31e56634bea6ab23817faa069663af3103da0609
->> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Date:   Sun May 18 19:05:23 2014 +0300
->>
->>     iwlwifi: mvm: disable beacon filtering
->>
->>     This feature has been causing trouble - disable it for now.
->>     Fixes are available, but they are too big to be backported.
->>
->>     https://bugzilla.kernel.org/show_bug.cgi?id=72601
->>
->>     Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> While this is for debug printing only, it is still a bad idea to use variables in
+> debugfs dependent space and splatter source code with required checks. I'll move
+> that into a different context and post a follow-up patch.
 > 
-> Also, sending it in a format that I can apply it in would be nice :)
 > 
+> John, please drop this one.
 
-:) Done.
+Actually, I merged it yesterday.  Please submit your follow-up patch
+on top of this one.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
