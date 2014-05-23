@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48977 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbaEGI7c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 04:59:32 -0400
-Message-ID: <1399453163.10517.4.camel@jlt4.sipsolutions.net> (sfid-20140507_105937_339556_570286D9)
-Subject: Re: [PATCH v4 0/4] mac80211/cfg80211: CSA fixes/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Date: Wed, 07 May 2014 10:59:23 +0200
-In-Reply-To: <CA+BoTQnx8EzBGwYKV-ZmR+zf=iv3YOaT7BPPsYKrrNG=tJkXmQ@mail.gmail.com> (sfid-20140507_090446_958273_E2C29DC8)
-References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	 <1397049062-24177-1-git-send-email-michal.kazior@tieto.com>
-	 <1399382148.4218.28.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnx8EzBGwYKV-ZmR+zf=iv3YOaT7BPPsYKrrNG=tJkXmQ@mail.gmail.com>
-	 (sfid-20140507_090446_958273_E2C29DC8)
+Received: from dedo.coelho.fi ([88.198.205.34]:44294 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752069AbaEWLf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2014 07:35:57 -0400
+Message-ID: <1400844948.25946.39.camel@dubbel> (sfid-20140523_133601_834500_3F2C95E5)
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: michal.kazior@tieto.com, linux-wireless@vger.kernel.org
+Date: Fri, 23 May 2014 14:35:48 +0300
+In-Reply-To: <1400844793-18069-2-git-send-email-luca@coelho.fi>
+References: <1400838772.4358.22.camel@jlt4.sipsolutions.net>
+	 <1400844793-18069-1-git-send-email-luca@coelho.fi>
+	 <1400844793-18069-2-git-send-email-luca@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: [PATCH 2/2] mac80211: use switch_vif_chanctx to change a
+ running chanctx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 09:04 +0200, Michal Kazior wrote:
-
-> > However, there's one more thing - one caller of ieee80211_csa_finalize()
-> > doesn't check the return value now, I think it probably should. Mind
-> > taking a look at that? It should *probably* be the same as the other
-> > caller (and not propagate the error), I'd say, so maybe that should be
-> > rolled into the function?
+On Fri, 2014-05-23 at 14:33 +0300, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
 > 
-> Right - the return value of ieee80211_csa_finalize() in
-> __ieee80211_channel_switch() should be checked against. I think it
-> should be like:
+> Instead of hammering a new channel into the running context, make use
+> of the new switch_vif_chanctx to let the driver decide how to perform
+> the switch.
 > 
->  err = ieee80211_csa_finalize(sdata);
->  if (err) {
->   sdata_info(sdata, "failed to finalize immediate CSA, disconnecting\n");
->   cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev, GFP_KERNEL);
+> Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
+> since we never change a running context directly anymore.
 > 
->   /* don't propagate the error here - stop the iface instead since
-> there's no way to revert CS now */
->   err = 0;
->  }
-> 
-> Should I re-post the patch(set?), post a follow up, or are you going
-> to update the patch yourself?
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
 
-Can you post a separate patch on top? I already have it in my tree, but
-I can squash it I guess if I really want to.
+This is optional, you don't have to apply it if you're going to take
+Michal's patches (since they will undo this change anyway), as we
+discussed on IRC.
 
-> I'm not sure what you mean by rolling "that" into the function. You
-> want to put the stop_iface() in csa_finalize()? I think it's going to
-> look a bit ugly that way.
+So, this is mostly just for the record.
 
-Well, the only other caller of it right now does the same thing:
-
-       err = ieee80211_csa_finalize(sdata);
-       if (err) {
-               sdata_info(sdata, "failed to finalize CSA, disconnecting
-\n");
-               cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev,
-GFP_KERNEL);
-               goto unlock;
-       }
-
-so it seems it would make sense to have that as common code, maybe in
-the ieee80211_csa_finalize() function or maybe by changing
-ieee80211_csa_finalize() to be __ieee80211_csa_finalize() and making a
-new ieee80211_csa_finalize() that does this step?
-
-In fact, then we could get rid of the int return value again, so maybe
-better post a new version of this particular patch after all.
-
-johannes
+--
+Luca.
 
