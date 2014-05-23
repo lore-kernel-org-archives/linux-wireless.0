@@ -1,145 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:51637 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934768AbaE3WYS (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:48431 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753478AbaEWRBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 18:24:18 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so2602370wgg.6
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:17 -0700 (PDT)
+	Fri, 23 May 2014 13:01:33 -0400
+Received: by mail-we0-f169.google.com with SMTP id u56so5220128wes.14
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:32 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 8/8] staging: vt6656: rename CARDvSetBSSMode to vnt_set_bss_mode
-Date: Fri, 30 May 2014 23:22:54 +0100
-Message-Id: <1401488574-16508-8-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002423_278271_AB200854)
-In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
-References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 18/20] staging: vt6656: camel case cleanup vUpdateIFS
+Date: Fri, 23 May 2014 18:00:17 +0100
+Message-Id: <1400864419-8327-18-git-send-email-tvboxspy@gmail.com> (sfid-20140523_192148_982302_8C793405)
+In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drop card and rename to vnt_set_bss_mode
+camel case changes
+pDevice -> priv
+byMaxMin -> max_min
+byData -> data
+pItemRates -> item_rates
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/card.c     |  2 +-
- drivers/staging/vt6656/card.h     |  2 +-
- drivers/staging/vt6656/main_usb.c |  2 +-
- drivers/staging/vt6656/wcmd.c     |  6 +++---
- drivers/staging/vt6656/wmgr.c     | 10 +++++-----
- 5 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/staging/vt6656/card.c | 159 +++++++++++++++++++++---------------------
+ drivers/staging/vt6656/card.h |   2 +-
+ 2 files changed, 79 insertions(+), 82 deletions(-)
 
 diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 366d7d5..ffd6a01 100644
+index 43554e0..58d31bc 100644
 --- a/drivers/staging/vt6656/card.c
 +++ b/drivers/staging/vt6656/card.c
-@@ -829,7 +829,7 @@ int vnt_radio_power_on(struct vnt_private *priv)
- 	return ret;
+@@ -385,95 +385,92 @@ void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice             - The adapter to be set
+- *  Out:
+- *      none
++ *	priv - The adapter to be set
++ * Out:
++ *	none
+  *
+  * Return Value: None.
+  *
+  */
+-void vUpdateIFS(struct vnt_private *pDevice)
++void vUpdateIFS(struct vnt_private *priv)
+ {
+-	u8 byMaxMin = 0;
+-	u8 byData[4];
+-
+-    if (pDevice->byPacketType==PK_TYPE_11A) {//0000 0000 0000 0000,11a
+-        pDevice->uSlot = C_SLOT_SHORT;
+-        pDevice->uSIFS = C_SIFS_A;
+-        pDevice->uDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
+-        pDevice->uCwMin = C_CWMIN_A;
+-        byMaxMin = 4;
+-    }
+-    else if (pDevice->byPacketType==PK_TYPE_11B) {//0000 0001 0000 0000,11b
+-        pDevice->uSlot = C_SLOT_LONG;
+-        pDevice->uSIFS = C_SIFS_BG;
+-        pDevice->uDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
+-          pDevice->uCwMin = C_CWMIN_B;
+-        byMaxMin = 5;
+-    }
+-    else {// PK_TYPE_11GA & PK_TYPE_11GB
+-        u8 byRate = 0;
+-        bool bOFDMRate = false;
+-	unsigned int ii = 0;
+-        PWLAN_IE_SUPP_RATES pItemRates = NULL;
+-
+-        pDevice->uSIFS = C_SIFS_BG;
+-        if (pDevice->bShortSlotTime) {
+-            pDevice->uSlot = C_SLOT_SHORT;
+-        } else {
+-            pDevice->uSlot = C_SLOT_LONG;
+-        }
+-        pDevice->uDIFS = C_SIFS_BG + 2*pDevice->uSlot;
+-
+-	pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->vnt_mgmt.abyCurrSuppRates;
+-        for (ii = 0; ii < pItemRates->len; ii++) {
+-            byRate = (u8)(pItemRates->abyRates[ii]&0x7F);
+-            if (RATEwGetRateIdx(byRate) > RATE_11M) {
+-                bOFDMRate = true;
+-                break;
+-            }
+-        }
+-        if (bOFDMRate == false) {
+-		pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->vnt_mgmt
+-			.abyCurrExtSuppRates;
+-            for (ii = 0; ii < pItemRates->len; ii++) {
+-                byRate = (u8)(pItemRates->abyRates[ii]&0x7F);
+-                if (RATEwGetRateIdx(byRate) > RATE_11M) {
+-                    bOFDMRate = true;
+-                    break;
+-                }
+-            }
+-        }
+-        if (bOFDMRate == true) {
+-            pDevice->uCwMin = C_CWMIN_A;
+-            byMaxMin = 4;
+-        } else {
+-            pDevice->uCwMin = C_CWMIN_B;
+-            byMaxMin = 5;
+-        }
+-    }
++	u8 max_min = 0;
++	u8 data[4];
++
++	if (priv->byPacketType == PK_TYPE_11A) {
++		priv->uSlot = C_SLOT_SHORT;
++		priv->uSIFS = C_SIFS_A;
++		priv->uDIFS = C_SIFS_A + 2 * C_SLOT_SHORT;
++		priv->uCwMin = C_CWMIN_A;
++		max_min = 4;
++	} else if (priv->byPacketType == PK_TYPE_11B) {
++		priv->uSlot = C_SLOT_LONG;
++		priv->uSIFS = C_SIFS_BG;
++		priv->uDIFS = C_SIFS_BG + 2 * C_SLOT_LONG;
++		priv->uCwMin = C_CWMIN_B;
++		max_min = 5;
++	} else {/* PK_TYPE_11GA & PK_TYPE_11GB */
++		u8 rate = 0;
++		bool ofdm_rate = false;
++		unsigned int ii = 0;
++		PWLAN_IE_SUPP_RATES item_rates = NULL;
++
++		priv->uSIFS = C_SIFS_BG;
++
++		if (priv->bShortSlotTime)
++			priv->uSlot = C_SLOT_SHORT;
++		else
++			priv->uSlot = C_SLOT_LONG;
++
++		priv->uDIFS = C_SIFS_BG + 2 * priv->uSlot;
++
++		item_rates =
++			(PWLAN_IE_SUPP_RATES)priv->vnt_mgmt.abyCurrSuppRates;
++
++		for (ii = 0; ii < item_rates->len; ii++) {
++			rate = (u8)(item_rates->abyRates[ii] & 0x7f);
++			if (RATEwGetRateIdx(rate) > RATE_11M) {
++				ofdm_rate = true;
++				break;
++			}
++		}
+ 
+-    pDevice->uCwMax = C_CWMAX;
+-    pDevice->uEIFS = C_EIFS;
++		if (ofdm_rate == false) {
++			item_rates = (PWLAN_IE_SUPP_RATES)priv->vnt_mgmt
++				.abyCurrExtSuppRates;
++			for (ii = 0; ii < item_rates->len; ii++) {
++				rate = (u8)(item_rates->abyRates[ii] & 0x7f);
++				if (RATEwGetRateIdx(rate) > RATE_11M) {
++					ofdm_rate = true;
++					break;
++				}
++			}
++		}
+ 
+-    byData[0] = (u8)pDevice->uSIFS;
+-    byData[1] = (u8)pDevice->uDIFS;
+-    byData[2] = (u8)pDevice->uEIFS;
+-    byData[3] = (u8)pDevice->uSlot;
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE,
+-                        MAC_REG_SIFS,
+-                        MESSAGE_REQUEST_MACREG,
+-                        4,
+-                        &byData[0]);
++		if (ofdm_rate == true) {
++			priv->uCwMin = C_CWMIN_A;
++			max_min = 4;
++		} else {
++			priv->uCwMin = C_CWMIN_B;
++			max_min = 5;
++			}
++	}
+ 
+-    byMaxMin |= 0xA0;//1010 1111,C_CWMAX = 1023
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_WRITE,
+-                        MAC_REG_CWMAXMIN0,
+-                        MESSAGE_REQUEST_MACREG,
+-                        1,
+-                        &byMaxMin);
++	priv->uCwMax = C_CWMAX;
++	priv->uEIFS = C_EIFS;
++
++	data[0] = (u8)priv->uSIFS;
++	data[1] = (u8)priv->uDIFS;
++	data[2] = (u8)priv->uEIFS;
++	data[3] = (u8)priv->uSlot;
++
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_SIFS,
++		MESSAGE_REQUEST_MACREG, 4, &data[0]);
++
++	max_min |= 0xa0;
++
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_WRITE, MAC_REG_CWMAXMIN0,
++		MESSAGE_REQUEST_MACREG, 1, &max_min);
  }
  
--void CARDvSetBSSMode(struct vnt_private *priv)
-+void vnt_set_bss_mode(struct vnt_private *priv)
- {
- 	if (priv->byRFType == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
- 		MACvSetBBType(priv, BB_TYPE_11G);
+ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice)
 diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index 150f870..8c6f67d 100644
+index 6123c13..4986e2d 100644
 --- a/drivers/staging/vt6656/card.h
 +++ b/drivers/staging/vt6656/card.h
-@@ -61,6 +61,6 @@ u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
- int vnt_radio_power_off(struct vnt_private *);
- int vnt_radio_power_on(struct vnt_private *);
- u8 vnt_get_pkt_type(struct vnt_private *);
--void CARDvSetBSSMode(struct vnt_private *pDevice);
-+void vnt_set_bss_mode(struct vnt_private *);
+@@ -47,7 +47,7 @@ struct vnt_private;
  
- #endif /* __CARD_H__ */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 09da861..bdb9de8 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -525,7 +525,7 @@ static int device_init_registers(struct vnt_private *pDevice)
- 	}
- 
- 	BBvSetShortSlotTime(pDevice);
--	CARDvSetBSSMode(pDevice);
-+	vnt_set_bss_mode(pDevice);
- 
- 	pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
- 	pDevice->byBBVGANew = pDevice->byBBVGACurrent;
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 191e788..acd5be7 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -333,11 +333,11 @@ void vRunCommand(struct work_struct *work)
- 			if ((pDevice->byBBType != BB_TYPE_11A) &&
- 			    (pMgmt->uScanChannel > CB_MAX_CHANNEL_24G)) {
- 				pDevice->byBBType = BB_TYPE_11A;
--				CARDvSetBSSMode(pDevice);
-+				vnt_set_bss_mode(pDevice);
- 			} else if ((pDevice->byBBType == BB_TYPE_11A) &&
- 				   (pMgmt->uScanChannel <= CB_MAX_CHANNEL_24G)) {
- 				pDevice->byBBType = BB_TYPE_11G;
--				CARDvSetBSSMode(pDevice);
-+				vnt_set_bss_mode(pDevice);
- 			}
- 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Scanning....  channel: [%d]\n", pMgmt->uScanChannel);
- 			// Set channel
-@@ -377,7 +377,7 @@ void vRunCommand(struct work_struct *work)
- 		// Set Baseband's sensitivity back.
- 		if (pDevice->byBBType != pDevice->byScanBBType) {
- 			pDevice->byBBType = pDevice->byScanBBType;
--			CARDvSetBSSMode(pDevice);
-+			vnt_set_bss_mode(pDevice);
- 		}
- 
- 		BBvSetShortSlotTime(pDevice);
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 1646aaf..0ba292c 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -2081,7 +2081,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-     // vUpdateIFS() use pDevice->bShortSlotTime as parameter so it must be called
-     // after setting ShortSlotTime.
-     // CARDvSetBSSMode call vUpdateIFS()
--    CARDvSetBSSMode(pDevice);
-+    vnt_set_bss_mode(pDevice);
- 
-     if (pMgmt->eConfigMode == WMAC_CONFIG_AP) {
-         MACvRegBitsOn(pDevice, MAC_REG_HOSTCR, HOSTCR_AP);
-@@ -2601,7 +2601,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
-             pMgmt->eCurrentPHYMode = PHY_TYPE_11A;
-             pDevice->bShortSlotTime = true;
-             BBvSetShortSlotTime(pDevice);
--            CARDvSetBSSMode(pDevice);
-+	    vnt_set_bss_mode(pDevice);
-         } else {
-             return;
-         }
-@@ -2613,7 +2613,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
-             pMgmt->eCurrentPHYMode = PHY_TYPE_11B;
-             pDevice->bShortSlotTime = false;
-             BBvSetShortSlotTime(pDevice);
--            CARDvSetBSSMode(pDevice);
-+	    vnt_set_bss_mode(pDevice);
-         } else {
-             return;
-         }
-@@ -2624,12 +2624,12 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
-             pMgmt->eCurrentPHYMode = PHY_TYPE_11G;
-             pDevice->bShortSlotTime = true;
-             BBvSetShortSlotTime(pDevice);
--            CARDvSetBSSMode(pDevice);
-+	    vnt_set_bss_mode(pDevice);
-         } else if (pDevice->eConfigPHYMode == PHY_TYPE_11B) {
-             pDevice->byBBType = BB_TYPE_11B;
-             pDevice->bShortSlotTime = false;
-             BBvSetShortSlotTime(pDevice);
--            CARDvSetBSSMode(pDevice);
-+	    vnt_set_bss_mode(pDevice);
-         } else {
-             return;
-         }
+ void CARDbSetMediaChannel(struct vnt_private *pDevice, u32 uConnectionChannel);
+ void CARDvSetRSPINF(struct vnt_private *, u8);
+-void vUpdateIFS(struct vnt_private *pDevice);
++void vUpdateIFS(struct vnt_private *);
+ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice);
+ void CARDbAddBasicRate(struct vnt_private *pDevice, u16 wRateIdx);
+ int CARDbIsOFDMinBasicRate(struct vnt_private *pDevice);
 -- 
 1.9.1
 
