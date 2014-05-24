@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:52758 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933956AbaEFGe7 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35469 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbaEXNiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 02:34:59 -0400
-Received: by mail-ee0-f43.google.com with SMTP id d17so1346772eek.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2014 23:34:58 -0700 (PDT)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, ath9k-devel@venema.h4ckr.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 2/2] ath9k: Handling flag IEEE80211_TX_CTRL_NO_DUR_UPDATE
-Date: Tue,  6 May 2014 08:32:47 +0200
-Message-Id: <1399357967-6541-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140506_083504_084536_2E18A017)
-In-Reply-To: <1399357967-6541-1-git-send-email-marek.kwaczynski@tieto.com>
-References: <1399357967-6541-1-git-send-email-marek.kwaczynski@tieto.com>
+	Sat, 24 May 2014 09:38:07 -0400
+Received: by mail-wi0-f173.google.com with SMTP id bs8so2120243wib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/14] staging: vt6656: CARDqGetTSFOffset remove camel case
+Date: Sat, 24 May 2014 14:37:00 +0100
+Message-Id: <1400938630-2850-4-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153819_208587_0488A785)
+In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevents durationId field updates for injected frames
-when this information is included in radiotap header.
-It could be very useful for testing NAV update.
+camel case changes
+byRxRate -> rx_rate
+qwTSF1 -> tsf1
+qwTSF2 -> tsf2
+qwTSFOffset -> tsf_offset
+wRxBcnTSFOffst -> rx_bcn_offset
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/staging/vt6656/card.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 87cbec4..c24c113 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1092,8 +1092,15 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	rates = bf->rates;
- 	hdr = (struct ieee80211_hdr *)skb->data;
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index e39bdd5..8d12ae9 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -551,27 +551,27 @@ u8 CARDbyGetPktType(struct vnt_private *priv)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice         - The adapter to be sync.
+- *      qwTSF1          - Rx BCN's TSF
+- *      qwTSF2          - Local TSF
++ *      rx_rate	- rx rate.
++ *      tsf1	- Rx BCN's TSF
++ *      tsf2	- Local TSF
+  *  Out:
+  *      none
+  *
+  * Return Value: TSF Offset value
+  *
+  */
+-u64 CARDqGetTSFOffset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2)
++u64 CARDqGetTSFOffset(u8 rx_rate, u64 tsf1, u64 tsf2)
+ {
+-	u64 qwTSFOffset = 0;
+-	u16 wRxBcnTSFOffst = 0;
++	u64 tsf_offset = 0;
++	u16 rx_bcn_offset = 0;
  
--	/* set dur_update_en for l-sig computation except for PS-Poll frames */
--	info->dur_update = !ieee80211_is_pspoll(hdr->frame_control);
-+	if (tx_info->flags & IEEE80211_TX_CTRL_NO_DUR_UPDATE) {
-+		info->dur_update = 0;
-+	} else {
-+		/* set dur_update_en for l-sig computation except for PS-Poll
-+		 * frames
-+		 */
-+		info->dur_update = !ieee80211_is_pspoll(hdr->frame_control);
-+	}
-+
- 	info->rtscts_rate = fi->rtscts_rate;
+-	wRxBcnTSFOffst = cwRXBCNTSFOff[byRxRate % MAX_RATE];
++	rx_bcn_offset = cwRXBCNTSFOff[rx_rate % MAX_RATE];
  
- 	for (i = 0; i < ARRAY_SIZE(bf->rates); i++) {
+-	qwTSF2 += (u64)wRxBcnTSFOffst;
++	tsf2 += (u64)rx_bcn_offset;
+ 
+-	qwTSFOffset = qwTSF1 - qwTSF2;
++	tsf_offset = tsf1 - tsf2;
+ 
+-	return qwTSFOffset;
++	return tsf_offset;
+ }
+ 
+ /*
 -- 
-1.7.9.5
+1.9.1
 
