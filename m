@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58059 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755364AbaEGL4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 07:56:08 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-Date: Wed, 7 May 2014 11:55:42 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333F4475@HASMSX106.ger.corp.intel.com> (sfid-20140507_135619_424844_B3984B20)
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	 <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
-	 <1399444778.5038.3.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F41ED@HASMSX106.ger.corp.intel.com>
- <1399461582.10517.18.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1399461582.10517.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:45973 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154AbaEXNiJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 May 2014 09:38:09 -0400
+Received: by mail-wg0-f49.google.com with SMTP id m15so5901620wgh.8
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:07 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/14] staging: vt6656: camel case and clean up CARDvAdjustTSF
+Date: Sat, 24 May 2014 14:37:01 +0100
+Message-Id: <1400938630-2850-5-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153816_237894_E74EC5F5)
+In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBb
-bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFdlZG5lc2RheSwgTWF5
-IDA3LCAyMDE0IDE0OjIwDQo+IFRvOiBQZWVyLCBJbGFuDQo+IENjOiBMdWNhIENvZWxobzsgbGlu
-dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBtaWNoYWwua2F6aW9yQHRpZXRvLmNvbTsNCj4g
-T3RjaGVyZXRpYW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvNF0gY2ZnODAy
-MTEvbmw4MDIxMTogYWRkIGNoYW5uZWwgc3dpdGNoIHN0YXJ0ZWQgYW5kDQo+IGZhaWxlZCBub3Rp
-ZmljYXRpb25zDQo+IA0KPiBPbiBXZWQsIDIwMTQtMDUtMDcgYXQgMTA6MjcgKzAwMDAsIFBlZXIs
-IElsYW4gd3JvdGU6DQo+IA0KPiA+ID4gSW4gdGhlIGZpcnN0IGNhc2UsIHRoZXJlJ3Mgbm8gbm90
-aWZpY2F0aW9uLCBub3IgYW55IG5lZWQgZm9yIGl0LiBJbg0KPiA+ID4gdGhlIHNlY29uZCBjYXNl
-LCB0aGUgc2NlbmFyaW8geW91IHN1Z2dlc3QgZG9lc24ndCBhcHBseSwgYW5kIFNUT1BfQVANCj4g
-PiA+IGhhcyB0byBoYXBwZW4gYW55d2F5IGJlY2F1c2UgdGhlIHN0YXRlIGlzIGNvbXBsZXRlbHkg
-bWVzc2VkIHVwLA0KPiA+ID4gY2xpZW50cyB3aWxsIGJlIGluIHRoZSBwcm9jZXNzIG9mIHN3aXRj
-aGluZyBldGMuDQo+ID4gPg0KPiA+ID4gPiBPdGhlciB0aGFuIHRoYXQsIGEgU1RPUF9BUCBtaWdo
-dCBpbnRyb2R1Y2Ugc29tZSByYWNlcywgYXMNCj4gPiA+ID4gd3BhX3N1cHBsaWNhbnQvaG9zdGFw
-IHdpbGwgbm90IGtub3cgaWYgdGhlIHN0b3BfYXAgd2FzIGR1ZSB0byB0aGUNCj4gPiA+ID4gZmFp
-bGVkIENTIG9yIGR1ZSB0byBzb21lIG90aGVyIHJlYXNvbi4NCj4gPiA+DQo+ID4gPiBJIGRvbid0
-IHNlZSB3aHkgdGhhdCB3b3VsZCBtYXR0ZXIgLSBldmVuIGlmIHRoZSBTVE9QX0FQICp3YXMqIGZv
-cg0KPiA+ID4gc29tZSBvdGhlciByZWFzb24sIGJ1dCBoYXBwZW5lZCBpbiB0aGUgbWlkZGxlIG9m
-IHRoZSBDUyBmbG93LCB0aGUNCj4gPiA+IHJlYWN0aW9uIHdvdWxkIHByZXN1bWFibHkgYmUgdGhl
-IHNhbWU/DQo+ID4gPg0KPiA+DQo+ID4gSXQgY2FuIGJlIGJlbmVmaWNpYWwgdG8ga25vdyB0aGF0
-IHRoZSBTVE9QX0FQIHdhcyBjYWxsZWQgZHVlIHRvDQo+ID4gZmFpbHVyZSBvZiBDUywgYXMgd3Bh
-X3N1cHBsaWNhbnQvaG9zdGFwIGNhbiB0ZWFyIGRvd24gdGhlIEFQIGFuZCB0aGVuDQo+ID4gKGlm
-IHBvc3NpYmxlKSBzZXQgaXQgdXAgYWdhaW4gb24gdGhlIG5ldyBjaGFubmVsIG9yIGFub3RoZXIg
-Y2hhbm5lbC4NCj4gDQo+IE1heWJlIHRoYXQncyBtb3JlIG9mIGFuIGFyZ3VtZW50IGZvciBhZGRp
-bmcgYSBzb3J0IG9mICJyZWFzb24iIG9yICJjYXVzZSIgdG8NCj4gdGhlIFNUT1BfQVA/IChCdHcs
-IG5vIHRlYXIgZG93biBuZWVkZWQgaW4gdGhpcyBjYXNlIC0gdGhhdCdzIGFscmVhZHkgZG9uZSkN
-Cj4gDQoNClllcyA6KQ0KDQo+IE9UT0gsIHdoYXQgZWxzZSBhcmUgeW91IHRoaW5raW5nIG9mIGRv
-aW5nPyBXaHkgd291bGQgeW91IGV2ZXIsIHVuZGVyIGFueQ0KPiBjaXJjdW1zdGFuY2VzLCBub3Qg
-cmVzdGFydCB0aGUgQVAgaWYgaXQgd2FzIHN0b3BwZWQgYnkgdGhlIGRldmljZT8NCg0KQWN0dWFs
-bHkgdGhpcyBpcyB0aGUgZGVmYXVsdCB0b2RheTogb24gU1RPUF9BUCBub3RpZmljYXRpb24gYSBH
-TyBpbnRlcmZhY2UgaXMgc2ltcGx5IGRlbGV0ZWQsIGFzIHRoZSBhc3N1bXB0aW9uIGlzIHRoYXQg
-c29tZXRoaW5nIHVucmVjb3ZlcmFibGUgaGFwcGVuZWQuIEluIGNhc2Ugb2YgQ1MgZmFpbHVyZSwg
-aXQgd291bGQgYmUgKm5pY2UqIHRvIGtub3cgaWYgdGhlIGZhaWx1cmUgaXMgcmVjb3ZlcmFibGUg
-b3Igbm90Lg0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQoNCiANCg0K
+camel case changes
+pDevice -> priv
+byRxRate -> rx_rate
+qwBSSTimestamp -> time_stamp
+qwLocalTSF -> local_tsf
+qwTSFOffset -> tsf_offset
+pbyData -> data
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 44 ++++++++++++++++++-------------------------
+ 1 file changed, 18 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 8d12ae9..4b0b3ef 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -580,42 +580,34 @@ u64 CARDqGetTSFOffset(u8 rx_rate, u64 tsf1, u64 tsf2)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice         - The adapter to be sync.
+- *      qwBSSTimestamp  - Rx BCN's TSF
+- *      qwLocalTSF      - Local TSF
++ *      priv		- The adapter to be sync.
++ *      time_stamp	- Rx BCN's TSF
++ *      local_tsf	- Local TSF
+  *  Out:
+  *      none
+  *
+  * Return Value: none
+  *
+  */
+-void CARDvAdjustTSF(struct vnt_private *pDevice, u8 byRxRate,
+-		u64 qwBSSTimestamp, u64 qwLocalTSF)
++void CARDvAdjustTSF(struct vnt_private *priv, u8 rx_rate,
++		u64 time_stamp, u64 local_tsf)
+ {
+-	u64 qwTSFOffset = 0;
+-	u8 pbyData[8];
+-
+-    qwTSFOffset = CARDqGetTSFOffset(byRxRate, qwBSSTimestamp, qwLocalTSF);
+-    // adjust TSF
+-    // HW's TSF add TSF Offset reg
++	u64 tsf_offset = 0;
++	u8 data[8];
+ 
+-	pbyData[0] = (u8)qwTSFOffset;
+-	pbyData[1] = (u8)(qwTSFOffset >> 8);
+-	pbyData[2] = (u8)(qwTSFOffset >> 16);
+-	pbyData[3] = (u8)(qwTSFOffset >> 24);
+-	pbyData[4] = (u8)(qwTSFOffset >> 32);
+-	pbyData[5] = (u8)(qwTSFOffset >> 40);
+-	pbyData[6] = (u8)(qwTSFOffset >> 48);
+-	pbyData[7] = (u8)(qwTSFOffset >> 56);
++	tsf_offset = CARDqGetTSFOffset(rx_rate, time_stamp, local_tsf);
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_SET_TSFTBTT,
+-                        MESSAGE_REQUEST_TSF,
+-                        0,
+-                        8,
+-                        pbyData
+-                        );
++	data[0] = (u8)tsf_offset;
++	data[1] = (u8)(tsf_offset >> 8);
++	data[2] = (u8)(tsf_offset >> 16);
++	data[3] = (u8)(tsf_offset >> 24);
++	data[4] = (u8)(tsf_offset >> 32);
++	data[5] = (u8)(tsf_offset >> 40);
++	data[6] = (u8)(tsf_offset >> 48);
++	data[7] = (u8)(tsf_offset >> 56);
+ 
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_SET_TSFTBTT,
++		MESSAGE_REQUEST_TSF, 0, 8, data);
+ }
+ /*
+  * Description: Read NIC TSF counter
+-- 
+1.9.1
+
