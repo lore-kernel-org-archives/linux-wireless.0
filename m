@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44382 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751795AbaEWNcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 09:32:01 -0400
-Message-ID: <1400851911.25946.42.camel@dubbel> (sfid-20140523_153206_022190_D3FD2DCB)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: michal.kazior@tieto.com, linux-wireless@vger.kernel.org
-Date: Fri, 23 May 2014 16:31:51 +0300
-In-Reply-To: <1400851684.4358.41.camel@jlt4.sipsolutions.net>
-References: <1400838772.4358.22.camel@jlt4.sipsolutions.net>
-	 <1400844793-18069-1-git-send-email-luca@coelho.fi>
-	 <1400844793-18069-2-git-send-email-luca@coelho.fi>
-	 <1400851684.4358.41.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 2/2] mac80211: use switch_vif_chanctx to change a
- running chanctx
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:47043 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbaEXNiY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 May 2014 09:38:24 -0400
+Received: by mail-wg0-f52.google.com with SMTP id l18so5932676wgh.11
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:23 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/14] staging: vt6656: CARDvCalculateOFDMRParameter fix indentation rsv_time
+Date: Sat, 24 May 2014 14:37:10 +0100
+Message-Id: <1400938630-2850-14-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153833_084555_681F1838)
+In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-23 at 15:28 +0200, Johannes Berg wrote:
-> On Fri, 2014-05-23 at 14:33 +0300, Luca Coelho wrote:
-> > From: Luciano Coelho <luciano.coelho@intel.com>
-> > 
-> > Instead of hammering a new channel into the running context, make use
-> > of the new switch_vif_chanctx to let the driver decide how to perform
-> > the switch.
-> > 
-> > Additionally, remove the IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag,
-> > since we never change a running context directly anymore.
-> 
-> This seems totally reasonable to me, but I'll wait to see what Michal
-> does :)
+In patch
+staging: vt6656 camel case clean up CARDvCalculateOFDMRParameter
+rsv_time is indented incorrectly.
 
-Yeah, I think so too, but if he specifically add us not to do this, it's
-probably because he would have trouble rebasing or something. :)
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-Luca.
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 5a65f75..ce069c9 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -256,7 +256,7 @@ void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
+ 			*rsv_time = 4;
+ 		} else {
+ 			*tx_rate = 0x88;
+-		*rsv_time = 10;
++			*rsv_time = 10;
+ 		}
+ 		break;
+ 	case RATE_54M:
+-- 
+1.9.1
 
