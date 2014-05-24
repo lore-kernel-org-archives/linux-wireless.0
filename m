@@ -1,100 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:44165 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460AbaEaKvb (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:47786 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbaEXNiR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 06:51:31 -0400
-Received: by mail-we0-f178.google.com with SMTP id u56so3109486wes.9
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:30 -0700 (PDT)
+	Sat, 24 May 2014 09:38:17 -0400
+Received: by mail-wg0-f48.google.com with SMTP id k14so1729274wgh.31
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:16 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/14] staging: vt6656: rename MACvSetKeyEntry to vnt_mac_set_keyentry
-Date: Sat, 31 May 2014 11:50:40 +0100
-Message-Id: <1401533449-2972-5-git-send-email-tvboxspy@gmail.com> (sfid-20140531_125138_541367_1AFF3AC9)
-In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
-References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 10/14] staging: vt6656: camel case clean up CARDvUpdateNextTBTT
+Date: Sat, 24 May 2014 14:37:06 +0100
+Message-Id: <1400938630-2850-10-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153829_015486_347D8BE9)
+In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+camel case changes
+pDevice -> priv
+qwTSF -> tsf
+wBeaconInterval -> beacon_interval
+pbyData -> data
+
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/key.c | 12 ++++++------
- drivers/staging/vt6656/mac.c |  2 +-
- drivers/staging/vt6656/mac.h |  2 +-
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/staging/vt6656/card.c | 45 ++++++++++++++++++-------------------------
+ 1 file changed, 19 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/staging/vt6656/key.c b/drivers/staging/vt6656/key.c
-index 4b08654..33e3e5a 100644
---- a/drivers/staging/vt6656/key.c
-+++ b/drivers/staging/vt6656/key.c
-@@ -238,8 +238,8 @@ int KeybSetKey(struct vnt_private *pDevice, PSKeyManagement pTable,
-                     pKey->abyKey[15] |= 0x80;
-             }
- 
--	    MACvSetKeyEntry(pDevice, pTable->KeyTable[i].wKeyCtl, i, uKeyIdx,
--			pbyBSSID, pKey->abyKey);
-+	    vnt_mac_set_keyentry(pDevice, pTable->KeyTable[i].wKeyCtl, i,
-+					uKeyIdx, pbyBSSID, pKey->abyKey);
- 
- 		if ((dwKeyIndex & USE_KEYRSC) == 0)
- 			pKey->KeyRSC = 0; /* RSC set by NIC */
-@@ -308,7 +308,7 @@ int KeybSetKey(struct vnt_private *pDevice, PSKeyManagement pTable,
-                 pKey->abyKey[15] |= 0x80;
-         }
- 
--	MACvSetKeyEntry(pDevice, pTable->KeyTable[j].wKeyCtl, j, uKeyIdx,
-+	vnt_mac_set_keyentry(pDevice, pTable->KeyTable[j].wKeyCtl, j, uKeyIdx,
- 					pbyBSSID, pKey->abyKey);
- 
- 		if ((dwKeyIndex & USE_KEYRSC) == 0)
-@@ -604,7 +604,7 @@ int KeybSetDefaultKey(struct vnt_private *pDevice, PSKeyManagement pTable,
-             pKey->abyKey[15] |= 0x80;
-     }
- 
--	MACvSetKeyEntry(pDevice, pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl,
-+	vnt_mac_set_keyentry(pDevice, pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl,
- 		MAX_KEY_TABLE-1, uKeyIdx,
- 		pTable->KeyTable[MAX_KEY_TABLE-1].abyBSSID, pKey->abyKey);
- 
-@@ -700,8 +700,8 @@ int KeybSetAllGroupKey(struct vnt_private *pDevice, PSKeyManagement pTable,
-                     pKey->abyKey[15] |= 0x80;
-             }
- 
--	    MACvSetKeyEntry(pDevice, pTable->KeyTable[i].wKeyCtl, i, uKeyIdx,
--			pTable->KeyTable[i].abyBSSID, pKey->abyKey);
-+	    vnt_mac_set_keyentry(pDevice, pTable->KeyTable[i].wKeyCtl, i,
-+			uKeyIdx, pTable->KeyTable[i].abyBSSID, pKey->abyKey);
- 
- 		if ((dwKeyIndex & USE_KEYRSC) == 0)
- 			pKey->KeyRSC = 0; /* RSC set by NIC */
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index fe6b4ac..2d5121a 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -119,7 +119,7 @@ void vnt_mac_disable_keyentry(struct vnt_private *priv, u8 entry_idx)
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index b73b1b8..09b6de5 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -727,45 +727,38 @@ void CARDvSetFirstNextTBTT(struct vnt_private *priv, u16 beacon_interval)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice         - The adapter to be set
+- *      qwTSF           - Current TSF counter
+- *      wBeaconInterval - Beacon Interval
++ *	priv		- The adapter to be set
++ *      tsf		- Current TSF counter
++ *      beacon_interval - Beacon Interval
+  *  Out:
+  *      none
+  *
   * Return Value: none
   *
   */
--void MACvSetKeyEntry(struct vnt_private *priv, u16 key_ctl, u32 entry_idx,
-+void vnt_mac_set_keyentry(struct vnt_private *priv, u16 key_ctl, u32 entry_idx,
- 	u32 key_idx, u8 *addr, u8 *key)
+-void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
+-			u16 wBeaconInterval)
++void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 tsf,
++			u16 beacon_interval)
  {
- 	struct vnt_mac_set_key set_key;
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index a808794..331c75c 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -418,7 +418,7 @@ void vnt_mac_set_filter(struct vnt_private *, u64);
- void vnt_mac_shutdown(struct vnt_private *);
- void vnt_mac_set_bb_type(struct vnt_private *, u8);
- void vnt_mac_disable_keyentry(struct vnt_private *, u8);
--void MACvSetKeyEntry(struct vnt_private *, u16, u32, u32, u8 *, u8 *);
-+void vnt_mac_set_keyentry(struct vnt_private *, u16, u32, u32, u8 *, u8 *);
- void MACvRegBitsOff(struct vnt_private *, u8, u8);
- void MACvRegBitsOn(struct vnt_private *, u8, u8);
- void MACvWriteWord(struct vnt_private *, u8, u16);
+-	u8 pbyData[8];
+-
+-    qwTSF = CARDqGetNextTBTT(qwTSF, wBeaconInterval);
++	u8 data[8];
+ 
+-    // Set NextTBTT
++	tsf = CARDqGetNextTBTT(tsf, beacon_interval);
+ 
+-	pbyData[0] = (u8)qwTSF;
+-	pbyData[1] = (u8)(qwTSF >> 8);
+-	pbyData[2] = (u8)(qwTSF >> 16);
+-	pbyData[3] = (u8)(qwTSF >> 24);
+-	pbyData[4] = (u8)(qwTSF >> 32);
+-	pbyData[5] = (u8)(qwTSF >> 40);
+-	pbyData[6] = (u8)(qwTSF >> 48);
+-	pbyData[7] = (u8)(qwTSF >> 56);
++	data[0] = (u8)tsf;
++	data[1] = (u8)(tsf >> 8);
++	data[2] = (u8)(tsf >> 16);
++	data[3] = (u8)(tsf >> 24);
++	data[4] = (u8)(tsf >> 32);
++	data[5] = (u8)(tsf >> 40);
++	data[6] = (u8)(tsf >> 48);
++	data[7] = (u8)(tsf >> 56);
+ 
+-    CONTROLnsRequestOut(pDevice,
+-                        MESSAGE_TYPE_SET_TSFTBTT,
+-                        MESSAGE_REQUEST_TBTT,
+-                        0,
+-                        8,
+-                        pbyData
+-                        );
++	CONTROLnsRequestOut(priv, MESSAGE_TYPE_SET_TSFTBTT,
++		MESSAGE_REQUEST_TBTT, 0, 8, data);
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-		"Card:Update Next TBTT[%8lx]\n", (unsigned long)qwTSF);
++		"Card:Update Next TBTT[%8lx]\n", (unsigned long)tsf);
+ 
+-    return;
++	return;
+ }
+ 
+ /*
 -- 
 1.9.1
 
