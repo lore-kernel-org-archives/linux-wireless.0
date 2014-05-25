@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25096 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.17.20]:49993 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752555AbaESKtO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 06:49:14 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
-	devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change rtw_alloc_stainfo23a to use gfp_t instead if int
-References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
-	<20140519101855.GU15585@mwanda>
-	<wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org>
-	<20140519104012.GP16255@mwanda>
-Date: Mon, 19 May 2014 12:49:03 +0200
-In-Reply-To: <20140519104012.GP16255@mwanda> (Dan Carpenter's message of "Mon,
-	19 May 2014 13:40:12 +0300")
-Message-ID: <wrfjlhtyrqlc.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140519_124930_736798_CA7E1FB5)
+	id S1751071AbaEYR7w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 May 2014 13:59:52 -0400
+From: =?UTF-8?q?Manuel=20Sch=C3=B6lling?= <manuel.schoelling@gmx.de>
+To: bzhao@marvell.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	=?UTF-8?q?Manuel=20Sch=C3=B6lling?= <manuel.schoelling@gmx.de>
+Subject: [PATCH] mwifiex: use time_after()
+Date: Sun, 25 May 2014 19:59:36 +0200
+Message-Id: <1401040776-13711-1-git-send-email-manuel.schoelling@gmx.de> (sfid-20140525_200019_642998_71DA518B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> On Mon, May 19, 2014 at 12:25:13PM +0200, Jes Sorensen wrote:
->> Dan,
->> 
->> Calm down, I haven't been bombarding the list, due to the sheer volume
->> of commits.  If you want me to spam the list, tell me where and I'll add
->> that to the CC list next time.
->
-> We provide the scripts/get_maintainer.pl script for that.  You can leave
-> linux-kernel off if you want because they don't care about staging
-> drivers.  The staging list is devel@driverdev.osuosl.org.
+To be future-proof and for better readability the time comparisons are
+modified to use time_after() instead of plain, error-prone math.
 
-You should be running your tools against the staging tree automatically,
-that way you catch it before it hits the mainline tree.
+Signed-off-by: Manuel Schölling <manuel.schoelling@gmx.de>
+---
+ drivers/net/wireless/mwifiex/main.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Just flooding mailing lists for the sake of flooding them doesn't add
-any value either.
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index d53e1e8..3191066 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1101,7 +1101,7 @@ mwifiex_11h_get_csa_closed_channel(struct mwifiex_private *priv)
+ 		return 0;
+ 
+ 	/* Clear csa channel, if DFS channel move time has passed */
+-	if (jiffies > priv->csa_expire_time) {
++	if (time_after(jiffies, priv->csa_expire_time)) {
+ 		priv->csa_chan = 0;
+ 		priv->csa_expire_time = 0;
+ 	}
+-- 
+1.7.10.4
 
-Jes
