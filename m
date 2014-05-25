@@ -1,103 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:47786 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaEXNiR (ORCPT
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:52920 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaEYRYE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 09:38:17 -0400
-Received: by mail-wg0-f48.google.com with SMTP id k14so1729274wgh.31
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:16 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/14] staging: vt6656: camel case clean up CARDvUpdateNextTBTT
-Date: Sat, 24 May 2014 14:37:06 +0100
-Message-Id: <1400938630-2850-10-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153829_015486_347D8BE9)
-In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
-References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 25 May 2014 13:24:04 -0400
+Received: by mail-ve0-f172.google.com with SMTP id oz11so8336491veb.17
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 10:24:03 -0700 (PDT)
+MIME-Version: 1.0
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Sun, 25 May 2014 10:23:42 -0700
+Message-ID: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com> (sfid-20140525_192520_959843_AA87DCA2)
+Subject: Help debugging iwldvm / ath10k stalls
+To: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-qwTSF -> tsf
-wBeaconInterval -> beacon_interval
-pbyData -> data
+I have an old iwldvm station (Intel(R) Centrino(R) Ultimate-N 6300
+AGN, REV=0x74) and a new ath10k AP (QCA9880-BR4A, I think, as found in
+the TP-Link Archer C7 vs).  The former is Fedora's 3.14 kernel and the
+latter is OpenWRT trunk from a few days ago.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 45 ++++++++++++++++++-------------------------
- 1 file changed, 19 insertions(+), 26 deletions(-)
+Every now and then, my connection drops out.  From wireshark on the
+station, it looks like traffic from the AP to the STA is coming
+through but traffic from the STA to the AP is not.  I could be wrong
+here, though.  Nothing is logged in either machine's kernel log.
+After 5 seconds to a couple minutes, everything starts working again.
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index b73b1b8..09b6de5 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -727,45 +727,38 @@ void CARDvSetFirstNextTBTT(struct vnt_private *priv, u16 beacon_interval)
-  *
-  * Parameters:
-  *  In:
-- *      pDevice         - The adapter to be set
-- *      qwTSF           - Current TSF counter
-- *      wBeaconInterval - Beacon Interval
-+ *	priv		- The adapter to be set
-+ *      tsf		- Current TSF counter
-+ *      beacon_interval - Beacon Interval
-  *  Out:
-  *      none
-  *
-  * Return Value: none
-  *
-  */
--void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
--			u16 wBeaconInterval)
-+void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 tsf,
-+			u16 beacon_interval)
- {
--	u8 pbyData[8];
--
--    qwTSF = CARDqGetNextTBTT(qwTSF, wBeaconInterval);
-+	u8 data[8];
- 
--    // Set NextTBTT
-+	tsf = CARDqGetNextTBTT(tsf, beacon_interval);
- 
--	pbyData[0] = (u8)qwTSF;
--	pbyData[1] = (u8)(qwTSF >> 8);
--	pbyData[2] = (u8)(qwTSF >> 16);
--	pbyData[3] = (u8)(qwTSF >> 24);
--	pbyData[4] = (u8)(qwTSF >> 32);
--	pbyData[5] = (u8)(qwTSF >> 40);
--	pbyData[6] = (u8)(qwTSF >> 48);
--	pbyData[7] = (u8)(qwTSF >> 56);
-+	data[0] = (u8)tsf;
-+	data[1] = (u8)(tsf >> 8);
-+	data[2] = (u8)(tsf >> 16);
-+	data[3] = (u8)(tsf >> 24);
-+	data[4] = (u8)(tsf >> 32);
-+	data[5] = (u8)(tsf >> 40);
-+	data[6] = (u8)(tsf >> 48);
-+	data[7] = (u8)(tsf >> 56);
- 
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_SET_TSFTBTT,
--                        MESSAGE_REQUEST_TBTT,
--                        0,
--                        8,
--                        pbyData
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_SET_TSFTBTT,
-+		MESSAGE_REQUEST_TBTT, 0, 8, data);
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--		"Card:Update Next TBTT[%8lx]\n", (unsigned long)qwTSF);
-+		"Card:Update Next TBTT[%8lx]\n", (unsigned long)tsf);
- 
--    return;
-+	return;
- }
- 
- /*
--- 
-1.9.1
+A couple of Apple devices using the same radio on the same AP seem to work fine.
 
+Any advice for debugging this?  I don't know where to start.
+
+Thanks,
+Andy
