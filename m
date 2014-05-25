@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8345 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755682AbaENNeN (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:43484 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaEYUiX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 09:34:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
-References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
-Date: Wed, 14 May 2014 16:34:05 +0300
-In-Reply-To: <CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 12 May 2014 09:34:53 +0200")
-Message-ID: <87oaz0fprm.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_153419_494560_80276746)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 25 May 2014 16:38:23 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x12so7039214wgg.21
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 13:38:22 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/8] staging: vt6656: baseband.c replace DBG_PRT debug messages
+Date: Sun, 25 May 2014 21:36:25 +0100
+Message-Id: <1401050189-3249-4-git-send-email-tvboxspy@gmail.com> (sfid-20140525_223828_639709_41BF38D3)
+In-Reply-To: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
+References: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Replace with dev_dbg
 
-> On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
->> Hi,
->>
->> This depends on my `ath10k: recovery fixes
->> 2014-05-09`.
->>
->> Hopefully the split makes it a little saner to
->> review.
->>
->> Please note: `ath10k: make wmi timeout trigger hw
->> restart` effectively hides the mgmt tx / htc
->> credit starvation issue that was discussed
->> recently. My intention is to make the driver more
->> robust and as a side effect it makes the
->> starvation issue less painful. If desired so
->> the patch can be easily ignored in the series as
->> nothing depends on it.
->>
->>
->> Michal Kazior (7):
->>   ath10k: move restart_work call
->>   ath10k: introduce core restart symbol
->
->
->>   ath10k: drain wmi quickly upon hw restart
->>   ath10k: wake up everything on core restart
->
-> These 2 are harmful as they are. In case of early fw crash
-> uninitialized structures are accessed. I'll re-spin later.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
-So I can drop the whole series, right?
-
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 3a06bf4..c2b0897 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -43,9 +43,6 @@
+ #include "control.h"
+ #include "datarate.h"
+ 
+-static int          msglevel                =MSG_LEVEL_INFO;
+-//static int          msglevel                =MSG_LEVEL_DEBUG;
+-
+ static u8 abyVT3184_AGC[] = {
+     0x00,   //0
+     0x00,   //1
+@@ -910,20 +907,20 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 			(priv->abyEEPROM[EEP_OFS_ZONETYPE] != 0x00)) {
+ 			priv->abyEEPROM[EEP_OFS_ZONETYPE] = 0;
+ 			priv->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0B;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-						"Init Zone Type :USA\n");
++
++			dev_dbg(&priv->usb->dev, "Init Zone Type :USA\n");
+ 		} else if ((priv->config_file.ZoneType == 1) &&
+ 			(priv->abyEEPROM[EEP_OFS_ZONETYPE] != 0x01)) {
+ 			priv->abyEEPROM[EEP_OFS_ZONETYPE] = 0x01;
+ 			priv->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0D;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-						"Init Zone Type :Japan\n");
++
++			dev_dbg(&priv->usb->dev, "Init Zone Type :Japan\n");
+ 		} else if ((priv->config_file.ZoneType == 2) &&
+ 			(priv->abyEEPROM[EEP_OFS_ZONETYPE] != 0x02)) {
+ 			priv->abyEEPROM[EEP_OFS_ZONETYPE] = 0x02;
+ 			priv->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0D;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-						"Init Zone Type :Europe\n");
++
++			dev_dbg(&priv->usb->dev, "Init Zone Type :Europe\n");
+ 		} else {
+ 			if (priv->config_file.ZoneType !=
+ 					priv->abyEEPROM[EEP_OFS_ZONETYPE])
+@@ -943,10 +940,9 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 
+ 	priv->byRFType = priv->abyEEPROM[EEP_OFS_RFTYPE];
+ 
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Zone Type %x\n",
+-							priv->byZoneType);
++	dev_dbg(&priv->usb->dev, "Zone Type %x\n", priv->byZoneType);
+ 
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RF Type %d\n", priv->byRFType);
++	dev_dbg(&priv->usb->dev, "RF Type %d\n", priv->byRFType);
+ 
+ 	if ((priv->byRFType == RF_AL2230) ||
+ 				(priv->byRFType == RF_AL2230S)) {
 -- 
-Kalle Valo
+1.9.1
+
