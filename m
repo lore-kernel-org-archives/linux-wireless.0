@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:39735 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaEVNxt convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:33221 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaEYUiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 09:53:49 -0400
-Received: by mail-we0-f175.google.com with SMTP id t61so3490377wes.34
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 06:53:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1400766195.4174.13.camel@jlt4.sipsolutions.net>
-References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
-	<1400765294-14732-2-git-send-email-michal.kazior@tieto.com>
-	<1400766195.4174.13.camel@jlt4.sipsolutions.net>
-Date: Thu, 22 May 2014 15:53:47 +0200
-Message-ID: <CA+BoTQmw6taxwxHtK99BQXgGugu6aDrGUOCz+-MvUo52JoWrpw@mail.gmail.com> (sfid-20140522_155352_561137_B50D3412)
-Subject: Re: [PATCH 1/3] mac80211: move csa counters from sdata to beacon/presp
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 25 May 2014 16:38:18 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so7121449wgg.12
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 13:38:17 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/8] staging: vt6656: swGetOFDMControlRate remove camel case
+Date: Sun, 25 May 2014 21:36:22 +0100
+Message-Id: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com> (sfid-20140525_223822_812714_0D05E375)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 May 2014 15:43, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-05-22 at 15:28 +0200, Michal Kazior wrote:
->> Having csa counters part of beacon and probe_resp
->> structures makes it easier to get rid of possible
->> reaces between setting a beacon and updating
+camel case changes
+pDevice -> priv
+wRateIdx -> rate_idx
 
->> reaces
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
--_- grr
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index ce069c9..f025010 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -149,31 +149,31 @@ static u16 swGetCCKControlRate(struct vnt_private *pDevice, u16 wRateIdx)
+  *
+  * Parameters:
+  *  In:
+- *      pDevice             - The adapter to be set
+- *      wRateIdx            - Receiving data rate
++ *      priv		- The adapter to be set
++ *      rate_idx	- Receiving data rate
+  *  Out:
+  *      none
+  *
+  * Return Value: response Control frame rate
+  *
+  */
+-static u16 swGetOFDMControlRate(struct vnt_private *pDevice, u16 wRateIdx)
++static u16 swGetOFDMControlRate(struct vnt_private *priv, u16 rate_idx)
+ {
+-	u16 ui = wRateIdx;
++	u16 ui = rate_idx;
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"BASIC RATE: %X\n",
+-		pDevice->wBasicRate);
++		priv->wBasicRate);
+ 
+-	if (!CARDbIsOFDMinBasicRate(pDevice)) {
++	if (!CARDbIsOFDMinBasicRate(priv)) {
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"swGetOFDMControlRate:(NO OFDM) %d\n", wRateIdx);
+-		if (wRateIdx > RATE_24M)
+-			wRateIdx = RATE_24M;
+-		return wRateIdx;
++			"swGetOFDMControlRate:(NO OFDM) %d\n", rate_idx);
++		if (rate_idx > RATE_24M)
++			rate_idx = RATE_24M;
++		return rate_idx;
+ 	}
+ 
+ 	while (ui > RATE_11M) {
+-		if (pDevice->wBasicRate & (1 << ui)) {
++		if (priv->wBasicRate & (1 << ui)) {
+ 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+ 				"swGetOFDMControlRate: %d\n", ui);
+ 			return ui;
+-- 
+1.9.1
 
-
->> counters on SMP systems by guaranteeing counters
->> are always consistent against given beacon struct.
->
-> This makes a lot of sense.
->
->>  static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
->> -                                struct cfg80211_beacon_data *params)
->> +                                struct cfg80211_beacon_data *params,
->> +                                const u16 *csa_counter_offset_beacon,
->> +                                int n_csa_counter_offset_beacon,
->> +                                const u16 *csa_counter_offset_presp,
->> +                                int n_csa_counter_offset_presp,
->> +                                u8 csa_count)
->
-> But that seems overkill. Maybe those CSA-related arguments could be in
-> some new struct so you don't have to pass "..., NULL, 0, NULL, 0, 0"?
-
-I didn't want to invent a structure just to pass a bunch of arguments.
-
-Hmm.. maybe we can move counter offsets into cfg80211_beacon_data?
-This would apply to cfg80211_csa_settings as well.
-
-
-Michał
