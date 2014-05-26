@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:44237 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbaEGTyJ (ORCPT
+Received: from mail-ve0-f179.google.com ([209.85.128.179]:53032 "EHLO
+	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbaEZGLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:54:09 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so1978394wib.7
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:54:08 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/23] iwlwifi: mvm: fix sparse warning when _DEBUGFS isn't set
-Date: Wed,  7 May 2014 22:52:59 +0300
-Message-Id: <1399492380-12050-22-git-send-email-egrumbach@gmail.com> (sfid-20140507_215426_313673_C3526E0A)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+	Mon, 26 May 2014 02:11:41 -0400
+Received: by mail-ve0-f179.google.com with SMTP id oy12so8775047veb.38
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 23:11:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+ <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com> <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Sun, 25 May 2014 23:11:19 -0700
+Message-ID: <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com> (sfid-20140526_081144_385770_27CAA04A)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Sun, May 25, 2014 at 10:39 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, May 26, 2014 at 8:06 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> On Sun, May 25, 2014 at 10:23 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>>> I have an old iwldvm station (Intel(R) Centrino(R) Ultimate-N 6300
+>>> AGN, REV=0x74) and a new ath10k AP (QCA9880-BR4A, I think, as found in
+>>> the TP-Link Archer C7 vs).  The former is Fedora's 3.14 kernel and the
+>>> latter is OpenWRT trunk from a few days ago.
+>>>
+>>> Every now and then, my connection drops out.  From wireshark on the
+>>> station, it looks like traffic from the AP to the STA is coming
+>>> through but traffic from the STA to the AP is not.  I could be wrong
+>>> here, though.  Nothing is logged in either machine's kernel log.
+>>> After 5 seconds to a couple minutes, everything starts working again.
+>>>
+>>> A couple of Apple devices using the same radio on the same AP seem to work fine.
+>>>
+>>> Any advice for debugging this?  I don't know where to start.
+>>
+>> I caught one of the stalls with iwlwifi debugging on.  I've attached
+>> the dmesg.  The stall ended ten seconds or so before the end of this
+>> trace.  Is this an indication that something's wrong with iwlwifi?
+>>
+>> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
+>> shold 50 delta 96 msecs 103
+>> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
+>>
+> Can you please disable powersave?
+> It seems that it should be disabled by default, but you enabled it?
+> I might be confused though... Looking again at the code...
 
-Since the declaration of iwl_mvm_fw_error_rxf_dump and
-iwl_mvm_fw_error_sram_dump is under
-ifdef CONFIG_IWLWIFI_DEBUGFS, do the same for their
-implementation.
+This?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/utils.c | 2 ++
- 1 file changed, 2 insertions(+)
+$ cat /sys/module/iwlwifi/parameters/power_save
+N
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index c5f4532..4c3577e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -519,6 +519,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 		iwl_mvm_dump_umac_error_log(mvm);
- }
- 
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
- void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm)
- {
- 	const struct fw_img *img;
-@@ -581,6 +582,7 @@ void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm)
- 	}
- 	iwl_trans_release_nic_access(mvm->trans, &flags);
- }
-+#endif
- 
- /**
-  * iwl_mvm_send_lq_cmd() - Send link quality command
--- 
-1.8.3.2
+I have pcie_aspm.policy=powersave, but I don't think that should
+matter.  Or am I missing something?
 
+--Andy
