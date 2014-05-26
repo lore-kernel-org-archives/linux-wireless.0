@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33720 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932118AbaESOta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 10:49:30 -0400
-Message-ID: <1400510950.4273.9.camel@jlt4.sipsolutions.net> (sfid-20140519_164938_360796_E0B7530F)
-Subject: Re: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216..
- and RX path involved in scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: andrea.merello@gmail.com
-Cc: emmanuel.grumbach@intel.com,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	joerg.albert@gmx.de, alex@foogod.com, n0_5p4m_p13453@hotmail.com,
-	proski@gnu.org, agx@sigxcpu.org, kalle.valo@iki.fi, sesmo@gmx.net,
-	John Linville <linville@tuxdriver.com>
-Date: Mon, 19 May 2014 16:49:10 +0200
-In-Reply-To: <1400509775.4273.8.camel@jlt4.sipsolutions.net> (sfid-20140519_163001_496941_4CFA01FA)
-References: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
-	 (sfid-20140517_174307_788362_95E52488) <1400509775.4273.8.camel@jlt4.sipsolutions.net>
-	 (sfid-20140519_163001_496941_4CFA01FA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:33401 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbaEZFjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 01:39:54 -0400
+Received: by mail-oa0-f49.google.com with SMTP id eb12so7852897oac.22
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 22:39:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
+Date: Mon, 26 May 2014 08:39:53 +0300
+Message-ID: <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com> (sfid-20140526_073958_073160_B5E73536)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-05-19 at 16:29 +0200, Johannes Berg wrote:
-
-> Since there's no "rx channel" information in this driver, but there does
-> seem to be a (currently unused) channel field in the scan request, maybe
-> we can make the driver request up to 14 single-channel scans (rather
-> than a single full scan), and then it can keep track of the current
-> channel in software and assign the pointer properly.
-> 
-> This would also allow implementing regulatory for scan properly, which
-> seems like a good idea as well.
-
-Maybe something like this works?
-
-http://p.sipsolutions.net/fa75caf17c54747a.txt
-
-johannes
-
+On Mon, May 26, 2014 at 8:06 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Sun, May 25, 2014 at 10:23 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> I have an old iwldvm station (Intel(R) Centrino(R) Ultimate-N 6300
+>> AGN, REV=0x74) and a new ath10k AP (QCA9880-BR4A, I think, as found in
+>> the TP-Link Archer C7 vs).  The former is Fedora's 3.14 kernel and the
+>> latter is OpenWRT trunk from a few days ago.
+>>
+>> Every now and then, my connection drops out.  From wireshark on the
+>> station, it looks like traffic from the AP to the STA is coming
+>> through but traffic from the STA to the AP is not.  I could be wrong
+>> here, though.  Nothing is logged in either machine's kernel log.
+>> After 5 seconds to a couple minutes, everything starts working again.
+>>
+>> A couple of Apple devices using the same radio on the same AP seem to work fine.
+>>
+>> Any advice for debugging this?  I don't know where to start.
+>
+> I caught one of the stalls with iwlwifi debugging on.  I've attached
+> the dmesg.  The stall ended ten seconds or so before the end of this
+> trace.  Is this an indication that something's wrong with iwlwifi?
+>
+> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
+> shold 50 delta 96 msecs 103
+> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
+>
+Can you please disable powersave?
+It seems that it should be disabled by default, but you enabled it?
+I might be confused though... Looking again at the code...
