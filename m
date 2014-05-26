@@ -1,45 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42422 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755316AbaEGLsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 07:48:54 -0400
-In-Reply-To: <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com> <1398849681-3606-1-git-send-email-michal.kazior@tieto.com> <1399372915.4218.17.camel@jlt4.sipsolutions.net> <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com> <1399385141.4218.37.camel@jlt4.sipsolutions.net> <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com> <1399450061.5038.10.camel@jlt4.sipsolutions.net> <1399455657.6800.4.camel@dubbel> <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com> <1399457760.6800.7.camel@dubbel> <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com> (sfid-20140507_123846_454540_5D41186C) <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-From: Luca Coelho <luca@coelho.fi>
-Date: Wed, 07 May 2014 14:48:47 +0300
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Message-ID: <1369ec0d-d09f-4791-9431-d94a642ee979@email.android.com> (sfid-20140507_134857_667686_28E89DCD)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Received: from mx1.redhat.com ([209.132.183.28]:34196 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751980AbaEZHtZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 03:49:25 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
+	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 11/11] ARM: dts: sun7i: Add OOB irq support to boards with broadcom sdio wifi
+Date: Mon, 26 May 2014 09:48:06 +0200
+Message-Id: <1401090486-4414-12-git-send-email-hdegoede@redhat.com> (sfid-20140526_094938_890190_C741FD5A)
+In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On May 7, 2014 2:09:24 PM EEST, Johannes Berg <johannes@sipsolutions.net> wrote:
->On Wed, 2014-05-07 at 12:38 +0200, Michal Kazior wrote:
->
->> I was actually thinking of just providing the bare minimum to fulfill
->> requirements for the CSA case: int foo(*hw, **vifs, n_vifs, *oldctx,
->> *newctx, flags).
->> 
->> Having an array of transactions passed through a single call seems
->> more robust and cleaner. Naiive drivers might just iterate over each
->> entry while more complex drivers might examine the whole request and
->> detect chanctx swapping.
->
->Not sure what you mean by "detect chanctx swapping" - the flags would
->indicate that anyway, no? In any case, I like this better than a more
->general transaction API I think, it's easier for the driver
->implementation and clearer as to what needs to be done/supported.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ arch/arm/boot/dts/sun7i-a20-cubietruck.dts | 12 ++++++++++++
+ arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts  | 12 ++++++++++++
+ 2 files changed, 24 insertions(+)
 
-How is it clearer? I think having a list of transactions is clearer than trying to say with flags what needs to be done for each vif and what their relation to each context is...
-
-Additionally, I'm always for more generic solutions that may help us with future cases we haven't thought of already... unless the generalization complicates things a lot, which I don't think is the case here.
-
---
-Luca.
+diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
+index 3931986..d3dcd8e 100644
+--- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
++++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
+@@ -31,12 +31,24 @@
+ 		};
+ 
+ 		mmc3: mmc@01c12000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&mmc3_pins_a>;
+ 			vmmc-supply = <&reg_vmmc3>;
+ 			bus-width = <4>;
+ 			non-removable;
+ 			status = "okay";
++
++			brcmf: bcrmf@1 {
++				reg = <1>;
++				compatible = "brcm,bcm43xx-fmac";
++				interrupt-parent = <&pio>;
++				interrupts = <10 8>; /* PH10 / EINT10 */
++				interrupt-names = "host-wake";
++				status = "okay";
++			};
+ 		};
+ 
+ 		usbphy: phy@01c13400 {
+diff --git a/arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts b/arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts
+index 4aad09c..806f236 100644
+--- a/arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts
++++ b/arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts
+@@ -29,12 +29,24 @@
+ 		};
+ 
+ 		mmc3: mmc@01c12000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&mmc3_pins_a>;
+ 			vmmc-supply = <&reg_vmmc3>;
+ 			bus-width = <4>;
+ 			non-removable;
+ 			status = "okay";
++
++			brcmf: bcrmf@1 {
++				reg = <1>;
++				compatible = "brcm,bcm43xx-fmac";
++				interrupt-parent = <&pio>;
++				interrupts = <10 8>; /* PH10 / EINT10 */
++				interrupt-names = "host-wake";
++				status = "okay";
++			};
+ 		};
+ 
+ 		usbphy: phy@01c13400 {
+-- 
+1.9.3
 
