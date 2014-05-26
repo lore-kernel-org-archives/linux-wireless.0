@@ -1,51 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:58412 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbaETSBd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 14:01:33 -0400
-Received: by mail-la0-f53.google.com with SMTP id ec20so699725lab.40
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 11:01:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140520142453.GB13981@tuxdriver.com>
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-	<20140520142453.GB13981@tuxdriver.com>
-Date: Tue, 20 May 2014 20:01:31 +0200
-Message-ID: <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com> (sfid-20140520_200136_256218_92BC547F)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:57726 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151AbaEZHWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 03:22:37 -0400
+Message-ID: <1401088941.19055.0.camel@jlt4.sipsolutions.net> (sfid-20140526_092240_626947_188EB4AA)
+Subject: Re: [RFC] trace-cmd: plugin_mac80211: add parsing for the new
+ drv_switch_vif_chanctx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>, Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com
+Date: Mon, 26 May 2014 09:22:21 +0200
+In-Reply-To: <1400873435-9687-1-git-send-email-luca@coelho.fi>
+References: <1400873435-9687-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2014 16:24, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, May 20, 2014 at 12:33:51AM -0700, Luis R. Rodriguez wrote:
->> On Fri, May 9, 2014 at 1:40 AM, Janusz Dziedzic
->> <janusz.dziedzic@tieto.com> wrote:
->> > Introduce support for setting DFS CAC time
->> > in milliseconds.
->> >
->> > Eg.
->> > (5250 - 5330 @ AUTO), (20), (60000), DFS
->> >
->> > will setup CAC 60 seconds CAC time.
->>
->> Can you elaborate whether or not this will require a bump on CRDA  and
->> issuing of two new wireless-regdb files for the different versions on
->> the commit log?
->
-> I would really prefer not to manage two regdb binary releases.
-> Fear of that is what has kept me from merging this patch.
->
-I can add support for version 19 and 20 in one crda. I am not sure
-this is the best option.
-BTW what about versions < 19? How do we handle this this days?
+Steven, what do you think about those packed structs in a dynamic
+array? I've applied the kernel patch but I can still back it out if you
+know of a better solution.
 
-BR
-Janusz
+Thanks,
+johannes
+
+On Fri, 2014-05-23 at 22:30 +0300, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> This new command has a complex trace, with a variable number of struct
+> elements in an array and needs special parsing.  Add a parsing
+> function to handle it.
+> 
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>  I'm sending this to linux-wireless as an RFC before sending it to
+> Steven to get some comments and because the new function hasn't yet
+> gotten to linux-wireless/mainline.
+> 
+>  plugin_mac80211.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 93 insertions(+)
+> 
+> diff --git a/plugin_mac80211.c b/plugin_mac80211.c
+> index f35cb80..0b4835e 100644
+> --- a/plugin_mac80211.c
+> +++ b/plugin_mac80211.c
+> @@ -191,12 +191,105 @@ static int drv_config(struct trace_seq *s, struct pevent_record *record,
+>  	return 0;
+>  }
+>  
+> +struct trace_vif_entry {
+> +	int vif_type;
+
+This in particular was an enum upstream - which technically doesn't n
+
+> +	bool p2p;
+> +	char vif_name[8];
+> +} __attribute__((packed));
+> +
+> +struct trace_chandef_entry {
+> +	unsigned int control_freq;
+> +	unsigned int chan_width;
+> +	unsigned int center_freq1;
+> +	unsigned int center_freq2;
+> +} __attribute__((packed));
+> +
+> +struct trace_switch_entry {
+> +	struct trace_vif_entry vif;
+> +	struct trace_chandef_entry old_chandef;
+> +	struct trace_chandef_entry new_chandef;
+> +} __attribute__((packed));
+> +
+> +static int drv_switch_vif_chanctx(struct trace_seq *s,
+> +				  struct pevent_record *record,
+> +				  struct event_format *event, void *context)
+> +{
+> +	struct format_field *f = pevent_find_field(event, "n_vifs");
+> +	unsigned int i, offset, len;
+> +	long long unsigned int n_vifs;
+> +	void *data = record->data;
+> +	struct trace_switch_entry *vifs;
+> +
+> +	if (!f) {
+> +		trace_seq_printf(s, "NOTFOUND: n_vifs");
+> +		return 0;
+> +	}
+> +
+> +	if (pevent_read_number_field(f, data, &n_vifs)) {
+> +		trace_seq_puts(s, "field-invalid: n_vifs");
+> +		return 0;
+> +	}
+> +
+> +	f = pevent_find_field(event, "vifs");
+> +
+> +	if (!f) {
+> +		trace_seq_printf(s, "NOTFOUND: vifs");
+> +		return 0;
+> +	}
+> +
+> +	offset = f->offset;
+> +	len = f->size;
+> +	if (f->flags & FIELD_IS_DYNAMIC) {
+> +		long long unsigned int val;
+> +
+> +		val = pevent_read_number(event->pevent, data + offset, len);
+> +		offset = val;
+> +		len = offset >> 16;
+> +		offset &= 0xffff;
+> +	}
+> +
+> +	if (len != sizeof(*vifs) * n_vifs) {
+> +		trace_seq_printf(s, "field-invalid: vifs");
+> +		return 0;
+> +	}
+> +
+> +	print_string(s, event, "wiphy_name", data);
+> +	pevent_print_num_field(s, " n_vifs:%d ", event, "n_vifs", record, 1);
+> +	print_enum(s, event, "mode", data,
+> +		   { 0, "REASSIGN_VIF" },
+> +		   { 1, "SWAP_CONTEXTS"} );
+> +
+> +	vifs = (void *) (char *) data + offset;
+> +
+> +	for (i = 0; i < n_vifs; i++) {
+> +		trace_seq_printf(s, "\n%*s\t", INDENT, "");
+> +		trace_seq_printf(s, "vif %d:\tname: %s type: %d p2p: %d",
+> +				 i, vifs[i].vif.vif_name, vifs[i].vif.vif_type,
+> +				 vifs[i].vif.p2p);
+> +		trace_seq_printf(s, "\n%*s\t\t", INDENT, "");
+> +		trace_seq_printf(s, "old_ctx: control_freq: %d chan_width: %d center_freq1: %d center_freq2: %d",
+> +				 vifs[i].old_chandef.control_freq,
+> +				 vifs[i].old_chandef.chan_width,
+> +				 vifs[i].old_chandef.center_freq1,
+> +				 vifs[i].old_chandef.center_freq2);
+> +		trace_seq_printf(s, "\n%*s\t\t", INDENT, "");
+> +		trace_seq_printf(s, "new_ctx: control_freq: %d chan_width: %d center_freq1: %d center_freq2: %d",
+> +				 vifs[i].new_chandef.control_freq,
+> +				 vifs[i].new_chandef.chan_width,
+> +				 vifs[i].new_chandef.center_freq1,
+> +				 vifs[i].new_chandef.center_freq2);
+> +	}
+> +
+> +	return 0;
+> +}
+>  int PEVENT_PLUGIN_LOADER(struct pevent *pevent)
+>  {
+>  	pevent_register_event_handler(pevent, -1, "mac80211", "drv_bss_info_changed",
+>  				      drv_bss_info_changed, NULL);
+>  	pevent_register_event_handler(pevent, -1, "mac80211", "drv_config",
+>  				      drv_config, NULL);
+> +	pevent_register_event_handler(pevent, -1, "mac80211", "drv_switch_vif_chanctx",
+> +				      drv_switch_vif_chanctx, NULL);
+>  
+>  	return 0;
+>  }
+
+
+
