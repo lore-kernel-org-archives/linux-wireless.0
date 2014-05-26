@@ -1,84 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dewberryfields.co.uk ([217.41.92.67]:49448 "EHLO
-	mail.dewberryfields.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757119AbaEQOjv (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:52296 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbaEZVGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 10:39:51 -0400
-Message-ID: <537774B4.2000905@dewberryfields.co.uk> (sfid-20140517_163955_660142_06FD36F5)
-Date: Sat, 17 May 2014 15:39:48 +0100
-From: Michael Howard <mike@dewberryfields.co.uk>
+	Mon, 26 May 2014 17:06:05 -0400
+Received: by mail-oa0-f45.google.com with SMTP id l6so8756111oag.32
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 14:06:04 -0700 (PDT)
+Message-ID: <5383ACB9.2060904@lwfinger.net> (sfid-20140526_230609_737684_9EE50619)
+Date: Mon, 26 May 2014 16:06:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Mwifiex driver on Globalscale Mirabox
-References: <5346DED8.2030704@free.fr>
-	<CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
-	<53480138.2080805@free.fr>	<53733AB4.7010500@free.fr>
-	<20140514215126.GA15419@us.netrek.org>
-	<CAJwzM1k+75qRJaONyehMNPaOqOHyBhryMGBtZ4NpD6jGHk-cHQ@mail.gmail.com>
-	<5374F638.6000505@dewberryfields.co.uk>
-	<CAJwzM1mvK1i3ENrQyVZNoiwYFiopWGRaOVe5iGTr61TQVXdaMQ@mail.gmail.com>
- <CAJwzM1mg5KVZFev4Gs9Qw43H5OwiLF3fmhwv8-3y9mEvWM6b6g@mail.gmail.com>
-In-Reply-To: <CAJwzM1mg5KVZFev4Gs9Qw43H5OwiLF3fmhwv8-3y9mEvWM6b6g@mail.gmail.com>
+To: stefan.krueger@vodafone.de
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: Re: Kernel binary for RTL8192EE
+References: <8fb8a514-da1c-40ad-9fe1-235aaf21b52c@email.android.com> <1e5e57d0-46cb-4bbc-9463-22bafad445d8@email.android.com>
+In-Reply-To: <1e5e57d0-46cb-4bbc-9463-22bafad445d8@email.android.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 16/05/2014 13:27, Avinash Patil wrote:
+On 05/26/2014 03:09 PM, stefan.krueger@vodafone.de wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
 >
-> Hi Michael,
+> Hello Larry,
 >
-> We are not able to reproduce this issue in our setup with sd8787 p96. 
-> Could you please share hostapd config file, console logs and driver 
-> debug logs?
->
-> Thanks,
-> -Avinash
->
->
-Hi Avinash,
+> do you habe an (good) news for me to get working my wifi?
 
-Not sure how to enable driver debug logs, other than debugfs and that 
-contains only empty files, and adding -ddd to hostapd.
+No. None of your logs indicate why it refuses to connect for you. No one else 
+has this complaint.
 
-hostapd.conf is simple, just for testing, as follows;
+I worked about 15 hours a day getting this driver ready to be submitted to the 
+kernel. That happened last Wednesday. After that, I was exhausted and took some 
+time off. Now I have to go out of town, and it will be at least 10 days before I 
+will have any time.
 
-interface=uap0
-bridge=br0
-driver=nl80211
-ssid=TEST
-hw_mode=g
-channel=1
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=3
-wpa_passphrase=*******************
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
+Larry
 
-root@mirabox:/etc/init.d# ./hostapd start
-[....] Starting advanced IEEE 802.11 management: hostapddevice uap0 
-entered promiscuous mode
-br0: port 2(uap0) entered listening state
-br0: port 2(uap0) entered listening state
-mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 0x112 error, result=0x2
-. ok
-
-==> kern.log <==
-May 17 13:23:52 mirabox kernel: mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 
-0x112 error, result=0x2
-
-The odd thing is, I have just added an atheros AR9287 mini pcie card to 
-the Mirabox, rebuilt the kernel (only adding atheros support) and now 
-the SD8787 card and mwifiex work.
-I have no idea why this is other than possibly a flakey Mirabox. I will 
-let you know if I get a better idea (maybe I'll now take out the Atheros 
-card) of what's happening.
-
-Regards,
-Mike
-
--- 
 
