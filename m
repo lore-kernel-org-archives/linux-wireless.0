@@ -1,60 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58213 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbaEWOpM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 10:45:12 -0400
-Date: Fri, 23 May 2014 10:40:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
-	jim.epost@gmail.com
-Subject: Re: [PATCH] ath9k: fix build error with disabled debug
-Message-ID: <20140523144058.GB13311@tuxdriver.com> (sfid-20140523_164518_435744_8C5CA483)
-References: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
- <877g5e3qfg.fsf@purkki.adurom.net>
- <537F038C.7050305@neratec.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <537F038C.7050305@neratec.com>
+Received: from isis.lip6.fr ([132.227.60.2]:56632 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753303AbaEZPYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 11:24:39 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: linux-media@vger.kernel.org
+Cc: benoit.taine@lip6.fr, dri-devel@lists.freedesktop.org,
+	devel@driverdev.osuosl.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
+	DL-MPTFusionLinux@lsi.com, linux-input@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 0/18] Use kmemdup instead of kmalloc + memcpy
+Date: Mon, 26 May 2014 17:21:09 +0200
+Message-Id: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr> (sfid-20140526_172456_217106_5C527E49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 23, 2014 at 10:15:08AM +0200, Zefir Kurtisi wrote:
-> On 05/22/2014 03:15 PM, Kalle Valo wrote:
-> > Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
-> > 
-> >> DFS pulse interval printing is only available
-> >> when CONFIG_ATH9K_DEBUGFS is set.
-> >>
-> >> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> > 
-> > [...]
-> > 
-> >> --- a/drivers/net/wireless/ath/ath9k/dfs.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
-> >> @@ -178,12 +178,14 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
-> >>  	pe.ts = mactime;
-> >>  	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
-> >>  		struct dfs_pattern_detector *pd = sc->dfs_detector;
-> >> +#ifdef CONFIG_ATH9K_DEBUGFS
-> > 
-> > IMHO config_enabled() is much nicer than ifdef.
-> > 
-> 
-> Actually, I dislike both of them.
-> 
-> While this is for debug printing only, it is still a bad idea to use variables in
-> debugfs dependent space and splatter source code with required checks. I'll move
-> that into a different context and post a follow-up patch.
-> 
-> 
-> John, please drop this one.
+These patches enhance kernel style usage, and allows smaller code while
+preventing accidental code edits to produce overflows.
 
-Actually, I merged it yesterday.  Please submit your follow-up patch
-on top of this one.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The semantic patch at scripts/coccinelle/api/memdup.cocci was used to
+detect and edit this situation.
