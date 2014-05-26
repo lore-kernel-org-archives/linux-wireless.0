@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24346 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750878AbaE1Ejq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 00:39:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: set TDLS link for newly created RA list
-Date: Tue, 27 May 2014 21:39:33 -0700
-Message-ID: <1401251974-18738-2-git-send-email-bzhao@marvell.com> (sfid-20140528_063950_475334_234FAEF8)
-In-Reply-To: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
-References: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:45501 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751750AbaEZLyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 07:54:50 -0400
+Message-ID: <1401105274.4431.9.camel@dubbel> (sfid-20140526_135453_890369_EE078580)
+From: Luca Coelho <luca@coelho.fi>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 26 May 2014 14:54:34 +0300
+In-Reply-To: <536A1FA9.7010404@broadcom.com>
+References: <536A1FA9.7010404@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: scheduled scan api
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi Arend,
 
-Current implementation sets tdls_link flag only while restoring
-packets from TDLS queue. If traffic to peer starts after TDLS is
-setup, there is no way to set TDLS link flag to true. Do this
-while creating RA list and we confirm that there exist a TDLS
-peer for which setup is complete.
+I'm replying to this since I've been "somewhat" involved in the
+implementation. ;)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 1 +
- 1 file changed, 1 insertion(+)
+I think it will make more sense if you check the nl80211 doc:
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 6d9738a..d3671d0 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -163,6 +163,7 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
- 		if (!mwifiex_queuing_ra_based(priv)) {
- 			if (mwifiex_get_tdls_link_status(priv, ra) ==
- 			    TDLS_SETUP_COMPLETE) {
-+				ra_list->tdls_link = true;
- 				ra_list->is_11n_enabled =
- 					mwifiex_tdls_peer_11n_enabled(priv, ra);
- 			} else {
--- 
-1.8.2.3
+
+---8<----
+ * @NL80211_ATTR_SCHED_SCAN_MATCH: Nested attribute with one or more
+ *	sets of attributes to match during scheduled scans.  Only BSSs
+ *	that match any of the sets will be reported.  These are
+ *	pass-thru filter rules.
+ *	For a match to succeed, the BSS must match all attributes of a
+ *	set.  Since not every hardware supports matching all types of
+ *	attributes, there is no guarantee that the reported BSSs are
+ *	fully complying with the match sets and userspace needs to be
+ *	able to ignore them by itself.
+ *	Thus, the implementation is somewhat hardware-dependent, but
+ *	this is only an optimization and the userspace application
+ *	needs to handle all the non-filtered results anyway.
+ *	If the match attributes don't make sense when combined with
+ *	the values passed in @NL80211_ATTR_SCAN_SSIDS (eg. if an SSID
+ *	is included in the probe request, but the match attributes
+ *	will never let it go through), -EINVAL may be returned.
+ *	If ommited, no filtering is done.
+---8<----
+
+Especially the second paragraph.  This means that for the SSIDs, a
+broadcast SSID means that everything goes through, there is no filtering
+of SSIDs.  You can use that for RSSI-only matches with a single RSSI
+match attribute (so you don't need to specify an RSSI attribute for
+every SSID you need to match).
+
+This is a bit unclear, but it's due to some confusion that was
+introduced when the RSSI match attribute was added.
+
+--
+Luca.
+
+On Wed, 2014-05-07 at 13:57 +0200, Arend van Spriel wrote:
+> Hi Johannes,
+> 
+> I received a couple of reports from people who got problem with brcmfmac 
+> when a scheduled scan is requested, without any ssid specified. 
+> Currently, brcmfmac basically rejects the request. So what are valid 
+> usage scenarios for scheduled scans with respect to the n_ssid, 
+> n_channels, and n_matchsets. In the kernel doc below it says a 
+> zero-length ssid means 'no match'. I suppose it means any ssid which 
+> signal is above RRSI threshold will match.
+> 
+> Regards,
+> Arend
+> ---8<----------------------------------------------------------
+> /**
+>   * struct cfg80211_match_set - sets of attributes to match
+>   *
+>   * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
+>   * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
+>   */
+> _______________________________________________
+> HostAP mailing list
+> HostAP@lists.shmoo.com
+> http://lists.shmoo.com/mailman/listinfo/hostap
+
 
