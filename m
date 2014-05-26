@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:39198 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751636AbaEBNlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 09:41:14 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: michal.kazior@tieto.com
-Date: Fri,  2 May 2014 16:40:29 +0300
-Message-Id: <1399038031-23206-2-git-send-email-luca@coelho.fi> (sfid-20140502_154120_940377_82EBF5A9)
-In-Reply-To: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 2/4] mac80211: send channel switch started notifications
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:60511 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbaEZNAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 09:00:20 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so4332914wiw.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 06:00:19 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/11] staging: vt6656: Fix CARDvCalculateOFDMRParameter static warning
+Date: Mon, 26 May 2014 13:59:08 +0100
+Message-Id: <1401109148-3593-11-git-send-email-tvboxspy@gmail.com> (sfid-20140526_150033_269199_A9323E5F)
+In-Reply-To: <1401109148-3593-1-git-send-email-tvboxspy@gmail.com>
+References: <1401109148-3593-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Fix  warning: symbol 'CARDvCalculateOFDMRParameter' was not declared. Should it be static?
 
-Send a channel switch notification to userspace when a channel switch
-is requested or when we react to a remote CSA.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/cfg.c  | 2 ++
- net/mac80211/mlme.c | 2 ++
- 2 files changed, 4 insertions(+)
+ drivers/staging/vt6656/card.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7b8d3cf..53a2cfe 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3281,6 +3281,8 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->csa_chandef = params->chandef;
- 	sdata->vif.csa_active = true;
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 06f8b00..5ad0a98 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -197,7 +197,7 @@ static u16 swGetOFDMControlRate(struct vnt_private *priv, u16 rate_idx)
+  * Return Value: none
+  *
+  */
+-void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
++static void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
+ 					u8 *tx_rate, u8 *rsv_time)
+ {
  
-+	cfg80211_ch_switch_started_notify(sdata->dev, &sdata->csa_chandef);
-+
- 	if (changed) {
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 		drv_channel_switch_beacon(sdata, &params->chandef);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 488826f..139005d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1107,6 +1107,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				IEEE80211_MAX_QUEUE_MAP,
- 				IEEE80211_QUEUE_STOP_REASON_CSA);
- 
-+	cfg80211_ch_switch_started_notify(sdata->dev, &csa_ie.chandef);
-+
- 	if (local->ops->channel_switch) {
- 		/* use driver's channel switch callback */
- 		struct ieee80211_channel_switch ch_switch = {
 -- 
-1.9.2
+1.9.1
 
