@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53604 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbaEZJpg (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:40567 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbaEZIj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 05:45:36 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: async pci probing
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 26 May 2014 12:45:21 +0300
-In-Reply-To: <1400840927-14272-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 23 May 2014 12:28:44 +0200")
-Message-ID: <87ppj0swjy.fsf@kamboji.qca.qualcomm.com> (sfid-20140526_114539_679640_BD77C562)
+	Mon, 26 May 2014 04:39:28 -0400
+Received: by mail-ob0-f175.google.com with SMTP id wo20so7729081obc.34
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 01:39:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
+	<CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
+	<CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
+	<CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
+Date: Mon, 26 May 2014 11:39:28 +0300
+Message-ID: <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com> (sfid-20140526_103933_090796_C8CA6461)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, May 26, 2014 at 11:29 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>
+>>>>> Every now and then, my connection drops out.  From wireshark on the
+>>>>> station, it looks like traffic from the AP to the STA is coming
+>>>>> through but traffic from the STA to the AP is not.  I could be wrong
+>>>>> here, though.  Nothing is logged in either machine's kernel log.
+>>>>> After 5 seconds to a couple minutes, everything starts working again.
+>>>>>
+>>>>> A couple of Apple devices using the same radio on the same AP seem to work fine.
+>>>>>
+>>>>> Any advice for debugging this?  I don't know where to start.
+>>>>
+>>>> I caught one of the stalls with iwlwifi debugging on.  I've attached
+>>>> the dmesg.  The stall ended ten seconds or so before the end of this
+>>>> trace.  Is this an indication that something's wrong with iwlwifi?
+>>>>
+>>>> [151258.096091] iwlwifi 0000:03:00.0: U iwlagn_good_plcp_health plcp health thre
+>>>> shold 50 delta 96 msecs 103
+>>>> [151258.096095] iwlwifi 0000:03:00.0: U iwl_force_rf_reset perform radio reset.
+>>>>
+>>> Can you please disable powersave?
+>>> It seems that it should be disabled by default, but you enabled it?
+>>> I might be confused though... Looking again at the code...
+>>
+>> This?
+>>
+>> $ cat /sys/module/iwlwifi/parameters/power_save
+>> N
+>>
+>> I have pcie_aspm.policy=powersave, but I don't think that should
+>> matter.  Or am I missing something?
+>
+> That should be ok.
 
-> Hi,
->
-> Recently I've tried to build ath10k into kernel
-> and discovered it doesn't play nice.
->
->
-> v2:
->  * split and introduce an additional patch [2/3]
->  * unbind driver upon failure
->
->
-> Michal Kazior (3):
->   ath10k: relocate core create/destroy functions
->   ath10k: remove unnecessary tasklet_kill()
->   ath10k: make core registering async
+Does this help?
 
-Thanks, all three applied.
+diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
+b/drivers/net/wireless/iwlwifi/dvm/power.c
+index f2c1439..e5a6b70 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/power.c
++++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+@@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+        bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
+        int dtimper;
 
--- 
-Kalle Valo
++       iwl_power_sleep_cam_cmd(priv, cmd);
++       return;
++
+        dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+
+        if (priv->wowlan)
