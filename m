@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42871 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbaENTH5 (ORCPT
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:56153 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbaEZGrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 15:07:57 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/5] ath10k: clean up start() callback
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-	<1399637749-13489-2-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 14 May 2014 22:07:46 +0300
-In-Reply-To: <1399637749-13489-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 9 May 2014 14:15:45 +0200")
-Message-ID: <87ppjgch6l.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_210802_793560_0BEBC6EA)
+	Mon, 26 May 2014 02:47:21 -0400
+Received: by mail-vc0-f173.google.com with SMTP id il7so8817644vcb.32
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 23:47:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20140523205717.GB6585@localhost>
+References: <3893194.GDQagdLGN9@desktop.local>
+	<20140522192720.GA13440@localhost>
+	<CAGnRvuqUkebLhvqY1Y28NtRyp3uUdbrpOSb4dOX2+ZSg6qineg@mail.gmail.com>
+	<CAEFj9850c9aD5gKz2B-e=hPnS2vNdY+a4uc9D_+psryE0ywDVA@mail.gmail.com>
+	<CAGnRvuo_ydU-HwtyTeKP50GPjEiNQy1EoVMR5_Dg-qTrFjYkPg@mail.gmail.com>
+	<20140523205717.GB6585@localhost>
+Date: Mon, 26 May 2014 14:47:19 +0800
+Message-ID: <CAEFj987H_aVYyAH0jtOSe4Jbwx-Af=-8Fw+U5dC5=mmVZKy4AA@mail.gmail.com> (sfid-20140526_084724_350299_E88DA7AE)
+Subject: Re: [RFC Patch] Unify mpp/mesh_path handling for Mac 802.11s
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Henning Rogge <hrogge@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@noack.us>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+For disable HWMP, in additional to disable frame forwarding and set
+mesh TTL to 1, you can force specific mpath using "iw mesh0 mpath set
+<MACx> next_hop <MACx>". In this case, you will disable the path
+refresh.
 
-> This fixes failpath when override AC pdev param
-> setup fails and makes other pdev params setting
-> fail as well.
+----
+Chun-Yeow
+
+On Sat, May 24, 2014 at 4:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, May 23, 2014 at 12:52:57PM +0200, Henning Rogge wrote:
+>> Hi,
+>>
+>> I will have another look at the codebase next week, there was a lot of
+>> similar code for both tables that could be simplified without throwing
+>> them together.
+>>
+>> The feeling I get here is that four new nl80211 commands
+>> (set/get/del/dump mpp_paths) are the right way to export these values?
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-[...]
-
->  	ar->num_started_vdevs = 0;
->  	ath10k_regd_update(ar);
->  	ret = 0;
-> +	goto out;
->  
-> -exit:
-> +err_core_stop:
-> +	ath10k_core_stop(ar);
-> +err_power_down:
-> +	ath10k_hif_power_down(ar);
-> +err_off:
-> +	ar->state = ATH10K_STATE_OFF;
-> +out:
->  	mutex_unlock(&ar->conf_mutex);
->  	return ret;
->  }
-
-Having err_ labels on the "main" code path is not good, the error
-handling code should be clearly separated to make it easier to read. I
-think you should use the same style as pci.c uses, for example something
-like this:
-       
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
- 
-err_core_stop:
-	ath10k_core_stop(ar);
-
-err_power_down:
-	ath10k_hif_power_down(ar);
-
-err_off:
-	ar->state = ATH10K_STATE_OFF;
-
- 	mutex_unlock(&ar->conf_mutex);
-
- 	return ret;
-
-I know this has mutex_unlock() so it's not good either, but I think it's
-still better. Other option might be to do like this:
-
-        ret = 0;
-
-out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- 
-err_core_stop:
-	ath10k_core_stop(ar);
-
-err_power_down:
-	ath10k_hif_power_down(ar);
-
-err_off:
-	ar->state = ATH10K_STATE_OFF;
-
-        goto out;
-
-But not sure if it's any better. More ideas?
-
-Oh yeah, please also add an empty line before each label.
-
--- 
-Kalle Valo
+> That approach would be fine by me.  Thanks for working on this!
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
