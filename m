@@ -1,99 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:49172 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879AbaEUUKm (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:61225 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516AbaEZSNm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 16:10:42 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f8so3296004wiw.16
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2014 13:10:41 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/6] staging: vt6656: iowpa.h removed dead code.
-Date: Wed, 21 May 2014 21:09:40 +0100
-Message-Id: <1400702984-3221-2-git-send-email-tvboxspy@gmail.com> (sfid-20140521_221045_643809_9779BFF3)
-In-Reply-To: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
-References: <1400702984-3221-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 26 May 2014 14:13:42 -0400
+Received: by mail-oa0-f43.google.com with SMTP id l6so8551882oag.30
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 11:13:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
+	<CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
+	<CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
+	<CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
+	<CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
+	<CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com>
+	<CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
+	<CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
+Date: Mon, 26 May 2014 21:13:42 +0300
+Message-ID: <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com> (sfid-20140526_201347_595203_DB0BDA3C)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove dead strutures
+>>>>
+>>>> diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>> b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>> index f2c1439..e5a6b70 100644
+>>>> --- a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>> +++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>> @@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+>>>>         bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
+>>>>         int dtimper;
+>>>>
+>>>> +       iwl_power_sleep_cam_cmd(priv, cmd);
+>>>> +       return;
+>>>> +
+>>>>         dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+>>>>
+>>>>         if (priv->wowlan)
+>>>
+>>> This patch has survived for about 15 minutes on 3.15-rc.  It certainly
+>>> has some effect: pinging from the AP to the STA now takes a consistent
+>>> ~3.8ms instead of taking varying amounts of time between 5 and 200 ms
+>>> or so.
+>>>
+>>> I wonder if this is something 802.11n/802.11ac-specific?  I remember
+>>> having all kinds of problems with 802.11n on this laptop that were
+>>> resolved by turning off 11n or turning off power saving.
+>>>
+>>
+>> well... my patch really turns off power saving. The hard way.
+>> But since you are having issues - I guess I'll post it and disable
+>> power save for these devices. Note that today most of the power save
+>> features are disabled anyway.
+>
+> Would it make sense to do this only when connected to a VHT-supporting
+> AP or whatever AP feature is probably triggering the problem?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/iowpa.h | 53 ------------------------------------------
- 1 file changed, 53 deletions(-)
+I am not sure it is related to some "VHT / whatever" feature. From
+your logs, I'd say this bug could have happened with any AP. It is
+down there in the PCI layer.
 
-diff --git a/drivers/staging/vt6656/iowpa.h b/drivers/staging/vt6656/iowpa.h
-index 97af32e..98f2b21 100644
---- a/drivers/staging/vt6656/iowpa.h
-+++ b/drivers/staging/vt6656/iowpa.h
-@@ -31,43 +31,6 @@
- 
- #define WPA_IE_LEN 64
- 
--//WPA related
--/*
--typedef enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
--typedef enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
--	       CIPHER_WEP104 } wpa_cipher;
--typedef enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
--	       KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE } wpa_key_mgmt;
--*/
--
--enum {
--	VIAWGET_SET_WPA = 1,
--	VIAWGET_SET_KEY = 2,
--	VIAWGET_SET_SCAN = 3,
--	VIAWGET_GET_SCAN = 4,
--	VIAWGET_GET_SSID = 5,
--	VIAWGET_GET_BSSID = 6,
--	VIAWGET_SET_DROP_UNENCRYPT = 7,
--	VIAWGET_SET_DEAUTHENTICATE = 8,
--	VIAWGET_SET_ASSOCIATE = 9,
--	VIAWGET_SET_DISASSOCIATE = 10
--};
--
--enum {
--	VIAWGET_ASSOC_MSG = 1,
--	VIAWGET_DISASSOC_MSG = 2,
--	VIAWGET_PTK_MIC_MSG = 3,
--	VIAWGET_GTK_MIC_MSG = 4,
--	VIAWGET_CCKM_ROAM_MSG = 5,
--	VIAWGET_DEVICECLOSE_MSG = 6
--};
--
--typedef struct viawget_wpa_header {
--	u8 type;
--	u16 req_ie_len;
--	u16 resp_ie_len;
--} __packed viawget_wpa_header;
--
- struct viawget_wpa_param {
- 	u32 cmd;
- 	u8 addr[6];
-@@ -109,20 +72,4 @@ struct viawget_wpa_param {
- 	} u;
- } __packed;
- 
--struct viawget_scan_result {
--	u8 bssid[6];
--	u8 ssid[32];
--	u16 ssid_len;
--	u8 wpa_ie[WPA_IE_LEN];
--	u16 wpa_ie_len;
--	u8 rsn_ie[WPA_IE_LEN];
--	u16 rsn_ie_len;
--	int freq; // MHz
--	int caps; // e.g. privacy
--	int qual; // signal quality
--	int noise;
--	int level;
--	int maxrate;
--} __packed;
--
- #endif /* __IOWPA_H__ */
--- 
-1.9.1
+>
+> *sigh* I'd just plug in a new PCIe wireless card, except that I think
+> that my evil BIOS will refuse to boot if I do that.
+>
+I can recommend 7260 :)
+Before you do that, can you check this one?
 
+diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
+b/drivers/net/wireless/iwlwifi/dvm/power.c
+index f2c1439..047112c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/power.c
++++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+@@ -292,6 +292,8 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+
+        if (priv->wowlan)
+                iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, dtimper);
++       if (!enabled)
++               iwl_power_sleep_cam_cmd(priv, cmd);
+        else if (!priv->lib->no_idle_support &&
+                 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+                iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+@@ -299,9 +301,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+                /* in thermal throttling low power state */
+                iwl_static_sleep_cmd(priv, cmd,
+                    iwl_tt_current_power_mode(priv), dtimper);
+-       } else if (!enabled)
+-               iwl_power_sleep_cam_cmd(priv, cmd);
+-       else if (priv->power_data.debug_sleep_level_override >= 0)
++       } else if (priv->power_data.debug_sleep_level_override >= 0)
+                iwl_static_sleep_cmd(priv, cmd,
+
+priv->power_data.debug_sleep_level_override,
+                                     dtimper);
+
+This is the final version I want to send.
