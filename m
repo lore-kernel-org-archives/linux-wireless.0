@@ -1,54 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9875 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbaEWIpc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 04:45:32 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
-	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
-Date: Fri, 23 May 2014 11:45:26 +0300
-In-Reply-To: <CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 23 May 2014 10:38:20 +0200")
-Message-ID: <87bnuovq6x.fsf@kamboji.qca.qualcomm.com> (sfid-20140523_104544_156634_B9A6FB59)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from isis.lip6.fr ([132.227.60.2]:57194 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753085AbaEZPVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 11:21:16 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: benoit.taine@lip6.fr, Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 9/18] staging: rtl8723au: Use kmemdup instead of kmalloc + memcpy
+Date: Mon, 26 May 2014 17:21:18 +0200
+Message-Id: <1401117687-28911-10-git-send-email-benoit.taine@lip6.fr> (sfid-20140526_172305_625531_1FF4FA8C)
+In-Reply-To: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
+References: <1401117687-28911-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This issue was reported by coccicheck using the semantic patch 
+at scripts/coccinelle/api/memdup.cocci
 
-> On 23 May 2014 10:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> +static void ath10k_drain_tx(struct ath10k *ar)
->>> +{
->>> +     /* workers can hold conf_mutex -- avoid deadlock */
->>> +     WARN_ON(lockdep_is_held(&ar->conf_mutex));
->>
->> If CONFIG_LOCKDEP is disabled this will fail with:
->>
->> drivers/net/wireless/ath/ath10k/mac.c:2301:2: error: implicit declaration of function 'lockdep_is_held' [-Werror=implicit-function-declaration]
->>
->> I wasn't able to come up with any other way than adding '#ifdef
->> CONFIG_LOCKDEP' which is quite ugly. What should we do?
->
-> I guess we could define lockdep_assert_not_held() in debug.h?
+Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
+---
+Tested by compilation without errors.
 
-Sure, but I still think it's a bit ugly. The right way to fix this would
-be to add it to include/lockdep.h, instead of adding custom checks to a
-driver. But does this check even make sense? There's nothing preventing
-to another thread to take lock just after the WARN_ON(), right?
+ drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |    3 +--
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c |   16 ++++++----------
+ 2 files changed, 7 insertions(+), 12 deletions(-)
 
-Oh, and if we add it to debug.h we should name ath10k_assert_not_held().
-We should not use lockdep's namespace for anything inside ath10k.
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+index e2d426a..f917edd 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+@@ -339,12 +339,11 @@ int rtl8723a_FirmwareDownload(struct rtw_adapter *padapter)
+ 		rtStatus = _FAIL;
+ 		goto Exit;
+ 	}
+-	firmware_buf = kzalloc(fw->size, GFP_KERNEL);
++	firmware_buf = kmemdup(fw->data, fw->size, GFP_KERNEL);
+ 	if (!firmware_buf) {
+ 		rtStatus = _FAIL;
+ 		goto Exit;
+ 	}
+-	memcpy(firmware_buf, fw->data, fw->size);
+ 	buf = firmware_buf;
+ 	fw_size = fw->size;
+ 	release_firmware(fw);
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index 182f57c..735eb99 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -1426,14 +1426,13 @@ static int rtw_cfg80211_set_probe_req_wpsp2pie(struct rtw_adapter *padapter,
+ 				pmlmepriv->wps_probe_req_ie = NULL;
+ 			}
+ 
+-			pmlmepriv->wps_probe_req_ie =
+-				kmalloc(wps_ielen, GFP_KERNEL);
++			pmlmepriv->wps_probe_req_ie = kmemdup(wps_ie,
++							wps_ielen, GFP_KERNEL);
+ 			if (pmlmepriv->wps_probe_req_ie == NULL) {
+ 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 					  __func__, __LINE__);
+ 				return -EINVAL;
+ 			}
+-			memcpy(pmlmepriv->wps_probe_req_ie, wps_ie, wps_ielen);
+ 			pmlmepriv->wps_probe_req_ie_len = wps_ielen;
+ 		}
+ 	}
+@@ -1697,12 +1696,11 @@ static int rtw_cfg80211_set_wpa_ie(struct rtw_adapter *padapter, const u8 *pie,
+ 		ret = -EINVAL;
+ 		goto exit;
+ 	}
+-	buf = kzalloc(ielen, GFP_KERNEL);
++	buf = kmemdup(pie, ielen, GFP_KERNEL);
+ 	if (buf == NULL) {
+ 		ret = -ENOMEM;
+ 		goto exit;
+ 	}
+-	memcpy(buf, pie, ielen);
+ 
+ 	/* dump */
+ 	DBG_8723A("set wpa_ie(length:%zu):\n", ielen);
+@@ -3178,14 +3176,13 @@ static int rtw_cfg80211_set_beacon_wpsp2pie(struct net_device *ndev, char *buf,
+ 				pmlmepriv->wps_beacon_ie = NULL;
+ 			}
+ 
+-			pmlmepriv->wps_beacon_ie =
+-				kmalloc(wps_ielen, GFP_KERNEL);
++			pmlmepriv->wps_beacon_ie = kmemdup(wps_ie, wps_ielen,
++							   GFP_KERNEL);
+ 			if (pmlmepriv->wps_beacon_ie == NULL) {
+ 				DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 					  __func__, __LINE__);
+ 				return -EINVAL;
+ 			}
+-			memcpy(pmlmepriv->wps_beacon_ie, wps_ie, wps_ielen);
+ 			pmlmepriv->wps_beacon_ie_len = wps_ielen;
+ 
+ #ifdef CONFIG_8723AU_AP_MODE
+@@ -3270,14 +3267,13 @@ static int rtw_cfg80211_set_assoc_resp_wpsp2pie(struct net_device *net,
+ 			pmlmepriv->wps_assoc_resp_ie = NULL;
+ 		}
+ 
+-		pmlmepriv->wps_assoc_resp_ie = kmalloc(len, GFP_KERNEL);
++		pmlmepriv->wps_assoc_resp_ie = kmemdup(buf, len, GFP_KERNEL);
+ 		if (pmlmepriv->wps_assoc_resp_ie == NULL) {
+ 			DBG_8723A("%s()-%d: kmalloc() ERROR!\n",
+ 				  __func__, __LINE__);
+ 			return -EINVAL;
+ 
+ 		}
+-		memcpy(pmlmepriv->wps_assoc_resp_ie, buf, len);
+ 		pmlmepriv->wps_assoc_resp_ie_len = len;
+ 	}
+ 
 
--- 
-Kalle Valo
