@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45624 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaEFOoB (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:65247 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbaEZFs6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 10:44:01 -0400
-Message-ID: <1399387428.4218.45.camel@jlt4.sipsolutions.net> (sfid-20140506_164405_663183_741A0CB6)
-Subject: Re: [PATCH v4 3/5] mac80211: use chanctx reservation for STA CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
-Date: Tue, 06 May 2014 16:43:48 +0200
-In-Reply-To: <1397051137-26201-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155158_003700_3D901A43)
-References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-	 <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
-	 <1397051137-26201-4-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140409_155158_003700_3D901A43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 26 May 2014 01:48:58 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n15so3710984wiw.2
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 22:48:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1400850209.4358.31.camel@jlt4.sipsolutions.net>
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-4-git-send-email-michal.kazior@tieto.com>
+	<87oayovr1m.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmJTsh3Kcwmqx19WAzoBhYrhkQaPT_S=JFVPptkVaaKyw@mail.gmail.com>
+	<87bnuovq6x.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQn_V5zGA18qGMNrWYy_-fBQzBi1=EmzMs=0SLvk1LBVJQ@mail.gmail.com>
+	<1400850209.4358.31.camel@jlt4.sipsolutions.net>
+Date: Mon, 26 May 2014 07:48:56 +0200
+Message-ID: <CA+BoTQmmYJ8Mjv1=w=ZijFzZ-FB+PyEV5SKtzvVW7A8_kirueg@mail.gmail.com> (sfid-20140526_074901_869359_5BB0370C)
+Subject: Re: [PATCH v2 3/5] ath10k: drain tx before restarting hw
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 15:45 +0200, Michal Kazior wrote:
-> Channel switch finalization is now 2-step. First
-> step is when driver calls chswitch_done(), the
-> other is when reservation is actually finalized
-> (which be defered for in-place reservation).
-> 
-> It is now safe to call ieee80211_chswitch_done()
-> more than once.
-> 
-> Also remove the ieee80211_vif_change_channel()
-> because it is no longer used.
+On 23 May 2014 15:03, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-05-23 at 11:06 +0200, Michal Kazior wrote:
+>
+>> There's nothing wrong with other thread holding it. Actually that's
+>> the reason for this very check.
+>>
+>> The point is to prevent ath10k_drain_tx() being called while caller
+>> (current thread) holds conf_mutex. If it were to hold conf_mutex then
+>> cancel_work_sync() can deadlock as both workers it tries to stop try
+>> to get a hold of the lock too.
+>
+> That seems pointless - lockdep would warn you about that *anyway*
+> because cancel_work_sync() and friends have proper annotations. Try it
+> sometime :)
 
-A lot of this looks really duplicated from the previous patch - since I
-just merged the fixes is there really a need to go through the work etc.
-and have this different, instead of going through cfg80211 for the
-disconnect?
+Does it splat every time or just by chance or after a deadlock?
 
-johannes
 
+Michał
