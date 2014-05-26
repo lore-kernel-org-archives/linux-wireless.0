@@ -1,98 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:48924 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389AbaE3Rdl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 13:33:41 -0400
-Message-ID: <5388C0F1.90503@gmail.com> (sfid-20140530_193352_597057_E47A0C04)
-Date: Fri, 30 May 2014 10:33:37 -0700
-From: David Daney <ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-To: abdoulaye berthe <berthe.ab@gmail.com>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	patches@opensource.wolfsonmicro.com,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
-References: <20140530094025.3b78301e@canb.auug.org.au>        <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>        <1401449454-30895-2-git-send-email-berthe.ab@gmail.com> <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
-In-Reply-To: <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from dedo.coelho.fi ([88.198.205.34]:45261 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751452AbaEZGaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 02:30:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 26 May 2014 09:30:12 +0300
+Message-Id: <1401085812-21040-1-git-send-email-luca@coelho.fi> (sfid-20140526_083023_239812_0560397F)
+Subject: [PATCH] mac80211: docs: remove spurious blank line that causes docbook warnings
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2014 04:39 AM, Geert Uytterhoeven wrote:
-> On Fri, May 30, 2014 at 1:30 PM, abdoulaye berthe <berthe.ab@gmail.com> wrote:
->> --- a/drivers/gpio/gpiolib.c
->> +++ b/drivers/gpio/gpiolib.c
->> @@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
->>    *
->>    * A gpio_chip with any GPIOs still requested may not be removed.
->>    */
->> -int gpiochip_remove(struct gpio_chip *chip)
->> +void gpiochip_remove(struct gpio_chip *chip)
->>   {
->>          unsigned long   flags;
->> -       int             status = 0;
->>          unsigned        id;
->>
->>          acpi_gpiochip_remove(chip);
->> @@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
->>          of_gpiochip_remove(chip);
->>
->>          for (id = 0; id < chip->ngpio; id++) {
->> -               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
->> -                       status = -EBUSY;
->> -                       break;
->> -               }
->> -       }
->> -       if (status == 0) {
->> -               for (id = 0; id < chip->ngpio; id++)
->> -                       chip->desc[id].chip = NULL;
->> -
->> -               list_del(&chip->list);
->> +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
->> +                       panic("gpio: removing gpiochip with gpios still requested\n");
->
-> panic?
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-NACK to the patch for this reason.  The strongest thing you should do 
-here is WARN.
+When making htmldocs (at least) the following warning was being generated:
 
-That said, I am not sure why we need this whole patch set in the first 
-place.
+Warning(/home/luca/kvm-shared/git/public/mac80211-next//include/net/mac80211.h:2770): bad line:
 
-David Daney
+The cause was a stray empty line inside a block of documentation.  Fix this.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-
->
-> Is this likely to happen?
->
-> Gr{oetje,eeting}s,
->
->                          Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                  -- Linus Torvalds
->
->
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 38c10ea..e0bde8c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2767,7 +2767,6 @@ enum ieee80211_roc_type {
+  *	to vif. Possible use is for hw queue remapping.
+  * @unassign_vif_chanctx: Notifies device driver about channel context being
+  *	unbound from vif.
+-
+  * @switch_vif_chanctx: switch a number of vifs from one chanctx to
+  *	another, as specified in the list of
+  *	@ieee80211_vif_chanctx_switch passed to the driver, according
+-- 
+2.0.0.rc0
 
