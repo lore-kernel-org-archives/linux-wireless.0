@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9888 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874AbaESKZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 06:25:23 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Karim Raslan <karim.allah.ahmed@gmail.com>,
-	devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au: rtw_sta_mgt: change rtw_alloc_stainfo23a to use gfp_t instead if int
-References: <1400395256-8892-1-git-send-email-karim.allah.ahmed@gmail.com>
-	<20140519101855.GU15585@mwanda>
-Date: Mon, 19 May 2014 12:25:13 +0200
-In-Reply-To: <20140519101855.GU15585@mwanda> (Dan Carpenter's message of "Mon,
-	19 May 2014 13:18:56 +0300")
-Message-ID: <wrfjtx8mrrp2.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140519_122543_271949_5A44FFAB)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-we0-f172.google.com ([74.125.82.172]:40787 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbaEZMcQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 08:32:16 -0400
+Received: by mail-we0-f172.google.com with SMTP id k48so8112393wev.31
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 05:32:15 -0700 (PDT)
+From: chaitanya.mgit@gmail.com
+To: linville@tuxdriver.com, mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH V2] regdb: Generalize the mW to dBm power conversion
+Date: Mon, 26 May 2014 18:01:44 +0530
+Message-Id: <1401107504-11385-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140526_143219_846087_559DD3B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> On Sun, May 18, 2014 at 07:39:23AM +0100, Karim Raslan wrote:
->> This should fix a few sparse warnings like the following:
->> 
->>   CHECK   drivers/staging/rtl8723au/core/rtw_ap.c
->> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45: warning: incorrect
->> type in argument 3 (different base types)
->> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    expected int [signed] gfp
->> drivers/staging/rtl8723au/core/rtw_ap.c:1054:45:    got restricted gfp_t
->> 
->
-> Thanks, Karim, looks good.
->
-> Jes's patch which added this never went to the list so I didn't review
-> it.  This annoys me.
->
-> I try to be fair when I review code.  I try to allow lots of patches in
-> and let people send fix up patches for minor stuff.  But, obviously, you
-> should be running Sparse as part of the review process so if I made you
-> redo this patch it's because your process is broken.  When I review
-> patches I am trying to help you.
+Generalize the power conversion from mW to dBm 
+using log. This should fix the below compilation
+error for country NO which adds a new power value
+2000mW which is not handled earlier.
 
-Dan,
+ CC [M]  net/wireless/wext-sme.o
+ CC [M]  net/wireless/regdb.o
+net/wireless/regdb.c:1130:1: error: Unknown undeclared here (not in
+a function)
+net/wireless/regdb.c:1130:9: error: expected } before power
+make[2]: *** [net/wireless/regdb.o] Error 1
+make[1]: *** [net/wireless] Error 2
+make: *** [net] Error 2
 
-Calm down, I haven't been bombarding the list, due to the sheer volume
-of commits.  If you want me to spam the list, tell me where and I'll add
-that to the CC list next time.
+Reported-By:  John Walker <john@x109.net>
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
 
-This particular case isn't exactly a real problem either.
+---
+ net/wireless/genregdb.awk |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-Jes
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+index 4119833..949ee38 100644
+--- a/net/wireless/genregdb.awk
++++ b/net/wireless/genregdb.awk
+@@ -68,17 +68,7 @@ function parse_reg_rule()
+ 	sub(/,/, "", units)
+ 	dfs_cac = $9
+ 	if (units == "mW") {
+-		if (power == 100) {
+-			power = 20
+-		} else if (power == 200) {
+-			power = 23
+-		} else if (power == 500) {
+-			power = 27
+-		} else if (power == 1000) {
+-			power = 30
+-		} else {
+-			print "Unknown power value in database!"
+-		}
++		power = 10 * (log(power)/log(10))
+ 	} else {
+ 		dfs_cac = $8
+ 	}
