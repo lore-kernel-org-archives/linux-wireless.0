@@ -1,99 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40585 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615AbaE0RDF (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38463 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbaEZJTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 13:03:05 -0400
-Message-ID: <5384C544.9000903@broadcom.com> (sfid-20140527_190311_296724_8FEA4B47)
-Date: Tue, 27 May 2014 19:03:00 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 26 May 2014 05:19:39 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Avery Pennarun <apenwarr@gmail.com>
+Subject: Re: [PATCH 2/3] ath10k: revert incomplete scatter-gather pci tx
+References: <1400158139-13836-1-git-send-email-michal.kazior@tieto.com>
+	<1400158139-13836-3-git-send-email-michal.kazior@tieto.com>
+	<87fvjytht6.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQkfZbzy62xZV0tcPw1xu8B-rioVVags3z+DJMGxMB-jFQ@mail.gmail.com>
+Date: Mon, 26 May 2014 12:19:31 +0300
+In-Reply-To: <CA+BoTQkfZbzy62xZV0tcPw1xu8B-rioVVags3z+DJMGxMB-jFQ@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 26 May 2014 07:37:13 +0200")
+Message-ID: <877g58ucbg.fsf@kamboji.qca.qualcomm.com> (sfid-20140526_111943_194516_3831A830)
 MIME-Version: 1.0
-To: Hans de Goede <hdegoede@redhat.com>
-CC: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	<linux-sunxi@googlegroups.com>
-Subject: Re: [PATCH 09/11] brcmfmac: Fix OOB interrupt not working for BCM43362
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <1401090486-4414-10-git-send-email-hdegoede@redhat.com>
-In-Reply-To: <1401090486-4414-10-git-send-email-hdegoede@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/14 09:48, Hans de Goede wrote:
-> It has taken me a long long time to get the OOB interrupt working on the
-> AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
-> end I found these magic register pokes in the cubietruck kernel tree:
-> https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> On 25 May 2014 09:53, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This prevents leaving incomplete scatter-gather
+>>> transfer on CE rings which can lead firmware to
+>>> crash.
+>>>
+>>> Reported-By: Avery Pennarun <apenwarr@gmail.com>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> The title is a bit misleading as usually the commit log with the word
+>> revert means that the commit is reverting another git commit. Maybe
+>> something like this is better:
+>>
+>> ath10k: drop incomplete scatter-gather pci tx transfers
 >
-> I'm not entirely sure if this specific to the AP6210 module, or if this
-> should be done for all BCM43362 sdio devices.
+> Good point. I was actually thinking 'abort' .. 'properly'.
 
-Let keep it as this for now. I added some remarks below.
+Sounds good to me.
 
-Regards,
-Arend
-
-> Signed-off-by: Hans de Goede<hdegoede@redhat.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 ++++++++++++++++++
->   1 file changed, 18 insertions(+)
+>>> +err:
+>>> +     for (; i > 0; i--)
+>>
+>> Isn't this just a fancy way to say 'while (i-- > 0)'?
 >
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 0fc707c..2369a0f 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -39,7 +39,9 @@
->   #include<brcm_hw_ids.h>
->   #include<brcmu_utils.h>
->   #include<brcmu_wifi.h>
-> +#include<chipcommon.h>
->   #include<soc.h>
-> +#include "chip.h"
->   #include "dhd_bus.h"
->   #include "dhd_dbg.h"
->   #include "sdio_host.h"
-> @@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
->   {
->   	int ret = 0;
->   	u8 data;
-> +	u32 addr, gpiocontrol;
->   	unsigned long flags;
->
->   	if ((sdiodev->pdata)&&  (sdiodev->pdata->oob_irq_supported)) {
-> @@ -148,6 +151,21 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
->
->   		sdio_claim_host(sdiodev->func[1]);
->
-> +		if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
-+			/* assign GPIO to SDIO core */
-> +			addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
-> +			gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr,&ret);
-> +			gpiocontrol |= 0x2;
-> +			brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol,&ret);
-> +
-> +			/* SPROM_ADDR_HIGH ? perhaps the defines name is off */
+> Not really. More like do { .. } while (--i > 0), no? First iteration
+> must use unmodified `i`.
 
-These names are all off. These should be:
-SBSDIO_SPROM_ADDR_HIGH = SBSDIO_GPIO_SELECT
-SBSDIO_CHIP_CTRL_DATA = SBSDIO_GPIO_OUT
-SBSDIO_CHIP_CTRL_EN = SBSDIO_GPIO_EN
+Ok, I missed that. Then the for loop is good here.
 
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_SPROM_ADDR_HIGH, 0xf,
-> +					&ret);
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_CHIP_CTRL_DATA, 0,
-> +					&ret);
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_CHIP_CTRL_EN, 0x2,
-> +					&ret);
-> +		}
-> +
->   		/* must configure SDIO_CCCR_IENx to enable irq */
->   		data = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_IENx,&ret);
->   		data |= 1<<  SDIO_FUNC_1 | 1<<  SDIO_FUNC_2 | 1;
-
+-- 
+Kalle Valo
