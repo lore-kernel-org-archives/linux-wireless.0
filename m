@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52089 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:19991 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751993AbaEZHtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 03:49:11 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 10/11] ARM: dts: sun7i: Add #interrupt-cells to pinctrl node
-Date: Mon, 26 May 2014 09:48:05 +0200
-Message-Id: <1401090486-4414-11-git-send-email-hdegoede@redhat.com> (sfid-20140526_095026_320927_29732F7F)
-In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+	id S1751179AbaEZLoF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 07:44:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: don't check netdev state for debugfs read/write
+Date: Mon, 26 May 2014 14:40:51 +0300
+Message-Id: <1401104451-12838-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140526_134419_592316_6B265AD4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chen-Yu Tsai <wens@csie.org>
+From: Arik Nemtsov <arik@wizery.com>
 
-The pinctrl device is also an interrupt controller for external
-interrupts. Add the missing #interrupt-cells property.
+Doing so will lead to an oops for a p2p-dev interface, since it has
+no netdev.
 
-Also remove the unused #address-cells property.
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- arch/arm/boot/dts/sun7i-a20.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/debugfs_netdev.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
-index b82642c..19b1ced 100644
---- a/arch/arm/boot/dts/sun7i-a20.dtsi
-+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-@@ -594,7 +594,7 @@
- 			clocks = <&apb0_gates 5>;
- 			gpio-controller;
- 			interrupt-controller;
--			#address-cells = <1>;
-+			#interrupt-cells = <2>;
- 			#size-cells = <0>;
- 			#gpio-cells = <3>;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 3da74ae..ff4fa15 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -34,8 +34,7 @@ static ssize_t ieee80211_if_read(
+ 	ssize_t ret = -EINVAL;
  
+ 	read_lock(&dev_base_lock);
+-	if (sdata->dev->reg_state == NETREG_REGISTERED)
+-		ret = (*format)(sdata, buf, sizeof(buf));
++	ret = (*format)(sdata, buf, sizeof(buf));
+ 	read_unlock(&dev_base_lock);
+ 
+ 	if (ret >= 0)
+@@ -62,8 +61,7 @@ static ssize_t ieee80211_if_write(
+ 
+ 	ret = -ENODEV;
+ 	rtnl_lock();
+-	if (sdata->dev->reg_state == NETREG_REGISTERED)
+-		ret = (*write)(sdata, buf, count);
++	ret = (*write)(sdata, buf, count);
+ 	rtnl_unlock();
+ 
+ 	return ret;
 -- 
-1.9.3
+1.9.1
 
