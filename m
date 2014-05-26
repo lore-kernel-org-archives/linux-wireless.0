@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38545 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752863AbaEVNPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 09:15:34 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jim.epost@gmail.com
-Subject: Re: [PATCH] ath9k: fix build error with disabled debug
-References: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
-Date: Thu, 22 May 2014 16:15:31 +0300
-In-Reply-To: <1400668835-22335-1-git-send-email-zefir.kurtisi@neratec.com>
-	(Zefir Kurtisi's message of "Wed, 21 May 2014 12:40:35 +0200")
-Message-ID: <877g5e3qfg.fsf@purkki.adurom.net> (sfid-20140522_151544_864477_08AA8075)
+Received: from pegasos-out.vodafone.de ([80.84.1.38]:41396 "EHLO
+	pegasos-out.vodafone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbaEZUJQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2014 16:09:16 -0400
+In-Reply-To: <8fb8a514-da1c-40ad-9fe1-235aaf21b52c@email.android.com>
+References: <8fb8a514-da1c-40ad-9fe1-235aaf21b52c@email.android.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Fwd: Re: Kernel binary for RTL8192EE
+From: stefan.krueger@vodafone.de
+Date: Mon, 26 May 2014 22:09:03 +0200
+To: Larry.Finger@lwfinger.net
+CC: linux-wireless@vger.kernel.org
+Message-ID: <1e5e57d0-46cb-4bbc-9463-22bafad445d8@email.android.com> (sfid-20140526_220920_816273_872FB799)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-> DFS pulse interval printing is only available
-> when CONFIG_ATH9K_DEBUGFS is set.
->
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Hello Larry,
 
-[...]
+do you habe an (good) news for me to get working my wifi?
 
-> --- a/drivers/net/wireless/ath/ath9k/dfs.c
-> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
-> @@ -178,12 +178,14 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
->  	pe.ts = mactime;
->  	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
->  		struct dfs_pattern_detector *pd = sc->dfs_detector;
-> +#ifdef CONFIG_ATH9K_DEBUGFS
+Best regards
+Stefan
+- --
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
+-----BEGIN PGP SIGNATURE-----
+Version: APG v1.1.1
 
-IMHO config_enabled() is much nicer than ifdef.
+iQJIBAEBCgAyBQJTg59cKxxTdGVmYW4gS3L8Z2VyIDxzdGVmYW4ua3J1ZWdlckB2
+b2RhZm9uZS5kZT4ACgkQKfL7XZZDcf2SIBAAh9arGQgolG+OFY499dCwMmC2RYgm
+xHLplsP9/0x3+jAfpJ2VFRtPdL0ahGpWeBmRyV2PX7k32EFmmh8Rn5F2oHEadN5M
+oHwZM39+buKSvSqb3NhBgnGg3NoxJEu5TzraHtKHMmJ7qtJwY0QdWwwUgIwNLYcd
+XAroi9qHDnh6GMDJkHzs1EVgeIdqbbiJt2ktBj3doKfaScHE3DxKT/nHdr/q1trV
+iWPX8cy4TczamD3p5WCqFyaHyazM6RW2gHxoBT8Dwmz1JDQrv+BGc4htvsZRo8wA
+zV1b3Vs9LzxpSNmkqSZcxJYxxwiXdI2GrQmjfpbdpU4Xna+5OZrZC3CYOz///MfY
+6HNEuRueocCGtrc8wsVsbJ/R0UkfqRDoMRMTt2Q6z2gm1n80keCsMSEwQaHJ2TZS
+wMWj8VbjRkd78TUYOH+3m2t27P8/NREAZyJdOtIRHuk090Bwfse1g2Mx8bO5AGqw
+JGjb4utL+r5TdgRMJ5VaaTxiflDqegDJuTCI/BRenf8ydjOvEjBjoeeC3M7Xdnsm
+sb0FvSPEsU+X1AFTyOKHQnhqDoAb+wuzYdoSCjL1IGdV+YSvrEkxc4ZYuVwXdWJR
+t5nzH+8GOFtYp2Zp3S4TG1nNPFn/tkIceGHNk4FwE9boezWzISoHnCXb3rJr+5Xs
+PdqMGyjOVdS8sY4=
+=on78
+-----END PGP SIGNATURE-----
 
--- 
-Kalle Valo
