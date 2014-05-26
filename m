@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:55186 "EHLO
+Received: from mail-we0-f173.google.com ([74.125.82.173]:39226 "EHLO
 	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933253AbaEMNo5 (ORCPT
+	with ESMTP id S1751566AbaEZJGp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 09:44:57 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so406047wes.32
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 06:44:56 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/3] iwlwifi: mvm: fix off-by-one in scan channels configuration
-Date: Tue, 13 May 2014 16:44:44 +0300
-Message-Id: <1399988685-14715-2-git-send-email-egrumbach@gmail.com> (sfid-20140513_154505_424440_1B13E8DA)
-In-Reply-To: <53722142.6070105@gmail.com>
-References: <53722142.6070105@gmail.com>
+	Mon, 26 May 2014 05:06:45 -0400
+Message-ID: <1401095199.11908.6.camel@umadbro> (sfid-20140526_110702_132852_B0BFB878)
+Subject: Re: [RFC 1/2] cfg80211: Add channel flags limiting availability to
+ OCB mode only
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Mon, 26 May 2014 11:06:39 +0200
+In-Reply-To: <1400511063.4273.10.camel@jlt4.sipsolutions.net>
+References: <1400510945-24868-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1400510945-24868-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140519_164914_781166_025BC930) <1400511063.4273.10.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Mon, 2014-05-19 at 16:51 +0200, Johannes Berg wrote:
+> This patch is fine, but insufficient - you should also do something
+> with
+> the new flags?
 
-tail should be equal to the last valid index, so
-decrease it by one.
+That's definitely a good point. I think the biggest issue is that the
+flags can't be checked only with the knowledge of the 'wiphy' but they
+are related to the 'vif' type -- this prohibits checking in the
+cfg80211_chandef_usable() (I assume).
 
-This error causes in "a gap" in some cases (as well as
-some possible out-of-bound write), finally resulting in
-ucode assertion.
+Would the following be sufficient?
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -801,6 +801,10 @@ static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 		*changed |= BSS_CHANGED_BANDWIDTH;
+ 	}
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_OCB &&
++	    !(chandef->chan->flags & IEEE80211_CHAN_OCB_ONLY))
++		return -EINVAL;
++
+ 	sdata->vif.bss_conf.chandef = *chandef;
+ 	ctx->conf.def = *chandef;
+ 
+@@ -1049,6 +1053,12 @@ int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_OCB &&
++	    !(chandef->chan->flags & IEEE80211_CHAN_OCB_ONLY)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
+ 	if (chandef->width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) {
+ 		ret = -EINVAL;
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index cba88a3..c28de54 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -732,7 +732,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 	int band_2ghz = mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels;
- 	int band_5ghz = mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
- 	int head = 0;
--	int tail = band_2ghz + band_5ghz;
-+	int tail = band_2ghz + band_5ghz - 1;
- 	u32 ssid_bitmap;
- 	int cmd_len;
- 	int ret;
--- 
-1.8.3.2
+--
+Best regards;
+Rostislav Lisovy
+
 
