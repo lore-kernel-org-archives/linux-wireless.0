@@ -1,369 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:51267 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754209AbaEOVvM (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34772 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbaE0K4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:12 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi2so1276833wib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:11 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 02/15] staging: vt6656: struct vnt_usb_send_context remove camel case.
-Date: Thu, 15 May 2014 22:49:11 +0100
-Message-Id: <1400190564-5135-2-git-send-email-tvboxspy@gmail.com> (sfid-20140515_235116_748960_829EEC88)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 27 May 2014 06:56:36 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 11/16] brcmfmac: use asynchronous firmware request in USB
+Date: Tue, 27 May 2014 12:56:23 +0200
+Message-ID: <1401188188-16492-12-git-send-email-arend@broadcom.com> (sfid-20140527_125642_640771_9DC495C6)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-pDevice -> priv
-pPacket -> skb
-pUrb -> urb
-uBufLen -> buf_len;
-bBoolInUse -> in_use
-Data -> data
+This patch adds use of asynchronous firmware request to
+the driver USB layer.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/device.h   | 12 +++----
- drivers/staging/vt6656/main_usb.c | 14 ++++----
- drivers/staging/vt6656/rxtx.c     | 74 +++++++++++++++++++--------------------
- drivers/staging/vt6656/usbpipe.c  | 26 +++++++-------
- 4 files changed, 63 insertions(+), 63 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   98 +++++++++++++++++--------
+ 1 file changed, 68 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index e2abe3d..f36a2eb 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -176,13 +176,13 @@ struct vnt_rcb {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 8d67940..21335e2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -25,6 +25,7 @@
+ #include <dhd_bus.h>
+ #include <dhd_dbg.h>
  
- /* used to track bulk out irps */
- struct vnt_usb_send_context {
--	void *pDevice;
--	struct sk_buff *pPacket;
--	struct urb *pUrb;
--	unsigned int uBufLen;
-+	void *priv;
-+	struct sk_buff *skb;
-+	struct urb *urb;
-+	unsigned int buf_len;
- 	u8 type;
--	bool bBoolInUse;
--	unsigned char Data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
-+	bool in_use;
-+	unsigned char data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
- };
++#include "firmware.h"
+ #include "usb_rdl.h"
+ #include "usb.h"
  
- /* tx packet info for rxtx */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 208640b..ea0d6b3 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -760,9 +760,9 @@ static void device_free_tx_bufs(struct vnt_private *priv)
- 	for (ii = 0; ii < priv->cbTD; ii++) {
- 		tx_context = priv->apTD[ii];
- 		/* deallocate URBs */
--		if (tx_context->pUrb) {
--			usb_kill_urb(tx_context->pUrb);
--			usb_free_urb(tx_context->pUrb);
-+		if (tx_context->urb) {
-+			usb_kill_urb(tx_context->urb);
-+			usb_free_urb(tx_context->urb);
- 		}
+@@ -87,7 +88,7 @@ struct brcmf_usbdev_info {
+ 	struct brcmf_usbreq *tx_reqs;
+ 	struct brcmf_usbreq *rx_reqs;
  
- 		kfree(tx_context);
-@@ -828,17 +828,17 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 		}
+-	u8 *image;	/* buffer for combine fw and nvram */
++	const u8 *image;	/* buffer for combine fw and nvram */
+ 	int image_len;
  
- 		priv->apTD[ii] = tx_context;
--		tx_context->pDevice = priv;
-+		tx_context->priv = priv;
- 
- 		/* allocate URBs */
--		tx_context->pUrb = usb_alloc_urb(0, GFP_ATOMIC);
--		if (tx_context->pUrb == NULL) {
-+		tx_context->urb = usb_alloc_urb(0, GFP_ATOMIC);
-+		if (!tx_context->urb) {
- 			DBG_PRT(MSG_LEVEL_ERR,
- 				KERN_ERR "alloc tx urb failed\n");
- 			goto free_tx;
- 		}
- 
--		tx_context->bBoolInUse = false;
-+		tx_context->in_use = false;
+ 	struct usb_device *usbdev;
+@@ -1021,7 +1022,7 @@ brcmf_usb_fw_download(struct brcmf_usbdev_info *devinfo)
  	}
  
- 	/* allocate RCB mem */
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 57eb502..52be7b0 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -149,9 +149,9 @@ static struct vnt_usb_send_context
- 			return NULL;
- 
- 		context = priv->apTD[ii];
--		if (context->bBoolInUse == false) {
--			context->bBoolInUse = true;
--			memset(context->Data, 0,
-+		if (context->in_use == false) {
-+			context->in_use = true;
-+			memset(context->data, 0,
- 					MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
- 			return context;
- 		}
-@@ -1391,7 +1391,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-         return CMD_STATUS_RESOURCES;
-     }
- 
--	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
-+	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
-     cbFrameBodySize = pPacket->cbPayloadLen;
- 	pTxBufHead = &pTX_Buffer->fifo_head;
- 	pbyTxBufferAddr = (u8 *)&pTxBufHead->adwTxKey[0];
-@@ -1609,9 +1609,9 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     pTX_Buffer->byPKTNO = (u8) (((wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->byType = 0x00;
- 
--    pContext->pPacket = NULL;
--    pContext->type = CONTEXT_MGMT_PACKET;
--    pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
-+	pContext->skb = NULL;
-+	pContext->type = CONTEXT_MGMT_PACKET;
-+	pContext->buf_len = (u16)cbReqCount + 4; /* USB header */
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
- 	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-@@ -1649,7 +1649,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
-         return status ;
-     }
- 
--	pTX_Buffer = (struct vnt_beacon_buffer *)&pContext->Data[0];
-+	pTX_Buffer = (struct vnt_beacon_buffer *)&pContext->data[0];
- 	short_head = &pTX_Buffer->short_head;
- 
-     cbFrameBodySize = pPacket->cbPayloadLen;
-@@ -1701,9 +1701,9 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
-     pTX_Buffer->byPKTNO = (u8) (((wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->byType = 0x01;
- 
--    pContext->pPacket = NULL;
--    pContext->type = CONTEXT_MGMT_PACKET;
--    pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
-+	pContext->skb = NULL;
-+	pContext->type = CONTEXT_MGMT_PACKET;
-+	pContext->buf_len = (u16)cbReqCount + 4; /* USB header */
- 
-     PIPEnsSendBulkOut(pDevice,pContext);
-     return CMD_STATUS_PENDING;
-@@ -1760,7 +1760,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-         return ;
-     }
- 
--	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
-+	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
- 	pTxBufHead = &pTX_Buffer->fifo_head;
- 	pbyTxBufferAddr = (u8 *)&pTxBufHead->adwTxKey[0];
- 	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
-@@ -2049,9 +2049,9 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     pTX_Buffer->byPKTNO = (u8) (((wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->byType = 0x00;
- 
--    pContext->pPacket = skb;
--    pContext->type = CONTEXT_MGMT_PACKET;
--    pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
-+	pContext->skb = skb;
-+	pContext->type = CONTEXT_MGMT_PACKET;
-+	pContext->buf_len = (u16)cbReqCount + 4;  /* USB header */
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
- 	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-@@ -2408,7 +2408,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
- 		return STATUS_RESOURCES;
- 	}
- 
--	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
-+	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
- 
-     fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
- 			pTX_Buffer, bNeedEncryption,
-@@ -2418,11 +2418,11 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
-                         &uHeaderLen, &BytesToWrite
-                        );
- 
--    if (fConvertedPacket == false) {
--        pContext->bBoolInUse = false;
--        dev_kfree_skb_irq(skb);
--        return STATUS_FAILURE;
--    }
-+	if (fConvertedPacket == false) {
-+		pContext->in_use = false;
-+		dev_kfree_skb_irq(skb);
-+		return STATUS_FAILURE;
-+	}
- 
-     if ( pDevice->bEnablePSMode == true ) {
-         if ( !pDevice->bPSModeTxBurst ) {
-@@ -2436,9 +2436,9 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
-     pTX_Buffer->byPKTNO = (u8) (((pDevice->wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->tx_byte_count = cpu_to_le16((u16)BytesToWrite);
- 
--    pContext->pPacket = skb;
--    pContext->type = CONTEXT_DATA_PACKET;
--    pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
-+	pContext->skb = skb;
-+	pContext->type = CONTEXT_DATA_PACKET;
-+	pContext->buf_len = (u16)BytesToWrite + 4 ; /* USB header */
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
- 			&pDevice->sTxEthHeader.h_dest[0],
-@@ -2453,14 +2453,14 @@ int nsDMA_tx_packet(struct vnt_private *pDevice, struct sk_buff *skb)
- 	bScheduleCommand((void *) pDevice, WLAN_CMD_DEAUTH, (u8 *) &wReason);
-     }
- 
--  if(status!=STATUS_PENDING) {
--     pContext->bBoolInUse = false;
--    dev_kfree_skb_irq(skb);
--    return STATUS_FAILURE;
--  }
--  else
--    return 0;
-+	if (status != STATUS_PENDING) {
-+		pContext->in_use = false;
-+		dev_kfree_skb_irq(skb);
-+		return STATUS_FAILURE;
-+	}
- 
-+
-+	return 0;
+ 	err = brcmf_usb_dlstart(devinfo,
+-		devinfo->image, devinfo->image_len);
++		(u8 *)devinfo->image, devinfo->image_len);
+ 	if (err == 0)
+ 		err = brcmf_usb_dlrun(devinfo);
+ 	return err;
+@@ -1080,7 +1081,22 @@ static int check_file(const u8 *headers)
+ 	return -1;
  }
  
- /*
-@@ -2531,7 +2531,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     }
- 
-     if ( bNeedEncryption && (pTransmitKey == NULL) ) {
--        pContext->bBoolInUse = false;
-+	pContext->in_use = false;
-         return false;
-     }
- 
-@@ -2572,7 +2572,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     // Convert the packet to an usb frame and copy into our buffer
-     // and send the irp.
- 
--	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
-+	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->data[0];
- 
-     fConvertedPacket = s_bPacketToWirelessUsb(pDevice, byPktType,
- 			pTX_Buffer, bNeedEncryption,
-@@ -2583,16 +2583,16 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-                         );
- 
-     if (fConvertedPacket == false) {
--        pContext->bBoolInUse = false;
-+	pContext->in_use = false;
-         return false;
-     }
- 
-     pTX_Buffer->byPKTNO = (u8) (((pDevice->wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->tx_byte_count = cpu_to_le16((u16)BytesToWrite);
- 
--    pContext->pPacket = NULL;
--    pContext->type = CONTEXT_DATA_PACKET;
--    pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
-+	pContext->skb = NULL;
-+	pContext->type = CONTEXT_DATA_PACKET;
-+	pContext->buf_len = (u16)BytesToWrite + 4; /* USB header */
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
- 		&pDevice->sTxEthHeader.h_dest[0],
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index c5838d9..1a6f911 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -530,17 +530,17 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_nsSendBulkOut\n");
- 
- 	if (!(MP_IS_READY(priv) && priv->Flags & fMP_POST_WRITES)) {
--		context->bBoolInUse = false;
-+		context->in_use = false;
- 		return STATUS_RESOURCES;
- 	}
- 
--	urb = context->pUrb;
-+	urb = context->urb;
- 
- 	usb_fill_bulk_urb(urb,
- 			priv->usb,
- 			usb_sndbulkpipe(priv->usb, 3),
--			context->Data,
--			context->uBufLen,
-+			context->data,
-+			context->buf_len,
- 			s_nsBulkOutIoCompleteWrite,
- 			context);
- 
-@@ -548,7 +548,7 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- 	if (status != 0) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 				"Submit Tx URB failed %d\n", status);
--		context->bBoolInUse = false;
-+		context->in_use = false;
- 		return STATUS_FAILURE;
- 	}
- 
-@@ -586,7 +586,7 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+-static int brcmf_usb_get_fw(struct brcmf_usbdev_info *devinfo)
++static const char *brcmf_usb_get_fwname(struct brcmf_usbdev_info *devinfo)
++{
++	switch (devinfo->bus_pub.devid) {
++	case 43143:
++		return BRCMF_USB_43143_FW_NAME;
++	case 43235:
++	case 43236:
++	case 43238:
++		return BRCMF_USB_43236_FW_NAME;
++	case 43242:
++		return BRCMF_USB_43242_FW_NAME;
++	default:
++		return NULL;
++	}
++}
++static __used int brcmf_usb_get_fw(struct brcmf_usbdev_info *devinfo)
  {
- 	struct vnt_usb_send_context *context = urb->context;
--	struct vnt_private *priv = context->pDevice;
-+	struct vnt_private *priv = context->priv;
- 	u8 context_type = context->type;
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
-@@ -594,12 +594,12 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	switch (urb->status) {
- 	case 0:
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"Write %d bytes\n", context->uBufLen);
-+			"Write %d bytes\n", context->buf_len);
- 		break;
- 	case -ECONNRESET:
- 	case -ENOENT:
- 	case -ESHUTDOWN:
--		context->bBoolInUse = false;
-+		context->in_use = false;
- 		return;
- 	case -ETIMEDOUT:
- 	default:
-@@ -612,11 +612,11 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 		return;
- 
- 	if (CONTEXT_DATA_PACKET == context_type) {
--		if (context->pPacket != NULL) {
--			dev_kfree_skb_irq(context->pPacket);
--			context->pPacket = NULL;
-+		if (context->skb != NULL) {
-+			dev_kfree_skb_irq(context->skb);
-+			context->skb = NULL;
- 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--				"tx  %d bytes\n", context->uBufLen);
-+				"tx  %d bytes\n", context->buf_len);
- 		}
- 
- 		priv->dev->trans_start = jiffies;
-@@ -627,7 +627,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 			netif_wake_queue(priv->dev);
+ 	s8 *fwname;
+ 	const struct firmware *fw;
+@@ -1202,16 +1218,6 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
+ 		goto error;
  	}
  
--	context->bBoolInUse = false;
-+	context->in_use = false;
+-	if (!brcmf_usb_dlneeded(devinfo))
+-		return &devinfo->bus_pub;
+-
+-	brcmf_dbg(USB, "Start fw downloading\n");
+-	if (brcmf_usb_get_fw(devinfo))
+-		goto error;
+-
+-	if (brcmf_usb_fw_download(devinfo))
+-		goto error;
+-
+ 	return &devinfo->bus_pub;
  
- 	return;
+ error:
+@@ -1252,12 +1258,47 @@ fail:
+ 	return ret;
  }
+ 
++static void brcmf_usb_probe_phase2(struct device *dev,
++				   const struct firmware *fw,
++				   void *nvram, u32 nvlen)
++{
++	struct brcmf_bus *bus = dev_get_drvdata(dev);
++	struct brcmf_usbdev_info *devinfo;
++	int ret;
++
++	brcmf_dbg(USB, "Start fw downloading\n");
++	ret = check_file(fw->data);
++	if (ret < 0) {
++		brcmf_err("invalid firmware\n");
++		release_firmware(fw);
++		goto error;
++	}
++
++	devinfo = bus->bus_priv.usb->devinfo;
++	devinfo->image = fw->data;
++	devinfo->image_len = fw->size;
++
++	ret = brcmf_usb_fw_download(devinfo);
++	release_firmware(fw);
++	if (ret)
++		goto error;
++
++	ret = brcmf_usb_bus_setup(devinfo);
++	if (ret)
++		goto error;
++
++	return;
++error:
++	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), ret);
++	device_release_driver(dev);
++}
++
+ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ {
+ 	struct brcmf_bus *bus = NULL;
+ 	struct brcmf_usbdev *bus_pub = NULL;
+-	int ret;
+ 	struct device *dev = devinfo->dev;
++	int ret;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 	bus_pub = brcmf_usb_attach(devinfo, BRCMF_USB_NRXQ, BRCMF_USB_NTXQ);
+@@ -1280,13 +1321,16 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	bus->proto_type = BRCMF_PROTO_BCDC;
+ 	bus->always_use_fws_queue = true;
+ 
+-	ret = brcmf_usb_bus_setup(devinfo);
+-	if (ret) {
+-		brcmf_err("dongle is not responding\n");
+-		goto fail;
++	if (!brcmf_usb_dlneeded(devinfo)) {
++		ret = brcmf_usb_bus_setup(devinfo);
++		if (ret)
++			goto fail;
+ 	}
+-
++	/* request firmware here */
++	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
++			       brcmf_usb_probe_phase2);
+ 	return 0;
++
+ fail:
+ 	/* Release resources in reverse order */
+ 	kfree(bus);
+@@ -1409,12 +1453,8 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	}
+ 
+ 	/* Allocate interrupt URB and data buffer */
+-	/* RNDIS says 8-byte intr, our old drivers used 4-byte */
+-	if (IFEPDESC(usb, CONTROL_IF, 0).wMaxPacketSize == cpu_to_le16(16))
+-		devinfo->intr_size = 8;
+-	else
+-		devinfo->intr_size = 4;
+-
++	devinfo->intr_size =
++		le16_to_cpu(IFEPDESC(usb, CONTROL_IF, 0).wMaxPacketSize);
+ 	devinfo->interval = IFEPDESC(usb, CONTROL_IF, 0).bInterval;
+ 
+ 	if (usb->speed == USB_SPEED_SUPER)
+@@ -1481,13 +1521,11 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ {
+ 	struct usb_device *usb = interface_to_usbdev(intf);
+ 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(&usb->dev);
+-
+ 	brcmf_dbg(USB, "Enter\n");
+ 
+-	if (!brcmf_usb_fw_download(devinfo))
+-		return brcmf_usb_bus_setup(devinfo);
+-
+-	return -EIO;
++	return brcmf_fw_get_firmwares(&usb->dev, 0,
++				      brcmf_usb_get_fwname(devinfo), NULL,
++				      brcmf_usb_probe_phase2);
+ }
+ 
+ #define BRCMF_USB_VENDOR_ID_BROADCOM	0x0a5c
 -- 
-1.9.1
+1.7.9.5
 
