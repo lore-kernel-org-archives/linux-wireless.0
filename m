@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48767 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671AbaEGIH7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 04:07:59 -0400
-Message-ID: <1399450061.5038.10.camel@jlt4.sipsolutions.net> (sfid-20140507_100819_772616_5C298C34)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Received: from s3.sipsolutions.net ([5.9.151.49]:34944 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911AbaE0SLh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 14:11:37 -0400
+Message-ID: <1401214293.8146.12.camel@jlt4.sipsolutions.net> (sfid-20140527_201140_738419_142F72F0)
+Subject: Re: nl80211 kernel doc??
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 07 May 2014 10:07:41 +0200
-In-Reply-To: <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com> (sfid-20140507_080520_858946_318E5B7B)
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 (sfid-20140507_080520_858946_318E5B7B)
+To: shankar swaminathan <shankswa@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 May 2014 20:11:33 +0200
+In-Reply-To: <CADNhdGFpnY8Dy5ybV83QgpPShzSnk1eSNCHhsLb9r7svFGn9mw@mail.gmail.com> (sfid-20140527_200810_822649_9A968E27)
+References: <CADNhdGFpnY8Dy5ybV83QgpPShzSnk1eSNCHhsLb9r7svFGn9mw@mail.gmail.com>
+	 (sfid-20140527_200810_822649_9A968E27)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 08:05 +0200, Michal Kazior wrote:
-
-> Hmm... Now that I think about the atomic swap - it actually becomes a
-> little bit of an issue in some cases.
+On Tue, 2014-05-27 at 23:37 +0530, shankar swaminathan wrote:
+> Hello,
 > 
-> For one you might need to overcommit number of chanctx since swapping
-> requires both chanctx (old and new) to exist but that's the least of
-> the eproblem. If you have more than one interface you end up with
-> temporarily breaking interface combinations from driver point of view
-> while switching (first swap breaks it, last swap fixes it). Driver
-> won't know whether given swap is first/last unless we somehow pass it
-> through the switch_vif_chanctx(). IOW we actually need a "chanctx
-> transaction" (sort of a start-stop) that can batch up a couple of
-> chanctx switches for different vifs as an atomic op.
+> the kerneldoc for nl80211 used to be very useful -
+> http://wireless.kernel.org/en/developers/Documentation/nl80211/kerneldoc
+> 
+> However, this link is not been working for a while now.
+> Is there any other equally good documentation for nl80211?
 
-Hmmm. Don't you already have that problem? Or you don't because you'd do
-
-for_each_affected_vif: unassign
-del chanctx [optional depending on reservation]
-add chanctx [ditto]
-for_each_affected_vif: assign
-
-right now?
-
-I suppose a sort of transaction API, if designed the right way, would
-also work somehow - Luca?
+Oops. Most of the content is in
+https://www.kernel.org/doc/htmldocs/80211/index.html
 
 johannes
 
