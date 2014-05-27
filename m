@@ -1,218 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:43663 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755935AbaEOVv5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55608 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbaE0Lqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:57 -0400
-Received: by mail-we0-f181.google.com with SMTP id w61so1691839wes.40
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:56 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 14/15] staging: vt6656: PIPEnsControlIn use usb_control_msg
-Date: Thu, 15 May 2014 22:49:23 +0100
-Message-Id: <1400190564-5135-14-git-send-email-tvboxspy@gmail.com> (sfid-20140516_002147_758467_7D01CD7A)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 27 May 2014 07:46:42 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 7/7] wil6210: optimize wil_release_reorder_frames
+Date: Tue, 27 May 2014 14:45:50 +0300
+Message-ID: <1401191150-29037-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140527_134645_608021_28C85439)
+In-Reply-To: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that this function is nolonger atomic useusb_control_msg.
+In case of receiving frame with sequence number far greater than current,
+wil_release_reorder_frames() will iterate many times over empty buffer.
 
-Return STATUS_FAILURE if ntStatus less than wLength
+Optimize this case by checking buffer emptiness and simply update
+head_seq_num without iterating.
 
-Remove the old struct urb and struct usb_ctrlrequest structures.
-
-Remove fMP_CONTROL_READS flag.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Suggested-by: Vladimir Shulman <Vladimir.Shulman@Wilocity.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/device.h   |  3 --
- drivers/staging/vt6656/main_usb.c | 11 -----
- drivers/staging/vt6656/usbpipe.c  | 94 ++++-----------------------------------
- 3 files changed, 9 insertions(+), 99 deletions(-)
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index da1b70d..410e028 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -380,9 +380,7 @@ struct vnt_private {
- 	u32 uCurrentDFCBIdx;
- 
- 	/* USB */
--	struct urb *pControlURB;
- 	struct urb *pInterruptURB;
--	struct usb_ctrlrequest sUsbCtlRequest;
- 	u32 int_interval;
- 
- 	/* Variables to track resources for the BULK In Pipe */
-@@ -743,7 +741,6 @@ struct vnt_private {
- #define fMP_RECV_SIDE_RESOURCE_ALLOCATED    0x00000080
- #define fMP_POST_READS                      0x00000100
- #define fMP_POST_WRITES                     0x00000200
--#define fMP_CONTROL_READS                   0x00000400
- 
- #define MP_SET_FLAG(_M, _F)             ((_M)->Flags |= (_F))
- #define MP_CLEAR_FLAG(_M, _F)            ((_M)->Flags &= ~(_F))
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 6ca5d78..1b58cca 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -702,12 +702,6 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	INIT_WORK(&pDevice->read_work_item, RXvWorkItem);
- 	INIT_WORK(&pDevice->rx_mng_work_item, RXvMngWorkItem);
- 
--	pDevice->pControlURB = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!pDevice->pControlURB) {
--		DBG_PRT(MSG_LEVEL_ERR, KERN_ERR"Failed to alloc control urb\n");
--		goto err_netdev;
--	}
--
- 	pDevice->tx_80211 = device_dma0_tx_80211;
- 	pDevice->vnt_mgmt.pAdapter = (void *) pDevice;
- 
-@@ -964,7 +958,6 @@ static int  device_open(struct net_device *dev)
-     }
- 
-     MP_CLEAR_FLAG(pDevice, fMP_DISCONNECTED);
--    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
-     MP_SET_FLAG(pDevice, fMP_POST_READS);
-     MP_SET_FLAG(pDevice, fMP_POST_WRITES);
- 
-@@ -1130,10 +1123,6 @@ static void vt6656_disconnect(struct usb_interface *intf)
- 
- 	if (device->dev) {
- 		unregister_netdev(device->dev);
--
--		usb_kill_urb(device->pControlURB);
--		usb_free_urb(device->pControlURB);
--
- 		free_netdev(device->dev);
- 	}
- }
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 1ab3958..9946bfd 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -63,7 +63,6 @@ static int          msglevel                =MSG_LEVEL_INFO;
- static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
--static void s_nsControlInUsbIoCompleteRead(struct urb *urb);
- 
- int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
- 	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
-@@ -126,100 +125,25 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- }
- 
- int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
--	u16 wIndex, u16 wLength,  u8 *pbyBuffer)
--	__releases(&pDevice->lock)
--	__acquires(&pDevice->lock)
-+	u16 wIndex, u16 wLength, u8 *pbyBuffer)
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index ec29954..747ae12 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -49,10 +49,17 @@ static void wil_release_reorder_frames(struct wil6210_priv *wil,
  {
--	int ntStatus = 0;
--	int ii;
--
--    if (pDevice->Flags & fMP_DISCONNECTED)
--        return STATUS_FAILURE;
--
--    if (pDevice->Flags & fMP_CONTROL_READS)
--	return STATUS_FAILURE;
-+	int ntStatus;
+ 	int index;
  
--	if (pDevice->pControlURB->hcpriv)
-+	if (pDevice->Flags & fMP_DISCONNECTED)
- 		return STATUS_FAILURE;
- 
- 	mutex_lock(&pDevice->usb_lock);
- 
--	MP_SET_FLAG(pDevice, fMP_CONTROL_READS);
--
--	pDevice->sUsbCtlRequest.bRequestType = 0xC0;
--	pDevice->sUsbCtlRequest.bRequest = byRequest;
--	pDevice->sUsbCtlRequest.wValue = cpu_to_le16p(&wValue);
--	pDevice->sUsbCtlRequest.wIndex = cpu_to_le16p(&wIndex);
--	pDevice->sUsbCtlRequest.wLength = cpu_to_le16p(&wLength);
--	pDevice->pControlURB->transfer_flags |= URB_ASYNC_UNLINK;
--    pDevice->pControlURB->actual_length = 0;
--	usb_fill_control_urb(pDevice->pControlURB, pDevice->usb,
--			 usb_rcvctrlpipe(pDevice->usb , 0), (char *) &pDevice->sUsbCtlRequest,
--			 pbyBuffer, wLength, s_nsControlInUsbIoCompleteRead, pDevice);
--
--	ntStatus = usb_submit_urb(pDevice->pControlURB, GFP_ATOMIC);
--	if (ntStatus != 0) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"control request submission failed: %d\n", ntStatus);
--		MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
--		mutex_unlock(&pDevice->usb_lock);
--		return STATUS_FAILURE;
--	}
--
--    for (ii = 0; ii <= USB_CTL_WAIT; ii ++) {
--
--	if (pDevice->Flags & fMP_CONTROL_READS)
--		mdelay(1);
--	else
--		break;
--
--	if (ii >= USB_CTL_WAIT) {
--		DBG_PRT(MSG_LEVEL_DEBUG,
--			KERN_INFO "control rcv request submission timeout\n");
--            MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
--	    mutex_unlock(&pDevice->usb_lock);
--            return STATUS_FAILURE;
--        }
--    }
-+	ntStatus = usb_control_msg(pDevice->usb,
-+		usb_rcvctrlpipe(pDevice->usb, 0), byRequest, 0xc0, wValue,
-+			wIndex, pbyBuffer, wLength, USB_CTL_WAIT);
- 
- 	mutex_unlock(&pDevice->usb_lock);
- 
--    return ntStatus;
--}
--
--/*
-- * Description:
-- *      Complete function of usb Control callback
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
--static void s_nsControlInUsbIoCompleteRead(struct urb *urb)
--{
--	struct vnt_private *pDevice = (struct vnt_private *)urb->context;
--
--	switch (urb->status) {
--	case 0:
--		break;
--	case -EINPROGRESS:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl read urb status EINPROGRESS%d\n", urb->status);
--		break;
--	case -ENOENT:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl read urb status = ENOENT %d\n", urb->status);
--		break;
--	default:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl read urb status %d\n", urb->status);
--	}
-+	if (ntStatus < (int)wLength)
-+		return STATUS_FAILURE;
- 
--    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
-+	return STATUS_SUCCESS;
+-	while (seq_less(r->head_seq_num, hseq)) {
++	/* note: this function is never called with
++	 * hseq preceding r->head_seq_num, i.e it is always true
++	 * !seq_less(hseq, r->head_seq_num)
++	 * and thus on loop exit it should be
++	 * r->head_seq_num == hseq
++	 */
++	while (seq_less(r->head_seq_num, hseq) && r->stored_mpdu_num) {
+ 		index = reorder_index(r, r->head_seq_num);
+ 		wil_release_reorder_frame(wil, r, index);
+ 	}
++	r->head_seq_num = hseq;
  }
  
- /*
+ static void wil_reorder_release(struct wil6210_priv *wil,
 -- 
 1.9.1
 
