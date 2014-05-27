@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:36850 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883AbaENNnM convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0153.hostedemail.com ([216.40.44.153]:46837 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751749AbaE0OAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 09:43:12 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hm4so8028146wib.10
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2014 06:43:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87oaz0fprm.fsf@kamboji.qca.qualcomm.com>
-References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQ=VxSu9q_w3tjMNikKxuiMAfW5=k9La_AK3PoP8azgFUA@mail.gmail.com>
-	<87oaz0fprm.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 14 May 2014 15:43:11 +0200
-Message-ID: <CA+BoTQmytFM-YxXCMdhZ8J3OhK2udRrAtuWrY0rrLrHbASjGgA@mail.gmail.com> (sfid-20140514_154316_222879_4143E5E1)
-Subject: Re: [PATCH 0/7] ath10k: recovery improvements 2014-05-09
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 27 May 2014 10:00:05 -0400
+Message-ID: <1401199199.18413.26.camel@joe-AO725> (sfid-20140527_160011_664939_778804DB)
+Subject: Re: [PATCH 4/7] wil6210: improve debug for WMI receive
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Tue, 27 May 2014 06:59:59 -0700
+In-Reply-To: <1401191150-29037-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1401191150-29037-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 May 2014 15:34, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> On 9 May 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> Hi,
->>>
->>> This depends on my `ath10k: recovery fixes
->>> 2014-05-09`.
->>>
->>> Hopefully the split makes it a little saner to
->>> review.
->>>
->>> Please note: `ath10k: make wmi timeout trigger hw
->>> restart` effectively hides the mgmt tx / htc
->>> credit starvation issue that was discussed
->>> recently. My intention is to make the driver more
->>> robust and as a side effect it makes the
->>> starvation issue less painful. If desired so
->>> the patch can be easily ignored in the series as
->>> nothing depends on it.
->>>
->>>
->>> Michal Kazior (7):
->>>   ath10k: move restart_work call
->>>   ath10k: introduce core restart symbol
->>
->>
->>>   ath10k: drain wmi quickly upon hw restart
->>>   ath10k: wake up everything on core restart
->>
->> These 2 are harmful as they are. In case of early fw crash
->> uninitialized structures are accessed. I'll re-spin later.
->
-> So I can drop the whole series, right?
+On Tue, 2014-05-27 at 14:45 +0300, Vladimir Kondratiev wrote:
+> Print error if no events received. This should not happen.
+> If it is, it points to the problem in firmware.
+> 
+> Print information as soon as possible - mbox pointers and
+> event header right after reading it. This helps to identify potential
+> problem with memory allocation for the event buffer.
+[]
+> diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+[]
+> @@ -658,21 +658,27 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+[]
+> 	for (;;) {
+> +	for (n = 0;; n++) {
+>  		u16 len;
+>  
+>  		r->head = ioread32(wil->csr + HOST_MBOX +
+>  				   offsetof(struct wil6210_mbox_ctl, rx.head));
+> -		if (r->tail == r->head)
+> +		if (r->tail == r->head) {
+> +			if (n == 0)
+> +				wil_err(wil, "No events?\n");
 
-Correct.
+This error message might be expanded a bit to describe
+a bit more about what to do: report to you, turn on
+event debugging, update firmware, etc...
 
 
-Michał
