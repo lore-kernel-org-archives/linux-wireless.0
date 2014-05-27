@@ -1,108 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:41499 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757375AbaEQPnD (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:45350 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753713AbaE0UGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2014 11:43:03 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so6068634wgg.0
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2014 08:43:01 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Sat, 17 May 2014 17:42:41 +0200
-Message-ID: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com> (sfid-20140517_174307_788362_95E52488)
-Subject: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216.. and RX
- path involved in scan
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	oku@masqmail.cx, joerg.albert@gmx.de, alex@foogod.com,
-	n0_5p4m_p13453@hotmail.com, proski@gnu.org, agx@sigxcpu.org,
-	kalle.valo@iki.fi, sesmo@gmx.net,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 27 May 2014 16:06:15 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n15so2487383wiw.14
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:06:14 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/10] staging: vt6656: rf.c/h rename RFbRawSetPower to vnt_rf_set_txpower
+Date: Tue, 27 May 2014 21:05:22 +0100
+Message-Id: <1401221126-4219-6-git-send-email-tvboxspy@gmail.com> (sfid-20140527_220627_826851_65665242)
+In-Reply-To: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
+References: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Remove raw and use txpower.
 
-It happened that since Emmanuel's commit
-3afc2167f60a327a2c1e1e2600ef209a3c2b75b7 (cfg80211/mac80211: ignore
-signal if the frame was heard on wrong channel) my atmel-based wifi
-device couldn't scan anymore.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c |  6 +++---
+ drivers/staging/vt6656/rf.c   | 10 +++++-----
+ drivers/staging/vt6656/rf.h   |  2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-I looked at this issue and I found the cause, but currently I have
-some doubts, and I would like asking for clarification and comments,
-before trying to patch the driver or mac80211 itself....
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 5ad0a98..d662e54 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -99,15 +99,15 @@ void CARDbSetMediaChannel(struct vnt_private *priv, u32 connection_channel)
+ 
+ 	if (priv->byBBType == BB_TYPE_11A) {
+ 		priv->byCurPwr = 0xff;
+-		RFbRawSetPower(priv,
++		vnt_rf_set_txpower(priv,
+ 			priv->abyOFDMAPwrTbl[connection_channel-15], RATE_54M);
+ 	} else if (priv->byBBType == BB_TYPE_11G) {
+ 		priv->byCurPwr = 0xff;
+-		RFbRawSetPower(priv,
++		vnt_rf_set_txpower(priv,
+ 			priv->abyOFDMPwrTbl[connection_channel-1], RATE_54M);
+ 	} else {
+ 		priv->byCurPwr = 0xff;
+-		RFbRawSetPower(priv,
++		vnt_rf_set_txpower(priv,
+ 			priv->abyCCKPwrTbl[connection_channel-1], RATE_1M);
+ 	}
+ 
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index c1e0a79..fd69960 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -763,7 +763,7 @@ int vnt_rf_setpower(struct vnt_private *priv, u32 rate, u32 channel)
+ 		break;
+ 	}
+ 
+-	ret = RFbRawSetPower(priv, power, rate);
++	ret = vnt_rf_set_txpower(priv, power, rate);
+ 
+ 	return ret;
+ }
+@@ -808,7 +808,7 @@ static u8 vnt_rf_addpower(struct vnt_private *priv)
+  *
+  */
+ 
+-int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
++int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ {
+ 	u32 power_setting = 0;
+ 	int ret = true;
+@@ -903,14 +903,14 @@ int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
+ 
+ 			if (priv->vnt_mgmt.eScanState != WMAC_NO_SCANNING) {
+ 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"RFbRawSetPower> 11B mode uCurrChannel[%d]\n",
++				"vnt_rf_set_txpower> 11B mode uCurrChannel[%d]\n",
+ 						priv->vnt_mgmt.uScanChannel);
+ 				ret &= vnt_rf_write_embedded(priv,
+ 					vt3226d0_lo_current_table[priv->
+ 						vnt_mgmt.uScanChannel - 1]);
+ 			} else {
+ 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"RFbRawSetPower> 11B mode uCurrChannel[%d]\n",
++				"vnt_rf_set_txpower> 11B mode uCurrChannel[%d]\n",
+ 						priv->vnt_mgmt.uCurrChannel);
+ 				ret &= vnt_rf_write_embedded(priv,
+ 					vt3226d0_lo_current_table[priv->
+@@ -921,7 +921,7 @@ int RFbRawSetPower(struct vnt_private *priv, u8 power, u32 rate)
+ 				(BY_VT3226_REG_LEN<<3)+IFREGCTL_REGW);
+ 		} else {
+ 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-					"@@@@ RFbRawSetPower> 11G mode\n");
++					"@@@@ vnt_rf_set_txpower> 11G mode\n");
+ 
+ 			power_setting = ((0x3f-priv->byCurPwr) << 20) |
+ 				(0x7 << 8) | (BY_VT3226_REG_LEN << 3) |
+diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
+index e47b67d..2040d50 100644
+--- a/drivers/staging/vt6656/rf.h
++++ b/drivers/staging/vt6656/rf.h
+@@ -59,7 +59,7 @@ extern const u8 RFaby11aChannelIndex[200];
+ 
+ int vnt_rf_write_embedded(struct vnt_private *, u32);
+ int vnt_rf_setpower(struct vnt_private *, u32, u32);
+-int RFbRawSetPower(struct vnt_private *, u8 byPwr, u32 uRATE);
++int vnt_rf_set_txpower(struct vnt_private *, u8, u32);
+ void RFvRSSITodBm(struct vnt_private *, u8 byCurrRSSI, long *pldBm);
+ void RFbRFTableDownload(struct vnt_private *pDevice);
+ 
+-- 
+1.9.1
 
-The problem is triggered because the at76x50x-usb driver does not
-provide frequency information in rx_status (and AFAIK it difficultly
-could do that during scan right now).
-
-Emmanuel's commit make certain mac80211 functions stop getting the
-channel information from the beacon/probe response, and start getting
-it from rx_status, but the channel results now NULL, and the frame is
-discarded.
-The relevant check is done in mlme.c, ieee80211_rx_bss_info
-if (!channel)
-    return;
-just after Emmanuel's change.
-
-So my first question is:
-Are mac80211 drivers obligated to report this information?
-Does this commit just rely on something that should be already in that
-way (and the at7950x-usb driver is simply buggy not doing this)?
-Reading Emmanuel's commit message it seems he didn't have any
-intention to introduce this constraint now.
-
-Said that, I dig in mac80211 code, and I saw Emmanuel commit does
-affect frames processed in sta (and ibss, but i didn't look at this)
-rx path.
-
-Summarizing it a bit, the call path should be:
- __ieee80211_rx_handle_packet()
-ieee80211_invoke_rx_handlers()
-ieee80211_rx_h_mgmt()
--- work queue --
-ieee80211_iface_work()
-ieee80211_sta_rx_queued_mgmt()
-ieee80211_rx_bss_info() - patched to get channel from driver's rx_status.
-And finally
-ieee80211_bss_info_update()
-
-is this right?
-
-What is surprising for me is that
- __ieee80211_rx_handle_packet()
-contains a shorter path for updating BSS information by
-ieee80211_scan_rx() that directly calls
-ieee80211_bss_info_update()
-
-The interesting thing is that ieee80211_scan_rx was already written in
-the way Emmanuel's patched ieee80211_rx_bss_info(): It get channel
-info from rx_status.
-
-This suggests that the at79c50x-usb driver, prior to Emmanuel's
-commit, was able to scan by getting mgmt frames processed by the
-former, longer, RX path, and that the ieee80211_scan_rx() path was
-never really used.
-
-If this is correct, my question is:
-Isn't this a redundant path duplication (provided that drivers
-supplies channel information)?
-
-This seems to be confirmed by the fact that if I modify mac80211 to
-avoid discarding frame without channel information (by putting a valid
-channel information directly in mac80211 just before the check for
-NULL), the scan works by either doing this in ieee80211_scan_rx() or
-in ieee80211_rx_bss_info() (reverting Emmanuel change in mlme.c).
-
-Finally my latest question is:
-Emmanuel's patch makes cfg80211_inform_bss_width_frame() compare the
-RX channel and the actual BSS channel (known from beacon/probe
-response), and it does this by comparing the two pointers.
-
-Are we guaranteed that only one instance of every channel object does
-exists ? isn't it safer to compare the frequency field value?
-
-Thank you
-Andrea
