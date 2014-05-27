@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:63547 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187AbaEVHYG (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34771 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186AbaE0K4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 03:24:06 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so8773306wib.17
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 00:24:05 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/11] iwlwifi: mvm: Remove redundant initialization
-Date: Thu, 22 May 2014 10:23:46 +0300
-Message-Id: <1400743435-702-2-git-send-email-egrumbach@gmail.com> (sfid-20140522_092726_172170_2BAC2CA0)
-In-Reply-To: <537DA58C.5050003@gmail.com>
-References: <537DA58C.5050003@gmail.com>
+	Tue, 27 May 2014 06:56:35 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/16] brcmfmac: Add log of superspeed device detection to USB probe.
+Date: Tue, 27 May 2014 12:56:20 +0200
+Message-ID: <1401188188-16492-9-git-send-email-arend@broadcom.com> (sfid-20140527_125648_479103_FA30CD84)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This value is being set few lines under in set_cqm_params.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/power.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 2e99ddd..1057647 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -130,7 +130,6 @@ int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
- 	struct iwl_beacon_filter_cmd cmd = {
- 		IWL_BF_CMD_CONFIG_DEFAULTS,
- 		.bf_enable_beacon_filter = cpu_to_le32(1),
--		.ba_enable_beacon_abort = cpu_to_le32(enable),
- 	};
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 3c3ffff..8d67940 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -1417,7 +1417,9 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
  
- 	if (!mvmvif->bf_data.bf_enabled)
+ 	devinfo->interval = IFEPDESC(usb, CONTROL_IF, 0).bInterval;
+ 
+-	if (usb->speed == USB_SPEED_HIGH)
++	if (usb->speed == USB_SPEED_SUPER)
++		brcmf_dbg(USB, "Broadcom super speed USB wireless device detected\n");
++	else if (usb->speed == USB_SPEED_HIGH)
+ 		brcmf_dbg(USB, "Broadcom high speed USB wireless device detected\n");
+ 	else
+ 		brcmf_dbg(USB, "Broadcom full speed USB wireless device detected\n");
 -- 
-1.8.3.2
+1.7.9.5
 
