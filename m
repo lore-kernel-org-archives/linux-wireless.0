@@ -1,61 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:41979 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbaE1CB4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 22:01:56 -0400
-Date: Wed, 28 May 2014 12:01:28 +1000
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34652 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751738AbaE0PNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 11:13:19 -0400
+Date: Tue, 27 May 2014 17:12:02 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Matthias Fend <Matthias.Fend@wolfvision.net>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mwifiex: block work queue while suspended
-Message-ID: <20140528020128.GG4151@us.netrek.org> (sfid-20140528_040159_087642_41BFD75B)
-References: <20140516012439.GI15430@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
- <20140526080110.GJ6118@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
+Subject: Re: rt2x00: Ralink RT5572 very high peak current consumption
+Message-ID: <20140527151201.GA6131@redhat.com> (sfid-20140527_171323_997874_9599EB80)
+References: <CC2A85E271C1FB479D9C17305347F69A4479A6@WOLFSERVER19.wolfvision-at.intra>
+ <CC2A85E271C1FB479D9C17305347F69A44D336@WOLFSERVER19.wolfvision-at.intra>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CC2A85E271C1FB479D9C17305347F69A44D336@WOLFSERVER19.wolfvision-at.intra>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2014 at 04:39:07PM -0700, Bing Zhao wrote:
-> Hi James,
+On Mon, May 26, 2014 at 03:37:36PM +0000, Matthias Fend wrote:
+> Hello,
 > 
-> > > To understand what is happening here could you apply attached debug
-> > > patch to generate logs, or enable dynamic_debug for that?
-> > 
-> > Here's a dynamic_debug log.
-> > 
-> > Note the point of failure is the "mmc0: Timeout waiting for hardware
-> > interrupt." message, which occurs in the driver SDIO interrupt
-> > function, which began execution in a critical time period after driver
-> > suspend but before platform suspend.
-> > 
-> > We use a GPIO to wake from WLAN.
+> Here are some updates concerning my current issues.
 > 
-> This doesn't match the gpio parameter configured in hscfg command
-> 0xe5.
+> > -----Ursprüngliche Nachricht-----
+> > Von: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> > owner@vger.kernel.org] Im Auftrag von Matthias Fend
+> > Gesendet: Freitag, 23. Mai 2014 14:25
+> > An: linux-wireless@vger.kernel.org
+> > Betreff: rt2x00: Ralink RT5572 very high peak current consumption
+> > 
+> > Hello Ralink experts,
+> > 
+> > I recognized spurious problems with Ralink RT5572 USB-dongles when using
+> > this dongles as access point in 5G band.
+> > The problems may appear as short usb disconnect-connect events or failed
+> > vendor request messages at different offsets with different error codes or
+> > will not appear for days ;) During error research I noticed that, most likely
+> > during the beacon send time (100ms interval), there are very high peak
+> > currents in the supply of the USB-dongle.
+> > 
+> > I tried it with two different dongles, the base current for all three is in the
+> > range of  ~200mA:
+> > Buffalo WI-U2-300D: Peak ~1A
+> > TP-Link TL-WDN3200: Peak ~1.2mA
+> > 
+> > We could reproduce this issue on two different machines (x86 and arm), did
+> > test with kernel versions 3.10.19, 3.13.0 and 3.14.4 tried hostapd-2.0 and
+> > hostapd-2.1 and loaded chip firmware version V0.29, V0.33 and V0.35.
+> > 
+> > As a comparison I also created an 5G access point setup with a windows7
+> > machine - all with the latest drivers from the manufacturer webpage.
+> > Buffalo WI-U2-300D: Peak 330mA
+> > TP-Link TL-WDN3200: Peak 330mA
+> > Which seems more legit than the values from the linux setups.
+> > 
+> > The access point functionality itself worked with every tested combination,
+> > but there is definitively something wrong.
+> > I also started to grab the usb communication of the windows driver to see if
+> > there is an obvious difference in some of the written registers.
+> > But this kind of reverse engineering is not as easy since the windows driver
+> > does not write the same registers as the linux drivers but write some others -
+> > and of course I have no datasheet/register description.
+> > 
+> > Until now the only interesting thing I found out is that the linux driver writes
+> > 0x00000082 to the TXOP_HLDR_ET (0x1608) register whereas the windows
+> > driver uses a value of 0x0000000a. Changing this register during runtime in a
+> > linux system reduces the current peaks to 50 percent of their previous value.
+> > But there is still something else wrong.
+> > 
+> > So, in my despair I try to get help in any form (hints, datasheets/manuals,
+> > ideas, experience, ...).
+> 
+> I found out that the discovered high current peaks are somehow related to invalidated beacons.
+> Usually I can see 1 block with a normal tx-condition current followed by 7 additional blocks with high current peaks.
+> For a test I copied the beacon data from HW_BEACON_BASE0 to HW_BEACON_BASE2 and then the first and the third beacon block have normal current values while the others still generate high current peaks
+> 
+> It seems that setting all five words of the TXWI at the beacon base does not complete disable the generation of this beacon.
+> If I modify the TXIW_W0 of the disabled beacons to 0x40000000 (set TXWI_W0_PHYMODE as in the really used beacon) then the current consumption does not exceed the usual value. But it seems that there is still a short activity for this beacon which, in my opinion, should not be the case.
+> 
+> So, currently I'm wondering about two things:
+> -)How do I completely turn off unused beacons (from the measurements with the windows setup I know that this should be somehow possible)?
 
-You're right, and I'm quite wrong.  Sorry about that.  I misread our
-code.
+Perhaps this could be MULTI_BCN_NUM value in MAC_BSSID_DW1 register.
+Try below patch. If it would help we will need to change way we
+clear/setup beacons on multiple BSSes, because seems that HW
+send MULTI_BCN_NUM beacons from first registers. 
 
-Correction, we use SDIO to wake from WLAN.
+Stanislaw
 
-We set gap to 0xff, which we think is a special value that means the
-device will wait for the host to acknowledge before sending data to
-the host.
-
-Looking through history of development, we thought that this would
-avoid a race condition, where the host starts to suspend, configures
-the device for host sleep, but the device may wake in the time before
-the host suspends.
-
-We don't see this "mmc0: Timeout waiting for hardware interrupt."
-problem unless we use WPA2.  It does not reproduce on an open access
-point.
-
--- 
-James Cameron
-http://quozl.linux.org.au/
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c17fcf2..2e799d5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1556,7 +1556,7 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+ 		if (!is_zero_ether_addr((const u8 *)conf->bssid)) {
+ 			reg = le32_to_cpu(conf->bssid[1]);
+ 			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_ID_MASK, 3);
+-			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 7);
++			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 0);
+ 			conf->bssid[1] = cpu_to_le32(reg);
+ 		}
+ 
