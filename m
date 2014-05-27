@@ -1,312 +1,395 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:60180 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382AbaEaMfz (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57759 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbaE0K4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 08:35:55 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi2so2279214wib.2
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 05:35:54 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/4] staging: vt6656: rxtx add mac header to vnt_tx_datahead_* structures
-Date: Sat, 31 May 2014 13:34:58 +0100
-Message-Id: <1401539700-3183-2-git-send-email-tvboxspy@gmail.com> (sfid-20140531_143603_468465_EA2CC9FD)
-In-Reply-To: <1401539700-3183-1-git-send-email-tvboxspy@gmail.com>
-References: <1401539700-3183-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 27 May 2014 06:56:36 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 10/16] brcmfmac: use asynchronous firmware request in SDIO
+Date: Tue, 27 May 2014 12:56:22 +0200
+Message-ID: <1401188188-16492-11-git-send-email-arend@broadcom.com> (sfid-20140527_125723_997302_58AB8D5F)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add vnt_mac_hdr_pos to set mac header pointer and the calculate header size.
+This patch adds use of asynchronous firmware request to
+the driver SDIO layer.
 
-Pass ieee80211 hdr pointer and tx_hdr_size in vnt_usb_send_context.
-
-Remove old pointer arithmetic and attach pMACHeader to hdr.
-
-cbHeaderLength/cbHeaderSize now uses the value of tx_hdr_size.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/device.h |   2 +
- drivers/staging/vt6656/rxtx.c   | 122 ++++++++++++++++------------------------
- drivers/staging/vt6656/rxtx.h   |   4 ++
- 3 files changed, 55 insertions(+), 73 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  271 +++++++++-----------
+ 1 file changed, 124 insertions(+), 147 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 5b64ca7..11b863d 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -241,7 +241,9 @@ struct vnt_usb_send_context {
- 	void *priv;
- 	struct sk_buff *skb;
- 	struct urb *urb;
-+	struct ieee80211_hdr *hdr;
- 	unsigned int buf_len;
-+	u16 tx_hdr_size;
- 	u8 type;
- 	bool in_use;
- 	unsigned char data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index fa04894..e4cc1ff 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -102,8 +102,9 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 	int bNeedACK, struct ethhdr *psEthHeader, bool need_rts);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index efb8c4f..506ef0d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -632,43 +632,28 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
+ 	{ BCM4354_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4354) }
+ };
  
- static void s_vGenerateMACHeader(struct vnt_private *pDevice,
--	u8 *pbyBufferAddr, u16 wDuration, struct ethhdr *psEthHeader,
--	int bNeedEncrypt, u16 wFragType, u32 uFragIdx);
-+	struct ieee80211_hdr *pMACHeader, u16 wDuration,
-+	struct ethhdr *psEthHeader, int bNeedEncrypt, u16 wFragType,
-+	u32 uFragIdx);
+-
+-static const struct firmware *brcmf_sdio_get_fw(struct brcmf_sdio *bus,
+-						  enum brcmf_firmware_type type)
++static const char *brcmf_sdio_get_fwname(struct brcmf_chip *ci,
++					 enum brcmf_firmware_type type)
+ {
+-	const struct firmware *fw;
+-	const char *name;
+-	int err, i;
++	int i;
  
- static void s_vFillTxKey(struct vnt_private *pDevice,
- 	struct vnt_tx_fifo_head *fifo_head, u8 *pbyIVHead,
-@@ -151,6 +152,9 @@ static struct vnt_usb_send_context
- 			context->in_use = true;
- 			memset(context->data, 0,
- 					MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
-+
-+			context->hdr = NULL;
-+
- 			return context;
+ 	for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
+-		if (brcmf_fwname_data[i].chipid == bus->ci->chip &&
+-		    brcmf_fwname_data[i].revmsk & BIT(bus->ci->chiprev)) {
++		if (brcmf_fwname_data[i].chipid == ci->chip &&
++		    brcmf_fwname_data[i].revmsk & BIT(ci->chiprev)) {
+ 			switch (type) {
+ 			case BRCMF_FIRMWARE_BIN:
+-				name = brcmf_fwname_data[i].bin;
+-				break;
++				return brcmf_fwname_data[i].bin;
+ 			case BRCMF_FIRMWARE_NVRAM:
+-				name = brcmf_fwname_data[i].nv;
+-				break;
++				return brcmf_fwname_data[i].nv;
+ 			default:
+ 				brcmf_err("invalid firmware type (%d)\n", type);
+ 				return NULL;
+ 			}
+-			goto found;
  		}
  	}
-@@ -470,6 +474,19 @@ static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
- 	return cpu_to_le16((u16)uDurTime);
- }
- 
-+static u16 vnt_mac_hdr_pos(struct vnt_usb_send_context *tx_context,
-+	struct ieee80211_hdr *hdr)
-+{
-+	u8 *head = tx_context->data + offsetof(struct vnt_tx_buffer, fifo_head);
-+	u8 *hdr_pos = (u8 *)hdr;
-+
-+	tx_context->hdr = hdr;
-+	if (!tx_context->hdr)
-+		return 0;
-+
-+	return (u16)(hdr_pos - head);
-+}
-+
- static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
- 		u8 pkt_type, u16 rate, struct vnt_tx_datahead_g *buf,
- 		u32 frame_len, int need_ack)
-@@ -490,6 +507,8 @@ static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
- 	buf->time_stamp_off_b = vnt_time_stamp_off(priv,
- 					priv->byTopCCKBasicRate);
- 
-+	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
-+
- 	return le16_to_cpu(buf->duration_a);
- }
- 
-@@ -516,6 +535,8 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_usb_send_context *tx_context,
- 	buf->time_stamp_off_b = vnt_time_stamp_off(priv,
- 						priv->byTopCCKBasicRate);
- 
-+	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
-+
- 	return le16_to_cpu(buf->duration_a);
- }
- 
-@@ -535,6 +556,8 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_usb_send_context *tx_context,
- 
- 	buf->time_stamp_off = vnt_time_stamp_off(priv, rate);
- 
-+	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
-+
- 	return le16_to_cpu(buf->duration);
- }
- 
-@@ -551,6 +574,8 @@ static u16 vnt_rxtx_datahead_ab(struct vnt_usb_send_context *tx_context,
- 
- 	buf->time_stamp_off = vnt_time_stamp_off(priv, rate);
- 
-+	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
-+
- 	return le16_to_cpu(buf->duration);
- }
- 
-@@ -979,7 +1004,7 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
- 	u32 cbFCSlen = 4, cbMICHDR = 0;
- 	int bNeedACK;
- 	bool bRTS = false;
--	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
-+	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead;
- 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
- 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
- 		= {0xAA, 0xAA, 0x03, 0x00, 0x00, 0xF8};
-@@ -987,7 +1012,6 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
- 	u32 cbHeaderLength = 0, uPadding = 0;
- 	struct vnt_mic_hdr *pMICHDR;
- 	u8 byFBOption = AUTO_FB_NONE, byFragType;
--	u16 wTxBufSize;
- 	u32 dwMICKey0, dwMICKey1, dwMIC_Priority;
- 	u32 *pdwMIC_L, *pdwMIC_R;
- 	int bSoftWEP = false;
-@@ -1106,58 +1130,6 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
-         pTxBufHead->wFIFOCtl |= (FIFOCTL_RTS | FIFOCTL_LRETRY);
-     }
- 
--    pbyTxBufferAddr = (u8 *) &(pTxBufHead->adwTxKey[0]);
--	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
+ 	brcmf_err("Unknown chipid %d [%d]\n",
+-		  bus->ci->chip, bus->ci->chiprev);
++		  ci->chip, ci->chiprev);
+ 	return NULL;
 -
--    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
--        if (byFBOption == AUTO_FB_NONE) {
--            if (bRTS == true) {//RTS_need
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
--			cbMICHDR + sizeof(struct vnt_rts_g);
--            }
--            else { //RTS_needless
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
--			cbMICHDR + sizeof(struct vnt_cts);
--            }
--        } else {
--            // Auto Fall Back
--            if (bRTS == true) {//RTS_need
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
--			cbMICHDR + sizeof(struct vnt_rts_g_fb);
--            }
--            else if (bRTS == false) { //RTS_needless
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
--				cbMICHDR + sizeof(struct vnt_cts_fb);
--            }
--        } // Auto Fall Back
--    }
--    else {//802.11a/b packet
--        if (byFBOption == AUTO_FB_NONE) {
--            if (bRTS == true) {//RTS_need
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--			cbMICHDR + sizeof(struct vnt_rts_ab);
--            }
--            else if (bRTS == false) { //RTS_needless, no MICHDR
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--				cbMICHDR + sizeof(struct vnt_tx_datahead_ab);
--            }
--        } else {
--            // Auto Fall Back
--            if (bRTS == true) {//RTS_need
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--			cbMICHDR + sizeof(struct vnt_rts_a_fb);
--            }
--            else if (bRTS == false) { //RTS_needless
--		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--			cbMICHDR + sizeof(struct vnt_tx_datahead_a_fb);
--            }
--        } // Auto Fall Back
--    }
+-found:
+-	err = request_firmware(&fw, name, &bus->sdiodev->func[2]->dev);
+-	if ((err) || (!fw)) {
+-		brcmf_err("fail to request firmware %s (%d)\n", name, err);
+-		return NULL;
+-	}
 -
--    pbyMacHdr = (u8 *)(pbyTxBufferAddr + cbHeaderLength);
--    pbyIVHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding);
--    pbyPayloadHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding + cbIVlen);
--
-     //=========================
-     //    No Fragmentation
-     //=========================
-@@ -1170,9 +1142,17 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
- 			tx_buffer, &pMICHDR, cbMICHDR,
- 			cbFrameSize, bNeedACK, psEthHeader, bRTS);
+-	return fw;
+ }
  
--    // Generate TX MAC Header
--    s_vGenerateMACHeader(pDevice, pbyMacHdr, (u16)uDuration, psEthHeader, bNeedEncryption,
--		byFragType, 0);
-+	cbHeaderLength = tx_context->tx_hdr_size;
-+	if (!cbHeaderLength)
-+		return false;
-+
-+	pbyMacHdr = (u8 *)tx_context->hdr;
-+	pbyIVHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding);
-+	pbyPayloadHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding + cbIVlen);
-+
-+	/* Generate TX MAC Header */
-+	s_vGenerateMACHeader(pDevice, tx_context->hdr, (u16)uDuration,
-+		psEthHeader, bNeedEncryption, byFragType, 0);
+ static void pkt_align(struct sk_buff *p, int len, int align)
+@@ -3278,20 +3263,13 @@ static int brcmf_sdio_download_code_file(struct brcmf_sdio *bus,
+ }
  
-     if (bNeedEncryption == true) {
-         //Fill TXKEY
-@@ -1298,10 +1278,10 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
- -*/
- 
- static void s_vGenerateMACHeader(struct vnt_private *pDevice,
--	u8 *pbyBufferAddr, u16 wDuration, struct ethhdr *psEthHeader,
--	int bNeedEncrypt, u16 wFragType, u32 uFragIdx)
-+	struct ieee80211_hdr *pMACHeader, u16 wDuration,
-+	struct ethhdr *psEthHeader, int bNeedEncrypt, u16 wFragType,
-+	u32 uFragIdx)
+ static int brcmf_sdio_download_nvram(struct brcmf_sdio *bus,
+-				     const struct firmware *nv)
++				     void *vars, u32 varsz)
  {
--	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyBufferAddr;
+-	void *vars;
+-	u32 varsz;
+ 	int address;
+ 	int err;
  
- 	pMACHeader->frame_control = TYPE_802_11_DATA;
+ 	brcmf_dbg(TRACE, "Enter\n");
  
-@@ -1516,16 +1496,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     }
-     //the rest of pTxBufHead->wFragCtl:FragTyp will be set later in s_vFillFragParameter()
- 
--    //Set RrvTime/RTS/CTS Buffer
--    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
--	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
--		sizeof(struct vnt_cts);
--    }
--    else { // 802.11a/b packet
--	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--		sizeof(struct vnt_tx_datahead_ab);
--    }
+-	vars = brcmf_fw_nvram_strip(nv, &varsz);
 -
-     memcpy(&(sEthHeader.h_dest[0]),
- 	   &(pPacket->p80211Header->sA3.abyAddr1[0]),
- 	   ETH_ALEN);
-@@ -1542,7 +1512,13 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 		pTX_Buffer, &pMICHDR, 0,
- 		cbFrameSize, bNeedACK, &sEthHeader, false);
+-	if (vars == NULL)
+-		return -EINVAL;
+-
+ 	address = bus->ci->ramsize - varsz + bus->ci->rambase;
+ 	err = brcmf_sdiod_ramrw(bus->sdiodev, true, address, vars, varsz);
+ 	if (err)
+@@ -3300,15 +3278,14 @@ static int brcmf_sdio_download_nvram(struct brcmf_sdio *bus,
+ 	else if (!brcmf_sdio_verifymemory(bus->sdiodev, address, vars, varsz))
+ 		err = -EIO;
  
--    pMACHeader = (struct ieee80211_hdr *) (pbyTxBufferAddr + cbHeaderSize);
-+	cbHeaderSize = pContext->tx_hdr_size;
-+	if (!cbHeaderSize) {
-+		pContext->in_use = false;
-+		return CMD_STATUS_RESOURCES;
+-	brcmf_fw_nvram_free(vars);
+-
+ 	return err;
+ }
+ 
+-static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus)
++static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
++					const struct firmware *fw,
++					void *nvram, u32 nvlen)
+ {
+ 	int bcmerror = -EFAULT;
+-	const struct firmware *fw;
+ 	u32 rstvec;
+ 
+ 	sdio_claim_host(bus->sdiodev->func[1]);
+@@ -3317,12 +3294,6 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus)
+ 	/* Keep arm in reset */
+ 	brcmf_chip_enter_download(bus->ci);
+ 
+-	fw = brcmf_sdio_get_fw(bus, BRCMF_FIRMWARE_BIN);
+-	if (fw == NULL) {
+-		bcmerror = -ENOENT;
+-		goto err;
+-	}
+-
+ 	rstvec = get_unaligned_le32(fw->data);
+ 	brcmf_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
+ 
+@@ -3330,17 +3301,12 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus)
+ 	release_firmware(fw);
+ 	if (bcmerror) {
+ 		brcmf_err("dongle image file download failed\n");
++		brcmf_fw_nvram_free(nvram);
+ 		goto err;
+ 	}
+ 
+-	fw = brcmf_sdio_get_fw(bus, BRCMF_FIRMWARE_NVRAM);
+-	if (fw == NULL) {
+-		bcmerror = -ENOENT;
+-		goto err;
+-	}
+-
+-	bcmerror = brcmf_sdio_download_nvram(bus, fw);
+-	release_firmware(fw);
++	bcmerror = brcmf_sdio_download_nvram(bus, nvram, nvlen);
++	brcmf_fw_nvram_free(nvram);
+ 	if (bcmerror) {
+ 		brcmf_err("dongle nvram file download failed\n");
+ 		goto err;
+@@ -3490,97 +3456,6 @@ done:
+ 	return err;
+ }
+ 
+-static int brcmf_sdio_bus_init(struct device *dev)
+-{
+-	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+-	struct brcmf_sdio *bus = sdiodev->bus;
+-	int err, ret = 0;
+-	u8 saveclk;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	/* try to download image and nvram to the dongle */
+-	if (bus_if->state == BRCMF_BUS_DOWN) {
+-		bus->alp_only = true;
+-		err = brcmf_sdio_download_firmware(bus);
+-		if (err)
+-			return err;
+-		bus->alp_only = false;
+-	}
+-
+-	if (!bus->sdiodev->bus_if->drvr)
+-		return 0;
+-
+-	/* Start the watchdog timer */
+-	bus->sdcnt.tickcnt = 0;
+-	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
+-
+-	sdio_claim_host(bus->sdiodev->func[1]);
+-
+-	/* Make sure backplane clock is on, needed to generate F2 interrupt */
+-	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+-	if (bus->clkstate != CLK_AVAIL)
+-		goto exit;
+-
+-	/* Force clocks on backplane to be sure F2 interrupt propagates */
+-	saveclk = brcmf_sdiod_regrb(bus->sdiodev,
+-				    SBSDIO_FUNC1_CHIPCLKCSR, &err);
+-	if (!err) {
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  (saveclk | SBSDIO_FORCE_HT), &err);
+-	}
+-	if (err) {
+-		brcmf_err("Failed to force clock for F2: err %d\n", err);
+-		goto exit;
+-	}
+-
+-	/* Enable function 2 (frame transfers) */
+-	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
+-		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
+-	err = sdio_enable_func(bus->sdiodev->func[SDIO_FUNC_2]);
+-
+-
+-	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
+-
+-	/* If F2 successfully enabled, set core and enable interrupts */
+-	if (!err) {
+-		/* Set up the interrupt mask and enable interrupts */
+-		bus->hostintmask = HOSTINTMASK;
+-		w_sdreg32(bus, bus->hostintmask,
+-			  offsetof(struct sdpcmd_regs, hostintmask));
+-
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_WATERMARK, 8, &err);
+-	} else {
+-		/* Disable F2 again */
+-		sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
+-		ret = -ENODEV;
+-	}
+-
+-	if (brcmf_chip_sr_capable(bus->ci)) {
+-		brcmf_sdio_sr_init(bus);
+-	} else {
+-		/* Restore previous clock setting */
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  saveclk, &err);
+-	}
+-
+-	if (ret == 0) {
+-		ret = brcmf_sdiod_intr_register(bus->sdiodev);
+-		if (ret != 0)
+-			brcmf_err("intr register failed:%d\n", ret);
+-	}
+-
+-	/* If we didn't come up, turn off backplane clock */
+-	if (ret != 0)
+-		brcmf_sdio_clkctl(bus, CLK_NONE, false);
+-
+-exit:
+-	sdio_release_host(bus->sdiodev->func[1]);
+-
+-	return ret;
+-}
+-
+ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -4026,6 +3901,108 @@ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.gettxq = brcmf_sdio_bus_gettxq,
+ };
+ 
++static void brcmf_sdio_firmware_callback(struct device *dev,
++					 const struct firmware *code,
++					 void *nvram, u32 nvram_len)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	int err = 0;
++	u8 saveclk;
++
++	brcmf_dbg(TRACE, "Enter: dev=%s\n", dev_name(dev));
++
++	/* try to download image and nvram to the dongle */
++	if (bus_if->state == BRCMF_BUS_DOWN) {
++		bus->alp_only = true;
++		err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
++		if (err)
++			goto fail;
++		bus->alp_only = false;
 +	}
 +
-+	pMACHeader = pContext->hdr;
++	if (!bus_if->drvr)
++		return;
++
++	/* Start the watchdog timer */
++	bus->sdcnt.tickcnt = 0;
++	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
++
++	sdio_claim_host(sdiodev->func[1]);
++
++	/* Make sure backplane clock is on, needed to generate F2 interrupt */
++	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
++	if (bus->clkstate != CLK_AVAIL)
++		goto release;
++
++	/* Force clocks on backplane to be sure F2 interrupt propagates */
++	saveclk = brcmf_sdiod_regrb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, &err);
++	if (!err) {
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				  (saveclk | SBSDIO_FORCE_HT), &err);
++	}
++	if (err) {
++		brcmf_err("Failed to force clock for F2: err %d\n", err);
++		goto release;
++	}
++
++	/* Enable function 2 (frame transfers) */
++	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
++		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
++	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
++
++
++	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
++
++	/* If F2 successfully enabled, set core and enable interrupts */
++	if (!err) {
++		/* Set up the interrupt mask and enable interrupts */
++		bus->hostintmask = HOSTINTMASK;
++		w_sdreg32(bus, bus->hostintmask,
++			  offsetof(struct sdpcmd_regs, hostintmask));
++
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_WATERMARK, 8, &err);
++	} else {
++		/* Disable F2 again */
++		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
++		goto release;
++	}
++
++	if (brcmf_chip_sr_capable(bus->ci)) {
++		brcmf_sdio_sr_init(bus);
++	} else {
++		/* Restore previous clock setting */
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				  saveclk, &err);
++	}
++
++	if (err == 0) {
++		err = brcmf_sdiod_intr_register(sdiodev);
++		if (err != 0)
++			brcmf_err("intr register failed:%d\n", err);
++	}
++
++	/* If we didn't come up, turn off backplane clock */
++	if (err != 0)
++		brcmf_sdio_clkctl(bus, CLK_NONE, false);
++
++	sdio_release_host(sdiodev->func[1]);
++
++	err = brcmf_bus_start(dev);
++	if (err != 0) {
++		brcmf_err("dongle is not responding\n");
++		goto fail;
++	}
++	return;
++
++release:
++	sdio_release_host(sdiodev->func[1]);
++fail:
++	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
++	device_release_driver(dev);
++}
++
+ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+@@ -4149,14 +4126,14 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdio_debugfs_create(bus);
+ 	brcmf_dbg(INFO, "completed!!\n");
  
-     cbReqCount = cbHeaderSize + cbMacHdLen + uPadding + cbIVlen + cbFrameBodySize;
+-	ret = brcmf_sdio_bus_init(sdiodev->dev);
+-	if (ret)
+-		goto fail;
+-
+-	/* if firmware path present try to download and bring up bus */
+-	ret = brcmf_bus_start(bus->sdiodev->dev);
++	ret = brcmf_fw_get_firmwares(sdiodev->dev, BRCMF_FW_REQUEST_NVRAM,
++				     brcmf_sdio_get_fwname(bus->ci,
++							   BRCMF_FIRMWARE_BIN),
++				     brcmf_sdio_get_fwname(bus->ci,
++							   BRCMF_FIRMWARE_NVRAM),
++				     brcmf_sdio_firmware_callback);
+ 	if (ret != 0) {
+-		brcmf_err("dongle is not responding\n");
++		brcmf_err("async firmware request failed: %d\n", ret);
+ 		goto fail;
+ 	}
  
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 6db3337..30e1437 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -81,6 +81,7 @@ struct vnt_tx_datahead_g {
- 	__le16 duration_a;
- 	__le16 time_stamp_off_b;
- 	__le16 time_stamp_off_a;
-+	struct ieee80211_hdr hdr;
- } __packed;
- 
- struct vnt_tx_datahead_g_fb {
-@@ -92,12 +93,14 @@ struct vnt_tx_datahead_g_fb {
- 	__le16 duration_a_f1;
- 	__le16 time_stamp_off_b;
- 	__le16 time_stamp_off_a;
-+	struct ieee80211_hdr hdr;
- } __packed;
- 
- struct vnt_tx_datahead_ab {
- 	struct vnt_phy_field ab;
- 	__le16 duration;
- 	__le16 time_stamp_off;
-+	struct ieee80211_hdr hdr;
- } __packed;
- 
- struct vnt_tx_datahead_a_fb {
-@@ -106,6 +109,7 @@ struct vnt_tx_datahead_a_fb {
- 	__le16 time_stamp_off;
- 	__le16 duration_f0;
- 	__le16 duration_f1;
-+	struct ieee80211_hdr hdr;
- } __packed;
- 
- /* RTS buffer header */
 -- 
-1.9.1
+1.7.9.5
 
