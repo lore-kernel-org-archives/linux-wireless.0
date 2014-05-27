@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40819 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932193AbaEEM65 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39911 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbaE0PaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 08:58:57 -0400
-Message-ID: <1399294719.22235.10.camel@jlt4.sipsolutions.net> (sfid-20140505_145900_876872_D41FE32C)
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Mon, 05 May 2014 14:58:39 +0200
-In-Reply-To: <8738guokvv.fsf@qca.qualcomm.com>
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
-	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
-	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
-	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
-	 <8738gvp8md.fsf@qca.qualcomm.com>
-	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
-	 <8738guokvv.fsf@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 27 May 2014 11:30:19 -0400
+Date: Tue, 27 May 2014 11:26:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 00/11] sdio wifi oob irq support for sunxi
+Message-ID: <20140527152614.GB5694@tuxdriver.com> (sfid-20140527_173024_376431_697BB987)
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-30 at 19:13 +0300, Kalle Valo wrote:
+On Mon, May 26, 2014 at 09:47:55AM +0200, Hans de Goede wrote:
+> Hi All,
+> 
+> Here is a patch series adding support for oob irqs for the ap6210 sdio wifi
+> modules found on various Allwinner A20 boards.
+> 
+> A lot of it is ground work which should be useful for adding oob irq support
+> to other sdio wifi models too.
+> 
+> The first 5 patches are sunxi pinctrl patches and should go upstream through
+> the pinctrl tree.
+> 
+> Patch 6 adds generic support for having per sdio function child nodes in
+> devicetree and should go upstream through the mmc tree.
+> 
+> Patch 7 and 8 add oob irq support to the brcmfmac driver. Patch 9 pokes some
+> magic bits needed to enable the oob irq, this was taken from an android code
+> dump and good do with a good review from someone from Broadcom, Arend ?
 
-> I was thinking that it would be nice to avoid rewriting a separate user
-> space dumping tool for each driver and instead have a comman way to
-> retrieve the blobs from the driver.
+If Arend approves, I'm fine with these going through another appropriate tree.
 
-Ours is pretty much just "cat /path/to/some/debugfs/file > wherever",
-but indeed it would make sense to have a common uevent and dump
-mechanism.
+> Patch 10 and 11 add the necessary dts bits to actually enable the sdio irq
+> and should go upstream through Maxime's dt tree.
+> 
+> Please review / merge.
+> 
+> Thanks & Regards,
+> 
+> Hans
+> 
 
-The ethtool dump thing seems reasonable to me, who wants to implement
-it? The generic uevent should probably be some cfg80211 API then I
-guess?
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
