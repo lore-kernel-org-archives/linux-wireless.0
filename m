@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:61203 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbaEUHig (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34771 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbaE0K4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 03:38:36 -0400
-Received: by mail-ob0-f178.google.com with SMTP id va2so1746149obc.9
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2014 00:38:36 -0700 (PDT)
+	Tue, 27 May 2014 06:56:36 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Kim <dekim@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 14/16] brcmfmac: Increase max buffer size for receiving control message from dongle
+Date: Tue, 27 May 2014 12:56:26 +0200
+Message-ID: <1401188188-16492-15-git-send-email-arend@broadcom.com> (sfid-20140527_125722_688438_4CE358A4)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <m3k39fmyqg.fsf@t19.piap.pl>
-References: <m3k39fmyqg.fsf@t19.piap.pl>
-Date: Wed, 21 May 2014 10:38:36 +0300
-Message-ID: <CANUX_P0CyqhFU5fpTMa=q=du2ZkEPkyuvE32VBmFPUejgn0xOA@mail.gmail.com> (sfid-20140521_093839_869219_E44AF9DB)
-Subject: Re: iwlwifi Microcode SW error and subsequent WARNINGs
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi,
->
-> I'm having problems with an Intel Corporation Wireless 7260 (rev 6b)
-> adapter running in ad hoc mode. Any ideas?
->
-> The hardware is Getac F110 tablet, Core i5 Haswell. I've tried to use
-> Linux v. 3.13, 3.14, 3.15-rc5+ with microcode v. 22.24.8.0 and
-> 23.214.9.0.
->
-> What I'm trying to do is:
->
-> # iwconfig wlan0 mode ad-hoc essid xxx txpower 16 channel 11
-> # ip link set up dev wlan0
-> # sleep 1
-> # iwconfig wlan0 mode ad-hoc essid xxx txpower 16 channel 11 rate 6M
-> # sleep 10
-> # iwconfig wlan0 mode ad-hoc essid xxx txpower 16 channel 11 rate 6M
->
-> wlan0 works in ad hoc mode after "sleep 10" and subsequent iwconfig.
->
+From: Daniel Kim <dekim@broadcom.com>
 
-Please use iw instead of iwconfig. If it reproduces with iw, please
-reprdoduce with debug=0xf. Or even better while tracing:
-As root:
-trace-cmd record -e cfg80211 -e mac80211 -e iwlwifi
-and then send me the trace.dat file that it will create.
+The max buffer size for receiving control message from dongle needs to be
+increased considering possible block padding. Otherwise some big control
+message can't be received due to buffer overrun check.
 
-thanks.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Daniel Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 506ef0d..8fa0dbb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -4086,8 +4086,13 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 		goto fail;
+ 	}
+ 
++	/* Query the F2 block size, set roundup accordingly */
++	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
++	bus->roundup = min(max_roundup, bus->blocksize);
++
+ 	/* Allocate buffers */
+ 	if (bus->sdiodev->bus_if->maxctl) {
++		bus->sdiodev->bus_if->maxctl += bus->roundup;
+ 		bus->rxblen =
+ 		    roundup((bus->sdiodev->bus_if->maxctl + SDPCM_HDRLEN),
+ 			    ALIGNMENT) + bus->head_align;
+@@ -4115,10 +4120,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	bus->idletime = BRCMF_IDLE_INTERVAL;
+ 	bus->idleclock = BRCMF_IDLE_ACTIVE;
+ 
+-	/* Query the F2 block size, set roundup accordingly */
+-	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
+-	bus->roundup = min(max_roundup, bus->blocksize);
+-
+ 	/* SR state */
+ 	bus->sleeping = false;
+ 	bus->sr_enabled = false;
+-- 
+1.7.9.5
+
