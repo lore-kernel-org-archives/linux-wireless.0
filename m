@@ -1,113 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:61091 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbaEHHQ5 (ORCPT
+Received: from smtprelay0016.hostedemail.com ([216.40.44.16]:55513 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752487AbaE0OPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2014 03:16:57 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so1365405eei.14
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2014 00:16:56 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v5] mac80211: disconnect iface if CSA unexpectedly fails
-Date: Thu,  8 May 2014 09:10:02 +0200
-Message-Id: <1399533002-3681-1-git-send-email-michal.kazior@tieto.com> (sfid-20140508_091701_818912_0652BF82)
-In-Reply-To: <1397049062-24177-5-git-send-email-michal.kazior@tieto.com>
-References: <1397049062-24177-5-git-send-email-michal.kazior@tieto.com>
+	Tue, 27 May 2014 10:15:11 -0400
+Message-ID: <1401200106.20587.0.camel@joe-AO725> (sfid-20140527_161518_601636_E739CF69)
+Subject: Re: [PATCH 4/7] wil6210: improve debug for WMI receive
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Tue, 27 May 2014 07:15:06 -0700
+In-Reply-To: <1835954.xHumgOahYl@lx-wigig-72>
+References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1401191150-29037-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1401199199.18413.26.camel@joe-AO725> <1835954.xHumgOahYl@lx-wigig-72>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to leave a crippled
-interface running.
+On Tue, 2014-05-27 at 17:11 +0300, Vladimir Kondratiev wrote:
+> On Tuesday, May 27, 2014 06:59:59 AM Joe Perches wrote:
+> > This error message might be expanded a bit to describe
+> > a bit more about what to do: report to you, turn on
+> > event debugging, update firmware, etc...
+> 
+> As of now, for the user it is nothing to do;
+> I expect to see this messages in the bug reports that
+> may be potentially sent to me. It may help understanding
+> the situation. But, again, this message itself do not
+> indicate anything interesting.
 
-As a side effect this will unblock tx queues with
-CSA reason immediately after failure instead of
-until after userspace requests interface to stop.
+Then is it an error?
+Maybe use dev_notice instead.
 
-This also gives userspace an opportunity to
-indirectly see CSA failure.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-This was originally a 4/4 of csa fixes patchset.
-
-Changelog:
-
-v3:
- * rebase to use gfp_t argument
-
-v4:
- * remove WARN_ON from ieee80211_vif_change_channel() error checking [Luca]
- * fix typo: s/cripled/crippled/ [Johannes]
-
-v5:
- * fix csa failure for immediate csa.
-   ieee80211_csa_finalize() wasn't error checked
-   in __ieee80211_channel_switch.
-   __ieee80211_csa_finalize() now does what
-   ieee80211_csa_finalize() originally did, while
-   the latter now performs the error check to avoid
-   code duplication [Johannes]
-
- net/mac80211/cfg.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0c87c8c..e028a2b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3090,7 +3090,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
-@@ -3101,8 +3101,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
--	if (WARN_ON(err < 0))
--		return;
-+	if (err < 0)
-+		return err;
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3113,7 +3113,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
- 	if (err)
--		return;
-+		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-@@ -3122,6 +3122,21 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_wake_queues_by_reason(&local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
-+
-+	return 0;
-+}
-+
-+static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+{
-+	int err;
-+
-+	err = __ieee80211_csa_finalize(sdata);
-+	if (err) {
-+		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
-+		cfg80211_stop_iface(sdata->local->hw.wiphy, &sdata->wdev,
-+				    GFP_KERNEL);
-+		return;
-+	}
- }
- 
- void ieee80211_csa_finalize_work(struct work_struct *work)
--- 
-1.8.5.3
 
