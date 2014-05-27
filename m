@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18129 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60524 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756564AbaE2QeM (ORCPT
+	with ESMTP id S1751684AbaE0J31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 12:34:12 -0400
-Date: Thu, 29 May 2014 19:34:06 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/8] wireless-regdb: Add Vanuatu (VU) regulatory rules
-Message-ID: <20140529163406.GA28002@jouni.qca.qualcomm.com> (sfid-20140529_183434_801653_ED9D54F7)
+	Tue, 27 May 2014 05:29:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ath10k: recovery fixes 2014-05-09
+References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
+	<1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 27 May 2014 12:29:19 +0300
+In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 15 May 2014 10:41:59 +0200")
+Message-ID: <87sinvbmds.fsf@kamboji.qca.qualcomm.com> (sfid-20140527_112930_743111_0050105A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source:
-http://www.trr.vu/attachments/category/130/GURL_for_Short-range_Radiocommunication_Devices2.pdf
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 9 +++++++++
- 1 file changed, 9 insertions(+)
+> Hi,
+>
+> Here's is a bunch of fixes for recovery/hw
+> restart. This notably fixes a bug Ben has hit some
+> time ago.
+>
+> I also have some improvements for recovery code as
+> well in a follow up patchset that I'll be sending
+> separately.
+>
+> v2:
+>  * minor code style adjustments
+>  * extra comment
+>  * sanity check in wep key worker
+>
+>
+> Michal Kazior (5):
+>   ath10k: clean up start() callback
+>   ath10k: perform hw restart lazily
+>   ath10k: drain tx before restarting hw
+>   ath10k: protect wep tx key setup
+>   ath10k: dont configure bssid for ap mode
 
-diff --git a/db.txt b/db.txt
-index 219d3a6..83a3af4 100644
---- a/db.txt
-+++ b/db.txt
-@@ -937,6 +937,15 @@ country VN: DFS-FCC
- 	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
-+# Source:
-+# http://www.trr.vu/attachments/category/130/GURL_for_Short-range_Radiocommunication_Devices2.pdf
-+country VU: DFS-FCC
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (17)
-+	(5250 - 5330 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country YE:
- 	(2402 - 2482 @ 40), (20)
- 
--- 
-1.9.1
-
+Thanks, all five patches applied.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
