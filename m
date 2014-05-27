@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51487 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbaENTpL (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:64364 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753463AbaE0UGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 15:45:11 -0400
-Date: Wed, 14 May 2014 15:41:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211: 2014-05-14
-Message-ID: <20140514194121.GF14183@tuxdriver.com> (sfid-20140514_214517_041550_A28B474A)
-References: <1400078307.4759.11.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400078307.4759.11.camel@jlt4.sipsolutions.net>
+	Tue, 27 May 2014 16:06:05 -0400
+Received: by mail-wi0-f175.google.com with SMTP id f8so2453862wiw.14
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:06:03 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/10] staging: vt6656: WCTLbIsDuplicate fix PSCacheEntry base types and warnings
+Date: Tue, 27 May 2014 21:05:17 +0100
+Message-Id: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com> (sfid-20140527_220611_345175_882F4521)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 14, 2014 at 04:38:27PM +0200, Johannes Berg wrote:
-> John,
-> 
-> I know I sent a pull request two days ago, but now I have more fixes ...
-> if it's too much let me know and I'll limit myself to once a week or so,
-> but it seemed that we should get at least Emmanuel's fix in soon.
-> 
-> This has a fix from Emmanuel for a problem I failed to fix - when
-> association is in progress then it needs to be cancelled while
-> suspending (I had fixed the same for authentication). Also included a
-> fix from myself for a userspace API problem that hit the iw tool and a
-> fix to the remain-on-channel framework.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> The following changes since commit f9ac71bfcc5c937ff02765dc316cf5bc01d21d97:
-> 
->   mac80211: fix vif name tracing (2014-05-09 14:35:40 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git HEAD
-> 
-> for you to fetch changes up to b4b177a5556a686909e643f1e9b6434c10de079f:
-> 
->   mac80211: fix on-channel remain-on-channel (2014-05-14 15:48:38 +0200)
+Fix wFmSequence and wFrameCtl to __le16
 
-Pulling now...
+Don't restrict to u8, if packet is a duplicate both bytes of __le16 will be
+the same.
 
+Fixes warnings
+wctl.c:66:9: warning: restricted __le16 degrades to integer
+wctl.c:71:56: warning: restricted __le16 degrades to integer
+wctl.c:73:49: warning: cast from restricted __le16
+wctl.c:83:30: warning: incorrect type in assignment (different base types)
+wctl.c:83:30:    expected unsigned short [unsigned] [usertype] wFmSequence
+wctl.c:83:30:    got restricted __le16 [usertype] seq_ctrl
+wctl.c:85:28: warning: incorrect type in assignment (different base types)
+wctl.c:85:28:    expected unsigned short [unsigned] [usertype] wFrameCtl
+wctl.c:85:28:    got restricted __le16 [usertype] frame_control
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h | 6 +++---
+ drivers/staging/vt6656/wctl.c   | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index e5f84f5..5b64ca7 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -340,9 +340,9 @@ typedef struct tagSPMKIDCandidateEvent {
+ 
+ /* The receive duplicate detection cache entry */
+ typedef struct tagSCacheEntry{
+-    u16        wFmSequence;
+-    u8        abyAddr2[ETH_ALEN];
+-    u16        wFrameCtl;
++	__le16 wFmSequence;
++	u8 abyAddr2[ETH_ALEN];
++	__le16 wFrameCtl;
+ } SCacheEntry, *PSCacheEntry;
+ 
+ typedef struct tagSCache{
+diff --git a/drivers/staging/vt6656/wctl.c b/drivers/staging/vt6656/wctl.c
+index 814342c..efdc5d5 100644
+--- a/drivers/staging/vt6656/wctl.c
++++ b/drivers/staging/vt6656/wctl.c
+@@ -70,7 +70,7 @@ bool WCTLbIsDuplicate (PSCache pCache, struct ieee80211_hdr *pMACHeader)
+             pCacheEntry = &(pCache->asCacheEntry[uIndex]);
+             if ((pCacheEntry->wFmSequence == pMACHeader->seq_ctrl) &&
+ 		ether_addr_equal(pCacheEntry->abyAddr2, pMACHeader->addr2) &&
+-                (LOBYTE(pCacheEntry->wFrameCtl) == LOBYTE(pMACHeader->frame_control))
++		(pCacheEntry->wFrameCtl == pMACHeader->frame_control)
+                 ) {
+                 /* Duplicate match */
+                 return true;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
