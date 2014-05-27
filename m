@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57140 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbaEVRl4 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15539 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbaE0Lqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 13:41:56 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id EF4DB40A9E6
-	for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 10:41:55 -0700 (PDT)
-Message-ID: <537E36E3.6040205@candelatech.com> (sfid-20140522_194159_466177_730569AE)
-Date: Thu, 22 May 2014 10:41:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 27 May 2014 07:46:32 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 1/7] wil6210: limit MTU
+Date: Tue, 27 May 2014 14:45:44 +0300
+Message-ID: <1401191150-29037-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140527_134635_760376_5E2855E8)
+In-Reply-To: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1401191150-29037-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on regulatory settings.
-References: <537E2ABB.6030302@candelatech.com>
-In-Reply-To: <537E2ABB.6030302@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2014 09:50 AM, Ben Greear wrote:
-> Hello!
-> 
-> I'm having issues where when we add several ath10k NICs to a system,
-> the regulatory domain goes quite restricted..  There is an ath9k NIC
-> with eeprom over-ride hack, and user-space sets regdomain to 'US'.
-> 
-> Later, when registering ath10k, at least one of those NICs registeres
-> as 'TW'.  The ending domain looks like this:
-> 
-> [root@lf1011-13060017 ~]# iw reg get
-> country 98: DFS-UNSET
-> 	(2402 - 2472 @ 40), (N/A, 30)
-> 	(5270 - 5330 @ 40), (N/A, 17), DFS
-> 	(5735 - 5835 @ 80), (N/A, 30)
-> 
-> 
-> I tried adding a hack to ath10k to zero out the ar->ath_common.regulatory.current_rd,
-> but in fact it seems to be reported as zero to begin with.
-> 
-> I am obviously missing something.  Either my hacks to ath10k are not
-> sufficient, or possibly the system is getting regulatory info from
-> somewhere else?
-> 
-> Any ideas where else it might be getting the idea it should be in TW
-> domain?  Can it get this from beacons from other systems?
+Obey 802.11 spec that defines max. data size 7920 bytes
 
-Ahh, sneaky nasty code....it was being set based on the timezone
-of all things!
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/netdev.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Looks like you can override this behaviour with the command
-below if you are of a mind to do so:
-
-echo COUNTRY=US > /etc/sysconfig/regdomain
-
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index fdcaeb8..106b6dc 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -32,12 +32,26 @@ static int wil_stop(struct net_device *ndev)
+ 	return wil_down(wil);
+ }
+ 
++static int wil_change_mtu(struct net_device *ndev, int new_mtu)
++{
++	struct wil6210_priv *wil = ndev_to_wil(ndev);
++
++	if (new_mtu < 68 || new_mtu > IEEE80211_MAX_DATA_LEN_DMG)
++		return -EINVAL;
++
++	wil_dbg_misc(wil, "change MTU %d -> %d\n", ndev->mtu, new_mtu);
++	ndev->mtu = new_mtu;
++
++	return 0;
++}
++
+ static const struct net_device_ops wil_netdev_ops = {
+ 	.ndo_open		= wil_open,
+ 	.ndo_stop		= wil_stop,
+ 	.ndo_start_xmit		= wil_start_xmit,
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
++	.ndo_change_mtu		= wil_change_mtu,
+ };
+ 
+ static int wil6210_netdev_poll_rx(struct napi_struct *napi, int budget)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
