@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:58314 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbaETH13 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59323 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbaE0K4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 03:27:29 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e49so216227eek.21
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 00:27:27 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] b43: xmit: set 5 GHz bit depending on current band
-Date: Tue, 20 May 2014 09:27:18 +0200
-Message-Id: <1400570838-27060-1-git-send-email-zajec5@gmail.com> (sfid-20140520_092732_748273_265B2DDF)
-In-Reply-To: <1400568385-26182-1-git-send-email-zajec5@gmail.com>
-References: <1400568385-26182-1-git-send-email-zajec5@gmail.com>
+	Tue, 27 May 2014 06:56:35 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/16] brcmfmac: restore mpc before passing scan status to cfg80211
+Date: Tue, 27 May 2014 12:56:14 +0200
+Message-ID: <1401188188-16492-3-git-send-email-arend@broadcom.com> (sfid-20140527_125638_481047_58B0D82B)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PHYs other than A may also work in 5 GHz mode.
+Before informing cfg80211 about the scan status the device should
+be put back in mpc state. If done after user-space may initiate
+another (scheduled) scan and fail because scan is still busy as
+shown in logging below:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Update comment about "gmode" in phy_common.h
-    Thanks Antonio.
----
- drivers/net/wireless/b43/phy_common.h | 2 +-
- drivers/net/wireless/b43/xmit.c       | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+[ 3301.367376] brcmfmac: brcmf_fweh_event_worker event ESCAN_RESULT (69)
+[ 3301.377305] brcmfmac: brcmf_fweh_event_worker   version 2 flags 0 status 0
+[ 3301.384993] brcmutil: event payload, len=12
+[ 3301.389208] 00000000: 0c 00 00 00 6d 00 00 00 34 12 00 00
+[ 3301.389214] brcmfmac: brcmf_sdio_kso_control Enter: on=0
+[ 3301.402196] brcmfmac: brcmf_inform_bss scanned AP count (0)
+[ 3301.407808] brcmfmac: brcmf_notify_escan_complete Enter
+[ 3301.413064] brcmfmac: brcmf_notify_escan_complete ESCAN Completed scan: Done
+[ 3301.420137] brcmfmac: brcmf_sdio_bus_txctl Enter
+[ 3301.420368] brcmfmac: brcmf_cfg80211_sched_scan_start Enter
+[ 3301.420370] brcmfmac: brcmf_cfg80211_sched_scan_start:
+				Scanning already: status (1)
+[ 3301.440190] brcmfmac: brcmf_sdio_kso_control Enter: on=1
+[ 3301.448695] brcmfmac: brcmf_sdio_tx_ctrlframe Enter
+[ 3301.453662] brcmfmac: brcmf_sdio_bus_rxctl Enter
+[ 3301.458326] brcmfmac: brcmf_sdio_isr Enter
+[ 3301.462523] brcmfmac: brcmf_sdio_dpc Enter
+[ 3301.466632] brcmfmac: brcmf_sdio_readframes Enter
+[ 3301.471431] brcmfmac: brcmf_sdio_read_control Enter
+[ 3301.476340] brcmfmac: brcmf_set_mpc MPC : 1
 
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index 4c80b09..47b5585 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -231,7 +231,7 @@ struct b43_phy {
- 	/* HT info */
- 	bool is_40mhz;
- 
--	/* GMODE bit enabled? */
-+	/* Is GMODE (2 GHz mode) bit enabled? */
- 	bool gmode;
- 
- 	/* Analog Type */
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 31adb8c..4f38f19 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -408,7 +408,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
- 		mac_ctl |= B43_TXH_MAC_HWSEQ;
- 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
- 		mac_ctl |= B43_TXH_MAC_STMSDU;
--	if (phy->type == B43_PHYTYPE_A)
-+	if (!phy->gmode)
- 		mac_ctl |= B43_TXH_MAC_5GHZ;
- 
- 	/* Overwrite rates[0].count to make the retry calculation
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 10aacc9..df42a10 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -640,6 +640,9 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+ 		if (err)
+ 			brcmf_err("Scan abort  failed\n");
+ 	}
++
++	brcmf_set_mpc(ifp, 1);
++
+ 	/*
+ 	 * e-scan can be initiated by scheduled scan
+ 	 * which takes precedence.
+@@ -649,12 +652,10 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+ 		cfg->sched_escan = false;
+ 		if (!aborted)
+ 			cfg80211_sched_scan_results(cfg_to_wiphy(cfg));
+-		brcmf_set_mpc(ifp, 1);
+ 	} else if (scan_request) {
+ 		brcmf_dbg(SCAN, "ESCAN Completed scan: %s\n",
+ 			  aborted ? "Aborted" : "Done");
+ 		cfg80211_scan_done(scan_request, aborted);
+-		brcmf_set_mpc(ifp, 1);
+ 	}
+ 	if (!test_and_clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
+ 		brcmf_dbg(SCAN, "Scan complete, probably P2P scan\n");
 -- 
-1.8.4.5
+1.7.9.5
 
