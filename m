@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:64856 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbaETHrU (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:62752 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753691AbaE0UGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 03:47:20 -0400
-Received: by mail-la0-f52.google.com with SMTP id gl10so66379lab.25
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 00:47:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1399919689-31742-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1399919689-31742-1-git-send-email-rmanohar@qti.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 20 May 2014 00:46:58 -0700
-Message-ID: <CAB=NE6V_4u_7L3jW7kjMwWFx9=NfxZdWMuiFWCzEVSg6-+jTjg@mail.gmail.com> (sfid-20140520_094725_208668_3C4DAC71)
-Subject: Re: [PATCH v3] cfg80211: avoid restoring the regulatory during disconnect
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sachin Ahuja <sahuja@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 27 May 2014 16:06:08 -0400
+Received: by mail-we0-f174.google.com with SMTP id k48so10063458wev.5
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:06:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 02/10] staging: vt6656: IFRFbWriteEmbedded use ARRAY_SIZE
+Date: Tue, 27 May 2014 21:05:18 +0100
+Message-Id: <1401221126-4219-2-git-send-email-tvboxspy@gmail.com> (sfid-20140527_220625_812716_E1CFA184)
+In-Reply-To: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
+References: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2014 at 11:34 AM, Rajkumar Manoharan
-<rmanohar@qti.qualcomm.com> wrote:
-> From: Sachin Ahuja <sahuja@codeaurora.org>
->
-> When STA disconnects, cfg80211 restores the regulatory setting
-> to world domain. For the drivers that ignore country ie, cfg80211
-> should remain in the default country code which is configured
-> at driver load and should do not be restored to world reg domain.
->
-> Signed-off-by: Sachin Ahuja <sahuja@codeaurora.org>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
-> v2: Removed is_all_countryie_ignore
-> v3: Removed wdev_lock
->  net/wireless/sme.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
->
-> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-> index 4bc21a2..031ab4c 100644
-> --- a/net/wireless/sme.c
-> +++ b/net/wireless/sme.c
+Replace magic number with ARRAY_SIZE of pbyData
 
-This approach is making the assumption that regulatory hint
-disconnects should only be issued for devices that use country IEs
-which I do not think should the place within the SME code, can you
-instead stuff this handle this in net/wireless/reg.c ? For example --
-beacon hints should be cleared even though the regulatory setting on
-the device is not cleared. Your patch does not address that.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  Luis
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index d244dab..9126156 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -716,7 +716,7 @@ int IFRFbWriteEmbedded(struct vnt_private *pDevice, u32 dwData)
+ 	pbyData[3] = (u8)(dwData >> 24);
+ 
+ 	vnt_control_out(pDevice,
+-		MESSAGE_TYPE_WRITE_IFRF, 0, 0, 4, pbyData);
++		MESSAGE_TYPE_WRITE_IFRF, 0, 0, ARRAY_SIZE(pbyData), pbyData);
+ 
+ 	return true;
+ }
+-- 
+1.9.1
+
