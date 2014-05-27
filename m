@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:59177 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaEVOTp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 10:19:45 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e53so2747438eek.39
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 07:19:44 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/2] ath10k: async pci probing
-Date: Thu, 22 May 2014 16:12:33 +0200
-Message-Id: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com> (sfid-20140522_161950_560992_71509766)
+Received: from nbd.name ([46.4.11.11]:51641 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753761AbaE0U2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 16:28:31 -0400
+Message-ID: <5384F568.6030303@openwrt.org> (sfid-20140527_222847_686519_3AE70A74)
+Date: Tue, 27 May 2014 22:28:24 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>, cprevotaux@nltinc.com
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix a memory leak on sta rate selection table
+References: <1400866194-62234-1-git-send-email-nbd@openwrt.org> <5384BEAF.1030803@candelatech.com> <5384C00C.4020507@nltinc.com> <5384C4FA.90202@candelatech.com>
+In-Reply-To: <5384C4FA.90202@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2014-05-27 19:01, Ben Greear wrote:
+> On 05/27/2014 09:40 AM, Christophe Prevotaux wrote:
+>> Hi Ben,
+>> 
+>> In terms of OpenWRT world, at least backfire, did not go further back in checking. I suspect it is much older than this though :) But I did
+>> put on my spelunking head lamp and I am afraid of the dark :)
+> 
+> A quick look makes me think it is at least not relevant to 3.9 kernels,
+> but I could be wrong about that.
+Right, it applies to 3.10 and above.
+Will resend with Cc stable.
 
-Recently I've tried to built ath10k into kernel.
-Thus I've discovered it doesn't play nice.
-
-Are there any gotchas I should be aware of and
-might've missed while changing this sort of thing?
-
-
-Michal Kazior (2):
-  ath10k: relocate core create/destroy functions
-  ath10k: make core registering async
-
- drivers/net/wireless/ath/ath10k/core.c | 170 ++++++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/core.h |   2 +
- drivers/net/wireless/ath/ath10k/pci.c  |   2 -
- 3 files changed, 96 insertions(+), 78 deletions(-)
-
--- 
-1.8.5.3
+- Felix
 
