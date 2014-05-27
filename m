@@ -1,78 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:54838 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756705AbaELO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2014 10:27:54 -0400
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-To: linville@tuxdriver.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-Subject: [PATCH] wireless-regdb: update NO's regulatory rules
-Date: Mon, 12 May 2014 16:26:52 +0200
-Message-Id: <1399904812-22753-1-git-send-email-bjorn@mork.no> (sfid-20140512_162757_304685_D2AA3F37)
+Received: from mail-we0-f170.google.com ([74.125.82.170]:40570 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998AbaE0QOg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 12:14:36 -0400
+Message-ID: <5384B9E7.1070405@gmail.com> (sfid-20140527_181443_775505_1F04DE73)
+Date: Tue, 27 May 2014 18:14:31 +0200
+From: Tomasz Figa <tomasz.figa@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Hans de Goede <hdegoede@redhat.com>
+CC: devicetree <devicetree@vger.kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	linux-wireless@vger.kernel.org,
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-sunxi@googlegroups.com, linux-mmc@vger.kernel.org,
+	Chris Ball <chris@printf.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 02/11] pinctrl: sunxi: add IRQCHIP_SKIP_SET_WAKE flag
+ for pinctrl irq chip
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <1401090486-4414-3-git-send-email-hdegoede@redhat.com> <20140527080746.GB4730@lukather>
+In-Reply-To: <20140527080746.GB4730@lukather>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This aligns the regdb entry with the current Norwegian
-regulations.
+On 27.05.2014 10:07, Maxime Ripard wrote:
+> On Mon, May 26, 2014 at 09:47:57AM +0200, Hans de Goede wrote:
+>> From: Chen-Yu Tsai <wens@csie.org>
+>> 
+>> The sunxi pinctrl irq chip driver does not support wakeup at the 
+>> moment. Adding IRQCHIP_SKIP_SET_WAKE lets the irqs work with
+>> drivers using wakeup.
+>> 
+>> Also add a name to the irq chip.
+>> 
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org> Signed-off-by: Hans
+>> de Goede <hdegoede@redhat.com> --- 
+>> drivers/pinctrl/sunxi/pinctrl-sunxi.c | 2 ++ 1 file changed, 2
+>> insertions(+)
+>> 
+>> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+>> b/drivers/pinctrl/sunxi/pinctrl-sunxi.c index db9ccd6..ec60c2e
+>> 100644 --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c +++
+>> b/drivers/pinctrl/sunxi/pinctrl-sunxi.c @@ -646,6 +646,8 @@
+>> static struct irq_chip sunxi_pinctrl_irq_chip = { .irq_mask_ack	=
+>> sunxi_pinctrl_irq_mask_ack, .irq_unmask	=
+>> sunxi_pinctrl_irq_unmask, .irq_set_type	=
+>> sunxi_pinctrl_irq_set_type, +	.name		= "sunxi-pio", +	.flags		=
+>> IRQCHIP_SKIP_SET_WAKE,
+> 
+> I'd rather see the name set to dev_name() or something like that.
+> This will not work that great with multiple pin controller
+> supporting interrupts.
 
- o Adding a reference to the authoritative source
+Correct me if I'm wrong, but I've always thought that struct irq_chip
+describes a class of IRQ controllers, not particular instances.
 
- o Adding a note about TPC
-
- o Adjusting band edges to match the text of the regulations,
-   except for merging 5470 - 5725 and 5725 – 5795 MHz using
-   the lowest common EIRP limit
-
- o Syncronizing EIRP limits with the regulation text, fixing
-   values, using mW instead of dBm, and adjusting for "no TPC"
-   where applicable
-
- o Adding the bands 5710 – 5795 MHz, 5815 – 5850 MHz and
-   17.1 - 17.3 GHz
-
-An unofficial English translation of the regulations is available
-from (attachment link on the right):
-http://eng.npt.no/technical/frequency-management/frequency-licenses/permission-to-use-radio-frequencies
-The relevant part is "Section 11. Wireless networks"
-
-The reference in the db.txt comment is the actual authoritative
-publication of these regulations, in Norwegian only.
-
-Signed-off-by: Bjørn Mork <bjorn@mork.no>
----
- db.txt | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index fcab208..9d32643 100644
---- a/db.txt
-+++ b/db.txt
-@@ -579,11 +579,18 @@ country NL: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
-+# Data from http://www.lovdata.no/dokument/SF/forskrift/2012-01-19-77
-+# Power at 5250 - 5350 MHz, 5470 - 5725 MHz and 5815 – 5850 MHz can
-+# be doubled if TPC is implemented.
-+# Up to 2W (or 4W with TPC) is allowed in the 5725 – 5795 MHz band
-+# which has been merged with 5470 - 5725 MHz to allow wide channels
- country NO: DFS-ETSI
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20)
--	(5250 - 5330 @ 80), (20), DFS
--	(5490 - 5710 @ 80), (27), DFS
-+	(2400 - 2483.5 @ 40), (100 mW)
-+	(5150 - 5250 @ 80), (200 mW)
-+	(5250 - 5350 @ 80), (100 mW), DFS
-+	(5470 - 5795 @ 80), (500 mW), DFS
-+	(5815 - 5850 @ 35), (2000 mW), DFS
-+	(17100 - 17300 @ 200), (100 mW)
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--- 
-2.0.0.rc2
-
+Best regards,
+Tomasz
