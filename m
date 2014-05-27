@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:40612 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaETHhV (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54050 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbaE0K4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 03:37:21 -0400
-Received: by mail-la0-f49.google.com with SMTP id pv20so58636lab.22
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2014 00:37:20 -0700 (PDT)
+	Tue, 27 May 2014 06:56:35 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/16] brcmfmac: make chandef_to_chanspec() function static
+Date: Tue, 27 May 2014 12:56:15 +0200
+Message-ID: <1401188188-16492-4-git-send-email-arend@broadcom.com> (sfid-20140527_125642_006298_B698D8AD)
+In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
+References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1399634618-3619-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1399634618-3619-1-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 20 May 2014 00:37:00 -0700
-Message-ID: <CAB=NE6Vi0n-z3ci242fqe-r7vpnLw6i1QBqAmFQmS-deR7iyjQ@mail.gmail.com> (sfid-20140520_093725_264641_B14057F6)
-Subject: Re: [PATCH] cfg80211: reg: get dfs region only from cfg80211_regd
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 9, 2014 at 4:23 AM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> Scenario:
-> 1) Driver register regd as "US"
-> 2) cfg80211 set wiphy_regd->dfs_region = FCC
-> 3) now I change country to FR
-> 4) cfg80211_regd->dfs_region == ETSI
->    wiphy_regd->dfs_region == FCC
-> 6) start CAC (this call get_dfs_region)
-> 5) next get warning
-> device specific dfs_region (FCC) disagrees with cfg80211's central dfs_region (ETSI)
->
-> Seems checking wiphy_regd->dfs_region is not required, while
-> there is no way to register more than one dfs_region from
-> the driver when registering regd.
->
-> With patch:
-> cfg80211: allow restricting supported dfs regions
-> driver will supported dfs regions using bitmap.
-> This seems like a more correct approach.
+The function chandef_to_chanspec() was added by
 
-Can you verify if we are not allowing combination of DFS wiphys to be
-registered then, because it would be pointless to let a wiphy go up as
-a master device if we have the use the central regulatory domain for
-DFS and share it. If such checks are not in place your patch
-implicates we need it.
+    brcmfmac: determine chanspec from struct cfg80211_chan_def info
 
- Luis
+    The struct cfg80211_chan_def contains additional info to derive the
+    bandwidth and side-band information of the chanspec. This patch adds
+    chandef_to_chanspec() function used in IBSS join and starting AP
+    operation.
+
+However, it introduced a sparse warning because the function
+is only called from within the source file wl_cfg80211.c.
+
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index df42a10..d8fa276 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -341,8 +341,8 @@ static u8 brcmf_mw_to_qdbm(u16 mw)
+ 	return qdbm;
+ }
+ 
+-u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
+-			struct cfg80211_chan_def *ch)
++static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
++			       struct cfg80211_chan_def *ch)
+ {
+ 	struct brcmu_chan ch_inf;
+ 	s32 primary_offset;
+-- 
+1.7.9.5
+
