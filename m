@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:53945 "EHLO
-	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756617AbaEEMRa convert rfc822-to-8bit (ORCPT
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:39861 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795AbaE0IfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 08:17:30 -0400
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp06.msg.oleane.net (MTA) with ESMTP id s45CHRPJ011595
-	for <linux-wireless@vger.kernel.org>; Mon, 5 May 2014 14:17:27 +0200
-Subject: DFS development Status
-Date: Mon, 5 May 2014 14:17:26 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A319017BC92B@sbs2003.acksys.local> (sfid-20140505_141733_220027_E23514CB)
+	Tue, 27 May 2014 04:35:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+In-Reply-To: <20140527080257.GA4730@lukather>
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+ <1401090486-4414-2-git-send-email-hdegoede@redhat.com> <20140527080257.GA4730@lukather>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 27 May 2014 16:35:03 +0800
+Message-ID: <CAGb2v66MB79bxhYq=iQy75OZ9KxtjocY+tVxZPN1NoVhPe=edQ@mail.gmail.com> (sfid-20140527_103534_375778_DFB3DB6C)
+Subject: Re: [linux-sunxi] Re: [PATCH 01/11] pinctrl: sunxi: create irq/pin
+ mapping during init
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Dear all,
+On Tue, May 27, 2014 at 4:02 PM, Maxime Ripard
+<maxime.ripard@free-electrons.com> wrote:
+> Hi,
+>
+> On Mon, May 26, 2014 at 09:47:56AM +0200, Hans de Goede wrote:
+>> From: Chen-Yu Tsai <wens@csie.org>
+>>
+>> The irq/pin mapping is used to lookup the pin to mux to the irq
+>> function when the irq is enabled. It is created when gpio_to_irq
+>> is called. Creating the mapping during init allows us to map the
+>> interrupts directly from the device tree.
+>
+> Can you be a bit more precise on this?
+>
+> What is the issue that this patch fix?
 
-	I'm read the web page
-http://wireless.kernel.org/en/developers/DFS#Development_roadmap but the
-roadmap is not updated since 2010.
+IIRC, originally the IRQ to pin mapping was created when gpio_to_irq
+was called with a GPIO handle. The mapping in turn is used to mux
+the pin into EINT mode.
 
-	I understood the DFS required :
-		Hostapd modifications
-		Mac80211/cfg80211 modifications
-		Regulatory/crda modifications
-		Low level driver (ath9k,ath10k,...) modifications
+If the mapping is created during gpio_to_irq, we can't use the
+interrupts directly, i.e. through the DT with "interrupts = <&pio A 4>".
 
-	Where can I found the development status for each module ? Could
-you give me the minimal version for each module ?
+Instead we'd have to use "gpios = <&pio A B>", then pass the gpio
+through to gpio_to_irq.
 
-	I'm working with Wireless radio card with AR9xxx chipset, and on
-several project the DFS is required.
 
-	In ATH9K source file I found some code to configure the ETSI
-pattern detection. Do you plan to support the latest ETSI pattern and
-other pattern (FCC) ?
-
-	Thanks for your help.
-
-Cedric Voncken 
-
+ChenYu
