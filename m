@@ -1,41 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:53969 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359AbaEZROI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 13:14:08 -0400
-Message-ID: <53837258.8050907@01019freenet.de> (sfid-20140526_191411_970606_FF610BFF)
-Date: Mon, 26 May 2014 18:56:56 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:50796 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbaE0SBz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 14:01:55 -0400
+Received: by mail-vc0-f179.google.com with SMTP id im17so10909898vcb.24
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 11:01:54 -0700 (PDT)
 MIME-Version: 1.0
-To: Matthias Fend <Matthias.Fend@wolfvision.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rt2x00: Ralink RT5572 very high peak current consumption
-References: <CC2A85E271C1FB479D9C17305347F69A4479A6@WOLFSERVER19.wolfvision-at.intra> <CC2A85E271C1FB479D9C17305347F69A44D336@WOLFSERVER19.wolfvision-at.intra>
-In-Reply-To: <CC2A85E271C1FB479D9C17305347F69A44D336@WOLFSERVER19.wolfvision-at.intra>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CALCETrW0NQ6aW06WD6ZAi8-o7fZSiKPOf0xYCSEw2egYBfqyQQ@mail.gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+ <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
+ <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
+ <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
+ <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
+ <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
+ <CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com>
+ <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
+ <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
+ <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com>
+ <CALCETrVPXwedhPGtDJQDSK5Kxa4NpeSDck4-nHyox_xriPBcZQ@mail.gmail.com> <CALCETrW0NQ6aW06WD6ZAi8-o7fZSiKPOf0xYCSEw2egYBfqyQQ@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 27 May 2014 11:01:34 -0700
+Message-ID: <CALCETrUTsKCw_G7V=YDeP-v_GF8cK8ezY-wqcpxeuw3dzBQhQg@mail.gmail.com> (sfid-20140527_200158_909771_342CB0F2)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthias Fend wrote:
+On Tue, May 27, 2014 at 10:09 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Mon, May 26, 2014 at 11:47 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> On Mon, May 26, 2014 at 11:13 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>>>
+>>>>>>> diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>>>>> b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>>>>> index f2c1439..e5a6b70 100644
+>>>>>>> --- a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>>>>> +++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>>>>>> @@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+>>>>>>>         bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
+>>>>>>>         int dtimper;
+>>>>>>>
+>>>>>>> +       iwl_power_sleep_cam_cmd(priv, cmd);
+>>>>>>> +       return;
+>>>>>>> +
+>>>>>>>         dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+>>>>>>>
+>>>>>>>         if (priv->wowlan)
+>>>>>>
+>>>>>> This patch has survived for about 15 minutes on 3.15-rc.  It certainly
+>>>>>> has some effect: pinging from the AP to the STA now takes a consistent
+>>>>>> ~3.8ms instead of taking varying amounts of time between 5 and 200 ms
+>>>>>> or so.
+>>>>>>
+>>>>>> I wonder if this is something 802.11n/802.11ac-specific?  I remember
+>>>>>> having all kinds of problems with 802.11n on this laptop that were
+>>>>>> resolved by turning off 11n or turning off power saving.
+>>>>>>
+>>>>>
+>>>>> well... my patch really turns off power saving. The hard way.
+>>>>> But since you are having issues - I guess I'll post it and disable
+>>>>> power save for these devices. Note that today most of the power save
+>>>>> features are disabled anyway.
+>>>>
+>>>> Would it make sense to do this only when connected to a VHT-supporting
+>>>> AP or whatever AP feature is probably triggering the problem?
+>>>
+>>> I am not sure it is related to some "VHT / whatever" feature. From
+>>> your logs, I'd say this bug could have happened with any AP. It is
+>>> down there in the PCI layer.
+>>>
+>>>>
+>>>> *sigh* I'd just plug in a new PCIe wireless card, except that I think
+>>>> that my evil BIOS will refuse to boot if I do that.
+>>>>
+>>> I can recommend 7260 :)
+>>
+>> http://www.thinkwiki.org/wiki/Problem_with_unauthorized_MiniPCI_network_card
+>>
+>> I'm not sure how I feel about flashing my BIOS with random things off
+>> the internet :(
+>>
+>>> Before you do that, can you check this one?
+>>>
+>>> diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>> b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>> index f2c1439..047112c 100644
+>>> --- a/drivers/net/wireless/iwlwifi/dvm/power.c
+>>> +++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+>>> @@ -292,6 +292,8 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+>>>
+>>>         if (priv->wowlan)
+>>>                 iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, dtimper);
+>>> +       if (!enabled)
+>>> +               iwl_power_sleep_cam_cmd(priv, cmd);
+>>>         else if (!priv->lib->no_idle_support &&
+>>>                  priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+>>>                 iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+>>> @@ -299,9 +301,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+>>>                 /* in thermal throttling low power state */
+>>>                 iwl_static_sleep_cmd(priv, cmd,
+>>>                     iwl_tt_current_power_mode(priv), dtimper);
+>>> -       } else if (!enabled)
+>>> -               iwl_power_sleep_cam_cmd(priv, cmd);
+>>> -       else if (priv->power_data.debug_sleep_level_override >= 0)
+>>> +       } else if (priv->power_data.debug_sleep_level_override >= 0)
+>>>                 iwl_static_sleep_cmd(priv, cmd,
+>>>
+>>> priv->power_data.debug_sleep_level_override,
+>>>                                      dtimper);
+>>>
+>>> This is the final version I want to send.
+>>
+>> I'll test it tonight.  I'm away from both the network and the laptop right now.
+>
+> No good :(  I got the same issue again, but it still sames rarer than unpatched.
+>
+> It looks like your patch allows both:
+>
+> iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, dtimper);
+>
+> and
+>
+> iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+>
+> I don't know whether that's a problem.
+>
+> Also, is this bad?
+>
+> iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
+>
+> lspci seems to think that L1 is enabled (see attached logs).
+>
 
-[...]
+This seems surprisingly consistent: on first boot, wireless is okay w/
+this AP, but after suspend/resume, it's unreliable.  I could be wrong
+(the unreliability isn't *that* consistent), but I've just seen this a
+couple more times.
 
-> I found out that the discovered high current peaks are somehow related to invalidated beacons.
-> Usually I can see 1 block with a normal tx-condition current followed by 7 additional blocks with high current peaks.
-> For a test I copied the beacon data from HW_BEACON_BASE0 to HW_BEACON_BASE2 and then the first and the third beacon block have normal current values while the others still generate high current peaks
-> 
-> It seems that setting all five words of the TXWI at the beacon base does not complete disable the generation of this beacon.
-> If I modify the TXIW_W0 of the disabled beacons to 0x40000000 (set TXWI_W0_PHYMODE as in the really used beacon) then the current consumption does not exceed the usual value. But it seems that there is still a short activity for this beacon which, in my opinion, should not be the case.
-> 
-> So, currently I'm wondering about two things:
-> -)How do I completely turn off unused beacons (from the measurements with the windows setup I know that this should be somehow possible)?
-> -)Where is the real address of HW_BEACON_BASE6 and HW_BEACON_BASE7? Modifying registers at the address of the appropriate defines (0x5dc0, 0x5bc0) does not change anything at all.
+Using pcie_aspm=force to forcibly disable L1 makes no difference.
 
-Container 13_UExxF68xx.zip on
-http://opensource.samsung.com/reception/receptionSub.do?method=sub&sub=T&menu_item=tv_n_video&classification1=tv
+Is there possibly a driver bug that causes some workaround to be
+applied on boot but not on resume?  Or is BIOS doing something
+different?
 
-seems to contain a complete Ralink vendor AP driver. I would take a look
-there.
-
-
-Andreas
+--Andy
