@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:45211 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbaEIMm7 (ORCPT
+Received: from nbd.name ([46.4.11.11]:51901 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751710AbaE0UeC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 08:42:59 -0400
-Received: by mail-ee0-f47.google.com with SMTP id c13so2639578eek.6
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 05:42:58 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 6/7] ath10k: make wmi timeout trigger hw restart
-Date: Fri,  9 May 2014 14:35:56 +0200
-Message-Id: <1399638957-20449-7-git-send-email-michal.kazior@tieto.com> (sfid-20140509_144309_715231_16471D8B)
-In-Reply-To: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
-References: <1399638957-20449-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 27 May 2014 16:34:02 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, cprevotaux@nltinc.com
+Subject: [PATCH v2] mac80211: fix a memory leak on sta rate selection table
+Date: Tue, 27 May 2014 22:33:57 +0200
+Message-Id: <1401222837-93492-1-git-send-email-nbd@openwrt.org> (sfid-20140527_223406_969440_FDC57A31)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If tx credits aren't replenished for too long
-firmware and driver state get out of sync. It
-doesn't matter if firmware recovers a little later
-on its own since by then it's already too late.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Christophe Prévotaux <cprevotaux@nltinc.com>
+Fixes: 0d528d85c5
+Cc: stable@vger.kernel.org # v3.10+
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 5 +++++
+ net/mac80211/sta_info.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 159d744..e33c811 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -634,6 +634,11 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
- 	if (ret)
- 		dev_kfree_skb_any(skb);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 632d372..3f26740 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -227,6 +227,7 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+  */
+ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ {
++	struct ieee80211_sta_rates *rates;
+ 	int i;
  
-+	if (ret == -EAGAIN) {
-+		/* no credits for 3 seconds means fw is practically dead */
-+		ath10k_core_restart(ar);
-+	}
+ 	if (sta->rate_ctrl)
+@@ -238,6 +239,10 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ 		kfree(sta->tx_lat);
+ 	}
+ 
++	rates = rcu_dereference_raw(sta->sta.rates);
++	if (rates)
++		kfree(rates);
 +
- 	return ret;
- }
+ 	sta_dbg(sta->sdata, "Destroyed STA %pM\n", sta->sta.addr);
  
+ 	kfree(sta);
 -- 
-1.8.5.3
+1.8.5.2 (Apple Git-48)
 
