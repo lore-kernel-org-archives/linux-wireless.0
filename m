@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-157.synserver.de ([212.40.185.157]:1413 "EHLO
-	smtp-out-156.synserver.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933271AbaE3TgF (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:46513 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158AbaE0OSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 15:36:05 -0400
-Message-ID: <5388CB1B.3090802@metafoo.de> (sfid-20140530_213610_888199_21EEA54B)
-Date: Fri, 30 May 2014 20:16:59 +0200
-From: Lars-Peter Clausen <lars@metafoo.de>
+	Tue, 27 May 2014 10:18:30 -0400
+Received: by mail-ob0-f169.google.com with SMTP id vb8so9392423obc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 07:18:29 -0700 (PDT)
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>
-CC: abdoulaye berthe <berthe.ab@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+In-Reply-To: <1401090486-4414-4-git-send-email-hdegoede@redhat.com>
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+	<1401090486-4414-4-git-send-email-hdegoede@redhat.com>
+Date: Tue, 27 May 2014 16:18:29 +0200
+Message-ID: <CACRpkdZcGJTXfcxN_sogm+hYHM56d_VxtuZqth0t-c2mgAJ0vA@mail.gmail.com> (sfid-20140527_161834_420690_89521B4B)
+Subject: Re: [PATCH 03/11] pinctrl: sunxi: Move setting of mux to irq type
+ from unmask to set_type
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	patches@opensource.wolfsonmicro.com,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
-	platform-driver-x86@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
-References: <20140530094025.3b78301e@canb.auug.org.au>        <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>        <1401449454-30895-2-git-send-email-berthe.ab@gmail.com> <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com> <5388C0F1.90503@gmail.com>
-In-Reply-To: <5388C0F1.90503@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2014 07:33 PM, David Daney wrote:
-> On 05/30/2014 04:39 AM, Geert Uytterhoeven wrote:
->> On Fri, May 30, 2014 at 1:30 PM, abdoulaye berthe <berthe.ab@gmail.com>
->> wrote:
->>> --- a/drivers/gpio/gpiolib.c
->>> +++ b/drivers/gpio/gpiolib.c
->>> @@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct
->>> gpio_chip *gpiochip);
->>>    *
->>>    * A gpio_chip with any GPIOs still requested may not be removed.
->>>    */
->>> -int gpiochip_remove(struct gpio_chip *chip)
->>> +void gpiochip_remove(struct gpio_chip *chip)
->>>   {
->>>          unsigned long   flags;
->>> -       int             status = 0;
->>>          unsigned        id;
->>>
->>>          acpi_gpiochip_remove(chip);
->>> @@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
->>>          of_gpiochip_remove(chip);
->>>
->>>          for (id = 0; id < chip->ngpio; id++) {
->>> -               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
->>> -                       status = -EBUSY;
->>> -                       break;
->>> -               }
->>> -       }
->>> -       if (status == 0) {
->>> -               for (id = 0; id < chip->ngpio; id++)
->>> -                       chip->desc[id].chip = NULL;
->>> -
->>> -               list_del(&chip->list);
->>> +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
->>> +                       panic("gpio: removing gpiochip with gpios still
->>> requested\n");
->>
->> panic?
+On Mon, May 26, 2014 at 9:47 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+
+> With level triggered interrupt mask / unmask will get called for each
+> interrupt, doing the somewhat expensive mux setting on each unmask thus is
+> not a good idea. Instead move it to the set_type callback, which is typically
+> done only once for each irq.
 >
-> NACK to the patch for this reason.  The strongest thing you should do here
-> is WARN.
->
-> That said, I am not sure why we need this whole patch set in the first place.
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
-Well, what currently happens when you remove a device that is a provider of 
-a gpio_chip which is still in use, is that the kernel crashes. Probably with 
-a rather cryptic error message. So this patch doesn't really change the 
-behavior, but makes it more explicit what is actually wrong. And even if you 
-replace the panic() by a WARN() it will again just crash slightly later.
+Yes move it out of mask/unmask but no, not into set_type().
 
-This is a design flaw in the GPIO subsystem that needs to be fixed.
+Can you not use the irqchip startup()/shutdown() callbacks
+instead?
 
-- Lars
+And how come we have no clean separation between gpiochip
+and the pinmux parts here, why cant we just call
+pinctrl_request_gpio() and pinctrl_free_gpio() here instead?
+Or maybe pinctrl_gpio_direction_input() and have that set
+up the muxing in the pinctrl driver side?
+
+It looks slightly convoluted.
+
+Yours,
+Linus Walleij
