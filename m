@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:36980 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754547AbaEaKv0 (ORCPT
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:39916 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769AbaE0OVZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 06:51:26 -0400
-Received: by mail-we0-f180.google.com with SMTP id q58so3078994wes.25
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:25 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/14] staging: vt6656: rename MACbShutdown to vnt_mac_shutdown
-Date: Sat, 31 May 2014 11:50:37 +0100
-Message-Id: <1401533449-2972-2-git-send-email-tvboxspy@gmail.com> (sfid-20140531_125135_744520_5EC499DF)
-In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
-References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 27 May 2014 10:21:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <CACRpkdZpy2aT_kFp01bnrviVB3SOggiNUJB46wbWAY_bqW8=gg@mail.gmail.com>
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+ <1401090486-4414-2-git-send-email-hdegoede@redhat.com> <CACRpkdZpy2aT_kFp01bnrviVB3SOggiNUJB46wbWAY_bqW8=gg@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 27 May 2014 22:21:04 +0800
+Message-ID: <CAGb2v65NW61+BV2hR3wn_xRvCyPo+AhcMU7hmFjQxKWj49G=Bw@mail.gmail.com> (sfid-20140527_162137_386552_30AE4094)
+Subject: Re: [linux-sunxi] Re: [PATCH 01/11] pinctrl: sunxi: create irq/pin
+ mapping during init
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c      | 2 +-
- drivers/staging/vt6656/mac.h      | 2 +-
- drivers/staging/vt6656/main_usb.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+On Tue, May 27, 2014 at 10:11 PM, Linus Walleij
+<linus.walleij@linaro.org> wrote:
+> On Mon, May 26, 2014 at 9:47 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+>
+>> From: Chen-Yu Tsai <wens@csie.org>
+>>
+>> The irq/pin mapping is used to lookup the pin to mux to the irq
+>> function when the irq is enabled. It is created when gpio_to_irq
+>> is called. Creating the mapping during init allows us to map the
+>> interrupts directly from the device tree.
+>>
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>
+> This is exactly correct. Patch applied.
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 8c73f36..5ee5376 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -69,7 +69,7 @@ void vnt_mac_set_filter(struct vnt_private *priv, u64 mc_filter)
-  *
-  *
-  */
--void MACbShutdown(struct vnt_private *priv)
-+void vnt_mac_shutdown(struct vnt_private *priv)
- {
- 	vnt_control_out(priv, MESSAGE_TYPE_MACSHUTDOWN, 0, 0, 0, NULL);
- }
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index b0e5d49..9eee6d7 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -415,7 +415,7 @@ struct vnt_mac_set_key {
- } __packed;
- 
- void vnt_mac_set_filter(struct vnt_private *, u64);
--void MACbShutdown(struct vnt_private *);
-+void vnt_mac_shutdown(struct vnt_private *);
- void MACvSetBBType(struct vnt_private *, u8);
- void MACvDisableKeyEntry(struct vnt_private *, u8);
- void MACvSetKeyEntry(struct vnt_private *, u16, u32, u32, u8 *, u8 *);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index b297f3a..11738dc 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1002,9 +1002,9 @@ static int device_close(struct net_device *dev)
- 	for (uu = 0; uu < MAX_KEY_TABLE; uu++)
-                 MACvDisableKeyEntry(pDevice,uu);
- 
--    if ((pDevice->flags & DEVICE_FLAGS_UNPLUG) == false) {
--        MACbShutdown(pDevice);
--    }
-+	if ((pDevice->flags & DEVICE_FLAGS_UNPLUG) == false)
-+		vnt_mac_shutdown(pDevice);
-+
-     netif_stop_queue(pDevice->dev);
-     MP_SET_FLAG(pDevice, fMP_DISCONNECTED);
-     MP_CLEAR_FLAG(pDevice, fMP_POST_WRITES);
--- 
-1.9.1
+Thanks.
 
+> I tried to hack the sunxi driver to even use the gpiolib
+> irqchip helpers but exactly this complex map thing in
+> ->irq_array[] git me stuck. If any of you guys could be so
+> nice to take a stab at this (compare to other commits
+> converting drivers to use gpiolibs irqchip helpers) then
+> I'd be very happy.
+
+We still need to rework the whole irqchip stuff for sun6i/sun8i,
+which have 1 parent interrupt per EINT capable pin bank.
+
+Earlier discussions with Maxime (on IRC IIRC) suggested moving this
+over to gpiolib irqchip helpers might be more work than using our own
+irqchip implementation, requiring 1 gpiochip per pin group? (not sure)
+
+
+ChenYu
