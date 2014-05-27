@@ -1,59 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:43533 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753333AbaESOO6 (ORCPT
+Received: from p02c11o148.mxlogic.net ([208.65.144.81]:34957 "EHLO
+	p02c11o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbaE0Qtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 10:14:58 -0400
-Received: by mail-qg0-f52.google.com with SMTP id a108so8790151qge.39
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 07:14:57 -0700 (PDT)
+	Tue, 27 May 2014 12:49:55 -0400
+Message-ID: <5384C00C.4020507@nltinc.com> (sfid-20140527_185000_255060_105ABAC7)
+Date: Tue, 27 May 2014 18:40:44 +0200
+From: Christophe Prevotaux <cprevotaux@nltinc.com>
+Reply-To: <cprevotaux@nltinc.com>
 MIME-Version: 1.0
-In-Reply-To: <20140519131832.GA6198@localhost>
-References: <CAGnRvurDvRqeNZYHZQG63=6FQv2XnFOR+J9K4-Dk=F77c6SdKQ@mail.gmail.com>
- <20140519131832.GA6198@localhost>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Mon, 19 May 2014 16:14:36 +0200
-Message-ID: <CAGnRvuq9pP3f+KiZAZ6Rpz-NKPqW9tnPRX4MmGZ6PK9PT3U_xA@mail.gmail.com> (sfid-20140519_161501_707481_64EAE420)
-Subject: Re: 802.11s mode without HWMP
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Greear <greearb@candelatech.com>,
+	Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix a memory leak on sta rate selection table
+References: <1400866194-62234-1-git-send-email-nbd@openwrt.org> <5384BEAF.1030803@candelatech.com>
+In-Reply-To: <5384BEAF.1030803@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2014 at 3:18 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, May 19, 2014 at 11:00:53AM +0200, Henning Rogge wrote:
->> Is there an easy way to stop HWMP in the 802.11s implementation?
+Hi Ben,
+
+In terms of OpenWRT world, at least backfire, did not go further back in 
+checking. I suspect it is much older than this though :) But I did
+put on my spelunking head lamp and I am afraid of the dark :)
+
+Maybe Felix would know ?
+
+Regards
+
+Christophe
+
+On 05/27/2014 06:34 PM, Ben Greear wrote:
+> On 05/23/2014 10:29 AM, Felix Fietkau wrote:
+>> Cc: stable@vger.kernel.org
+>> Reported-by: Christophe Prévotaux <cprevotaux@nltinc.com>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 >
-> If I understand your use case, you want to basically remove the
-> resolving part of mesh_nexthop_resolve()?  I don't believe the
-> current implementation has a way to turn that off.  In principle,
-> you can specify a vendor-specific path selection protocol when
-> joining, but glancing at the existing code, we don't really do
-> anything with that field except use it for peering fitness checks.
-
-I have an IP router connected via ethernet to a radio with a single
-wifi card, using the wifi card as a bridged radio. Its a great way to
-build routers with lots of Wifi links because you can mount the
-wifi-cards itself on the antenna and keep the router in a central
-place.
-
-I don't want to use layer-2 forwarding in the mesh because this
-increases the broad-/multicast domain size and spams the available
-frequencies even more.
-
-> If all you want to do is force the paths, you can do so with the
-> NL80211_CMD_SET_MESH_PATH API; such paths would override any selected
-> by HWMP.  But you'd still generate PREQ/PREPs and get multihop
-> communication in that case, it just wouldn't be subject to the
-> airtime link metric.
+> Any idea how far back this should be applied?
 >
-> Perhaps we should skip resolve in case ifmsh->mesh_pp_id != 1
-> and assume paths are somehow set up out of band or something?
+> Thanks,
+> Ben
+>
+>> ---
+>>   net/mac80211/sta_info.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>> index 632d372..8b42f49 100644
+>> --- a/net/mac80211/sta_info.c
+>> +++ b/net/mac80211/sta_info.c
+>> @@ -227,6 +227,7 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+>>    */
+>>   void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+>>   {
+>> +	struct ieee80211_sta_rates *rates;
+>>   	int i;
+>>
+>>   	if (sta->rate_ctrl)
+>> @@ -238,6 +239,10 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+>>   		kfree(sta->tx_lat);
+>>   	}
+>>
+>> +	rates = rcu_dereference_protected(sta->sta.rates, true);
+>> +	if (rates)
+>> +		kfree(rates);
+>> +
+>>   	sta_dbg(sta->sdata, "Destroyed STA %pM\n", sta->sta.addr);
+>>
+>>   	kfree(sta);
+>>
+>
+>
 
-I want to force 802.11s only to connect to other stations one layer-2
-hop away. So no forwarding by intermediate stations.
 
-Does the "mesh_fwding" parameter maybe help? Or can I set a "TTL" for
-the PREQ messages to 1?
+-- 
+Christophe Prévotaux
 
-Henning Rogge
+cprevotaux@nltinc.com  +1 416 425 6559 [ext 240]
+
+Northern Light Technologies
+33 Laird Drive
+M4G 3S9, Toronto, ON
+Canada
+
+http://www.nltinc.com
