@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:35631 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbaEVODH convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60468 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbaE0Qu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 10:03:07 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so3382636wgg.13
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2014 07:03:05 -0700 (PDT)
+	Tue, 27 May 2014 12:50:59 -0400
+Message-ID: <5384C25E.70505@broadcom.com> (sfid-20140527_185117_133557_2029624A)
+Date: Tue, 27 May 2014 18:50:38 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1400766635.4174.18.camel@jlt4.sipsolutions.net>
-References: <1400765294-14732-1-git-send-email-michal.kazior@tieto.com>
-	<1400765294-14732-4-git-send-email-michal.kazior@tieto.com>
-	<1400766635.4174.18.camel@jlt4.sipsolutions.net>
-Date: Thu, 22 May 2014 16:03:05 +0200
-Message-ID: <CA+BoTQ=ubXxkyJZErm9eWQqPNWxAz4XZqgW=PLydWZR5hS+68g@mail.gmail.com> (sfid-20140522_160311_244817_228FDCC5)
-Subject: Re: [PATCH 3/3] mac80211: make csa_currnet_counter atomic
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Hans de Goede <hdegoede@redhat.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	<linux-sunxi@googlegroups.com>
+Subject: Re: [PATCH 00/11] sdio wifi oob irq support for sunxi
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <20140527152614.GB5694@tuxdriver.com>
+In-Reply-To: <20140527152614.GB5694@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 May 2014 15:50, Johannes Berg <johannes@sipsolutions.net> wrote:
-> typo in subject.
+On 05/27/14 17:26, John W. Linville wrote:
+> On Mon, May 26, 2014 at 09:47:55AM +0200, Hans de Goede wrote:
+>> Hi All,
+>>
+>> Here is a patch series adding support for oob irqs for the ap6210 sdio wifi
+>> modules found on various Allwinner A20 boards.
+>>
+>> A lot of it is ground work which should be useful for adding oob irq support
+>> to other sdio wifi models too.
+>>
+>> The first 5 patches are sunxi pinctrl patches and should go upstream through
+>> the pinctrl tree.
+>>
+>> Patch 6 adds generic support for having per sdio function child nodes in
+>> devicetree and should go upstream through the mmc tree.
+>>
+>> Patch 7 and 8 add oob irq support to the brcmfmac driver. Patch 9 pokes some
+>> magic bits needed to enable the oob irq, this was taken from an android code
+>> dump and good do with a good review from someone from Broadcom, Arend ?
 >
-> On Thu, 2014-05-22 at 15:28 +0200, Michal Kazior wrote:
->> Even it ieee80211_beacon_get() and
->> ieee80211_csa_update_counter() were to be
->> guaranteed to be serialized by drivers it still
->> couldn't be guaranteed to be safe on SMP systems.
->
-> We had this debate internally as well, but I don't see where issues
-> should be. The only place updating the counter is
-> ieee80211_csa_update_counter(), and that should only be called either by
-> the driver, or by ieee80211_beacon_get[_tim]() [*]. If the driver wants
-> to have the counter update by ieee80211_beacon_get() then it must call
-> the function once every beacon interval, if it uses the _template()
-> version then it must call ieee80211_csa_update_counter() every beacon
-> interval, so no races seem possible.
->
-> johannes
->
-> [*] the driver shouldn't call ieee80211_beacon_get[_tim] and
-> ieee80211_csa_update_counter() in a mixed fashion anyway as that'd lead
-> to CSA counter bugs, and ieee80211_beacon_get_template() doesn't change
-> the counter
+> If Arend approves, I'm fine with these going through another appropriate tree.
 
-I was thinking the same. The problem is without an atomic variable the
-code is simply oblivious to SMP. What if your beacon interrupts are
-spread across different CPU and your caches haven't synced yet? I
-suppose this is practically unlikely considering beacon intervals but
-still..
+Not sure in what tree these patches were created (assume some sunxi 
+tree), but if it conflicts with wireless-next I am pretty sure Stephen 
+will find that. I am fine with any tree. Patch 9 indeed has some magic 
+bits that need some clarification, but I will sort that out with Hans.
 
+Regards,
+Arend
 
-Michał
+>> Patch 10 and 11 add the necessary dts bits to actually enable the sdio irq
+>> and should go upstream through Maxime's dt tree.
+>>
+>> Please review / merge.
+>>
+>> Thanks&  Regards,
+>>
+>> Hans
+>>
+>
+
