@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:46592 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932605AbaE2OmP (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:46752 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753739AbaE0UGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2014 10:42:15 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x12so500966wgg.33
-        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 07:42:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACKGw+FT0GTRF+tn_Odi0KQvEFL93Oyjj4x=SKgNP1aayB4-QA@mail.gmail.com>
-References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
-	<53873A58.1070209@candelatech.com>
-	<CACKGw+FT0GTRF+tn_Odi0KQvEFL93Oyjj4x=SKgNP1aayB4-QA@mail.gmail.com>
-Date: Thu, 29 May 2014 16:42:13 +0200
-Message-ID: <CACKGw+HZEvVVaGk3DzbvCTe7GSvU206=hr4QswLXVyiat1ozZg@mail.gmail.com> (sfid-20140529_164219_426601_AD1EF62C)
-Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 27 May 2014 16:06:22 -0400
+Received: by mail-we0-f176.google.com with SMTP id q59so9896691wes.7
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2014 13:06:20 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/10] staging: vt6656: rf.c replace DBG_PRT debug messages
+Date: Tue, 27 May 2014 21:05:26 +0100
+Message-Id: <1401221126-4219-10-git-send-email-tvboxspy@gmail.com> (sfid-20140527_220646_914266_A3AD9AA7)
+In-Reply-To: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
+References: <1401221126-4219-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 May 2014 16:10, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
-> On 29 May 2014 15:47, Ben Greear <greearb@candelatech.com> wrote:
->>
->>
->> On 05/29/2014 06:36 AM, Bartosz Markowski wrote:
->>>
->>> Firmware 10.x supports up to 8 virtual AP interfaces
->>> (comparing to 7 for main firmware). Previous vdev map
->>> initialization was missing enough space for 8 + 1 vdevs
->>> (we may spent one for mac monitor), due to wrong define used.
->>>
->>> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
->>
->>
->> You are bumping total vdevs up to 16 with that patch...have you
->> actually tested that many?  The stock firmware has quite a bit of
->> deficiencies in the concurrency handling, at least for stations.
->
-> No, I have never tested it with so many. I'm running tests with 8 at
-> most. And by this patch I just aimed to support 8 VAPS we advertise in
-> iface_combinations to mac80211 (.max_interfaces = 8). I was managed to
-> get only 7 before, since 1 vdev was being allocated as monitor.
+replace with dev_dbg
 
-FYI: I quickly tried to extend the .max_interfaces +
-interface_combinations limit in ath10k and check with 15 VAPs (using
-hostapd, open network; on MIPS platform) and it just worked.. I did
-not perform any exploratory testing, but managed to connect a couple
-of clients to various bssids + run some sane iperf traffic etc.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rf.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index d509839..3f54ae3 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -41,8 +41,6 @@
+ #include "usbpipe.h"
+ #include "datarate.h"
+ 
+-static int          msglevel                =MSG_LEVEL_INFO;
+-//static int          msglevel                =MSG_LEVEL_DEBUG;
+ #define BY_AL2230_REG_LEN     23 //24bit
+ #define CB_AL2230_INIT_SEQ    15
+ #define AL2230_PWR_IDX_LEN    64
+@@ -902,14 +900,14 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 					(BY_VT3226_REG_LEN<<3)+IFREGCTL_REGW);
+ 
+ 			if (priv->vnt_mgmt.eScanState != WMAC_NO_SCANNING) {
+-				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				dev_dbg(&priv->usb->dev,
+ 				"vnt_rf_set_txpower> 11B mode uCurrChannel[%d]\n",
+ 						priv->vnt_mgmt.uScanChannel);
+ 				ret &= vnt_rf_write_embedded(priv,
+ 					vt3226d0_lo_current_table[priv->
+ 						vnt_mgmt.uScanChannel - 1]);
+ 			} else {
+-				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				dev_dbg(&priv->usb->dev,
+ 				"vnt_rf_set_txpower> 11B mode uCurrChannel[%d]\n",
+ 						priv->vnt_mgmt.uCurrChannel);
+ 				ret &= vnt_rf_write_embedded(priv,
+@@ -920,7 +918,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 			ret &= vnt_rf_write_embedded(priv, 0x015C0800 +
+ 				(BY_VT3226_REG_LEN<<3)+IFREGCTL_REGW);
+ 		} else {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++			dev_dbg(&priv->usb->dev,
+ 					"@@@@ vnt_rf_set_txpower> 11G mode\n");
+ 
+ 			power_setting = ((0x3f-priv->byCurPwr) << 20) |
 -- 
-Bartosz
+1.9.1
+
