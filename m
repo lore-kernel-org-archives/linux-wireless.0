@@ -1,82 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29048 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751777AbaEZHs6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 03:48:58 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 03/11] pinctrl: sunxi: Move setting of mux to irq type from unmask to set_type
-Date: Mon, 26 May 2014 09:47:58 +0200
-Message-Id: <1401090486-4414-4-git-send-email-hdegoede@redhat.com> (sfid-20140526_094905_333837_441EB094)
-In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1127 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633AbaE0OVD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 10:21:03 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add implementation for configure max amsdu, ampdu
+References: <1400245332-6974-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Tue, 27 May 2014 17:20:55 +0300
+In-Reply-To: <1400245332-6974-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Fri, 16 May 2014 15:02:12 +0200")
+Message-ID: <87zji39ubc.fsf@kamboji.qca.qualcomm.com> (sfid-20140527_162208_422823_265B3C8D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With level triggered interrupt mask / unmask will get called for each
-interrupt, doing the somewhat expensive mux setting on each unmask thus is
-not a good idea. Instead move it to the set_type callback, which is typically
-done only once for each irq.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/pinctrl/sunxi/pinctrl-sunxi.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+> Allow to setup maximum subframes for AMSDU and AMPDU aggregation,
+> using debugfs htt_max_amsdu_ampdu file.
+>
+> Eg.
+> echo "2 64" > htt_max_amsdu_ampdu
+> will setup maximum amsdu subframes equal 2 and
+> maximum ampdu subframes equal to 64.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index ec60c2e..d1675c9 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-@@ -542,6 +542,7 @@ static int sunxi_pinctrl_irq_set_type(struct irq_data *d,
- 	struct sunxi_pinctrl *pctl = irq_data_get_irq_chip_data(d);
- 	u32 reg = sunxi_irq_cfg_reg(d->hwirq);
- 	u8 index = sunxi_irq_cfg_offset(d->hwirq);
-+	struct sunxi_desc_function *func;
- 	unsigned long flags;
- 	u32 regval;
- 	u8 mode;
-@@ -574,6 +575,12 @@ static int sunxi_pinctrl_irq_set_type(struct irq_data *d,
- 
- 	spin_unlock_irqrestore(&pctl->lock, flags);
- 
-+	func = sunxi_pinctrl_desc_find_function_by_pin(pctl,
-+					pctl->irq_array[d->hwirq], "irq");
-+
-+	/* Change muxing to INT mode */
-+	sunxi_pmx_set(pctl->pctl_dev, pctl->irq_array[d->hwirq], func->muxval);
-+
- 	return 0;
- }
- 
-@@ -619,19 +626,11 @@ static void sunxi_pinctrl_irq_mask(struct irq_data *d)
- static void sunxi_pinctrl_irq_unmask(struct irq_data *d)
- {
- 	struct sunxi_pinctrl *pctl = irq_data_get_irq_chip_data(d);
--	struct sunxi_desc_function *func;
- 	u32 reg = sunxi_irq_ctrl_reg(d->hwirq);
- 	u8 idx = sunxi_irq_ctrl_offset(d->hwirq);
- 	unsigned long flags;
- 	u32 val;
- 
--	func = sunxi_pinctrl_desc_find_function_by_pin(pctl,
--						       pctl->irq_array[d->hwirq],
--						       "irq");
--
--	/* Change muxing to INT mode */
--	sunxi_pmx_set(pctl->pctl_dev, pctl->irq_array[d->hwirq], func->muxval);
--
- 	spin_lock_irqsave(&pctl->lock, flags);
- 
- 	/* Unmask the IRQ */
+I saw two new warnings:
+
+drivers/net/wireless/ath/ath10k/debug.c:683: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/debug.c:685: WARNING: line over 80 characters
+
+> I wasn't sure we have to protect
+> debug.htt_max_amsdu, debug.htt_max_ampdu using conf_mutex.
+> Anyway I can add such protection if required.
+
+Yeah, we need to protect those variables.
+
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -671,6 +671,61 @@ static const struct file_operations fops_htt_stats_mask = {
+>  	.llseek = default_llseek,
+>  };
+>  
+> +static ssize_t ath10k_read_htt_max_amsdu_ampdu(struct file *file,
+> +					       char __user *user_buf,
+> +					       size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	char buf[64];
+> +	unsigned int len;
+> +
+> +	if (!ar->debug.htt_max_amsdu || !ar->debug.htt_max_ampdu)
+> +		len = scnprintf(buf, sizeof(buf), "using FW default max subframes configuration: amsdu 3, ampdu 64\n");
+> +	else
+> +		len = scnprintf(buf, sizeof(buf), "max subframes amsdu %u, ampdu %d\n",
+> +				ar->debug.htt_max_amsdu,
+> +				ar->debug.htt_max_ampdu);
+> +
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+
+I would prefer to have something more machine readable, for example
+something like this:
+
+if (ar->debug.htt_max_amsdu != 0) {
+        amsdu = ar->debug.htt_max_amsdu;
+} else {
+        amsdu = 3;
+        amsdu_default = " (default)";
+}
+
+len += scnprintf(buf + len, sizeof(buf) - len, 
+                "max subframes amsdu %u%s\n", amsdu, amsdu_default);
+
+And the same for ampdu. But I'm not actually sure if it makes any sense
+to print the default at all?
+
+Now I think more maybe we should just use the same format as we use as
+input ("%u %u"). That would follow the KISS principle.
+
+> @@ -757,6 +812,9 @@ void ath10k_debug_stop(struct ath10k *ar)
+>  	 * warning from del_timer(). */
+>  	if (ar->debug.htt_stats_mask != 0)
+>  		cancel_delayed_work(&ar->debug.htt_stats_dwork);
+> +
+> +	ar->debug.htt_max_amsdu = 0;
+> +	ar->debug.htt_max_ampdu = 0;
+>  }
+
+This is correct. But the problem now is that the value only is valid
+until the interface is put down or firmware crashes. That's a bit
+confusing for the user, but I guess we can fix that later if that will
+become a problem. Users should not use this command normally.
+
+> +int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+> +				u8 max_subfrms_ampdu,
+> +				u8 max_subfrms_amsdu)
+> +{
+> +	struct htt_aggr_conf *aggr_conf;
+> +	struct sk_buff *skb;
+> +	struct htt_cmd *cmd;
+> +	int len;
+> +	int ret;
+> +
+> +	/* By default FW setup amsdu = 3 and ampdu = 64 */
+> +	if (max_subfrms_ampdu == 0 || max_subfrms_ampdu > 64)
+> +		return -EINVAL;
+
+I didn't immediately understand the comment above. Is it just to
+document what are the firmware defaults? In that case please add an
+empty line after the comment and clear up the wording. For example,
+"Firmware defaults are: amsdu = 3 and ampdu = 64 */".
+
+> +
+> +	if (max_subfrms_amsdu == 0 || max_subfrms_amsdu > 31)
+> +		return -EINVAL;
+> +
+> +	len = sizeof(cmd->hdr);
+> +	len += sizeof(cmd->aggr_conf);
+> +
+> +	skb = ath10k_htc_alloc_skb(len);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	skb_put(skb, len);
+> +	cmd = (struct htt_cmd *)skb->data;
+> +	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_AGGR_CFG;
+> +
+> +	aggr_conf = &cmd->aggr_conf;
+> +	aggr_conf->max_num_ampdu_subframes = max_subfrms_ampdu;
+> +	aggr_conf->max_num_amsdu_subframes = max_subfrms_amsdu;
+> +
+> +	ath10k_dbg(ATH10K_DBG_HTT, "htt h2t aggr cfg msg amsdu %d, ampdu %d",
+> +		   aggr_conf->max_num_amsdu_subframes,
+> +		   aggr_conf->max_num_ampdu_subframes);
+
+No comma in the debug message, please.
+
 -- 
-1.9.3
-
+Kalle Valo
