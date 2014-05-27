@@ -1,115 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:47854 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbaEXMer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 08:34:47 -0400
-Received: by mail-qc0-f177.google.com with SMTP id i17so9622632qcy.22
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 05:34:46 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:28782 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751202AbaE0JJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2014 05:09:58 -0400
+Message-ID: <5384563D.2000000@redhat.com> (sfid-20140527_111002_515459_481AD2D6)
+Date: Tue, 27 May 2014 11:09:17 +0200
+From: Hans de Goede <hdegoede@redhat.com>
 MIME-Version: 1.0
-Date: Sat, 24 May 2014 13:34:46 +0100
-Message-ID: <CANy8jx+RY-_wbX5JqdF_xwyP+2XQ-V9Ae95Y5MOzd=fyir8KTw@mail.gmail.com> (sfid-20140524_143452_434308_04279CE3)
-Subject: max_erip/tx_power not being set correctly
-From: John Walker <john@x109.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Maxime Ripard <maxime.ripard@free-electrons.com>
+CC: Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 02/11] pinctrl: sunxi: add IRQCHIP_SKIP_SET_WAKE flag
+ for pinctrl irq chip
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <1401090486-4414-3-git-send-email-hdegoede@redhat.com> <20140527080746.GB4730@lukather>
+In-Reply-To: <20140527080746.GB4730@lukather>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wireless Development
+Hi,
 
-I hope you can help.A bug seems to have been introduced in 3.10.34ish
-(3.10.32 is ok) linux kernel where a statically compiled regulator
-db.txt file does not set max_erip /tx_power correctly.
+On 05/27/2014 10:07 AM, Maxime Ripard wrote:
+> On Mon, May 26, 2014 at 09:47:57AM +0200, Hans de Goede wrote:
+>> From: Chen-Yu Tsai <wens@csie.org>
+>>
+>> The sunxi pinctrl irq chip driver does not support wakeup at the
+>> moment. Adding IRQCHIP_SKIP_SET_WAKE lets the irqs work with drivers
+>> using wakeup.
+>>
+>> Also add a name to the irq chip.
+>>
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  drivers/pinctrl/sunxi/pinctrl-sunxi.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+>> index db9ccd6..ec60c2e 100644
+>> --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+>> +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+>> @@ -646,6 +646,8 @@ static struct irq_chip sunxi_pinctrl_irq_chip = {
+>>  	.irq_mask_ack	= sunxi_pinctrl_irq_mask_ack,
+>>  	.irq_unmask	= sunxi_pinctrl_irq_unmask,
+>>  	.irq_set_type	= sunxi_pinctrl_irq_set_type,
+>> +	.name		= "sunxi-pio",
+>> +	.flags		= IRQCHIP_SKIP_SET_WAKE,
+> 
+> I'd rather see the name set to dev_name() or something like that. This
+> will not work that great with multiple pin controller supporting
+> interrupts.
 
-It was first noticed that the power output of a RaspberyPi hostapd AP
-was only outputting -55dBm, while previously it was at -30dbm. This
-was measured with a phone app, wifi analyzer at 1 m distance.
+That would require moving the irq_chip struct to become a member of the
+sunxi_pinctrl struct. Not undoable, but that seems like something which
+should be done in a separate patch. So shall I just drop the .name part
+of this patch for now ?
 
-Any post 3.10.33 & late 3.12 kernels show the following when cfg80211
-is loaded. One can see that the max_erip is not set:
+Regards,
 
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: World regulatory domain updated:
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2402000 KHz - 2472000 KHz @ 0 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (2457000 KHz - 2482000 KHz @ 0 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 160000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5250000 KHz - 5330000 KHz @ 160000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 0 mBm)
-cfg80211: Calling CRDA for country: GB
-cfg80211: Regulatory domain changed to country: GB
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (2000 mBi, 0 mBm)
-cfg80211:   (5490000 KHz - 5710000 KHz @ 80000 KHz), (2700 mBi, 0 mBm)
-cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), (4000 mBi, 0 mBm)
-
-iw list shows:
-[snip]
-    Frequencies:
-            * 2412 MHz [1] (0.0 dBm)
-            * 2417 MHz [2] (0.0 dBm)
-            * 2422 MHz [3] (0.0 dBm)
-            * 2427 MHz [4] (0.0 dBm)
-            * 2432 MHz [5] (0.0 dBm)
-            * 2437 MHz [6] (0.0 dBm)
-            * 2442 MHz [7] (0.0 dBm)
-            * 2447 MHz [8] (0.0 dBm)
-            * 2452 MHz [9] (0.0 dBm)
-            * 2457 MHz [10] (0.0 dBm)
-            * 2462 MHz [11] (0.0 dBm)
-            * 2467 MHz [12] (0.0 dBm)
-            * 2472 MHz [13] (0.0 dBm)
-            * 2484 MHz [14] (disabled)
-
-iw reg get shows:
-(3.12.20)
-country GB: DFS-UNSET
-    (2402 - 2482 @ 40), (20, 0)
-    (5170 - 5250 @ 80), (20, 0)
-    (5250 - 5330 @ 80), (20, 0)
-    (5490 - 5710 @ 80), (27, 0)
-    (57240 - 65880 @ 2160), (40, 0)
-
-When I've returned to a 3.10.32 kernel, the tx output power is
-restored to -30dBm, all the cfg80211 and iw list values are restored.
-I've also tested an old db.txt file from the start of the year against
-3.12.19, but it makes no difference.
-
-iw list from 3.10.32
-[snip]
-Frequencies:
-            * 2412 MHz [1] (20.0 dBm)
-            * 2417 MHz [2] (20.0 dBm)
-            * 2422 MHz [3] (20.0 dBm)
-            * 2427 MHz [4] (20.0 dBm)
-            * 2432 MHz [5] (20.0 dBm)
-            * 2437 MHz [6] (20.0 dBm)
-            * 2442 MHz [7] (20.0 dBm)
-            * 2447 MHz [8] (20.0 dBm)
-            * 2452 MHz [9] (20.0 dBm)
-            * 2457 MHz [10] (20.0 dBm)
-            * 2462 MHz [11] (20.0 dBm)
-            * 2467 MHz [12] (20.0 dBm)
-            * 2472 MHz [13] (20.0 dBm)
-            * 2484 MHz [14] (disabled)
-
-iw reg get
-country GB: DFS-UNSET
-    (2402 - 2482 @ 40), (N/A, 20)
-    (5170 - 5250 @ 80), (N/A, 20)
-    (5250 - 5330 @ 80), (N/A, 20), DFS
-    (5490 - 5710 @ 80), (N/A, 27), DFS
-    (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-
-
-The iw version is 3.14
-
-I hope you can help, and many thanks
-
-John
+Hans
