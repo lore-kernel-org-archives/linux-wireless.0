@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11207 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593AbaENMwv (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:41979 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbaE1CB4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 08:52:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Hold tx-lock while detaching htt.
-References: <1397695357-14028-1-git-send-email-greearb@candelatech.com>
-	<CA+BoTQ=Q3s6_9tXq02_3S0=q5qv4U4V1F_qHoN1X1pfWV9CKBA@mail.gmail.com>
-Date: Wed, 14 May 2014 15:52:43 +0300
-In-Reply-To: <CA+BoTQ=Q3s6_9tXq02_3S0=q5qv4U4V1F_qHoN1X1pfWV9CKBA@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 17 Apr 2014 08:12:06 +0200")
-Message-ID: <878uq4h690.fsf@kamboji.qca.qualcomm.com> (sfid-20140514_145254_466706_D082A564)
+	Tue, 27 May 2014 22:01:56 -0400
+Date: Wed, 28 May 2014 12:01:28 +1000
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mwifiex: block work queue while suspended
+Message-ID: <20140528020128.GG4151@us.netrek.org> (sfid-20140528_040159_087642_41BFD75B)
+References: <20140516012439.GI15430@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
+ <20140526080110.GJ6118@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, May 27, 2014 at 04:39:07PM -0700, Bing Zhao wrote:
+> Hi James,
+> 
+> > > To understand what is happening here could you apply attached debug
+> > > patch to generate logs, or enable dynamic_debug for that?
+> > 
+> > Here's a dynamic_debug log.
+> > 
+> > Note the point of failure is the "mmc0: Timeout waiting for hardware
+> > interrupt." message, which occurs in the driver SDIO interrupt
+> > function, which began execution in a critical time period after driver
+> > suspend but before platform suspend.
+> > 
+> > We use a GPIO to wake from WLAN.
+> 
+> This doesn't match the gpio parameter configured in hscfg command
+> 0xe5.
 
-> On 17 April 2014 02:42,  <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> And check for null pool in the tx path (which would
->> indicate we are detaching).
->
-> Shouldn't we just make sure tx is stopped before we try to detach htt?
-> Stoping mac80211 queues and synchronize_net() should be sufficient I
-> think.
->
->
->> @@ -403,6 +412,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
->>                 goto err;
->>
->>         spin_lock_bh(&htt->tx_lock);
->> +
->> +       /* Check if we are detached... */
->> +       if (! htt->tx_pool) {
->> +               spin_unlock_bh(&htt->tx_lock);
->
-> Setting `res` would be nice to indicate an error. And there's a space after !.
+You're right, and I'm quite wrong.  Sorry about that.  I misread our
+code.
 
-Ben, are you planning to send v2? Or what should we do with this patch?
+Correction, we use SDIO to wake from WLAN.
+
+We set gap to 0xff, which we think is a special value that means the
+device will wait for the host to acknowledge before sending data to
+the host.
+
+Looking through history of development, we thought that this would
+avoid a race condition, where the host starts to suspend, configures
+the device for host sleep, but the device may wake in the time before
+the host suspends.
+
+We don't see this "mmc0: Timeout waiting for hardware interrupt."
+problem unless we use WPA2.  It does not reproduce on an open access
+point.
 
 -- 
-Kalle Valo
+James Cameron
+http://quozl.linux.org.au/
