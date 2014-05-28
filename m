@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:54720 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757209AbaEIUDG (ORCPT
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:37361 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545AbaE1Kzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 16:03:06 -0400
-Received: by mail-pd0-f178.google.com with SMTP id r10so4108349pdi.9
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2014 13:03:05 -0700 (PDT)
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Subject: Re: [PATCH 0/4] wl1251 IBSS fixes
-Date: Fri, 9 May 2014 22:03:00 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	David Gnedt <david.gnedt@davizone.at>, freemangordon@abv.bg
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com> <CANOLnOO0xPH9kfZuqdbpYkdQrOFAOvL-4H0QmfAUVKCwg0ot2Q@mail.gmail.com>
-In-Reply-To: <CANOLnOO0xPH9kfZuqdbpYkdQrOFAOvL-4H0QmfAUVKCwg0ot2Q@mail.gmail.com>
+	Wed, 28 May 2014 06:55:39 -0400
+Received: by mail-qg0-f45.google.com with SMTP id z60so16962658qgd.18
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 03:55:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1491444.GnbF3doq8s";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201405092203.00729@pali> (sfid-20140509_220310_998946_E57A8A1E)
+In-Reply-To: <CAEFj98755Zfjs_MOXFEF+PPRKH5Q+UVsURmAcf-CKKkVfnrTLA@mail.gmail.com>
+References: <2083629.VLZzpqGjAs@desktop.local> <CAEFj98755Zfjs_MOXFEF+PPRKH5Q+UVsURmAcf-CKKkVfnrTLA@mail.gmail.com>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Wed, 28 May 2014 12:55:18 +0200
+Message-ID: <CAGnRvuq=aLFhFuE=ntJ1GkFFf_UNQjDxx2KcGMdskRycunZbaA@mail.gmail.com> (sfid-20140528_125542_229559_EE841540)
+Subject: Re: [RFC Patch v2] Unify mpp/mesh_path handling for Mac 802.11s
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Thomas Pedersen <thomas@noack.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1491444.GnbF3doq8s
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 28, 2014 at 12:43 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>> While looking through the code I noticed that there seems to be no code-path
+>> that removes stall mpp_path entries (except for the removal of the mesh
+>> interface) ! Unless I overlooked something this would be a way to use up all
+>> existing memory of the kernel by sending it 802.11s packets with changing
+>> proxied addresses.
+>
+> AFAIK, we don't really "manage" the mpp path and relying on incoming
+> packet to update the mpp path table.
 
-On Friday 09 May 2014 02:21:21 Grazvydas Ignotas wrote:
-> On Tue, Apr 22, 2014 at 3:09 AM, Grazvydas Ignotas=20
-<notasas@gmail.com> wrote:
-> > IBSS mode is currently advertised by wl1251 driver but is
-> > totally broken. First there is a disconnect hack for
-> > monitor mode that was recently merged, it abuses mac80211
-> > and causes corruption in IBSS mode, so I think should be
-> > reverted. Then there are several cases of station-only
-> > mac80211 functions called carelessly, what is also fixed.
->=20
-> Ping.
-> This driver is orphan and hardware carrying it is outdated, so
-> acks / tested-bys are unlikely..
+Imagine a malicious or maybe misbehaving node that is sending you
+proxied traffic and is just counting up the source mac address. Every
+received packet would generate another entry in the mpp_path table.
 
-Now I'm testing these patches on wireless-testing git tree from=20
-year 2010 compiled against patched maemo 2.6.28 kernel.
+Even without this, one usecase for 802.11s is to connect multiple
+access points and allow clients to roam between them and not loosing
+internet connectivity through a gateway. A scenario like this would
+have one mpp_path table entry for every client that has connected to
+the network... even if it has been years ago.
 
-Reason for using these historical wireless-testing version is=20
-that this version can be compiled against kernel which working=20
-with default Maemo system in Nokia N900.
-
-It looks like your patches fixed some kernel oops when iwconfig=20
-changing mode to ad-hoc.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1491444.GnbF3doq8s
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlNtNHQACgkQi/DJPQPkQ1LC3gCfTzwXWuvoO5KqTb6i1/NhHHuW
-Nj0An1ytIZXsGXzAds7IebMYb+PYjDbG
-=zme/
------END PGP SIGNATURE-----
-
---nextPart1491444.GnbF3doq8s--
+Henning Rogge
