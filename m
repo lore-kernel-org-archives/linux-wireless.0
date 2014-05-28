@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5246 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932157AbaEGK2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 06:28:35 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH 1/4] cfg80211/nl80211: add channel switch started and
- failed notifications
-Date: Wed, 7 May 2014 10:27:31 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333F41ED@HASMSX106.ger.corp.intel.com> (sfid-20140507_122838_816055_B4B985E1)
-References: <1399038031-23206-1-git-send-email-luca@coelho.fi>
-	 <1399373244.4218.21.camel@jlt4.sipsolutions.net>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A0333F3C57@HASMSX106.ger.corp.intel.com>
- <1399444778.5038.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1399444778.5038.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9511 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750878AbaE1Eju (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 00:39:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/3] mwifiex: change hscfg gap parameter to avoid potential firmware deadlock
+Date: Tue, 27 May 2014 21:39:34 -0700
+Message-ID: <1401251974-18738-3-git-send-email-bzhao@marvell.com> (sfid-20140528_063953_468774_CF8F528F)
+In-Reply-To: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
+References: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gPiA+IEknbSBub3QgcmVhbGx5IHN1cmUgd2h5IHlvdSBoYXZlIHRoaXMgLSBpdCBzZWVt
-cyB0aGF0IGluIHRoaXMgY2FzZQ0KPiA+ID4gdGhlIGludGVyZmFjZSB3aWxsIGJlIHN0b3BwZWQg
-c28geW91J2xsIGdldCBhIFNUT1BfQVAgb3IgRElTQ09OTkVDVA0KPiA+ID4gb3Igd2hhdGV2ZXIg
-b3RoZXIgbm90aWZpY2F0aW9uLiBUaGlzIG1heSBub3QgYWN0dWFsbHkgYmUgY29tcGxldGVseQ0K
-PiA+ID4gdHJ1ZSByaWdodCBub3cgKEkgc2VlbSB0byByZW1lbWJlciBhIGZpeCBpbiB0aGlzIGFy
-ZWEgYnV0IGNhbid0IHNlZW0NCj4gPiA+IHRvIGZpbmQgaXQgaW4gbXkgdHJlZSEhKSBidXQgd2Un
-bGwgaGF2ZSB0byBmaXggdGhhdCBwYXJ0IGFueXdheS4gTm90DQo+ID4gPiByZWFsbHkgc3VyZSB3
-aHkgdGhlbiB0aGF0IGNvdWxkbid0IGJlIHVzZWQgaW5zdGVhZCBvZiB0aGlzDQo+ID4gPiBub3Rp
-ZmljYXRpb24/IFRoZSB1c2Vyc3BhY2UgY29kZSBpcyBnb2luZyB0byBoYXZlIHRvIHdvcnJ5IGFi
-b3V0IHRoYXQNCj4gYW55d2F5LCBJJ2QgdGhpbmsuDQo+ID4gPg0KPiA+DQo+ID4gQXQgbGVhc3Qg
-Zm9yIEFQL0dPLCB0aGVyZSBhcmUgY2FzZXMgdGhhdCBhIGZhaWxlZCBjaGFubmVsIHN3aXRjaA0K
-PiA+IHNob3VsZCBub3QgbmVjZXNzYXJpbHkgdHJpZ2dlciBhIFNUT1BfQVAgZmxvdy4gRm9yIGV4
-YW1wbGUsIGluIGNhc2UNCj4gPiB0aGF0IG11bHRpLWNoYW5uZWwgaXMgc3VwcG9ydGVkLCB3cGFf
-c3VwcGxpY2FudCBtaWdodCByZXF1ZXN0IGENCj4gPiBjaGFubmVsIHN3aXRjaCB0byB0cnkgdG8g
-c3dpdGNoIGFuIEFQL0dPIGludGVyZmFjZSB0byBhIGNoYW5uZWwgdXNlZA0KPiA+IGJ5IGEgc3Rh
-dGlvbiBpbnRlcmZhY2UgKHRvIGF2b2lkIG11bHRpIGNoYW5uZWwgb3BlcmF0aW9uKSwgYnV0IGlu
-IGNhc2UNCj4gPiB0aGF0IHN1Y2ggYSB0cmFuc2l0aW9uIGZhaWxzLCBpdCBpcyBzdGlsbCBhIHZh
-bGlkIHRvIGNvbnRpbnVlIHRvIHVzZQ0KPiA+IGN1cnJlbnQgY2hhbm5lbCBhbmQgZG8gbm90IHN0
-b3AgdGhlIEdPLiBJbiBzdWNoIGEgY2FzZSwgaXQgd291bGQgYmUNCj4gPiB1c2VmdWwgdG8gZ2V0
-IGEgZmFpbHVyZSBub3RpZmljYXRpb24uIEdlbmVyYWxseSwgSSB0aGluayB0aGF0IHNpbmNlDQo+
-ID4gaG9zdGFwZC93cGFfc3VwcGxpY2FudCBoYXZlIHN0YXJ0ZWQgdGhlIGNoYW5uZWwgc3dpdGNo
-LCBpdCBtaWdodCBiZQ0KPiA+IGJldHRlciB0byBoYXZlIHRoZW0gaGFuZGxlIGEgbm90aWZpY2F0
-aW9uIGFuZCB0YWtlIHRoZSBhcHByb3ByaWF0ZQ0KPiA+IGFjdGlvbiAoaWYgbmVlZGVkIHN0b3Ag
-dGhlIEFQL0dPIC4uLikuDQo+IA0KPiBJIGRvbid0IHVuZGVyc3RhbmQgdGhpcyAtIHRoZXJlIGFy
-ZSB0d28gd2F5cyB0aGUgY2hhbm5lbCBzd2l0Y2ggY2FuDQo+IGZhaWw6DQo+IA0KPiAgKiB0aGUg
-cmVxdWVzdCBmYWlscw0KPiAgICB0aGlzIGp1c3QgcmV0dXJucyBhbiBlcnJvciBjb2RlIHRvIHVz
-ZXJzcGFjZSBkdXJpbmcgdGhlIHJlcXVlc3QsIHRoZXJlJ3Mgbm8NCj4gICAgbm90aWZpY2F0aW9u
-IGV2ZW4gd2l0aCB0aGVzZSBwYXRjaGVzDQo+ICAqIHRoZSByZXF1ZXN0IHN1Y2NlZWRzLCBidXQg
-cmVhbCBzd2l0Y2ggZmFpbHMNCj4gICAgd2UgYmVhY29uIHdpdGggdGhlIENTQSwgY291bnRpbmcg
-aXQgZG93biBldGMuLCBidXQgd2hlbiBpdCBjb21lcyB0bw0KPiBhY3R1YWxseQ0KPiAgICBzd2l0
-Y2hpbmcsIHRoZSBzd2l0Y2ggZmFpbHMuIFRoaXMgc2hvdWxkIGhvcGVmdWxseSBiZSByYXRoZXIg
-dW5saWtlbHksIGJ1dCBpZg0KPiAgICBpdCByZWFsbHkgaGFwcGVucyB0aGUgb25seSB0aGluZyB3
-ZSBjYW4gZG8gdG8gcmVjb3ZlciAoYW5kIGFjdHVhbGx5IGRvIG5vdw0KPiAgICBhZnRlciBNaWNo
-YWwncyBwYXRjaGVzKSBpcyB0byBTVE9QX0FQDQo+IA0KDQpZZXAsIGFncmVlIHRoYXQgdGhlIG9u
-bHkgdmFsaWQgb3B0aW9uIGhlcmUgaXMgdG8gc3RvcCB0aGUgQVAuDQoNCj4gSW4gdGhlIGZpcnN0
-IGNhc2UsIHRoZXJlJ3Mgbm8gbm90aWZpY2F0aW9uLCBub3IgYW55IG5lZWQgZm9yIGl0LiBJbiB0
-aGUgc2Vjb25kDQo+IGNhc2UsIHRoZSBzY2VuYXJpbyB5b3Ugc3VnZ2VzdCBkb2Vzbid0IGFwcGx5
-LCBhbmQgU1RPUF9BUCBoYXMgdG8gaGFwcGVuDQo+IGFueXdheSBiZWNhdXNlIHRoZSBzdGF0ZSBp
-cyBjb21wbGV0ZWx5IG1lc3NlZCB1cCwgY2xpZW50cyB3aWxsIGJlIGluIHRoZQ0KPiBwcm9jZXNz
-IG9mIHN3aXRjaGluZyBldGMuDQo+IA0KPiA+IE90aGVyIHRoYW4gdGhhdCwgYSBTVE9QX0FQIG1p
-Z2h0IGludHJvZHVjZSBzb21lIHJhY2VzLCBhcw0KPiA+IHdwYV9zdXBwbGljYW50L2hvc3RhcCB3
-aWxsIG5vdCBrbm93IGlmIHRoZSBzdG9wX2FwIHdhcyBkdWUgdG8gdGhlDQo+ID4gZmFpbGVkIENT
-IG9yIGR1ZSB0byBzb21lIG90aGVyIHJlYXNvbi4NCj4gDQo+IEkgZG9uJ3Qgc2VlIHdoeSB0aGF0
-IHdvdWxkIG1hdHRlciAtIGV2ZW4gaWYgdGhlIFNUT1BfQVAgKndhcyogZm9yIHNvbWUNCj4gb3Ro
-ZXIgcmVhc29uLCBidXQgaGFwcGVuZWQgaW4gdGhlIG1pZGRsZSBvZiB0aGUgQ1MgZmxvdywgdGhl
-IHJlYWN0aW9uIHdvdWxkDQo+IHByZXN1bWFibHkgYmUgdGhlIHNhbWU/DQo+IA0KDQpJdCBjYW4g
-YmUgYmVuZWZpY2lhbCB0byBrbm93IHRoYXQgdGhlIFNUT1BfQVAgd2FzIGNhbGxlZCBkdWUgdG8g
-ZmFpbHVyZSBvZiBDUywgYXMgd3BhX3N1cHBsaWNhbnQvaG9zdGFwIGNhbiB0ZWFyIGRvd24gdGhl
-IEFQIGFuZCB0aGVuIChpZiBwb3NzaWJsZSkgc2V0IGl0IHVwIGFnYWluIG9uIHRoZSBuZXcgY2hh
-bm5lbCBvciBhbm90aGVyIGNoYW5uZWwuDQoNClJlZ2FyZHMsDQoNCklsYW4uDQo=
+If host sleep parameter gap is set to 0xff, firmware will wait
+for an ack from host to confirm the success of host wakeup.
+This prevents firmware from uploading data packet before host
+actually wakes up.
+
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 42eaeda..3175dd0 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -405,7 +405,7 @@ enum P2P_MODES {
+ #define HS_CFG_CANCEL			0xffffffff
+ #define HS_CFG_COND_DEF			0x00000000
+ #define HS_CFG_GPIO_DEF			0xff
+-#define HS_CFG_GAP_DEF			0
++#define HS_CFG_GAP_DEF			0xff
+ #define HS_CFG_COND_BROADCAST_DATA	0x00000001
+ #define HS_CFG_COND_UNICAST_DATA	0x00000002
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+-- 
+1.8.2.3
+
