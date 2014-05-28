@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbaEFNQH (ORCPT
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.225]:9640 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751466AbaE1OSQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2014 09:16:07 -0400
-Message-ID: <1399382148.4218.28.camel@jlt4.sipsolutions.net> (sfid-20140506_151611_447561_5CACA573)
-Subject: Re: [PATCH v4 0/4] mac80211/cfg80211: CSA fixes/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
-Date: Tue, 06 May 2014 15:15:48 +0200
-In-Reply-To: <1397049062-24177-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_151716_663097_86B5A1EC)
-References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	 <1397049062-24177-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140409_151716_663097_86B5A1EC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 May 2014 10:18:16 -0400
+Date: Wed, 28 May 2014 10:18:14 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+	michal.kazior@tieto.com
+Subject: Re: [RFC] trace-cmd: plugin_mac80211: add parsing for the new
+ drv_switch_vif_chanctx
+Message-ID: <20140528101814.400b20e2@gandalf.local.home> (sfid-20140528_161819_633485_5C1C57CD)
+In-Reply-To: <1401283140.8146.16.camel@jlt4.sipsolutions.net>
+References: <1400873435-9687-1-git-send-email-luca@coelho.fi>
+	<1401088941.19055.0.camel@jlt4.sipsolutions.net>
+	<20140528090837.2b868d22@gandalf.local.home>
+	<1401283140.8146.16.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 15:10 +0200, Michal Kazior wrote:
-> Hi,
+On Wed, 28 May 2014 15:19:00 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> On Wed, 2014-05-28 at 09:08 -0400, Steven Rostedt wrote:
+> > On Mon, 26 May 2014 09:22:21 +0200
+> > Johannes Berg <johannes@sipsolutions.net> wrote:
+> > 
+> > > Steven, what do you think about those packed structs in a dynamic
+> > > array? I've applied the kernel patch but I can still back it out if you
+> > > know of a better solution.
+> > 
+> > I consider you more of the maintainer of the mac80211 plugin, so I'll
+> > leave that decision up to you ;-)
 > 
-> The patchset fixes CSA tx queue locking and
-> introduces interface teardown upon CSA failure
-> during finalization.
+> Heh, ok. I was more thinking about the structure of the kernel
+> tracepoint than the userspace code though.
+> 
 
-Applied (with the rename Luca suggested), thanks.
+Where's the patch for the kernel? I can take a look at that. Most cases
+if it works for you, then it should be fine.
 
-However, there's one more thing - one caller of ieee80211_csa_finalize()
-doesn't check the return value now, I think it probably should. Mind
-taking a look at that? It should *probably* be the same as the other
-caller (and not propagate the error), I'd say, so maybe that should be
-rolled into the function?
-
-Thanks,
-johannes
-
+-- Steve
