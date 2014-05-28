@@ -1,102 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42509 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755585AbaEGMxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 08:53:25 -0400
-Message-ID: <1399467196.6800.22.camel@dubbel> (sfid-20140507_145328_304530_5BDBBDCF)
-From: Luca Coelho <luca@coelho.fi>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:64870 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250AbaE1TeD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 15:34:03 -0400
+Received: by mail-qg0-f53.google.com with SMTP id f51so19198440qge.12
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 12:34:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1401283656.8146.17.camel@jlt4.sipsolutions.net>
+References: <2083629.VLZzpqGjAs@desktop.local> <1401283040.8146.15.camel@jlt4.sipsolutions.net>
+ <CAGnRvuq1By_dZZnv3Vcm+JRxpkyZwv8NfEv4cM-1QChwX-+eqA@mail.gmail.com> <1401283656.8146.17.camel@jlt4.sipsolutions.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Wed, 28 May 2014 21:33:40 +0200
+Message-ID: <CAGnRvuqcMm6A6SPuuPHaahxBAvSM+oHUs3NJRN4N8jsSijVQLQ@mail.gmail.com> (sfid-20140528_213407_677782_E7B1DFF5)
+Subject: Re: [RFC Patch v2] Unify mpp/mesh_path handling for Mac 802.11s
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Date: Wed, 07 May 2014 15:53:16 +0300
-In-Reply-To: <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	 <1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	 <1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	 <1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	 <1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	 <1399455657.6800.4.camel@dubbel>
-	 <CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	 <1399457760.6800.7.camel@dubbel>
-	 <CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	 <1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	 (sfid-20140507_131912_954267_EF512364) <1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	 <1399464536.6800.11.camel@dubbel>
-	 <1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	 <1399465244.6800.13.camel@dubbel>
-	 <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Thomas Pedersen <thomas@noack.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-05-07 at 14:38 +0200, Johannes Berg wrote:
-> On Wed, 2014-05-07 at 15:20 +0300, Luca Coelho wrote:
-> > On Wed, 2014-05-07 at 14:13 +0200, Johannes Berg wrote:
-> > > On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
-> > > 
-> > > > I was thinking about the case where you you need to involve 3 contexts.
-> > > > Let's say you have 2 vifs in the same context and after the switch you
-> > > > need to split them into 2 new ones (for instance, if there is some
-> > > > incompatibility in the new chandefs).
-> > > > 
-> > > > With the generic transactions you could do:
-> > > >  - new chanctx2
-> > > >  - new chanctx3
-> > > >  - switch vif1 chanctx1->chanctx2
-> > > >  - switch vif2 chanctx1->chanctx3
-> > > >  - del chanctx1
-> > > 
-> > > This isn't an interesting case, because it means you have a spare, so
-> > > you might as well do
-> > > 
-> > >  new chanctx3
-> > >  switch vif2 chanctx1->chanctx3
-> > >  switch_transaction(chanctx1, chanctx2, vif1)
-> > 
-> > Couldn't this potentially break the combinations temporarily again?
-> 
-> I don't see why? You had a spare channel context to start with,
-> otherwise you'd never have accepted this situation. Therefore, you can
-> use the spare one before actually doing the proposed
-> switch_vif_chanctx().
+On Wed, May 28, 2014 at 3:27 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> The current patch ONLY unifies the mpp_path_add() and mesh_path_add()
+>> function. But I could factor out the addition of the atomic counter
+>> for mpp_paths into a patch of its own.
+>
+> Please.
 
-It's not about the spare, it's about having this temporarily:
+*sigh* new version of the patch will be coming later...
 
-chanctx3-vif2
-chanctx1-vif1
+the existing atomic counter thing in mesh_pathtbl.c is slightly broken
+and I have to look how to fix it before I can think about the
+unification thing again.
 
-Can we be sure that chanctx1 with vif1 is compatible with chanctx3 with
-vif2? We only check chanctx2 with vif1 and chanctx3 with vif2, which is
-our final goal.
+Maybe I will try to work on the nl80211 addition for mpp_dumps in
+parallel, but all the "tracing event" code looks still quite obscure
+to me.
 
-I'm not sure this is even possible, but it was something like this I had
-in mind.
-
---
-Luca.
-
-
-
-> 
-> Ultimately, what I'm trying to say is that instead of the proposed
-> switch_vif_chanctx(), we need to have this:
-> 
-> enum ieee80211_chanctx_switch_mode - as before
-> 
->         (*switch_vif_chanctx)(struct ieee80211_hw *hw,
->                               struct ieee80211_vif **vifs, int n_vifs,
->                               struct ieee80211_chanctx_conf *old_ctx,
->                               struct ieee80211_chanctx_conf *new_ctx,
->                               enum ieee80211_chanctx_switch_mode mode);
-> 
-> 
-> johannes
-> 
-
-
+Henning Rogge
