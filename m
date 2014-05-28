@@ -1,144 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:41600 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbaEYUia (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 May 2014 16:38:30 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so3353561wib.13
-        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2014 13:38:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 8/8] staging: vt6656: MACvSetKeyEntry create structure to write key
-Date: Sun, 25 May 2014 21:36:29 +0100
-Message-Id: <1401050189-3249-8-git-send-email-tvboxspy@gmail.com> (sfid-20140525_223834_265884_B1936C82)
-In-Reply-To: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
-References: <1401050189-3249-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37815 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbaE1OCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 10:02:35 -0400
+Message-ID: <1401285737.8146.21.camel@jlt4.sipsolutions.net> (sfid-20140528_160238_992635_5508BEDF)
+Subject: Re: [RFC] mac80211: at76x50x_usb driver broken by commit 3afc216..
+ and RX path involved in scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andrea.merello@gmail.com
+Cc: emmanuel.grumbach@intel.com,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	joerg.albert@gmx.de, Alex Stewart <alex@foogod.com>,
+	n0_5p4m_p13453@hotmail.com, Pavel Roskin <proski@gnu.org>,
+	agx@sigxcpu.org, Kalle Valo <kalle.valo@iki.fi>, sesmo@gmx.net,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 28 May 2014 16:02:17 +0200
+In-Reply-To: <CAN8YU5OgcuaLv3C=_Lg0E6p1kHqhYZ-PjSgqaTxjJ=EV7VhNaw@mail.gmail.com> (sfid-20140526_135345_142220_CC6E431E)
+References: <CAN8YU5Nh-FwrBWuCz-YArmHg9NSLqsS2aan_6edaVDg+i6018g@mail.gmail.com>
+	 <1400509775.4273.8.camel@jlt4.sipsolutions.net>
+	 <1400510950.4273.9.camel@jlt4.sipsolutions.net>
+	 <CAN8YU5OdpxQ0F7RMEFeQWC6PNzppHu6bDEt7Tv6dKntEUMy-9A@mail.gmail.com>
+	 <1400515344.4273.19.camel@jlt4.sipsolutions.net>
+	 <CAN8YU5P5rFjjF9kjLBi0qXwZ1-Zphfi-fbY048wbO9oBmKoULQ@mail.gmail.com>
+	 <CAN8YU5OgcuaLv3C=_Lg0E6p1kHqhYZ-PjSgqaTxjJ=EV7VhNaw@mail.gmail.com>
+	 (sfid-20140526_135345_142220_CC6E431E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create structure for wKeyCtl , pbyAddr and pbyKey
+Hi Andrea,
 
-wKeyCtl(key_ctl) and pbyAddr(addr) form an union of 64 bits with swap
-of two 32 bits. pbyKey(key) has a length of WLAN_KEY_LEN_CCMP(16)
-bytes.
+> Unfortunately it seems it does the same as mine..
 
-swap is needed because high order 32 bits needs to written out first.
+Ok ... fair enough.
 
-pbyKey is memcpy on to key.
+> If this is not the case (no one knowns/tells) IMHO the two choice are:
+> - do what we said: parse beacons to extract channel information (and
+> let monitor mode stay as it is)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 65 ++++++++++++--------------------------------
- drivers/staging/vt6656/mac.h | 11 ++++++++
- 2 files changed, 29 insertions(+), 47 deletions(-)
+Probably the best course of action for now. I'd make this conditional on
+receiving probe response/beacon, there should be helper functions for
+most of this. Since the chip is 2.4 GHz only you also don't have any
+problems with band selection stuff.
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index f486834..bc72144 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -125,60 +125,31 @@ void MACvDisableKeyEntry(struct vnt_private *priv, u8 entry_idx)
- void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
- 	u32 uKeyIdx, u8 *pbyAddr, u32 *pdwKey)
- {
--	u8 *pbyKey;
-+	struct vnt_mac_set_key set_key;
-+	u8 *pbyKey = (u8 *)pdwKey;
- 	u16 wOffset;
--	u32 dwData1, dwData2;
--	int ii;
--	u8 pbyData[24];
- 
- 	if (pDevice->byLocalID <= MAC_REVISION_A1)
- 		if (pDevice->vnt_mgmt.byCSSPK == KEY_CTL_CCMP)
- 			return;
- 
--    wOffset = MISCFIFO_KEYETRY0;
--    wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
--
--    dwData1 = 0;
--    dwData1 |= wKeyCtl;
--    dwData1 <<= 16;
--    dwData1 |= MAKEWORD(*(pbyAddr+4), *(pbyAddr+5));
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"1. wOffset: %d, Data: %X,"\
--		" KeyCtl:%X\n", wOffset, dwData1, wKeyCtl);
--
--    dwData2 = 0;
--    dwData2 |= *(pbyAddr+3);
--    dwData2 <<= 8;
--    dwData2 |= *(pbyAddr+2);
--    dwData2 <<= 8;
--    dwData2 |= *(pbyAddr+1);
--    dwData2 <<= 8;
--    dwData2 |= *(pbyAddr+0);
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"2. wOffset: %d, Data: %X\n",
--		wOffset, dwData2);
--
--    pbyKey = (u8 *)pdwKey;
--
--    pbyData[0] = (u8)dwData1;
--    pbyData[1] = (u8)(dwData1>>8);
--    pbyData[2] = (u8)(dwData1>>16);
--    pbyData[3] = (u8)(dwData1>>24);
--    pbyData[4] = (u8)dwData2;
--    pbyData[5] = (u8)(dwData2>>8);
--    pbyData[6] = (u8)(dwData2>>16);
--    pbyData[7] = (u8)(dwData2>>24);
--    for (ii = 8; ii < 24; ii++)
--	pbyData[ii] = *pbyKey++;
--
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_SETKEY,
--                        wOffset,
--                        (u16)uKeyIdx,
--			ARRAY_SIZE(pbyData),
--                        pbyData
--                        );
-+	wOffset = MISCFIFO_KEYETRY0;
-+	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
- 
-+	set_key.u.write.key_ctl = cpu_to_le16(wKeyCtl);
-+	memcpy(set_key.u.write.addr, pbyAddr, ETH_ALEN);
-+
-+	/* swap over swap[0] and swap[1] to get correct write order */
-+	swap(set_key.u.swap[0], set_key.u.swap[1]);
-+
-+	memcpy(set_key.key, pbyKey, WLAN_KEY_LEN_CCMP);
-+
-+	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+		"offset %d key ctl %d set key %24ph\n",
-+				wOffset, wKeyCtl, (u8 *)&set_key);
-+
-+	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_SETKEY, wOffset,
-+		(u16)uKeyIdx, sizeof(struct vnt_mac_set_key), (u8 *)&set_key);
- }
- 
- void MACvRegBitsOff(struct vnt_private *priv, u8 reg_ofs, u8 bits)
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index 2084d4b..8100685 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -403,6 +403,17 @@
- #define MAC_REVISION_A0     0x00
- #define MAC_REVISION_A1     0x01
- 
-+struct vnt_mac_set_key {
-+	union {
-+		struct {
-+			u8 addr[ETH_ALEN];
-+			__le16 key_ctl;
-+		} write __packed;
-+		u32 swap[2];
-+	} u;
-+	u8 key[WLAN_KEY_LEN_CCMP];
-+} __packed;
-+
- void MACvWriteMultiAddr(struct vnt_private *, u64);
- void MACbShutdown(struct vnt_private *);
- void MACvSetBBType(struct vnt_private *, u8);
--- 
-1.9.1
+> - do more investigation trying to fix also monitor mode issue.
+
+That could be done as a follow-up, I guess.
+
+> I could do some work on this (including opening the dongle to see if I
+> can put HW probes on the RF chip, to see on with frequency the FW
+> tunes it when scan commands are sent).
+> 
+> Also AFAIK there is a new firmware in the off-tree Atmel driver, that
+> AFAIK also support WPA.
+> If this turns out to be true, then I'm tempted to rework the driver
+> for using it (hoping the the scan command works better on it).
+> 
+> FYI :
+> Honestly I'm unsure if it's worth to do these last things:
+
+Whatever you want to do :-)
+
+johannes
 
