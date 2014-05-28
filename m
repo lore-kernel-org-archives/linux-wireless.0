@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:62222 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750743AbaEMGuA (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39612 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbaE1Nw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 02:50:00 -0400
-Received: by mail-ie0-f173.google.com with SMTP id rp18so8111605iec.32
-        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2014 23:50:00 -0700 (PDT)
+	Wed, 28 May 2014 09:52:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Frederic Danis <frederic.danis@linux.intel.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl@lists.infradead.org>
+Subject: Re: [PATCH] ath6kl: Fix ath6kl_bmi_read_hi32 macro
+References: <1400249504-23739-1-git-send-email-frederic.danis@linux.intel.com>
+Date: Wed, 28 May 2014 16:52:21 +0300
+In-Reply-To: <1400249504-23739-1-git-send-email-frederic.danis@linux.intel.com>
+	(Frederic Danis's message of "Fri, 16 May 2014 16:11:44 +0200")
+Message-ID: <87oayi6mei.fsf@kamboji.qca.qualcomm.com> (sfid-20140528_155231_397970_3ED11714)
 MIME-Version: 1.0
-In-Reply-To: <53711646.1030909@openwrt.org>
-References: <1399447378-31503-1-git-send-email-dh.herrmann@gmail.com>
-	<20140507195435.GF20432@tuxdriver.com>
-	<536A9479.8010201@openwrt.org>
-	<20140512174910.GM17022@tuxdriver.com>
-	<53711646.1030909@openwrt.org>
-Date: Tue, 13 May 2014 08:50:00 +0200
-Message-ID: <CANq1E4Seak3MoBVdQTV7afFHQWmir14DJCQe_knjhC8szp4EhA@mail.gmail.com> (sfid-20140513_085012_061479_C6AF5FD3)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: fix NULL-deref in
- hw_per_calibration() for ar9002
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Frederic Danis <frederic.danis@linux.intel.com> writes:
 
-On Mon, May 12, 2014 at 8:43 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> I looked into it again, the scenario where I assumed that this problem
-> could occur didn't turn out to be true. I have no idea how this crash
-> can occur.
+> tmp may be used uninitialized if ath6kl_bmi_read() returns an error.
+>
+> Signed-off-by: Frederic Danis <frederic.danis@linux.intel.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/bmi.h |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
+> index 18fdd69..397a52f 100644
+> --- a/drivers/net/wireless/ath/ath6kl/bmi.h
+> +++ b/drivers/net/wireless/ath/ath6kl/bmi.h
+> @@ -242,7 +242,8 @@ struct ath6kl_bmi_target_info {
+>  		(void) (check_type == val);				\
+>  		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
+>  		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
+> -		*val = le32_to_cpu(tmp);				\
+> +		if (!ret)						\
+> +			*val = le32_to_cpu(tmp);			\
+>  		ret;							\
+>  	})
 
-The only path that can set ah->caldata to NULL is through:
+I see new warnings with this patch:
 
-ieee80211_hw_config()
-  ath9k_htc_config()
-    ath9k_htc_set_channel()
-      ath9k_hw_reset()
+drivers/net/wireless/ath/ath6kl/init.c: In function '__ath6kl_init_hw_start.part.5':
+drivers/net/wireless/ath/ath6kl/init.c:1196:13: warning: 'board_ext_address' may be used uninitialized in this function [-Wuninitialized]
+drivers/net/wireless/ath/ath6kl/init.c:1147:21: note: 'board_ext_address' was declared here
+drivers/net/wireless/ath/ath6kl/init.c:1224:6: warning: 'board_address' may be used uninitialized in this function [-Wuninitialized]
+drivers/net/wireless/ath/ath6kl/init.c:1147:6: note: 'board_address' was declared here
 
-This happens whenever IEEE80211_CONF_OFFCHANNEL is set.
-
-Now mac80211 is way to big for me to review right now and
-ieee80211_hw_config() is used quite often. Given that the described
-call-path does no synchronization against ath9k_htc_ani_work(), all
-the callers of mac80211_hw_config(OFFCHANNEL) must guarantee that no
-ani-work is running. Is that intentional? I cannot see any of those
-functions calling into ath9k_htc_stop_ani(). This might of course be
-implicit.
-
-One call-path I see is:
-ieee80211_scan_cancel()
-  cancel_delayed_work()
-
-We cannot use cancel_delayed_work_sync() here due to locking issues.
-However, this obviously races against any following
-set_channel(OFFCHANNEL) request.
-
-If there's anything I can do to debug this, let me know. I tried
-adding some printk()'s into the hot-path and it turns out to no longer
-fail then. So this really seems to be a quite small race (given that a
-bunch of simple printk()s is slow enough to work around it).
-
-Thanks
-David
+-- 
+Kalle Valo
