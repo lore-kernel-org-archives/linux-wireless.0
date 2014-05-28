@@ -1,146 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:51165 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933066AbaEMNo4 (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:36004 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763AbaE1EuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 09:44:56 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 1/3] iwlwifi: mvm: fix setting channel in monitor mode
-Date: Tue, 13 May 2014 16:44:43 +0300
-Message-Id: <1399988685-14715-1-git-send-email-egrumbach@gmail.com> (sfid-20140513_154459_903253_67222743)
-In-Reply-To: <53722142.6070105@gmail.com>
-References: <53722142.6070105@gmail.com>
+	Wed, 28 May 2014 00:50:05 -0400
+Date: Wed, 28 May 2014 14:49:45 +1000
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mwifiex: block work queue while suspended
+Message-ID: <20140528044945.GI4151@us.netrek.org> (sfid-20140528_065016_051664_2DCCBF32)
+References: <20140516012439.GI15430@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
+ <20140526080110.GJ6118@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
+ <20140528020128.GG4151@us.netrek.org>
+ <477F20668A386D41ADCC57781B1F70430F70F5E4B3@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70F5E4B3@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, May 27, 2014 at 09:35:21PM -0700, Bing Zhao wrote:
+> Hi James,
+> 
+> > > > We use a GPIO to wake from WLAN.
+> > >
+> > > This doesn't match the gpio parameter configured in hscfg command
+> > > 0xe5.
+> > 
+> > You're right, and I'm quite wrong.  Sorry about that.  I misread our
+> > code.
+> > 
+> > Correction, we use SDIO to wake from WLAN.
+> > 
+> > We set gap to 0xff, which we think is a special value that means the
+> > device will wait for the host to acknowledge before sending data to
+> > the host.
+> 
+> Yes, gap=0xff should be used. Actually I also have the patch to set
+> gap to 0xff queued in my local tree. I will send it upstream.
 
-There was a deadlock in monitor mode when we were setting the
-channel if the channel was not 1.
+Thanks.  Today I have been testing with gap 50ms and no longer able to
+reproduce the "mmc0: Timeout waiting for hardware interrupt." problem.
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.14.3 #4 Not tainted
--------------------------------------------------------
-iw/3323 is trying to acquire lock:
- (&local->chanctx_mtx){+.+.+.}, at: [<ffffffffa062e2f2>] ieee80211_vif_release_channel+0x42/0xb0 [mac80211]
+> > Looking through history of development, we thought that this would
+> > avoid a race condition, where the host starts to suspend, configures
+> > the device for host sleep, but the device may wake in the time before
+> > the host suspends.
+> > 
+> > We don't see this "mmc0: Timeout waiting for hardware interrupt."
+> > problem unless we use WPA2.  It does not reproduce on an open access
+> > point.
+> 
+> With WPA2 enabled, does the "mmc0 timeout" happen in every suspend
+> attempt?
 
-but task is already holding lock:
- (&local->iflist_mtx){+.+...}, at: [<ffffffffa0609e0a>] ieee80211_set_monitor_channel+0x5a/0x1b0 [mac80211]
+No, it is rare, of the order of one in every 6000 attempts, and depends
+on the timing of arriving packets.  Our reproducer uses a ping ramp,
+with interval varying from 0.1 to 0.9 seconds with 50ms increment, and
+this brings the problem frequency down to about one in 200 attempts.
 
-which lock already depends on the new lock.
+The OLPC XO-4 by default tries to suspend automatically when user is
+idle, which is why we notice the problem.
 
-the existing dependency chain (in reverse order) is:
-
--> #2 (&local->iflist_mtx){+.+...}:
-       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
-       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
-       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
-       [<ffffffffa06225cf>] ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
-       [<ffffffffa0518189>] iwl_mvm_recalc_multicast+0x49/0xa0 [iwlmvm]
-       [<ffffffffa051822e>] iwl_mvm_configure_filter+0x4e/0x70 [iwlmvm]
-       [<ffffffffa05e6d43>] ieee80211_configure_filter+0x153/0x5f0 [mac80211]
-       [<ffffffffa05e71f5>] ieee80211_reconfig_filter+0x15/0x20 [mac80211]
-       [snip]
-
--> #1 (&mvm->mutex){+.+.+.}:
-       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
-       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
-       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
-       [<ffffffffa0517246>] iwl_mvm_add_chanctx+0x56/0xe0 [iwlmvm]
-       [<ffffffffa062ca1e>] ieee80211_new_chanctx+0x13e/0x410 [mac80211]
-       [<ffffffffa062d953>] ieee80211_vif_use_channel+0x1c3/0x5a0 [mac80211]
-       [<ffffffffa06035ab>] ieee80211_add_virtual_monitor+0x1ab/0x6b0 [mac80211]
-       [<ffffffffa06052ea>] ieee80211_do_open+0xe6a/0x15a0 [mac80211]
-       [<ffffffffa0605a79>] ieee80211_open+0x59/0x60 [mac80211]
-       [snip]
-
--> #0 (&local->chanctx_mtx){+.+.+.}:
-       [<ffffffff810d6cb7>] check_prevs_add+0x977/0x980
-       [<ffffffff810d95bb>] __lock_acquire+0xb3b/0x13b0
-       [<ffffffff810d9ee0>] lock_acquire+0xb0/0x1f0
-       [<ffffffff817eb9c8>] mutex_lock_nested+0x78/0x4f0
-       [<ffffffffa062e2f2>] ieee80211_vif_release_channel+0x42/0xb0 [mac80211]
-       [<ffffffffa0609ec3>] ieee80211_set_monitor_channel+0x113/0x1b0 [mac80211]
-       [<ffffffffa058fb37>] cfg80211_set_monitor_channel+0x77/0x2b0 [cfg80211]
-       [<ffffffffa056e0b2>] __nl80211_set_channel+0x122/0x140 [cfg80211]
-       [<ffffffffa0581374>] nl80211_set_wiphy+0x284/0xaf0 [cfg80211]
-       [snip]
-
-other info that might help us debug this:
-
-Chain exists of:
-  &local->chanctx_mtx --> &mvm->mutex --> &local->iflist_mtx
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&local->iflist_mtx);
-                               lock(&mvm->mutex);
-                               lock(&local->iflist_mtx);
-  lock(&local->chanctx_mtx);
-
- *** DEADLOCK ***
-
-This deadlock actually occurs:
-INFO: task iw:3323 blocked for more than 120 seconds.
-      Not tainted 3.14.3 #4
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-iw              D ffff8800c8afcd80  4192  3323   3322 0x00000000
- ffff880078fdb7e0 0000000000000046 ffff8800c8afcd80 ffff880078fdbfd8
- 00000000001d5540 00000000001d5540 ffff8801141b0000 ffff8800c8afcd80
- ffff880078ff9e38 ffff880078ff9e38 ffff880078ff9e40 0000000000000246
-Call Trace:
- [<ffffffff817ea841>] schedule_preempt_disabled+0x31/0x80
- [<ffffffff817ebaed>] mutex_lock_nested+0x19d/0x4f0
- [<ffffffffa06225cf>] ? ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
- [<ffffffffa06225cf>] ? ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
- [<ffffffffa052a680>] ? iwl_mvm_power_mac_update_mode+0xc0/0xc0 [iwlmvm]
- [<ffffffffa06225cf>] ieee80211_iterate_active_interfaces+0x2f/0x60 [mac80211]
- [<ffffffffa0529357>] _iwl_mvm_power_update_binding+0x27/0x80 [iwlmvm]
- [<ffffffffa0516eb1>] iwl_mvm_unassign_vif_chanctx+0x81/0xc0 [iwlmvm]
- [<ffffffffa062d3ff>] __ieee80211_vif_release_channel+0xdf/0x470 [mac80211]
- [<ffffffffa062e2fa>] ieee80211_vif_release_channel+0x4a/0xb0 [mac80211]
- [<ffffffffa0609ec3>] ieee80211_set_monitor_channel+0x113/0x1b0 [mac80211]
- [<ffffffffa058fb37>] cfg80211_set_monitor_channel+0x77/0x2b0 [cfg80211]
- [<ffffffffa056e0b2>] __nl80211_set_channel+0x122/0x140 [cfg80211]
- [<ffffffffa0581374>] nl80211_set_wiphy+0x284/0xaf0 [cfg80211]
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=75541
-
-Cc: <stable@vger.kernel.org> [3.13+]
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 593f723..4b0b8b6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1007,7 +1007,7 @@ static void iwl_mvm_mc_iface_iterator(void *_data, u8 *mac,
- 	memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
- 	len = roundup(sizeof(*cmd) + cmd->count * ETH_ALEN, 4);
- 
--	ret = iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_SYNC, len, cmd);
-+	ret = iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_ASYNC, len, cmd);
- 	if (ret)
- 		IWL_ERR(mvm, "mcast filter cmd error. ret=%d\n", ret);
- }
-@@ -1023,7 +1023,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	if (WARN_ON_ONCE(!mvm->mcast_filter_cmd))
- 		return;
- 
--	ieee80211_iterate_active_interfaces(
-+	ieee80211_iterate_active_interfaces_atomic(
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_mc_iface_iterator, &iter_data);
- }
 -- 
-1.8.3.2
-
+James Cameron
+http://quozl.linux.org.au/
