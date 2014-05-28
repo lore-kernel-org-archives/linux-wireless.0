@@ -1,103 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:61225 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaEZSNm (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58629 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbaE1JQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 14:13:42 -0400
-Received: by mail-oa0-f43.google.com with SMTP id l6so8551882oag.30
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2014 11:13:42 -0700 (PDT)
+	Wed, 28 May 2014 05:16:13 -0400
+Date: Wed, 28 May 2014 12:16:07 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 8/9] wireless-regdb: Add Guyana (GY) regulatory rules
+Message-ID: <20140528091607.GA14718@jouni.qca.qualcomm.com> (sfid-20140528_111616_418137_7C2BA9DC)
 MIME-Version: 1.0
-In-Reply-To: <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
-	<CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
-	<CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
-	<CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
-	<CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
-	<CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
-	<CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com>
-	<CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
-	<CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
-Date: Mon, 26 May 2014 21:13:42 +0300
-Message-ID: <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com> (sfid-20140526_201347_595203_DB0BDA3C)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>
->>>> diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
->>>> b/drivers/net/wireless/iwlwifi/dvm/power.c
->>>> index f2c1439..e5a6b70 100644
->>>> --- a/drivers/net/wireless/iwlwifi/dvm/power.c
->>>> +++ b/drivers/net/wireless/iwlwifi/dvm/power.c
->>>> @@ -288,6 +288,9 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
->>>>         bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
->>>>         int dtimper;
->>>>
->>>> +       iwl_power_sleep_cam_cmd(priv, cmd);
->>>> +       return;
->>>> +
->>>>         dtimper = priv->hw->conf.ps_dtim_period ?: 1;
->>>>
->>>>         if (priv->wowlan)
->>>
->>> This patch has survived for about 15 minutes on 3.15-rc.  It certainly
->>> has some effect: pinging from the AP to the STA now takes a consistent
->>> ~3.8ms instead of taking varying amounts of time between 5 and 200 ms
->>> or so.
->>>
->>> I wonder if this is something 802.11n/802.11ac-specific?  I remember
->>> having all kinds of problems with 802.11n on this laptop that were
->>> resolved by turning off 11n or turning off power saving.
->>>
->>
->> well... my patch really turns off power saving. The hard way.
->> But since you are having issues - I guess I'll post it and disable
->> power save for these devices. Note that today most of the power save
->> features are disabled anyway.
->
-> Would it make sense to do this only when connected to a VHT-supporting
-> AP or whatever AP feature is probably triggering the problem?
+Source is QCA's regulatory team's efforts and email confirmation from
+ministry that spectrum rules are based upon FCC 15.247 for bands
+2400-2483.5 MHz and 5725-5850 MHz. NFMU.Gov.GY
 
-I am not sure it is related to some "VHT / whatever" feature. From
-your logs, I'd say this bug could have happened with any AP. It is
-down there in the PCI layer.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
->
-> *sigh* I'd just plug in a new PCIe wireless card, except that I think
-> that my evil BIOS will refuse to boot if I do that.
->
-I can recommend 7260 :)
-Before you do that, can you check this one?
+diff --git a/db.txt b/db.txt
+index b06fb2b..9864027 100644
+--- a/db.txt
++++ b/db.txt
+@@ -366,6 +366,10 @@ country GU: DFS-FCC
+ 	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
++country GY:
++	(2402 - 2482 @ 40), (30)
++	(5735 - 5835 @ 80), (30)
++
+ country HN: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+-- 
+1.9.1
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c
-b/drivers/net/wireless/iwlwifi/dvm/power.c
-index f2c1439..047112c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/power.c
-@@ -292,6 +292,8 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
 
-        if (priv->wowlan)
-                iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, dtimper);
-+       if (!enabled)
-+               iwl_power_sleep_cam_cmd(priv, cmd);
-        else if (!priv->lib->no_idle_support &&
-                 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
-                iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
-@@ -299,9 +301,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
-                /* in thermal throttling low power state */
-                iwl_static_sleep_cmd(priv, cmd,
-                    iwl_tt_current_power_mode(priv), dtimper);
--       } else if (!enabled)
--               iwl_power_sleep_cam_cmd(priv, cmd);
--       else if (priv->power_data.debug_sleep_level_override >= 0)
-+       } else if (priv->power_data.debug_sleep_level_override >= 0)
-                iwl_static_sleep_cmd(priv, cmd,
-
-priv->power_data.debug_sleep_level_override,
-                                     dtimper);
-
-This is the final version I want to send.
+-- 
+Jouni Malinen                                            PGP id EFC895FA
