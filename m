@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:56142 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbaEWRBD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2014 13:01:03 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n15so1215708wiw.8
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2014 10:01:02 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/20] staging: vt6656: remove camel case MACbShutdown
-Date: Fri, 23 May 2014 18:00:01 +0100
-Message-Id: <1400864419-8327-2-git-send-email-tvboxspy@gmail.com> (sfid-20140523_190109_792198_5AD21B09)
-In-Reply-To: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
-References: <1400864419-8327-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37705 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752068AbaE1NRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 09:17:32 -0400
+Message-ID: <1401283040.8146.15.camel@jlt4.sipsolutions.net> (sfid-20140528_151735_954151_AD208064)
+Subject: Re: [RFC Patch v2] Unify mpp/mesh_path handling for Mac 802.11s
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Thomas Pedersen <thomas@noack.us>
+Date: Wed, 28 May 2014 15:17:20 +0200
+In-Reply-To: <2083629.VLZzpqGjAs@desktop.local> (sfid-20140528_123454_081662_DB061595)
+References: <2083629.VLZzpqGjAs@desktop.local>
+	 (sfid-20140528_123454_081662_DB061595)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-pDevice -> priv
+On Wed, 2014-05-28 at 12:34 +0200, Henning Rogge wrote:
+> Hi,
+> 
+> I looked a little bit more into the 802.11s mesh code to see if there is still
+> a chance for unifying some code without forcing the issue as the last patch
+> did.
+> 
+> The result was the attached patch, which still needs one "if (mpp) ... else"
+> block but unifies most of the code for mpp_path_add() and mesh_path_add().
+> 
+> If this is still too much I would suggest leaving the mesh_pathtbl code as it is.
+> 
+> While looking through the code I noticed that there seems to be no code-path
+> that removes stall mpp_path entries (except for the removal of the mesh
+> interface) ! Unless I overlooked something this would be a way to use up all
+> existing memory of the kernel by sending it 802.11s packets with changing
+> proxied addresses.
+> 
+> I have added an atomic counter to restrict the number of proxied paths
+> (similar to the restriction of the mesh paths), but I am not convinced that
+> this would be enough. There needs to be some timeout mechanism, but resetting
+> the timeout of a MPP every times we receive an unicast from it sounds
+> expensive.
 
-signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+Can you not do everything in one patch? :)
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 22dd653..cc80c8e 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -72,15 +72,9 @@ void MACvWriteMultiAddr(struct vnt_private *priv, u64 mc_filter)
-  *
-  *
-  */
--void MACbShutdown(struct vnt_private *pDevice)
-+void MACbShutdown(struct vnt_private *priv)
- {
--	CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_MACSHUTDOWN,
--                        0,
--                        0,
--                        0,
--                        NULL
--                        );
-+	CONTROLnsRequestOut(priv, MESSAGE_TYPE_MACSHUTDOWN, 0, 0, 0, NULL);
- }
- 
- void MACvSetBBType(struct vnt_private *pDevice, u8 byType)
--- 
-1.9.1
+Also - I think reporting the MPPs to userspace like the mesh paths is
+probably not a good idea? And I think that happens now since you didn't
+touch the code in cfg?
+
+johannes
+
+johannes
 
