@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39909 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbaE0PaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 11:30:12 -0400
-Date: Tue, 27 May 2014 11:23:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:47479 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753490AbaE1OfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 10:35:07 -0400
+Message-ID: <1401287690.29067.4.camel@dubbel> (sfid-20140528_163512_835588_572EDBEA)
+From: Luca Coelho <luca@coelho.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: chaitanya.mgit@gmail.com, mcgrof@gmail.com,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [regdb] Add support to parse 2000mW tx power
-Message-ID: <20140527152357.GA5694@tuxdriver.com> (sfid-20140527_173017_240334_65DDA67F)
-References: <1401089962-10720-1-git-send-email-chaitanya.mgit@gmail.com>
- <1401097086.29704.0.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401097086.29704.0.camel@jlt4.sipsolutions.net>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+	linux-wireless@vger.kernel.org, michal.kazior@tieto.com
+Date: Wed, 28 May 2014 17:34:50 +0300
+In-Reply-To: <1401287435.8146.27.camel@jlt4.sipsolutions.net>
+References: <1400873435-9687-1-git-send-email-luca@coelho.fi>
+	 <1401088941.19055.0.camel@jlt4.sipsolutions.net>
+	 <20140528090837.2b868d22@gandalf.local.home>
+	 <1401283140.8146.16.camel@jlt4.sipsolutions.net>
+	 <20140528101814.400b20e2@gandalf.local.home>
+	 <1401287435.8146.27.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [RFC] trace-cmd: plugin_mac80211: add parsing for the new
+ drv_switch_vif_chanctx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 11:38:06AM +0200, Johannes Berg wrote:
-> On Mon, 2014-05-26 at 13:09 +0530, chaitanya.mgit@gmail.com wrote:
+On Wed, 2014-05-28 at 16:30 +0200, Johannes Berg wrote:
+> On Wed, 2014-05-28 at 10:18 -0400, Steven Rostedt wrote:
 > 
-> > @@ -74,7 +74,7 @@ function parse_reg_rule()
-> >  			power = 23
-> >  		} else if (power == 500) {
-> >  			power = 27
-> > -		} else if (power == 1000) {
-> > +		} else if ((power == 1000) || (power == 2000)) {
-> >  			power = 30
+> > > Heh, ok. I was more thinking about the structure of the kernel
+> > > tracepoint than the userspace code though.
+> > > 
+> > 
+> > Where's the patch for the kernel? I can take a look at that. Most cases
+> > if it works for you, then it should be fine.
 > 
-> This seems like a pretty sick thing to do to start with, and certainly
-> power=30 isn't right for 2000mW...
+> This:
+> http://mid.gmane.org/1400844793-18069-1-git-send-email-luca@coelho.fi
 
-Heh...it was like that in my original version!  
+This link is not working for me (I was just trying the same), but the
+patch can also be seen here:
 
-> Can't awk calculate the logarithm?
+https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git/commit/?id=1a5f0c13d1a8808c2bdd00630818ed491e1719f5
 
-I probably didn't know how to compute it in awk.  I still don't OTOH...
+--
+Luca.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
