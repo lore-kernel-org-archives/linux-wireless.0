@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:53050 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbaEaSt7 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24346 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750878AbaE1Ejq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 14:49:59 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n15so2614086wiw.15
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:49:57 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/9] b43: drop B43_DEFAULT_CHANNEL
-Date: Sat, 31 May 2014 20:49:33 +0200
-Message-Id: <1401562181-14608-2-git-send-email-zajec5@gmail.com> (sfid-20140531_205008_913198_1BDDE12A)
-In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
-References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+	Wed, 28 May 2014 00:39:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/3] mwifiex: set TDLS link for newly created RA list
+Date: Tue, 27 May 2014 21:39:33 -0700
+Message-ID: <1401251974-18738-2-git-send-email-bzhao@marvell.com> (sfid-20140528_063950_475334_234FAEF8)
+In-Reply-To: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
+References: <1401251974-18738-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was never used, b43_switch_channel is always called with hw_value
-(from mac80211) or whatever get_default_chan returns.
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Current implementation sets tdls_link flag only while restoring
+packets from TDLS queue. If traffic to peer starts after TDLS is
+setup, there is no way to set TDLS link flag to true. Do this
+while creating RA list and we confirm that there exist a TDLS
+peer for which setup is complete.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/b43/phy_common.c | 3 ---
- drivers/net/wireless/b43/phy_common.h | 4 ----
- 2 files changed, 7 deletions(-)
+ drivers/net/wireless/mwifiex/wmm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 08244b3..ac4cf2b 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -408,9 +408,6 @@ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
- 	u16 channelcookie, savedcookie;
- 	int err;
- 
--	if (new_channel == B43_DEFAULT_CHANNEL)
--		new_channel = phy->ops->get_default_chan(dev);
--
- 	/* First we set the channel radio code to prevent the
- 	 * firmware from sending ghost packets.
- 	 */
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index 4ad6240..9a92df4 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -400,10 +400,6 @@ void b43_phy_take_out_of_reset(struct b43_wldev *dev);
-  * b43_switch_channel - Switch to another channel
-  */
- int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel);
--/**
-- * B43_DEFAULT_CHANNEL - Switch to the default channel.
-- */
--#define B43_DEFAULT_CHANNEL	UINT_MAX
- 
- /**
-  * b43_software_rfkill - Turn the radio ON or OFF in software.
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 6d9738a..d3671d0 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -163,6 +163,7 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
+ 		if (!mwifiex_queuing_ra_based(priv)) {
+ 			if (mwifiex_get_tdls_link_status(priv, ra) ==
+ 			    TDLS_SETUP_COMPLETE) {
++				ra_list->tdls_link = true;
+ 				ra_list->is_11n_enabled =
+ 					mwifiex_tdls_peer_11n_enabled(priv, ra);
+ 			} else {
 -- 
-1.8.4.5
+1.8.2.3
 
