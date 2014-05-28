@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:56702 "EHLO
-	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbaEREOa (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23549 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbaE1JRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2014 00:14:30 -0400
-Message-ID: <53783355.6070205@open-mesh.com> (sfid-20140518_061435_854662_C31A3CDD)
-Date: Sun, 18 May 2014 06:13:09 +0200
-From: Antonio Quartulli <antonio@open-mesh.com>
+	Wed, 28 May 2014 05:17:04 -0400
+Date: Wed, 28 May 2014 12:16:58 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 9/9] wireless-regdb: Update Venezuela (VE) regulatory rules
+Message-ID: <20140528091658.GA14748@jouni.qca.qualcomm.com> (sfid-20140528_111708_729279_F6A0706D)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: print expected throughput when dumping station
-References: <1400350632-2422-1-git-send-email-antonio@meshcoding.com>
-In-Reply-To: <1400350632-2422-1-git-send-email-antonio@meshcoding.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ch7g0XWgWsTqjMA5a3gVQ7mOBqpNMAxUN"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ch7g0XWgWsTqjMA5a3gVQ7mOBqpNMAxUN
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Source:
+Official Gazette (Gaceta Oficial) concerning Unlicensed transmitter use
+(10 June 2013)
+http://www.conatel.gob.ve/
 
-On 17/05/14 20:17, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
->=20
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->=20
-> This patch is based on the "Export the expected throughput towards a pe=
-er"
-> patchset sent on linux-wireless
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-well, this just means that the iw private copy of nl80211.h needs to be
-updated in order to use this feature.
+diff --git a/db.txt b/db.txt
+index 9864027..2854eec 100644
+--- a/db.txt
++++ b/db.txt
+@@ -874,9 +874,13 @@ country UZ: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20)
+ 	(5250 - 5330 @ 80), (20), DFS
+ 
++# Source:
++# Official Gazette (Gaceta Oficial) concerning Unlicensed transmitter use
++# (10 June 2013)
++# http://www.conatel.gob.ve/
+ country VE: DFS-FCC
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
++	(2402 - 2482 @ 40), (30)
++	(5170 - 5250 @ 80), (23)
+ 	(5250 - 5330 @ 80), (23), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-- 
+1.9.1
 
-Cheers,
 
-
---=20
---=20
-Antonio Quartulli
-
-
---ch7g0XWgWsTqjMA5a3gVQ7mOBqpNMAxUN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJTeDNaAAoJEEKTMo6mOh1VpkMQAIL1Ljesm6IOmIrGqQT7cXm3
-s2Jom5sBsDaCtUl9lJ601a2gC7o35dGwkMncfLfCO00xO2QQ/iRvu21e/Z43W0xV
-ZNeixEJMW2B4mTMA5bCp0SyKPll8h4tY4b5XOpJnH+SVIorQY72z66abosn0vUUk
-pZMKCS3AXvfbTTRvWwtJ+XPl6WnAQXgwwPxfD5tmmNvWGcaEscxMwm30l2PN9wPe
-pgA4GdUIb5FrttzbU1oR8IBqvv1C27sd3wruH2dHUtOoix05tUiLRqFhn2tTt0LN
-JgSIvPikH+DkV+R20Kpf3MN+GxcBFt33BFtMDclFi0maoHqk3BclefOWqA6GWoCe
-BYSbu+fgYztgKcLayklH46N5W+RvedKsbLA4vQ3EynCFGNZJ1a0FJQo9xa3MFbjn
-W7GHP89XMcNVIzxc5kvcaGR/r4oYgQ0kYuxhfwhD0zmNSzLoj1wMDAwkJNwIc5Y7
-b1E6s/o5NzcfzSAqA7F/7PZfzdKlV/8+M6+k9bmvwLVhgdRX8IeFaZcXnyyl9SFd
-YKxEN8LJzhRXgOnVFfge+FhYKdaYMhyiHRtTpCFDjvagaNoQmVFg8aNE9mhAmqyd
-nkvecO4ohuCfWoICRn3KuS9Mvs4xlNDUQtl/4PhwpaoGBDlb+6iUYnbQ0DWT1bPZ
-hQfEikrIdBpFSe1qQF+h
-=swiO
------END PGP SIGNATURE-----
-
---ch7g0XWgWsTqjMA5a3gVQ7mOBqpNMAxUN--
+-- 
+Jouni Malinen                                            PGP id EFC895FA
