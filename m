@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:34791 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751559AbaEOAiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2014 20:38:01 -0400
-Message-ID: <53740C42.3000906@zytor.com> (sfid-20140515_023825_015191_F0E76EAE)
-Date: Wed, 14 May 2014 17:37:22 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:51354 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272AbaE1IxU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2014 04:53:20 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wp18so10550927obc.31
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 01:53:20 -0700 (PDT)
 MIME-Version: 1.0
-To: George Spelvin <linux@horizon.com>, pavel@ucw.cz
-CC: arik@wizery.com, david.gnedt@davizone.at, eliad@wizery.com,
-	jan.nikitenko@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, luca@coelho.fi, tony@atomide.com
-Subject: Re: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
-References: <20140511100211.1334.qmail@ns.horizon.com>
-In-Reply-To: <20140511100211.1334.qmail@ns.horizon.com>
+In-Reply-To: <CAGb2v65NW61+BV2hR3wn_xRvCyPo+AhcMU7hmFjQxKWj49G=Bw@mail.gmail.com>
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+	<1401090486-4414-2-git-send-email-hdegoede@redhat.com>
+	<CACRpkdZpy2aT_kFp01bnrviVB3SOggiNUJB46wbWAY_bqW8=gg@mail.gmail.com>
+	<CAGb2v65NW61+BV2hR3wn_xRvCyPo+AhcMU7hmFjQxKWj49G=Bw@mail.gmail.com>
+Date: Wed, 28 May 2014 10:53:19 +0200
+Message-ID: <CACRpkdbJJWXyO-beDCed5rBfAx0aMmdXLTUDtYuyWZGfABXzpA@mail.gmail.com> (sfid-20140528_105327_620014_FA05092E)
+Subject: Re: [linux-sunxi] Re: [PATCH 01/11] pinctrl: sunxi: create irq/pin
+ mapping during init
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: linux-sunxi <linux-sunxi@googlegroups.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	Chris Ball <chris@printf.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2014 03:02 AM, George Spelvin wrote:
-> From 770aa22e6c9c92027e3e21797192ccabb3e7c70e Mon Sep 17 00:00:00 2001
-> From: George Spelvin <linux@horizon.com>
-> Date: Sat, 10 May 2014 10:32:57 -0400
-> Subject: [PATCH v2 1/3] lib/crc7: Shift crc7() output left 1 bit
-> 
-> This eliminates a 1-bit left shift in every single caller,
-> and makes the inner loop of the CRC computation more efficient.
-> 
-> Renamed crc7 to crc7_be (big-endian) since the interface changed.
-> 
-> Also purged #include <linux/crc7.h> from files that don't use it at all.
-> 
-> Signed-off-by: George Spelvin <linux@horizon.com>
+On Tue, May 27, 2014 at 4:21 PM, Chen-Yu Tsai <wens@csie.org> wrote:
+> On Tue, May 27, 2014 at 10:11 PM, Linus Walleij
 
-If the whole point of this is to use it for MMC/SD cards, why not just
-also subsume the OR 1 and call it crc7_mmc() or something like that.
+>> I tried to hack the sunxi driver to even use the gpiolib
+>> irqchip helpers but exactly this complex map thing in
+>> ->irq_array[] git me stuck. If any of you guys could be so
+>> nice to take a stab at this (compare to other commits
+>> converting drivers to use gpiolibs irqchip helpers) then
+>> I'd be very happy.
+>
+> We still need to rework the whole irqchip stuff for sun6i/sun8i,
+> which have 1 parent interrupt per EINT capable pin bank.
+>
+> Earlier discussions with Maxime (on IRC IIRC) suggested moving this
+> over to gpiolib irqchip helpers might be more work than using our own
+> irqchip implementation, requiring 1 gpiochip per pin group? (not sure)
 
-(Which I'm all for doing... I don't know of any other crc7 users.)
+OK then keep your current code. I do not intend to cover all
+cases in the world with these helpers, just the simple cases.
+Complex hardware merits complex code.
 
-	-hpa
-
-
+Yours,
+Linus Walleij
