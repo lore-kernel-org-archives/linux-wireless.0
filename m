@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:41673 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbaETGqf (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25786 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166AbaE1JP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 02:46:35 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d49so179555eek.18
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2014 23:46:33 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: xmit: set 5 GHz bit depending on current band
-Date: Tue, 20 May 2014 08:46:25 +0200
-Message-Id: <1400568385-26182-1-git-send-email-zajec5@gmail.com> (sfid-20140520_084639_049087_D61056BB)
+	Wed, 28 May 2014 05:15:28 -0400
+Date: Wed, 28 May 2014 12:15:22 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/9] wireless-regdb: Add Chad (TD) regulatory rules
+Message-ID: <20140528091522.GA14693@jouni.qca.qualcomm.com> (sfid-20140528_111531_440382_E336EBC3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PHYs other than A may also work in 5 GHz mode.
+Source is QCA's regulatory team's efforts and correspondence with
+regulator: http://otrt.td [L'Office Tchadien de Régulation des
+Télécommunications (OTRT)].
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 31adb8c..4f38f19 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -408,7 +408,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
- 		mac_ctl |= B43_TXH_MAC_HWSEQ;
- 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
- 		mac_ctl |= B43_TXH_MAC_STMSDU;
--	if (phy->type == B43_PHYTYPE_A)
-+	if (!phy->gmode)
- 		mac_ctl |= B43_TXH_MAC_5GHZ;
+diff --git a/db.txt b/db.txt
+index 887902e..b06fb2b 100644
+--- a/db.txt
++++ b/db.txt
+@@ -785,6 +785,12 @@ country SV: DFS-FCC
+ country SY:
+ 	(2402 - 2482 @ 40), (20)
  
- 	/* Overwrite rates[0].count to make the retry calculation
++country TD: DFS-ETSI
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
++
+ country TG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
 -- 
-1.8.4.5
+1.9.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
