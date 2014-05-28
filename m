@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:62776 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757816AbaEJRFe convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:27198 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbaE1JHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2014 13:05:34 -0400
-Received: by mail-oa0-f47.google.com with SMTP id i7so6407679oag.34
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2014 10:05:33 -0700 (PDT)
+	Wed, 28 May 2014 05:07:33 -0400
+Message-ID: <5385A751.6090609@broadcom.com> (sfid-20140528_110741_112017_38BDBA37)
+Date: Wed, 28 May 2014 11:07:29 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20140510183645.04c801f2@wiggum>
-References: <1399733088-26607-1-git-send-email-zajec5@gmail.com>
-	<20140510171721.54b21a63@wiggum>
-	<CACna6rwdXiGwLW=vuo2MMaQHYAWjDwc_W2zufmVbkmpBsMMp-Q@mail.gmail.com>
-	<20140510183645.04c801f2@wiggum>
-Date: Sat, 10 May 2014 19:05:33 +0200
-Message-ID: <CACna6rzS8_VCtJhktiX1B+MoM714_j_LRzHK0SzcGNnr1JzBNg@mail.gmail.com> (sfid-20140510_190537_385904_FF0205FF)
-Subject: Re: [RFC][PATCH] b43: drop SSB dependency
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+To: Hans de Goede <hdegoede@redhat.com>
+CC: Linus Walleij <linus.walleij@linaro.org>,
+	Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	<linux-sunxi@googlegroups.com>
+Subject: Re: [PATCH 09/11] brcmfmac: Fix OOB interrupt not working for BCM43362
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <1401090486-4414-10-git-send-email-hdegoede@redhat.com> <5384C544.9000903@broadcom.com> <53850399.9000708@redhat.com>
+In-Reply-To: <53850399.9000708@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 May 2014 18:36, Michael Büsch <m@bues.ch> wrote:
-> On Sat, 10 May 2014 18:12:15 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
+On 05/27/14 23:28, Hans de Goede wrote:
+> Hi,
 >
->> On 10 May 2014 17:17, Michael Büsch <m@bues.ch> wrote:
->> > On Sat, 10 May 2014 16:44:48 +0200
->> > Rafał Miłecki <zajec5@gmail.com> wrote:
->> >> +config B43_BUSES_BCMA_AND_SSB
->> >> +     bool "BCMA and SSB"
->> >> +     depends on BCMA_POSSIBLE && SSB_POSSIBLE
->> >
->> > I think this needs to be:
->> >
->> >         depends on (BCMA_POSSIBLE && (BCMA = y || BCMA = B43)) && (SSB_POSSIBLE && (SSB = y || SSB = B43))
->> >
->> > to avoid the case where b43 is y and ssb or bcma is m.
->> > Or did I miss something and this is caught elsewhere?
+> On 05/27/2014 07:03 PM, Arend van Spriel wrote:
+>> On 05/26/14 09:48, Hans de Goede wrote:
+>>> It has taken me a long long time to get the OOB interrupt working on the
+>>> AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
+>>> end I found these magic register pokes in the cubietruck kernel tree:
+>>> https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
+>>>
+>>>
+>>> I'm not entirely sure if this specific to the AP6210 module, or if this
+>>> should be done for all BCM43362 sdio devices.
 >>
->> Oh, wait, I think I meant B43_BUSES_BCMA_AND_SSB to select BCMA and
->> SSB (so user doesn't have to enable BCMA and SSB on his own). It it
->> the way it's handled without my patch (B43 select-s SSB).
+>> Let keep it as this for now. I added some remarks below.
 >>
->> I'd like to add
->> select BCMA
->> select SSB
->> , but this won't guarantee BCMA (or SSB) being "y" after choosing B43
->> to "y". Or will it?
+>> Regards,
+>> Arend
+>>
+>>> Signed-off-by: Hans de Goede<hdegoede@redhat.com>
+>>> ---
+>>> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 ++++++++++++++++++
+>>> 1 file changed, 18 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> index 0fc707c..2369a0f 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> @@ -39,7 +39,9 @@
+>>> #include<brcm_hw_ids.h>
+>>> #include<brcmu_utils.h>
+>>> #include<brcmu_wifi.h>
+>>> +#include<chipcommon.h>
+>>> #include<soc.h>
+>>> +#include "chip.h"
+>>> #include "dhd_bus.h"
+>>> #include "dhd_dbg.h"
+>>> #include "sdio_host.h"
+>>> @@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct
+>>> brcmf_sdio_dev *sdiodev)
+>>> {
+>>> int ret = 0;
+>>> u8 data;
+>>> + u32 addr, gpiocontrol;
+>>> unsigned long flags;
+>>>
+>>> if ((sdiodev->pdata)&& (sdiodev->pdata->oob_irq_supported)) {
+>>> @@ -148,6 +151,21 @@ int brcmf_sdiod_intr_register(struct
+>>> brcmf_sdio_dev *sdiodev)
+>>>
+>>> sdio_claim_host(sdiodev->func[1]);
+>>>
+>>> + if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
+>> + /* assign GPIO to SDIO core */
+>>> + addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
+>>> + gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr,&ret);
+>>> + gpiocontrol |= 0x2;
+>>> + brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol,&ret);
+>>> +
+>>> + /* SPROM_ADDR_HIGH ? perhaps the defines name is off */
+>>
+>> These names are all off. These should be:
+>> SBSDIO_SPROM_ADDR_HIGH = SBSDIO_GPIO_SELECT
+>> SBSDIO_CHIP_CTRL_DATA = SBSDIO_GPIO_OUT
+>> SBSDIO_CHIP_CTRL_EN = SBSDIO_GPIO_EN
 >
-> I'm currently unsure.
-> You probably want to add select SSB to config B43_SSB and the same for B43_BCMA.
+> Ok, so I guess I should do a pre-patch adding defines for these, should
+> these replace the existing defines for these addresses in:
+> drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+>
+> Or should the pre-patch add defines with the new names and keep the old
+> ones ?
 
-I've just tried this, however this will force SSB to be "y" (even if
-B43 is "m"). We have to select BCMA/SSB from non-bool configs.
-This lead me to the idea of select-ing SSB and BCMA in "B43" depending
-on the B43_BCMA and B43_SSB. That should make the trick. I'll test it
-and submit V2.
+These defines are not used in the code so go ahead and replace them. It 
+needs some more cleanup, but I can do a subsequent patch for that.
+
+Gr. AvS
