@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48973 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbaEVQmq (ORCPT
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:62637 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068AbaE1LxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 12:42:46 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 22 May 2014 19:42:41 +0300
-In-Reply-To: <1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 22 May 2014 16:12:35 +0200")
-Message-ID: <87ppj5wyri.fsf@kamboji.qca.qualcomm.com> (sfid-20140522_184250_049427_54D6C2B3)
+	Wed, 28 May 2014 07:53:17 -0400
+Received: by mail-qg0-f50.google.com with SMTP id z60so17427416qgd.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 04:53:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAEFj984PE5L2Yv4r6nshAy6Zuama5wsins27xeX9A1B4RGqmgg@mail.gmail.com>
+References: <2083629.VLZzpqGjAs@desktop.local> <CAEFj98755Zfjs_MOXFEF+PPRKH5Q+UVsURmAcf-CKKkVfnrTLA@mail.gmail.com>
+ <CAGnRvuq=aLFhFuE=ntJ1GkFFf_UNQjDxx2KcGMdskRycunZbaA@mail.gmail.com> <CAEFj984PE5L2Yv4r6nshAy6Zuama5wsins27xeX9A1B4RGqmgg@mail.gmail.com>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Wed, 28 May 2014 13:52:57 +0200
+Message-ID: <CAGnRvuoXq-1Ehg7tAiO9uZAhp0NJkp3T_xU-4yG9+H7g_NvY+g@mail.gmail.com> (sfid-20140528_135321_194773_F351A118)
+Subject: Re: [RFC Patch v2] Unify mpp/mesh_path handling for Mac 802.11s
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@noack.us>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Wed, May 28, 2014 at 1:44 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Agree. Maybe a timer to delete the expired mpp table and just let the
+> incoming received packet to reinsert the table?
 
-> If ath10k was built into the kernel it could stall
-> booting for 120 seconds by default (60 seconds for
-> each firmware API variant) waiting for firmware
-> files before userspace was ready or filesystems
-> mounted.
->
-> Fix this by making the core registering
-> asynchronous.
->
-> This also shoves off about 1 second from boot time
-> on most systems since the driver is now mostly
-> initialized in a worker and modprobe takes very
-> little time to complete.
->
-> As a side effect there's no way to propagate
-> registering errors to the pci subsystem but this
-> probably isn't really necessary.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+I will prepare a second cleanup patch for the 802.11s code.
 
-[...]
-
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -2758,8 +2758,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
->  	if (!ar_pci)
->  		return;
->  
-> -	tasklet_kill(&ar_pci->msi_fw_err);
-
-Why this? That's not obvious to me.
-
--- 
-Kalle Valo
+Henning Rogge
