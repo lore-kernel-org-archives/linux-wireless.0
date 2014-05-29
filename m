@@ -1,90 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:33285 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaE3WYM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14392 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757008AbaE2Gsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 18:24:12 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n15so1954390wiw.8
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:11 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/8] staging: vt6656: rename CARDvSetFirstNextTBTT to vnt_reset_next_tbtt
-Date: Fri, 30 May 2014 23:22:50 +0100
-Message-Id: <1401488574-16508-4-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002419_913552_2D485AC5)
-In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
-References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 29 May 2014 02:48:39 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath9k: Fix interface combinations for multi-channel concurrency
+Date: Thu, 29 May 2014 12:19:01 +0530
+Message-ID: <1401346141-9888-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140529_084854_679239_BCCFAF5C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop card, set and first. The device resets the next tbtt rename
-to vnt_reset_next_tbtt
+Currently mac80211 does not support WDS and DFS with channel context
+drivers. So advertise these features only when the driver is not
+supporting channel context and modparam "use_chanctx" is introduced
+for preparing channel context support in ath9k.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/staging/vt6656/card.c | 4 ++--
- drivers/staging/vt6656/card.h | 2 +-
- drivers/staging/vt6656/wmgr.c | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index ee013a3..7cb7bbc 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -31,7 +31,7 @@
-  *      vnt_get_tsf_offset - Calculate TSFOffset
-  *      vnt_get_current_tsf - Read Current NIC TSF counter
-  *      vnt_get_next_tbtt - Calculate Next Beacon TSF counter
-- *      CARDvSetFirstNextTBTT - Set NIC Beacon time
-+ *      vnt_reset_next_tbtt - Set NIC Beacon time
-  *      CARDvUpdateNextTBTT - Sync. NIC Beacon time
-  *      CARDbRadioPowerOff - Turn Off NIC Radio Power
-  *      CARDbRadioPowerOn - Turn On NIC Radio Power
-@@ -689,7 +689,7 @@ u64 vnt_get_next_tbtt(u64 tsf, u16 beacon_interval)
-  * Return Value: none
-  *
-  */
--void CARDvSetFirstNextTBTT(struct vnt_private *priv, u16 beacon_interval)
-+void vnt_reset_next_tbtt(struct vnt_private *priv, u16 beacon_interval)
- {
- 	u64 next_tbtt = 0;
- 	u8 data[8];
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index d39a0a5..768515c 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -54,7 +54,7 @@ int vnt_ofdm_min_rate(struct vnt_private *);
- void vnt_adjust_tsf(struct vnt_private *, u8, u64, u64);
- bool vnt_get_current_tsf(struct vnt_private *, u64 *);
- bool vnt_clear_current_tsf(struct vnt_private *);
--void CARDvSetFirstNextTBTT(struct vnt_private *pDevice, u16 wBeaconInterval);
-+void vnt_reset_next_tbtt(struct vnt_private *, u16);
- void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
- 			 u16 wBeaconInterval);
- u64 vnt_get_next_tbtt(u64, u16);
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index 5b2e9e5..28112ec 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -2051,7 +2051,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-     // enable TSF counter
-     MACvRegBitsOn(pDevice,MAC_REG_TFTCTL,TFTCTL_TSFCNTREN);
-     // set Next TBTT
--    CARDvSetFirstNextTBTT(pDevice, pMgmt->wIBSSBeaconPeriod);
-+    vnt_reset_next_tbtt(pDevice, pMgmt->wIBSSBeaconPeriod);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 1af7708..765a3c0 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -61,6 +61,10 @@ static int ath9k_ps_enable;
+ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
  
-     pMgmt->uIBSSChannel = pDevice->uChannel;
++static int ath9k_use_chanctx;
++module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
++MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
++
+ bool is_ath9k_unloaded;
  
-@@ -2584,7 +2584,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+ #ifdef CONFIG_MAC80211_LEDS
+@@ -646,8 +650,7 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ }
  
-     // set Next TBTT
-     // Next TBTT = ((local_current_TSF / beacon_interval) + 1 ) * beacon_interval
--    CARDvSetFirstNextTBTT(pDevice, pCurr->wBeaconInterval);
-+    vnt_reset_next_tbtt(pDevice, pCurr->wBeaconInterval);
+ static const struct ieee80211_iface_limit if_limits[] = {
+-	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
+-				 BIT(NL80211_IFTYPE_WDS) },
++	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) },
+ 	{ .max = 8,	.types =
+ #ifdef CONFIG_MAC80211_MESH
+ 				 BIT(NL80211_IFTYPE_MESH_POINT) |
+@@ -657,6 +660,10 @@ static const struct ieee80211_iface_limit if_limits[] = {
+ 				 BIT(NL80211_IFTYPE_P2P_GO) },
+ };
  
-     // set BSSID
-     MACvWriteBSSIDAddress(pDevice, pCurr->abyBSSID);
++static const struct ieee80211_iface_limit wds_limits[] = {
++	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_WDS) },
++};
++
+ static const struct ieee80211_iface_limit if_dfs_limits[] = {
+ 	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) |
+ #ifdef CONFIG_MAC80211_MESH
+@@ -673,6 +680,13 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+ 	},
++	{
++		.limits = wds_limits,
++		.n_limits = ARRAY_SIZE(if_limits),
++		.max_interfaces = 2048,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++	},
+ #ifdef CONFIG_ATH9K_DFS_CERTIFIED
+ 	{
+ 		.limits = if_dfs_limits,
+@@ -722,12 +736,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			BIT(NL80211_IFTYPE_P2P_GO) |
+ 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			BIT(NL80211_IFTYPE_AP) |
+-			BIT(NL80211_IFTYPE_WDS) |
+ 			BIT(NL80211_IFTYPE_STATION) |
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+ 			BIT(NL80211_IFTYPE_MESH_POINT);
+ 		hw->wiphy->iface_combinations = if_comb;
+-		hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++		if (!ath9k_use_chanctx) {
++			hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++			hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_WDS);
++		} else
++			hw->wiphy->n_iface_combinations = 1;
+ 	}
+ 
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
 -- 
-1.9.1
+1.9.3
 
