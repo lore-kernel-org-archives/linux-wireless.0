@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51715 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142AbaEILdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 07:33:49 -0400
-Message-ID: <1399635226.4136.3.camel@jlt4.sipsolutions.net> (sfid-20140509_133353_012244_2CB98FE3)
-Subject: Re: [PATCH] cfg80211: fix compilation error in cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 09 May 2014 13:33:46 +0200
-In-Reply-To: <1399634516-13089-1-git-send-email-luca@coelho.fi>
-References: <1399634516-13089-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-vc0-f182.google.com ([209.85.220.182]:35602 "EHLO
+	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964966AbaE2Rwx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2014 13:52:53 -0400
+Received: by mail-vc0-f182.google.com with SMTP id id10so796108vcb.13
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 10:52:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
+References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com>
+ <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 29 May 2014 10:52:32 -0700
+Message-ID: <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> (sfid-20140529_195258_544494_1E306A01)
+Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-09 at 14:21 +0300, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> Commit 0be035a2 (mac80211: handle failed restart/resume better) broke
-> compilation:
-> 
-> net/wireless/core.c: In function 'cfg80211_shutdown_all_interfaces':
-> net/wireless/core.c:215:9: error: implicit declaration of function 'wiphy_to_dev' [-Werror=implicit-function-declaration]
->   struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
->          ^
-> 
-> This is due to the function name change from wiphy_to_dev() to
-> wiphy_to_rdev().
+On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> +ath10k@lists.infradead.org
+>
+> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
+>> It dies with 'otp calibration failed: 2'.
+>>
+>> Some older version of the driver seemed to work fine.
+>
+> ath10k did not verify otp result before so it could load successfully
+> despite errors.
+>
+> Someone raised this problem yesterday on IRC. I'm not really sure how
+> we should deal with this properly.
+>
 
-Yeah, my mistake, but I already had Fengguang's build bot flag it and
-fixed it already. Thanks though.
+Ideally, someone from Atheros could figure out what the error is.
+Barring that, the card seems to work okay without otp (I don't even
+know what otp is), so just warning and continuing to load might be
+better than bailing.
 
-johannes
-
+--Andy
