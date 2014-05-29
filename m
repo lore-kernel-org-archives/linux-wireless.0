@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:46840 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbaEGMoz convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34428 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933348AbaE2P5H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 08:44:55 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so911804wgh.23
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 05:44:53 -0700 (PDT)
+	Thu, 29 May 2014 11:57:07 -0400
+Message-ID: <538758CF.8090208@candelatech.com> (sfid-20140529_175711_252247_9581C3A3)
+Date: Thu, 29 May 2014 08:57:03 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1399466312.10517.34.camel@jlt4.sipsolutions.net>
-References: <1397050174-26121-14-git-send-email-michal.kazior@tieto.com>
-	<1398849681-3606-1-git-send-email-michal.kazior@tieto.com>
-	<1399372915.4218.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk1upg7yGK-QWoz8QhMeRzLBY60Lk=eUN=iQLaF2pUhQQ@mail.gmail.com>
-	<1399385141.4218.37.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnGRtdOGfJ78EG43cmND2bD9m3WyvmSKx92uBFnKenPkw@mail.gmail.com>
-	<1399450061.5038.10.camel@jlt4.sipsolutions.net>
-	<1399455657.6800.4.camel@dubbel>
-	<CA+BoTQmXb=_jjE4-dL8U_-8=CxRMgo4qckUKF9LizfV2W0iC7A@mail.gmail.com>
-	<1399457760.6800.7.camel@dubbel>
-	<CA+BoTQnF3pVmGumqqHbfuphXbYhAybHUMosX4kJazfHWJDE+Fw@mail.gmail.com>
-	<1399460964.10517.12.camel@jlt4.sipsolutions.net>
-	<CA+BoTQnSJgaN=incAtW08tSqDgW2jRm1cdarMhupArGBAw7FRQ@mail.gmail.com>
-	<1399463646.10517.28.camel@jlt4.sipsolutions.net>
-	<1399464536.6800.11.camel@dubbel>
-	<1399464789.10517.29.camel@jlt4.sipsolutions.net>
-	<1399465244.6800.13.camel@dubbel>
-	<1399466312.10517.34.camel@jlt4.sipsolutions.net>
-Date: Wed, 7 May 2014 14:44:53 +0200
-Message-ID: <CA+BoTQmDF2NiWK_PbTYKxFecajiaH6nEPej0ENP7HBZ1ym83sw@mail.gmail.com> (sfid-20140507_144457_713838_9CF2BD1F)
-Subject: Re: [PATCH v5] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Content-Type: text/plain; charset=UTF-8
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
+References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com> <53873A58.1070209@candelatech.com> <CACKGw+FT0GTRF+tn_Odi0KQvEFL93Oyjj4x=SKgNP1aayB4-QA@mail.gmail.com> <CACKGw+HZEvVVaGk3DzbvCTe7GSvU206=hr4QswLXVyiat1ozZg@mail.gmail.com>
+In-Reply-To: <CACKGw+HZEvVVaGk3DzbvCTe7GSvU206=hr4QswLXVyiat1ozZg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2014 14:38, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-05-07 at 15:20 +0300, Luca Coelho wrote:
->> On Wed, 2014-05-07 at 14:13 +0200, Johannes Berg wrote:
->> > On Wed, 2014-05-07 at 15:08 +0300, Luca Coelho wrote:
->> >
->> > > I was thinking about the case where you you need to involve 3 contexts.
->> > > Let's say you have 2 vifs in the same context and after the switch you
->> > > need to split them into 2 new ones (for instance, if there is some
->> > > incompatibility in the new chandefs).
->> > >
->> > > With the generic transactions you could do:
->> > >  - new chanctx2
->> > >  - new chanctx3
->> > >  - switch vif1 chanctx1->chanctx2
->> > >  - switch vif2 chanctx1->chanctx3
->> > >  - del chanctx1
->> >
->> > This isn't an interesting case, because it means you have a spare, so
->> > you might as well do
->> >
->> >  new chanctx3
->> >  switch vif2 chanctx1->chanctx3
->> >  switch_transaction(chanctx1, chanctx2, vif1)
+On 05/29/2014 07:42 AM, Bartosz Markowski wrote:
+> On 29 May 2014 16:10, Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
+>> On 29 May 2014 15:47, Ben Greear <greearb@candelatech.com> wrote:
+>>>
+>>>
+>>> On 05/29/2014 06:36 AM, Bartosz Markowski wrote:
+>>>>
+>>>> Firmware 10.x supports up to 8 virtual AP interfaces
+>>>> (comparing to 7 for main firmware). Previous vdev map
+>>>> initialization was missing enough space for 8 + 1 vdevs
+>>>> (we may spent one for mac monitor), due to wrong define used.
+>>>>
+>>>> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
+>>>
+>>>
+>>> You are bumping total vdevs up to 16 with that patch...have you
+>>> actually tested that many?  The stock firmware has quite a bit of
+>>> deficiencies in the concurrency handling, at least for stations.
 >>
->> Couldn't this potentially break the combinations temporarily again?
->
-> I don't see why? You had a spare channel context to start with,
-> otherwise you'd never have accepted this situation. Therefore, you can
-> use the spare one before actually doing the proposed
-> switch_vif_chanctx().
->
->
-> Ultimately, what I'm trying to say is that instead of the proposed
-> switch_vif_chanctx(), we need to have this:
->
-> enum ieee80211_chanctx_switch_mode - as before
->
->         (*switch_vif_chanctx)(struct ieee80211_hw *hw,
->                               struct ieee80211_vif **vifs, int n_vifs,
->                               struct ieee80211_chanctx_conf *old_ctx,
->                               struct ieee80211_chanctx_conf *new_ctx,
->                               enum ieee80211_chanctx_switch_mode mode);
+>> No, I have never tested it with so many. I'm running tests with 8 at
+>> most. And by this patch I just aimed to support 8 VAPS we advertise in
+>> iface_combinations to mac80211 (.max_interfaces = 8). I was managed to
+>> get only 7 before, since 1 vdev was being allocated as monitor.
+> 
+> FYI: I quickly tried to extend the .max_interfaces +
+> interface_combinations limit in ath10k and check with 15 VAPs (using
+> hostapd, open network; on MIPS platform) and it just worked.. I did
+> not perform any exploratory testing, but managed to connect a couple
+> of clients to various bssids + run some sane iperf traffic etc.
 
-Yeah. This is another way to do it. It does solve the edge case when
-you're maxing out on different channels.
+Good to know that many VAPs can work...
 
-It doesn't, however, (if you don't do transactions) prevent from
-chanctx overcommit (i.e. you still can end up with more, albeit
-"idle", chanctx allocations in driver).
+If the OS limits are going to remain at 8, then maybe
+only set the vdev mask to support 9 instead of 16
+vifs to handle the monitor interface?  That should make
+it easier (or at least safer) to support my firmware on
+un-patched kernels...
 
+Some of the problems with running out of resources in the
+firmware (which generally just asserts or crashes in that case)
+are only seen under load and/or random-ish cases
+in my experience.  I'm all for pushing the firmware to the
+max, but I suspect 16 vifs may not be that stable.
 
-Michał
+That said, I have only been testing multiple stations, so maybe it
+will just work fine.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
