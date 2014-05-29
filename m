@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:34206 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbaEDMA3 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60985 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932954AbaE2NrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2014 08:00:29 -0400
-Received: by mail-lb0-f180.google.com with SMTP id p9so244587lbv.39
-        for <linux-wireless@vger.kernel.org>; Sun, 04 May 2014 05:00:28 -0700 (PDT)
+	Thu, 29 May 2014 09:47:07 -0400
+Message-ID: <53873A58.1070209@candelatech.com> (sfid-20140529_154711_701133_23579D6A)
+Date: Thu, 29 May 2014 06:47:04 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <zarafa.53660170.0441.6aa863343df6b74b@srv1.localhost>
-References: <zarafa.53660170.0441.6aa863343df6b74b@srv1.localhost>
-Date: Sun, 4 May 2014 05:00:28 -0700
-Message-ID: <CANUX_P14UWZ8DcbwQSJ+pSm-rBR6ReWUeBzeFwfg1bcfHa4RFw@mail.gmail.com> (sfid-20140504_140119_736717_2B624E90)
-Subject: Re: Issue with monitor mode - iwlwifi - 7260 rev 73 - Microcode SW error
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stefan Bauer <stefan.bauer@cubewerk.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
+References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+In-Reply-To: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 4, 2014 at 1:59 AM, Stefan Bauer <stefan.bauer@cubewerk.de> wrote:
-> Dear Developers,
+
+
+On 05/29/2014 06:36 AM, Bartosz Markowski wrote:
+> Firmware 10.x supports up to 8 virtual AP interfaces
+> (comparing to 7 for main firmware). Previous vdev map
+> initialization was missing enough space for 8 + 1 vdevs
+> (we may spent one for mac monitor), due to wrong define used.
 >
-> after putting the card into monitor mode with airmon-ng start wlan0 i see instantly a Microcode SW error.
-> From time to time, i can also produce a kernel oops.
+> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
+
+You are bumping total vdevs up to 16 with that patch...have you
+actually tested that many?  The stock firmware has quite a bit of
+deficiencies in the concurrency handling, at least for stations.
+
+For what it's worth, my firmware will only work on stock kernels
+because I ignore the request for 16 vdevs in the firmware and knock
+it down to 8 to match the kernel driver (before your change below).
+
+Thanks,
+Ben
+
+
 >
-> Hardware is a IBM/Lenovo S440 Laptop with
-> Intel 7260 rev73 wlan card
-> Kernel is 3.13.10-1
-> Lenovo-Laptop-Bios is latest from lenovo webpage
-> IWLWIFI Firmware is 22.24.8
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/core.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 82017f5..e6c56c5 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -795,7 +795,11 @@ int ath10k_core_start(struct ath10k *ar)
+>   	if (status)
+>   		goto err_htc_stop;
+>
+> -	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+> +	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+> +		ar->free_vdev_map = (1 << TARGET_10X_NUM_VDEVS) - 1;
+> +	else
+> +		ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+> +
+>   	INIT_LIST_HEAD(&ar->arvifs);
+>
+>   	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
 >
 
-Ok - this is surely a firmware bug.
-Would you be able to open a bugzilla.kernel.org ticket for that?
-I an open it for you if needed.
-If you do open a ticket, please CC ilw@linux.intel.com to the bug.
-
-Thank you.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
