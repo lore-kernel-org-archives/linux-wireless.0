@@ -1,55 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:33484 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbaEGNhO (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58439 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932839AbaE2PkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 09:37:14 -0400
-Received: by mail-lb0-f170.google.com with SMTP id w7so1380413lbi.15
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 06:37:13 -0700 (PDT)
+	Thu, 29 May 2014 11:40:01 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>
+Subject: [PATCH 4/7 v2] wil6210: improve debug for WMI receive
+Date: Thu, 29 May 2014 18:37:52 +0300
+Message-ID: <1401377872-8562-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140529_174007_468853_F3486E93)
+In-Reply-To: <1417278.VSQeiOskQO@lx-wigig-72>
+References: <1417278.VSQeiOskQO@lx-wigig-72>
 MIME-Version: 1.0
-In-Reply-To: <CABtfrpAcED4yM9Cg027uz9YaeyDtJYqh-Hs0kF9Pvk=e7TXj_w@mail.gmail.com>
-References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>
-	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>
-	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
-	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>
-	<5350B340.9020201@gmail.com>
-	<53512D04.5070808@gmail.com>
-	<CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>
-	<53513BC4.7020502@gmail.com>
-	<CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com>
-	<535363D5.4070708@gmail.com>
-	<CANUX_P3=vC26x-EotmprmsnnpXwO+uDWUoVMohwsf2iO+zW8nQ@mail.gmail.com>
-	<CABtfrpAcED4yM9Cg027uz9YaeyDtJYqh-Hs0kF9Pvk=e7TXj_w@mail.gmail.com>
-Date: Wed, 7 May 2014 16:37:12 +0300
-Message-ID: <CANUX_P3mtm2TPAM01am+ejyPVEetXD0DGtRAj1+zv_2Yha4QhQ@mail.gmail.com> (sfid-20140507_153724_109914_C379FE34)
-Subject: Re: iwlwifi null pointer dereference
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Alexander Monakov <amonakov@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 1, 2014 at 11:43 AM, Alexander Monakov <amonakov@gmail.com> wrote:
-> On Thu, May 1, 2014 at 5:19 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>> It bisects to
->>>>
->>>> commit 2dbc368d7fded35ed221a3751405b15e06eb8925
->>>> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>>> Date:   Mon Dec 9 11:09:47 2013 +0200
->>>>
->>>>     iwlwifi: pcie: track interrupt mask in SW
->>>>
->>>
->>> Yeah - ok.
->>> Thank you for this information.
->>> I'll check again later.
->>
->> Can you try this? I guess it won't work, but I want to be sure about it.
->
-> Indeed, it still fails for me with that patch on top of 3.14.0.
->
-> Anything else I can do?
+Print message if no events received. This should not happen.
+If it is, it points to the problem in firmware.
+Track also cases when multiple events processed in one IRQ
 
-Ok - I now understand what happened. Fix is on the way.
-Sorry for having been so long. Vacation plus travelling doesn't help.
+Print information as soon as possible - mbox pointers and
+event header right after reading it. This helps to identify potential
+problem with memory allocation for the event buffer.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index e9a11cb..706ee52 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -658,21 +658,27 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 	u8 *cmd;
+ 	void __iomem *src;
+ 	ulong flags;
++	unsigned n;
+ 
+ 	if (!test_bit(wil_status_reset_done, &wil->status)) {
+ 		wil_err(wil, "Reset not completed\n");
+ 		return;
+ 	}
+ 
+-	for (;;) {
++	for (n = 0;; n++) {
+ 		u16 len;
+ 
+ 		r->head = ioread32(wil->csr + HOST_MBOX +
+ 				   offsetof(struct wil6210_mbox_ctl, rx.head));
+-		if (r->tail == r->head)
++		if (r->tail == r->head) {
++			if (n == 0)
++				wil_dbg_wmi(wil, "No events?\n");
+ 			return;
++		}
+ 
+-		/* read cmd from tail */
++		wil_dbg_wmi(wil, "Mbox head %08x tail %08x\n",
++			    r->head, r->tail);
++		/* read cmd descriptor from tail */
+ 		wil_memcpy_fromio_32(&d_tail, wil->csr + HOSTADDR(r->tail),
+ 				     sizeof(struct wil6210_mbox_ring_desc));
+ 		if (d_tail.sync == 0) {
+@@ -680,13 +686,18 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			return;
+ 		}
+ 
++		/* read cmd header from descriptor */
+ 		if (0 != wmi_read_hdr(wil, d_tail.addr, &hdr)) {
+ 			wil_err(wil, "Mbox evt at 0x%08x?\n",
+ 				le32_to_cpu(d_tail.addr));
+ 			return;
+ 		}
+-
+ 		len = le16_to_cpu(hdr.len);
++		wil_dbg_wmi(wil, "Mbox evt %04x %04x %04x %02x\n",
++			    le16_to_cpu(hdr.seq), len, le16_to_cpu(hdr.type),
++			    hdr.flags);
++
++		/* read cmd buffer from descriptor */
+ 		src = wmi_buffer(wil, d_tail.addr) +
+ 		      sizeof(struct wil6210_mbox_hdr);
+ 		evt = kmalloc(ALIGN(offsetof(struct pending_wmi_event,
+@@ -702,9 +713,6 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 		iowrite32(0, wil->csr + HOSTADDR(r->tail) +
+ 			  offsetof(struct wil6210_mbox_ring_desc, sync));
+ 		/* indicate */
+-		wil_dbg_wmi(wil, "Mbox evt %04x %04x %04x %02x\n",
+-			    le16_to_cpu(hdr.seq), len, le16_to_cpu(hdr.type),
+-			    hdr.flags);
+ 		if ((hdr.type == WIL_MBOX_HDR_TYPE_WMI) &&
+ 		    (len >= sizeof(struct wil6210_mbox_hdr_wmi))) {
+ 			struct wil6210_mbox_hdr_wmi *wmi = &evt->event.wmi;
+@@ -734,6 +742,8 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			wil_dbg_wmi(wil, "queue_work -> %d\n", q);
+ 		}
+ 	}
++	if (n > 1)
++		wil_dbg_wmi(wil, "%s -> %d events processed\n", __func__, n);
+ }
+ 
+ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+-- 
+1.9.1
+
