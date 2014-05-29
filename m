@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754635AbaEEHeC (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:60188 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932730AbaE2GqQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 03:34:02 -0400
-Message-ID: <1399275222.22235.2.camel@jlt4.sipsolutions.net> (sfid-20140505_093409_549323_30FB5B38)
-Subject: Re: [PATCH 3.15] cfg80211: allow restricting supported dfs regions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 05 May 2014 09:33:42 +0200
-In-Reply-To: <1399150555-36041-1-git-send-email-nbd@openwrt.org>
-References: <1399150555-36041-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 29 May 2014 02:46:16 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so36828wiw.10
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2014 23:46:14 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/2] mac80211: fix csa counters
+Date: Thu, 29 May 2014 08:38:53 +0200
+Message-Id: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com> (sfid-20140529_084624_055241_C09A09EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-05-03 at 22:55 +0200, Felix Fietkau wrote:
-> At the moment, the ath9k/ath10k DFS module only supports detecting ETSI
-> radar patterns.
+Hi,
 
-It seems this should also be advertised to the userspace.
+I was seeing strange WARN_ON splat loops and
+crashes while I was testing my multi-vif CSA.
 
-> Add a bitmap in the interface combinations, indicating which DFS regions
-> are supported by the detector.
+CSA counters weren't properly reset and on some
+failpaths this caused a mess. There were also
+possible SMP inconsitencies/races.
 
-Does that make sense? It seems unlikely to me that it would be interface
-combination specific?
 
-I think it's already questionable to put this in after -rc4, in
-particular with the userspace advertising part. Can we do anything
-else? 
+v2:
+ * dropped the atomic counter patch
+ * fix patch 1
 
-johannes
+Michal Kazior (2):
+  mac80211: move csa counters from sdata to beacon/presp
+  mac80211: use csa counter offsets instead of csa_active
 
+ net/mac80211/cfg.c         |  67 ++++++++++++++++++---------
+ net/mac80211/ibss.c        |   2 +-
+ net/mac80211/ieee80211_i.h |  16 +++++--
+ net/mac80211/mesh.c        |   2 +-
+ net/mac80211/tx.c          | 113 +++++++++++++++++++++++++--------------------
+ 5 files changed, 122 insertions(+), 78 deletions(-)
+
+-- 
+1.8.5.3
 
