@@ -1,197 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:47660 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756148AbaEOVvz (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:46651 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756331AbaE2Hlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 17:51:55 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so1279820wib.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 14:51:54 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH rebased 13/15] staging: vt6656: usbpipe.c PIPEnsControlOut use usb_control_msg
-Date: Thu, 15 May 2014 22:49:22 +0100
-Message-Id: <1400190564-5135-13-git-send-email-tvboxspy@gmail.com> (sfid-20140516_002147_446644_BD513EC7)
-In-Reply-To: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
-References: <1400190564-5135-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 29 May 2014 03:41:49 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so12060697wgh.26
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 00:41:47 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v7 3/5] mac80211: use chanctx reservation for AP CSA
+Date: Thu, 29 May 2014 09:34:09 +0200
+Message-Id: <1401348851-26732-4-git-send-email-michal.kazior@tieto.com> (sfid-20140529_094153_847610_37082236)
+In-Reply-To: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that this fucntion is nolonger atomic change to usb_control_msg
+Channel switch finalization is now 2-step. First
+step is when driver calls csa_finish(), the other
+is when reservation is actually finalized (which
+can be deferred for in-place reservation).
 
-Return STATUS_FAILURE if ntStatus less than wLength.
+It is now safe to call ieee80211_csa_finish() more
+then once.
 
-Remove fMP_CONTROL_WRITES flag
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/device.h   |  1 -
- drivers/staging/vt6656/main_usb.c |  1 -
- drivers/staging/vt6656/usbpipe.c  | 87 ++++-----------------------------------
- 3 files changed, 7 insertions(+), 82 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 622cf02..da1b70d 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -744,7 +744,6 @@ struct vnt_private {
- #define fMP_POST_READS                      0x00000100
- #define fMP_POST_WRITES                     0x00000200
- #define fMP_CONTROL_READS                   0x00000400
--#define fMP_CONTROL_WRITES                  0x00000800
+Notes:
+    v3:
+     * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
+     * fix comment style [Johannes]
+     * use goto for cleaner unlocking/returning [Johannes]
+     * squash with ieee80211_vif_change_channel() removal patch [Johannes]
+     * fix commit message [Johannes]
+     * add resilience for multiple ieee80211_csa_finish() calls
+    
+    v4:
+     * split removal of ieee80211_vif_change_channel()
+    
+    v7:
+     * tune commit message
+     * put the initial ieee80211_vif_chanctx_reservation_complete()
+       implementation here [Johannes]
+     * remove 'default' case and use all iftypes explicitly and WARN_ON
+
+ net/mac80211/cfg.c  | 82 +++++++++++++++++++++++++++++++++++------------------
+ net/mac80211/chan.c | 34 ++++++++++++++++++++--
+ 2 files changed, 87 insertions(+), 29 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0fa37d8..53401d5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3126,17 +3126,35 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
  
- #define MP_SET_FLAG(_M, _F)             ((_M)->Flags |= (_F))
- #define MP_CLEAR_FLAG(_M, _F)            ((_M)->Flags &= ~(_F))
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 462f95d..6ca5d78 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -965,7 +965,6 @@ static int  device_open(struct net_device *dev)
+ 	sdata_assert_lock(sdata);
+ 	lockdep_assert_held(&local->mtx);
++	lockdep_assert_held(&local->chanctx_mtx);
  
-     MP_CLEAR_FLAG(pDevice, fMP_DISCONNECTED);
-     MP_CLEAR_FLAG(pDevice, fMP_CONTROL_READS);
--    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
-     MP_SET_FLAG(pDevice, fMP_POST_READS);
-     MP_SET_FLAG(pDevice, fMP_POST_WRITES);
+-	sdata->radar_required = sdata->csa_radar_required;
+-	err = ieee80211_vif_change_channel(sdata, &changed);
+-	if (err < 0)
+-		return err;
++	/*
++	 * using reservation isn't immediate as it may be deferred until later
++	 * with multi-vif. once reservation is complete it will re-schedule the
++	 * work with no reserved_chanctx so verify chandef to check if it
++	 * completed successfully
++	 */
  
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index b707470..1ab3958 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -64,7 +64,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
- static void s_nsControlInUsbIoCompleteRead(struct urb *urb);
--static void s_nsControlInUsbIoCompleteWrite(struct urb *urb);
+-	if (!local->use_chanctx) {
+-		local->_oper_chandef = sdata->csa_chandef;
+-		ieee80211_hw_config(local, 0);
++	if (sdata->reserved_chanctx) {
++		/*
++		 * with multi-vif csa driver may call ieee80211_csa_finish()
++		 * many times while waiting for other interfaces to use their
++		 * reservations
++		 */
++		if (sdata->reserved_ready)
++			return 0;
++
++		err = ieee80211_vif_use_reserved_context(sdata);
++		if (err)
++			return err;
++
++		return 0;
+ 	}
  
- int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
- 	u16 wValue, u16 wIndex, u16 wLength, u8 *pbyBuffer)
-@@ -74,9 +73,6 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
-     if (pDevice->Flags & fMP_DISCONNECTED)
-         return STATUS_FAILURE;
++	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
++					&sdata->csa_chandef))
++		return -EINVAL;
++
+ 	sdata->vif.csa_active = false;
  
--    if (pDevice->Flags & fMP_CONTROL_WRITES)
--        return STATUS_FAILURE;
--
-     if (in_interrupt()) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"in_interrupt return ..byRequest %x\n", byRequest);
-         return STATUS_FAILURE;
-@@ -109,69 +105,24 @@ int PIPEnsControlOutAsyn(struct vnt_private *pDevice, u8 byRequest,
+ 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
+@@ -3172,6 +3190,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
  
- int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- 		u16 wIndex, u16 wLength, u8 *pbyBuffer)
--		__releases(&pDevice->lock)
--		__acquires(&pDevice->lock)
+ 	sdata_lock(sdata);
+ 	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
+ 
+ 	/* AP might have been stopped while waiting for the lock. */
+ 	if (!sdata->vif.csa_active)
+@@ -3183,6 +3202,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	ieee80211_csa_finalize(sdata);
+ 
+ unlock:
++	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ }
+@@ -3328,7 +3348,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *conf;
+ 	struct ieee80211_chanctx *chanctx;
+-	int err, num_chanctx, changed = 0;
++	int err, changed = 0;
+ 
+ 	sdata_assert_lock(sdata);
+ 	lockdep_assert_held(&local->mtx);
+@@ -3343,37 +3363,43 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				       &sdata->vif.bss_conf.chandef))
+ 		return -EINVAL;
+ 
++	/* don't allow another channel switch if one is already active. */
++	if (sdata->vif.csa_active)
++		return -EBUSY;
++
+ 	mutex_lock(&local->chanctx_mtx);
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					 lockdep_is_held(&local->chanctx_mtx));
+ 	if (!conf) {
+-		mutex_unlock(&local->chanctx_mtx);
+-		return -EBUSY;
++		err = -EBUSY;
++		goto out;
+ 	}
+ 
+-	/* don't handle for multi-VIF cases */
+ 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
+-		mutex_unlock(&local->chanctx_mtx);
+-		return -EBUSY;
++	if (!chanctx) {
++		err = -EBUSY;
++		goto out;
+ 	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
+-		num_chanctx++;
+-	mutex_unlock(&local->chanctx_mtx);
+ 
+-	if (num_chanctx > 1)
+-		return -EBUSY;
++	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
++					    chanctx->mode,
++					    params->radar_required);
++	if (err)
++		goto out;
+ 
+-	/* don't allow another channel switch if one is already active. */
+-	if (sdata->vif.csa_active)
+-		return -EBUSY;
++	/* if reservation is invalid then this will fail */
++	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
++	if (err) {
++		ieee80211_vif_unreserve_chanctx(sdata);
++		goto out;
++	}
+ 
+ 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
+-	if (err)
+-		return err;
++	if (err) {
++		ieee80211_vif_unreserve_chanctx(sdata);
++		goto out;
++	}
+ 
+-	sdata->csa_radar_required = params->radar_required;
+ 	sdata->csa_chandef = params->chandef;
+ 	sdata->csa_block_tx = params->block_tx;
+ 	sdata->vif.csa_active = true;
+@@ -3391,7 +3417,9 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_csa_finalize(sdata);
+ 	}
+ 
+-	return 0;
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return err;
+ }
+ 
+ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 01379a17..2ab0c90 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1018,6 +1018,30 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++static void
++ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
++{
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_MESH_POINT:
++		ieee80211_queue_work(&sdata->local->hw,
++				     &sdata->csa_finalize_work);
++		break;
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_P2P_DEVICE:
++	case NUM_NL80211_IFTYPES:
++		WARN_ON(1);
++		break;
++	}
++}
++
+ static int
+ ieee80211_vif_use_reserved_assign(struct ieee80211_sub_if_data *sdata)
  {
- 	int ntStatus = 0;
--	int ii;
--
--    if (pDevice->Flags & fMP_DISCONNECTED)
--        return STATUS_FAILURE;
--
--    if (pDevice->Flags & fMP_CONTROL_WRITES)
--        return STATUS_FAILURE;
+@@ -1075,7 +1099,7 @@ ieee80211_vif_use_reserved_assign(struct ieee80211_sub_if_data *sdata)
+ 		if (ieee80211_chanctx_refcount(local, new_ctx) == 0)
+ 			ieee80211_free_chanctx(local, new_ctx);
  
--	if (pDevice->Flags & fMP_CONTROL_READS)
--		return STATUS_FAILURE;
--
--	if (pDevice->pControlURB->hcpriv)
-+	if (pDevice->Flags & fMP_DISCONNECTED)
- 		return STATUS_FAILURE;
+-		return err;
++		goto out;
+ 	}
  
- 	mutex_lock(&pDevice->usb_lock);
+ 	list_move(&sdata->assigned_chanctx_list, &new_ctx->assigned_vifs);
+@@ -1094,6 +1118,8 @@ ieee80211_vif_use_reserved_assign(struct ieee80211_sub_if_data *sdata)
+ 	if (changed)
+ 		ieee80211_bss_info_change_notify(sdata, changed);
  
--	MP_SET_FLAG(pDevice, fMP_CONTROL_WRITES);
-+	ntStatus = usb_control_msg(pDevice->usb,
-+		usb_sndctrlpipe(pDevice->usb, 0), byRequest, 0x40, wValue,
-+			wIndex, pbyBuffer, wLength, USB_CTL_WAIT);
- 
--	pDevice->sUsbCtlRequest.bRequestType = 0x40;
--	pDevice->sUsbCtlRequest.bRequest = byRequest;
--	pDevice->sUsbCtlRequest.wValue = cpu_to_le16p(&wValue);
--	pDevice->sUsbCtlRequest.wIndex = cpu_to_le16p(&wIndex);
--	pDevice->sUsbCtlRequest.wLength = cpu_to_le16p(&wLength);
--	pDevice->pControlURB->transfer_flags |= URB_ASYNC_UNLINK;
--    pDevice->pControlURB->actual_length = 0;
--    // Notice, pbyBuffer limited point to variable buffer, can't be constant.
--  	usb_fill_control_urb(pDevice->pControlURB, pDevice->usb,
--			 usb_sndctrlpipe(pDevice->usb , 0), (char *) &pDevice->sUsbCtlRequest,
--			 pbyBuffer, wLength, s_nsControlInUsbIoCompleteWrite, pDevice);
-+	mutex_unlock(&pDevice->usb_lock);
- 
--	ntStatus = usb_submit_urb(pDevice->pControlURB, GFP_ATOMIC);
--	if (ntStatus != 0) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"control send request submission failed: %d\n",
--				ntStatus);
--		MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
--		mutex_unlock(&pDevice->usb_lock);
-+	if (ntStatus < (int)wLength)
- 		return STATUS_FAILURE;
--	}
--
--    for (ii = 0; ii <= USB_CTL_WAIT; ii ++) {
--
--	if (pDevice->Flags & fMP_CONTROL_WRITES)
--		mdelay(1);
--        else
--		break;
--
--        if (ii >= USB_CTL_WAIT) {
--		DBG_PRT(MSG_LEVEL_DEBUG,
--			KERN_INFO "control send request submission timeout\n");
--            MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
--	    mutex_unlock(&pDevice->usb_lock);
--            return STATUS_FAILURE;
--        }
--    }
--
--	mutex_unlock(&pDevice->usb_lock);
- 
--    return STATUS_SUCCESS;
-+	return STATUS_SUCCESS;
++out:
++	ieee80211_vif_chanctx_reservation_complete(sdata);
+ 	return err;
  }
  
- int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
-@@ -188,9 +139,6 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
-     if (pDevice->Flags & fMP_CONTROL_READS)
- 	return STATUS_FAILURE;
+@@ -1277,6 +1303,8 @@ ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 			list_move(&sdata->assigned_chanctx_list,
+ 				  &new_ctx->assigned_vifs);
+ 			sdata->reserved_chanctx = NULL;
++
++			ieee80211_vif_chanctx_reservation_complete(sdata);
+ 		}
  
--	if (pDevice->Flags & fMP_CONTROL_WRITES)
--		return STATUS_FAILURE;
--
- 	if (pDevice->pControlURB->hcpriv)
- 		return STATUS_FAILURE;
+ 		list_del_rcu(&ctx->replaces->list);
+@@ -1320,8 +1348,10 @@ err:
+ 			continue;
  
-@@ -239,27 +187,6 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
-     return ntStatus;
- }
+ 		list_for_each_entry_safe(sdata, sdata_tmp, &ctx->reserved_vifs,
+-					 reserved_chanctx_list)
++					 reserved_chanctx_list) {
+ 			ieee80211_vif_unreserve_chanctx(sdata);
++			ieee80211_vif_chanctx_reservation_complete(sdata);
++		}
+ 	}
  
--static void s_nsControlInUsbIoCompleteWrite(struct urb *urb)
--{
--	struct vnt_private *pDevice = (struct vnt_private *)urb->context;
--
--	pDevice = urb->context;
--	switch (urb->status) {
--	case 0:
--		break;
--	case -EINPROGRESS:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status EINPROGRESS%d\n", urb->status);
--		break;
--	case -ENOENT:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status ENOENT %d\n", urb->status);
--		break;
--	default:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ctrl write urb status %d\n", urb->status);
--	}
--
--    MP_CLEAR_FLAG(pDevice, fMP_CONTROL_WRITES);
--}
--
- /*
-  * Description:
-  *      Complete function of usb Control callback
+ 	return err;
 -- 
-1.9.1
+1.8.5.3
 
