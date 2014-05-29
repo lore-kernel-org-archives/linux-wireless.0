@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20921 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750912AbaE1FFL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 01:05:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 27 May 2014 22:04:51 -0700
-Subject: RE: [RFC] mwifiex: block work queue while suspended
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5E4CC@SC-VEXCH1.marvell.com> (sfid-20140528_070515_569884_A0D1294C)
-References: <20140516012439.GI15430@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5D8ED@SC-VEXCH1.marvell.com>
- <20140526080110.GJ6118@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5E39F@SC-VEXCH1.marvell.com>
- <20140528020128.GG4151@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430F70F5E4B3@SC-VEXCH1.marvell.com>
- <20140528044945.GI4151@us.netrek.org>
-In-Reply-To: <20140528044945.GI4151@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-we0-f179.google.com ([74.125.82.179]:64028 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932423AbaE2NgO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2014 09:36:14 -0400
+Received: by mail-we0-f179.google.com with SMTP id q59so425688wes.10
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 06:36:13 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: fix vdev map size for 10.x firmware
+Date: Thu, 29 May 2014 15:36:07 +0200
+Message-Id: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20140529_153618_372217_A47C5B5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+Firmware 10.x supports up to 8 virtual AP interfaces
+(comparing to 7 for main firmware). Previous vdev map
+initialization was missing enough space for 8 + 1 vdevs
+(we may spent one for mac monitor), due to wrong define used.
 
-> > > We set gap to 0xff, which we think is a special value that means the
-> > > device will wait for the host to acknowledge before sending data to
-> > > the host.
-> >
-> > Yes, gap=0xff should be used. Actually I also have the patch to set
-> > gap to 0xff queued in my local tree. I will send it upstream.
-> 
-> Thanks.  Today I have been testing with gap 50ms and no longer able to
-> reproduce the "mmc0: Timeout waiting for hardware interrupt." problem.
+Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
 
-Hmm, that's interesting.
-The concern of none-0xff gap was that the SDIO interrupt could come in without acknowledgement from host. As long as XO-4 system (specifically mmc subsystem) can wake up within 50ms you are fine.
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-> 
-> > > Looking through history of development, we thought that this would
-> > > avoid a race condition, where the host starts to suspend, configures
-> > > the device for host sleep, but the device may wake in the time before
-> > > the host suspends.
-> > >
-> > > We don't see this "mmc0: Timeout waiting for hardware interrupt."
-> > > problem unless we use WPA2.  It does not reproduce on an open access
-> > > point.
-> >
-> > With WPA2 enabled, does the "mmc0 timeout" happen in every suspend
-> > attempt?
-> 
-> No, it is rare, of the order of one in every 6000 attempts, and depends
-> on the timing of arriving packets.  Our reproducer uses a ping ramp,
-> with interval varying from 0.1 to 0.9 seconds with 50ms increment, and
-> this brings the problem frequency down to about one in 200 attempts.
-> 
-> The OLPC XO-4 by default tries to suspend automatically when user is
-> idle, which is why we notice the problem.
-
-Good to know.
-
-Thanks,
-Bing
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 82017f5..e6c56c5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -795,7 +795,11 @@ int ath10k_core_start(struct ath10k *ar)
+ 	if (status)
+ 		goto err_htc_stop;
+ 
+-	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
++		ar->free_vdev_map = (1 << TARGET_10X_NUM_VDEVS) - 1;
++	else
++		ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
++
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
+ 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
+-- 
+1.8.2
 
