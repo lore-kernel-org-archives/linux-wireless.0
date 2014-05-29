@@ -1,46 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.225]:9640 "EHLO
-	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751466AbaE1OSQ (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:65060 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbaE2WOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2014 10:18:16 -0400
-Date: Wed, 28 May 2014 10:18:14 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-	michal.kazior@tieto.com
-Subject: Re: [RFC] trace-cmd: plugin_mac80211: add parsing for the new
- drv_switch_vif_chanctx
-Message-ID: <20140528101814.400b20e2@gandalf.local.home> (sfid-20140528_161819_633485_5C1C57CD)
-In-Reply-To: <1401283140.8146.16.camel@jlt4.sipsolutions.net>
-References: <1400873435-9687-1-git-send-email-luca@coelho.fi>
-	<1401088941.19055.0.camel@jlt4.sipsolutions.net>
-	<20140528090837.2b868d22@gandalf.local.home>
-	<1401283140.8146.16.camel@jlt4.sipsolutions.net>
+	Thu, 29 May 2014 18:14:37 -0400
+Message-ID: <5387B149.20408@gmail.com> (sfid-20140530_001504_904833_BAE99FF5)
+Date: Thu, 29 May 2014 15:14:33 -0700
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: abdoulaye berthe <berthe.ab@gmail.com>
+CC: linus.walleij@linaro.org, gnurou@gmail.com, m@bues.ch,
+	linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	patches@opensource.wolfsonmicro.com, linux-input@vger.kernel.org,
+	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH] gpio: removes all usage of gpiochip_remove retval
+References: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
+In-Reply-To: <1401400492-26175-1-git-send-email-berthe.ab@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 28 May 2014 15:19:00 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+On 05/29/2014 02:54 PM, abdoulaye berthe wrote:
 
-> On Wed, 2014-05-28 at 09:08 -0400, Steven Rostedt wrote:
-> > On Mon, 26 May 2014 09:22:21 +0200
-> > Johannes Berg <johannes@sipsolutions.net> wrote:
-> > 
-> > > Steven, what do you think about those packed structs in a dynamic
-> > > array? I've applied the kernel patch but I can still back it out if you
-> > > know of a better solution.
-> > 
-> > I consider you more of the maintainer of the mac80211 plugin, so I'll
-> > leave that decision up to you ;-)
-> 
-> Heh, ok. I was more thinking about the structure of the kernel
-> tracepoint than the userspace code though.
-> 
+Did you forget a changelog explaining why this is either needed, or even 
+a good idea?  I joined the conversation late and don't know why you are 
+doing this.
 
-Where's the patch for the kernel? I can take a look at that. Most cases
-if it works for you, then it should be fine.
+Thanks,
+David Daney
 
--- Steve
+
+
+> Signed-off-by: abdoulaye berthe <berthe.ab@gmail.com>
+> ---
+>   arch/arm/common/scoop.c                        | 10 ++--------
+>   arch/mips/txx9/generic/setup.c                 |  4 ++--
+>   arch/powerpc/platforms/83xx/mcu_mpc8349emitx.c |  3 ++-
+>   arch/sh/boards/mach-x3proto/gpio.c             |  6 ++----
+>   drivers/bcma/driver_gpio.c                     |  3 ++-
+>   drivers/gpio/gpio-74x164.c                     |  8 +++-----
+>   drivers/gpio/gpio-adnp.c                       |  9 +--------
+>   drivers/gpio/gpio-adp5520.c                    |  8 +-------
+>   drivers/gpio/gpio-adp5588.c                    |  6 +-----
+>   drivers/gpio/gpio-amd8111.c                    |  3 +--
+>   drivers/gpio/gpio-arizona.c                    |  3 ++-
+>   drivers/gpio/gpio-cs5535.c                     |  8 +-------
+>   drivers/gpio/gpio-da9052.c                     |  3 ++-
+>   drivers/gpio/gpio-da9055.c                     |  3 ++-
+>   drivers/gpio/gpio-dwapb.c                      |  2 +-
+>   drivers/gpio/gpio-em.c                         |  5 +----
+>   drivers/gpio/gpio-f7188x.c                     | 18 ++----------------
+>   drivers/gpio/gpio-generic.c                    |  3 ++-
+>   drivers/gpio/gpio-grgpio.c                     |  4 +---
+>   drivers/gpio/gpio-ich.c                        |  9 +--------
+>   drivers/gpio/gpio-it8761e.c                    |  6 +-----
+>   drivers/gpio/gpio-janz-ttl.c                   |  8 +-------
+>   drivers/gpio/gpio-kempld.c                     |  3 ++-
+>   drivers/gpio/gpio-lp3943.c                     |  3 ++-
+>   drivers/gpio/gpio-lynxpoint.c                  |  5 +----
+>   drivers/gpio/gpio-max730x.c                    | 12 ++++--------
+>   drivers/gpio/gpio-max732x.c                    |  7 +------
+>   drivers/gpio/gpio-mc33880.c                    | 11 +++--------
+>   drivers/gpio/gpio-mc9s08dz60.c                 |  3 ++-
+>   drivers/gpio/gpio-mcp23s08.c                   | 26 +++++++-------------------
+>   drivers/gpio/gpio-ml-ioh.c                     |  8 ++------
+>   drivers/gpio/gpio-msm-v2.c                     |  5 +----
+>   drivers/gpio/gpio-mxc.c                        |  2 +-
+>   drivers/gpio/gpio-octeon.c                     |  3 ++-
+>   drivers/gpio/gpio-palmas.c                     |  3 ++-
+>   drivers/gpio/gpio-pca953x.c                    |  7 +------
+>   drivers/gpio/gpio-pcf857x.c                    |  4 +---
+>   drivers/gpio/gpio-pch.c                        | 10 ++--------
+>   drivers/gpio/gpio-rc5t583.c                    |  3 ++-
+>   drivers/gpio/gpio-rcar.c                       |  5 +----
+>   drivers/gpio/gpio-rdc321x.c                    |  7 ++-----
+>   drivers/gpio/gpio-sch.c                        | 16 +++-------------
+>   drivers/gpio/gpio-sch311x.c                    |  6 ++----
+>   drivers/gpio/gpio-sodaville.c                  |  4 +---
+>   drivers/gpio/gpio-stmpe.c                      |  8 +-------
+>   drivers/gpio/gpio-sx150x.c                     |  7 ++-----
+>   drivers/gpio/gpio-syscon.c                     |  3 ++-
+>   drivers/gpio/gpio-tb10x.c                      |  5 +----
+>   drivers/gpio/gpio-tc3589x.c                    |  8 +-------
+>   drivers/gpio/gpio-timberdale.c                 |  5 +----
+>   drivers/gpio/gpio-tps6586x.c                   |  3 ++-
+>   drivers/gpio/gpio-tps65910.c                   |  3 ++-
+>   drivers/gpio/gpio-tps65912.c                   |  3 ++-
+>   drivers/gpio/gpio-ts5500.c                     |  6 +++---
+>   drivers/gpio/gpio-twl4030.c                    |  4 +---
+>   drivers/gpio/gpio-twl6040.c                    |  3 ++-
+>   drivers/gpio/gpio-ucb1400.c                    |  2 +-
+>   drivers/gpio/gpio-viperboard.c                 | 10 +++-------
+>   drivers/gpio/gpio-vx855.c                      |  3 +--
+>   drivers/gpio/gpio-wm831x.c                     |  3 ++-
+>   drivers/gpio/gpio-wm8350.c                     |  3 ++-
+>   drivers/gpio/gpio-wm8994.c                     |  3 ++-
+>   drivers/hid/hid-cp2112.c                       |  6 ++----
+>   drivers/input/keyboard/adp5588-keys.c          |  4 +---
+>   drivers/input/keyboard/adp5589-keys.c          |  4 +---
+>   drivers/input/touchscreen/ad7879.c             | 10 +++-------
+>   drivers/leds/leds-pca9532.c                    | 10 ++--------
+>   drivers/leds/leds-tca6507.c                    |  7 ++-----
+>   drivers/media/dvb-frontends/cxd2820r_core.c    | 10 +++-------
+>   drivers/mfd/asic3.c                            |  3 ++-
+>   drivers/mfd/htc-i2cpld.c                       |  8 +-------
+>   drivers/mfd/sm501.c                            | 17 +++--------------
+>   drivers/mfd/tc6393xb.c                         | 13 ++++---------
+>   drivers/mfd/ucb1x00-core.c                     |  8 ++------
+>   drivers/pinctrl/pinctrl-abx500.c               | 15 +++------------
+>   drivers/pinctrl/pinctrl-adi2.c                 |  9 ++++-----
+>   drivers/pinctrl/pinctrl-as3722.c               | 11 ++---------
+>   drivers/pinctrl/pinctrl-baytrail.c             |  5 +----
+>   drivers/pinctrl/pinctrl-coh901.c               | 10 ++--------
+>   drivers/pinctrl/pinctrl-exynos5440.c           |  6 +-----
+>   drivers/pinctrl/pinctrl-msm.c                  | 11 ++---------
+>   drivers/pinctrl/pinctrl-nomadik.c              |  2 +-
+>   drivers/pinctrl/pinctrl-rockchip.c             | 16 ++++------------
+>   drivers/pinctrl/pinctrl-samsung.c              | 14 ++++----------
+>   drivers/pinctrl/pinctrl-sunxi.c                |  3 +--
+>   drivers/pinctrl/sh-pfc/gpio.c                  |  9 +++------
+>   drivers/pinctrl/spear/pinctrl-plgpio.c         |  3 +--
+>   drivers/pinctrl/vt8500/pinctrl-wmt.c           |  9 ++-------
+>   drivers/platform/x86/intel_pmic_gpio.c         |  3 +--
+>   drivers/ssb/driver_gpio.c                      |  3 ++-
+>   drivers/staging/vme/devices/vme_pio2_gpio.c    |  4 +---
+>   drivers/tty/serial/max310x.c                   | 10 ++++------
+>   drivers/video/fbdev/via/via-gpio.c             | 10 +++-------
+>   sound/soc/codecs/wm5100.c                      |  5 +----
+>   sound/soc/codecs/wm8903.c                      |  6 +-----
+>   sound/soc/codecs/wm8962.c                      |  5 +----
+>   sound/soc/codecs/wm8996.c                      |  6 +-----
+>   97 files changed, 182 insertions(+), 460 deletions(-)
+>
+[...]
