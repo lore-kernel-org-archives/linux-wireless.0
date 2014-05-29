@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:59010 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752888AbaETK2z (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7179 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757822AbaE2QdO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 06:28:55 -0400
-Date: Tue, 20 May 2014 06:26:24 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still
- being compiled?
-In-Reply-To: <1400581259.4474.3.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.LFD.2.11.1405200625520.3646@localhost> (sfid-20140520_122858_194819_4C6E41FA)
-References: <alpine.LFD.2.11.1405200342050.10462@localhost>   (sfid-20140520_101149_157876_1874D563) <1400574452.4474.2.camel@jlt4.sipsolutions.net>  <alpine.LFD.2.11.1405200526530.12158@localhost> <1400581259.4474.3.camel@jlt4.sipsolutions.net>
+	Thu, 29 May 2014 12:33:14 -0400
+Date: Thu, 29 May 2014 19:33:08 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/8] wireless-regdb: Add Micronesia (FM) and Palau (PW)
+ regulatory rules
+Message-ID: <20140529163308.GA27966@jouni.qca.qualcomm.com> (sfid-20140529_183333_445846_FA0AAA45)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 May 2014, Johannes Berg wrote:
+FCC has jurisdiction over public use of radio spectrum in all U.S.
+territories.
 
-> On Tue, 2014-05-20 at 05:28 -0400, Robert P. J. Day wrote:
->
-> > > The whole driver depends on CONFIG_PCI, maybe it should depend on
-> > > something more PCIe specific, but that wasn't easy to sort out, and
-> > > the APIs it needs aren't PCIe specific afaict.
-> >
-> >   ok, i'll have to think about that for a few minutes. am i at least
-> > correct in my understanding that, technically, the kernel config
-> > option PCIEPORTBUS is supposed to control whether one wants basic PCIE
-> > support or not?
->
-> I don't know, sorry.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-  ok, i think i'll go hassle people on the linux-pci list about this,
-thanks for your patience.
+diff --git a/db.txt b/db.txt
+index 063cd44..f85a622 100644
+--- a/db.txt
++++ b/db.txt
+@@ -325,6 +325,13 @@ country FI: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
++country FM: DFS-FCC
++	(2402 - 2472 @ 40), (30)
++	(5170 - 5250 @ 80), (24)
++	(5250 - 5330 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
++	(5735 - 5835 @ 80), (30)
++
+ country FR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20)
+@@ -730,6 +737,13 @@ country PR: DFS-FCC
+ 	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
++country PW: DFS-FCC
++	(2402 - 2472 @ 40), (30)
++	(5170 - 5250 @ 80), (24)
++	(5250 - 5330 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
++	(5735 - 5835 @ 80), (30)
++
+ country QA: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 80), (30)
+-- 
+1.9.1
 
-rday
 
 -- 
-
-========================================================================
-Robert P. J. Day                                 Ottawa, Ontario, CANADA
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
+Jouni Malinen                                            PGP id EFC895FA
