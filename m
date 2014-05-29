@@ -1,121 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:50372 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300AbaESOtQ (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:51498 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757804AbaE2OKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 10:49:16 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [RFC 1/2] cfg80211: Add channel flags limiting availability to OCB mode only
-Date: Mon, 19 May 2014 16:49:04 +0200
-Message-Id: <1400510945-24868-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140519_165045_996219_29310BB4)
-In-Reply-To: <1400510945-24868-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1400510945-24868-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Thu, 29 May 2014 10:10:40 -0400
+Received: by mail-wi0-f179.google.com with SMTP id bs8so725691wib.6
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2014 07:10:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53873A58.1070209@candelatech.com>
+References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+	<53873A58.1070209@candelatech.com>
+Date: Thu, 29 May 2014 16:10:39 +0200
+Message-ID: <CACKGw+FT0GTRF+tn_Odi0KQvEFL93Oyjj4x=SKgNP1aayB4-QA@mail.gmail.com> (sfid-20140529_161045_717744_C111DDA1)
+Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.11p operates in its own 5.9GHz band. When there will
-be a record for the 5.9GHz band in the regulatory daemon,
-it must be limited to the OCB mode only -- using the newly
-added flags.
+On 29 May 2014 15:47, Ben Greear <greearb@candelatech.com> wrote:
+>
+>
+> On 05/29/2014 06:36 AM, Bartosz Markowski wrote:
+>>
+>> Firmware 10.x supports up to 8 virtual AP interfaces
+>> (comparing to 7 for main firmware). Previous vdev map
+>> initialization was missing enough space for 8 + 1 vdevs
+>> (we may spent one for mac monitor), due to wrong define used.
+>>
+>> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
+>
+>
+> You are bumping total vdevs up to 16 with that patch...have you
+> actually tested that many?  The stock firmware has quite a bit of
+> deficiencies in the concurrency handling, at least for stations.
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
----
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/nl80211.c       | 3 +++
- net/wireless/reg.c           | 2 ++
- 4 files changed, 12 insertions(+)
+No, I have never tested it with so many. I'm running tests with 8 at
+most. And by this patch I just aimed to support 8 VAPS we advertise in
+iface_combinations to mac80211 (.max_interfaces = 8). I was managed to
+get only 7 before, since 1 vdev was being allocated as monitor.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5c7169b..6722ab2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -115,6 +115,7 @@ enum ieee80211_band {
-  *	on this channel.
-  * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-  *	on this channel.
-+ * @IEEE80211_CHAN_OCB_ONLY: only OCB is allowed on this channel.
-  *
-  */
- enum ieee80211_channel_flags {
-@@ -131,6 +132,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
- 	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
- 	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
-+	IEEE80211_CHAN_OCB_ONLY         = 1<<13,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 406010d..970c5df 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2362,6 +2362,8 @@ enum nl80211_band_attr {
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
-  *	on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_OCB_ONLY: no other than OCB networks are
-+ *	permitted on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -2390,6 +2392,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
- 	NL80211_FREQUENCY_ATTR_NO_20MHZ,
- 	NL80211_FREQUENCY_ATTR_NO_10MHZ,
-+	NL80211_FREQUENCY_ATTR_OCB_ONLY,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -2558,6 +2561,7 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
-  *	base on contiguous rules and wider channels will be allowed to cross
-  *	multiple contiguous/overlapping frequency ranges.
-+ * @NL80211_RRF_OCB_ONLY: no other than OCB is allowed
-  */
- enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_OFDM		= 1<<0,
-@@ -2570,6 +2574,7 @@ enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_IR		= 1<<7,
- 	__NL80211_RRF_NO_IBSS		= 1<<8,
- 	NL80211_RRF_AUTO_BW		= 1<<11,
-+	NL80211_RRF_OCB_ONLY            = 1<<12,
- };
- 
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0f1b18f2..c766c31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -633,6 +633,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
- 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
- 			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_OCB_ONLY) &&
-+		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_OCB_ONLY))
-+			goto nla_put_failure;
- 	}
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e78f532..74e41f7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -906,6 +906,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_NO_OFDM;
- 	if (rd_flags & NL80211_RRF_NO_OUTDOOR)
- 		channel_flags |= IEEE80211_CHAN_INDOOR_ONLY;
-+	if (rd_flags & NL80211_RRF_OCB_ONLY)
-+		channel_flags |= IEEE80211_CHAN_OCB_ONLY;
- 	return channel_flags;
- }
- 
--- 
-2.0.0.rc0
+[  219.960000] ath10k: mac monitor refs: promisc 1 monitor 0 cac 0
+[  219.960000] ath10k: mac monitor vdev 1 created
 
+I agree the 10X_NUM_VDEVS is a bit unfortunate with its 16 value, but
+that's what was there from FW APIs for a long time and I do not know
+exactly if it's still valid (from firmware point of view).
+
+> For what it's worth, my firmware will only work on stock kernels
+> because I ignore the request for 16 vdevs in the firmware and knock
+> it down to 8 to match the kernel driver (before your change below).
+
+Do you encode your firmware with the FW IE (wmi-10x) also? If som then
+it's a bit weird to have different firmware tracks that introduce
+themselves as 10.x.
+
+-Bartosz
