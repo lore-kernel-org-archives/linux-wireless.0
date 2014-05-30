@@ -1,100 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:52000 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382AbaEaNUE (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:57002 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933501AbaE3P2m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 09:20:04 -0400
-Received: by mail-pb0-f53.google.com with SMTP id md12so2649154pbc.26
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 06:20:04 -0700 (PDT)
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Subject: Re: [PATCH 0/4] wl1251 IBSS fixes
-Date: Sat, 31 May 2014 15:20:00 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	David Gnedt <david.gnedt@davizone.at>, freemangordon@abv.bg
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com> <201405301818.13260@pali> <CANOLnOPUrgcov5jaL-VaExk8db7P7O-RVBBm4BJq9rhBmEcjZw@mail.gmail.com>
-In-Reply-To: <CANOLnOPUrgcov5jaL-VaExk8db7P7O-RVBBm4BJq9rhBmEcjZw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1804769.q2hlhH2Pav";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201405311520.00427@pali> (sfid-20140531_152014_927773_6EEF0463)
+	Fri, 30 May 2014 11:28:42 -0400
+Received: by mail-we0-f172.google.com with SMTP id k48so2217340wev.17
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:41 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/12] staging: vt6656: rename CARDqGetTSFOffset to vnt_get_tsf_offset
+Date: Fri, 30 May 2014 16:27:50 +0100
+Message-Id: <1401463671-4705-11-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172855_119124_DB724EBB)
+In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1804769.q2hlhH2Pav
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+drop card and rename to vnt_get_tsf_offset
 
-On Saturday 31 May 2014 15:15:20 Grazvydas Ignotas wrote:
-> On Fri, May 30, 2014 at 7:18 PM, Pali Roh=C3=A1r=20
-<pali.rohar@gmail.com> wrote:
-> > On Saturday 10 May 2014 14:28:45 Pali Roh=C3=A1r wrote:
-> >> On Friday 09 May 2014 22:03:00 Pali Roh=C3=A1r wrote:
-> >> > On Friday 09 May 2014 02:21:21 Grazvydas Ignotas wrote:
-> >> > > On Tue, Apr 22, 2014 at 3:09 AM, Grazvydas Ignotas
-> >> >=20
-> >> > <notasas@gmail.com> wrote:
-> >> > > > IBSS mode is currently advertised by wl1251 driver
-> >> > > > but is totally broken. First there is a disconnect
-> >> > > > hack for monitor mode that was recently merged, it
-> >> > > > abuses mac80211 and causes corruption in IBSS mode,
-> >> > > > so I think should be reverted. Then there are
-> >> > > > several cases of station-only mac80211 functions
-> >> > > > called carelessly, what is also fixed.
-> >> > >=20
-> >> > > Ping.
-> >> > > This driver is orphan and hardware carrying it is
-> >> > > outdated, so acks / tested-bys are unlikely..
-> >> >=20
-> >> > Now I'm testing these patches on wireless-testing git
-> >> > tree from year 2010 compiled against patched maemo
-> >> > 2.6.28 kernel.
-> >> >=20
-> >> > Reason for using these historical wireless-testing
-> >> > version is that this version can be compiled against
-> >> > kernel which working with default Maemo system in Nokia
-> >> > N900.
-> >> >=20
-> >> > It looks like your patches fixed some kernel oops when
-> >> > iwconfig changing mode to ad-hoc.
-> >>=20
-> >> Looks like everything working fine except power save mode.
-> >> In dmesg I see only these message:
-> >>=20
-> >> wl1251: ERROR Power save entry failed, giving up
-> >>=20
-> >> If you are OK with fact that I tested your patches with
-> >> older kernel (not last upstream), you can add my
-> >> Tested-by.
-> >=20
-> > Grazvydas: PING
->=20
-> Sure I'm ok, patches seem to be already queued with your
-> Tested-bys:
-> https://git.kernel.org/cgit/linux/kernel/git/linville/wireles
-> s-next.git/log/?h=3De5b02f649bb
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 6 +++---
+ drivers/staging/vt6656/card.h | 2 +-
+ drivers/staging/vt6656/wmgr.c | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-OK.
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 27ed88b..3b51eae 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -28,7 +28,7 @@
+  *      vnt_ofdm_min_rate - Check if any OFDM rate is in BasicRateSet
+  *      CARDvSetLoopbackMode - Set Loopback mode
+  *      CARDbSoftwareReset - Sortware reset NIC
+- *      CARDqGetTSFOffset - Calculate TSFOffset
++ *      vnt_get_tsf_offset - Calculate TSFOffset
+  *      CARDbGetCurrentTSF - Read Current NIC TSF counter
+  *      CARDqGetNextTBTT - Calculate Next Beacon TSF counter
+  *      CARDvSetFirstNextTBTT - Set NIC Beacon time
+@@ -552,7 +552,7 @@ u8 vnt_get_pkt_type(struct vnt_private *priv)
+  * Return Value: TSF Offset value
+  *
+  */
+-u64 CARDqGetTSFOffset(u8 rx_rate, u64 tsf1, u64 tsf2)
++u64 vnt_get_tsf_offset(u8 rx_rate, u64 tsf1, u64 tsf2)
+ {
+ 	u64 tsf_offset = 0;
+ 	u16 rx_bcn_offset = 0;
+@@ -587,7 +587,7 @@ void CARDvAdjustTSF(struct vnt_private *priv, u8 rx_rate,
+ 	u64 tsf_offset = 0;
+ 	u8 data[8];
+ 
+-	tsf_offset = CARDqGetTSFOffset(rx_rate, time_stamp, local_tsf);
++	tsf_offset = vnt_get_tsf_offset(rx_rate, time_stamp, local_tsf);
+ 
+ 	data[0] = (u8)tsf_offset;
+ 	data[1] = (u8)(tsf_offset >> 8);
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index 7a844c3..ffd6552 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -59,7 +59,7 @@ void CARDvSetFirstNextTBTT(struct vnt_private *pDevice, u16 wBeaconInterval);
+ void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
+ 			 u16 wBeaconInterval);
+ u64 CARDqGetNextTBTT(u64 qwTSF, u16 wBeaconInterval);
+-u64 CARDqGetTSFOffset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
++u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
+ int CARDbRadioPowerOff(struct vnt_private *pDevice);
+ int CARDbRadioPowerOn(struct vnt_private *pDevice);
+ u8 vnt_get_pkt_type(struct vnt_private *);
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index 652e8b6..9381d6f 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -1750,10 +1750,10 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+ 		bTSFOffsetPostive = false;
+ 
+     if (bTSFOffsetPostive) {
+-        qwTSFOffset = CARDqGetTSFOffset(pRxPacket->byRxRate, (qwTimestamp), (qwLocalTSF));
++	qwTSFOffset = vnt_get_tsf_offset(pRxPacket->byRxRate, (qwTimestamp), (qwLocalTSF));
+     }
+     else {
+-        qwTSFOffset = CARDqGetTSFOffset(pRxPacket->byRxRate, (qwLocalTSF), (qwTimestamp));
++	qwTSFOffset = vnt_get_tsf_offset(pRxPacket->byRxRate, (qwLocalTSF), (qwTimestamp));
+     }
+ 
+ 	if (qwTSFOffset > TRIVIAL_SYNC_DIFFERENCE)
+-- 
+1.9.1
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1804769.q2hlhH2Pav
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlOJ1wAACgkQi/DJPQPkQ1IdwQCgu99dtnC5Mah022a1x0eQnd4f
-ZLIAn1Fumlrh4rntaZJZJOeBZfLSjBBL
-=QgAT
------END PGP SIGNATURE-----
-
---nextPart1804769.q2hlhH2Pav--
