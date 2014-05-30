@@ -1,37 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:36915 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbaEMTDv (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:46993 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbaE3LjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 15:03:51 -0400
-Received: by mail-lb0-f170.google.com with SMTP id w7so628787lbi.29
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 12:03:50 -0700 (PDT)
+	Fri, 30 May 2014 07:39:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1405131223270.29439@admin.chi.technicality.org>
-References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
-	<alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
-	<CANUX_P3TaX_2BFg6qxjiFYLvUiaaFYqdxWbkCbymA0sGrWh4Gg@mail.gmail.com>
-	<alpine.DEB.2.02.1405131223270.29439@admin.chi.technicality.org>
-Date: Tue, 13 May 2014 22:03:50 +0300
-Message-ID: <CANUX_P18EWxs9RtMygH0grwZujNMHTP2EDtO5Mpna=umJVH-kg@mail.gmail.com> (sfid-20140513_210354_706283_1141D5DD)
-Subject: Re: [ANN] New firmware for Intel 7260 / 3160 - 22.212.9.0
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Nate Carlson <linux-wireless@natecarlson.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1401449454-30895-2-git-send-email-berthe.ab@gmail.com>
+References: <20140530094025.3b78301e@canb.auug.org.au>
+	<1401449454-30895-1-git-send-email-berthe.ab@gmail.com>
+	<1401449454-30895-2-git-send-email-berthe.ab@gmail.com>
+Date: Fri, 30 May 2014 13:39:15 +0200
+Message-ID: <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com> (sfid-20140530_133928_304243_0D7DEC88)
+Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: abdoulaye berthe <berthe.ab@gmail.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	patches@opensource.wolfsonmicro.com,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
+	platform-driver-x86@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> So yeah - the name of the directory / tarball isn't the same as the
->> version reported here. Sorry for that. No impact though.
+On Fri, May 30, 2014 at 1:30 PM, abdoulaye berthe <berthe.ab@gmail.com> wrote:
+> --- a/drivers/gpio/gpiolib.c
+> +++ b/drivers/gpio/gpiolib.c
+> @@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
+>   *
+>   * A gpio_chip with any GPIOs still requested may not be removed.
+>   */
+> -int gpiochip_remove(struct gpio_chip *chip)
+> +void gpiochip_remove(struct gpio_chip *chip)
+>  {
+>         unsigned long   flags;
+> -       int             status = 0;
+>         unsigned        id;
 >
+>         acpi_gpiochip_remove(chip);
+> @@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
+>         of_gpiochip_remove(chip);
 >
-> Great, just wanted to make sure that it wasn't a bleeding-edge firmware that
-> was unintentionally released or something like that.  ;)
+>         for (id = 0; id < chip->ngpio; id++) {
+> -               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
+> -                       status = -EBUSY;
+> -                       break;
+> -               }
+> -       }
+> -       if (status == 0) {
+> -               for (id = 0; id < chip->ngpio; id++)
+> -                       chip->desc[id].chip = NULL;
+> -
+> -               list_del(&chip->list);
+> +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
+> +                       panic("gpio: removing gpiochip with gpios still requested\n");
 
-Actually, I remember what happened - I started to prepare the
-delivery, and then there were last minute fixes and I forgot to update
-the title in the mail + tarball name.
-But since Ben hasn't pulled yet, I might very well update it again
-(with non critical fixes).
+panic?
+
+Is this likely to happen?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
