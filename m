@@ -1,189 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54050 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752200AbaE0K4g (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:44299 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933239AbaE3P2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 06:56:36 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/16] brcmfmac: introduce asynchronous firmware loading
-Date: Tue, 27 May 2014 12:56:21 +0200
-Message-ID: <1401188188-16492-10-git-send-email-arend@broadcom.com> (sfid-20140527_125723_337373_C42FC8B8)
-In-Reply-To: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-References: <1401188188-16492-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 30 May 2014 11:28:32 -0400
+Received: by mail-we0-f169.google.com with SMTP id u56so2225297wes.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/12] staging: vt6656: rename CARDvCalculateOFDMRParameter to vnt_calculate_ofdm_rate
+Date: Fri, 30 May 2014 16:27:43 +0100
+Message-Id: <1401463671-4705-4-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172837_082879_362E449A)
+In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver needs firmware to be loaded to the device, which
-is done through the firmware class API. The synchronous call
-request_firmware() need root filesystem to be mounted and/or
-user-mode helper. These may not be avaliable on the moment
-it is called. Instead use request_firmware_nowait().
+Drop card and Parameter. R is the rate to rename to vnt_calculate_ofdm_rate
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c |  107 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/firmware.h |   15 ++-
- 2 files changed, 121 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/card.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index ff5b867..d92fed0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -16,6 +16,7 @@
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 695236b..9c88134 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -197,7 +197,7 @@ static u16 vnt_get_ofdm_rate(struct vnt_private *priv, u16 rate_idx)
+  * Return Value: none
+  *
+  */
+-static void CARDvCalculateOFDMRParameter(u16 rate, u8 bb_type,
++static void vnt_calculate_ofdm_rate(u16 rate, u8 bb_type,
+ 					u8 *tx_rate, u8 *rsv_time)
+ {
  
- #include <linux/kernel.h>
- #include <linux/slab.h>
-+#include <linux/device.h>
- #include <linux/firmware.h>
+@@ -317,39 +317,34 @@ void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
  
- #include "dhd_dbg.h"
-@@ -224,3 +225,109 @@ void brcmf_fw_nvram_free(void *nvram)
- 	kfree(nvram);
- }
  
-+struct brcmf_fw {
-+	struct device *dev;
-+	u16 flags;
-+	const struct firmware *code;
-+	const char *nvram_name;
-+	void (*done)(struct device *dev, const struct firmware *fw,
-+		     void *nvram_image, u32 nvram_len);
-+};
-+
-+static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
-+{
-+	struct brcmf_fw *fwctx = ctx;
-+	u32 nvram_length = 0;
-+	void *nvram = NULL;
-+
-+	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
-+	if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+		goto fail;
-+
-+	if (fw) {
-+		nvram = brcmf_fw_nvram_strip(fw, &nvram_length);
-+		release_firmware(fw);
-+		if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+			goto fail;
-+	}
-+
-+	fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
-+	kfree(fwctx);
-+	return;
-+
-+fail:
-+	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
-+	if (fwctx->code)
-+		release_firmware(fwctx->code);
-+	device_release_driver(fwctx->dev);
-+	kfree(fwctx);
-+}
-+
-+static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
-+{
-+	struct brcmf_fw *fwctx = ctx;
-+	int ret;
-+
-+	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
-+	if (!fw)
-+		goto fail;
-+
-+	/* only requested code so done here */
-+	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
-+		fwctx->done(fwctx->dev, fw, NULL, 0);
-+		kfree(fwctx);
-+		return;
-+	}
-+	fwctx->code = fw;
-+	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
-+				      fwctx->dev, GFP_KERNEL, fwctx,
-+				      brcmf_fw_request_nvram_done);
-+
-+	if (!ret)
-+		return;
-+
-+	/* when nvram is optional call .done() callback here */
-+	if (fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL) {
-+		fwctx->done(fwctx->dev, fw, NULL, 0);
-+		kfree(fwctx);
-+		return;
-+	}
-+
-+	/* failed nvram request */
-+	release_firmware(fw);
-+fail:
-+	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
-+	device_release_driver(fwctx->dev);
-+	kfree(fwctx);
-+}
-+
-+int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
-+			   const char *code, const char *nvram,
-+			   void (*fw_cb)(struct device *dev,
-+					 const struct firmware *fw,
-+					 void *nvram_image, u32 nvram_len))
-+{
-+	struct brcmf_fw *fwctx;
-+
-+	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
-+	if (!fw_cb || !code)
-+		return -EINVAL;
-+
-+	if ((flags & BRCMF_FW_REQUEST_NVRAM) && !nvram)
-+		return -EINVAL;
-+
-+	fwctx = kzalloc(sizeof(*fwctx), GFP_KERNEL);
-+	if (!fwctx)
-+		return -ENOMEM;
-+
-+	fwctx->dev = dev;
-+	fwctx->flags = flags;
-+	fwctx->done = fw_cb;
-+	if (flags & BRCMF_FW_REQUEST_NVRAM)
-+		fwctx->nvram_name = nvram;
-+
-+	return request_firmware_nowait(THIS_MODULE, true, code, dev,
-+				       GFP_KERNEL, fwctx,
-+				       brcmf_fw_request_code_done);
-+}
-+
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
-index 127633b..25b64bd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
-@@ -16,9 +16,22 @@
- #ifndef BRCMFMAC_FIRMWARE_H
- #define BRCMFMAC_FIRMWARE_H
+ 	/*RSPINF_a_6*/
+-	CARDvCalculateOFDMRParameter(RATE_6M, bb_type,
+-						&tx_rate[0], &rsv_time[0]);
++	vnt_calculate_ofdm_rate(RATE_6M, bb_type, &tx_rate[0], &rsv_time[0]);
  
-+#define BRCMF_FW_REQUEST		0x000F
-+#define  BRCMF_FW_REQUEST_NVRAM		0x0001
-+#define BRCMF_FW_REQ_FLAGS		0x00F0
-+#define  BRCMF_FW_REQ_NV_OPTIONAL	0x0010
+ 	/*RSPINF_a_9*/
+-	CARDvCalculateOFDMRParameter(RATE_9M, bb_type,
+-						&tx_rate[1], &rsv_time[1]);
++	vnt_calculate_ofdm_rate(RATE_9M, bb_type, &tx_rate[1], &rsv_time[1]);
  
- void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length);
- void brcmf_fw_nvram_free(void *nvram);
--
-+/*
-+ * Request firmware(s) asynchronously. When the asynchronous request
-+ * fails it will not use the callback, but call device_release_driver()
-+ * instead which will call the driver .remove() callback.
-+ */
-+int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
-+			   const char *code, const char *nvram,
-+			   void (*fw_cb)(struct device *dev,
-+					 const struct firmware *fw,
-+					 void *nvram_image, u32 nvram_len));
+ 	/*RSPINF_a_12*/
+-	CARDvCalculateOFDMRParameter(RATE_12M, bb_type,
+-						&tx_rate[2], &rsv_time[2]);
++	vnt_calculate_ofdm_rate(RATE_12M, bb_type, &tx_rate[2], &rsv_time[2]);
  
- #endif /* BRCMFMAC_FIRMWARE_H */
+ 	/*RSPINF_a_18*/
+-	CARDvCalculateOFDMRParameter(RATE_18M, bb_type,
+-						&tx_rate[3], &rsv_time[3]);
++	vnt_calculate_ofdm_rate(RATE_18M, bb_type, &tx_rate[3], &rsv_time[3]);
+ 
+ 	/*RSPINF_a_24*/
+-	CARDvCalculateOFDMRParameter(RATE_24M, bb_type,
+-						&tx_rate[4], &rsv_time[4]);
++	vnt_calculate_ofdm_rate(RATE_24M, bb_type, &tx_rate[4], &rsv_time[4]);
+ 
+ 	/*RSPINF_a_36*/
+-	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_36M),
++	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_36M),
+ 					bb_type, &tx_rate[5], &rsv_time[5]);
+ 
+ 	/*RSPINF_a_48*/
+-	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_48M),
++	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_48M),
+ 					bb_type, &tx_rate[6], &rsv_time[6]);
+ 
+ 	/*RSPINF_a_54*/
+-	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
++	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_54M),
+ 					bb_type, &tx_rate[7], &rsv_time[7]);
+ 
+ 	/*RSPINF_a_72*/
+-	CARDvCalculateOFDMRParameter(vnt_get_ofdm_rate(priv, RATE_54M),
++	vnt_calculate_ofdm_rate(vnt_get_ofdm_rate(priv, RATE_54M),
+ 					bb_type, &tx_rate[8], &rsv_time[8]);
+ 
+ 	put_unaligned(phy[0].len, (u16 *)&data[0]);
 -- 
-1.7.9.5
+1.9.1
 
