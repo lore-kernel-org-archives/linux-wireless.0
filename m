@@ -1,115 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:59916 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbaEZVl2 (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:56837 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932769AbaE3Lba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 17:41:28 -0400
-Date: Mon, 26 May 2014 18:41:22 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-05-26
-Message-ID: <20140526214122.GA2034@joana> (sfid-20140526_234145_765043_52F499E7)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ikeVEW9yuYc//A+q"
+	Fri, 30 May 2014 07:31:30 -0400
+From: abdoulaye berthe <berthe.ab@gmail.com>
+To: linus.walleij@linaro.org, gnurou@gmail.com, m@bues.ch,
+	linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	patches@opensource.wolfsonmicro.com, linux-input@vger.kernel.org,
+	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Cc: abdoulaye berthe <berthe.ab@gmail.com>
+Subject: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
+Date: Fri, 30 May 2014 13:30:54 +0200
+Message-Id: <1401449454-30895-2-git-send-email-berthe.ab@gmail.com> (sfid-20140530_133157_796241_FAD5AECF)
+In-Reply-To: <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>
+References: <20140530094025.3b78301e@canb.auug.org.au>
+ <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This avoids handling gpiochip remove error in device
+remove handler.
 
---ikeVEW9yuYc//A+q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi John,
-
-Some more patches for 3.16. There is nothing really special here, just a
-bunch of clean ups, fixes plus some small improvements. Please pull.
-
-Thanks!
-
-	Gustavo
-
+Signed-off-by: abdoulaye berthe <berthe.ab@gmail.com>
 ---
+ drivers/gpio/gpiolib.c      | 24 +++++++-----------------
+ include/linux/gpio/driver.h |  2 +-
+ 2 files changed, 8 insertions(+), 18 deletions(-)
 
-The following changes since commit 22e70786413ed05950207eda7be420c280b776d7:
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index f48817d..022543f 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
+  *
+  * A gpio_chip with any GPIOs still requested may not be removed.
+  */
+-int gpiochip_remove(struct gpio_chip *chip)
++void gpiochip_remove(struct gpio_chip *chip)
+ {
+ 	unsigned long	flags;
+-	int		status = 0;
+ 	unsigned	id;
+ 
+ 	acpi_gpiochip_remove(chip);
+@@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
+ 	of_gpiochip_remove(chip);
+ 
+ 	for (id = 0; id < chip->ngpio; id++) {
+-		if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
+-			status = -EBUSY;
+-			break;
+-		}
+-	}
+-	if (status == 0) {
+-		for (id = 0; id < chip->ngpio; id++)
+-			chip->desc[id].chip = NULL;
+-
+-		list_del(&chip->list);
++		if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
++			panic("gpio: removing gpiochip with gpios still requested\n");
+ 	}
++	for (id = 0; id < chip->ngpio; id++)
++		chip->desc[id].chip = NULL;
+ 
++	list_del(&chip->list);
+ 	spin_unlock_irqrestore(&gpio_lock, flags);
+-
+-	if (status == 0)
+-		gpiochip_unexport(chip);
+-
+-	return status;
++	gpiochip_unexport(chip);
+ }
+ EXPORT_SYMBOL_GPL(gpiochip_remove);
+ 
+diff --git a/include/linux/gpio/driver.h b/include/linux/gpio/driver.h
+index 1827b43..72ed256 100644
+--- a/include/linux/gpio/driver.h
++++ b/include/linux/gpio/driver.h
+@@ -138,7 +138,7 @@ extern const char *gpiochip_is_requested(struct gpio_chip *chip,
+ 
+ /* add/remove chips */
+ extern int gpiochip_add(struct gpio_chip *chip);
+-extern int __must_check gpiochip_remove(struct gpio_chip *chip);
++void gpiochip_remove(struct gpio_chip *chip);
+ extern struct gpio_chip *gpiochip_find(void *data,
+ 			      int (*match)(struct gpio_chip *chip, void *data));
+ 
+-- 
+1.8.3.2
 
-  Bluetooth: Remove hci_h4 unused defines (2014-04-24 11:55:26 -0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to d7b2545023ecfde94d3ea9c03c5480ac18da96c9:
-
-  Bluetooth: Clearly distinguish mgmt LTK type from authenticated property (2014-05-23 11:24:04 -0700)
-
-----------------------------------------------------------------
-Andrzej Kaczmarek (8):
-      Bluetooth: Store RSSI for connection
-      Bluetooth: Store TX power level for connection
-      Bluetooth: Add conn info lifetime parameters to debugfs
-      Bluetooth: Add support to get connection information
-      Bluetooth: Avoid polling TX power for LE links
-      Bluetooth: Store max TX power level for connection
-      Bluetooth: Add support for max_tx_power in Get Conn Info
-      Bluetooth: Add missing msecs to jiffies conversion
-
-Johan Hedberg (8):
-      Bluetooth: Add support for SMP Invalid Parameters error code
-      Bluetooth: Make SMP context private to smp.c
-      Bluetooth: Fix setting initial local auth_req value
-      Bluetooth: Remove unnecessary work structs from SMP code
-      Bluetooth: Rename smp->smp_flags to smp->flags
-      Bluetooth: Update smp_random to return a response code
-      Bluetooth: Update smp_confirm to return a response code
-      Bluetooth: Clearly distinguish mgmt LTK type from authenticated property
-
-Libor Pechacek (1):
-      Bluetooth: Convert RFCOMM spinlocks into mutexes
-
-Marcel Holtmann (1):
-      Bluetooth: Increment management interface revision
-
-Petri Gynther (1):
-      Bluetooth: btusb: Add Broadcom patch RAM support
-
- drivers/bluetooth/btusb.c        | 155 ++++++++++++++++++++++++++++++-
- include/net/bluetooth/hci.h      |  21 +++++
- include/net/bluetooth/hci_core.h |  11 +++
- include/net/bluetooth/mgmt.h     |  15 +++
- include/net/bluetooth/rfcomm.h   |   6 +-
- net/bluetooth/hci_conn.c         |   3 +
- net/bluetooth/hci_core.c         |  64 +++++++++++++
- net/bluetooth/hci_event.c        |  61 +++++++++++++
- net/bluetooth/mgmt.c             | 236 +++++++++++++++++++++++++++++++++++++++++++++++-
- net/bluetooth/rfcomm/core.c      |   2 +-
- net/bluetooth/rfcomm/tty.c       |  20 ++--
- net/bluetooth/smp.c              | 153 +++++++++++++++----------------
- net/bluetooth/smp.h              |  30 +-----
- 13 files changed, 653 insertions(+), 124 deletions(-)
-
-
---ikeVEW9yuYc//A+q
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTg7UCAAoJEPs3PUX4s20oMQ0QALApbMjC4Ylk5+WKaRyuRIr5
-fEbkbe9Mnvn5IOVq3SDJamQ9CMf6+4b3J0qYSs4yug1435AbLpR29Q1rAwCNhJ50
-WdbzOI7VOfRod/mpB8TzbCxLH2X0/RaKNXFW0tW9VET3mRXvTPJH6OS+YKRIJ+N8
-tHfhwxy7HXHdFSszK/AnL9CLVv8b30lcKtSaoW2DDZ76AzKnNneVMKzLvUO5ICVG
-0SzBo96c/ci9weE1Edp5PG7upl15AqjMVizJYrXnaQ6+CGATIIp1SxaQEU4vXNSN
-dEckVpgUpCM1eXHziB9Yf70r1js31/c9QAVEoavmC/9c5Q6rJ2g1JcMZN8vNHv55
-JVMsfsGpMXenDNX+uzfMxYrpKn05PPqzyEAlKit8Hw3DXZEYD1azKqHID4uyBfVo
-YI0D/Xoef8ZA1/Ctu1tKGnOnpn+smcEoukFRqKp7+Rve+aOKXqnjW1zyHJGci8cM
-/ctynJh73UBz/NUwQO6Os+W4vJ1NrPnFgVuJs8R+fVLa1PF5quDe+tH0F7MjISQn
-J6VECehz8VbwBjaz9miedzA7qM7V8CiNo1ju8gqu/6eyUJtiJh7Tdns0QwRGuJH0
-OFuZUMYfKijxe7pooKcx4kiB+eswm2FYdNk3YnKL66i0SqYhDOLjE+dYUdvZ8IEW
-nKpzpLC+L7PhfgebJwhU
-=XSPz
------END PGP SIGNATURE-----
-
---ikeVEW9yuYc//A+q--
