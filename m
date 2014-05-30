@@ -1,50 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:45558 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbaEMVnt (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:48841 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934730AbaE3WYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 17:43:49 -0400
-Date: Tue, 13 May 2014 17:43:45 -0400 (EDT)
-Message-Id: <20140513.174345.406760552060437774.davem@davemloft.net> (sfid-20140513_234418_480422_E763F142)
-To: w-lkml@lebenslange-mailadresse.de
-Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-acenic@sunsite.dk, nios2-dev@lists.rocketboards.org,
-	linuxppc-dev@lists.ozlabs.org, e1000-devel@lists.sourceforge.net,
-	devel@linuxdriverproject.org, linux-usb@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
-	b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux-foundation.org,
-	dev@openvswitch.org, trivial@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [resend] net: get rid of SET_ETHTOOL_OPS
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140511001231.GC7875@kaos.lebenslange-mailadresse.de>
-References: <20140511001231.GC7875@kaos.lebenslange-mailadresse.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 30 May 2014 18:24:15 -0400
+Received: by mail-we0-f177.google.com with SMTP id x48so2666857wes.36
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:14 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/8] staging: vt6656: rename CARDbRadioPowerOff to vnt_radio_power_off
+Date: Fri, 30 May 2014 23:22:52 +0100
+Message-Id: <1401488574-16508-6-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002422_640801_64938C6B)
+In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wilfried Klaebe <w-lkml@lebenslange-mailadresse.de>
-Date: Sun, 11 May 2014 00:12:32 +0000
+Drop card and rename to vnt_radio_power_off
 
-> net: get rid of SET_ETHTOOL_OPS
-> 
-> Dave Miller mentioned he'd like to see SET_ETHTOOL_OPS gone.
-> This does that.
-> 
-> Mostly done via coccinelle script:
-> @@
-> struct ethtool_ops *ops;
-> struct net_device *dev;
-> @@
-> -       SET_ETHTOOL_OPS(dev, ops);
-> +       dev->ethtool_ops = ops;
-> 
-> Compile tested only, but I'd seriously wonder if this broke anything.
-> 
-> Suggested-by: Dave Miller <davem@davemloft.net>
-> Signed-off-by: Wilfried Klaebe <w-lkml@lebenslange-mailadresse.de>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c     | 4 ++--
+ drivers/staging/vt6656/card.h     | 2 +-
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ drivers/staging/vt6656/wcmd.c     | 4 ++--
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-Applied to net-next, thanks.
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 9ecf189..e2ed0f4 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -33,7 +33,7 @@
+  *      vnt_get_next_tbtt - Calculate Next Beacon TSF counter
+  *      vnt_reset_next_tbtt - Set NIC Beacon time
+  *      vnt_update_next_tbtt - Sync. NIC Beacon time
+- *      CARDbRadioPowerOff - Turn Off NIC Radio Power
++ *      vnt_radio_power_off - Turn Off NIC Radio Power
+  *      CARDbRadioPowerOn - Turn On NIC Radio Power
+  *      CARDbSetWEPMode - Set NIC Wep mode
+  *      CARDbSetTxPower - Set NIC tx power
+@@ -764,7 +764,7 @@ void vnt_update_next_tbtt(struct vnt_private *priv, u64 tsf,
+  * Return Value: true if success; otherwise false
+  *
+  */
+-int CARDbRadioPowerOff(struct vnt_private *priv)
++int vnt_radio_power_off(struct vnt_private *priv)
+ {
+ 	int ret = true;
+ 
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index d5f7c68..614e6d6 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -58,7 +58,7 @@ void vnt_reset_next_tbtt(struct vnt_private *, u16);
+ void vnt_update_next_tbtt(struct vnt_private *, u64, u16);
+ u64 vnt_get_next_tbtt(u64, u16);
+ u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
+-int CARDbRadioPowerOff(struct vnt_private *pDevice);
++int vnt_radio_power_off(struct vnt_private *);
+ int CARDbRadioPowerOn(struct vnt_private *pDevice);
+ u8 vnt_get_pkt_type(struct vnt_private *);
+ void CARDvSetBSSMode(struct vnt_private *pDevice);
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 636afc2..2378068 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -560,7 +560,7 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 
+ 	if ((pDevice->bHWRadioOff == true) ||
+ 				(pDevice->bRadioControlOff == true)) {
+-		CARDbRadioPowerOff(pDevice);
++		vnt_radio_power_off(pDevice);
+ 	} else {
+ 		CARDbRadioPowerOn(pDevice);
+ 	}
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index cec6fc6..d1d6cf2 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -439,7 +439,7 @@ void vRunCommand(struct work_struct *work)
+ 		}
+ 		netif_stop_queue(pDevice->dev);
+ 		if (pDevice->bNeedRadioOFF == true)
+-			CARDbRadioPowerOff(pDevice);
++			vnt_radio_power_off(pDevice);
+ 
+ 		break;
+ 
+@@ -798,7 +798,7 @@ void vRunCommand(struct work_struct *work)
+ 				memset(pItemSSID->abySSID, 0, WLAN_SSID_MAXLEN);
+ 
+ 				netif_stop_queue(pDevice->dev);
+-				CARDbRadioPowerOff(pDevice);
++				vnt_radio_power_off(pDevice);
+ 				MACvRegBitsOn(pDevice, MAC_REG_GPIOCTL1, GPIO3_INTMD);
+ 
+ 				vnt_mac_set_led(pDevice, LEDSTS_STS, LEDSTS_OFF);
+-- 
+1.9.1
+
