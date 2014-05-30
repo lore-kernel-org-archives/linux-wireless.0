@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:58599 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbaETJb3 (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:60235 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934410AbaE3WYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2014 05:31:29 -0400
-Date: Tue, 20 May 2014 05:28:46 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: if i deselect PCIEPORTBUS, why are iwlwifi PCIE modules still
- being compiled?
-In-Reply-To: <1400574452.4474.2.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.LFD.2.11.1405200526530.12158@localhost> (sfid-20140520_113133_344702_60853011)
-References: <alpine.LFD.2.11.1405200342050.10462@localhost>  (sfid-20140520_101149_157876_1874D563) <1400574452.4474.2.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Fri, 30 May 2014 18:24:10 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so2589483wgg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/8] staging: vt6656: rename CARDqGetNextTBTT to vnt_get_next_tbtt
+Date: Fri, 30 May 2014 23:22:49 +0100
+Message-Id: <1401488574-16508-3-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002417_779307_CE6AF21B)
+In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 May 2014, Johannes Berg wrote:
+Drop card and rename to vnt_get_next_tbtt
 
-> On Tue, 2014-05-20 at 03:49 -0400, Robert P. J. Day wrote:
-> >   quite possibly a silly question (which has never stopped me before),
-> > but in perusing the PCIE code in the kernel source, i was looking for
-> > sample code to demo in a classroom setting and picked on
-> > drivers/net/wireless/iwlwifi/pcie, which i was *assuming* was
-> > PCIE-dependent -- specifically, i was going to demo the Advanced-N
-> > 6235 PCIE wifi card on an intel galileo board.
-> >
-> >   but i thought it was a bit strange that the pcie/ subdirectory there
-> > doesn't seem to depend on PCIEPORTBUS. as a test, i deselected
-> > PCIEPORTBUS in a configuration and did a rebuild, and the source in
-> > the pcie/ directory was recompiled.
-> >
-> >   am i misunderstanding the function of the kernel config variable
-> > PCIEPORTBUS? i notice that .../iwlwifi/Makefile includes the line:
-> >
-> >   iwlwifi-objs  += pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
-> >
-> > which simply compiles those files with no regard to dependency. can
-> > someone clarify this? thanks.
->
-> The whole driver depends on CONFIG_PCI, maybe it should depend on
-> something more PCIe specific, but that wasn't easy to sort out, and
-> the APIs it needs aren't PCIe specific afaict.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c | 8 ++++----
+ drivers/staging/vt6656/card.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-  ok, i'll have to think about that for a few minutes. am i at least
-correct in my understanding that, technically, the kernel config
-option PCIEPORTBUS is supposed to control whether one wants basic PCIE
-support or not?
-
-rday
-
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index fdc7cd5..ee013a3 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -30,7 +30,7 @@
+  *      CARDbSoftwareReset - Sortware reset NIC
+  *      vnt_get_tsf_offset - Calculate TSFOffset
+  *      vnt_get_current_tsf - Read Current NIC TSF counter
+- *      CARDqGetNextTBTT - Calculate Next Beacon TSF counter
++ *      vnt_get_next_tbtt - Calculate Next Beacon TSF counter
+  *      CARDvSetFirstNextTBTT - Set NIC Beacon time
+  *      CARDvUpdateNextTBTT - Sync. NIC Beacon time
+  *      CARDbRadioPowerOff - Turn Off NIC Radio Power
+@@ -657,7 +657,7 @@ bool vnt_clear_current_tsf(struct vnt_private *priv)
+  * Return Value: TSF value of next Beacon
+  *
+  */
+-u64 CARDqGetNextTBTT(u64 tsf, u16 beacon_interval)
++u64 vnt_get_next_tbtt(u64 tsf, u16 beacon_interval)
+ {
+ 	u32 beacon_int;
+ 
+@@ -696,7 +696,7 @@ void CARDvSetFirstNextTBTT(struct vnt_private *priv, u16 beacon_interval)
+ 
+ 	vnt_clear_current_tsf(priv);
+ 
+-	next_tbtt = CARDqGetNextTBTT(next_tbtt, beacon_interval);
++	next_tbtt = vnt_get_next_tbtt(next_tbtt, beacon_interval);
+ 
+ 	data[0] = (u8)next_tbtt;
+ 	data[1] = (u8)(next_tbtt >> 8);
+@@ -733,7 +733,7 @@ void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 tsf,
+ {
+ 	u8 data[8];
+ 
+-	tsf = CARDqGetNextTBTT(tsf, beacon_interval);
++	tsf = vnt_get_next_tbtt(tsf, beacon_interval);
+ 
+ 	data[0] = (u8)tsf;
+ 	data[1] = (u8)(tsf >> 8);
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index 78ff810..d39a0a5 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -57,7 +57,7 @@ bool vnt_clear_current_tsf(struct vnt_private *);
+ void CARDvSetFirstNextTBTT(struct vnt_private *pDevice, u16 wBeaconInterval);
+ void CARDvUpdateNextTBTT(struct vnt_private *pDevice, u64 qwTSF,
+ 			 u16 wBeaconInterval);
+-u64 CARDqGetNextTBTT(u64 qwTSF, u16 wBeaconInterval);
++u64 vnt_get_next_tbtt(u64, u16);
+ u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
+ int CARDbRadioPowerOff(struct vnt_private *pDevice);
+ int CARDbRadioPowerOn(struct vnt_private *pDevice);
 -- 
+1.9.1
 
-========================================================================
-Robert P. J. Day                                 Ottawa, Ontario, CANADA
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
