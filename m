@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44389 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756498AbaEILMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2014 07:12:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	andrei.otcheretianski@intel.com
-Date: Fri,  9 May 2014 14:11:51 +0300
-Message-Id: <1399633911-12788-9-git-send-email-luca@coelho.fi> (sfid-20140509_131226_513239_D9A3CF6F)
-In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
-References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 8/8] iwlwifi: mvm: Use beacon_get_template instead of beacon_get
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:65458 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933550AbaE3P2j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2014 11:28:39 -0400
+Received: by mail-wi0-f175.google.com with SMTP id f8so1289426wiw.14
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/12] staging: vt6656: rename CARDvUpdateBasicTopRate to vnt_update_top_rates
+Date: Fri, 30 May 2014 16:27:45 +0100
+Message-Id: <1401463671-4705-6-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172919_153549_BDD60D22)
+In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Drop card basic. The function updates the top rates vnt_update_top_rates
 
-Call ieee80211_beacon_get_template instead of ieee80211_beacon_get and sync the
-CSA counters with mac80211 after each beacon transmission.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/card.c | 6 +++---
+ drivers/staging/vt6656/card.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 25901ad..9b73a85 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -997,7 +997,7 @@ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
- 	WARN_ON(vif->type != NL80211_IFTYPE_AP &&
- 		vif->type != NL80211_IFTYPE_ADHOC);
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index b2192c1..7542b0d 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -22,7 +22,7 @@
+  *      s_vSafeResetTx - Rest Tx
+  *      CARDvSetRSPINF - Set RSPINF
+  *      vnt_update_ifs - Update slotTime,SIFS,DIFS, and EIFS
+- *      CARDvUpdateBasicTopRate - Update BasicTopRate
++ *      vnt_update_top_rates - Update BasicTopRate
+  *      CARDbAddBasicRate - Add to BasicRateSet
+  *      CARDbSetBasicRate - Set Basic Tx Rate
+  *      CARDbIsOFDMinBasicRate - Check if any OFDM rate is in BasicRateSet
+@@ -465,7 +465,7 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 		MESSAGE_REQUEST_MACREG, 1, &max_min);
+ }
  
--	beacon = ieee80211_beacon_get(mvm->hw, vif);
-+	beacon = ieee80211_beacon_get_template(mvm->hw, vif, NULL);
- 	if (!beacon)
- 		return -ENOMEM;
+-void CARDvUpdateBasicTopRate(struct vnt_private *priv)
++void vnt_update_top_rates(struct vnt_private *priv)
+ {
+ 	u8 top_ofdm = RATE_24M, top_cck = RATE_1M;
+ 	u8 i;
+@@ -511,7 +511,7 @@ void CARDbAddBasicRate(struct vnt_private *priv, u16 rate_idx)
+ 	priv->wBasicRate |= (1 << rate_idx);
  
-@@ -1250,6 +1250,7 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 	/*Determines the highest basic rate.*/
+-	CARDvUpdateBasicTopRate(priv);
++	vnt_update_top_rates(priv);
+ }
  
- 	if (unlikely(mvm->csa_vif && mvm->csa_vif->csa_active)) {
- 		if (!ieee80211_csa_is_complete(mvm->csa_vif)) {
-+			ieee80211_csa_update_counter(mvm->csa_vif);
- 			iwl_mvm_mac_ctxt_beacon_changed(mvm, mvm->csa_vif);
- 		} else {
- 			ieee80211_csa_finish(mvm->csa_vif);
+ int CARDbIsOFDMinBasicRate(struct vnt_private *priv)
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index 0b5c11c..f2afda4 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -48,7 +48,7 @@ struct vnt_private;
+ void vnt_set_channel(struct vnt_private *, u32);
+ void CARDvSetRSPINF(struct vnt_private *, u8);
+ void vnt_update_ifs(struct vnt_private *);
+-void CARDvUpdateBasicTopRate(struct vnt_private *);
++void vnt_update_top_rates(struct vnt_private *);
+ void CARDbAddBasicRate(struct vnt_private *, u16);
+ int CARDbIsOFDMinBasicRate(struct vnt_private *pDevice);
+ void CARDvAdjustTSF(struct vnt_private *pDevice, u8 byRxRate,
 -- 
-2.0.0.rc0
+1.9.1
 
