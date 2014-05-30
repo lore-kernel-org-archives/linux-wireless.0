@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:54982 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbaEBOkV (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:34798 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755156AbaE3Jow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2014 10:40:21 -0400
-From: Masanari Iida <standby24x7@gmail.com>
-To: luciano.coelho@intel.com, johannes.berg@intel.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH] cfg80211/mac80211: Fix warning on make xmldocs caused by cfg80211.h
-Date: Fri,  2 May 2014 23:39:57 +0900
-Message-Id: <1399041597-27409-2-git-send-email-standby24x7@gmail.com> (sfid-20140502_164036_772172_A38817A4)
-In-Reply-To: <1399041597-27409-1-git-send-email-standby24x7@gmail.com>
-References: <1399041597-27409-1-git-send-email-standby24x7@gmail.com>
+	Fri, 30 May 2014 05:44:52 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n15so782890wiw.14
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 02:44:51 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] mac80211: allow tx via monitor iface when DFS
+Date: Fri, 30 May 2014 11:44:41 +0200
+Message-Id: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140530_114509_286876_E47E2FBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following error messages caused by wrong description.
+Allow send frames using monitor interface
+when DFS chandef and we pass CAC (beaconing
+allowed).
 
-Warning(include/net/cfg80211.h:461): No description found
-for parameter 'nl80211_iftype'
+This fix problem when old kernel and new backports used,
+in such case hostapd create/use also monitor interface.
+Before this patch all frames hostapd send using monitor
+were dropped when AP was configured on DFS channel.
 
-Change "iftype" to "nl80211_iftype" fix the errors.
-
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/tx.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7eae46c..695c562 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -452,7 +452,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
-  * cfg80211_chandef_dfs_required - checks if radar detection is required
-  * @wiphy: the wiphy to validate against
-  * @chandef: the channel definition to check
-- * @iftype: the interface type as specified in &enum nl80211_iftype
-+ * @nl80211_iftype: the interface type as specified in &enum nl80211_iftype
-  * Returns:
-  *	1 if radar detection is required, 0 if it is not, < 0 on error
-  */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5214686..a32ca9b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1618,12 +1618,12 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_channel *chan;
+ 	struct ieee80211_radiotap_header *prthdr =
+ 		(struct ieee80211_radiotap_header *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
++	struct cfg80211_chan_def chandef;
+ 	u16 len_rthdr;
+ 	int hdrlen;
+ 
+@@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	}
+ 
+ 	if (chanctx_conf)
+-		chan = chanctx_conf->def.chan;
++		chandef = chanctx_conf->def;
+ 	else if (!local->use_chanctx)
+-		chan = local->_oper_chandef.chan;
++		chandef = local->_oper_chandef;
+ 	else
+ 		goto fail_rcu;
+ 
+@@ -1743,10 +1743,11 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * radar detection by itself. We can do that later by adding a
+ 	 * monitor flag interfaces used for AP support.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
++	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef,
++				     sdata->vif.type))
+ 		goto fail_rcu;
+ 
+-	ieee80211_xmit(sdata, skb, chan->band);
++	ieee80211_xmit(sdata, skb, chandef.chan->band);
+ 	rcu_read_unlock();
+ 
+ 	return NETDEV_TX_OK;
 -- 
-2.0.0.rc1.15.g7e76a2f
+1.7.9.5
 
