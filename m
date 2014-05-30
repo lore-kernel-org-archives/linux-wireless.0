@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:57254 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752665AbaEGPtU (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:33140 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934191AbaE3Q4j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 11:49:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1399097729.5873.2.camel@dubbel>
-References: <1399041597-27409-1-git-send-email-standby24x7@gmail.com>
-	<1399041597-27409-2-git-send-email-standby24x7@gmail.com>
-	<1399097729.5873.2.camel@dubbel>
-Date: Thu, 8 May 2014 00:49:17 +0900
-Message-ID: <CALLJCT2Y=0v7m0hSSBTaAQMqeNCfyXQS=S8pEERYev9YuyUqhw@mail.gmail.com> (sfid-20140507_174928_243716_33281D14)
-Subject: Re: [PATCH] cfg80211/mac80211: Fix warning on make xmldocs caused by cfg80211.h
-From: Masanari Iida <standby24x7@gmail.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: johannes.berg@intel.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 May 2014 12:56:39 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [RFC 3/4] nl80211: Do not ignore 5/10MHz wide channels in nl80211_send_chandef()
+Date: Fri, 30 May 2014 18:56:23 +0200
+Message-Id: <1401468984-24575-4-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185756_983802_99AF5242)
+In-Reply-To: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-Your patch fixed the symptom.
-I have tested it on linux-next as of 7th/May.
-Thank you.
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ net/wireless/nl80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Tested-by: Masanari Iida <standby24x7@gmail.com>
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 79bae31..3a50d1a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2281,6 +2281,8 @@ static int nl80211_send_chandef(struct sk_buff *msg,
+ 			chandef->chan->center_freq))
+ 		return -ENOBUFS;
+ 	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+ 	case NL80211_CHAN_WIDTH_40:
+-- 
+2.0.0.rc4
 
-Regards,
-Masanari
-
-On Sat, May 3, 2014 at 3:15 PM, Luciano Coelho <luciano.coelho@intel.com> wrote:
-> Hi,
->
-> A better way to fix this would be to add "iftype" to the function
-> prototype, since we don't usually use nameless arguments:
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 43c674e..f9e7373 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -458,7 +458,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
->   */
->  int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
->                                   const struct cfg80211_chan_def *chandef,
-> -                                 enum nl80211_iftype);
-> +                                 enum nl80211_iftype iftype);
->
->  /**
->   * ieee80211_chandef_rate_flags - returns rate flags for a channel
->
-> --
-> Cheers,
-> Luca.
->
