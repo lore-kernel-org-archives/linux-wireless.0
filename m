@@ -1,96 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:52659 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606AbaEORFD (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:51637 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934768AbaE3WYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 13:05:03 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so1397976wes.15
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 10:05:01 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/24] iwlwifi: mvm: notify sched scan complete from stop routine
-Date: Thu, 15 May 2014 20:04:23 +0300
-Message-Id: <1400173481-9047-6-git-send-email-egrumbach@gmail.com> (sfid-20140515_190620_427288_D46BA40B)
-In-Reply-To: <5374F373.6040902@gmail.com>
-References: <5374F373.6040902@gmail.com>
+	Fri, 30 May 2014 18:24:18 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x12so2602370wgg.6
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 15:24:17 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 8/8] staging: vt6656: rename CARDvSetBSSMode to vnt_set_bss_mode
+Date: Fri, 30 May 2014 23:22:54 +0100
+Message-Id: <1401488574-16508-8-git-send-email-tvboxspy@gmail.com> (sfid-20140531_002423_278271_AB200854)
+In-Reply-To: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
+References: <1401488574-16508-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+drop card and rename to vnt_set_bss_mode
 
-Add an option to notify mac80211 about sched scan complete from
-iwl_mvm_stop_sched_scan(), to enable this notification when the
-stop was called from within the driver.
-
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 4 ++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 2 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 5 ++++-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/staging/vt6656/card.c     |  2 +-
+ drivers/staging/vt6656/card.h     |  2 +-
+ drivers/staging/vt6656/main_usb.c |  2 +-
+ drivers/staging/vt6656/wcmd.c     |  6 +++---
+ drivers/staging/vt6656/wmgr.c     | 10 +++++-----
+ 5 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 18d77e4..66fa21b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1542,7 +1542,7 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 
- 	switch (mvm->scan_status) {
- 	case IWL_MVM_SCAN_SCHED:
--		ret = iwl_mvm_sched_scan_stop(mvm);
-+		ret = iwl_mvm_sched_scan_stop(mvm, true);
- 		if (ret) {
- 			ret = -EBUSY;
- 			goto out;
-@@ -1882,7 +1882,7 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	mutex_lock(&mvm->mutex);
--	ret = iwl_mvm_sched_scan_stop(mvm);
-+	ret = iwl_mvm_sched_scan_stop(mvm, false);
- 	mutex_unlock(&mvm->mutex);
- 	iwl_mvm_wait_for_async_handlers(mvm);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index a4909f3..78f3328 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -857,7 +857,7 @@ int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
- 				       struct cfg80211_sched_scan_request *req);
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct cfg80211_sched_scan_request *req);
--int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
-+int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify);
- int iwl_mvm_rx_sched_scan_results(struct iwl_mvm *mvm,
- 				  struct iwl_rx_cmd_buffer *rxb,
- 				  struct iwl_device_cmd *cmd);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 3e25af4..a7f6ae3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -936,7 +936,7 @@ static int iwl_mvm_send_sched_scan_abort(struct iwl_mvm *mvm)
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 366d7d5..ffd6a01 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -829,7 +829,7 @@ int vnt_radio_power_on(struct vnt_private *priv)
  	return ret;
  }
  
--int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
-+int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify)
+-void CARDvSetBSSMode(struct vnt_private *priv)
++void vnt_set_bss_mode(struct vnt_private *priv)
  {
- 	int ret;
- 	struct iwl_notification_wait wait_scan_done;
-@@ -974,5 +974,8 @@ int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
- 	 */
- 	mvm->scan_status = IWL_MVM_SCAN_NONE;
+ 	if (priv->byRFType == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
+ 		MACvSetBBType(priv, BB_TYPE_11G);
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index 150f870..8c6f67d 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -61,6 +61,6 @@ u64 vnt_get_tsf_offset(u8 byRxRate, u64 qwTSF1, u64 qwTSF2);
+ int vnt_radio_power_off(struct vnt_private *);
+ int vnt_radio_power_on(struct vnt_private *);
+ u8 vnt_get_pkt_type(struct vnt_private *);
+-void CARDvSetBSSMode(struct vnt_private *pDevice);
++void vnt_set_bss_mode(struct vnt_private *);
  
-+	if (notify)
-+		ieee80211_sched_scan_stopped(mvm->hw);
-+
- 	return 0;
- }
+ #endif /* __CARD_H__ */
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 09da861..bdb9de8 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -525,7 +525,7 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 	}
+ 
+ 	BBvSetShortSlotTime(pDevice);
+-	CARDvSetBSSMode(pDevice);
++	vnt_set_bss_mode(pDevice);
+ 
+ 	pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
+ 	pDevice->byBBVGANew = pDevice->byBBVGACurrent;
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 191e788..acd5be7 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -333,11 +333,11 @@ void vRunCommand(struct work_struct *work)
+ 			if ((pDevice->byBBType != BB_TYPE_11A) &&
+ 			    (pMgmt->uScanChannel > CB_MAX_CHANNEL_24G)) {
+ 				pDevice->byBBType = BB_TYPE_11A;
+-				CARDvSetBSSMode(pDevice);
++				vnt_set_bss_mode(pDevice);
+ 			} else if ((pDevice->byBBType == BB_TYPE_11A) &&
+ 				   (pMgmt->uScanChannel <= CB_MAX_CHANNEL_24G)) {
+ 				pDevice->byBBType = BB_TYPE_11G;
+-				CARDvSetBSSMode(pDevice);
++				vnt_set_bss_mode(pDevice);
+ 			}
+ 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Scanning....  channel: [%d]\n", pMgmt->uScanChannel);
+ 			// Set channel
+@@ -377,7 +377,7 @@ void vRunCommand(struct work_struct *work)
+ 		// Set Baseband's sensitivity back.
+ 		if (pDevice->byBBType != pDevice->byScanBBType) {
+ 			pDevice->byBBType = pDevice->byScanBBType;
+-			CARDvSetBSSMode(pDevice);
++			vnt_set_bss_mode(pDevice);
+ 		}
+ 
+ 		BBvSetShortSlotTime(pDevice);
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index 1646aaf..0ba292c 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -2081,7 +2081,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+     // vUpdateIFS() use pDevice->bShortSlotTime as parameter so it must be called
+     // after setting ShortSlotTime.
+     // CARDvSetBSSMode call vUpdateIFS()
+-    CARDvSetBSSMode(pDevice);
++    vnt_set_bss_mode(pDevice);
+ 
+     if (pMgmt->eConfigMode == WMAC_CONFIG_AP) {
+         MACvRegBitsOn(pDevice, MAC_REG_HOSTCR, HOSTCR_AP);
+@@ -2601,7 +2601,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+             pMgmt->eCurrentPHYMode = PHY_TYPE_11A;
+             pDevice->bShortSlotTime = true;
+             BBvSetShortSlotTime(pDevice);
+-            CARDvSetBSSMode(pDevice);
++	    vnt_set_bss_mode(pDevice);
+         } else {
+             return;
+         }
+@@ -2613,7 +2613,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+             pMgmt->eCurrentPHYMode = PHY_TYPE_11B;
+             pDevice->bShortSlotTime = false;
+             BBvSetShortSlotTime(pDevice);
+-            CARDvSetBSSMode(pDevice);
++	    vnt_set_bss_mode(pDevice);
+         } else {
+             return;
+         }
+@@ -2624,12 +2624,12 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+             pMgmt->eCurrentPHYMode = PHY_TYPE_11G;
+             pDevice->bShortSlotTime = true;
+             BBvSetShortSlotTime(pDevice);
+-            CARDvSetBSSMode(pDevice);
++	    vnt_set_bss_mode(pDevice);
+         } else if (pDevice->eConfigPHYMode == PHY_TYPE_11B) {
+             pDevice->byBBType = BB_TYPE_11B;
+             pDevice->bShortSlotTime = false;
+             BBvSetShortSlotTime(pDevice);
+-            CARDvSetBSSMode(pDevice);
++	    vnt_set_bss_mode(pDevice);
+         } else {
+             return;
+         }
 -- 
-1.8.3.2
+1.9.1
 
