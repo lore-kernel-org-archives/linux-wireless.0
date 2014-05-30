@@ -1,108 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:35952 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933066AbaEMNo6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 09:44:58 -0400
-Received: by mail-wg0-f51.google.com with SMTP id x13so403886wgg.22
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 06:44:57 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from plane.gmane.org ([80.91.229.3]:50383 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755177AbaE3JbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2014 05:31:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1WqJ9V-0000KQ-9t
+	for linux-wireless@vger.kernel.org; Fri, 30 May 2014 11:31:05 +0200
+Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 11:31:05 +0200
+Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 11:31:05 +0200
 To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/3] iwlwifi: mvm: prevent sched scan while not idle
-Date: Tue, 13 May 2014 16:44:45 +0300
-Message-Id: <1399988685-14715-3-git-send-email-egrumbach@gmail.com> (sfid-20140513_154501_857822_CE3F5969)
-In-Reply-To: <53722142.6070105@gmail.com>
-References: <53722142.6070105@gmail.com>
+From: piotr <pitkotko@gmail.com>
+Subject: Re: [Ilw] Wireless Centrino 2230-N issues
+Date: Fri, 30 May 2014 09:30:51 +0000 (UTC)
+Message-ID: <loom.20140530T111920-677@post.gmane.org> (sfid-20140530_113112_167050_F89D4534)
+References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com> <loom.20140530T020912-598@post.gmane.org> <53882EAD.4010609@gmail.com> <53882EF4.4070105@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Emmanuel Grumbach <egrumbach@...> writes:
 
-Prevent sched scan while not idle (including during association or in AP
-mode) instead of while associated only.
+> 
+> >>
+> >> I have similar problem. My system is Ubuntu 14.04 with kernel 3.13.0-24
+> >> installed on a new Toshiba laptop with N2230 wifi card. 
+> >> dmesg:
+> >> [  614.007461] iwlwifi 0000:01:00.0: Could not complete ALIVE
+transition: -5
+> >> [  614.007748] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+> >> [  614.007790] iwlwifi 0000:01:00.0: Unable to initialize device.
+> >> [  614.008318] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+> >> [  614.015390] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+> >> [  614.059495] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD
+failed:
+> >> FW Error
+> >>
+> >> Is the card broken?
+> >>
+> >> Best,
+> >> Piotr
+> >>
+> >>
+> > 
+> > Can you try to add bt_coex_active=0 as debug parameter?
+> > 
+> 
+> Sorry, I meant *module* parameter. The mode is iwlwifi
 
-This fixes my previous commit which was incomplete:
+Thanks for quick reply.
 
-commit bd5e4744a6ca64299b57a2682c720d00a475a734
-Author: David Spinadel <david.spinadel@intel.com>
-Date:   Thu Apr 24 13:15:29 2014 +0300
+I've tried your suggestion on the fly: 
 
-    iwlwifi: mvm: do no sched scan while associated
+modprobe -rv iwlwifi
+modprobe iwlwifi bt_coex_active=0
 
-    Currently the FW doesn't support sched scan while associated,
-    Prevent it.
+After this, I get "N" from "more
+/sys/module/iwlwifi/parameters/bt_coex_active", but it seems not to take any
+effect on device functioning nor on the kernel messages. 
+Is this what you meant? BTW, the bluetooth seems to work.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
- drivers/net/wireless/iwlwifi/mvm/utils.c    | 16 ++++++++--------
- 3 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 4b0b8b6..b41dc84 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1807,7 +1807,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	if (iwl_mvm_is_associated(mvm)) {
-+	if (!iwl_mvm_is_idle(mvm)) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 84c75a1..f1ec098 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1004,7 +1004,7 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
- }
- 
- /* Assoc status */
--bool iwl_mvm_is_associated(struct iwl_mvm *mvm);
-+bool iwl_mvm_is_idle(struct iwl_mvm *mvm);
- 
- /* Thermal management and CT-kill */
- void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index 6fdbef9..2180902 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -645,21 +645,21 @@ bool iwl_mvm_low_latency(struct iwl_mvm *mvm)
- 	return result;
- }
- 
--static void iwl_mvm_assoc_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
-+static void iwl_mvm_idle_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
- {
--	bool *assoc = _data;
-+	bool *idle = _data;
- 
--	if (vif->bss_conf.assoc)
--		*assoc = true;
-+	if (!vif->bss_conf.idle)
-+		*idle = false;
- }
- 
--bool iwl_mvm_is_associated(struct iwl_mvm *mvm)
-+bool iwl_mvm_is_idle(struct iwl_mvm *mvm)
- {
--	bool assoc = false;
-+	bool idle = true;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
--			iwl_mvm_assoc_iter, &assoc);
-+			iwl_mvm_idle_iter, &idle);
- 
--	return assoc;
-+	return idle;
- }
--- 
-1.8.3.2
+Best,
+Piotr
 
