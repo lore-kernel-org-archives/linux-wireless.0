@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46565 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751191AbaEONLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 09:11:15 -0400
-Message-ID: <1400159466.4146.4.camel@jlt4.sipsolutions.net> (sfid-20140515_151118_823144_A47EC7E3)
-Subject: Re: [PATCH 0/8] mac80211/cfg80211/iwlwifi: a few channel-switch
- patches
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	andrei.otcheretianski@intel.com
-Date: Thu, 15 May 2014 15:11:06 +0200
-In-Reply-To: <1399633911-12788-1-git-send-email-luca@coelho.fi>
-References: <1399633911-12788-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37110 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751304AbaE3Aqc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2014 20:46:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Avinash Patil <avinashapatil@gmail.com>,
+	Krishnankutty Plachikkattle
+	<Krishnankutty_Plachikkattle@mindtree.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 29 May 2014 17:46:29 -0700
+Subject: RE: Support for 88W8897 in 3.10.17 kernel
+Message-ID: <477F20668A386D41ADCC57781B1F70430F71047F0C@SC-VEXCH1.marvell.com> (sfid-20140530_024636_035190_5C010C94)
+References: <78e41a7f3d624575aa7feef3b002553c@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
+ <CAJwzM1=_uOi_RvaQaxS=uZLLpqiNqObRYuyD-SaKnK77py2PZw@mail.gmail.com>
+In-Reply-To: <CAJwzM1=_uOi_RvaQaxS=uZLLpqiNqObRYuyD-SaKnK77py2PZw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-09 at 14:11 +0300, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> Hi,
-> 
-> These are a few channel-switch patches by Andrei that we have in our
-> internal tree.  I have rebased them for upstream.
-
-Applied the cfg80211/mac80211 changes, but please ... that cover letter
-was useless, and your patch set had build breakage in the middle. :)
-
-I fixed that with along with some minor editing changes and a change to
-the netlink dump as well.
-
-johannes
-
+DQo+PklzIHRoZXJlIGFueSBvcGVuIHNvdXJjZSBkcml2ZXIgdGhhdCBzdXBwb3J0cyAgTkZDIGFu
+ZCBCbHVldG9vdGggaW4gdGhpcyBTb0M/DQo+IFllczsgYnRtcnZsLmtvIGFuZCBidHVzYi5rbyB3
+b3VsZCBzdXBwb3J0IFBDSWUtVVNCODg5NyBCVCBmdW5jdGlvbmFsaXR5Lg0KPiBQbGVhc2UgY2hl
+Y2sgQ09ORklHX0JUX01SVkwga2VybmVsIGNvbmZpZ3VyYXRpb24gcGFyYW1ldGVyLg0KDQpDbGFy
+aWZpY2F0aW9uOiANCmJ0bXJ2bCBkcml2ZXIgb25seSBzdXBwb3J0cyBCbHVldG9vdGggb3ZlciBT
+RElPIChidG1ydmxfc2RpbykuIFNvIGl0J3MgZm9yIFNEODg5NyBjYXJkcyBvbmx5Lg0KVGhlIGdl
+bmVyaWMgYnR1c2IgZHJpdmVyIHdvcmtzIGZvciBQQ0llLVVTQiA4ODk3IGNhcmRzIChCbHVldG9v
+dGggaXMgb3ZlciBVU0IpLg0KDQpSZWdhcmRzLA0KQmluZw0KDQo+IEZvciBORkMsICBuZmNtcnZs
+LmtvICYgbmZjbXJ2bF91c2Iua28gd291bGQgc3VwcG9ydCA4ODk3IE5GQyBmdW5jdGlvbmFsaXR5
+Lg0KPiBQbGVhc2UgY2hlY2sgZm9yIENPTkZJR19ORkNfTVJWTCBrZXJuZWwgY29uZmlndXJhdGlv
+biBwYXJhbWV0ZXIuDQo+IA0KPiBUaGFua3MsDQo+IEF2aW5hc2gNCg0K
