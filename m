@@ -1,78 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:43892 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbaEGTyE (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:52316 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933462AbaE3P2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:54:04 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so1488731wgg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:54:03 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/23] iwlwifi: mvm: wait for d0i3 exit in some more ampdu actions
-Date: Wed,  7 May 2014 22:52:56 +0300
-Message-Id: <1399492380-12050-19-git-send-email-egrumbach@gmail.com> (sfid-20140507_215415_347056_B9E358E6)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+	Fri, 30 May 2014 11:28:36 -0400
+Received: by mail-wi0-f175.google.com with SMTP id f8so1347865wiw.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/12] staging: vt6656: rename CARDvSetRSPINF to vnt_set_rspinf
+Date: Fri, 30 May 2014 16:27:46 +0100
+Message-Id: <1401463671-4705-7-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172928_096022_27D84151)
+In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Drop card and rename to vnt_set_rspinf
 
-Some ampdu actions change queues by direct target access.
-
-Since the bus is disabled in d0i3, make sure to exit d0i3
-before handling these actions.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/card.c     | 6 +++---
+ drivers/staging/vt6656/card.h     | 2 +-
+ drivers/staging/vt6656/datarate.c | 2 +-
+ drivers/staging/vt6656/wmgr.c     | 8 ++++----
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 97c3dea..db55d67 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -539,13 +539,22 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
- 		return -EACCES;
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 7542b0d..cf46aa8 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -20,7 +20,7 @@
+  * Purpose: Provide functions to setup NIC operation mode
+  * Functions:
+  *      s_vSafeResetTx - Rest Tx
+- *      CARDvSetRSPINF - Set RSPINF
++ *      vnt_set_rspinf - Set RSPINF
+  *      vnt_update_ifs - Update slotTime,SIFS,DIFS, and EIFS
+  *      vnt_update_top_rates - Update BasicTopRate
+  *      CARDbAddBasicRate - Add to BasicRateSet
+@@ -291,7 +291,7 @@ static void vnt_calculate_ofdm_rate(u16 rate, u8 bb_type,
+  *
+  */
  
- 	/* return from D0i3 before starting a new Tx aggregation */
--	if (action == IEEE80211_AMPDU_TX_START) {
-+	switch (action) {
-+	case IEEE80211_AMPDU_TX_START:
-+	case IEEE80211_AMPDU_TX_STOP_CONT:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		iwl_mvm_ref(mvm, IWL_MVM_REF_TX_AGG);
- 		tx_agg_ref = true;
+-void CARDvSetRSPINF(struct vnt_private *priv, u8 bb_type)
++void vnt_set_rspinf(struct vnt_private *priv, u8 bb_type)
+ {
+ 	struct vnt_phy_field phy[4];
+ 	u8 tx_rate[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; /* For OFDM */
+@@ -846,7 +846,7 @@ void CARDvSetBSSMode(struct vnt_private *priv)
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
  
- 		/*
--		 * wait synchronously until D0i3 exit to get the correct
--		 * sequence number for the tid
-+		 * for tx start, wait synchronously until D0i3 exit to
-+		 * get the correct sequence number for the tid.
-+		 * additionally, some other ampdu actions use direct
-+		 * target access, which is not handled automatically
-+		 * by the trans layer (unlike commands), so wait for
-+		 * d0i3 exit in these cases as well.
- 		 */
- 		if (!wait_event_timeout(mvm->d0i3_exit_waitq,
- 			  !test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status), HZ)) {
-@@ -553,6 +562,9 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
- 			iwl_mvm_unref(mvm, IWL_MVM_REF_TX_AGG);
- 			return -EIO;
- 		}
-+		break;
-+	default:
-+		break;
- 	}
+ 	vnt_update_ifs(priv);
+-	CARDvSetRSPINF(priv, (u8)priv->byBBType);
++	vnt_set_rspinf(priv, (u8)priv->byBBType);
  
- 	mutex_lock(&mvm->mutex);
+ 	if (priv->byBBType == BB_TYPE_11A) {
+ 		if (priv->byRFType == RF_AIROHA7230) {
+diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
+index f2afda4..b52a8c2 100644
+--- a/drivers/staging/vt6656/card.h
++++ b/drivers/staging/vt6656/card.h
+@@ -46,7 +46,7 @@ typedef enum _CARD_PHY_TYPE {
+ struct vnt_private;
+ 
+ void vnt_set_channel(struct vnt_private *, u32);
+-void CARDvSetRSPINF(struct vnt_private *, u8);
++void vnt_set_rspinf(struct vnt_private *, u8);
+ void vnt_update_ifs(struct vnt_private *);
+ void vnt_update_top_rates(struct vnt_private *);
+ void CARDbAddBasicRate(struct vnt_private *, u16);
+diff --git a/drivers/staging/vt6656/datarate.c b/drivers/staging/vt6656/datarate.c
+index 8032d6b..e4a3ac2 100644
+--- a/drivers/staging/vt6656/datarate.c
++++ b/drivers/staging/vt6656/datarate.c
+@@ -222,7 +222,7 @@ void RATEvParseMaxRate(struct vnt_private *pDevice,
+ 	else
+ 		*pwMaxBasicRate = pDevice->byTopOFDMBasicRate;
+ 	if (wOldBasicRate != pDevice->wBasicRate)
+-		CARDvSetRSPINF((void *)pDevice, pDevice->byBBType);
++		vnt_set_rspinf(pDevice, pDevice->byBBType);
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Exit ParseMaxRate\n");
+ }
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index c1151b9..4751242 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -1705,7 +1705,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+                     pDevice->byPreambleType = 0;
+                 }
+                 if (pDevice->byPreambleType != byOldPreambleType)
+-                    CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
++			vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
+             //
+             // Basic Rate Set may change dynamically
+             //
+@@ -1930,7 +1930,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+                         pDevice->byPreambleType = 0;
+                     }
+                     if (pDevice->byPreambleType != byOldPreambleType)
+-                        CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
++			vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
+ 
+                      // MACvRegBitsOff(pDevice->PortOffset, MAC_REG_RCR, RCR_BSSID);
+                      // set highest basic rate
+@@ -2379,7 +2379,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+                 pDevice->byPreambleType = 0;
+             }
+             // Change PreambleType must set RSPINF again
+-            CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
++	    vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
+ 
+             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Join ESS\n");
+ 
+@@ -2510,7 +2510,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+                 pDevice->byPreambleType = 0;
+             }
+             // Change PreambleType must set RSPINF again
+-            CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
++	    vnt_set_rspinf(pDevice, (u8)pDevice->byBBType);
+ 
+             // Prepare beacon
+ 		bMgrPrepareBeaconToSend((void *) pDevice, pMgmt);
 -- 
-1.8.3.2
+1.9.1
 
