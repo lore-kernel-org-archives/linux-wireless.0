@@ -1,54 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56846 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225AbaEOSbF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 14:31:05 -0400
-From: greearb@candelatech.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  fix rssi reporting.
-Date: Thu, 15 May 2014 11:31:03 -0700
-Message-Id: <1400178663-25661-1-git-send-email-greearb@candelatech.com> (sfid-20140515_203141_916908_8F1754D1)
+Received: from plane.gmane.org ([80.91.229.3]:53982 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751538AbaE3AfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2014 20:35:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1WqAmm-0003CO-AZ
+	for linux-wireless@vger.kernel.org; Fri, 30 May 2014 02:35:04 +0200
+Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 02:35:04 +0200
+Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 02:35:04 +0200
+To: linux-wireless@vger.kernel.org
+From: piotr <pitkotko@gmail.com>
+Subject: Re: [Ilw] Wireless Centrino 2230-N issues
+Date: Fri, 30 May 2014 00:20:04 +0000 (UTC)
+Message-ID: <loom.20140530T020912-598@post.gmane.org> (sfid-20140530_023511_912927_4E7440C3)
+References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Grumbach, Emmanuel <emmanuel.grumbach@...> writes:
 
-When the driver cannot provide proper rssi, mark
-status with RX_FLAG_NO_SIGNAL_VAL so that stack
-properly ignores it.
+> 
+> > 
+> > My wireless card was working fine for some time, but after reinstallation of
+> > computer with Ubuntu, it stopped working and i keep getting this in my
+> > dmesg:
+> 
+> Can you please share with us the kernel versions you had used until now,
+and your current version?
+> 
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Hi,
 
-Patch is against my tree, hopefully will apply OK against upstream
-but have not tested that yet.
+I have similar problem. My system is Ubuntu 14.04 with kernel 3.13.0-24
+installed on a new Toshiba laptop with N2230 wifi card. 
+dmesg:
+[  614.007461] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
+[  614.007748] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+[  614.007790] iwlwifi 0000:01:00.0: Unable to initialize device.
+[  614.008318] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[  614.015390] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+[  614.059495] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
+FW Error
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Is the card broken?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 0c83ffb..d8ec8dd 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1216,11 +1216,12 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
- 	/* Fill this once, while this is per-ppdu */
--	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
--		memset(rx_status, 0, sizeof(*rx_status));
-+	memset(rx_status, 0, sizeof(*rx_status));
-+	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID)
- 		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
- 				     rx->ppdu.combined_rssi;
--	}
-+	else
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
- 		/* TSF available only in 32-bit */
--- 
-1.7.11.7
+Best,
+Piotr
+
+
+> > 
+> > lspci:
+> > 0a:00.0 Network controller: Intel Corporation Centrino Wireless-N 2230 (rev
+> > c4)
+> >          Subsystem: Intel Corporation Centrino Wireless-N 2230 BGN
+> > 
+> > 
+> > dmesg:
+> > [ 1465.050832] iwlwifi 0000:0a:00.0: L1 Disabled; Enabling L0S
+> > [ 1465.058299] iwlwifi 0000:0a:00.0: Radio type=0x2-0x0-0x0
+> > [ 1465.104509] iwlwifi 0000:0a:00.0: Command COEX_PRIORITY_TABLE_CMD
+> > failed: FW Error
+> > [ 1465.104522] iwlwifi 0000:0a:00.0: Could not complete ALIVE transition: -5
+> > [ 1465.104527] iwlwifi 0000:0a:00.0: Failed to start RT ucode: -5
+> > [ 1465.104818] iwlwifi 0000:0a:00.0: Unable to initialize device.
+> > [ 1465.105296] iwlwifi 0000:0a:00.0: L1 Disabled; Enabling L0S
+> > [ 1465.112770] iwlwifi 0000:0a:00.0: Radio type=0x2-0x0-0x0
+> > [ 1465.156493] iwlwifi 0000:0a:00.0: Command COEX_PRIORITY_TABLE_CMD
+> > failed: FW Error
+> > [ 1465.156500] iwlwifi 0000:0a:00.0: Could not complete ALIVE transition: -5
+> > [ 1465.156504] iwlwifi 0000:0a:00.0: Failed to start RT ucode: -5
+> > [ 1465.156784] iwlwifi 0000:0a:00.0: Unable to initialize device.
+> > [ 1465.158031] iwlwifi 0000:0a:00.0: L1 Disabled; Enabling L0S
+> > [ 1465.165471] iwlwifi 0000:0a:00.0: Radio type=0x2-0x0-0x0
+> > [ 1465.212534] iwlwifi 0000:0a:00.0: Command COEX_PRIORITY_TABLE_CMD
+> > failed: FW Error
+> > [ 1465.212542] iwlwifi 0000:0a:00.0: Could not complete ALIVE transition: -5
+> > [ 1465.212546] iwlwifi 0000:0a:00.0: Failed to start RT ucode: -5
+> > [ 1465.212825] iwlwifi 0000:0a:00.0: Unable to initialize device.
+> > [ 1465.213119] iwlwifi 0000:0a:00.0: L1 Disabled; Enabling L0S
+> > [ 1465.220559] iwlwifi 0000:0a:00.0: Radio type=0x2-0x0-0x0
+> > 
+> > Does this mean i have issue with driver/kernel or my wifi card is
+> > broken? I tried copying latest uucode for 2230 wireless card
+> > (http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=
+> > get&target=iwlwifi-2030-ucode-18.168.6.1.tgz)
+> > into /lib/firmware and reloading kernel module, no success. Still the
+> > same issue.
+> > 
+> > 
+> > Best regards,
+> > Alen Krmelj
+> > 
+> > _______________________________________________
+> > ilw mailing list
+> > ilw@...
+> > http://linux.intel.com/mailman/listinfo/ilw
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
+
 
