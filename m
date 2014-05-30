@@ -1,98 +1,314 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:45387 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933614AbaE3P2l (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:47644 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934081AbaE3Q4i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2014 11:28:41 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so1309905wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2014 08:28:38 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/12] staging: vt6656: rename CARDbIsOFDMinBasicRate to vnt_ofdm_min_rate
-Date: Fri, 30 May 2014 16:27:48 +0100
-Message-Id: <1401463671-4705-9-git-send-email-tvboxspy@gmail.com> (sfid-20140530_172853_863083_3EB3CF87)
-In-Reply-To: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
-References: <1401463671-4705-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 30 May 2014 12:56:38 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [RFC 2/4] cfg80211: Add new interface type for OCB mode
+Date: Fri, 30 May 2014 18:56:22 +0200
+Message-Id: <1401468984-24575-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185801_684934_E3781C32)
+In-Reply-To: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drop card and basic rename to vnt_ofdm_min_rate
+Add new OCB mode (outside the context of the BSS) interface
+type as well as functions necessary to configure the interface
+when 'joining' such network.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 ---
- drivers/staging/vt6656/card.c     | 8 ++++----
- drivers/staging/vt6656/card.h     | 2 +-
- drivers/staging/vt6656/datarate.c | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ include/net/cfg80211.h       |  7 +++++
+ include/uapi/linux/nl80211.h |  3 ++
+ net/wireless/Makefile        |  2 +-
+ net/wireless/chan.c          |  2 ++
+ net/wireless/core.h          |  8 +++++
+ net/wireless/nl80211.c       |  1 +
+ net/wireless/ocb.c           | 75 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 11 +++++++
+ net/wireless/trace.h         | 17 ++++++++++
+ net/wireless/util.c          |  5 ++-
+ 10 files changed, 129 insertions(+), 2 deletions(-)
+ create mode 100644 net/wireless/ocb.c
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index a905076..8e6158b 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -25,7 +25,7 @@
-  *      vnt_update_top_rates - Update BasicTopRate
-  *      vnt_add_basic_rate - Add to BasicRateSet
-  *      CARDbSetBasicRate - Set Basic Tx Rate
-- *      CARDbIsOFDMinBasicRate - Check if any OFDM rate is in BasicRateSet
-+ *      vnt_ofdm_min_rate - Check if any OFDM rate is in BasicRateSet
-  *      CARDvSetLoopbackMode - Set Loopback mode
-  *      CARDbSoftwareReset - Sortware reset NIC
-  *      CARDqGetTSFOffset - Calculate TSFOffset
-@@ -161,7 +161,7 @@ static u16 vnt_get_ofdm_rate(struct vnt_private *priv, u16 rate_idx)
- 	dev_dbg(&priv->usb->dev, "%s basic rate: %d\n",
- 					__func__,  priv->wBasicRate);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6722ab2..c3879b8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1314,6 +1314,11 @@ struct mesh_setup {
+ 	u32 basic_rates;
+ };
  
--	if (!CARDbIsOFDMinBasicRate(priv)) {
-+	if (!vnt_ofdm_min_rate(priv)) {
- 		dev_dbg(&priv->usb->dev, "%s (NO OFDM) %d\n",
- 						__func__, rate_idx);
- 		if (rate_idx > RATE_24M)
-@@ -514,7 +514,7 @@ void vnt_add_basic_rate(struct vnt_private *priv, u16 rate_idx)
- 	vnt_update_top_rates(priv);
++struct ocb_setup {
++	struct cfg80211_chan_def chandef;
++	u32 basic_rates;
++};
++
+ /**
+  * struct ieee80211_txq_params - TX queue parameters
+  * @ac: AC identifier
+@@ -2371,6 +2376,8 @@ struct cfg80211_ops {
+ 			     const struct mesh_setup *setup);
+ 	int	(*leave_mesh)(struct wiphy *wiphy, struct net_device *dev);
+ 
++	int	(*join_ocb)(struct wiphy *wiphy, struct net_device *dev,
++			    struct ocb_setup *setup);
+ 	int	(*change_bss)(struct wiphy *wiphy, struct net_device *dev,
+ 			      struct bss_parameters *params);
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 970c5df..250b8d8 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1994,6 +1994,8 @@ enum nl80211_attrs {
+  *	and therefore can't be created in the normal ways, use the
+  *	%NL80211_CMD_START_P2P_DEVICE and %NL80211_CMD_STOP_P2P_DEVICE
+  *	commands to create and destroy one
++ * @NL80211_IF_TYPE_OCB: outside context of a bss
++ *	this mode corresponds to the MIB variable dot11OCBActivated=true
+  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
+  * @NUM_NL80211_IFTYPES: number of defined interface types
+  *
+@@ -2013,6 +2015,7 @@ enum nl80211_iftype {
+ 	NL80211_IFTYPE_P2P_CLIENT,
+ 	NL80211_IFTYPE_P2P_GO,
+ 	NL80211_IFTYPE_P2P_DEVICE,
++	NL80211_IFTYPE_OCB,
+ 
+ 	/* keep last */
+ 	NUM_NL80211_IFTYPES,
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index a761670..4c9e39f 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
+ obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
+ 
+ cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+-cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o trace.o
++cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o trace.o ocb.o
+ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+ cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
+ cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 84d686e..a457085 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -370,6 +370,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 		break;
+ 	case NUM_NL80211_IFTYPES:
+@@ -892,6 +893,7 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 				*radar_detect |= BIT(wdev->chandef.width);
+ 		}
+ 		return;
++	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_WDS:
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index e9afbf1..3d8fde5 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -290,6 +290,14 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev,
+ 			      struct cfg80211_chan_def *chandef);
+ 
++/* OCB */
++int __cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
++			struct net_device *dev,
++			struct ocb_setup *setup);
++int cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
++		      struct net_device *dev,
++		      struct ocb_setup *setup);
++
+ /* AP */
+ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev, bool notify);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c766c31..79bae31 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1859,6 +1859,7 @@ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ 	 * operation to set the monitor channel if possible.
+ 	 */
+ 	return !wdev ||
++		wdev->iftype == NL80211_IFTYPE_OCB ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+ 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+ 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
+diff --git a/net/wireless/ocb.c b/net/wireless/ocb.c
+new file mode 100644
+index 0000000..66da583
+--- /dev/null
++++ b/net/wireless/ocb.c
+@@ -0,0 +1,75 @@
++/* OCB mode implementation
++ * Copyright 2014, Czech Technical University in Prague, Rostislav Lisovy
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/ieee80211.h>
++#include <net/cfg80211.h>
++#include "nl80211.h"
++#include "core.h"
++#include "rdev-ops.h"
++
++
++int __cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
++			struct net_device *dev,
++			struct ocb_setup *setup)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err;
++
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_OCB)
++		return -EOPNOTSUPP;
++
++	if (!setup->chandef.chan)
++		WARN_ON(!setup->chandef.chan);
++
++	 /* In OCB mode only those channels flagged with 'CHAN_OCB_ONLY'
++	  * may be used
++	  */
++	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_OCB &&
++	    !(setup->chandef.chan->flags & IEEE80211_CHAN_OCB_ONLY))
++		return -EINVAL;
++
++	 /* check if basic rates are available otherwise use mandatory
++	  * rates as basic rates
++	  */
++	if (!setup->basic_rates) {
++		enum nl80211_bss_scan_width scan_width;
++		struct ieee80211_supported_band *sband =
++				rdev->wiphy.bands[setup->chandef.chan->band];
++		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
++		setup->basic_rates = ieee80211_mandatory_rates(sband,
++							       scan_width);
++	}
++
++	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
++					   setup->chandef.chan,
++					   CHAN_MODE_EXCLUSIVE, 0);
++	if (err)
++		return err;
++
++	err = rdev_join_ocb(rdev, dev, setup);
++	if (!err)
++		wdev->chandef = setup->chandef;
++
++	return err;
++}
++
++int cfg80211_join_ocb(struct cfg80211_registered_device *rdev,
++		      struct net_device *dev,
++		      struct ocb_setup *setup)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err;
++
++	wdev_lock(wdev);
++	err = __cfg80211_join_ocb(rdev, dev, setup);
++	wdev_unlock(wdev);
++
++	return err;
++}
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 00cdf73..2f2fa14 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -322,6 +322,17 @@ static inline int rdev_leave_mesh(struct cfg80211_registered_device *rdev,
+ 	return ret;
  }
  
--int CARDbIsOFDMinBasicRate(struct vnt_private *priv)
-+int vnt_ofdm_min_rate(struct vnt_private *priv)
- {
- 	int ii;
++static inline int rdev_join_ocb(struct cfg80211_registered_device *rdev,
++				struct net_device *dev,
++				struct ocb_setup *setup)
++{
++	int ret;
++	trace_rdev_join_ocb(&rdev->wiphy, dev, setup);
++	ret = rdev->ops->join_ocb(&rdev->wiphy, dev, setup);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline int rdev_change_bss(struct cfg80211_registered_device *rdev,
+ 				  struct net_device *dev,
+ 				  struct bss_parameters *params)
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index cdfbb00..f4e2cc3 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1256,6 +1256,23 @@ TRACE_EVENT(rdev_join_ibss,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(bssid), __entry->ssid)
+ );
  
-@@ -531,7 +531,7 @@ u8 CARDbyGetPktType(struct vnt_private *priv)
- 
- 	if (priv->byBBType == BB_TYPE_11A || priv->byBBType == BB_TYPE_11B)
- 		return (u8)priv->byBBType;
--	else if (CARDbIsOFDMinBasicRate(priv))
-+	else if (vnt_ofdm_min_rate(priv))
- 		return PK_TYPE_11GA;
- 	else
- 		return PK_TYPE_11GB;
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index ef5a671..41871e9 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -50,7 +50,7 @@ void vnt_set_rspinf(struct vnt_private *, u8);
- void vnt_update_ifs(struct vnt_private *);
- void vnt_update_top_rates(struct vnt_private *);
- void vnt_add_basic_rate(struct vnt_private *, u16);
--int CARDbIsOFDMinBasicRate(struct vnt_private *pDevice);
-+int vnt_ofdm_min_rate(struct vnt_private *);
- void CARDvAdjustTSF(struct vnt_private *pDevice, u8 byRxRate,
- 		u64 qwBSSTimestamp, u64 qwLocalTSF);
- bool CARDbGetCurrentTSF(struct vnt_private *pDevice, u64 *pqwCurrTSF);
-diff --git a/drivers/staging/vt6656/datarate.c b/drivers/staging/vt6656/datarate.c
-index 517fbf7..c44d3a0 100644
---- a/drivers/staging/vt6656/datarate.c
-+++ b/drivers/staging/vt6656/datarate.c
-@@ -210,7 +210,7 @@ void RATEvParseMaxRate(struct vnt_private *pDevice,
++TRACE_EVENT(rdev_join_ocb,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 const struct ocb_setup *setup),
++	TP_ARGS(wiphy, netdev, setup),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT,
++		  WIPHY_PR_ARG, NETDEV_PR_ARG)
++);
++
++
+ TRACE_EVENT(rdev_set_wiphy_params,
+ 	TP_PROTO(struct wiphy *wiphy, u32 changed),
+ 	TP_ARGS(wiphy, changed),
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index a756429..019e34c 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -441,7 +441,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		break;
+ 	case cpu_to_le16(0):
+ 		if (iftype != NL80211_IFTYPE_ADHOC &&
+-		    iftype != NL80211_IFTYPE_STATION)
++		    iftype != NL80211_IFTYPE_STATION &&
++		    iftype != NL80211_IFTYPE_OCB)
+ 				return -1;
+ 		break;
  	}
- 
- 	if ((pDevice->byPacketType == PK_TYPE_11GB)
--			&& CARDbIsOFDMinBasicRate((void *)pDevice)) {
-+			&& vnt_ofdm_min_rate(pDevice)) {
- 		pDevice->byPacketType = PK_TYPE_11GA;
- 	}
- 
+@@ -517,6 +518,7 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ 		memcpy(hdr.addr3, skb->data, ETH_ALEN);
+ 		hdrlen = 24;
+ 		break;
++	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_ADHOC:
+ 		/* DA SA BSSID */
+ 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
+@@ -935,6 +937,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 			if (dev->ieee80211_ptr->use_4addr)
+ 				break;
+ 			/* fall through */
++		case NL80211_IFTYPE_OCB:
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_ADHOC:
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
 -- 
-1.9.1
+2.0.0.rc4
 
