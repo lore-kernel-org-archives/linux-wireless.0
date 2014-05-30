@@ -1,99 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22066 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751697AbaE0V3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 17:29:49 -0400
-Message-ID: <53850399.9000708@redhat.com> (sfid-20140527_232954_171696_3A3B3DA4)
-Date: Tue, 27 May 2014 23:28:57 +0200
-From: Hans de Goede <hdegoede@redhat.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:48924 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754389AbaE3Rdl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2014 13:33:41 -0400
+Message-ID: <5388C0F1.90503@gmail.com> (sfid-20140530_193352_597057_E47A0C04)
+Date: Fri, 30 May 2014 10:33:37 -0700
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [PATCH 09/11] brcmfmac: Fix OOB interrupt not working for BCM43362
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> <1401090486-4414-10-git-send-email-hdegoede@redhat.com> <5384C544.9000903@broadcom.com>
-In-Reply-To: <5384C544.9000903@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: abdoulaye berthe <berthe.ab@gmail.com>
+CC: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>, m@bues.ch,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux MIPS Mailing List <linux-mips@linux-mips.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	patches@opensource.wolfsonmicro.com,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	linux-samsungsoc@vger.kernel.org, spear-devel@list.st.com,
+	platform-driver-x86@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH 2/2] gpio: gpiolib: set gpiochip_remove retval to void
+References: <20140530094025.3b78301e@canb.auug.org.au>        <1401449454-30895-1-git-send-email-berthe.ab@gmail.com>        <1401449454-30895-2-git-send-email-berthe.ab@gmail.com> <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
+In-Reply-To: <CAMuHMdV6AtjD2aqO3buzj8Eo7A7xc_+ROYnxEi2sdjMaqFiAuA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 05/27/2014 07:03 PM, Arend van Spriel wrote:
-> On 05/26/14 09:48, Hans de Goede wrote:
->> It has taken me a long long time to get the OOB interrupt working on the
->> AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
->> end I found these magic register pokes in the cubietruck kernel tree:
->> https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
->>
->> I'm not entirely sure if this specific to the AP6210 module, or if this
->> should be done for all BCM43362 sdio devices.
->
-> Let keep it as this for now. I added some remarks below.
->
-> Regards,
-> Arend
->
->> Signed-off-by: Hans de Goede<hdegoede@redhat.com>
->> ---
->>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 ++++++++++++++++++
->>   1 file changed, 18 insertions(+)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> index 0fc707c..2369a0f 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> @@ -39,7 +39,9 @@
->>   #include<brcm_hw_ids.h>
->>   #include<brcmu_utils.h>
->>   #include<brcmu_wifi.h>
->> +#include<chipcommon.h>
->>   #include<soc.h>
->> +#include "chip.h"
->>   #include "dhd_bus.h"
->>   #include "dhd_dbg.h"
->>   #include "sdio_host.h"
->> @@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+On 05/30/2014 04:39 AM, Geert Uytterhoeven wrote:
+> On Fri, May 30, 2014 at 1:30 PM, abdoulaye berthe <berthe.ab@gmail.com> wrote:
+>> --- a/drivers/gpio/gpiolib.c
+>> +++ b/drivers/gpio/gpiolib.c
+>> @@ -1263,10 +1263,9 @@ static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
+>>    *
+>>    * A gpio_chip with any GPIOs still requested may not be removed.
+>>    */
+>> -int gpiochip_remove(struct gpio_chip *chip)
+>> +void gpiochip_remove(struct gpio_chip *chip)
 >>   {
->>       int ret = 0;
->>       u8 data;
->> +    u32 addr, gpiocontrol;
->>       unsigned long flags;
+>>          unsigned long   flags;
+>> -       int             status = 0;
+>>          unsigned        id;
 >>
->>       if ((sdiodev->pdata)&&  (sdiodev->pdata->oob_irq_supported)) {
->> @@ -148,6 +151,21 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+>>          acpi_gpiochip_remove(chip);
+>> @@ -1278,24 +1277,15 @@ int gpiochip_remove(struct gpio_chip *chip)
+>>          of_gpiochip_remove(chip);
 >>
->>           sdio_claim_host(sdiodev->func[1]);
->>
->> +        if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
-> +            /* assign GPIO to SDIO core */
->> +            addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
->> +            gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr,&ret);
->> +            gpiocontrol |= 0x2;
->> +            brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol,&ret);
->> +
->> +            /* SPROM_ADDR_HIGH ? perhaps the defines name is off */
+>>          for (id = 0; id < chip->ngpio; id++) {
+>> -               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
+>> -                       status = -EBUSY;
+>> -                       break;
+>> -               }
+>> -       }
+>> -       if (status == 0) {
+>> -               for (id = 0; id < chip->ngpio; id++)
+>> -                       chip->desc[id].chip = NULL;
+>> -
+>> -               list_del(&chip->list);
+>> +               if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags))
+>> +                       panic("gpio: removing gpiochip with gpios still requested\n");
 >
-> These names are all off. These should be:
-> SBSDIO_SPROM_ADDR_HIGH = SBSDIO_GPIO_SELECT
-> SBSDIO_CHIP_CTRL_DATA = SBSDIO_GPIO_OUT
-> SBSDIO_CHIP_CTRL_EN = SBSDIO_GPIO_EN
+> panic?
 
-Ok, so I guess I should do a pre-patch adding defines for these, should
-these replace the existing defines for these addresses in:
-drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+NACK to the patch for this reason.  The strongest thing you should do 
+here is WARN.
 
-Or should the pre-patch add defines with the new names and keep the old
-ones ?
+That said, I am not sure why we need this whole patch set in the first 
+place.
 
-Regards,
+David Daney
 
-Hans
+
+
+>
+> Is this likely to happen?
+>
+> Gr{oetje,eeting}s,
+>
+>                          Geert
+>
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                  -- Linus Torvalds
+>
+>
+
