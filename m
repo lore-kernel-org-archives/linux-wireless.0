@@ -1,121 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:55994 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbaEXNiW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 09:38:22 -0400
-Received: by mail-wi0-f182.google.com with SMTP id r20so2177484wiv.3
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:21 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 13/14] staging: vt6656: camel case and clean up CARDvSetBSSMode
-Date: Sat, 24 May 2014 14:37:09 +0100
-Message-Id: <1400938630-2850-13-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153830_865490_BC80D6A1)
-In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
-References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34483 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754324AbaE3VS0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2014 17:18:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Chin-Ran Lo <crlo@marvell.com>,
+	Aaron Durbin <adurbin@chromium.org>
+Date: Fri, 30 May 2014 14:18:18 -0700
+Subject: RE: [PATCH 1/2] mwifiex: fix PCIe tx_info overlap
+Message-ID: <477F20668A386D41ADCC57781B1F70430F7104819A@SC-VEXCH1.marvell.com> (sfid-20140530_231830_260290_190ADC2C)
+References: <1401477189-24531-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1401477189-24531-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
+> From: Chin-Ran Lo <crlo@marvell.com>
+> 
+> On PCIe Tx data path, network interface specific parameters
+> bss_num and bss_type are saved at "skb->cb + sizeof(dma_addr_t)"
+> (returned by MWIFIEX_SKB_TXCB). Later mwifiex_map_pci_memory()
+> called from mwifiex_pcie_send_data() will memcpy
+> sizeof(struct mwifiex_dma_mapping) bytes to save PCIe DMA
+> address and length information at beginning of skb->cb.
+> This accidently overwrites bss_num and bss_type saved in skb->cb
+> previously because bss_num/bss_type and mwifiex_dma_mapping data
+> overlap. Fix it by having MWIFIEX_SKB_TXCB return the correct
+> offset for bss_num and bss_type.
+> 
+> Cc: Aaron Durbin <adurbin@chromium.org>
+> Signed-off-by: Chin-Ran Lo <crlo@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 80 +++++++++++++++++++++----------------------
- 1 file changed, 39 insertions(+), 41 deletions(-)
+Hi John,
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 3d41709..5a65f75 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -838,46 +838,44 @@ int CARDbRadioPowerOn(struct vnt_private *priv)
- 	return ret;
- }
- 
--void CARDvSetBSSMode(struct vnt_private *pDevice)
-+void CARDvSetBSSMode(struct vnt_private *priv)
- {
--    // Set BB and packet type at the same time.//{{RobertYu:20050222, AL7230 have two TX PA output, only connet to b/g now
--    // so in 11a mode need to set the MAC Reg0x4C to 11b/g mode to turn on PA
--    if( (pDevice->byRFType == RF_AIROHA7230 ) && (pDevice->byBBType == BB_TYPE_11A) )
--    {
--        MACvSetBBType(pDevice, BB_TYPE_11G);
--    }
--    else
--    {
--        MACvSetBBType(pDevice, pDevice->byBBType);
--    }
--    pDevice->byPacketType = CARDbyGetPktType(pDevice);
--
--    if (pDevice->byBBType == BB_TYPE_11A) {
--        ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x88, 0x03);
--    } else if (pDevice->byBBType == BB_TYPE_11B) {
--        ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x88, 0x02);
--    } else if (pDevice->byBBType == BB_TYPE_11G) {
--        ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
--    }
--
--    vUpdateIFS(pDevice);
--    CARDvSetRSPINF(pDevice, (u8)pDevice->byBBType);
--
--    if ( pDevice->byBBType == BB_TYPE_11A ) {
--        //request by Jack 2005-04-26
--        if (pDevice->byRFType == RF_AIROHA7230) {
--            pDevice->abyBBVGA[0] = 0x20;
--            ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xE7, pDevice->abyBBVGA[0]);
--        }
--        pDevice->abyBBVGA[2] = 0x10;
--        pDevice->abyBBVGA[3] = 0x10;
--    } else {
--        //request by Jack 2005-04-26
--        if (pDevice->byRFType == RF_AIROHA7230) {
--            pDevice->abyBBVGA[0] = 0x1C;
--            ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xE7, pDevice->abyBBVGA[0]);
--        }
--        pDevice->abyBBVGA[2] = 0x0;
--        pDevice->abyBBVGA[3] = 0x0;
--    }
-+	if (priv->byRFType == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
-+		MACvSetBBType(priv, BB_TYPE_11G);
-+	else
-+		MACvSetBBType(priv, priv->byBBType);
-+
-+	priv->byPacketType = CARDbyGetPktType(priv);
-+
-+	if (priv->byBBType == BB_TYPE_11A)
-+		ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x03);
-+	else if (priv->byBBType == BB_TYPE_11B)
-+		ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x02);
-+	else if (priv->byBBType == BB_TYPE_11G)
-+		ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
-+
-+	vUpdateIFS(priv);
-+	CARDvSetRSPINF(priv, (u8)priv->byBBType);
-+
-+	if (priv->byBBType == BB_TYPE_11A) {
-+		if (priv->byRFType == RF_AIROHA7230) {
-+			priv->abyBBVGA[0] = 0x20;
-+
-+			ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG,
-+						0xe7, priv->abyBBVGA[0]);
-+		}
-+
-+		priv->abyBBVGA[2] = 0x10;
-+		priv->abyBBVGA[3] = 0x10;
-+	} else {
-+		if (priv->byRFType == RF_AIROHA7230) {
-+			priv->abyBBVGA[0] = 0x1c;
-+
-+			ControlvWriteByte(priv, MESSAGE_REQUEST_BBREG,
-+						0xe7, priv->abyBBVGA[0]);
-+		}
-+
-+		priv->abyBBVGA[2] = 0x0;
-+		priv->abyBBVGA[3] = 0x0;
-+	}
- }
--- 
-1.9.1
+Please ignore this patch.
+As Aaron pointed out offline, it needs more work on RX path as well.
+
+Thanks,
+Bing
 
