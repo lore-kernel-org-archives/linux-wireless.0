@@ -1,59 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932635AbaEEM6D (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:54702 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932338AbaEaKvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2014 08:58:03 -0400
-Message-ID: <1399294659.22235.9.camel@jlt4.sipsolutions.net> (sfid-20140505_145820_382931_1ECE9807)
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Mon, 05 May 2014 14:57:39 +0200
-In-Reply-To: <87y4ymn69s.fsf@qca.qualcomm.com>
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
-	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
-	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
-	 <1398413370.4152.0.camel@jlt4.sipsolutions.net>
-	 <8738gvp8md.fsf@qca.qualcomm.com>
-	 <1398846593.5408.0.camel@jlt4.sipsolutions.net>
-	 <20140430132246.GB3635@tuxdriver.com> <87y4ymn69s.fsf@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 31 May 2014 06:51:45 -0400
+Received: by mail-wi0-f179.google.com with SMTP id bs8so2390790wib.6
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:44 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/14] staging: vt6656: rename MACvWriteBeaconInterval to vnt_mac_set_beacon_interval
+Date: Sat, 31 May 2014 11:50:49 +0100
+Message-Id: <1401533449-2972-14-git-send-email-tvboxspy@gmail.com> (sfid-20140531_132148_011304_EE20F0B9)
+In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-30 at 19:14 +0300, Kalle Valo wrote:
+Drop write for set
 
-> >> We have it in iwlwifi as well - we were considering a generic uevent but
-> >> beyond that I don't think there's much that could be done?
-> >
-> > There is an ethtool op for that, no?
-> 
-> Do you mean this one:
-> 
->  * @get_dump_flag: Get dump flag indicating current dump length, version,
->  * 		   and flag of the device.
->  * @get_dump_data: Get dump data.
->  * @set_dump: Set dump specific flags to the device.
-> 
-> 	int	(*get_dump_flag)(struct net_device *, struct ethtool_dump *);
-> 	int	(*get_dump_data)(struct net_device *,
-> 				 struct ethtool_dump *, void *);
-> 	int	(*set_dump)(struct net_device *, struct ethtool_dump *);
-> 
-> Yeah, maybe we could use that in wireless as well.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c  | 2 +-
+ drivers/staging/vt6656/mac.h  | 2 +-
+ drivers/staging/vt6656/wmgr.c | 6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-What was the intended use case for this though? Neither the header file
-nor the ethtool documentation seem particularly clear, other than saying
-"firmware dump" - we'll want to include driver data as well though?
-
-johannes
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 3275ee9..b06436f 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -230,7 +230,7 @@ void vnt_mac_disable_barker_preamble_mode(struct vnt_private *priv)
+ 		MAC_REG_ENCFG2, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+-void MACvWriteBeaconInterval(struct vnt_private *priv, u16 interval)
++void vnt_mac_set_beacon_interval(struct vnt_private *priv, u16 interval)
+ {
+ 	u8 data[2];
+ 
+diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
+index dfeacbf..eac2be7 100644
+--- a/drivers/staging/vt6656/mac.h
++++ b/drivers/staging/vt6656/mac.h
+@@ -427,7 +427,7 @@ void vnt_mac_enable_protect_mode(struct vnt_private *);
+ void vnt_mac_disable_protect_mode(struct vnt_private *);
+ void vnt_mac_enable_barker_preamble_mode(struct vnt_private *);
+ void vnt_mac_disable_barker_preamble_mode(struct vnt_private *);
+-void MACvWriteBeaconInterval(struct vnt_private *, u16);
++void vnt_mac_set_beacon_interval(struct vnt_private *, u16);
+ void vnt_mac_set_led(struct vnt_private *priv, u8, u8);
+ 
+ #endif /* __MAC_H__ */
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index 73c6e90..a1b5307 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -1915,7 +1915,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+                      // set HW beacon interval and re-synchronizing....
+                      DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Rejoining to Other Adhoc group with same SSID........\n");
+ 
+-                     MACvWriteBeaconInterval(pDevice, pMgmt->wCurrBeaconPeriod);
++		     vnt_mac_set_beacon_interval(pDevice, pMgmt->wCurrBeaconPeriod);
+ 		     vnt_adjust_tsf(pDevice, pRxPacket->byRxRate, qwTimestamp, pRxPacket->qwLocalTSF);
+ 		     vnt_update_next_tbtt(pDevice, qwTimestamp, pMgmt->wCurrBeaconPeriod);
+ 
+@@ -2041,7 +2041,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+     // set HW beacon interval
+     if (pMgmt->wIBSSBeaconPeriod == 0)
+         pMgmt->wIBSSBeaconPeriod = DEFAULT_IBSS_BI;
+-    MACvWriteBeaconInterval(pDevice, pMgmt->wIBSSBeaconPeriod);
++    vnt_mac_set_beacon_interval(pDevice, pMgmt->wIBSSBeaconPeriod);
+ 
+     vnt_get_current_tsf(pDevice, &qwCurrTSF);
+     // clear TSF counter
+@@ -2579,7 +2579,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+     vnt_adjust_tsf(pDevice, pCurr->byRxRate, pCurr->qwBSSTimestamp, pCurr->qwLocalTSF);
+ 
+     // set HW beacon interval
+-    MACvWriteBeaconInterval(pDevice, pCurr->wBeaconInterval);
++    vnt_mac_set_beacon_interval(pDevice, pCurr->wBeaconInterval);
+ 
+     // set Next TBTT
+     // Next TBTT = ((local_current_TSF / beacon_interval) + 1 ) * beacon_interval
+-- 
+1.9.1
 
