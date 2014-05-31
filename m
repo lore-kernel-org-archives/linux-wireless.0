@@ -1,197 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:34623 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbaEGTxl (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:65089 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751206AbaEaStz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 15:53:41 -0400
-Received: by mail-we0-f179.google.com with SMTP id q59so1500479wes.38
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 12:53:40 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/23] iwlwifi: mvm: rs: overhaul rs_get_best_rate
-Date: Wed,  7 May 2014 22:52:42 +0300
-Message-Id: <1399492380-12050-5-git-send-email-egrumbach@gmail.com> (sfid-20140507_215403_461013_81A2583F)
-In-Reply-To: <536A8EE3.2050906@gmail.com>
-References: <536A8EE3.2050906@gmail.com>
+	Sat, 31 May 2014 14:49:55 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f8so2627884wiw.16
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:49:54 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/9] b43: clean channel handling
+Date: Sat, 31 May 2014 20:49:32 +0200
+Message-Id: <1401562181-14608-1-git-send-email-zajec5@gmail.com> (sfid-20140531_205008_274346_0DAFF812)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+This patchset cleans channel handling in the driver which became a bit
+messy recently. We get rid of too many variables in PHY struct switching
+to a simple struct cfg80211_chan_def (unsigned int channel is still
+there because a lot of code depends on it).
 
-rs_get_best_rate determines the optimal rate to try in a
-new Tx column. Currently we were sometimes trying a too high
-rate which would lead us to fail and avoid switching to the
-new column despite it having a potential to be better.
-Change the logic to try and find the first rate which would
-exceed the current actual throughput or be more aggressive
-if the success ratio is good.
+This also slightly changes PHY ops to make PHY re-init possible with
+the current channel (this will be needed for band switching).
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 117 +++++++++-------------------------
- 1 file changed, 31 insertions(+), 86 deletions(-)
+This has been basically tested for regressions on the following cards:
+14e4:4312 BCM4311 G-PHY rev 8
+14e4:4315 BCM4312 LP-PHY rev 1
+14e4:4328 BCM4321 N-PHY rev 2
+14e4:432b BCM4322 N-PHY rev 4
+14e4:4353 BCM43224 N-PHY rev 6
+(note 14e4:4312 was never working correctly for me).
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index f9aab15..a7ad532 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -1335,105 +1335,50 @@ static void rs_set_expected_tpt_table(struct iwl_lq_sta *lq_sta,
- 	tbl->expected_tpt = rs_get_expected_tpt_table(lq_sta, column, rate->bw);
- }
- 
--/*
-- * Find starting rate for new "search" high-throughput mode of modulation.
-- * Goal is to find lowest expected rate (under perfect conditions) that is
-- * above the current measured throughput of "active" mode, to give new mode
-- * a fair chance to prove itself without too many challenges.
-- *
-- * This gets called when transitioning to more aggressive modulation
-- * (i.e. legacy to SISO or MIMO, or SISO to MIMO), as well as less aggressive
-- * (i.e. MIMO to SISO).  When moving to MIMO, bit rate will typically need
-- * to decrease to match "active" throughput.  When moving from MIMO to SISO,
-- * bit rate will typically need to increase, but not if performance was bad.
-- */
- static s32 rs_get_best_rate(struct iwl_mvm *mvm,
- 			    struct iwl_lq_sta *lq_sta,
- 			    struct iwl_scale_tbl_info *tbl,	/* "search" */
--			    u16 rate_mask, s8 index)
-+			    unsigned long rate_mask, s8 index)
- {
--	/* "active" values */
- 	struct iwl_scale_tbl_info *active_tbl =
- 	    &(lq_sta->lq_info[lq_sta->active_tbl]);
--	s32 active_sr = active_tbl->win[index].success_ratio;
--	s32 active_tpt = active_tbl->expected_tpt[index];
--	/* expected "search" throughput */
-+	s32 success_ratio = active_tbl->win[index].success_ratio;
-+	u16 expected_current_tpt = active_tbl->expected_tpt[index];
- 	const u16 *tpt_tbl = tbl->expected_tpt;
--
--	s32 new_rate, high, low, start_hi;
- 	u16 high_low;
--	s8 rate = index;
--
--	new_rate = high = low = start_hi = IWL_RATE_INVALID;
--
--	while (1) {
--		high_low = rs_get_adjacent_rate(mvm, rate, rate_mask,
--						tbl->rate.type);
--
--		low = high_low & 0xff;
--		high = (high_low >> 8) & 0xff;
--
--		/*
--		 * Lower the "search" bit rate, to give new "search" mode
--		 * approximately the same throughput as "active" if:
--		 *
--		 * 1) "Active" mode has been working modestly well (but not
--		 *    great), and expected "search" throughput (under perfect
--		 *    conditions) at candidate rate is above the actual
--		 *    measured "active" throughput (but less than expected
--		 *    "active" throughput under perfect conditions).
--		 * OR
--		 * 2) "Active" mode has been working perfectly or very well
--		 *    and expected "search" throughput (under perfect
--		 *    conditions) at candidate rate is above expected
--		 *    "active" throughput (under perfect conditions).
--		 */
--		if ((((100 * tpt_tbl[rate]) > lq_sta->last_tpt) &&
--		     ((active_sr > RS_SR_FORCE_DECREASE) &&
--		      (active_sr <= IWL_RATE_HIGH_TH) &&
--		      (tpt_tbl[rate] <= active_tpt))) ||
--		    ((active_sr >= IWL_RATE_SCALE_SWITCH) &&
--		     (tpt_tbl[rate] > active_tpt))) {
--			/* (2nd or later pass)
--			 * If we've already tried to raise the rate, and are
--			 * now trying to lower it, use the higher rate. */
--			if (start_hi != IWL_RATE_INVALID) {
--				new_rate = start_hi;
--				break;
--			}
--
--			new_rate = rate;
-+	u32 target_tpt;
-+	int rate_idx;
- 
--			/* Loop again with lower rate */
--			if (low != IWL_RATE_INVALID)
--				rate = low;
-+	if (success_ratio > RS_SR_NO_DECREASE) {
-+		target_tpt = 100 * expected_current_tpt;
-+		IWL_DEBUG_RATE(mvm,
-+			       "SR %d high. Find rate exceeding EXPECTED_CURRENT %d\n",
-+			       success_ratio, target_tpt);
-+	} else {
-+		target_tpt = lq_sta->last_tpt;
-+		IWL_DEBUG_RATE(mvm,
-+			       "SR %d not thag good. Find rate exceeding ACTUAL_TPT %d\n",
-+			       success_ratio, target_tpt);
-+	}
- 
--			/* Lower rate not available, use the original */
--			else
--				break;
-+	rate_idx = find_first_bit(&rate_mask, BITS_PER_LONG);
- 
--		/* Else try to raise the "search" rate to match "active" */
--		} else {
--			/* (2nd or later pass)
--			 * If we've already tried to lower the rate, and are
--			 * now trying to raise it, use the lower rate. */
--			if (new_rate != IWL_RATE_INVALID)
--				break;
-+	while (rate_idx != IWL_RATE_INVALID) {
-+		if (target_tpt < (100 * tpt_tbl[rate_idx]))
-+			break;
- 
--			/* Loop again with higher rate */
--			else if (high != IWL_RATE_INVALID) {
--				start_hi = high;
--				rate = high;
-+		high_low = rs_get_adjacent_rate(mvm, rate_idx, rate_mask,
-+						tbl->rate.type);
- 
--			/* Higher rate not available, use the original */
--			} else {
--				new_rate = rate;
--				break;
--			}
--		}
-+		rate_idx = (high_low >> 8) & 0xff;
- 	}
- 
--	return new_rate;
-+	IWL_DEBUG_RATE(mvm, "Best rate found %d target_tp %d expected_new %d\n",
-+		       rate_idx, target_tpt,
-+		       rate_idx != IWL_RATE_INVALID ?
-+		       100 * tpt_tbl[rate_idx] : IWL_INVALID_VALUE);
-+
-+	return rate_idx;
- }
- 
- static u32 rs_bw_from_sta_bw(struct ieee80211_sta *sta)
-@@ -1649,7 +1594,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
- 	const struct rs_tx_column *curr_column = &rs_tx_columns[tbl->column];
- 	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
- 		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
--	u16 rate_mask = 0;
-+	unsigned long rate_mask = 0;
- 	u32 rate_idx = 0;
- 
- 	memcpy(search_tbl, tbl, sz);
-@@ -1691,7 +1636,7 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
- 		    !(BIT(rate_idx) & rate_mask)) {
- 			IWL_DEBUG_RATE(mvm,
- 				       "can not switch with index %d"
--				       " rate mask %x\n",
-+				       " rate mask %lx\n",
- 				       rate_idx, rate_mask);
- 
- 			goto err;
+John: it's the last "big thing" I wanted for 3.16. It's a bit late, so
+to minimalize a risk I gave it some testing on many devices. If you
+manage to get it for 3.16, that will be cool for me. Still, it's up to
+you, not a big pressure.
+
+Rafał Miłecki (9):
+  b43: drop B43_DEFAULT_CHANNEL
+  b43: b43_op_config: drop check for core change
+  b43: b43_op_config: use IEEE80211_CONF_CHANGE_CHANNEL
+  b43: PHY: don't force default channel during init
+  b43: b43_op_config: set channel info before switching band
+  b43: store current channel using struct cfg80211_chan_def
+  b43: PHY: drop own channel_freq (get it from chandef when needed)
+  b43: PHY: drop is_40mhz (get width info from chandef)
+  b43: PHY: drop channel_type (we can get this info from chandef)
+
+ drivers/net/wireless/b43/main.c        | 46 ++++++------------
+ drivers/net/wireless/b43/phy_common.c  | 21 ++++----
+ drivers/net/wireless/b43/phy_common.h  | 12 +----
+ drivers/net/wireless/b43/phy_ht.c      |  2 +-
+ drivers/net/wireless/b43/phy_n.c       | 88 ++++++++++++++++++----------------
+ drivers/net/wireless/b43/tables_nphy.c |  2 +-
+ 6 files changed, 75 insertions(+), 96 deletions(-)
+
 -- 
-1.8.3.2
+1.8.4.5
 
