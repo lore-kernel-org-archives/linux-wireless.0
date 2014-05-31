@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56817 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbaESVpR (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:58153 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754118AbaEaKvZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2014 17:45:17 -0400
-Date: Mon, 19 May 2014 17:41:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: use 'struct ath_htc_rx_status
- *' in call to ath9k_htc_err_stat_rx
-Message-ID: <20140519214146.GM7650@tuxdriver.com> (sfid-20140519_234521_173874_22FBFCCB)
-References: <1400533670-23340-1-git-send-email-linville@tuxdriver.com>
- <537A778A.5050205@rempel-privat.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <537A778A.5050205@rempel-privat.de>
+	Sat, 31 May 2014 06:51:25 -0400
+Received: by mail-we0-f176.google.com with SMTP id q59so3007779wes.21
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:24 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/14] staging: vt6656: rename MACvWriteMultiAddr to vnt_mac_set_filter
+Date: Sat, 31 May 2014 11:50:36 +0100
+Message-Id: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com> (sfid-20140531_125135_084089_FACC0F0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2014 at 11:28:42PM +0200, Oleksij Rempel wrote:
-> Am 19.05.2014 23:07, schrieb John W. Linville:
-> >   CC [M]  drivers/net/wireless/ath/ath9k/htc_drv_txrx.o
-> > drivers/net/wireless/ath/ath9k/htc_drv_txrx.c: In function ‘ath9k_rx_prepare’:
-> > drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1006:2: warning: passing argument 2 of ‘ath9k_htc_err_stat_rx’ from incompatible pointer type [enabled by default]
-> >   ath9k_htc_err_stat_rx(priv, &rx_stats);
-> >   ^
-> > In file included from drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:17:0:
-> > drivers/net/wireless/ath/ath9k/htc.h:380:20: note: expected ‘struct ath_htc_rx_status *’ but argument is of type ‘struct ath_rx_status *’
-> >  static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> > Compile-test only...seems reasonable?
-> 
-> Hm... that is incorrect. Some missing patch?
-> "[PATCH 06/10] ath9k & ath9k_htc: move ath_rx_stats to cmn" did correct
-> change.
-> your patch will brake it.
+The function sets the mac filter so rename to vnt_mac_set_filter
 
-The patch you mention is in wireless-next and wireless-testing.
-The warning only shows-up in my wireless-testing build, although the
-configs are slightly different.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/mac.c      | 2 +-
+ drivers/staging/vt6656/mac.h      | 2 +-
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Would you be interested in tracking down the problem?
-
-John
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index cadf7cd..8c73f36 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -50,7 +50,7 @@
+  * Return Value: none
+  *
+  */
+-void MACvWriteMultiAddr(struct vnt_private *priv, u64 mc_filter)
++void vnt_mac_set_filter(struct vnt_private *priv, u64 mc_filter)
+ {
+ 	__le64 le_mc = cpu_to_le64(mc_filter);
+ 
+diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
+index 986ca95..b0e5d49 100644
+--- a/drivers/staging/vt6656/mac.h
++++ b/drivers/staging/vt6656/mac.h
+@@ -414,7 +414,7 @@ struct vnt_mac_set_key {
+ 	u8 key[WLAN_KEY_LEN_CCMP];
+ } __packed;
+ 
+-void MACvWriteMultiAddr(struct vnt_private *, u64);
++void vnt_mac_set_filter(struct vnt_private *, u64);
+ void MACbShutdown(struct vnt_private *);
+ void MACvSetBBType(struct vnt_private *, u8);
+ void MACvDisableKeyEntry(struct vnt_private *, u8);
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index bdb9de8..b297f3a 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1284,7 +1284,7 @@ void vnt_configure_filter(struct vnt_private *priv)
+ 	} else if ((netdev_mc_count(dev) > priv->multicast_limit) ||
+ 			(dev->flags & IFF_ALLMULTI)) {
+ 		mc_filter = ~0x0;
+-		MACvWriteMultiAddr(priv, mc_filter);
++		vnt_mac_set_filter(priv, mc_filter);
+ 
+ 		priv->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
+ 	} else {
+@@ -1294,7 +1294,7 @@ void vnt_configure_filter(struct vnt_private *priv)
+ 			mc_filter |= 1ULL << (bit_nr & 0x3f);
+ 		}
+ 
+-		MACvWriteMultiAddr(priv, mc_filter);
++		vnt_mac_set_filter(priv, mc_filter);
+ 
+ 		priv->byRxMode &= ~(RCR_UNICAST);
+ 		priv->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
