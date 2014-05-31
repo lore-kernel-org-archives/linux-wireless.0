@@ -1,173 +1,312 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45046 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752350AbaEGVux (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:60180 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756382AbaEaMfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 17:50:53 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
+	Sat, 31 May 2014 08:35:55 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so2279214wib.2
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 05:35:54 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] ath10k:  support get/set antenna configurations.
-Date: Wed,  7 May 2014 14:50:40 -0700
-Message-Id: <1399499440-32365-2-git-send-email-greearb@candelatech.com> (sfid-20140507_235100_275229_977FAA1A)
-In-Reply-To: <1399499440-32365-1-git-send-email-greearb@candelatech.com>
-References: <1399499440-32365-1-git-send-email-greearb@candelatech.com>
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/4] staging: vt6656: rxtx add mac header to vnt_tx_datahead_* structures
+Date: Sat, 31 May 2014 13:34:58 +0100
+Message-Id: <1401539700-3183-2-git-send-email-tvboxspy@gmail.com> (sfid-20140531_143603_468465_EA2CC9FD)
+In-Reply-To: <1401539700-3183-1-git-send-email-tvboxspy@gmail.com>
+References: <1401539700-3183-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Add vnt_mac_hdr_pos to set mac header pointer and the calculate header size.
 
-Tested with CT firmware, but should work on standard
-firmware as well.
+Pass ieee80211 hdr pointer and tx_hdr_size in vnt_usb_send_context.
 
-Verified that target's tx/rx chain register is set appropriately,
-and that the tx rate goes down as number of chains
-decrease, but I did not actually try to verify antenna
-ceased to transmit when disabled.
+Remove old pointer arithmetic and attach pMACHeader to hdr.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+cbHeaderLength/cbHeaderSize now uses the value of tx_hdr_size.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  5 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 64 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |  5 +++
- 3 files changed, 74 insertions(+)
+ drivers/staging/vt6656/device.h |   2 +
+ drivers/staging/vt6656/rxtx.c   | 122 ++++++++++++++++------------------------
+ drivers/staging/vt6656/rxtx.h   |   4 ++
+ 3 files changed, 55 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7050c47..f7eb8050 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -472,6 +472,11 @@ struct ath10k {
- 	u32 dfs_block_radar_events;
- 	int install_key_rv; /* Store error code from key-install */
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 5b64ca7..11b863d 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -241,7 +241,9 @@ struct vnt_usb_send_context {
+ 	void *priv;
+ 	struct sk_buff *skb;
+ 	struct urb *urb;
++	struct ieee80211_hdr *hdr;
+ 	unsigned int buf_len;
++	u16 tx_hdr_size;
+ 	u8 type;
+ 	bool in_use;
+ 	unsigned char data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fa04894..e4cc1ff 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -102,8 +102,9 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
+ 	int bNeedACK, struct ethhdr *psEthHeader, bool need_rts);
  
-+	unsigned char supp_tx_chainmask;
-+	unsigned char supp_rx_chainmask;
-+	unsigned char cfg_tx_chainmask;
-+	unsigned char cfg_rx_chainmask;
+ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
+-	u8 *pbyBufferAddr, u16 wDuration, struct ethhdr *psEthHeader,
+-	int bNeedEncrypt, u16 wFragType, u32 uFragIdx);
++	struct ieee80211_hdr *pMACHeader, u16 wDuration,
++	struct ethhdr *psEthHeader, int bNeedEncrypt, u16 wFragType,
++	u32 uFragIdx);
+ 
+ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 	struct vnt_tx_fifo_head *fifo_head, u8 *pbyIVHead,
+@@ -151,6 +152,9 @@ static struct vnt_usb_send_context
+ 			context->in_use = true;
+ 			memset(context->data, 0,
+ 					MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
 +
- 	struct wmi_pdev_set_wmm_params_arg wmm_params;
- 	struct completion install_key_done;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index dcb147d..cc85bd9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2483,6 +2483,61 @@ void ath10k_halt(struct ath10k *ar)
- 	spin_unlock_bh(&ar->data_lock);
++			context->hdr = NULL;
++
+ 			return context;
+ 		}
+ 	}
+@@ -470,6 +474,19 @@ static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
+ 	return cpu_to_le16((u16)uDurTime);
  }
  
-+static int ath10k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
++static u16 vnt_mac_hdr_pos(struct vnt_usb_send_context *tx_context,
++	struct ieee80211_hdr *hdr)
 +{
-+	struct ath10k *ar = hw->priv;
++	u8 *head = tx_context->data + offsetof(struct vnt_tx_buffer, fifo_head);
++	u8 *hdr_pos = (u8 *)hdr;
 +
-+	if (ar->cfg_tx_chainmask) {
-+		*tx_ant = ar->cfg_tx_chainmask;
-+		*rx_ant = ar->cfg_rx_chainmask;
-+	} else {
-+		*tx_ant = ar->supp_tx_chainmask;
-+		*rx_ant = ar->supp_rx_chainmask;
-+	}
-+	return 0;
-+}
-+
-+static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
-+{
-+	int ret;
-+
-+	ar->cfg_tx_chainmask = tx_ant;
-+	ar->cfg_rx_chainmask = rx_ant;
-+
-+	if (ar->state != ATH10K_STATE_ON)
++	tx_context->hdr = hdr;
++	if (!tx_context->hdr)
 +		return 0;
 +
-+	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->tx_chain_mask,
-+					tx_ant);
-+	if (ret) {
-+		ath10k_warn("failed to set tx-chainmask: %d, req 0x%x\n",
-+			    ret, tx_ant);
-+		return ret;
-+	}
-+
-+	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->rx_chain_mask,
-+					rx_ant);
-+	if (ret) {
-+		ath10k_warn("failed to set rx-chainmask: %d, req 0x%x\n",
-+			    ret, rx_ant);
-+		return ret;
-+	}
-+
-+	return ret;
++	return (u16)(hdr_pos - head);
 +}
 +
-+static int ath10k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath10k *ar = hw->priv;
-+	int ret;
+ static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
+ 		u8 pkt_type, u16 rate, struct vnt_tx_datahead_g *buf,
+ 		u32 frame_len, int need_ack)
+@@ -490,6 +507,8 @@ static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
+ 	buf->time_stamp_off_b = vnt_time_stamp_off(priv,
+ 					priv->byTopCCKBasicRate);
+ 
++	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
 +
-+	mutex_lock(&ar->conf_mutex);
-+	ret = __ath10k_set_antenna(ar, tx_ant, rx_ant);
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
+ 	return le16_to_cpu(buf->duration_a);
+ }
+ 
+@@ -516,6 +535,8 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_usb_send_context *tx_context,
+ 	buf->time_stamp_off_b = vnt_time_stamp_off(priv,
+ 						priv->byTopCCKBasicRate);
+ 
++	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
 +
+ 	return le16_to_cpu(buf->duration_a);
+ }
+ 
+@@ -535,6 +556,8 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_usb_send_context *tx_context,
+ 
+ 	buf->time_stamp_off = vnt_time_stamp_off(priv, rate);
+ 
++	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
 +
- static int ath10k_start(struct ieee80211_hw *hw)
+ 	return le16_to_cpu(buf->duration);
+ }
+ 
+@@ -551,6 +574,8 @@ static u16 vnt_rxtx_datahead_ab(struct vnt_usb_send_context *tx_context,
+ 
+ 	buf->time_stamp_off = vnt_time_stamp_off(priv, rate);
+ 
++	tx_context->tx_hdr_size = vnt_mac_hdr_pos(tx_context, &buf->hdr);
++
+ 	return le16_to_cpu(buf->duration);
+ }
+ 
+@@ -979,7 +1004,7 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
+ 	u32 cbFCSlen = 4, cbMICHDR = 0;
+ 	int bNeedACK;
+ 	bool bRTS = false;
+-	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
++	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead;
+ 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+ 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
+ 		= {0xAA, 0xAA, 0x03, 0x00, 0x00, 0xF8};
+@@ -987,7 +1012,6 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
+ 	u32 cbHeaderLength = 0, uPadding = 0;
+ 	struct vnt_mic_hdr *pMICHDR;
+ 	u8 byFBOption = AUTO_FB_NONE, byFragType;
+-	u16 wTxBufSize;
+ 	u32 dwMICKey0, dwMICKey1, dwMIC_Priority;
+ 	u32 *pdwMIC_L, *pdwMIC_R;
+ 	int bSoftWEP = false;
+@@ -1106,58 +1130,6 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
+         pTxBufHead->wFIFOCtl |= (FIFOCTL_RTS | FIFOCTL_LRETRY);
+     }
+ 
+-    pbyTxBufferAddr = (u8 *) &(pTxBufHead->adwTxKey[0]);
+-	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
+-
+-    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
+-        if (byFBOption == AUTO_FB_NONE) {
+-            if (bRTS == true) {//RTS_need
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
+-			cbMICHDR + sizeof(struct vnt_rts_g);
+-            }
+-            else { //RTS_needless
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-			cbMICHDR + sizeof(struct vnt_cts);
+-            }
+-        } else {
+-            // Auto Fall Back
+-            if (bRTS == true) {//RTS_need
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
+-			cbMICHDR + sizeof(struct vnt_rts_g_fb);
+-            }
+-            else if (bRTS == false) { //RTS_needless
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-				cbMICHDR + sizeof(struct vnt_cts_fb);
+-            }
+-        } // Auto Fall Back
+-    }
+-    else {//802.11a/b packet
+-        if (byFBOption == AUTO_FB_NONE) {
+-            if (bRTS == true) {//RTS_need
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-			cbMICHDR + sizeof(struct vnt_rts_ab);
+-            }
+-            else if (bRTS == false) { //RTS_needless, no MICHDR
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-				cbMICHDR + sizeof(struct vnt_tx_datahead_ab);
+-            }
+-        } else {
+-            // Auto Fall Back
+-            if (bRTS == true) {//RTS_need
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-			cbMICHDR + sizeof(struct vnt_rts_a_fb);
+-            }
+-            else if (bRTS == false) { //RTS_needless
+-		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-			cbMICHDR + sizeof(struct vnt_tx_datahead_a_fb);
+-            }
+-        } // Auto Fall Back
+-    }
+-
+-    pbyMacHdr = (u8 *)(pbyTxBufferAddr + cbHeaderLength);
+-    pbyIVHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding);
+-    pbyPayloadHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding + cbIVlen);
+-
+     //=========================
+     //    No Fragmentation
+     //=========================
+@@ -1170,9 +1142,17 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
+ 			tx_buffer, &pMICHDR, cbMICHDR,
+ 			cbFrameSize, bNeedACK, psEthHeader, bRTS);
+ 
+-    // Generate TX MAC Header
+-    s_vGenerateMACHeader(pDevice, pbyMacHdr, (u16)uDuration, psEthHeader, bNeedEncryption,
+-		byFragType, 0);
++	cbHeaderLength = tx_context->tx_hdr_size;
++	if (!cbHeaderLength)
++		return false;
++
++	pbyMacHdr = (u8 *)tx_context->hdr;
++	pbyIVHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding);
++	pbyPayloadHead = (u8 *)(pbyMacHdr + cbMACHdLen + uPadding + cbIVlen);
++
++	/* Generate TX MAC Header */
++	s_vGenerateMACHeader(pDevice, tx_context->hdr, (u16)uDuration,
++		psEthHeader, bNeedEncryption, byFragType, 0);
+ 
+     if (bNeedEncryption == true) {
+         //Fill TXKEY
+@@ -1298,10 +1278,10 @@ static int s_bPacketToWirelessUsb(struct vnt_usb_send_context *tx_context,
+ -*/
+ 
+ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
+-	u8 *pbyBufferAddr, u16 wDuration, struct ethhdr *psEthHeader,
+-	int bNeedEncrypt, u16 wFragType, u32 uFragIdx)
++	struct ieee80211_hdr *pMACHeader, u16 wDuration,
++	struct ethhdr *psEthHeader, int bNeedEncrypt, u16 wFragType,
++	u32 uFragIdx)
  {
- 	struct ath10k *ar = hw->priv;
-@@ -2530,6 +2585,10 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	if (ret)
- 		ath10k_warn("failed to enable dynamic BW: %d\n", ret);
+-	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyBufferAddr;
  
-+	if (ar->cfg_tx_chainmask)
-+		__ath10k_set_antenna(ar, ar->cfg_tx_chainmask,
-+				     ar->cfg_rx_chainmask);
-+
- 	/*
- 	 * By default FW set ARP frames ac to voice (6). In that case ARP
- 	 * exchange is not working properly for UAPSD enabled AP. ARP requests
-@@ -4437,6 +4496,8 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.set_frag_threshold		= ath10k_set_frag_threshold,
- 	.flush				= ath10k_flush,
- 	.tx_last_beacon			= ath10k_tx_last_beacon,
-+	.set_antenna			= ath10k_set_antenna,
-+	.get_antenna			= ath10k_get_antenna,
- 	.restart_complete		= ath10k_restart_complete,
- 	.get_survey			= ath10k_get_survey,
- 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
-@@ -4818,6 +4879,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_AP);
+ 	pMACHeader->frame_control = TYPE_802_11_DATA;
  
-+	ar->hw->wiphy->available_antennas_rx = ar->supp_rx_chainmask;
-+	ar->hw->wiphy->available_antennas_tx = ar->supp_tx_chainmask;
+@@ -1516,16 +1496,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+     }
+     //the rest of pTxBufHead->wFragCtl:FragTyp will be set later in s_vFillFragParameter()
+ 
+-    //Set RrvTime/RTS/CTS Buffer
+-    if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
+-	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-		sizeof(struct vnt_cts);
+-    }
+-    else { // 802.11a/b packet
+-	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-		sizeof(struct vnt_tx_datahead_ab);
+-    }
+-
+     memcpy(&(sEthHeader.h_dest[0]),
+ 	   &(pPacket->p80211Header->sA3.abyAddr1[0]),
+ 	   ETH_ALEN);
+@@ -1542,7 +1512,13 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
+ 		pTX_Buffer, &pMICHDR, 0,
+ 		cbFrameSize, bNeedACK, &sEthHeader, false);
+ 
+-    pMACHeader = (struct ieee80211_hdr *) (pbyTxBufferAddr + cbHeaderSize);
++	cbHeaderSize = pContext->tx_hdr_size;
++	if (!cbHeaderSize) {
++		pContext->in_use = false;
++		return CMD_STATUS_RESOURCES;
++	}
 +
- 	if (!test_bit(ATH10K_FW_FEATURE_NO_P2P, ar->fw_features))
- 		ar->hw->wiphy->interface_modes |=
- 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 82a827e..d82b740 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2601,6 +2601,8 @@ static int ath10k_wmi_main_cmd_init(struct ath10k *ar)
- 	config.ast_skid_limit = __cpu_to_le32(TARGET_AST_SKID_LIMIT);
- 	config.tx_chain_mask = __cpu_to_le32(TARGET_TX_CHAIN_MASK);
- 	config.rx_chain_mask = __cpu_to_le32(TARGET_RX_CHAIN_MASK);
-+	ar->supp_tx_chainmask = TARGET_TX_CHAIN_MASK;
-+	ar->supp_rx_chainmask = TARGET_RX_CHAIN_MASK;
- 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
-@@ -2721,6 +2723,9 @@ static int ath10k_wmi_10x_cmd_init(struct ath10k *ar)
- 	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
- 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
- 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
-+	/* TODO:  Have to deal with 2x2 chips if/when the come out. */
-+	ar->supp_tx_chainmask = TARGET_10X_TX_CHAIN_MASK;
-+	ar->supp_rx_chainmask = TARGET_10X_RX_CHAIN_MASK;
- 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	pMACHeader = pContext->hdr;
+ 
+     cbReqCount = cbHeaderSize + cbMacHdLen + uPadding + cbIVlen + cbFrameBodySize;
+ 
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 6db3337..30e1437 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -81,6 +81,7 @@ struct vnt_tx_datahead_g {
+ 	__le16 duration_a;
+ 	__le16 time_stamp_off_b;
+ 	__le16 time_stamp_off_a;
++	struct ieee80211_hdr hdr;
+ } __packed;
+ 
+ struct vnt_tx_datahead_g_fb {
+@@ -92,12 +93,14 @@ struct vnt_tx_datahead_g_fb {
+ 	__le16 duration_a_f1;
+ 	__le16 time_stamp_off_b;
+ 	__le16 time_stamp_off_a;
++	struct ieee80211_hdr hdr;
+ } __packed;
+ 
+ struct vnt_tx_datahead_ab {
+ 	struct vnt_phy_field ab;
+ 	__le16 duration;
+ 	__le16 time_stamp_off;
++	struct ieee80211_hdr hdr;
+ } __packed;
+ 
+ struct vnt_tx_datahead_a_fb {
+@@ -106,6 +109,7 @@ struct vnt_tx_datahead_a_fb {
+ 	__le16 time_stamp_off;
+ 	__le16 duration_f0;
+ 	__le16 duration_f1;
++	struct ieee80211_hdr hdr;
+ } __packed;
+ 
+ /* RTS buffer header */
 -- 
-1.7.11.7
+1.9.1
 
