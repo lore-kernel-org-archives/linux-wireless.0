@@ -1,76 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34489 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751724AbaEUM0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2014 08:26:53 -0400
-Message-ID: <537C9B84.7000002@openwrt.org> (sfid-20140521_142707_893495_95081DB6)
-Date: Wed, 21 May 2014 14:26:44 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: Handle multiple keys while setting tx filters
-References: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com>
-In-Reply-To: <1400671759-30499-1-git-send-email-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:47259 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756507AbaEaNKb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2014 09:10:31 -0400
+Received: by mail-wi0-f182.google.com with SMTP id r20so2393733wiv.15
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 06:10:29 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>, kbuild@01.org
+Subject: [PATCH] staging: vt6656: Fix vnt_rf_table_download __builtin_memcpy() addr* too small (3 vs 64).
+Date: Sat, 31 May 2014 14:09:27 +0100
+Message-Id: <1401541767-2940-1-git-send-email-tvboxspy@gmail.com> (sfid-20140531_151034_921055_AEBC53F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-05-21 13:29, Rajkumar Manoharan wrote:
-> The keycache index is used to abort transmission for given station
-> when it goes to sleep state. But the commit "ath9k_hw: Abort transmission
-> for sleeping station" is not handling multi-key station. Fix that.
-> 
-> Cc: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
->  drivers/net/wireless/ath/ath9k/main.c  | 52 +++++++++++++++++++++++++++-------
->  2 files changed, 42 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 47d442a..89be123 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1494,6 +1498,19 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
->  	return 0;
->  }
->  
-> +static inline void ath9k_sta_set_tx_filter(struct ath_hw *ah,
-> +					   struct ath_node *an,
-> +					   bool set)
-I'd suggest dropping the 'inline' - just let the compiler figure out if
-it's worth inlining.
+Fix following errors
+drivers/staging/vt6656/rf.c:1060 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
+drivers/staging/vt6656/rf.c:1078 vnt_rf_table_download() error: __builtin_memcpy() 'addr3' too small (3 vs 64)
+drivers/staging/vt6656/rf.c:1094 vnt_rf_table_download() error: __builtin_memcpy() 'addr1' too small (3 vs 48)
+drivers/staging/vt6656/rf.c:1108 vnt_rf_table_download() error: __builtin_memcpy() 'addr2' too small (3 vs 64)
 
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
-> +		if (!an->key_idx[i])
-> +			continue;
-> +		ath9k_hw_set_tx_filter(ah, an->key_idx[i], set);
-> +	}
-> +}
-> +
->  static void ath9k_sta_notify(struct ieee80211_hw *hw,
->  			 struct ieee80211_vif *vif,
->  			 enum sta_notify_cmd cmd,
-> @@ -1610,11 +1626,25 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
->  				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
->  			ret = 0;
->  		}
-> +		if (an && key->hw_key_idx) {
-> +			for (i = 0; i < ARRAY_SIZE(an->key_idx); i++) {
-> +				if (an->key_idx[i])
-> +					continue;
-> +				an->key_idx[i] = key->hw_key_idx;
-I think this should be moved inside the ret >= 0 test.
-You also need to add a break here to avoid the WARN_ON below.
-Did you test this patch?
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: kbuild@01.org
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rf.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-> +			}
-> +			WARN_ON(i == ARRAY_SIZE(an->key_idx));
-> +		}
->  		break;
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 3f54ae3..131764f 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -1003,41 +1003,41 @@ void vnt_rf_table_download(struct vnt_private *priv)
+ 		length1 = CB_AL2230_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL_24G * 3;
+ 		length3 = CB_MAX_CHANNEL_24G * 3;
+-		addr1 = &al2230_init_table[0][0];
+-		addr2 = &al2230_channel_table0[0][0];
+-		addr3 = &al2230_channel_table1[0][0];
++		addr1 = (u8 *)al2230_init_table;
++		addr2 = (u8 *)al2230_channel_table0;
++		addr3 = (u8 *)al2230_channel_table1;
+ 		break;
+ 	case RF_AIROHA7230:
+ 		length1 = CB_AL7230_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL * 3;
+ 		length3 = CB_MAX_CHANNEL * 3;
+-		addr1 = &al7230_init_table[0][0];
+-		addr2 = &al7230_channel_table0[0][0];
+-		addr3 = &al7230_channel_table1[0][0];
++		addr1 = (u8 *)al7230_init_table;
++		addr2 = (u8 *)al7230_channel_table0;
++		addr3 = (u8 *)al7230_channel_table1;
+ 		break;
+ 	case RF_VT3226:
+ 		length1 = CB_VT3226_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL_24G * 3;
+ 		length3 = CB_MAX_CHANNEL_24G * 3;
+-		addr1 = &vt3226_init_table[0][0];
+-		addr2 = &vt3226_channel_table0[0][0];
+-		addr3 = &vt3226_channel_table1[0][0];
++		addr1 = (u8 *)vt3226_init_table;
++		addr2 = (u8 *)vt3226_channel_table0;
++		addr3 = (u8 *)vt3226_channel_table1;
+ 		break;
+ 	case RF_VT3226D0:
+ 		length1 = CB_VT3226_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL_24G * 3;
+ 		length3 = CB_MAX_CHANNEL_24G * 3;
+-		addr1 = &vt3226d0_init_table[0][0];
+-		addr2 = &vt3226_channel_table0[0][0];
+-		addr3 = &vt3226_channel_table1[0][0];
++		addr1 = (u8 *)vt3226d0_init_table;
++		addr2 = (u8 *)vt3226_channel_table0;
++		addr3 = (u8 *)vt3226_channel_table1;
+ 		break;
+ 	case RF_VT3342A0:
+ 		length1 = CB_VT3342_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL * 3;
+ 		length3 = CB_MAX_CHANNEL * 3;
+-		addr1 = &vt3342a0_init_table[0][0];
+-		addr2 = &vt3342_channel_table0[0][0];
+-		addr3 = &vt3342_channel_table1[0][0];
++		addr1 = (u8 *)vt3342a0_init_table;
++		addr2 = (u8 *)vt3342_channel_table0;
++		addr3 = (u8 *)vt3342_channel_table1;
+ 		break;
+ 	}
+ 
+@@ -1086,8 +1086,8 @@ void vnt_rf_table_download(struct vnt_private *priv)
+ 	if (priv->byRFType == RF_AIROHA7230) {
+ 		length1 = CB_AL7230_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL * 3;
+-		addr1 = &(al7230_init_table_amode[0][0]);
+-		addr2 = &(al7230_channel_table2[0][0]);
++		addr1 = (u8 *)al7230_init_table_amode;
++		addr2 = (u8 *)al7230_channel_table2;
+ 
+ 		memcpy(array, addr1, length1);
+ 
+-- 
+1.9.1
 
