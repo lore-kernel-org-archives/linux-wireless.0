@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:51560 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626AbaEOItO (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:58345 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155AbaEaQaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2014 04:49:14 -0400
-Received: by mail-ee0-f53.google.com with SMTP id c13so400730eek.26
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2014 01:49:13 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/5] ath10k: protect wep tx key setup
-Date: Thu, 15 May 2014 10:42:03 +0200
-Message-Id: <1400143324-14911-5-git-send-email-michal.kazior@tieto.com> (sfid-20140515_104933_799497_9BD0B97A)
-In-Reply-To: <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
-References: <1399637749-13489-1-git-send-email-michal.kazior@tieto.com>
- <1400143324-14911-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 31 May 2014 12:30:13 -0400
+Received: by mail-we0-f171.google.com with SMTP id w62so3349730wes.16
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 09:30:12 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH 1/3] rtl818x_pci: make RSSI code more readable
+Date: Sat, 31 May 2014 18:29:46 +0200
+Message-Id: <1401553786-7603-1-git-send-email-andrea.merello@gmail.com> (sfid-20140531_183024_257678_086DBC45)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All configuration sequences should be protected
-with conf_mutex to avoid concurrent/conflicting
-requests.
+remove the if-else chains and use switch-case to make code more
+readable and avoiding long lines that broke in several lines
 
-This should make sure that wep tx key setup is not
-performed while hw is restarted (at least).
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
-v2:
- * skip wep update if state != ON [Kalle]
- * add empty space before goto label [Kalle]
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath/ath10k/mac.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 577a3a5..e474eca 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1888,8 +1888,13 @@ static void ath10k_tx_wep_key_work(struct work_struct *work)
- 						wep_key_work);
- 	int ret, keyidx = arvif->def_wep_key_newidx;
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 2c1c02b..c2dd5e6 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -209,7 +209,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 	struct rtl8180_priv *priv = dev->priv;
+ 	struct rtl818x_rx_cmd_desc *cmd_desc;
+ 	unsigned int count = 32;
+-	u8 signal, agc, sq;
++	u8 agc, sq, signal = 1;
+ 	dma_addr_t mapping;
  
-+	mutex_lock(&arvif->ar->conf_mutex);
-+
-+	if (arvif->ar->state != ATH10K_STATE_ON)
-+		goto unlock;
-+
- 	if (arvif->def_wep_key_idx == keyidx)
--		return;
-+		goto unlock;
+ 	while (count--) {
+@@ -266,18 +266,21 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
+ 			agc = (flags2 >> 17) & 0x7F;
  
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d set keyidx %d\n",
- 		   arvif->vdev_id, keyidx);
-@@ -1902,10 +1907,13 @@ static void ath10k_tx_wep_key_work(struct work_struct *work)
- 		ath10k_warn("failed to update wep key index for vdev %d: %d\n",
- 			    arvif->vdev_id,
- 			    ret);
--		return;
-+		goto unlock;
- 	}
- 
- 	arvif->def_wep_key_idx = keyidx;
-+
-+unlock:
-+	mutex_unlock(&arvif->ar->conf_mutex);
- }
- 
- static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+-			if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185) {
++			switch (priv->chip_family) {
++			case RTL818X_CHIP_FAMILY_RTL8185:
+ 				if (rx_status.rate_idx > 3)
+ 					signal = 90 - clamp_t(u8, agc, 25, 90);
+ 				else
+ 					signal = 95 - clamp_t(u8, agc, 30, 95);
+-			} else if (priv->chip_family ==
+-				   RTL818X_CHIP_FAMILY_RTL8180) {
++				break;
++			case RTL818X_CHIP_FAMILY_RTL8180:
+ 				sq = flags2 & 0xff;
+ 				signal = priv->rf->calc_rssi(agc, sq);
+-			} else {
++				break;
++			case RTL818X_CHIP_FAMILY_RTL8187SE:
+ 				/* TODO: rtl8187se rssi */
+ 				signal = 10;
++				break;
+ 			}
+ 			rx_status.signal = signal;
+ 			rx_status.freq = dev->conf.chandef.chan->center_freq;
 -- 
-1.8.5.3
+1.9.1
 
