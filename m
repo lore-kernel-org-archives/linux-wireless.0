@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2740 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751509AbaEZHsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2014 03:48:50 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, linux-arm-kernel@lists.infradead.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 00/11] sdio wifi oob irq support for sunxi
-Date: Mon, 26 May 2014 09:47:55 +0200
-Message-Id: <1401090486-4414-1-git-send-email-hdegoede@redhat.com> (sfid-20140526_094907_778211_98128196)
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:48284 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbaEaSuI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2014 14:50:08 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so3442077wgh.16
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:50:06 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 5/9] b43: b43_op_config: set channel info before switching band
+Date: Sat, 31 May 2014 20:49:37 +0200
+Message-Id: <1401562181-14608-6-git-send-email-zajec5@gmail.com> (sfid-20140531_205015_467096_B71E1B00)
+In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Band switching code needs to know what channel we switch to.
 
-Here is a patch series adding support for oob irqs for the ap6210 sdio wifi
-modules found on various Allwinner A20 boards.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c       | 3 ++-
+ drivers/net/wireless/b43/phy_common.c | 1 -
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-A lot of it is ground work which should be useful for adding oob irq support
-to other sdio wifi models too.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 59aa4fd..5e4eed3 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3808,6 +3808,7 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	b43_mac_suspend(dev);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		phy->channel = conf->chandef.chan->hw_value;
+ 		if (conf_is_ht(conf))
+ 			phy->is_40mhz = conf_is_ht40_minus(conf) ||
+ 					conf_is_ht40_plus(conf);
+@@ -3822,7 +3823,7 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		/* Switch to the requested channel.
+ 		 * The firmware takes care of races with the TX handler.
+ 		 */
+-		b43_switch_channel(dev, conf->chandef.chan->hw_value);
++		b43_switch_channel(dev, phy->channel);
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 3bfb795..b465011 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -424,7 +424,6 @@ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
+ 	if (err)
+ 		goto err_restore_cookie;
+ 
+-	dev->phy.channel = new_channel;
+ 	/* Wait for the radio to tune to the channel and stabilize. */
+ 	msleep(8);
+ 
+-- 
+1.8.4.5
 
-The first 5 patches are sunxi pinctrl patches and should go upstream through
-the pinctrl tree.
-
-Patch 6 adds generic support for having per sdio function child nodes in
-devicetree and should go upstream through the mmc tree.
-
-Patch 7 and 8 add oob irq support to the brcmfmac driver. Patch 9 pokes some
-magic bits needed to enable the oob irq, this was taken from an android code
-dump and good do with a good review from someone from Broadcom, Arend ?
-
-Patch 10 and 11 add the necessary dts bits to actually enable the sdio irq
-and should go upstream through Maxime's dt tree.
-
-Please review / merge.
-
-Thanks & Regards,
-
-Hans
