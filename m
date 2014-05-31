@@ -1,110 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:44094 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755370AbaEGNHN (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:51977 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547AbaEaKva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 09:07:13 -0400
-Received: by mail-ee0-f44.google.com with SMTP id c41so719835eek.31
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2014 06:07:12 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, apenwarr@gmail.com,
-	greearb@candelatech.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: fix htt rx ring clean up
-Date: Wed,  7 May 2014 14:33:25 +0200
-Message-Id: <1399466006-5556-2-git-send-email-michal.kazior@tieto.com> (sfid-20140507_150725_689216_3DB8CFCE)
-In-Reply-To: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
-References: <1399466006-5556-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 31 May 2014 06:51:30 -0400
+Received: by mail-wi0-f178.google.com with SMTP id cc10so2332659wib.17
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:28 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/14] staging: vt6656: rename MACvDisableKeyEntry to vnt_mac_disable_keyentry
+Date: Sat, 31 May 2014 11:50:39 +0100
+Message-Id: <1401533449-2972-4-git-send-email-tvboxspy@gmail.com> (sfid-20140531_125137_223123_ADE0ECDC)
+In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-msdu_payId was read before txrx tasklet was killed
-so it was possible to end up using an invalid
-sk_buff pointer leading to a panic.
-
-Make sure to sanitize rx ring sk_buff pointers and
-make the clean up go through all possible entries
-and not rely on coherent-DMA mapped u32 index
-which could be (in theory) corrupted by the device
-as well.
-
-Reported-By: Avery Pennarun <apenwarr@gmail.com>
-Reported-By: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 36 +++++++++++++++++++-------------
- 1 file changed, 21 insertions(+), 15 deletions(-)
+ drivers/staging/vt6656/iwctl.c    | 2 +-
+ drivers/staging/vt6656/key.c      | 1 -
+ drivers/staging/vt6656/mac.c      | 2 +-
+ drivers/staging/vt6656/mac.h      | 2 +-
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ drivers/staging/vt6656/wpactl.c   | 2 +-
+ 6 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f85a3cf..db6c8af 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -225,10 +225,26 @@ static void ath10k_htt_rx_ring_refill_retry(unsigned long arg)
- 	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index c43718d..b45af4a 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -1224,7 +1224,7 @@ int iwctl_siwencode(struct net_device *dev, struct iw_request_info *info,
+ 		pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+ 		if (pDevice->flags & DEVICE_FLAGS_OPENED) {
+ 			for (uu = 0; uu < MAX_KEY_TABLE; uu++)
+-				MACvDisableKeyEntry(pDevice, uu);
++				vnt_mac_disable_keyentry(pDevice, uu);
+ 		}
+ 	}
+ 	if (wrq->flags & IW_ENCODE_RESTRICTED) {
+diff --git a/drivers/staging/vt6656/key.c b/drivers/staging/vt6656/key.c
+index 38ea675..4b08654 100644
+--- a/drivers/staging/vt6656/key.c
++++ b/drivers/staging/vt6656/key.c
+@@ -64,7 +64,6 @@ static void s_vCheckKeyTableValid(struct vnt_private *pDevice,
+             pTable->KeyTable[i].wKeyCtl = 0;
+             pTable->KeyTable[i].bSoftWEP = false;
+             pbyData[wLength++] = (u8) i;
+-            //MACvDisableKeyEntry(pDevice, i);
+         }
+     }
  
--void ath10k_htt_rx_detach(struct ath10k_htt *htt)
-+static void ath10k_htt_rx_ring_clean_up(struct ath10k_htt *htt)
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 136c263..fe6b4ac 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -99,7 +99,7 @@ void vnt_mac_set_bb_type(struct vnt_private *priv, u8 type)
+  * Return Value: none
+  *
+  */
+-void MACvDisableKeyEntry(struct vnt_private *priv, u8 entry_idx)
++void vnt_mac_disable_keyentry(struct vnt_private *priv, u8 entry_idx)
  {
--	int sw_rd_idx = htt->rx_ring.sw_rd_idx.msdu_payld;
-+	struct sk_buff *skb;
-+	int i;
-+
-+	for (i = 0; i < htt->rx_ring.size; i++) {
-+		skb = htt->rx_ring.netbufs_ring[i];
-+		if (!skb)
-+			continue;
-+
-+		dma_unmap_single(htt->ar->dev, ATH10K_SKB_CB(skb)->paddr,
-+				 skb->len + skb_tailroom(skb),
-+				 DMA_FROM_DEVICE);
-+		dev_kfree_skb_any(skb);
-+		htt->rx_ring.netbufs_ring[i] = NULL;
-+	}
-+}
+ 	vnt_control_out(priv, MESSAGE_TYPE_CLRKEYENTRY, 0, 0,
+ 		sizeof(entry_idx), &entry_idx);
+diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
+index ac3d794..a808794 100644
+--- a/drivers/staging/vt6656/mac.h
++++ b/drivers/staging/vt6656/mac.h
+@@ -417,7 +417,7 @@ struct vnt_mac_set_key {
+ void vnt_mac_set_filter(struct vnt_private *, u64);
+ void vnt_mac_shutdown(struct vnt_private *);
+ void vnt_mac_set_bb_type(struct vnt_private *, u8);
+-void MACvDisableKeyEntry(struct vnt_private *, u8);
++void vnt_mac_disable_keyentry(struct vnt_private *, u8);
+ void MACvSetKeyEntry(struct vnt_private *, u16, u32, u32, u8 *, u8 *);
+ void MACvRegBitsOff(struct vnt_private *, u8, u8);
+ void MACvRegBitsOn(struct vnt_private *, u8, u8);
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 11738dc..fea667f 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1000,7 +1000,7 @@ static int device_close(struct net_device *dev)
+         pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
  
-+void ath10k_htt_rx_detach(struct ath10k_htt *htt)
-+{
- 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
- 	tasklet_kill(&htt->rx_replenish_task);
- 	tasklet_kill(&htt->txrx_compl_task);
-@@ -236,18 +252,7 @@ void ath10k_htt_rx_detach(struct ath10k_htt *htt)
- 	skb_queue_purge(&htt->tx_compl_q);
- 	skb_queue_purge(&htt->rx_compl_q);
+ 	for (uu = 0; uu < MAX_KEY_TABLE; uu++)
+-                MACvDisableKeyEntry(pDevice,uu);
++		vnt_mac_disable_keyentry(pDevice, uu);
  
--	while (sw_rd_idx != __le32_to_cpu(*(htt->rx_ring.alloc_idx.vaddr))) {
--		struct sk_buff *skb =
--				htt->rx_ring.netbufs_ring[sw_rd_idx];
--		struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
--
--		dma_unmap_single(htt->ar->dev, cb->paddr,
--				 skb->len + skb_tailroom(skb),
--				 DMA_FROM_DEVICE);
--		dev_kfree_skb_any(htt->rx_ring.netbufs_ring[sw_rd_idx]);
--		sw_rd_idx++;
--		sw_rd_idx &= htt->rx_ring.size_mask;
--	}
-+	ath10k_htt_rx_ring_clean_up(htt);
- 
- 	dma_free_coherent(htt->ar->dev,
- 			  (htt->rx_ring.size *
-@@ -277,6 +282,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
- 
- 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
- 	msdu = htt->rx_ring.netbufs_ring[idx];
-+	htt->rx_ring.netbufs_ring[idx] = NULL;
- 
- 	idx++;
- 	idx &= htt->rx_ring.size_mask;
-@@ -494,7 +500,7 @@ int ath10k_htt_rx_attach(struct ath10k_htt *htt)
- 	htt->rx_ring.fill_level = ath10k_htt_rx_ring_fill_level(htt);
- 
- 	htt->rx_ring.netbufs_ring =
--		kmalloc(htt->rx_ring.size * sizeof(struct sk_buff *),
-+		kzalloc(htt->rx_ring.size * sizeof(struct sk_buff *),
- 			GFP_KERNEL);
- 	if (!htt->rx_ring.netbufs_ring)
- 		goto err_netbuf;
+ 	if ((pDevice->flags & DEVICE_FLAGS_UNPLUG) == false)
+ 		vnt_mac_shutdown(pDevice);
+diff --git a/drivers/staging/vt6656/wpactl.c b/drivers/staging/vt6656/wpactl.c
+index 0a06715..2b508be 100644
+--- a/drivers/staging/vt6656/wpactl.c
++++ b/drivers/staging/vt6656/wpactl.c
+@@ -80,7 +80,7 @@ int wpa_set_keys(struct vnt_private *pDevice, void *ctx)
+ 		pDevice->byKeyIndex = 0;
+ 		pDevice->bTransmitKey = false;
+ 		for (uu=0; uu<MAX_KEY_TABLE; uu++) {
+-			MACvDisableKeyEntry(pDevice, uu);
++			vnt_mac_disable_keyentry(pDevice, uu);
+ 		}
+ 		return ret;
+ 	}
 -- 
-1.8.5.3
+1.9.1
 
