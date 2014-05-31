@@ -1,62 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39911 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbaE0PaT (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:35151 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932171AbaEaKvl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2014 11:30:19 -0400
-Date: Tue, 27 May 2014 11:26:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [PATCH 00/11] sdio wifi oob irq support for sunxi
-Message-ID: <20140527152614.GB5694@tuxdriver.com> (sfid-20140527_173024_376431_697BB987)
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
+	Sat, 31 May 2014 06:51:41 -0400
+Received: by mail-wg0-f44.google.com with SMTP id a1so3026984wgh.15
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 03:51:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/14] staging: vt6656: rename MACvDisableProtectMD to vnt_mac_disable_protect_mode
+Date: Sat, 31 May 2014 11:50:46 +0100
+Message-Id: <1401533449-2972-11-git-send-email-tvboxspy@gmail.com> (sfid-20140531_132147_675496_29AB24E2)
+In-Reply-To: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
+References: <1401533449-2972-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 09:47:55AM +0200, Hans de Goede wrote:
-> Hi All,
-> 
-> Here is a patch series adding support for oob irqs for the ap6210 sdio wifi
-> modules found on various Allwinner A20 boards.
-> 
-> A lot of it is ground work which should be useful for adding oob irq support
-> to other sdio wifi models too.
-> 
-> The first 5 patches are sunxi pinctrl patches and should go upstream through
-> the pinctrl tree.
-> 
-> Patch 6 adds generic support for having per sdio function child nodes in
-> devicetree and should go upstream through the mmc tree.
-> 
-> Patch 7 and 8 add oob irq support to the brcmfmac driver. Patch 9 pokes some
-> magic bits needed to enable the oob irq, this was taken from an android code
-> dump and good do with a good review from someone from Broadcom, Arend ?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/bssdb.c | 2 +-
+ drivers/staging/vt6656/mac.c   | 2 +-
+ drivers/staging/vt6656/mac.h   | 2 +-
+ drivers/staging/vt6656/wmgr.c  | 8 ++++----
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-If Arend approves, I'm fine with these going through another appropriate tree.
-
-> Patch 10 and 11 add the necessary dts bits to actually enable the sdio irq
-> and should go upstream through Maxime's dt tree.
-> 
-> Please review / merge.
-> 
-> Thanks & Regards,
-> 
-> Hans
-> 
-
+diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+index e335a4d..093b583 100644
+--- a/drivers/staging/vt6656/bssdb.c
++++ b/drivers/staging/vt6656/bssdb.c
+@@ -950,7 +950,7 @@ void BSSvSecondCallBack(struct work_struct *work)
+ 				pDevice->bProtectMode = true;
+ 			}
+ 		} else if (pDevice->bProtectMode) {
+-			MACvDisableProtectMD(pDevice);
++			vnt_mac_disable_protect_mode(pDevice);
+ 			pDevice->bProtectMode = false;
+ 		}
+ 		/* on/off short slot time */
+diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
+index 1319b8a..96fff70 100644
+--- a/drivers/staging/vt6656/mac.c
++++ b/drivers/staging/vt6656/mac.c
+@@ -197,7 +197,7 @@ void vnt_mac_enable_protect_mode(struct vnt_private *priv)
+ 		MAC_REG_ENCFG0, MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
+ }
+ 
+-void MACvDisableProtectMD(struct vnt_private *priv)
++void vnt_mac_disable_protect_mode(struct vnt_private *priv)
+ {
+ 	u8 data[2];
+ 
+diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
+index fa3cfc2..effab75 100644
+--- a/drivers/staging/vt6656/mac.h
++++ b/drivers/staging/vt6656/mac.h
+@@ -424,7 +424,7 @@ void vnt_mac_reg_bits_on(struct vnt_private *, u8, u8);
+ void vnt_mac_write_word(struct vnt_private *, u8, u16);
+ void vnt_mac_set_bssid_addr(struct vnt_private *, u8 *);
+ void vnt_mac_enable_protect_mode(struct vnt_private *);
+-void MACvDisableProtectMD(struct vnt_private *);
++void vnt_mac_disable_protect_mode(struct vnt_private *);
+ void MACvEnableBarkerPreambleMd(struct vnt_private *);
+ void MACvDisableBarkerPreambleMd(struct vnt_private *);
+ void MACvWriteBeaconInterval(struct vnt_private *, u16);
+diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
+index bb1242c..f35fdd8 100644
+--- a/drivers/staging/vt6656/wmgr.c
++++ b/drivers/staging/vt6656/wmgr.c
+@@ -1657,7 +1657,7 @@ if(ChannelExceedZoneType(pDevice,byCurrChannel)==true)
+                         if (pDevice->bProtectMode) {
+ 			    vnt_mac_enable_protect_mode(pDevice);
+                         } else {
+-                            MACvDisableProtectMD(pDevice);
++			    vnt_mac_disable_protect_mode(pDevice);
+                         }
+ 			vnt_update_ifs(pDevice);
+                     }
+@@ -2031,7 +2031,7 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+ 
+     // Disable Protect Mode
+     pDevice->bProtectMode = 0;
+-    MACvDisableProtectMD(pDevice);
++    vnt_mac_disable_protect_mode(pDevice);
+ 
+     pDevice->bBarkerPreambleMd = 0;
+     MACvDisableBarkerPreambleMd(pDevice);
+@@ -2389,7 +2389,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
+                     if (pDevice->bProtectMode) {
+ 			vnt_mac_enable_protect_mode(pDevice);
+                     } else {
+-                        MACvDisableProtectMD(pDevice);
++			vnt_mac_disable_protect_mode(pDevice);
+                     }
+ 		    vnt_update_ifs(pDevice);
+                 }
+@@ -2565,7 +2565,7 @@ static void s_vMgrSynchBSS(struct vnt_private *pDevice, u32 uBSSMode,
+ 
+     // Init the BSS informations
+     pDevice->bProtectMode = false;
+-    MACvDisableProtectMD(pDevice);
++    vnt_mac_disable_protect_mode(pDevice);
+     pDevice->bBarkerPreambleMd = false;
+     MACvDisableBarkerPreambleMd(pDevice);
+     pDevice->bNonERPPresent = false;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
