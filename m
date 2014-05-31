@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:42588 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbaEGUBk (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:53050 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791AbaEaSt7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2014 16:01:40 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 5/5] iwlwifi: pcie: disable interrupts upon PCIe alloc
-Date: Wed,  7 May 2014 23:01:24 +0300
-Message-Id: <1399492884-13508-5-git-send-email-egrumbach@gmail.com> (sfid-20140507_220146_764383_ECBDE55E)
-In-Reply-To: <536A90BD.8010204@gmail.com>
-References: <536A90BD.8010204@gmail.com>
+	Sat, 31 May 2014 14:49:59 -0400
+Received: by mail-wi0-f176.google.com with SMTP id n15so2614086wiw.15
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 11:49:57 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/9] b43: drop B43_DEFAULT_CHANNEL
+Date: Sat, 31 May 2014 20:49:33 +0200
+Message-Id: <1401562181-14608-2-git-send-email-zajec5@gmail.com> (sfid-20140531_205008_913198_1BDDE12A)
+In-Reply-To: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+References: <1401562181-14608-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+It was never used, b43_switch_channel is always called with hw_value
+(from mac80211) or whatever get_default_chan returns.
 
-In case RFKILL is in KILL position, the NIC will issue an
-interrupt straight away. This interrupt won't be sent
-because it is masked in the hardware.
-But if our interrupt service routine is called for another
-reason (SHARED_IRQ), then we'll look at the interrupt cause
-and service it. This can cause bad things if we are not
-ready yet.
-Explicitly clean the interrupt cause register to make sure
-we won't service anything before we are ready to.
-
-Cc: <stable@vger.kernel.org> [3.14]
-Reported-and-tested-by: Alexander Monakov <amonakov@gmail.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/b43/phy_common.c | 3 ---
+ drivers/net/wireless/b43/phy_common.h | 4 ----
+ 2 files changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index dcfd6d8..2365553 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1749,6 +1749,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	 * PCI Tx retries from interfering with C3 CPU state */
- 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 08244b3..ac4cf2b 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -408,9 +408,6 @@ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
+ 	u16 channelcookie, savedcookie;
+ 	int err;
  
-+	trans->dev = &pdev->dev;
-+	trans_pcie->pci_dev = pdev;
-+	iwl_disable_interrupts(trans);
-+
- 	err = pci_enable_msi(pdev);
- 	if (err) {
- 		dev_err(&pdev->dev, "pci_enable_msi failed(0X%x)\n", err);
-@@ -1760,8 +1764,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		}
- 	}
- 
--	trans->dev = &pdev->dev;
--	trans_pcie->pci_dev = pdev;
- 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
- 	snprintf(trans->hw_id_str, sizeof(trans->hw_id_str),
-@@ -1787,8 +1789,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		goto out_pci_disable_msi;
- 	}
- 
--	trans_pcie->inta_mask = CSR_INI_SET_MASK;
+-	if (new_channel == B43_DEFAULT_CHANNEL)
+-		new_channel = phy->ops->get_default_chan(dev);
 -
- 	if (iwl_pcie_alloc_ict(trans))
- 		goto out_free_cmd_pool;
+ 	/* First we set the channel radio code to prevent the
+ 	 * firmware from sending ghost packets.
+ 	 */
+diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+index 4ad6240..9a92df4 100644
+--- a/drivers/net/wireless/b43/phy_common.h
++++ b/drivers/net/wireless/b43/phy_common.h
+@@ -400,10 +400,6 @@ void b43_phy_take_out_of_reset(struct b43_wldev *dev);
+  * b43_switch_channel - Switch to another channel
+  */
+ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel);
+-/**
+- * B43_DEFAULT_CHANNEL - Switch to the default channel.
+- */
+-#define B43_DEFAULT_CHANNEL	UINT_MAX
  
-@@ -1800,6 +1800,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		goto out_free_ict;
- 	}
- 
-+	trans_pcie->inta_mask = CSR_INI_SET_MASK;
-+
- 	return trans;
- 
- out_free_ict:
+ /**
+  * b43_software_rfkill - Turn the radio ON or OFF in software.
 -- 
-1.8.3.2
+1.8.4.5
 
