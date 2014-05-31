@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:62034 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278AbaEXNiK (ORCPT
+Received: from mail-ve0-f180.google.com ([209.85.128.180]:54978 "EHLO
+	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751514AbaEaQMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2014 09:38:10 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so5932465wgh.11
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2014 06:38:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/14] staging: vt6656: CARDbGetCurrentTSF remove camel case
-Date: Sat, 24 May 2014 14:37:02 +0100
-Message-Id: <1400938630-2850-6-git-send-email-tvboxspy@gmail.com> (sfid-20140524_153837_466067_A34A6786)
-In-Reply-To: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
-References: <1400938630-2850-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 31 May 2014 12:12:52 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/11 V2] cw1200: Remove useless return variables
+Date: Sat, 31 May 2014 13:12:26 -0300
+Message-Id: <1401552746-10615-1-git-send-email-peter.senna@gmail.com> (sfid-20140531_181320_847957_51CEB54C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pDevice -> priv
-pqwCurrTSF -> current_tsf
+This patch remove variables that are initialized with a constant,
+are never updated, and are only used as parameter of return.
+Return the constant instead of using a variable.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Verified by compilation only.
+
+The coccinelle script that find and fixes this issue is:
+// <smpl>
+@@
+type T;
+constant C;
+identifier ret;
+@@
+- T ret = C;
+... when != ret
+    when strict
+return
+- ret
++ C
+;
+// </smpl>
+
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+
 ---
- drivers/staging/vt6656/card.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Changes from V1:
+- Keep commented code instead of removing it
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 4b0b3ef..b904b20 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -615,17 +615,17 @@ void CARDvAdjustTSF(struct vnt_private *priv, u8 rx_rate,
-  *
-  * Parameters:
-  *  In:
-- *      pDevice         - The adapter to be read
-+ *	priv		- The adapter to be read
-  *  Out:
-- *      qwCurrTSF       - Current TSF counter
-+ *	current_tsf	- Current TSF counter
-  *
-  * Return Value: true if success; otherwise false
-  *
-  */
--bool CARDbGetCurrentTSF(struct vnt_private *pDevice, u64 *pqwCurrTSF)
-+bool CARDbGetCurrentTSF(struct vnt_private *priv, u64 *current_tsf)
+ drivers/net/wireless/cw1200/sta.c |   19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
+index cd0cad7..5b84664 100644
+--- a/drivers/net/wireless/cw1200/sta.c
++++ b/drivers/net/wireless/cw1200/sta.c
+@@ -2289,7 +2289,6 @@ static int cw1200_upload_null(struct cw1200_common *priv)
+ 
+ static int cw1200_upload_qosnull(struct cw1200_common *priv)
  {
+-	int ret = 0;
+ 	/* TODO:  This needs to be implemented
  
--	*pqwCurrTSF = pDevice->qwCurrTSF;
-+	*current_tsf = priv->qwCurrTSF;
+ 	struct wsm_template_frame frame = {
+@@ -2306,7 +2305,7 @@ static int cw1200_upload_qosnull(struct cw1200_common *priv)
+ 	dev_kfree_skb(frame.skb);
  
- 	return true;
+ 	*/
+-	return ret;
++	return 0;
  }
--- 
-1.9.1
-
+ 
+ static int cw1200_enable_beaconing(struct cw1200_common *priv,
