@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:46075 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174AbaEMRBI (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:39900 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030257AbaEaNPV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2014 13:01:08 -0400
-Received: by mail-la0-f52.google.com with SMTP id gl10so505750lab.25
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2014 10:01:07 -0700 (PDT)
+	Sat, 31 May 2014 09:15:21 -0400
+Received: by mail-oa0-f47.google.com with SMTP id i7so2999726oag.6
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 06:15:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
-References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
-	<alpine.DEB.2.02.1405130906520.29439@admin.chi.technicality.org>
-Date: Tue, 13 May 2014 20:01:07 +0300
-Message-ID: <CANUX_P3TaX_2BFg6qxjiFYLvUiaaFYqdxWbkCbymA0sGrWh4Gg@mail.gmail.com> (sfid-20140513_190113_495039_B28B3693)
-Subject: Re: [ANN] New firmware for Intel 7260 / 3160 - 22.212.9.0
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Nate Carlson <linux-wireless@natecarlson.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201405301818.13260@pali>
+References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
+	<201405092203.00729@pali>
+	<201405101428.45185@pali>
+	<201405301818.13260@pali>
+Date: Sat, 31 May 2014 16:15:20 +0300
+Message-ID: <CANOLnOPUrgcov5jaL-VaExk8db7P7O-RVBBm4BJq9rhBmEcjZw@mail.gmail.com> (sfid-20140531_151532_144475_AFF5BD33)
+Subject: Re: [PATCH 0/4] wl1251 IBSS fixes
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Machek <pavel@ucw.cz>,
+	David Gnedt <david.gnedt@davizone.at>, freemangordon@abv.bg
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 13, 2014 at 5:15 PM, Nate Carlson
-<linux-wireless@natecarlson.com> wrote:
-> On Mon, 28 Apr 2014, Emmanuel Grumbach wrote:
+On Fri, May 30, 2014 at 7:18 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
+> On Saturday 10 May 2014 14:28:45 Pali Rohár wrote:
+>> On Friday 09 May 2014 22:03:00 Pali Rohár wrote:
+>> > On Friday 09 May 2014 02:21:21 Grazvydas Ignotas wrote:
+>> > > On Tue, Apr 22, 2014 at 3:09 AM, Grazvydas Ignotas
+>> >
+>> > <notasas@gmail.com> wrote:
+>> > > > IBSS mode is currently advertised by wl1251 driver but
+>> > > > is totally broken. First there is a disconnect hack for
+>> > > > monitor mode that was recently merged, it abuses
+>> > > > mac80211 and causes corruption in IBSS mode, so I think
+>> > > > should be reverted. Then there are several cases of
+>> > > > station-only mac80211 functions called carelessly, what
+>> > > > is also fixed.
+>> > >
+>> > > Ping.
+>> > > This driver is orphan and hardware carrying it is
+>> > > outdated, so acks / tested-bys are unlikely..
+>> >
+>> > Now I'm testing these patches on wireless-testing git tree
+>> > from year 2010 compiled against patched maemo 2.6.28 kernel.
+>> >
+>> > Reason for using these historical wireless-testing version
+>> > is that this version can be compiled against kernel which
+>> > working with default Maemo system in Nokia N900.
+>> >
+>> > It looks like your patches fixed some kernel oops when
+>> > iwconfig changing mode to ad-hoc.
 >>
->> The firmwares are available at [1].
->> I will send a pull request to linux-firmware.git soon.
+>> Looks like everything working fine except power save mode. In
+>> dmesg I see only these message:
 >>
->> The new firmware's version number is 22.212.9.0:
+>> wl1251: ERROR Power save entry failed, giving up
 >>
->> $ dmesg | grep loaded\ firmware
->> loaded firmware version 22.212.9.0 op_mode iwlmvm
->>
->> [1] http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
+>> If you are OK with fact that I tested your patches with older
+>> kernel (not last upstream), you can add my Tested-by.
 >
->
-> Hi,
->
-> I've just noticed that the firmware, as downloaded from both your git tree
-> and from the wireless.kernel.org URL, reports that it is v23.214.9.0 --
->
->
-> $ dmesg | grep loaded\ firmware
-> [   16.628491] iwlwifi 0000:03:00.0: loaded firmware version 23.214.9.0
-> op_mode iwlmvm
->
-> md5sum of installed firmware when the driver was loaded and reported that:
-> $ md5sum /lib/firmware/iwlwifi-7260-9.ucode
-> 1005c3b82879ecfa0d60544a78de7f92  /lib/firmware/iwlwifi-7260-9.ucode
->
-> md5sum of the firmware from 'iwlwifi-7260-ucode-22.212.9.0.tgz':
-> $ md5sum iwlwifi-7260-ucode-22.212.9.0/iwlwifi-7260-9.ucode
-> 1005c3b82879ecfa0d60544a78de7f92
-> iwlwifi-7260-ucode-22.212.9.0/iwlwifi-7260-9.ucode
->
-So yeah  - the name of the directory / tarball isn't the same as the
-version reported here. Sorry for that. No impact though.
+> Grazvydas: PING
+
+Sure I'm ok, patches seem to be already queued with your Tested-bys:
+https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/log/?h=e5b02f649bb
+
+-- 
+Gražvydas
