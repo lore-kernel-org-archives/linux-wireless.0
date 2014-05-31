@@ -1,54 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13790 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751946AbaEVS5t (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:41129 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727AbaEaQbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2014 14:57:49 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 May 2014 11:57:40 -0700
-Subject: RE: [PATCH] mwifiex: use 'const' qualifier for 2nd arg of
- mwifiex_tdls_add_ht_oper
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70F5DAD1@SC-VEXCH1.marvell.com> (sfid-20140522_205756_150706_12A621FB)
-References: <1400783038-10174-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1400783038-10174-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Sat, 31 May 2014 12:31:11 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n15so2652038wiw.8
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 09:31:10 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [RFT] rtl818x_pci: add RSSI information for rtl8187SE
+Date: Sat, 31 May 2014 18:30:58 +0200
+Message-Id: <1401553858-7784-1-git-send-email-andrea.merello@gmail.com> (sfid-20140531_183126_632022_4CD23F62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9obiwNCg0KPiBGaXhlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmc6DQo+IA0KPiAgIENDICAg
-ICAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLm8NCj4gZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbXdpZmlleC90ZGxzLmM6IEluIGZ1bmN0aW9uIOKAmG13aWZpZXhfcHJlcF90ZGxzX2Vu
-Y2FwX2RhdGHigJk6DQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jOjQ3NTo0
-OiB3YXJuaW5nOiBwYXNzaW5nIGFyZ3VtZW50IDIgb2Yg4oCYbXdpZmlleF90ZGxzX2FkZF9odF9v
-cGVy4oCZDQo+IGRpc2NhcmRzIOKAmGNvbnN04oCZIHF1YWxpZmllciBmcm9tIHBvaW50ZXIgdGFy
-Z2V0IHR5cGUgW2VuYWJsZWQgYnkNCj4gZGVmYXVsdF0NCj4gICAgIHJldCA9IG13aWZpZXhfdGRs
-c19hZGRfaHRfb3Blcihwcml2LCBwZWVyLCAxLCBza2IpOw0KPiAgICAgXg0KPiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9td2lmaWV4L3RkbHMuYzoxOTA6MTogbm90ZTogZXhwZWN0ZWQg4oCYdTggKuKA
-mSBidXQgYXJndW1lbnQgaXMgb2YgdHlwZSDigJhjb25zdCB1OCAq4oCZDQo+ICBtd2lmaWV4X3Rk
-bHNfYWRkX2h0X29wZXIoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdTggKm1hYywNCj4g
-IF4NCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLmM6NDgxOjQ6IHdhcm5pbmc6
-IHBhc3NpbmcgYXJndW1lbnQgMiBvZiDigJhtd2lmaWV4X3RkbHNfYWRkX2h0X29wZXLigJkNCj4g
-ZGlzY2FyZHMg4oCYY29uc3TigJkgcXVhbGlmaWVyIGZyb20gcG9pbnRlciB0YXJnZXQgdHlwZSBb
-ZW5hYmxlZCBieQ0KPiBkZWZhdWx0XQ0KPiAgICAgcmV0ID0gbXdpZmlleF90ZGxzX2FkZF9odF9v
-cGVyKHByaXYsIHBlZXIsIDAsIHNrYik7DQo+ICAgICBeDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvdGRscy5jOjE5MDoxOiBub3RlOiBleHBlY3RlZCDigJh1OCAq4oCZIGJ1dCBhcmd1
-bWVudCBpcyBvZiB0eXBlIOKAmGNvbnN0IHU4ICrigJkNCj4gIG13aWZpZXhfdGRsc19hZGRfaHRf
-b3BlcihzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1OCAqbWFjLA0KPiAgXg0KPiANCj4g
-U2lnbmVkLW9mZi1ieTogSm9obiBXLiBMaW52aWxsZSA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4N
-Cg0KQWNrZWQtYnk6IEJpbmcgWmhhbyA8YnpoYW9AbWFydmVsbC5jb20+DQoNClJlZ2FyZHMsDQpC
-aW5nDQoNCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3RkbHMuYyB8IDIg
-Ky0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiAN
-Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC90ZGxzLmMNCj4gaW5kZXggZTE0ZmJiNWRlNDliLi5l
-NzMwMzRmYmJkZTkgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
-dGRscy5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdGRscy5jDQo+IEBA
-IC0xODcsNyArMTg3LDcgQEAgc3RhdGljIGludCBtd2lmaWV4X3RkbHNfYWRkX3ZodF9jYXBhYihz
-dHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAgfQ0KPiANCj4gIHN0YXRpYyBpbnQNCj4g
-LW13aWZpZXhfdGRsc19hZGRfaHRfb3BlcihzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1
-OCAqbWFjLA0KPiArbXdpZmlleF90ZGxzX2FkZF9odF9vcGVyKHN0cnVjdCBtd2lmaWV4X3ByaXZh
-dGUgKnByaXYsIGNvbnN0IHU4ICptYWMsDQo+ICAJCQkgdTggdmh0X2VuYWJsZWQsIHN0cnVjdCBz
-a19idWZmICpza2IpDQo+ICB7DQo+ICAJc3RydWN0IGllZWU4MDIxMV9odF9vcGVyYXRpb24gKmh0
-X29wZXI7DQo+IC0tDQo+IDEuOS4wDQoNCg==
+This patch makes the driver to report signal stength information
+to mac80211 for rtl8187se boards.
+
+My card has probably an HW problem, because it suffers of bad
+RX sensitivity (even on other OSes), so I could only test that
+the information is somewhat proportional to the signal RXed.
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 1e25929..b41267c 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -188,6 +188,9 @@ static const int rtl8187se_queues_map[RTL8187SE_NR_TX_QUEUES] = {5, 4, 3, 2, 7};
+
+ static const int rtl8180_queues_map[RTL8180_NR_TX_QUEUES] = {4, 7};
+
++/* LNA gain table for rtl8187se */
++static const u8 rtl8187se_lna_gain[4] = {02, 17, 29, 39};
++
+ void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+@@ -215,7 +218,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 	while (count--) {
+ 		void *entry = priv->rx_ring + priv->rx_idx * priv->rx_ring_sz;
+ 		struct sk_buff *skb = priv->rx_buf[priv->rx_idx];
+-		u32 flags, flags2;
++		u32 flags, flags2, flags3;
+ 		u64 tsft;
+
+ 		if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
+@@ -229,6 +232,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			 */
+ 			rmb();
+ 			flags2 = le32_to_cpu(desc->flags2);
++			flags3 = le32_to_cpu(desc->flags3);
+ 			tsft = le64_to_cpu(desc->tsft);
+ 		} else {
+ 			struct rtl8180_rx_desc *desc = entry;
+@@ -237,6 +241,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			/* same as above */
+ 			rmb();
+ 			flags2 = le32_to_cpu(desc->flags2);
++			flags3 = 0; /* not used. get rid of GCC warn */
+ 			tsft = le64_to_cpu(desc->tsft);
+ 		}
+
+@@ -275,6 +280,11 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			agc = (flags2 >> 17) & 0x7F;
+
+ 			switch (priv->chip_family) {
++			case RTL818X_CHIP_FAMILY_RTL8187SE:
++				/* bias + BB gain + LNA gain */
++				agc = -4 + (agc & 0x1F) * 2 +
++					rtl8187se_lna_gain[(agc & 0x60) >> 5];
++				/* fall through */
+ 			case RTL818X_CHIP_FAMILY_RTL8185:
+ 				if (rx_status.rate_idx > 3)
+ 					signal = -clamp_t(u8, agc, 25, 90) - 9;
+@@ -285,10 +295,6 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 				sq = flags2 & 0xff;
+ 				signal = priv->rf->calc_rssi(agc, sq);
+ 				break;
+-			case RTL818X_CHIP_FAMILY_RTL8187SE:
+-				/* TODO: rtl8187se rssi */
+-				signal = 10;
+-				break;
+ 			}
+ 			rx_status.signal = signal;
+ 			rx_status.freq = dev->conf.chandef.chan->center_freq;
+@@ -1819,7 +1825,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 		pci_try_set_mwi(pdev);
+ 	}
+
+-	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185)
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180)
+ 		dev->flags |= IEEE80211_HW_SIGNAL_DBM;
+ 	else
+ 		dev->flags |= IEEE80211_HW_SIGNAL_UNSPEC;
+--
+1.9.1
