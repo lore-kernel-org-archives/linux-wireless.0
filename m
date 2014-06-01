@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34546 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719AbaFYKn6 (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59475 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752251AbaFATGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 06:43:58 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so7723522wib.17
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:43:57 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v11 0/5] cfg/mac80211: implement multi-vif csa
-Date: Wed, 25 Jun 2014 12:35:05 +0200
-Message-Id: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com> (sfid-20140625_124401_856501_E69C72E9)
+	Sun, 1 Jun 2014 15:06:14 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n15so2025124lbi.5
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 12:06:12 -0700 (PDT)
+Message-ID: <538B79A3.1080104@cogentembedded.com> (sfid-20140601_210636_367991_2697AE81)
+Date: Sun, 01 Jun 2014 23:06:11 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Michael Braun <michael-dev@fami-braun.de>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+CC: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] rt2800usb:fix efuse detection
+References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de> <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de>
+In-Reply-To: <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello.
 
-The patchset implements multi-interface
-reservations and multi-interface channel
-switching.
+On 06/01/2014 09:52 PM, Michael Braun wrote:
 
-There are still some cases that aren't handled
-well (at least degradation of number of channels
-due to interface combinations that I'm aware of).
+> The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
+> load. One thing observed is that the vendors driver detects EFUSE mode
+> for this device, but rt2800usb does not. This is due to rt2800usb
+> lacking a check for the firmware mode present in the vendors driver,
+> that this patch adopts for rt2800usb.
 
+> With this patch applied, the 'RF chipset' detection does no longer fail.
 
-v11:
- * rebase to latest mac80211-next/master
-   (eb6a61549f530f1cc435512df3799f656094ba83)
- * lots of fixes (see notes in [1/5])
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> ---
+>   drivers/net/wireless/rt2x00/rt2800usb.c |   16 +++++++++++++++-
+>   1 file changed, 15 insertions(+), 1 deletion(-)
 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index a49c3d7..b601422 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -735,11 +735,25 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+>   /*
+>    * Device probe functions.
+>    */
+> +static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
+> +{
+> +	__le32 fwMode;
+> +
+> +	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
+> +				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
+> +				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
+> +
+> +	if ((fwMode & 0x00000003) == 2)
 
-Michal Kazior (5):
-  mac80211: implement multi-vif in-place reservations
-  mac80211: make check_combinations() aware of chanctx reservation
-  mac80211: use chanctx reservation for AP CSA
-  mac80211: use chanctx reservation for STA CSA
-  cfg80211: remove channel_switch combination check
+    Operating directly on '__le32'? That doesn't look right.
 
- include/net/cfg80211.h     |   7 +-
- include/net/mac80211.h     |   8 +-
- net/mac80211/cfg.c         |  82 +++--
- net/mac80211/chan.c        | 861 +++++++++++++++++++++++++++++++++++++--------
- net/mac80211/ieee80211_i.h |  31 +-
- net/mac80211/mlme.c        |  99 ++++--
- net/mac80211/util.c        |  44 ++-
- net/wireless/nl80211.c     |  11 -
- 8 files changed, 906 insertions(+), 237 deletions(-)
+> +		return 1;
+> +
+> +	return rt2800_efuse_detect(rt2x00dev);
+> +}
+> +
 
--- 
-1.8.5.3
+WBR, Sergei
 
