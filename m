@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f169.google.com ([209.85.220.169]:34083 "EHLO
-	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628AbaFBT5z (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:49585 "EHLO
+	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbaFAR7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 15:57:55 -0400
-Received: by mail-vc0-f169.google.com with SMTP id il7so2016804vcb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2014 12:57:55 -0700 (PDT)
+	Sun, 1 Jun 2014 13:59:42 -0400
+Subject: [PATCH 1/2] rt2800usb:fix efuse detection
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+From: Michael Braun <michael-dev@fami-braun.de>
+Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Date: Sun, 01 Jun 2014 19:52:47 +0200
+Message-ID: <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140601_200029_569806_7E84949D)
+In-Reply-To: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
+References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P0LV05kBRcjmfsJxFP6bSJ5Ge4Mr8ihzE_WD0nY9mxdAA@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
- <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
- <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
- <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com>
- <CALCETrVPXwedhPGtDJQDSK5Kxa4NpeSDck4-nHyox_xriPBcZQ@mail.gmail.com>
- <CALCETrW0NQ6aW06WD6ZAi8-o7fZSiKPOf0xYCSEw2egYBfqyQQ@mail.gmail.com>
- <CALCETrUTsKCw_G7V=YDeP-v_GF8cK8ezY-wqcpxeuw3dzBQhQg@mail.gmail.com>
- <CANUX_P2_GZGhd7X4Ntzi5Jeng52i9Jam22DQTTU2akESPL1ffQ@mail.gmail.com>
- <CALCETrWdQwvMcgC=PESyECzkyMD8-vzjNEHOCkm5z=ENH7coHg@mail.gmail.com>
- <CANUX_P2AKnUvUyddsGC5JST51bbjpavG3X-VbJhS1Mf7fDNPcw@mail.gmail.com>
- <CALCETrX8Km4dc-XM4Ga8T7spDJzN00jx162A3iuTo5+NWhGTZg@mail.gmail.com>
- <CALCETrUHX3XB2+j5=3ULd9zMpDUisj3ZtK5JVuVS8Dh6088TTw@mail.gmail.com>
- <538CC508.3070707@gmail.com> <CALCETrVrPt4uKNC43nNB08iMA=vK7pM0choHNdB3ctT7RQuepQ@mail.gmail.com>
- <538CC827.6090408@gmail.com> <CALCETrXkhfvOGTo_31k-d9wkMW782aoz3YsJmzS-ApTePJH=Kg@mail.gmail.com>
- <CANUX_P0LV05kBRcjmfsJxFP6bSJ5Ge4Mr8ihzE_WD0nY9mxdAA@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Mon, 2 Jun 2014 12:57:34 -0700
-Message-ID: <CALCETrXLcOoXp33-y+M4PQfL7nf9G_wpfTRJiD26vsqCYD-v2Q@mail.gmail.com> (sfid-20140602_215759_245668_6E1DC878)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 2, 2014 at 12:32 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>> Note that the CMD queue (9 or 4 depending on your configuration) - uses another mechanism that is safer but consumes more power. This queue is intended for commands and not for real Tx packets.
->>
->> If that's queue 4 in the debugfs tx_queues file, then I think that
->> that's the queue that keeps moving when the card is dead.  I'll see if
->> I can improve the tx_queues file to show pending updates.
->>
->> Yay troubleshooting old hardware.
->>
-> If you plan to spend some time hacking on the code, please take into
-> account this code has been changed in 3.14 (mostly cleanups by
-> Johannes and myself).
-> Also note that long ago, I disabled shadow registers (you'll see ifs
-> all over the code). Shadow registers makes the whole wakup thing much
-> easier since it is handled internally in the HW. BUT we had tons of
-> issues with it so we disabled it. Most of the issues should have gone
-> away with the cmd_in_flight thing. So I would recommend you to give it
-> a try with shadow register enabled. Just check the relevant iwl-XXXX.c
-> file.
+The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
+load. One thing observed is that the vendors driver detects EFUSE mode
+for this device, but rt2800usb does not. This is due to rt2800usb
+lacking a check for the firmware mode present in the vendors driver,
+that this patch adopts for rt2800usb.
 
-Will do.
+With this patch applied, the 'RF chipset' detection does no longer fail.
 
-FWIW, I looked at the cmd_in_flight thing and, unless there's a bunch
-of locking magic going on, it looks racy.  It seems like some code
-expects it to be protected by reg_lock, and other code expects it to
-be protected by txq_lock (and there are multiple txq->lock instances,
-I think).
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-Also, what stops the card from going to sleep while processing a
-wakeup interrupt?  For example, what prevents this chain of events?
-The only thing I can see is that the only thing that clears ACCESS_REQ
-is the rx interrupt processing, which happens after wakeup processing,
-but this seems rather fragile.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index a49c3d7..b601422 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -735,11 +735,25 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ /*
+  * Device probe functions.
+  */
++static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
++{
++	__le32 fwMode;
++
++	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
++				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
++				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
++
++	if ((fwMode & 0x00000003) == 2)
++		return 1;
++
++	return rt2800_efuse_detect(rt2x00dev);
++}
++
+ static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+ 
+-	if (rt2800_efuse_detect(rt2x00dev))
++	if (rt2800usb_efuse_detect(rt2x00dev))
+ 		retval = rt2800_read_eeprom_efuse(rt2x00dev);
+ 	else
+ 		retval = rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
 
---Andy
