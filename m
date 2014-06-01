@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50225 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbaFGPcu (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:56745 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbaFAMi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 11:32:50 -0400
-Message-ID: <539330A1.9050307@candelatech.com> (sfid-20140607_173254_049145_D415AA7E)
-Date: Sat, 07 Jun 2014 08:32:49 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>	<5390B632.7030305@candelatech.com>	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>	<5391E842.4010401@candelatech.com> <874mzwkher.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <874mzwkher.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 1 Jun 2014 08:38:27 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so3205831wib.17
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 05:38:26 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: libertas: cmd.c:  Cleaning up uninitialized variables
+Date: Sun,  1 Jun 2014 14:39:20 +0200
+Message-Id: <1401626360-15505-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_143831_357112_3E2AF54C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There is a risk that the variable will be used without being initialized.
 
+This was largely found by using a static code analysis program called cppcheck.
 
-On 06/07/2014 05:55 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 06/05/2014 11:10 PM, Kalle Valo wrote:
->>> Ben Greear <greearb@candelatech.com> writes:
->>>
->>>> I did not do this because I figure we will want ethtool support w/out
->>>> forcing debugfs to be enabled someday soon.
->>>
->>> When we add ethtool support, it's easy to move these back. And then we
->>> need to move the code out from debug.c anyway.
->>
->> Well, it seems like needless churn and makes it harder to follow
->> 'git blame' when you move big chunks around.
->
-> I don't care about 'git blame', the actual code is far more important to
-> me. If git blame is so important, someone else can improve 'git blame'
-> to detect moving code chunks.
->
->> We would not have to move the code out of debug.c, but if you do want
->> it moved, lets pick that place now and just put it there to begin
->> with.
->
-> Code in debug.c should have the data it owns in struct ath10k_debug.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/libertas/cmd.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Ok, I'll move the data structs to the debug logic for next version of the patch.
-
-
->>>> I'm a bit leery of adding spin-locks in the dump routine just for
->>>> this, but I can add and use a new spin-lock if you prefer.
->>>
->>> Why a new spinlock? I didn't review the locking requirements, but I
->>> would first check ar->data_lock can be used.
->>
->> I think it has to be a spin-lock because the crash dump is gathered
->> in the irq handler, so I can't use a mutex as far as I know...
->>
->> I'll work on adding such a lock today.
->
-> I asked why add a _new_ spinlock as ar->data_lock is already a spinlock.
-
-Surely we do not want to impede traffic flow just to dump debug info?
-
-And, it is easier to review a specific spinlock rather than use one big
-global-ish lock and have to review every use of that lock for issues.
-
-My -v2 had a new spinlock for this new debug data.  I'll move it into the
-debug struct with the other new data fields for next version.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index aaa2973..0387a5b 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1111,6 +1111,7 @@ int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on)
+ 
+ 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+ 	cmd.action = cpu_to_le16(CMD_ACT_SET);
++	cmd.control = 0;
+ 
+ 	/* Only v8 and below support setting the preamble */
+ 	if (priv->fwrelease < 0x09000000) {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
+
