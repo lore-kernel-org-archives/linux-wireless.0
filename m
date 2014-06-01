@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0078.hostedemail.com ([216.40.44.78]:40465 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S934489AbaFCQpu (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:59133 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756261AbaFAMnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 12:45:50 -0400
-Message-ID: <1401813944.18833.6.camel@joe-AO725> (sfid-20140603_184556_839015_8860277C)
-Subject: Re: [RFC 2/4] ath10k:  save firmware debug log messages.
-From: Joe Perches <joe@perches.com>
-To: greearb@candelatech.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Tue, 03 Jun 2014 09:45:44 -0700
-In-Reply-To: <1401812719-25061-2-git-send-email-greearb@candelatech.com>
-References: <1401812719-25061-1-git-send-email-greearb@candelatech.com>
-	 <1401812719-25061-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sun, 1 Jun 2014 08:43:20 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so3209109wib.17
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 05:43:19 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rt2x00: rt2x00mac.c:  Cleaning up uninitialized variables
+Date: Sun,  1 Jun 2014 14:44:13 +0200
+Message-Id: <1401626653-15842-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_144339_463058_6FB6B8C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-03 at 09:25 -0700, greearb@candelatech.com wrote:
-> They may be dumped through the firmware dump debugfs
-> file.
-[]
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-[]
-> @@ -1084,11 +1084,14 @@ static void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb)
->  
->  static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
->  {
-> +	u32 *m = (u32 *)(skb->data);
->  	ath10k_dbg(ATH10K_DBG_WMI, "wmi event debug mesg len %d\n",
->  		   skb->len);
->  
->  	trace_ath10k_wmi_dbglog(skb->data, skb->len);
->  
-> +	ath10k_dbg_save_fw_dbg_buffer(ar, (u8 *)(&(m[1])), skb->len - 4);
-> +
->  	return 0;
->  }
->  
+There is a risk that the variable will be used without being initialized.
 
-That last line looks an overly complicated way of writing
+This was largely found by using a static code analysis program called cppcheck.
 
-	ath10k_dbg_save_fw_dbg_buffer(ar, skb->data + 4, skb->len - 4);
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-btw: why skip the first 4 bytes?
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index a87ee9b..98f440a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -798,6 +798,8 @@ int rt2x00mac_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ 
+ 	setup.tx = tx_ant;
+ 	setup.rx = rx_ant;
++	setup.rx_chain_num = 0;
++	setup.tx_chain_num = 0;
+ 
+ 	rt2x00lib_config_antenna(rt2x00dev, setup);
+ 
+-- 
+1.7.10.4
 
