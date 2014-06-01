@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:35939 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbaFHBjZ (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:40585 "EHLO
+	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752147AbaFAR7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 21:39:25 -0400
-Received: by mail-wg0-f48.google.com with SMTP id n12so4147592wgh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:39:24 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Sun, 1 Jun 2014 13:59:42 -0400
+Subject: [PATCH 2/2] rt2800usb:fix hang during firmware load
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+From: Michael Braun <michael-dev@fami-braun.de>
+Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Peter Wu <lekensteyn@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sun,  8 Jun 2014 03:40:19 +0200
-Message-Id: <1402191619-25977-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140608_033945_779157_66168E4C)
+Date: Sun, 01 Jun 2014 19:52:52 +0200
+Message-ID: <20140601175252.7980.64143.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140601_200000_749624_A6D0FD14)
+In-Reply-To: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
+References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
+The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) boots into a state that does not actually require loading a firmware file.
+The vendors driver finds out about this by checking a firmware state
+register, so this patch adopts this here.
 
-After pointing this out, Larry Finger informed what would be the correct one.
-'(X & 0x3) == 0x3'
+Finally, with this patch applied, my wifi dongle actually becomes
+usefull (scan + connect to wpa network works).
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-index 2b08671..32e791e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1128,7 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_AP) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
--- 
-1.7.10.4
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index b601422..71bf101 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -240,6 +240,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	int status;
+ 	u32 offset;
+ 	u32 length;
++	__le32 fwMode;
+ 
+ 	/*
+ 	 * Check which section of the firmware we need.
+@@ -257,8 +258,17 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Write firmware to device.
+ 	 */
+-	rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
+-				      data + offset, length);
++	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
++				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
++				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
++
++	if ((fwMode & 0x00000003) == 2) {
++		rt2x00_info(rt2x00dev,
++		      "Firmware loading not required - NIC in AutoRun mode\n");
++	} else {
++		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
++					      data + offset, length);
++	}
+ 
+ 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+ 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
 
