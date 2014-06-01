@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43836 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664AbaFJKwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 06:52:31 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH] rt2x00: disable TKIP on USB
-Date: Tue, 10 Jun 2014 12:51:06 +0200
-Message-Id: <1402397466-8243-1-git-send-email-sgruszka@redhat.com> (sfid-20140610_125237_035074_608ABB2C)
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:63482 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130AbaFAMsP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jun 2014 08:48:15 -0400
+Received: by mail-wg0-f52.google.com with SMTP id l18so3956336wgh.35
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 05:48:14 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192de: phy.c:  Cleaning up uninitialized variables
+Date: Sun,  1 Jun 2014 14:49:08 +0200
+Message-Id: <1401626948-16183-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_144818_750814_3CF5C5CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On USB we can not get atomically TKIP key. We have to disable support
-for TKIP acceleration on USB hardware to avoid bug as showed bellow.
+There is a risk that the variable will be used without being initialized.
 
-[  860.827243] BUG: scheduling while atomic: hostapd/3397/0x00000002
-<snip>
-[  860.827280] Call Trace:
-[  860.827282]  [<ffffffff81682ea6>] dump_stack+0x4d/0x66
-[  860.827284]  [<ffffffff8167eb9b>] __schedule_bug+0x47/0x55
-[  860.827285]  [<ffffffff81685bb3>] __schedule+0x733/0x7b0
-[  860.827287]  [<ffffffff81685c59>] schedule+0x29/0x70
-[  860.827289]  [<ffffffff81684f8a>] schedule_timeout+0x15a/0x2b0
-[  860.827291]  [<ffffffff8105ac50>] ? ftrace_raw_event_tick_stop+0xc0/0xc0
-[  860.827294]  [<ffffffff810c13c2>] ? __module_text_address+0x12/0x70
-[  860.827296]  [<ffffffff81686823>] wait_for_completion_timeout+0xb3/0x140
-[  860.827298]  [<ffffffff81080fc0>] ? wake_up_state+0x20/0x20
-[  860.827301]  [<ffffffff814d5b3d>] usb_start_wait_urb+0x7d/0x150
-[  860.827303]  [<ffffffff814d5cd5>] usb_control_msg+0xc5/0x110
-[  860.827305]  [<ffffffffa02fb0c6>] rt2x00usb_vendor_request+0xc6/0x160  [rt2x00usb]
-[  860.827307]  [<ffffffffa02fb215>] rt2x00usb_vendor_req_buff_lock+0x75/0x150 [rt2x00usb]
-[  860.827309]  [<ffffffffa02fb393>] rt2x00usb_vendor_request_buff+0xa3/0xe0 [rt2x00usb]
-[  860.827311]  [<ffffffffa023d1a3>] rt2x00usb_register_multiread+0x33/0x40 [rt2800usb]
-[  860.827314]  [<ffffffffa05805f9>] rt2800_get_tkip_seq+0x39/0x50  [rt2800lib]
-[  860.827321]  [<ffffffffa0480f88>] ieee80211_get_key+0x218/0x2a0  [mac80211]
-[  860.827322]  [<ffffffff815cc68c>] ? __nlmsg_put+0x6c/0x80
-[  860.827329]  [<ffffffffa051b02e>] nl80211_get_key+0x22e/0x360 [cfg80211]
+This was largely found by using a static code analysis program called cppcheck.
 
-Cc: stable@vger.kernel.org
-Reported-by: Peter Wu <lekensteyn@gmail.com>
-Reported-and-tested-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/rt2x00/rt2x00mac.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 212ac48..004dff9 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -487,6 +487,8 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	crypto.cipher = rt2x00crypto_key_to_cipher(key);
- 	if (crypto.cipher == CIPHER_NONE)
- 		return -EOPNOTSUPP;
-+	if (crypto.cipher == CIPHER_TKIP && rt2x00_is_usb(rt2x00dev))
-+		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+index 3d1f0dd..66abaf6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+@@ -203,11 +203,11 @@ u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitmask)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 	u32 returnvalue, originalvalue, bitshift;
+-	u8 dbi_direct;
  
- 	crypto.cmd = cmd;
- 
+ 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "regaddr(%#x), bitmask(%#x)\n",
+ 		 regaddr, bitmask);
+ 	if (rtlhal->during_mac1init_radioa || rtlhal->during_mac0init_radiob) {
++		u8 dbi_direct = 0;
+ 		/* mac1 use phy0 read radio_b. */
+ 		/* mac0 use phy1 read radio_b. */
+ 		if (rtlhal->during_mac1init_radioa)
 -- 
-1.8.3.1
+1.7.10.4
 
