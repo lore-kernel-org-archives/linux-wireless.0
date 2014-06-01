@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:42427 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754678AbaFNN2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:28:52 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] net: wireless: rtlwifi: rtl8188ee: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sat, 14 Jun 2014 15:28:37 +0200
-Message-ID: <2259587.sBdtJmoxcK@al> (sfid-20140614_152914_289868_DB989E90)
-In-Reply-To: <1402752272-13696-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1402752272-13696-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1402752272-13696-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Received: from userp1040.oracle.com ([156.151.31.81]:35231 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762AbaFAF1R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jun 2014 01:27:17 -0400
+Date: Sun, 1 Jun 2014 08:26:43 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>
+Subject: Re: [PATCH 1/3] rtl818x_pci: make RSSI code more readable
+Message-ID: <20140601052643.GM17724@mwanda> (sfid-20140601_072721_809054_22118F04)
+References: <1401553786-7603-1-git-send-email-andrea.merello@gmail.com>
+ <20140531200556.GL17724@mwanda>
+ <CAN8YU5OFqTa0Ywwhgt_MzTA5+5v9YON_YkQyD3L+syCyjO+OKw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAN8YU5OFqTa0Ywwhgt_MzTA5+5v9YON_YkQyD3L+syCyjO+OKw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 14 June 2014 15:24:32 Rickard Strandqvist wrote:
-> I found a logical error in an if statement that always evaluates to false.
+On Sun, Jun 01, 2014 at 02:37:51AM +0200, Andrea Merello wrote:
+> IHMO it does not matter.
 > 
-> This has after same discussion resulted in that we add a macro to handle this.
-
-This commit message is useless. If you really need to refer to a mailing
-list thread, use something like:
-
-Link: http://lkml.kernel.org/r/MESSAGE_ID_HERE
-
-... but it would even be better if you *explain* why the previous behavior
-is wrong, and what this patch does in an attempt to fix that.
-
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/net/wireless/rtlwifi/rtl8188ee/hw.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The 10 is a stub value for rtl8187se (because of not-implemented-yet
+> RSSI calculation), and indeed it is still here, in the rtl8187se case.
+> This has the functional role of providing a valid >0 value for reported RSSI.
+> This should hopefully go away soon :)
+> So, for rtl8187se case, it always reported 10, and it does continue to do this.
 > 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> index 94cd9df..9bdac68 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> @@ -1231,7 +1231,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
->  
->  	rtl_write_byte(rtlpriv, (MSR), bt_msr);
->  	rtlpriv->cfg->ops->led_control(hw, ledaction);
-> -	if ((bt_msr & 0xfc) == MSR_AP)
-> +	if ((bt_msr & MSR_MASK) == MSR_AP)
-
-There is no such constant as MSR_MASK. Please compile test before sending.
-
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->  	else
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+> The initialization to 1 has no any functional role, it is just to shut
+> up gcc complaints about not initialized variable, but it should be
+> always overwritten by one of the three cases, and we should never see
+> this value really reported on RSSI measure.
+> 
+> Indeed they are two random values (chosen >0, just in case it does matter..)..
 > 
 
-Kind regards,
-Peter
+Ah.  Ok.  Thanks.
+
+regards,
+dan carpenter
 
