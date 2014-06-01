@@ -1,40 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45256 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752470AbaFWJez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 05:34:55 -0400
-Message-ID: <1403516075.4418.9.camel@jlt4.sipsolutions.net> (sfid-20140623_113543_285017_C5E38519)
-Subject: Re: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module
- parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 23 Jun 2014 11:34:35 +0200
-In-Reply-To: <1402996581-10764-3-git-send-email-arend@broadcom.com>
-References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
-	 <1402996581-10764-3-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:51750 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566AbaFAQoQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jun 2014 12:44:16 -0400
+Received: by mail-oa0-f47.google.com with SMTP id i7so3748987oag.6
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 09:44:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <538B5714.6060107@cogentembedded.com>
+References: <1401626948-16183-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<538B5714.6060107@cogentembedded.com>
+Date: Sun, 1 Jun 2014 18:44:15 +0200
+Message-ID: <CAFo99gYJ_K9qEaHihtvaFT4Wv3ApUZMJmTK=nuqK+=sA2NaYsA@mail.gmail.com> (sfid-20140601_184440_656673_EF0F9440)
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: phy.c: Cleaning up
+ uninitialized variables
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-17 at 11:16 +0200, Arend van Spriel wrote:
+Hi Sergei!
 
->  /**
-> + * wiphy_is_40mhz_24ghz_disabled - check whether 40MHz bandwidth in 2.4G
+Okay, sorry. But you agree with what it is doing in general then?
 
-that seems incomplete :)
+In this case, I am sending a new patch...
 
-> + * @wiphy: The wiphy to check.
-> + *
-> + * Return: true is 40MHz is disabled in 2.4G band.
-> + */
-> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
+Best regards
+Rickard Strandqvist
 
-Why should that have a wiphy argument?
 
-Might also be simpler to just export the variable?
-
-johannes
-
+2014-06-01 18:38 GMT+02:00 Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>:
+> Hello.
+>
+>
+> On 06/01/2014 04:49 PM, Rickard Strandqvist wrote:
+>
+>> There is a risk that the variable will be used without being initialized.
+>
+>
+>> This was largely found by using a static code analysis program called
+>> cppcheck.
+>
+>
+>> Signed-off-by: Rickard Strandqvist
+>> <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+>> b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+>> index 3d1f0dd..66abaf6 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+>> @@ -203,11 +203,11 @@ u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw,
+>> u32 regaddr, u32 bitmask)
+>>         struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>         struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+>>         u32 returnvalue, originalvalue, bitshift;
+>> -       u8 dbi_direct;
+>>
+>>         RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "regaddr(%#x),
+>> bitmask(%#x)\n",
+>>                  regaddr, bitmask);
+>>         if (rtlhal->during_mac1init_radioa ||
+>> rtlhal->during_mac0init_radiob) {
+>> +               u8 dbi_direct = 0;
+>
+>
+>    Empty line is needed here, after declarations, like above.
+>
+>
+>>                 /* mac1 use phy0 read radio_b. */
+>>                 /* mac0 use phy1 read radio_b. */
+>>                 if (rtlhal->during_mac1init_radioa)
+>
+>
+> WBR, Sergei
+>
