@@ -1,67 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:53660 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbaF1Uyz (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:42750 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189AbaFBSqF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 16:54:55 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so3088780igc.1
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 13:54:55 -0700 (PDT)
-Date: Sat, 28 Jun 2014 16:54:52 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: mesh_plink: use get_unaligned_le16 instead
- of memcpy
-Message-ID: <20140628205452.GB17825@localhost> (sfid-20140628_225458_604948_1161B8F2)
-References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
- <1403987726-17576-2-git-send-email-me@bobcopeland.com>
+	Mon, 2 Jun 2014 14:46:05 -0400
+Received: by mail-vc0-f180.google.com with SMTP id hq11so3544435vcb.25
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2014 11:46:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403987726-17576-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <538CC508.3070707@gmail.com>
+References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
+ <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
+ <CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com>
+ <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
+ <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
+ <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com>
+ <CALCETrVPXwedhPGtDJQDSK5Kxa4NpeSDck4-nHyox_xriPBcZQ@mail.gmail.com>
+ <CALCETrW0NQ6aW06WD6ZAi8-o7fZSiKPOf0xYCSEw2egYBfqyQQ@mail.gmail.com>
+ <CALCETrUTsKCw_G7V=YDeP-v_GF8cK8ezY-wqcpxeuw3dzBQhQg@mail.gmail.com>
+ <CANUX_P2_GZGhd7X4Ntzi5Jeng52i9Jam22DQTTU2akESPL1ffQ@mail.gmail.com>
+ <CALCETrWdQwvMcgC=PESyECzkyMD8-vzjNEHOCkm5z=ENH7coHg@mail.gmail.com>
+ <CANUX_P2AKnUvUyddsGC5JST51bbjpavG3X-VbJhS1Mf7fDNPcw@mail.gmail.com>
+ <CALCETrX8Km4dc-XM4Ga8T7spDJzN00jx162A3iuTo5+NWhGTZg@mail.gmail.com>
+ <CALCETrUHX3XB2+j5=3ULd9zMpDUisj3ZtK5JVuVS8Dh6088TTw@mail.gmail.com> <538CC508.3070707@gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 2 Jun 2014 11:45:43 -0700
+Message-ID: <CALCETrVrPt4uKNC43nNB08iMA=vK7pM0choHNdB3ctT7RQuepQ@mail.gmail.com> (sfid-20140602_204608_985604_9A6EF36E)
+Subject: Re: Help debugging iwldvm / ath10k stalls
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[+CC linux-wireless]
-On Sat, Jun 28, 2014 at 04:35:26PM -0400, Bob Copeland wrote:
-> Use get_unaligned_le16 to access llid/plid.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  net/mac80211/mesh_plink.c | 10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-> index c47194d..421ec06 100644
-> --- a/net/mac80211/mesh_plink.c
-> +++ b/net/mac80211/mesh_plink.c
-> @@ -1004,7 +1004,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
->  	enum ieee80211_self_protected_actioncode ftype;
->  	u32 changed = 0;
->  	u8 ie_len = elems->peering_len;
-> -	__le16 _plid, _llid;
->  	u16 plid, llid = 0;
->  
->  	if (!elems->peering) {
-> @@ -1039,13 +1038,10 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
->  	/* Note the lines below are correct, the llid in the frame is the plid
->  	 * from the point of view of this host.
->  	 */
-> -	memcpy(&_plid, PLINK_GET_LLID(elems->peering), sizeof(__le16));
-> -	plid = le16_to_cpu(_plid);
-> +	plid = get_unaligned_le16(PLINK_GET_LLID(elems->peering));
->  	if (ftype == WLAN_SP_MESH_PEERING_CONFIRM ||
-> -	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 8)) {
-> -		memcpy(&_llid, PLINK_GET_PLID(elems->peering), sizeof(__le16));
-> -		llid = le16_to_cpu(_llid);
-> -	}
-> +	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 8))
-> +		llid = get_unaligned_le16(PLINK_GET_PLID(elems->peering));
->  
->  	/* WARNING: Only for sta pointer, is dropped & re-acquired */
->  	rcu_read_lock();
-> -- 
-> 2.0.0.rc2
-> 
+On Mon, Jun 2, 2014 at 11:40 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>
+>
+> On 06/02/2014 09:11 PM, Andy Lutomirski wrote:
+>> On Mon, Jun 2, 2014 at 9:54 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>>> On Wed, May 28, 2014 at 5:09 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>
+>>>>> I doubt I can bisect -- the trigger was a new AP, not a new kernel.  I
+>>>>> can't exactly cut the AP in half :)
+>>>>
+>>>> I see.. This is really weird though. Anyway.
+>>>>
+>>>>>
+>>>>>
+>>>>> Pre-suspend, i.e., working:
+>>>>>
+>>>>> [   20.949900] enabled = 1, wowlan = 0
+>>>>> [   20.950177] enabled = 1, wowlan = 0
+>>>>> [   21.614016] enabled = 1, wowlan = 0
+>>>>> [   21.614658] enabled = 1, wowlan = 0
+>>>>> [   42.667586] enabled = 0, wowlan = 0
+>>>>> [   42.672514] enabled = 1, wowlan = 0
+>>>>> [   53.088165] fuse init (API version 7.23)
+>>>>> [   53.102082] SELinux: initialized (dev fuse, type fuse), uses genfs_contexts
+>>>>> [   53.130945] SELinux: initialized (dev fusectl, type fusectl), uses
+>>>>> genfs_contexts
+>>>>> [   85.627558] enabled = 0, wowlan = 0
+>>>>> [   85.631686] enabled = 1, wowlan = 0
+>>>>> [  134.649346] e1000e: em1 NIC Link is Down
+>>>>> [  137.682277] wlan0: deauthenticating from 02:c6:26:cc:b4:c7 by local
+>>>>> choice (Reason: 3=DEAUTH_LEAVING)
+>>>>> [  137.682780] enabled = 0, wowlan = 0
+>>>>> [  137.693889] enabled = 0, wowlan = 0
+>>>>>
+>>>>> Post-suspend, i.e., not working:
+>>>>>
+>>>>> [  144.406303] enabled = 1, wowlan = 0
+>>>>> [  144.406496] enabled = 1, wowlan = 0
+>>>>> [  145.026827] enabled = 1, wowlan = 0
+>>>>> [  145.028211] enabled = 1, wowlan = 0
+>>>>> [  165.688632] enabled = 0, wowlan = 0
+>>>>> [  165.689960] enabled = 0, wowlan = 0
+>>>>> [  165.693988] enabled = 1, wowlan = 0
+>>>>> [  165.694245] enabled = 1, wowlan = 0
+>>>>> [  208.641426] enabled = 0, wowlan = 0
+>>>>> [  208.641786] enabled = 0, wowlan = 0
+>>>>> [  208.647499] enabled = 1, wowlan = 0
+>>>>> [  208.647639] enabled = 1, wowlan = 0
+>>>>> [  271.435558] enabled = 0, wowlan = 0
+>>>>> [  271.435767] enabled = 0, wowlan = 0
+>>>>> [  271.440125] enabled = 1, wowlan = 0
+>>>>> [  271.440405] enabled = 1, wowlan = 0
+>>>>>
+>>>>> With even more instrumentation added, I did get a glitch before
+>>>>> suspend/resume, but it came with more than two power setting updates.
+>>>>> Logs and patch attached, complete with call stacks.
+>>>>>
+>>>>
+>>>> I don't see any callstacks?
+>>>> Doesn't matter though.
+>>>
+>>> I think the callstacks were in the attachment.  I could have messed up, though.
+>>>
+>>> Anyway, I don't buy the theory that this is caused by the firmware
+>>> going out to lunch.  The queues files in debugfs show the rx queue
+>>> chugging along and all of the tx queues have read_ptr == write_ptr.
+>>> Wireshark shows incoming broadcast traffic, too.  I'd guess that the
+>>> problem is more likely to be that the card is failing to wake up and
+>>> notice pending data in the TIM.
+>
+> Well... I might have been unclear here (I never know how much detail I should share with the recipient :)).
+> From your log it appears that the NIC is in power save. So we can't increment the write pointer of the Tx ring (add a packet for transmission). So we simply remember that we need to do so (increment the write pointer) and request a wakeup so that we will update the write pointer in the wakeup interrupt... which doesn't happen.
+> No power save - no need for wakeup interrupt.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I'm still unconvinced.  One of the tx queues actually has a both
+read_ptr and write_ptr incrementing once or twice per second even when
+I can't ping the gateway.  Can you point me at the right code or log
+stuff to look at?
+
+>
+>>
+>> OTOH, with iwlwifi.11n_disable=4 (no rx A-MPDU), I seem to be doing
+>> pretty well.  I'll test a stock kernel configured like that for the
+>> next few days.
+>>
+>
+> That's interesting...
+
+--Andy
