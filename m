@@ -1,61 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:59619 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaFWWEY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25505 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbaFBR2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 18:04:24 -0400
-Received: by mail-wi0-f177.google.com with SMTP id r20so4882831wiv.4
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 15:04:23 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCHv3 4/6] rtlwifi/rtl8723ae: Replace magic number by macro
-Date: Tue, 24 Jun 2014 00:05:24 +0200
-Message-Id: <1403561124-7889-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140624_000428_724947_38D8E385)
+	Mon, 2 Jun 2014 13:28:18 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
+References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+	<87ppirz2ic.fsf@kamboji.qca.qualcomm.com>
+	<CACKGw+HRLuaRX3JW86PtMzRG86024m8YOmZj14eyE9vQTffMeg@mail.gmail.com>
+Date: Mon, 2 Jun 2014 20:28:12 +0300
+In-Reply-To: <CACKGw+HRLuaRX3JW86PtMzRG86024m8YOmZj14eyE9vQTffMeg@mail.gmail.com>
+	(Bartosz Markowski's message of "Mon, 2 Jun 2014 19:11:30 +0200")
+Message-ID: <87a99vz0er.fsf@kamboji.qca.qualcomm.com> (sfid-20140602_192821_961722_F01414C3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For consistency with other drivers, replace a magic number by a macro.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Reviewed-by: Peter Wu <peter@lekensteyn.nl>
----
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/reg.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> On 2 June 2014 18:42, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>
+>> So what is the actual bug you are fixing? Previously with 10.x it was
+>> possible to get only 7 VIFs, even though we advertised 8 to user space,
+>> and with your fix we get the full 8 VIFs?
+>
+> For CAC, we use one VDEV to start monitor interface. In case of 10.X
+> firmware we advertise support up to 8 VAPs, but if we spent one for
+> monitor interface, only 7 left. I've noticed we fail on .add_interface
+> when trying to add 8th AP, here:
+>
+>     bit = ffs(ar->free_vdev_map);
+>     if (bit == 0) {
+>         ret = -EBUSY;
+>         goto err;
+>     }
+>
+> and this lead me to initialization code for vdev_map
+>
+>     ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+>
+> We have an API split for main and 10.x firmware (incl. number of
+> vdevs, target fw is able to handle), but here we missed this split.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-index 65c9e80..8f50ace 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-@@ -1109,7 +1109,7 @@ static int _rtl8723ae_set_media_status(struct ieee80211_hw *hw,
- 
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0x03) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/reg.h b/drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
-index 64376b3..ce2c66f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
-@@ -361,6 +361,7 @@
- #define	MSR_ADHOC				0x01
- #define	MSR_INFRA				0x02
- #define	MSR_AP					0x03
-+#define	MSR_MASK				0x03
- 
- #define	RRSR_RSC_OFFSET				21
- #define	RRSR_SHORT_OFFSET			23
+This is a bit too technical. Basically I need a simple description of
+the bug so that both kernel and distro maintainers can quicly understand
+what this fix is about. Would this be correct:
+
+"ath10k: fix 8th virtual AP interface with DFS
+
+Firmware 10.x supports up to 8 virtual AP interfaces, but in a DFS
+channel it was possible to create only 7 interfaces as ath10k internal
+creates a monitor interface for DFS. Previous vdev map initialization
+was missing enough space for 8 + 1 vdevs due to wrong define used and
+that's why there was no space for 8th interface. Use the correct define
+TARGET_10X_NUM_VDEVS with 10.x firmware to make it possible to create
+the 8th virtual interface."
+
+> Ben has a valid point, the TARGET_10X_NUM_VDEVS claims to be 16, so
+> there's an inconsistency between what we adverts to mac in max
+> interfaces, but I'm not sure if this is such a big deal.
+
+I don't see that as a problem as long as we advertise 8 to user space.
+
+>> It would be good to clear have that in the commit log so that anyone
+>> can understand what bug is fixed.
+>
+> Do you want me to send a v2 with just an updated commit (better user
+> impact description)? (No patch content changes)
+
+I can update the commit log, we just need to agree on the content.
+
 -- 
-1.7.10.4
-
+Kalle Valo
