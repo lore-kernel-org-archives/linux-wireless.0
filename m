@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4859 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754242AbaFIMGA (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2846 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951AbaFBQm5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 08:06:00 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: wil6210: improve debug for WMI receive
-Date: Mon, 9 Jun 2014 15:05:47 +0300
-Message-ID: <1431413.xV8ODJtznW@lx-wigig-72> (sfid-20140609_140605_048535_36B76DDE)
-In-Reply-To: <20140609093518.GA10589@mwanda>
-References: <20140609093518.GA10589@mwanda>
+	Mon, 2 Jun 2014 12:42:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
+References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Mon, 2 Jun 2014 19:42:51 +0300
+In-Reply-To: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 29 May 2014 15:36:07 +0200")
+Message-ID: <87ppirz2ic.fsf@kamboji.qca.qualcomm.com> (sfid-20140602_184301_387539_D3588AA6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 09, 2014 12:35:18 PM Dan Carpenter wrote:
->    746          if (n > 1)
->                 ^^^^^^^^^^
-> We never reach this if statemtent.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Dan,
+> Firmware 10.x supports up to 8 virtual AP interfaces
+> (comparing to 7 for main firmware). Previous vdev map
+> initialization was missing enough space for 8 + 1 vdevs
+> (we may spent one for mac monitor), due to wrong define used.
+>
+> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Thanks for this. I'll upload fix shortly.
-Caused by the missed chunk in rebase.
+So what is the actual bug you are fixing? Previously with 10.x it was
+possible to get only 7 VIFs, even though we advertised 8 to user space,
+and with your fix we get the full 8 VIFs?
 
-Thanks, Vladimir
+It would be good to clear have that in the commit log so that anyone can
+understand what bug is fixed.
+
+-- 
+Kalle Valo
