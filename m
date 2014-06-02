@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:33052 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbaFXWkE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 18:40:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: tiwai@suse.de, chunkeey@googlemail.com, leedom@chelsio.com,
-	cocci@systeme.lip6.fr
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] p54: use request_firmware_direct() for optional EEPROM override
-Date: Tue, 24 Jun 2014 15:39:43 -0700
-Message-Id: <1403649583-12707-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20140625_004041_498025_B28418E8)
-In-Reply-To: <1403649583-12707-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1403649583-12707-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55206 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753137AbaFBLDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2014 07:03:06 -0400
+Message-ID: <1401706971.4303.3.camel@jlt4.sipsolutions.net> (sfid-20140602_130310_426203_A1B42A38)
+Subject: Re: [PATCH] mac80211: remove PID rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefano Brivio <stefano.brivio@gmx.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Date: Mon, 02 Jun 2014 13:02:51 +0200
+In-Reply-To: <20140530234122.5f5e0650@vaiolo.localdomain> (sfid-20140530_234139_432994_F8672B9E)
+References: <1401461248-29427-1-git-send-email-linville@tuxdriver.com>
+	 <20140530234122.5f5e0650@vaiolo.localdomain>
+	 (sfid-20140530_234139_432994_F8672B9E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Fri, 2014-05-30 at 23:41 +0200, Stefano Brivio wrote:
+> Hi,
+> 
+> On Fri, 30 May 2014 10:47:28 -0400
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > Minstrel has long since proven its worth.
+> 
+> Just a quick note: a while ago, somebody proposed
+> (http://lkml.iu.edu/hypermail/linux/kernel/1202.3/02307.html) a
+> enhanced version of this algorithm that would, according to the related
+> research and paper [1], outperform Minstrel in most cases. The patch
+> was not accepted as comments (mostly related to coding style, but not
+> only that) weren't addressed by the sender. I then never had the time
+> to seriously look into it. My understanding is that the amended
+> algorithm would spare some air time compared to Minstrel, and thus it
+> could provide marginally better performance.
+> 
+> So, maybe somebody is interested in looking into that. Otherwise, yes,
+> let's drop it.
 
-The p54 driver uses request_firmware() twice, once for actual
-firmware and then another time for an optional user overide on
-EEPROM, 3826.eeprom. The custom EEPROM  is optional but if not
-present we'll introduce an extra lag of 60 seconds with udev
-present. Annotate we don't want udev nonsense here to avoid
-the lag in case its not present.
+They can add it back if needed - looks like this was some academic paper
+and they weren't really interested in submitting it to mainline
+properly.
 
-This was found with the following SmPL patch.
-
-@ firmware_not_critical @
-expression cf;
-expression config_file;
-expression dev;
-int ret;
-identifier l;
-statement S;
-@@
-
--	ret = request_firmware(&cf, config_file, dev);
-+	ret = request_firmware_direct(&cf, config_file, dev);
-	if (ret < 0) {
-		... when != goto l;
-		    when != return ret;
-		    when any
-	} else {
-		...
-		release_firmware(cf);
-		...
-	}
-
-Cc: Takashi Iwai <tiwai@suse.de>
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/net/wireless/p54/p54spi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index de15171..63de5ee 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -193,7 +193,7 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
- 	/* allow users to customize their eeprom.
- 	 */
- 
--	ret = request_firmware(&eeprom, "3826.eeprom", &priv->spi->dev);
-+	ret = request_firmware_direct(&eeprom, "3826.eeprom", &priv->spi->dev);
- 	if (ret < 0) {
- #ifdef CONFIG_P54_SPI_DEFAULT_EEPROM
- 		dev_info(&priv->spi->dev, "loading default eeprom...\n");
--- 
-2.0.0
+johannes
 
