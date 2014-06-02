@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:58046 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbaFDFN1 (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:61198 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbaFBGQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 01:13:27 -0400
-Received: by mail-qg0-f41.google.com with SMTP id j5so15028447qga.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2014 22:13:26 -0700 (PDT)
+	Mon, 2 Jun 2014 02:16:03 -0400
+Received: by mail-ob0-f177.google.com with SMTP id wp4so3980210obc.36
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 23:16:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1401825537.4157.43.camel@jlt4.sipsolutions.net>
-References: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1401825537.4157.43.camel@jlt4.sipsolutions.net>
-Date: Wed, 4 Jun 2014 07:13:26 +0200
-Message-ID: <CALhHN=qXjGa09JNox5qOvjR6RDv_=N-465cV-LmgU-NCCyA53w@mail.gmail.com> (sfid-20140604_071330_667205_81786927)
-Subject: Re: [PATCH] mac80211: allow tx via monitor iface when DFS
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20140530T111920-677@post.gmane.org>
+References: <536F6620.9030001@gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com>
+	<loom.20140530T020912-598@post.gmane.org>
+	<53882EAD.4010609@gmail.com>
+	<53882EF4.4070105@gmail.com>
+	<loom.20140530T111920-677@post.gmane.org>
+Date: Mon, 2 Jun 2014 09:16:02 +0300
+Message-ID: <CANUX_P0JenW+GDT3N0Qj5BPGqMXqUWiBnj=TQ+nMEsjS4HFm1w@mail.gmail.com> (sfid-20140602_081608_005086_A564AB5A)
+Subject: Re: [Ilw] Wireless Centrino 2230-N issues
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: piotr <pitkotko@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 June 2014 21:58, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-05-30 at 11:44 +0200, Janusz Dziedzic wrote:
->
->> +     struct cfg80211_chan_def chandef;
->>       u16 len_rthdr;
->>       int hdrlen;
 >>
->> @@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
->>       }
+>> >>
+>> >> I have similar problem. My system is Ubuntu 14.04 with kernel 3.13.0-24
+>> >> installed on a new Toshiba laptop with N2230 wifi card.
+>> >> dmesg:
+>> >> [  614.007461] iwlwifi 0000:01:00.0: Could not complete ALIVE
+> transition: -5
+>> >> [  614.007748] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+>> >> [  614.007790] iwlwifi 0000:01:00.0: Unable to initialize device.
+>> >> [  614.008318] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+>> >> [  614.015390] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+>> >> [  614.059495] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD
+> failed:
+>> >> FW Error
+>> >>
+>> >> Is the card broken?
+>> >>
+>> >> Best,
+>> >> Piotr
+>> >>
+>> >>
+>> >
+>> > Can you try to add bt_coex_active=0 as debug parameter?
+>> >
 >>
->>       if (chanctx_conf)
->> -             chan = chanctx_conf->def.chan;
->> +             chandef = chanctx_conf->def;
->>       else if (!local->use_chanctx)
->> -             chan = local->_oper_chandef.chan;
->> +             chandef = local->_oper_chandef;
+>> Sorry, I meant *module* parameter. The mode is iwlwifi
 >
-> Why are you making a copy of the chandef - wouldn't a pointer work just
-> as well?
+> Thanks for quick reply.
 >
-No special reason (chandef is quite small), should I change this to
-pointer and send v2?
+> I've tried your suggestion on the fly:
+>
+> modprobe -rv iwlwifi
+> modprobe iwlwifi bt_coex_active=0
+>
+> After this, I get "N" from "more
+> /sys/module/iwlwifi/parameters/bt_coex_active", but it seems not to take any
+> effect on device functioning nor on the kernel messages.
+> Is this what you meant? BTW, the bluetooth seems to work.
+>
 
-BR
-Janusz
+Can you please send the whole dmesg output?
