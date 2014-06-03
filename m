@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33015 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932120AbaFLHQD (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42463 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932759AbaFCQt6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 03:16:03 -0400
-Received: by mail-ie0-f170.google.com with SMTP id tr6so786603ieb.15
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 00:16:02 -0700 (PDT)
+	Tue, 3 Jun 2014 12:49:58 -0400
+Message-ID: <538DFCB5.2060208@candelatech.com> (sfid-20140603_185010_547060_381CBF5E)
+Date: Tue, 03 Jun 2014 09:49:57 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <53987997.2040101@lwfinger.net>
-References: <53987997.2040101@lwfinger.net>
-Date: Thu, 12 Jun 2014 09:16:02 +0200
-Message-ID: <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com> (sfid-20140612_091608_227412_94C30487)
-Subject: Re: Driver for Mediatek MT7630E
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <stf_xl@wp.pl>
-Content-Type: text/plain; charset=UTF-8
+To: Joe Perches <joe@perches.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/4] ath10k:  save firmware debug log messages.
+References: <1401812719-25061-1-git-send-email-greearb@candelatech.com>  <1401812719-25061-2-git-send-email-greearb@candelatech.com> <1401813944.18833.6.camel@joe-AO725>
+In-Reply-To: <1401813944.18833.6.camel@joe-AO725>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On 06/03/2014 09:45 AM, Joe Perches wrote:
+> On Tue, 2014-06-03 at 09:25 -0700, greearb@candelatech.com wrote:
+>> They may be dumped through the firmware dump debugfs
+>> file.
+> []
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> []
+>> @@ -1084,11 +1084,14 @@ static void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb)
+>>  
+>>  static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+>>  {
+>> +	u32 *m = (u32 *)(skb->data);
+>>  	ath10k_dbg(ATH10K_DBG_WMI, "wmi event debug mesg len %d\n",
+>>  		   skb->len);
+>>  
+>>  	trace_ath10k_wmi_dbglog(skb->data, skb->len);
+>>  
+>> +	ath10k_dbg_save_fw_dbg_buffer(ar, (u8 *)(&(m[1])), skb->len - 4);
+>> +
+>>  	return 0;
+>>  }
+>>  
+> 
+> That last line looks an overly complicated way of writing
+> 
+> 	ath10k_dbg_save_fw_dbg_buffer(ar, skb->data + 4, skb->len - 4);
+> 
+> btw: why skip the first 4 bytes?
 
-On Wed, Jun 11, 2014 at 5:45 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In a recent E-mail interchange
-> (http://marc.info/?l=linux-wireless&m=140238255916367&w=2), I was made aware
-> that this device is not currently being handled by any driver in the kernel,
-> but that there was a GitHub repo at https://github.com/anthonywong/mt7630.
-> That code modifies rt2800pci to operate the MT7630E, but it is quite
-> outdated.
->
-> As a followup, I found such a device at a reasonable price on E-bay, and
-> ordered it. It should arrive next week. I also was able to find the firmware
-> in an RPM for SUSE SLE11, and a license allowing redistribution. Before I
-> start modifying rt2800pci for this new device, I want to be assured that
-> this modification is not currently being done by anyone in the rt2x00
-> project. There is too much to be done to duplicate effort.
-
-I'm not doing anything in this regard at the moment. So I'm really glad if you
-are working on that!
-
-CC'ed Stanislaw even though I don't think he's doing anything regarding the
-device you've mentioned.
-
-> For interested readers, I have modified the GitHub code to compile using the
-> current wireless-testing kernel source. If there is sufficient interest, I
-> could set up a new GH repo for it as an interim measure with conditional
-> code allowing it to build on recent kernels (3.5+).
-
-Awesome news.
+First 4 bytes is a counter meaning something like 'messages lost due to overflow',
+and is not really part of the debug messages.
 
 Thanks,
-Helmut
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
