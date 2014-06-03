@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:19495 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754622AbaFKKtL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:49:11 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 12/28] ath9k: Add ATH_OP_MULTI_CHANNEL
-Date: Wed, 11 Jun 2014 16:18:00 +0530
-Message-ID: <1402483696-2498-13-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124916_453748_B37AAFE3)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:60298 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933840AbaFCUK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 16:10:57 -0400
+Message-ID: <1401826244.4157.49.camel@jlt4.sipsolutions.net> (sfid-20140603_221151_839931_59640985)
+Subject: Re: [RFC 2/4] cfg80211: Add new interface type for OCB mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Tue, 03 Jun 2014 22:10:44 +0200
+In-Reply-To: <1401468984-24575-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185637_255661_DD2CB60E)
+References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1401468984-24575-3-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140530_185637_255661_DD2CB60E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Fri, 2014-05-30 at 18:56 +0200, Rostislav Lisovy wrote:
+> Add new OCB mode (outside the context of the BSS) interface
+> type as well as functions necessary to configure the interface
+> when 'joining' such network.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath.h           |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
+I think you also want some API to leave (stop operating in) the network
+again, and call that appropriately (e.g. on ifdown) and allow userspace
+to call it.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index a889fd6..fd9e530 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -63,6 +63,7 @@ enum ath_op_flags {
- 	ATH_OP_PRIM_STA_VIF,
- 	ATH_OP_HW_RESET,
- 	ATH_OP_SCANNING,
-+	ATH_OP_MULTI_CHANNEL,
- };
- 
- enum ath_bus_type {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 0972070..e3127b5 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -150,8 +150,10 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp;
- 	bool active = false;
-+	u8 n_active = 0;
- 
- 	if (!ctx)
- 		return;
-@@ -171,6 +173,17 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 		}
- 	}
- 	ctx->active = active;
-+
-+	ath_for_each_chanctx(sc, ctx) {
-+		if (!ctx->assigned || list_empty(&ctx->vifs))
-+			continue;
-+		n_active++;
-+	}
-+
-+	if (n_active > 1)
-+		set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
-+	else
-+		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
- }
- 
- static bool
--- 
-2.0.0
+> +struct ocb_setup {
+> +	struct cfg80211_chan_def chandef;
+> +	u32 basic_rates;
+> +};
+
+The channel seems obvious - but basic rates? Wouldn't OCB always just
+use a single rate, basically? Certainly not *basic* rates (which are
+required to be implemented for joining the BSS) since there is no BSS?
+
+
+> +	if (!setup->chandef.chan)
+> +		WARN_ON(!setup->chandef.chan);
+
+That makes very little sense to me?
+
+
+> @@ -892,6 +893,7 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+>                                 *radar_detect |=
+> BIT(wdev->chandef.width);
+>                 }
+>                 return;
+> +       case NL80211_IFTYPE_OCB:
+>         case NL80211_IFTYPE_MONITOR:
+>         case NL80211_IFTYPE_AP_VLAN:
+>         case NL80211_IFTYPE_WDS:
+
+That certainly doesn't seem correct, in particular if you consider the
+comment that's two lines down.
+
+        case NL80211_IFTYPE_P2P_DEVICE:
+                /* these interface types don't really have a channel
+*/   
+
+It seems for OCB you need some indication that it's joined (maybe the
+channel being non-NULL could do?) and then treat it here correctly has
+having an exclusive lock on the channel.
+
+johannes
 
