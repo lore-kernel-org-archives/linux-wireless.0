@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39127 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60239 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753776AbaFMR7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 13:59:14 -0400
-Message-ID: <1402682332.4478.31.camel@jlt4.sipsolutions.net> (sfid-20140613_195932_686293_D33C66F9)
-Subject: Re: net_timedelta() affected by settimeofday() (was: [patch 12/13]
- net: mac80211: Remove silly timespec dance)
+	id S1753837AbaFCTvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 15:51:42 -0400
+Message-ID: <1401825089.4157.39.camel@jlt4.sipsolutions.net> (sfid-20140603_215144_894951_129FF0BD)
+Subject: Re: [PATCH v7 0/5] cfg/mac80211: implement multi-vif csa
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 13 Jun 2014 19:58:52 +0200
-In-Reply-To: <alpine.DEB.2.10.1406121605470.5170@nanos>
-References: <20140611234024.103571777@linutronix.de>
-	   <20140611234607.683770899@linutronix.de>
-	   <1402555774.4224.1.camel@jlt4.sipsolutions.net>
-	   <alpine.DEB.2.10.1406121017500.5170@nanos>
-	   <1402562114.8095.3.camel@jlt4.sipsolutions.net>
-	   (sfid-20140612_103558_525847_209A5C98) <1402562399.8095.5.camel@jlt4.sipsolutions.net>
-	  <alpine.DEB.2.10.1406121047280.5170@nanos>
-	 <1402564914.8095.9.camel@jlt4.sipsolutions.net>
-	 <alpine.DEB.2.10.1406121605470.5170@nanos>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Tue, 03 Jun 2014 21:51:29 +0200
+In-Reply-To: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com> (sfid-20140529_094141_575159_9ECE86F3)
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140529_094141_575159_9ECE86F3)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-06-12 at 16:09 +0200, Thomas Gleixner wrote:
+On Thu, 2014-05-29 at 09:34 +0200, Michal Kazior wrote:
+> Hi,
+> 
+> Here's yet again a re-spin of my multi-vif csa
+> patches. Hopefully I got everything right this
+> time..
 
-> Fair enough. Still the timespec is silly. Here is an updated version.
+So there seems to be some discussion on patch 1, the rest looks fine (to
+me, I'll let Luca chime in if he wants)
 
-Makes sense, thanks. I've applied this (mac80211-next)
+> I've delibarately not included documentation
+> fixes. I think we can handle this with follow up
+> patches.
+
+Fair enough.
 
 johannes
-
 
