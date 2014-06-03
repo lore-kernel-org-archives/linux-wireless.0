@@ -1,1775 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:57982 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932184AbaFYUVi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:21:38 -0400
-Received: by mail-wi0-f175.google.com with SMTP id r20so8669453wiv.8
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:36 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 20/34] staging: vt6656: dead code remove 80211mgr.c/h
-Date: Wed, 25 Jun 2014 21:19:57 +0100
-Message-Id: <1403727611-6825-21-git-send-email-tvboxspy@gmail.com> (sfid-20140625_222951_722771_86D35E80)
-In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
-References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58535 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752355AbaFCJS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 05:18:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix station/driver powersave race
+Date: Tue,  3 Jun 2014 11:18:47 +0200
+Message-Id: <1401787127-8566-1-git-send-email-johannes@sipsolutions.net> (sfid-20140603_111911_926294_F48B6E13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/80211mgr.c | 849 --------------------------------------
- drivers/staging/vt6656/80211mgr.h | 808 ------------------------------------
- drivers/staging/vt6656/Makefile   |   1 -
- drivers/staging/vt6656/bssdb.h    |   1 -
- drivers/staging/vt6656/key.h      |   2 +-
- drivers/staging/vt6656/wcmd.h     |   2 +-
- drivers/staging/vt6656/wmgr.h     |   2 -
- 7 files changed, 2 insertions(+), 1663 deletions(-)
- delete mode 100644 drivers/staging/vt6656/80211mgr.c
- delete mode 100644 drivers/staging/vt6656/80211mgr.h
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/staging/vt6656/80211mgr.c b/drivers/staging/vt6656/80211mgr.c
-deleted file mode 100644
-index 09bfe24..0000000
---- a/drivers/staging/vt6656/80211mgr.c
-+++ /dev/null
-@@ -1,849 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: 80211mgr.c
-- *
-- * Purpose: Handles the 802.11 management support functions
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- * Functions:
-- *      vMgrEncodeBeacon - Encode the Beacon frame
-- *      vMgrDecodeBeacon - Decode the Beacon frame
-- *      vMgrEncodeDisassociation - Encode the Disassociation frame
-- *      vMgrDecodeDisassociation - Decode the Disassociation frame
-- *      vMgrEncodeAssocRequest - Encode the Association request frame
-- *      vMgrDecodeAssocRequest - Decode the Association request frame
-- *      vMgrEncodeAssocResponse - Encode the Association response frame
-- *      vMgrDecodeAssocResponse - Decode the Association response frame
-- *      vMgrEncodeReAssocRequest - Encode the ReAssociation request frame
-- *      vMgrDecodeReAssocRequest - Decode the ReAssociation request frame
-- *      vMgrEncodeProbeRequest - Encode the Probe request frame
-- *      vMgrDecodeProbeRequest - Decode the Probe request frame
-- *      vMgrEncodeProbeResponse - Encode the Probe response frame
-- *      vMgrDecodeProbeResponse - Decode the Probe response frame
-- *      vMgrEncodeAuthen - Encode the Authentication frame
-- *      vMgrDecodeAuthen - Decode the Authentication frame
-- *      vMgrEncodeDeauthen - Encode the DeAuthentication frame
-- *      vMgrDecodeDeauthen - Decode the DeAuthentication frame
-- *      vMgrEncodeReassocResponse - Encode the Reassociation response frame
-- *
-- * Revision History:
-- *
-- */
+It is currently possible to have a race due to the station PS
+unblock work like this:
+ * station goes to sleep with frames buffered in the driver
+ * driver blocks wakeup
+ * station wakes up again
+ * driver flushes/returns frames, and unblocks, which schedules
+   the unblock work
+ * unblock work starts to run, and checks that the station is
+   awake (i.e. that the WLAN_STA_PS_STA flag isn't set)
+ * we process a received frame with PM=1, setting the flag again
+ * ieee80211_sta_ps_deliver_wakeup() runs, delivering all frames
+   to the driver, and then clearing the WLAN_STA_PS_DRIVER and
+   WLAN_STA_PS_STA flags
+
+In this scenario, mac80211 will think that the station is awake,
+while it really is asleep, and any TX'ed frames should be filtered
+by the device (it will know that the station is sleeping) but then
+passed to mac80211 again, which will not buffer it either as it
+thinks the station is awake, and eventually the packets will be
+dropped.
+
+Fix this by moving the clearing of the flags to exactly where we
+learn about the situation. This creates a problem of reordering,
+so introduce another flag indicating that delivery is being done,
+this new flag also queues frames and is cleared only while the
+spinlock is held (which the queuing code also holds) so that any
+concurrent delivery/TX is handled correctly.
+
+Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c       |  2 ++
+ net/mac80211/sta_info.c | 65 ++++++++++++++++++++++++++++++-------------------
+ net/mac80211/sta_info.h |  5 ++--
+ net/mac80211/tx.c       |  6 +++--
+ 4 files changed, 49 insertions(+), 29 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0e5b67015650..fb44f48340c2 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1107,6 +1107,8 @@ static void sta_ps_end(struct sta_info *sta)
+ 		return;
+ 	}
+ 
++	set_sta_flag(sta, WLAN_STA_PS_DELIVER);
++	clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 	ieee80211_sta_ps_deliver_wakeup(sta);
+ }
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index be9120fb8448..c682e3c95f94 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -100,7 +100,8 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 	struct ps_data *ps;
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
+-	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
++	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
++	    test_sta_flag(sta, WLAN_STA_PS_DELIVER)) {
+ 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			ps = &sdata->bss->ps;
+@@ -111,6 +112,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 
+ 		clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++		clear_sta_flag(sta, WLAN_STA_PS_DELIVER);
+ 
+ 		atomic_dec(&ps->num_sta_ps);
+ 		sta_info_recalc_tim(sta);
+@@ -125,7 +127,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		mesh_sta_cleanup(sta);
+ 
+-	cancel_work_sync(&sta->drv_unblock_wk);
++	cancel_work_sync(&sta->drv_deliver_wk);
+ 
+ 	/*
+ 	 * Destroy aggregation state here. It would be nice to wait for the
+@@ -253,33 +255,23 @@ static void sta_info_hash_add(struct ieee80211_local *local,
+ 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
+ }
+ 
+-static void sta_unblock(struct work_struct *wk)
++static void sta_deliver_ps_frames(struct work_struct *wk)
+ {
+ 	struct sta_info *sta;
+ 
+-	sta = container_of(wk, struct sta_info, drv_unblock_wk);
++	sta = container_of(wk, struct sta_info, drv_deliver_wk);
+ 
+ 	if (sta->dead)
+ 		return;
+ 
+-	if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+-		local_bh_disable();
++	local_bh_disable();
++	if (!test_sta_flag(sta, WLAN_STA_PS_STA))
+ 		ieee80211_sta_ps_deliver_wakeup(sta);
+-		local_bh_enable();
+-	} else if (test_and_clear_sta_flag(sta, WLAN_STA_PSPOLL)) {
+-		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
 -
--#include "device.h"
--#include "tmacro.h"
--#include "80211mgr.h"
--#include "80211hdr.h"
+-		local_bh_disable();
++	else if (test_and_clear_sta_flag(sta, WLAN_STA_PSPOLL))
+ 		ieee80211_sta_ps_deliver_poll_response(sta);
+-		local_bh_enable();
+-	} else if (test_and_clear_sta_flag(sta, WLAN_STA_UAPSD)) {
+-		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
 -
--static int          msglevel                = MSG_LEVEL_INFO;
--/*static int          msglevel                =MSG_LEVEL_DEBUG;*/
--
--/*+
-- *
-- * Routine Description:
-- * Encode Beacon frame body offset
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeBeacon(
--      PWLAN_FR_BEACON  pFrame
--     )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--	/* Fixed Fields */
--	pFrame->pqwTimestamp =
--		(u64 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
--			WLAN_BEACON_OFF_TS);
--    pFrame->pwBeaconInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_BEACON_OFF_BCN_INT);
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_BEACON_OFF_CAPINFO);
--
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_BEACON_OFF_SSID;
--
--    return;
--}
--
--/*+
-- *
-- * Routine Description:
-- * Decode Beacon frame body offset
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeBeacon(
--      PWLAN_FR_BEACON  pFrame
--    )
--{
--    PWLAN_IE        pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--	/* Fixed Fields */
--	pFrame->pqwTimestamp =
--		(u64 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
--			WLAN_BEACON_OFF_TS);
--    pFrame->pwBeaconInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_BEACON_OFF_BCN_INT);
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_BEACON_OFF_CAPINFO);
--
--    /* Information elements */
--    pItem = (PWLAN_IE)((u8 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)))
--                       + WLAN_BEACON_OFF_SSID);
--    while (((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) {
--
--        switch (pItem->byElementID) {
--        case WLAN_EID_SSID:
--            if (pFrame->pSSID == NULL)
--                pFrame->pSSID = (PWLAN_IE_SSID)pItem;
--            break;
--        case WLAN_EID_SUPP_RATES:
--            if (pFrame->pSuppRates == NULL)
--                pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--        case WLAN_EID_FH_PARMS:
--            /* pFrame->pFHParms = (PWLAN_IE_FH_PARMS)pItem; */
--            break;
--        case WLAN_EID_DS_PARMS:
--            if (pFrame->pDSParms == NULL)
--                pFrame->pDSParms = (PWLAN_IE_DS_PARMS)pItem;
--            break;
--        case WLAN_EID_CF_PARMS:
--            if (pFrame->pCFParms == NULL)
--                pFrame->pCFParms = (PWLAN_IE_CF_PARMS)pItem;
--            break;
--        case WLAN_EID_IBSS_PARMS:
--            if (pFrame->pIBSSParms == NULL)
--                pFrame->pIBSSParms = (PWLAN_IE_IBSS_PARMS)pItem;
--            break;
--        case WLAN_EID_TIM:
--            if (pFrame->pTIM == NULL)
--                pFrame->pTIM = (PWLAN_IE_TIM)pItem;
--            break;
--
--        case WLAN_EID_RSN:
--            if (pFrame->pRSN == NULL) 
--                pFrame->pRSN = (PWLAN_IE_RSN)pItem;
--            break;
--        case WLAN_EID_RSN_WPA:
--            break;
--
--        case WLAN_EID_ERP:
--            if (pFrame->pERP == NULL)
--                pFrame->pERP = (PWLAN_IE_ERP)pItem;
--            break;
--        case WLAN_EID_EXTSUPP_RATES:
--            if (pFrame->pExtSuppRates == NULL)
--                pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        case WLAN_EID_COUNTRY:      /* 7 */
--            if (pFrame->pIE_Country == NULL)
--                pFrame->pIE_Country = (PWLAN_IE_COUNTRY)pItem;
--            break;
--
--        case WLAN_EID_PWR_CONSTRAINT:   /* 32 */
--            if (pFrame->pIE_PowerConstraint == NULL)
--                pFrame->pIE_PowerConstraint = (PWLAN_IE_PW_CONST)pItem;
--            break;
--
--        case WLAN_EID_CH_SWITCH:    /* 37 */
--            if (pFrame->pIE_CHSW == NULL)
--                pFrame->pIE_CHSW = (PWLAN_IE_CH_SW)pItem;
--            break;
--
--        case WLAN_EID_QUIET:        /* 40 */
--            if (pFrame->pIE_Quiet == NULL)
--                pFrame->pIE_Quiet = (PWLAN_IE_QUIET)pItem;
--            break;
--
--        case WLAN_EID_IBSS_DFS:
--            if (pFrame->pIE_IBSSDFS == NULL)
--                pFrame->pIE_IBSSDFS = (PWLAN_IE_IBSS_DFS)pItem;
--            break;
--
--        default:
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Unrecognized EID=%dd in beacon decode.\n", pItem->byElementID);
--                break;
--
--        }
--        pItem = (PWLAN_IE)(((u8 *)pItem) + 2 + pItem->len);
--    }
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Encode Disassociation
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeDisassociation(
--      PWLAN_FR_DISASSOC  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwReason = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_DISASSOC_OFF_REASON);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_DISASSOC_OFF_REASON + sizeof(*(pFrame->pwReason));
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Decode Disassociation
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeDisassociation(
--      PWLAN_FR_DISASSOC  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwReason = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_DISASSOC_OFF_REASON);
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Encode Association Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeAssocRequest(
--      PWLAN_FR_ASSOCREQ  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_ASSOCREQ_OFF_CAP_INFO);
--    pFrame->pwListenInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_ASSOCREQ_OFF_LISTEN_INT);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_ASSOCREQ_OFF_LISTEN_INT + sizeof(*(pFrame->pwListenInterval));
--}
--
--/*+
-- *
-- * Routine Description: (AP)
-- *  Decode Association Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeAssocRequest(
--      PWLAN_FR_ASSOCREQ  pFrame
--    )
--{
--    PWLAN_IE   pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_ASSOCREQ_OFF_CAP_INFO);
--    pFrame->pwListenInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_ASSOCREQ_OFF_LISTEN_INT);
--
--    /* Information elements */
--    pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                            + WLAN_ASSOCREQ_OFF_SSID);
--
--    while (((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) {
--        switch (pItem->byElementID) {
--        case WLAN_EID_SSID:
--            if (pFrame->pSSID == NULL)
--                pFrame->pSSID = (PWLAN_IE_SSID)pItem;
--            break;
--        case WLAN_EID_SUPP_RATES:
--            if (pFrame->pSuppRates == NULL)
--                pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        case WLAN_EID_RSN:
--            if (pFrame->pRSN == NULL)
--                pFrame->pRSN = (PWLAN_IE_RSN)pItem;
--            break;
--        case WLAN_EID_RSN_WPA:
--            if (pFrame->pRSNWPA == NULL) {
--            }
--            break;
--        case WLAN_EID_EXTSUPP_RATES:
--            if (pFrame->pExtSuppRates == NULL)
--                pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        default:
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Unrecognized EID=%dd in assocreq decode.\n",
--                    pItem->byElementID);
--            break;
--        }
--        pItem = (PWLAN_IE)(((u8 *)pItem) + 2 + pItem->len);
--    }
--}
--
--/*+
-- *
-- * Routine Description: (AP)
-- *  Encode Association Response
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeAssocResponse(
--      PWLAN_FR_ASSOCRESP  pFrame
--     )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_ASSOCRESP_OFF_CAP_INFO);
--    pFrame->pwStatus = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_ASSOCRESP_OFF_STATUS);
--    pFrame->pwAid = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                            + WLAN_ASSOCRESP_OFF_AID);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_ASSOCRESP_OFF_AID
--                  + sizeof(*(pFrame->pwAid));
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Decode Association Response
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeAssocResponse(
--     PWLAN_FR_ASSOCRESP  pFrame
--     )
--{
--    PWLAN_IE   pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_ASSOCRESP_OFF_CAP_INFO);
--    pFrame->pwStatus = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_ASSOCRESP_OFF_STATUS);
--    pFrame->pwAid = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                            + WLAN_ASSOCRESP_OFF_AID);
--
--    /* Information elements */
--    pFrame->pSuppRates  = (PWLAN_IE_SUPP_RATES)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                           + WLAN_ASSOCRESP_OFF_SUPP_RATES);
--
--    pItem = (PWLAN_IE)(pFrame->pSuppRates);
--    pItem = (PWLAN_IE)(((u8 *)pItem) + 2 + pItem->len);
--
--    if ((((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) && (pItem->byElementID == WLAN_EID_EXTSUPP_RATES)) {
--        pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "pFrame->pExtSuppRates=[%p].\n", pItem);
+-		local_bh_disable();
++	else if (test_and_clear_sta_flag(sta, WLAN_STA_UAPSD))
+ 		ieee80211_sta_ps_deliver_uapsd(sta);
+-		local_bh_enable();
 -	} else
--        pFrame->pExtSuppRates = NULL;
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Encode Reassociation Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeReassocRequest(
--      PWLAN_FR_REASSOCREQ  pFrame
--     )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_REASSOCREQ_OFF_CAP_INFO);
--    pFrame->pwListenInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                      + WLAN_REASSOCREQ_OFF_LISTEN_INT);
--    pFrame->pAddrCurrAP = (PIEEE_ADDR)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_REASSOCREQ_OFF_CURR_AP);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_REASSOCREQ_OFF_CURR_AP + sizeof(*(pFrame->pAddrCurrAP));
--}
--
--/*+
-- *
-- * Routine Description: (AP)
-- *  Decode Reassociation Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeReassocRequest(
--      PWLAN_FR_REASSOCREQ  pFrame
--     )
--{
--    PWLAN_IE   pItem;
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_REASSOCREQ_OFF_CAP_INFO);
--    pFrame->pwListenInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                      + WLAN_REASSOCREQ_OFF_LISTEN_INT);
--    pFrame->pAddrCurrAP = (PIEEE_ADDR)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_REASSOCREQ_OFF_CURR_AP);
--
--    /* Information elements */
--    pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                       + WLAN_REASSOCREQ_OFF_SSID);
--
--    while (((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) {
--
--        switch (pItem->byElementID) {
--        case WLAN_EID_SSID:
--            if (pFrame->pSSID == NULL)
--                pFrame->pSSID = (PWLAN_IE_SSID)pItem;
--            break;
--        case WLAN_EID_SUPP_RATES:
--            if (pFrame->pSuppRates == NULL)
--                pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        case WLAN_EID_RSN:
--            if (pFrame->pRSN == NULL)
--                pFrame->pRSN = (PWLAN_IE_RSN)pItem;
--            break;
--        case WLAN_EID_RSN_WPA:
--		if (pFrame->pRSNWPA == NULL)
--            break;
--
--        case WLAN_EID_EXTSUPP_RATES:
--            if (pFrame->pExtSuppRates == NULL)
--                pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--        default:
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Unrecognized EID=%dd in reassocreq decode.\n",
--                        pItem->byElementID);
--            break;
--        }
--        pItem = (PWLAN_IE)(((u8 *)pItem) + 2 + pItem->len);
--    }
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Encode Probe Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeProbeRequest(
--     PWLAN_FR_PROBEREQ  pFrame
--     )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--    pFrame->len = WLAN_HDR_ADDR3_LEN;
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Decode Probe Request
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeProbeRequest(
--     PWLAN_FR_PROBEREQ  pFrame
--     )
--{
--    PWLAN_IE   pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Information elements */
--    pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)));
--
--    while (((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) {
--
--        switch (pItem->byElementID) {
--        case WLAN_EID_SSID:
--            if (pFrame->pSSID == NULL)
--                pFrame->pSSID = (PWLAN_IE_SSID)pItem;
--            break;
--
--        case WLAN_EID_SUPP_RATES:
--            if (pFrame->pSuppRates == NULL)
--                pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        case WLAN_EID_EXTSUPP_RATES:
--            if (pFrame->pExtSuppRates == NULL)
--                pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        default:
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Bad EID=%dd in probereq\n", pItem->byElementID);
--            break;
--        }
--
--        pItem = (PWLAN_IE)(((u8 *)pItem) + 2 +  pItem->len);
--    }
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Encode Probe Response
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeProbeResponse(
--     PWLAN_FR_PROBERESP  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--	/* Fixed Fields */
--	pFrame->pqwTimestamp =
--		(u64 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
--			WLAN_PROBERESP_OFF_TS);
--    pFrame->pwBeaconInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_PROBERESP_OFF_BCN_INT);
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_PROBERESP_OFF_CAP_INFO);
--
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_PROBERESP_OFF_CAP_INFO +
--                  sizeof(*(pFrame->pwCapInfo));
--}
--
--/*+
-- *
-- * Routine Description:
-- *  Decode Probe Response
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeProbeResponse(
--     PWLAN_FR_PROBERESP  pFrame
--    )
--{
--    PWLAN_IE    pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--	/* Fixed Fields */
--	pFrame->pqwTimestamp =
--		(u64 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
--			WLAN_PROBERESP_OFF_TS);
--    pFrame->pwBeaconInterval = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                       + WLAN_PROBERESP_OFF_BCN_INT);
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_PROBERESP_OFF_CAP_INFO);
--
--    /* Information elements */
--    pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                       + WLAN_PROBERESP_OFF_SSID);
--
--    while (((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) {
--        switch (pItem->byElementID) {
--        case WLAN_EID_SSID:
--            if (pFrame->pSSID == NULL)
--                pFrame->pSSID = (PWLAN_IE_SSID)pItem;
--            break;
--        case WLAN_EID_SUPP_RATES:
--            if (pFrame->pSuppRates == NULL)
--                pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--        case WLAN_EID_FH_PARMS:
--            break;
--        case WLAN_EID_DS_PARMS:
--            if (pFrame->pDSParms == NULL)
--                pFrame->pDSParms = (PWLAN_IE_DS_PARMS)pItem;
--            break;
--        case WLAN_EID_CF_PARMS:
--            if (pFrame->pCFParms == NULL)
--                pFrame->pCFParms = (PWLAN_IE_CF_PARMS)pItem;
--            break;
--        case WLAN_EID_IBSS_PARMS:
--            if (pFrame->pIBSSParms == NULL)
--                pFrame->pIBSSParms = (PWLAN_IE_IBSS_PARMS)pItem;
--            break;
--
--        case WLAN_EID_RSN:
--            if (pFrame->pRSN == NULL)
--                pFrame->pRSN = (PWLAN_IE_RSN)pItem;
--            break;
--        case WLAN_EID_RSN_WPA:
--            if (pFrame->pRSNWPA == NULL) {
--            }
--            break;
--        case WLAN_EID_ERP:
--            if (pFrame->pERP == NULL)
--                pFrame->pERP = (PWLAN_IE_ERP)pItem;
--            break;
--        case WLAN_EID_EXTSUPP_RATES:
--            if (pFrame->pExtSuppRates == NULL)
--                pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
--            break;
--
--        case WLAN_EID_COUNTRY:      /* 7 */
--            if (pFrame->pIE_Country == NULL)
--                pFrame->pIE_Country = (PWLAN_IE_COUNTRY)pItem;
--            break;
--
--        case WLAN_EID_PWR_CONSTRAINT:   /* 32 */
--            if (pFrame->pIE_PowerConstraint == NULL)
--                pFrame->pIE_PowerConstraint = (PWLAN_IE_PW_CONST)pItem;
--            break;
--
--        case WLAN_EID_CH_SWITCH:    /* 37 */
--            if (pFrame->pIE_CHSW == NULL)
--                pFrame->pIE_CHSW = (PWLAN_IE_CH_SW)pItem;
--            break;
--
--        case WLAN_EID_QUIET:        /* 40 */
--            if (pFrame->pIE_Quiet == NULL)
--                pFrame->pIE_Quiet = (PWLAN_IE_QUIET)pItem;
--            break;
--
--        case WLAN_EID_IBSS_DFS:
--            if (pFrame->pIE_IBSSDFS == NULL)
--                pFrame->pIE_IBSSDFS = (PWLAN_IE_IBSS_DFS)pItem;
--            break;
--
--        default:
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Bad EID=%dd in proberesp\n", pItem->byElementID);
--            break;
--        }
--
--        pItem = (PWLAN_IE)(((u8 *)pItem) + 2 +  pItem->len);
--    }
--}
--
--/*+
-- *
-- * Routine Description:
-- *     Encode Authentication frame
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeAuthen(
--      PWLAN_FR_AUTHEN  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwAuthAlgorithm = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                      + WLAN_AUTHEN_OFF_AUTH_ALG);
--    pFrame->pwAuthSequence = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                     + WLAN_AUTHEN_OFF_AUTH_SEQ);
--    pFrame->pwStatus = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_AUTHEN_OFF_STATUS);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_AUTHEN_OFF_STATUS + sizeof(*(pFrame->pwStatus));
--}
--
--/*+
-- *
-- * Routine Description:
-- *   Decode Authentication
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeAuthen(
--      PWLAN_FR_AUTHEN  pFrame
--    )
--{
--    PWLAN_IE    pItem;
--
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwAuthAlgorithm = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                      + WLAN_AUTHEN_OFF_AUTH_ALG);
--    pFrame->pwAuthSequence = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                     + WLAN_AUTHEN_OFF_AUTH_SEQ);
--    pFrame->pwStatus = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_AUTHEN_OFF_STATUS);
--
--    /* Information elements */
--    pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                       + WLAN_AUTHEN_OFF_CHALLENGE);
--
--    if ((((u8 *)pItem) < (pFrame->pBuf + pFrame->len)) && (pItem->byElementID == WLAN_EID_CHALLENGE))
--        pFrame->pChallenge = (PWLAN_IE_CHALLENGE)pItem;
--}
--
--/*+
-- *
-- * Routine Description:
-- *   Encode Authentication
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeDeauthen(
--      PWLAN_FR_DEAUTHEN  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwReason = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_DEAUTHEN_OFF_REASON);
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_DEAUTHEN_OFF_REASON + sizeof(*(pFrame->pwReason));
--}
--
--/*+
-- *
-- * Routine Description:
-- *   Decode Deauthentication
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrDecodeDeauthen(
--      PWLAN_FR_DEAUTHEN  pFrame
--    )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwReason = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_DEAUTHEN_OFF_REASON);
--}
--
--/*+
-- *
-- * Routine Description: (AP)
-- *   Encode Reassociation Response
-- *
-- *
-- * Return Value:
-- *    None.
-- *
---*/
--
--void
--vMgrEncodeReassocResponse(
--      PWLAN_FR_REASSOCRESP  pFrame
--     )
--{
--    pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
--
--    /* Fixed Fields */
--    pFrame->pwCapInfo = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                                + WLAN_REASSOCRESP_OFF_CAP_INFO);
--    pFrame->pwStatus = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                               + WLAN_REASSOCRESP_OFF_STATUS);
--    pFrame->pwAid = (u16 *)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
--                            + WLAN_REASSOCRESP_OFF_AID);
--
--    pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_REASSOCRESP_OFF_AID + sizeof(*(pFrame->pwAid));
--}
-diff --git a/drivers/staging/vt6656/80211mgr.h b/drivers/staging/vt6656/80211mgr.h
-deleted file mode 100644
-index 39cde1a..0000000
---- a/drivers/staging/vt6656/80211mgr.h
-+++ /dev/null
-@@ -1,808 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: 80211mgr.h
-- *
-- * Purpose: 802.11 management frames pre-defines.
-- *
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- */
--
--#ifndef __80211MGR_H__
--#define __80211MGR_H__
--
--#include "80211hdr.h"
--
--#define WLAN_MIN_ARRAY          1
--
--/* Information Element ID value */
--#define WLAN_EID_SSID           0
--#define WLAN_EID_SUPP_RATES     1
--#define WLAN_EID_FH_PARMS       2
--#define WLAN_EID_DS_PARMS       3
--#define WLAN_EID_CF_PARMS       4
--#define WLAN_EID_TIM            5
--#define WLAN_EID_IBSS_PARMS     6
--#define WLAN_EID_COUNTRY        7
--#define WLAN_EID_CHALLENGE      16
--#define WLAN_EID_PWR_CONSTRAINT 32
--#define WLAN_EID_PWR_CAPABILITY 33
--#define WLAN_EID_TPC_REQ        34
--#define WLAN_EID_TPC_REP        35
--#define WLAN_EID_SUPP_CH        36
--#define WLAN_EID_CH_SWITCH      37
--#define WLAN_EID_MEASURE_REQ    38
--#define WLAN_EID_MEASURE_REP    39
--#define WLAN_EID_QUIET          40
--#define WLAN_EID_IBSS_DFS       41
--#define WLAN_EID_ERP            42
--/* reference 802.11i 7.3.2 table 20 */
--#define WLAN_EID_RSN            48
--#define WLAN_EID_EXTSUPP_RATES  50
--/* reference WiFi WPA spec */
--#define WLAN_EID_RSN_WPA        221
--
--#ifdef Cisco_ccx
--#define WLAN_EID_CCX        133
--#define WLAN_EID_CCX_IP        149
--#define WLAN_EID_CCX_Ver        221
--#endif
--
--#define WLAN_EID_ERP_NONERP_PRESENT             0x01
--#define WLAN_EID_ERP_USE_PROTECTION             0x02
--#define WLAN_EID_ERP_BARKER_MODE                0x04
--
--/* reason codes */
--#define WLAN_MGMT_REASON_RSVD                       0
--#define WLAN_MGMT_REASON_UNSPEC                     1
--#define WLAN_MGMT_REASON_PRIOR_AUTH_INVALID         2
--#define WLAN_MGMT_REASON_DEAUTH_LEAVING             3
--#define WLAN_MGMT_REASON_DISASSOC_INACTIVE          4
--#define WLAN_MGMT_REASON_DISASSOC_AP_BUSY           5
--#define WLAN_MGMT_REASON_CLASS2_NONAUTH             6
--#define WLAN_MGMT_REASON_CLASS3_NONASSOC            7
--#define WLAN_MGMT_REASON_DISASSOC_STA_HASLEFT       8
--#define WLAN_MGMT_REASON_CANT_ASSOC_NONAUTH         9
--#define WLAN_MGMT_REASON_DISASSOC_PWR_CAP_UNACCEPT      10
--#define WLAN_MGMT_REASON_DISASSOC_SUPP_CH_UNACCEPT      11
--#define WLAN_MGMT_REASON_INVALID_IE                 13
--#define WLAN_MGMT_REASON_MIC_FAILURE                14
--#define WLAN_MGMT_REASON_4WAY_HANDSHAKE_TIMEOUT     15
--#define WLAN_MGMT_REASON_GRPKEY_UPDATE_TIMEOUT      16
--#define WLAN_MGMT_REASON_4WAY_INFO_DIFFERENT        17
--#define WLAN_MGMT_REASON_MULTCAST_CIPHER_INVALID    18
--#define WLAN_MGMT_REASON_UNCAST_CIPHER_INVALID      19
--#define WLAN_MGMT_REASON_AKMP_INVALID               20
--#define WLAN_MGMT_REASON_RSNE_UNSUPPORTED           21
--#define WLAN_MGMT_REASON_RSNE_CAP_INVALID           22
--#define WLAN_MGMT_REASON_80211X_AUTH_FAILED         23
--
--/* status codes */
--#define WLAN_MGMT_STATUS_SUCCESS                        0
--#define WLAN_MGMT_STATUS_UNSPEC_FAILURE                 1
--#define WLAN_MGMT_STATUS_CAPS_UNSUPPORTED               10
--#define WLAN_MGMT_STATUS_REASSOC_NO_ASSOC               11
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_UNSPEC            12
--#define WLAN_MGMT_STATUS_UNSUPPORTED_AUTHALG            13
--#define WLAN_MGMT_STATUS_RX_AUTH_NOSEQ                  14
--#define WLAN_MGMT_STATUS_CHALLENGE_FAIL                 15
--#define WLAN_MGMT_STATUS_AUTH_TIMEOUT                   16
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_BUSY              17
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_RATES             18
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_SHORTPREAMBLE     19
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_PBCC              20
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_AGILITY           21
--
--/* reference 802.11h 7.3.1.9 */
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_SPECTRUM_MNG  22
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_PWR_CAP       23
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_SUPP_CH       24
--
--/* reference 802.11g 7.3.1.9 */
--#define WLAN_MGMT_STATUS_SHORTSLOTTIME_UNSUPPORTED      25
--#define WLAN_MGMT_STATUS_DSSSOFDM_UNSUPPORTED           26
--
--/* reference 802.11i 7.3.1.9 table 19 */
--#define WLAN_MGMT_STATUS_INVALID_IE                     40
--#define WLAN_MGMT_STATUS_GROUP_CIPHER_INVALID           41
--#define WLAN_MGMT_STATUS_PAIRWISE_CIPHER_INVALID        42
--#define WLAN_MGMT_STATUS_AKMP_INVALID                   43
--#define WLAN_MGMT_STATUS_UNSUPPORT_RSN_IE_VER           44
--#define WLAN_MGMT_STATUS_INVALID_RSN_IE_CAP             45
--#define WLAN_MGMT_STATUS_CIPHER_REJECT                  46
--
--/* auth algorithm */
--#define WLAN_AUTH_ALG_OPENSYSTEM                0
--#define WLAN_AUTH_ALG_SHAREDKEY                 1
--
--/* management frame field offsets */
--
--/*
-- * Note: Not all fields are listed because of variable lengths
-- * Note: These offsets are from the start of the frame data
-- */
--
--#define WLAN_BEACON_OFF_TS                  0
--#define WLAN_BEACON_OFF_BCN_INT             8
--#define WLAN_BEACON_OFF_CAPINFO             10
--#define WLAN_BEACON_OFF_SSID                12
--
--#define WLAN_DISASSOC_OFF_REASON            0
--
--#define WLAN_ASSOCREQ_OFF_CAP_INFO          0
--#define WLAN_ASSOCREQ_OFF_LISTEN_INT        2
--#define WLAN_ASSOCREQ_OFF_SSID              4
--
--#define WLAN_ASSOCRESP_OFF_CAP_INFO         0
--#define WLAN_ASSOCRESP_OFF_STATUS           2
--#define WLAN_ASSOCRESP_OFF_AID              4
--#define WLAN_ASSOCRESP_OFF_SUPP_RATES       6
--
--#define WLAN_REASSOCREQ_OFF_CAP_INFO        0
--#define WLAN_REASSOCREQ_OFF_LISTEN_INT      2
--#define WLAN_REASSOCREQ_OFF_CURR_AP         4
--#define WLAN_REASSOCREQ_OFF_SSID            10
--
--#define WLAN_REASSOCRESP_OFF_CAP_INFO       0
--#define WLAN_REASSOCRESP_OFF_STATUS         2
--#define WLAN_REASSOCRESP_OFF_AID            4
--#define WLAN_REASSOCRESP_OFF_SUPP_RATES     6
--
--#define WLAN_PROBEREQ_OFF_SSID              0
--
--#define WLAN_PROBERESP_OFF_TS               0
--#define WLAN_PROBERESP_OFF_BCN_INT          8
--#define WLAN_PROBERESP_OFF_CAP_INFO         10
--#define WLAN_PROBERESP_OFF_SSID             12
--
--#define WLAN_AUTHEN_OFF_AUTH_ALG            0
--#define WLAN_AUTHEN_OFF_AUTH_SEQ            2
--#define WLAN_AUTHEN_OFF_STATUS              4
--#define WLAN_AUTHEN_OFF_CHALLENGE           6
--
--#define WLAN_DEAUTHEN_OFF_REASON            0
--
--/* cipher suite selectors defined in 802.11i */
--#define WLAN_11i_CSS_USE_GROUP              0
--#define WLAN_11i_CSS_WEP40                  1
--#define WLAN_11i_CSS_TKIP                   2
--#define WLAN_11i_CSS_CCMP                   4
--#define WLAN_11i_CSS_WEP104                 5
--#define WLAN_11i_CSS_UNKNOWN                255
--
--/* authentication and key management suite selectors defined in 802.11i */
--#define WLAN_11i_AKMSS_802_1X               1
--#define WLAN_11i_AKMSS_PSK                  2
--#define WLAN_11i_AKMSS_UNKNOWN              255
--
--/* measurement type definitions reference IEEE 802.11h table 20b */
--#define MEASURE_TYPE_BASIC      0
--#define MEASURE_TYPE_CCA        1
--#define MEASURE_TYPE_RPI        2
--
--/* measurement request mode definitions reference IEEE 802.11h figure 46h */
--#define MEASURE_MODE_ENABLE     0x02
--#define MEASURE_MODE_REQ        0x04
--#define MEASURE_MODE_REP        0x08
--
--/* measurement report mode definitions reference IEEE 802.11h figure 46m */
--#define MEASURE_MODE_LATE       0x01
--#define MEASURE_MODE_INCAPABLE  0x02
--#define MEASURE_MODE_REFUSED    0x04
--
--/* Information Element types */
--
--#pragma pack(1)
--typedef struct tagWLAN_IE {
--    u8   byElementID;
--    u8   len;
--} __attribute__ ((__packed__))
--WLAN_IE, *PWLAN_IE;
--
--/* Service Set IDentity (SSID) */
--#pragma pack(1)
--typedef struct tagWLAN_IE_SSID {
--    u8   byElementID;
--    u8   len;
--    u8   abySSID[1];
--} __attribute__ ((__packed__))
--WLAN_IE_SSID, *PWLAN_IE_SSID;
--
--/* Supported Rates */
--#pragma pack(1)
--typedef struct tagWLAN_IE_SUPP_RATES {
--    u8   byElementID;
--    u8   len;
--    u8   abyRates[1];
--} __attribute__ ((__packed__))
--WLAN_IE_SUPP_RATES,  *PWLAN_IE_SUPP_RATES;
--
--/* FH Parameter Set */
--#pragma pack(1)
--typedef struct _WLAN_IE_FH_PARMS {
--    u8    byElementID;
--    u8    len;
--    u16    wDwellTime;
--    u8    byHopSet;
--    u8    byHopPattern;
--    u8    byHopIndex;
--} WLAN_IE_FH_PARMS,  *PWLAN_IE_FH_PARMS;
--
--/* DS Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_DS_PARMS {
--    u8   byElementID;
--    u8   len;
--    u8   byCurrChannel;
--} __attribute__ ((__packed__))
--WLAN_IE_DS_PARMS,  *PWLAN_IE_DS_PARMS;
--
--/* CF Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_CF_PARMS {
--    u8   byElementID;
--    u8   len;
--    u8   byCFPCount;
--    u8   byCFPPeriod;
--    u16   wCFPMaxDuration;
--    u16   wCFPDurRemaining;
--} __attribute__ ((__packed__))
--WLAN_IE_CF_PARMS,  *PWLAN_IE_CF_PARMS;
--
--/* TIM */
--#pragma pack(1)
--typedef struct tagWLAN_IE_TIM {
--    u8   byElementID;
--    u8   len;
--    u8   byDTIMCount;
--    u8   byDTIMPeriod;
--    u8   byBitMapCtl;
--    u8   byVirtBitMap[1];
--} __attribute__ ((__packed__))
--WLAN_IE_TIM,  *PWLAN_IE_TIM;
--
--/* IBSS Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_IBSS_PARMS {
--    u8   byElementID;
--    u8   len;
--    u16   wATIMWindow;
--} __attribute__ ((__packed__))
--WLAN_IE_IBSS_PARMS, *PWLAN_IE_IBSS_PARMS;
--
--/* Challenge Text */
--#pragma pack(1)
--typedef struct tagWLAN_IE_CHALLENGE {
--    u8   byElementID;
--    u8   len;
--    u8   abyChallenge[1];
--} __attribute__ ((__packed__))
--WLAN_IE_CHALLENGE,  *PWLAN_IE_CHALLENGE;
--
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN_EXT {
--    u8 byElementID;
--    u8 len;
--    u8 abyOUI[4];
--    u16 wVersion;
--    u8 abyMulticast[4];
--    u16 wPKCount;
--	struct {
--		u8 abyOUI[4];
--	} PKSList[1];
--	/* the rest is variable so need to overlay ieauth structure */
--} WLAN_IE_RSN_EXT, *PWLAN_IE_RSN_EXT;
--
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN_AUTH {
--    u16 wAuthCount;
--    struct {
--        u8 abyOUI[4];
--    } AuthKSList[1];
--} WLAN_IE_RSN_AUTH, *PWLAN_IE_RSN_AUTH;
--
--/* RSN Identity */
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN {
--    u8   byElementID;
--    u8   len;
--    u16   wVersion;
--    u8   abyRSN[WLAN_MIN_ARRAY];
--} WLAN_IE_RSN, *PWLAN_IE_RSN;
--
--/* CCX Identity DavidWang */
--#pragma pack(1)
--typedef struct tagWLAN_IE_CCX {
--u8   byElementID;
--u8   len;
--u8   abyCCX[30];
--} WLAN_IE_CCX, *PWLAN_IE_CCX;
--#pragma pack(1)
--typedef struct tagWLAN_IE_CCX_IP {
--u8   byElementID;
--u8   len;
--u8   abyCCXOUI[4];
--u8   abyCCXIP[4];
--u8   abyCCXREV[2];
--} WLAN_IE_CCX_IP, *PWLAN_IE_CCX_IP;
--#pragma pack(1)
--typedef struct tagWLAN_IE_CCX_Ver {
--u8   byElementID;
--u8   len;
--u8   abyCCXVer[5];
--} WLAN_IE_CCX_Ver, *PWLAN_IE_CCX_Ver;
--
--/* ERP */
--#pragma pack(1)
--typedef struct tagWLAN_IE_ERP {
--    u8   byElementID;
--    u8   len;
--    u8   byContext;
--} __attribute__ ((__packed__))
--WLAN_IE_ERP,  *PWLAN_IE_ERP;
--
--#pragma pack(1)
--typedef struct _MEASEURE_REQ {
--    u8                byChannel;
--    u8                abyStartTime[8];
--    u8                abyDuration[2];
--} MEASEURE_REQ, *PMEASEURE_REQ,
--  MEASEURE_REQ_BASIC, *PMEASEURE_REQ_BASIC,
--  MEASEURE_REQ_CCA, *PMEASEURE_REQ_CCA,
--  MEASEURE_REQ_RPI, *PMEASEURE_REQ_RPI;
--
--typedef struct _MEASEURE_REP_BASIC {
--    u8                byChannel;
--    u8                abyStartTime[8];
--    u8                abyDuration[2];
--    u8                byMap;
--} MEASEURE_REP_BASIC, *PMEASEURE_REP_BASIC;
--
--typedef struct _MEASEURE_REP_CCA {
--    u8                byChannel;
--    u8                abyStartTime[8];
--    u8                abyDuration[2];
--    u8                byCCABusyFraction;
--} MEASEURE_REP_CCA, *PMEASEURE_REP_CCA;
--
--typedef struct _MEASEURE_REP_RPI {
--    u8                byChannel;
--    u8                abyStartTime[8];
--    u8                abyDuration[2];
--    u8                abyRPIdensity[8];
--} MEASEURE_REP_RPI, *PMEASEURE_REP_RPI;
--
--typedef union _MEASEURE_REP {
--
--    MEASEURE_REP_BASIC  sBasic;
--    MEASEURE_REP_CCA    sCCA;
--    MEASEURE_REP_RPI    sRPI;
--
--} MEASEURE_REP, *PMEASEURE_REP;
--
--typedef struct _WLAN_IE_MEASURE_REQ {
--    u8                byElementID;
--    u8                len;
--    u8                byToken;
--    u8                byMode;
--    u8                byType;
--    MEASEURE_REQ        sReq;
--} WLAN_IE_MEASURE_REQ, *PWLAN_IE_MEASURE_REQ;
--
--typedef struct _WLAN_IE_MEASURE_REP {
--    u8                byElementID;
--    u8                len;
--    u8                byToken;
--    u8                byMode;
--    u8                byType;
--    MEASEURE_REP        sRep;
--} WLAN_IE_MEASURE_REP, *PWLAN_IE_MEASURE_REP;
--
--typedef struct _WLAN_IE_CH_SW {
--    u8                byElementID;
--    u8                len;
--    u8                byMode;
--    u8                byChannel;
--    u8                byCount;
--} WLAN_IE_CH_SW, *PWLAN_IE_CH_SW;
--
--typedef struct _WLAN_IE_QUIET {
--    u8                byElementID;
--    u8                len;
--    u8                byQuietCount;
--    u8                byQuietPeriod;
--    u8                abyQuietDuration[2];
--    u8                abyQuietOffset[2];
--} WLAN_IE_QUIET, *PWLAN_IE_QUIET;
--
--typedef struct _WLAN_IE_COUNTRY {
--    u8                byElementID;
--    u8                len;
--    u8                abyCountryString[3];
--    u8                abyCountryInfo[3];
--} WLAN_IE_COUNTRY, *PWLAN_IE_COUNTRY;
--
--typedef struct _WLAN_IE_PW_CONST {
--    u8                byElementID;
--    u8                len;
--    u8                byPower;
--} WLAN_IE_PW_CONST, *PWLAN_IE_PW_CONST;
--
--typedef struct _WLAN_IE_PW_CAP {
--    u8                byElementID;
--    u8                len;
--    u8                byMinPower;
--    u8                byMaxPower;
--} WLAN_IE_PW_CAP, *PWLAN_IE_PW_CAP;
--
--typedef struct _WLAN_IE_SUPP_CH {
--    u8                byElementID;
--    u8                len;
--    u8                abyChannelTuple[2];
--} WLAN_IE_SUPP_CH, *PWLAN_IE_SUPP_CH;
--
--typedef struct _WLAN_IE_TPC_REQ {
--    u8                byElementID;
--    u8                len;
--} WLAN_IE_TPC_REQ, *PWLAN_IE_TPC_REQ;
--
--typedef struct _WLAN_IE_TPC_REP {
--    u8                byElementID;
--    u8                len;
--    u8                byTxPower;
--    u8                byLinkMargin;
--} WLAN_IE_TPC_REP, *PWLAN_IE_TPC_REP;
--
--typedef struct _WLAN_IE_IBSS_DFS {
--    u8                byElementID;
--    u8                len;
--    u8                abyDFSOwner[6];
--    u8                byDFSRecovery;
--    u8                abyChannelMap[2];
--} WLAN_IE_IBSS_DFS, *PWLAN_IE_IBSS_DFS;
--
--#pragma pack()
--
--/* frame types */
--
--/* prototype structure, all mgmt frame types will start with these members */
--typedef struct tagWLAN_FR_MGMT {
--
--    unsigned int                  uType;
--    unsigned int                  len;
--    u8 *                 pBuf;
--    PUWLAN_80211HDR       pHdr;
--
--} WLAN_FR_MGMT,  *PWLAN_FR_MGMT;
--
--/* beacon frame */
--typedef struct tagWLAN_FR_BEACON {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--	/* fixed fields */
--	u64 *pqwTimestamp;
--    u16 *                   pwBeaconInterval;
--    u16 *                   pwCapInfo;
--    /* info elements */
--    PWLAN_IE_SSID           pSSID;
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--/*  PWLAN_IE_FH_PARMS       pFHParms; */
--    PWLAN_IE_DS_PARMS       pDSParms;
--    PWLAN_IE_CF_PARMS       pCFParms;
--    PWLAN_IE_TIM            pTIM;
--    PWLAN_IE_IBSS_PARMS     pIBSSParms;
--    PWLAN_IE_RSN            pRSN;
--    PWLAN_IE_RSN_EXT        pRSNWPA;
--    PWLAN_IE_ERP            pERP;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--    PWLAN_IE_COUNTRY        pIE_Country;
--    PWLAN_IE_PW_CONST       pIE_PowerConstraint;
--    PWLAN_IE_CH_SW          pIE_CHSW;
--    PWLAN_IE_IBSS_DFS       pIE_IBSSDFS;
--    PWLAN_IE_QUIET          pIE_Quiet;
--
--} WLAN_FR_BEACON, *PWLAN_FR_BEACON;
--
--/* IBSS ATIM frame */
--typedef struct tagWLAN_FR_IBSSATIM {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--
--	/* fixed fields */
--	/* info elements */
--	/* this frame type has a null body */
--
--} WLAN_FR_IBSSATIM, *PWLAN_FR_IBSSATIM;
--
--/* disassociation */
--typedef struct tagWLAN_FR_DISASSOC {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwReason;
--    /* info elements */
--
--} WLAN_FR_DISASSOC, *PWLAN_FR_DISASSOC;
--
--/* association request */
--typedef struct tagWLAN_FR_ASSOCREQ {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwCapInfo;
--    u16 *                   pwListenInterval;
--    /* info elements */
--    PWLAN_IE_SSID           pSSID;
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_RSN            pRSN;
--    PWLAN_IE_CCX            pCCX;
--    PWLAN_IE_CCX_IP            pCCXIP;
--    PWLAN_IE_CCX_Ver            pCCXVER;
--    PWLAN_IE_RSN_EXT        pRSNWPA;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--    PWLAN_IE_PW_CAP         pCurrPowerCap;
--    PWLAN_IE_SUPP_CH        pCurrSuppCh;
--
--} WLAN_FR_ASSOCREQ, *PWLAN_FR_ASSOCREQ;
--
--/* association response */
--typedef struct tagWLAN_FR_ASSOCRESP {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwCapInfo;
--    u16 *                   pwStatus;
--    u16 *                   pwAid;
--    /* info elements */
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--
--} WLAN_FR_ASSOCRESP, *PWLAN_FR_ASSOCRESP;
--
--/* reassociation request */
--typedef struct tagWLAN_FR_REASSOCREQ {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--
--    /* fixed fields */
--    u16 *                   pwCapInfo;
--    u16 *                   pwListenInterval;
--    PIEEE_ADDR              pAddrCurrAP;
--
--    /* info elements */
--    PWLAN_IE_SSID           pSSID;
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_RSN            pRSN;
--    PWLAN_IE_CCX            pCCX;
--    PWLAN_IE_CCX_IP            pCCXIP;
--    PWLAN_IE_CCX_Ver            pCCXVER;
--    PWLAN_IE_RSN_EXT        pRSNWPA;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--
--} WLAN_FR_REASSOCREQ, *PWLAN_FR_REASSOCREQ;
--
--/* reassociation response */
--typedef struct tagWLAN_FR_REASSOCRESP {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwCapInfo;
--    u16 *                   pwStatus;
--    u16 *                   pwAid;
--    /* info elements */
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--
--} WLAN_FR_REASSOCRESP, *PWLAN_FR_REASSOCRESP;
--
--/* probe request */
--typedef struct tagWLAN_FR_PROBEREQ {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    /* info elements */
--    PWLAN_IE_SSID           pSSID;
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--
--} WLAN_FR_PROBEREQ, *PWLAN_FR_PROBEREQ;
--
--/* probe response */
--typedef struct tagWLAN_FR_PROBERESP {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--	u64 *pqwTimestamp;
--    u16 *                   pwBeaconInterval;
--    u16 *                   pwCapInfo;
--    /* info elements */
--    PWLAN_IE_SSID           pSSID;
--    PWLAN_IE_SUPP_RATES     pSuppRates;
--    PWLAN_IE_DS_PARMS       pDSParms;
--    PWLAN_IE_CF_PARMS       pCFParms;
--    PWLAN_IE_IBSS_PARMS     pIBSSParms;
--    PWLAN_IE_RSN            pRSN;
--    PWLAN_IE_RSN_EXT        pRSNWPA;
--    PWLAN_IE_ERP            pERP;
--    PWLAN_IE_SUPP_RATES     pExtSuppRates;
--    PWLAN_IE_COUNTRY        pIE_Country;
--    PWLAN_IE_PW_CONST       pIE_PowerConstraint;
--    PWLAN_IE_CH_SW          pIE_CHSW;
--    PWLAN_IE_IBSS_DFS       pIE_IBSSDFS;
--    PWLAN_IE_QUIET          pIE_Quiet;
--
--} WLAN_FR_PROBERESP, *PWLAN_FR_PROBERESP;
--
--/* authentication */
--typedef struct tagWLAN_FR_AUTHEN {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwAuthAlgorithm;
--    u16 *                   pwAuthSequence;
--    u16 *                   pwStatus;
--    /* info elements */
--    PWLAN_IE_CHALLENGE      pChallenge;
--
--} WLAN_FR_AUTHEN, *PWLAN_FR_AUTHEN;
--
--/* deauthentication */
--typedef struct tagWLAN_FR_DEAUTHEN {
--
--    unsigned int                    uType;
--    unsigned int                    len;
--    u8 *                   pBuf;
--    PUWLAN_80211HDR         pHdr;
--    /* fixed fields */
--    u16 *                   pwReason;
--
--    /* info elements */
--
--} WLAN_FR_DEAUTHEN, *PWLAN_FR_DEAUTHEN;
--
--void
--vMgrEncodeBeacon(
--      PWLAN_FR_BEACON  pFrame
--     );
--
--void
--vMgrDecodeBeacon(
--      PWLAN_FR_BEACON  pFrame
--    );
--
--void
--vMgrEncodeDisassociation(
--      PWLAN_FR_DISASSOC  pFrame
--    );
--
--void
--vMgrDecodeDisassociation(
--      PWLAN_FR_DISASSOC  pFrame
--    );
--
--void
--vMgrEncodeAssocRequest(
--      PWLAN_FR_ASSOCREQ  pFrame
--    );
--
--void
--vMgrDecodeAssocRequest(
--      PWLAN_FR_ASSOCREQ  pFrame
--    );
--
--void
--vMgrEncodeAssocResponse(
--      PWLAN_FR_ASSOCRESP  pFrame
--    );
--
--void
--vMgrDecodeAssocResponse(
--     PWLAN_FR_ASSOCRESP  pFrame
--    );
--
--void
--vMgrEncodeReassocRequest(
--      PWLAN_FR_REASSOCREQ  pFrame
--    );
--
--void
--vMgrDecodeReassocRequest(
--      PWLAN_FR_REASSOCREQ  pFrame
--    );
--
--void
--vMgrEncodeProbeRequest(
--     PWLAN_FR_PROBEREQ  pFrame
--    );
--
--void
--vMgrDecodeProbeRequest(
--     PWLAN_FR_PROBEREQ  pFrame
--    );
--
--void
--vMgrEncodeProbeResponse(
--     PWLAN_FR_PROBERESP  pFrame
--    );
--
--void
--vMgrDecodeProbeResponse(
--     PWLAN_FR_PROBERESP  pFrame
--    );
--
--void
--vMgrEncodeAuthen(
--      PWLAN_FR_AUTHEN  pFrame
--    );
--
--void
--vMgrDecodeAuthen(
--      PWLAN_FR_AUTHEN  pFrame
--    );
--
--void
--vMgrEncodeDeauthen(
--      PWLAN_FR_DEAUTHEN  pFrame
--    );
--
--void
--vMgrDecodeDeauthen(
--      PWLAN_FR_DEAUTHEN  pFrame
--    );
--
--void
--vMgrEncodeReassocResponse(
--      PWLAN_FR_REASSOCRESP  pFrame
--    );
--
--#endif /* __80211MGR_H__ */
-diff --git a/drivers/staging/vt6656/Makefile b/drivers/staging/vt6656/Makefile
-index 92c6aa7..3dbe1f8 100644
---- a/drivers/staging/vt6656/Makefile
-+++ b/drivers/staging/vt6656/Makefile
-@@ -6,7 +6,6 @@ vt6656_stage-y +=	main_usb.o \
- 			card.o  \
- 			mac.o   \
- 			baseband.o \
--			80211mgr.o \
- 			wcmd.o\
- 			rxtx.o \
- 			dpc.o \
-diff --git a/drivers/staging/vt6656/bssdb.h b/drivers/staging/vt6656/bssdb.h
-index d415965..6cfa8af 100644
---- a/drivers/staging/vt6656/bssdb.h
-+++ b/drivers/staging/vt6656/bssdb.h
-@@ -32,7 +32,6 @@
+-		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++	local_bh_enable();
+ }
  
- #include <linux/skbuff.h>
- #include "80211hdr.h"
--#include "80211mgr.h"
- #include "card.h"
+ static int sta_prepare_rate_control(struct ieee80211_local *local,
+@@ -341,7 +333,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
  
- #define MAX_NODE_NUM             64
-diff --git a/drivers/staging/vt6656/key.h b/drivers/staging/vt6656/key.h
-index 4303c54..779a97a 100644
---- a/drivers/staging/vt6656/key.h
-+++ b/drivers/staging/vt6656/key.h
-@@ -30,7 +30,7 @@
- #ifndef __KEY_H__
- #define __KEY_H__
+ 	spin_lock_init(&sta->lock);
+ 	spin_lock_init(&sta->ps_lock);
+-	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
++	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
+ 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
+ 	mutex_init(&sta->ampdu_mlme.mtx);
+ #ifdef CONFIG_MAC80211_MESH
+@@ -1141,8 +1133,15 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	}
  
--#include "80211mgr.h"
-+#include "device.h"
+ 	ieee80211_add_pending_skbs(local, &pending);
+-	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-	clear_sta_flag(sta, WLAN_STA_PS_STA);
++
++	/* now we're no longer in the deliver code */
++	clear_sta_flag(sta, WLAN_STA_PS_DELIVER);
++
++	/* The station might have polled and then woken up before we responded,
++	 * so clear these flags now to avoid them sticking around.
++	 */
++	clear_sta_flag(sta, WLAN_STA_PSPOLL);
++	clear_sta_flag(sta, WLAN_STA_UAPSD);
+ 	spin_unlock(&sta->ps_lock);
  
- #define MAX_GROUP_KEY       4
- #define MAX_KEY_TABLE       11
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 894eea1..91351c6 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -30,7 +30,7 @@
- #define __WCMD_H__
+ 	atomic_dec(&ps->num_sta_ps);
+@@ -1542,10 +1541,26 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
  
- #include "80211hdr.h"
--#include "80211mgr.h"
-+#include "device.h"
+ 	trace_api_sta_block_awake(sta->local, pubsta, block);
  
- #define AUTHENTICATE_TIMEOUT   1000 //ms
- #define ASSOCIATE_TIMEOUT      1000 //ms
-diff --git a/drivers/staging/vt6656/wmgr.h b/drivers/staging/vt6656/wmgr.h
-index 2439068..f16dfe0 100644
---- a/drivers/staging/vt6656/wmgr.h
-+++ b/drivers/staging/vt6656/wmgr.h
-@@ -34,7 +34,6 @@
- #ifndef __WMGR_H__
- #define __WMGR_H__
+-	if (block)
++	if (block) {
+ 		set_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-	else if (test_sta_flag(sta, WLAN_STA_PS_DRIVER))
+-		ieee80211_queue_work(hw, &sta->drv_unblock_wk);
++		return;
++	}
++
++	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
++		return;
++
++	if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
++		set_sta_flag(sta, WLAN_STA_PS_DELIVER);
++		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++		ieee80211_queue_work(hw, &sta->drv_deliver_wk);
++	} else if (test_sta_flag(sta, WLAN_STA_PSPOLL) ||
++		   test_sta_flag(sta, WLAN_STA_UAPSD)) {
++		/* must be asleep in this case */
++		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++		ieee80211_queue_work(hw, &sta->drv_deliver_wk);
++	} else {
++		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++	}
+ }
+ EXPORT_SYMBOL(ieee80211_sta_block_awake);
  
--#include "80211mgr.h"
- #include "80211hdr.h"
- #include "wcmd.h"
- #include "bssdb.h"
-@@ -332,7 +331,6 @@ struct vnt_manager {
- 	int b11hEnable;
- 	int bSwitchChannel;
- 	u8 byNewChannel;
--	PWLAN_IE_MEASURE_REP    pCurrMeasureEIDRep;
- 	u32 uLengthOfRepEIDs;
- 	u8 abyCurrentMSRReq[sizeof(struct vnt_tx_mgmt)
- 		+ WLAN_A3FR_MAXLEN];
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 4acc5fc402fa..97152c946a7c 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -82,6 +82,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_TOFFSET_KNOWN,
+ 	WLAN_STA_MPSP_OWNER,
+ 	WLAN_STA_MPSP_RECIPIENT,
++	WLAN_STA_PS_DELIVER,
+ };
+ 
+ #define ADDBA_RESP_INTERVAL HZ
+@@ -265,7 +266,7 @@ struct ieee80211_tx_latency_stat {
+  * @last_rx_rate_vht_nss: rx status nss of last data packet
+  * @lock: used for locking all fields that require locking, see comments
+  *	in the header file.
+- * @drv_unblock_wk: used for driver PS unblocking
++ * @drv_deliver_wk: used for delivering frames after driver PS unblocking
+  * @listen_interval: listen interval of this station, when we're acting as AP
+  * @_flags: STA flags, see &enum ieee80211_sta_info_flags, do not use directly
+  * @ps_lock: used for powersave (when mac80211 is the AP) related locking
+@@ -345,7 +346,7 @@ struct sta_info {
+ 	void *rate_ctrl_priv;
+ 	spinlock_t lock;
+ 
+-	struct work_struct drv_unblock_wk;
++	struct work_struct drv_deliver_wk;
+ 
+ 	u16 listen_interval;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5214686d9fd1..8170d9945d6d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -469,7 +469,8 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		return TX_CONTINUE;
+ 
+ 	if (unlikely((test_sta_flag(sta, WLAN_STA_PS_STA) ||
+-		      test_sta_flag(sta, WLAN_STA_PS_DRIVER)) &&
++		      test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
++		      test_sta_flag(sta, WLAN_STA_PS_DELIVER)) &&
+ 		     !(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER))) {
+ 		int ac = skb_get_queue_mapping(tx->skb);
+ 
+@@ -486,7 +487,8 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		 * ahead and Tx the packet.
+ 		 */
+ 		if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
+-		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
++		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER) &&
++		    !test_sta_flag(sta, WLAN_STA_PS_DELIVER)) {
+ 			spin_unlock(&sta->ps_lock);
+ 			return TX_CONTINUE;
+ 		}
 -- 
-1.9.1
+2.0.0.rc0
 
