@@ -1,87 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:65328 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755192AbaFXTxA (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52207 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751351AbaFCTR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:53:00 -0400
-Received: by mail-wi0-f174.google.com with SMTP id bs8so6626529wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:59 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/27] iwlwifi: mvm: BT Coex - avoid the shared antenna for management frames
-Date: Tue, 24 Jun 2014 22:52:16 +0300
-Message-Id: <1403639541-4621-22-git-send-email-egrumbach@gmail.com> (sfid-20140624_220201_185964_7AF86ADB)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+	Tue, 3 Jun 2014 15:17:57 -0400
+Message-ID: <1401823338.2412.2.camel@deadeye.wl.decadent.org.uk> (sfid-20140603_211800_709793_E870D1C7)
+Subject: Re: [PATCH 0/3] brcm: add brcmfmac firmware files
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, linux-firmware@kernel.org
+Date: Tue, 03 Jun 2014 20:22:18 +0100
+In-Reply-To: <1397469068-19083-1-git-send-email-arend@broadcom.com>
+References: <1397469068-19083-1-git-send-email-arend@broadcom.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-o+5jiJIZ3eOD8ecIu8Nt"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If BT is active, we need to refrain from using the shared
-antenna. This logic is done in the firmware when we use the
-link quality tables. But for management frames, the rate is
-written in the Tx command by the driver.
-Hence the driver needs to make sure not use the shared
-antenna when BT is active for any frames that don't use
-the rate scale table such as management frames or multicast.
+--=-o+5jiJIZ3eOD8ecIu8Nt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c | 5 +++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h  | 1 +
- drivers/net/wireless/iwlwifi/mvm/tx.c   | 8 +++++++-
- 3 files changed, 13 insertions(+), 1 deletion(-)
+On Mon, 2014-04-14 at 11:51 +0200, Arend van Spriel wrote:
+> The brcmfmac driver added support for new devices. This patch
+> contains firmware files to be used for those devices.
+>=20
+> These apply to the master branch of the linux-firmware
+> repository.
+>=20
+> Arend van Spriel (3):
+>   brcm: add firmware for BCM43143 2.4G 11n USB device
+>   brcm: add firmware for BCM43143 2.4G 11n SDIO device
+>   brcm: add firmware for BCM4354 2x2 11ac SDIO device
+>=20
+>  WHENCE                      |   3 +++
+>  brcm/brcmfmac43143-sdio.bin | Bin 0 -> 385067 bytes
+>  brcm/brcmfmac43143.bin      | Bin 0 -> 397312 bytes
+>  brcm/brcmfmac4354-sdio.bin  | Bin 0 -> 507752 bytes
+>  4 files changed, 3 insertions(+)
+>  create mode 100755 brcm/brcmfmac43143-sdio.bin
+>  create mode 100644 brcm/brcmfmac43143.bin
+>  create mode 100644 brcm/brcmfmac4354-sdio.bin
+>=20
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index cae44ed..7e0388a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -1246,6 +1246,11 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 	return lut_type != BT_COEX_LOOSE_LUT;
- }
- 
-+bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm)
-+{
-+	return le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) == BT_OFF;
-+}
-+
- bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
- 				    enum ieee80211_band band)
- {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 472ef09..8419840 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -973,6 +973,7 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
- 				struct ieee80211_sta *sta);
- bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 				     struct ieee80211_sta *sta);
-+bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm);
- bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
- 				    enum ieee80211_band band);
- u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 3846a6c..4f7cff5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -205,7 +205,13 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
- 	mvm->mgmt_last_antenna_idx =
- 		iwl_mvm_next_antenna(mvm, mvm->fw->valid_tx_ant,
- 				     mvm->mgmt_last_antenna_idx);
--	rate_flags = BIT(mvm->mgmt_last_antenna_idx) << RATE_MCS_ANT_POS;
-+
-+	if (info->band == IEEE80211_BAND_2GHZ &&
-+	    !iwl_mvm_bt_coex_is_shared_ant_avail(mvm))
-+		rate_flags = BIT(ANT_A) << RATE_MCS_ANT_POS;
-+	else
-+		rate_flags =
-+			BIT(mvm->mgmt_last_antenna_idx) << RATE_MCS_ANT_POS;
- 
- 	/* Set CCK flag as needed */
- 	if ((rate_idx >= IWL_FIRST_CCK_RATE) && (rate_idx <= IWL_LAST_CCK_RATE))
--- 
-1.8.3.2
+Applied, thanks.  Sorry for the delay.
 
+Ben.
+
+--=20
+Ben Hutchings
+If more than one person is responsible for a bug, no one is at fault.
+
+--=-o+5jiJIZ3eOD8ecIu8Nt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUAU44gaue/yOyVhhEJAQp1shAAr1HWB5RWg7T+iRtYS+3E09NW+8+EHOTD
+2VmF+gqsYrX5uQX7LXsBqlfgwknZVFTwVKJY43rzsoYs3wxLPS+oIqIM8RZcXze9
+PRqX4RUvSQTdy91xlwD7Rg7ggVr/W53legvJ2tDiekn9GO/IsGo0qTP62mbHd6X2
+erVT6J7uJFarlksLZwKojUI8UHgYQer7NkM+r6eNdHZBK403fSaoMIrzBFxZ5sq+
+J2nEMZ1Hzmug+W5+kqR82A46ev2jDEqwbL3A0lIkTcMlko+pbOYPpBSUhlnvp//1
+fyqwhsz193/dkbaLm73l1PJSPeE+waCLxhxPv5rPb8uGChwPHrmhY8LWCmGIYLGa
+8bZFRYFURqWTJKq3x5fxFz7r40Ioav1UJZPzG7+BWNIFrnVqRGv2fp7b3qfctThR
+w96xaHVVV28FLfap5K8+AcDrb/OFddSHCB3LONsUeBRBIeFlTBU2MPwim6rkV9S3
+Ydq+Xs5mtvkHr8i2k8V23yiEJntTbHQIAiZiJ8U6ihM/ubQ6hD76hgfwSiNCQlVq
+2hQc13wJj8FZRTkBehtiWIV3RIHMmfHGvs1+opGIHRKPL6bhnZSZNYIlsvVZOi7A
+4nFfy2r2mXUpCOSvAfXmyDpTHLXno6HpEZiRp7yP7B6bWYSz+asYXEzlwJGsd9n5
+Cueuok+AufU=
+=MooV
+-----END PGP SIGNATURE-----
+
+--=-o+5jiJIZ3eOD8ecIu8Nt--
