@@ -1,214 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36392 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932695AbaFQJQr (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42166 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933083AbaFCQZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:16:47 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC 3/3] brcmfmac: update band and regulatory info before wiphy_register()
-Date: Tue, 17 Jun 2014 11:16:21 +0200
-Message-ID: <1402996581-10764-4-git-send-email-arend@broadcom.com> (sfid-20140617_111657_800334_0CC69B11)
-In-Reply-To: <1402996581-10764-1-git-send-email-arend@broadcom.com>
-References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Jun 2014 12:25:22 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [RFC 3/4] ath10k:  save firmware stack upon firmware crash.
+Date: Tue,  3 Jun 2014 09:25:18 -0700
+Message-Id: <1401812719-25061-3-git-send-email-greearb@candelatech.com> (sfid-20140603_182533_872428_71631A97)
+In-Reply-To: <1401812719-25061-1-git-send-email-greearb@candelatech.com>
+References: <1401812719-25061-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The band information was determined when bringing up the wireless
-interface. According description of wiphy_apply_custom_regulatory()
-it should be called before wiphy_register(). Currently, the driver
-calls the function twice. Once before calling wiphy_register() and
-once upon bringing up the interface. This is changed so it will
-determine band information and custom regulatory info before the
-wiphy_register() call.
+From: Ben Greear <greearb@candelatech.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Should help debug firmware crashes, and give users a way
+to provide some useful debug reports to firmware developers.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 93 ++++++++++------------
- 1 file changed, 40 insertions(+), 53 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  |  3 +++
+ drivers/net/wireless/ath/ath10k/debug.c | 11 ++++++++++-
+ drivers/net/wireless/ath/ath10k/pci.c   | 35 +++++++++++++++++++++++++++++++++
+ 3 files changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 2464e7e..dbe391c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -191,7 +191,6 @@ static struct ieee80211_supported_band __wl_band_2ghz = {
- 	.n_channels = ARRAY_SIZE(__wl_2ghz_channels),
- 	.bitrates = wl_g_rates,
- 	.n_bitrates = wl_g_rates_size,
--	.ht_cap = {IEEE80211_HT_CAP_SUP_WIDTH_20_40, true},
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4068910..b331942 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -42,6 +42,7 @@
+ #define ATH10K_NUM_CHANS 38
+ 
+ #define REG_DUMP_COUNT_QCA988X 60 /* from pci.h */
++#define ATH10K_FW_STACK_SIZE 4096
+ 
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+@@ -348,6 +349,7 @@ enum ath10k_dev_flags {
+ enum ath10k_fw_error_dump_type {
+ 	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
+ 	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
++	ATH10K_FW_ERROR_DUMP_STACK = 2,
+ 
+ 	ATH10K_FW_ERROR_DUMP_MAX,
  };
+@@ -528,6 +530,7 @@ struct ath10k {
+ 	bool crashed_since_read;
+ 	struct ath10k_dbglog_entry_storage dbglog_entry_data;
+ 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
++	unsigned char stack_buf[ATH10K_FW_STACK_SIZE];
  
- static struct ieee80211_supported_band __wl_band_5ghz_a = {
-@@ -4377,7 +4376,6 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
- static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 1f18412..9c9456d 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -599,6 +599,7 @@ EXPORT_SYMBOL(ath10k_dbg_save_fw_dbg_buffer);
+ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
  {
- 	struct wiphy *wiphy;
--	s32 err = 0;
+ 	unsigned int len = (sizeof(ar->dbglog_entry_data)
++			    + sizeof(ar->stack_buf)
+ 			    + sizeof(ar->reg_dump_values));
+ 	unsigned int sofar = 0;
+ 	char *buf;
+@@ -610,7 +611,7 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	sofar += hdr_len;
  
- 	wiphy = wiphy_new(&wl_cfg80211_ops, sizeof(struct brcmf_cfg80211_info));
- 	if (!wiphy) {
-@@ -4409,15 +4407,6 @@ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
- 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	brcmf_wiphy_pno_params(wiphy);
--	brcmf_dbg(INFO, "Registering custom regulatory\n");
--	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
--	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
--	err = wiphy_register(wiphy);
--	if (err < 0) {
--		brcmf_err("Could not register wiphy device (%d)\n", err);
--		wiphy_free(wiphy);
--		return ERR_PTR(err);
--	}
- 	return wiphy;
+ 	/* So we can add headers to the data dump */
+-	len += 2 * sizeof(*dump_tlv);
++	len += 3 * sizeof(*dump_tlv);
+ 
+ 	/* This is going to get big when we start dumping FW RAM and such,
+ 	 * so go ahead and use vmalloc.
+@@ -637,6 +638,14 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	memcpy(dump_tlv->tlv_data, &ar->reg_dump_values, dump_tlv->tlv_len);
+ 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
+ 
++	/* Gather firmware stack dump */
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = ATH10K_FW_ERROR_DUMP_STACK;
++	dump_tlv->tlv_len = sizeof(ar->stack_buf);
++	memcpy(dump_tlv->tlv_data, &ar->stack_buf, dump_tlv->tlv_len);
++	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
++
++	WARN_ON(sofar != len);
+ 	return dump_data;
  }
  
-@@ -5397,17 +5386,11 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	wiphy = cfg_to_wiphy(cfg);
- 	wiphy->bands[IEEE80211_BAND_2GHZ] = bands[IEEE80211_BAND_2GHZ];
- 	wiphy->bands[IEEE80211_BAND_5GHZ] = bands[IEEE80211_BAND_5GHZ];
--	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
- 
- 	return err;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 36da9a5..821a216 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -833,6 +833,38 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
  }
  
- 
--static s32 brcmf_dongle_probecap(struct brcmf_cfg80211_info *cfg)
--{
--	return brcmf_update_wiphybands(cfg);
--}
--
- static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
++static void ath10k_save_firmware_mem_helper(struct ath10k *ar, u32 sz,
++					    unsigned char *to, u32 addr)
++{
++	u32 host_addr;
++	u32 reg_dump_area;
++	int ret;
++
++	host_addr = host_interest_item_address(addr);
++
++	ret = ath10k_pci_diag_read_mem(ar, host_addr, &reg_dump_area,
++				       sizeof(u32));
++	if (ret != 0) {
++		ath10k_warn("failed to read FW addr: %d (addr %d)\n",
++			    ret, addr);
++		return;
++	}
++
++	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area, to, sz);
++	if (ret != 0)
++		ath10k_err("failed to read FW memory: %d (addr %d sz %d)\n",
++			   ret, reg_dump_area, sz);
++}
++
++/* Save the main firmware stack */
++static void ath10k_save_firmware_stack(struct ath10k *ar)
++{
++	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 8);
++	ath10k_save_firmware_mem_helper(ar, ATH10K_FW_STACK_SIZE,
++					ar->stack_buf, HI_ITEM(hi_stack));
++}
++
++
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
  {
- 	struct net_device *ndev;
-@@ -5443,9 +5426,6 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
- 					  NULL, NULL);
- 	if (err)
- 		goto default_conf_out;
--	err = brcmf_dongle_probecap(cfg);
--	if (err)
--		goto default_conf_out;
+ 	u32 reg_dump_area = 0;
+@@ -877,6 +909,9 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 			   reg_dump_values[i + 2],
+ 			   reg_dump_values[i + 3]);
  
- 	brcmf_configure_arp_offload(ifp, true);
- 
-@@ -5602,10 +5582,8 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 	INIT_LIST_HEAD(&cfg->vif_list);
- 
- 	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
--	if (IS_ERR(vif)) {
--		wiphy_free(wiphy);
--		return NULL;
--	}
-+	if (IS_ERR(vif))
-+		goto wiphy_out;
- 
- 	vif->ifp = ifp;
- 	vif->wdev.netdev = ndev;
-@@ -5615,35 +5593,51 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 	err = wl_init_priv(cfg);
- 	if (err) {
- 		brcmf_err("Failed to init iwm_priv (%d)\n", err);
--		goto cfg80211_attach_out;
-+		brcmf_free_vif(vif);
-+		goto wiphy_out;
- 	}
- 	ifp->vif = vif;
- 
-+	if (wiphy_is_40mhz_24ghz_disabled(wiphy) == false) {
-+		err = brcmf_enable_bw40_2g(ifp);
-+		if (!err)
-+			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
-+						      BRCMF_OBSS_COEX_AUTO);
-+	}
++	if (!ar->crashed_since_read)
++		ath10k_save_firmware_stack(ar);
 +
-+	/* determine d11 io type before updating bands */
-+	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION, &io_type);
-+	if (err) {
-+		brcmf_err("Failed to get D11 version (%d)\n", err);
-+		goto priv_out;
-+	}
-+	cfg->d11inf.io_type = (u8)io_type;
-+	brcmu_d11_attach(&cfg->d11inf);
-+
-+	err = brcmf_update_wiphybands(cfg);
-+	if (err)
-+		goto priv_out;
-+
-+	brcmf_dbg(INFO, "Registering custom regulatory\n");
-+	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
-+	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
-+	err = wiphy_register(wiphy);
-+	if (err < 0) {
-+		brcmf_err("Could not register wiphy device (%d)\n", err);
-+		goto priv_out;
-+	}
-+
- 	err = brcmf_p2p_attach(cfg);
- 	if (err) {
- 		brcmf_err("P2P initilisation failed (%d)\n", err);
--		goto cfg80211_p2p_attach_out;
-+		goto unreg_out;
- 	}
- 	err = brcmf_btcoex_attach(cfg);
- 	if (err) {
- 		brcmf_err("BT-coex initialisation failed (%d)\n", err);
- 		brcmf_p2p_detach(&cfg->p2p);
--		goto cfg80211_p2p_attach_out;
--	}
--
--	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
--	 * setup 40MHz in 2GHz band and enable OBSS scanning.
--	 */
--	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
--	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
--		err = brcmf_enable_bw40_2g(ifp);
--		if (!err)
--			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
--						      BRCMF_OBSS_COEX_AUTO);
-+		goto unreg_out;
- 	}
--	/* clear for now and rely on update later */
--	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
--	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
- 
- 	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
- 	if (err) {
-@@ -5651,22 +5645,15 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
- 	}
- 
--	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
--				    &io_type);
--	if (err) {
--		brcmf_err("Failed to get D11 version (%d)\n", err);
--		goto cfg80211_p2p_attach_out;
--	}
--	cfg->d11inf.io_type = (u8)io_type;
--	brcmu_d11_attach(&cfg->d11inf);
--
- 	return cfg;
- 
--cfg80211_p2p_attach_out:
-+unreg_out:
-+	wiphy_unregister(wiphy);
-+priv_out:
- 	wl_deinit_priv(cfg);
--
--cfg80211_attach_out:
- 	brcmf_free_vif(vif);
-+wiphy_out:
-+	wiphy_free(wiphy);
- 	return NULL;
- }
- 
+ 	/* Dump the debug logs on the target */
+ 	host_addr = host_interest_item_address(HI_ITEM(hi_dbglog_hdr));
+ 	if (ath10k_pci_diag_read_mem(ar, host_addr,
 -- 
-1.9.1
+1.7.11.7
 
