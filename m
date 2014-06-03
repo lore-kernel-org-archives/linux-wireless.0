@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33852 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60141 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932134AbaFLGu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 02:50:27 -0400
-Message-ID: <1402555774.4224.1.camel@jlt4.sipsolutions.net> (sfid-20140612_085044_234967_B7951CA4)
-Subject: Re: [patch 12/13] net: mac80211: Remove silly timespec dance
+	id S1754061AbaFCTka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 15:40:30 -0400
+Message-ID: <1401824416.4157.32.camel@jlt4.sipsolutions.net> (sfid-20140603_214034_543097_142BADD1)
+Subject: Re: [PATCH v2 1/2] mac80211: move csa counters from sdata to
+ beacon/presp
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 12 Jun 2014 08:49:34 +0200
-In-Reply-To: <20140611234607.683770899@linutronix.de>
-References: <20140611234024.103571777@linutronix.de>
-	 <20140611234607.683770899@linutronix.de>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Jun 2014 21:40:16 +0200
+In-Reply-To: <1401345535-22991-2-git-send-email-michal.kazior@tieto.com> (sfid-20140529_084616_544643_50FA8B92)
+References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
+	 <1401345535-22991-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140529_084616_544643_50FA8B92)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-06-11 at 23:59 +0000, Thomas Gleixner wrote:
+On Thu, 2014-05-29 at 08:38 +0200, Michal Kazior wrote:
 
-> +	msrmnt = ktime_to_ms(net_timedelta(skb_arv));
 
-This is probably more of a question about net_timedelta(), but is
-ktime_get_real() really appropriate for duration measurements? Isn't
-that non-monotonic?
+> +               memcpy(new->csa_counter_offsets,
+> csa->counter_offsets_beacon,
+> +                      csa->n_counter_offsets_beacon *
+> +                      sizeof(*new->csa_counter_offsets));
+
+Given that it's used like an array, maybe
+sizeof(new->csa_counter_offsets[0]) would be more readable? (this is in
+a few places)
+
+> +++ b/net/mac80211/ibss.c
+> @@ -143,7 +143,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+>  		*pos++ = csa_settings->block_tx ? 1 : 0;
+>  		*pos++ = ieee80211_frequency_to_channel(
+>  				csa_settings->chandef.chan->center_freq);
+> -		sdata->csa_counter_offset_beacon[0] = (pos - presp->head);
+> +		presp->csa_counter_offsets[0] = (pos - presp->head);
+
+This seems slightly odd, but maybe it's a bugfix? Or are presp/beacon
+actually identical?
 
 johannes
 
