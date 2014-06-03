@@ -1,119 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61101 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59782 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbaFELxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 07:53:49 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
-Subject: [PATCH 2/5] rt2x00: change beaconing setup on RT2800
-Date: Thu,  5 Jun 2014 13:52:24 +0200
-Message-Id: <1401969147-3532-2-git-send-email-sgruszka@redhat.com> (sfid-20140605_135352_831649_D0476B9D)
-In-Reply-To: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
-References: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
+	id S932714AbaFCRKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 13:10:49 -0400
+Message-ID: <1401815433.4157.16.camel@jlt4.sipsolutions.net> (sfid-20140603_191052_819681_88C0F579)
+Subject: Re: [PATCH v7 1/5] mac80211: implement multi-vif in-place
+ reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jun 2014 19:10:33 +0200
+In-Reply-To: <CA+BoTQnhOePTuDrzv_YNU6dmroRydqWfNjSj_e0UT6=SWu5r9w@mail.gmail.com> (sfid-20140603_081522_037334_31BAA2B3)
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+	 <1401348851-26732-2-git-send-email-michal.kazior@tieto.com>
+	 <1401708800.5528.62.camel@dubbel>
+	 <CA+BoTQnhOePTuDrzv_YNU6dmroRydqWfNjSj_e0UT6=SWu5r9w@mail.gmail.com>
+	 (sfid-20140603_081522_037334_31BAA2B3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Matthias, on 5572 chip, even if we clear up TXWI
-of corresponding beacon, hardware still try to send it or do other
-action that increase power consumption peak up to 1A.
+On Tue, 2014-06-03 at 08:15 +0200, Michal Kazior wrote:
 
-To avoid the issue, setup beaconing dynamically by configuring offsets
-of currently active beacons and MAC_BSSID_DW1_BSS_BCN_NUM variable,
-which limit number of beacons that hardware will try to send.
+> Hmm... (my brain..)
+> 
+> Consider the following: 3 ctx, 6 vifs. cannot create more ctx.
+> ctx1=vif1+vif2, ctx2=vif3+vif4, ctx3=vif5+vif6. ctx1..3 have
+> chandef1..3.
+> 
+> vif5 wants chandef4 so it allocates ctx4 and sets `replaces` to ctx3.
+> vif6 wants chandef5 so it allocates ctx5 and sets `replaces` to ctx1.
+> [ note ctx1 with its assigned vif1 and vif2 ]
+> vif3 wants chandef5 so it reserves ctx5.
+> vif4 wants chandef5 so it reserves ctx5.
+> [ ctx2 could be considered now as "free" and could be set as
+> `replaces` for ctx5 instead of ctx1 ]
+> 
+> It's pretty far fetched for now I'd say - are there any devices that
+> support more than 2 channels now?
 
-Reported-by: Matthias Fend <Matthias.Fend@wolfvision.net>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c   | 45 +++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00queue.h |  1 +
- 2 files changed, 46 insertions(+)
+Not right now, afaik, but in theory I think our device could have such
+cases. But it wouldn't have enough vifs ;-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c17fcf2..c45b2d3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -947,6 +947,40 @@ static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
- 	return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
- }
- 
-+static void rt2800_update_beacons_setup(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct data_queue *queue = rt2x00dev->bcn;
-+	struct queue_entry *entry;
-+	int i, bcn_num = 0;
-+	u64 off, reg = 0;
-+	u32 bssid_dw1;
-+
-+	/*
-+	 * Setup offsets of all active beacons in BCN_OFFSET{0,1} registers.
-+	 */
-+	for (i = 0; i < queue->limit; i++) {
-+		entry = &queue->entries[i];
-+		if (!test_bit(ENTRY_BCN_ENABLED, &entry->flags))
-+			continue;
-+		off = rt2800_get_beacon_offset(rt2x00dev, entry->entry_idx);
-+		reg |= off << (8 * bcn_num);
-+		bcn_num++;
-+	}
-+
-+	WARN_ON_ONCE(bcn_num != rt2x00dev->intf_beaconing);
-+
-+	rt2800_register_write(rt2x00dev, BCN_OFFSET0, (u32) reg);
-+	rt2800_register_write(rt2x00dev, BCN_OFFSET1, (u32) (reg >> 32));
-+
-+	/*
-+	 * H/W sends up to MAC_BSSID_DW1_BSS_BCN_NUM + 1 consecutive beacons.
-+	 */
-+	rt2800_register_read(rt2x00dev, MAC_BSSID_DW1, &bssid_dw1);
-+	rt2x00_set_field32(&bssid_dw1, MAC_BSSID_DW1_BSS_BCN_NUM,
-+			   bcn_num > 0 ? bcn_num - 1 : 0);
-+	rt2800_register_write(rt2x00dev, MAC_BSSID_DW1, bssid_dw1);
-+}
-+
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-@@ -1003,6 +1037,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 
- 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
- 				   entry->skb->len + padding_len);
-+	__set_bit(ENTRY_BCN_ENABLED, &entry->flags);
-+
-+	/*
-+	 * Change global beacons settings.
-+	 */
-+	rt2800_update_beacons_setup(rt2x00dev);
- 
- 	/*
- 	 * Restore beaconing state.
-@@ -1053,8 +1093,13 @@ void rt2800_clear_beacon(struct queue_entry *entry)
- 	 * Clear beacon.
- 	 */
- 	rt2800_clear_beacon_register(rt2x00dev, entry->entry_idx);
-+	__clear_bit(ENTRY_BCN_ENABLED, &entry->flags);
- 
- 	/*
-+	 * Change global beacons settings.
-+	 */
-+	rt2800_update_beacons_setup(rt2x00dev);
-+	/*
- 	 * Restore beaconing state.
- 	 */
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index c48125b..2233b91 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -353,6 +353,7 @@ struct txentry_desc {
-  */
- enum queue_entry_flags {
- 	ENTRY_BCN_ASSIGNED,
-+	ENTRY_BCN_ENABLED,
- 	ENTRY_OWNER_DEVICE_DATA,
- 	ENTRY_DATA_PENDING,
- 	ENTRY_DATA_IO_FAILED,
--- 
-1.8.3.1
+Somebody is working on ath9k multi-channel though I believe - will be
+interesting to see what happens there.
+
+> >> +     struct ieee80211_sub_if_data *sdata, *sdata_tmp;
+> >> +     struct ieee80211_chanctx *new_ctx = NULL, *ctx, *ctx_tmp;
+> >
+> > I prefer if declarations with assignments are in lines of their own, but
+> > maybe it's just me.
+> 
+> Actually fair point. I'm declaring multiple vars here..
+
+I think the above is fine, but if you want to declare on multiple lines
+that's OK too. Maybe just separate the one with from the ones without
+initialization?
+
+> >> +     list_for_each_entry(ctx, &local->chanctx_list, list) {
+> >> +             if (!(ctx->replaces && !ctx->replaced_by))
+> >> +                     continue;
+> >
+> > if (!ctx->replaces || ctx->replaced_by) looks more natural to me. (Same
+> > thing for some other cases in this patch).
+> 
+> I find it easier to reason with my condition. But yeah. Popular vote? :-)
+
+Uh, I find them almost equally unreadable, but then again I have no idea
+what "replaces" and "replaced_by" means :-)
+
+*looking*...
+
+Oh, those are pointers. I thought they were bool, reviewing without
+paying attention is the one case where using bools as pointers is no
+good I guess ;-)
+
+I'm assuming that "ctx->replaces && ctx->replaced_by" is always false,
+right? Or are some sort of concurrent replacement chains possible? In
+this case though I don't understand the logic at all - shouldn't it be
+equivalent to just checking ctx->replaces then?
+
+Maybe for such logic it would be easier to understand to have
+
+enum {
+	NOT_AFFECTED,
+	WILL_BE_REPLACED,
+	IS_REPLACEMENT,
+} replacement_state;
+struct chanctx *replace_ctx;
+
+then you can replace (pun intended) this check with
+
+	if (ctx->replacement_state != IS_REPLACEMENT)
+		continue;
+
+But maybe I'm misunderstanding something entirely.
+
+> > Hadn't we decided to disconnect the vifs that didn't follow? Can't
+> > remember anymore. :) But now you're just canceling the whole switch?
+> 
+> I'm not sure myself anymore either. This keeps the current behaviour
+> (i.e. disconnect interfaces that are switching on failure). Johannes?
+
+I think I'd prefer to disconnect the failing switch ones, rather than
+the other ones - seems simpler (since we know which ones are affected)
+and easier to understand as it's a more localized operation. Any
+arguments for the other way?
+
+
+> >> +     if (!(old_ctx->replaced_by && new_ctx->replaces)) {
+> >
+> > Isn't !old->ctx->replaced_by enough here? Do you really care if the
+> > new_ctx will replace something else at this point?
+> 
+> Hmm..
+> 
+> Now that I think this should actually be just:
+> 
+>  if (!new_ctx->replaces) { ... }
+
+Oh ... I think that's what I asked above. Nah. This check actually means
+that it *is* possible that replaced_by and replaces are true at the same
+time? *confused*
+
+johannes
 
