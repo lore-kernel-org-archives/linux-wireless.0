@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50726 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752348AbaFMKoh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 06:44:37 -0400
-Date: Fri, 13 Jun 2014 12:44:35 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>
-Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: iwlwifi: very poor performance on 3.16-rc0
-Message-ID: <20140613104435.GA4689@amd.pavel.ucw.cz> (sfid-20140613_124453_494311_FA9E1BEE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:60326 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932917AbaFCUOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2014 16:14:10 -0400
+Message-ID: <1401826431.4157.52.camel@jlt4.sipsolutions.net> (sfid-20140603_221431_761605_57DD6995)
+Subject: Re: [RFC 4/4] mac80211: OCB mode interface configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Tue, 03 Jun 2014 22:13:51 +0200
+In-Reply-To: <1401468984-24575-5-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140530_185640_927854_70A2DAA5)
+References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1401468984-24575-5-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140530_185640_927854_70A2DAA5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Fri, 2014-05-30 at 18:56 +0200, Rostislav Lisovy wrote:
+> +	static u8 bssid_wildcard[ETH_ALEN] = { 0xff, 0xff, 0xff,
+> +					       0xff, 0xff, 0xff };
 
-On 6d87c225f5d82d29243dc124f1ffcbb0e14ec358 I get basically unusable
-network.
+const
 
-Network manager connects to wireless network, and ping sometimes
-returns a packet. One in 10 tabs load, dns usually does not work.
+that doesn't actually exist anywhere already? Maybe not I guess.
 
-Thinkpad x60, 
+> +int ieee80211_start_ocb(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	u32 changed = BSS_CHANGED_BEACON_ENABLED;
+> +
+> +	sdata->vif.bss_conf.enable_beacon = false;
+> +	ieee80211_bss_info_change_notify(sdata, changed);
 
-03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
-[Golan] Network Connection (rev 02)
+Why would beacon_enabled be changing?
 
-Any ideas?
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> +	/* MORE TO BE DONE ... */
+
+>From a brief look it seems that you should at least be setting the QoS
+parameters, but what, if anything, else is there?
+
+Certainly there should also be some indication to the low-level driver
+that it should now consider being part of the OCB network though.
+
+> +	netif_carrier_on(sdata->dev);
+> +	return 0;
+> +}
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 7e0dd4b..bf4fd61 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1689,6 +1689,11 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+>  			ieee80211_bss_info_change_notify(sdata, changed);
+>  			sdata_unlock(sdata);
+>  			break;
+> +		case NL80211_IFTYPE_OCB:
+> +			changed |= BSS_CHANGED_IBSS |
+> +				   BSS_CHANGED_BEACON_ENABLED;
+
+CHANGED_IBSS?
+
+I guess you need a new CHANGED_OCB flag and ocb_active bool value.
+
+johannes
+
