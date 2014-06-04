@@ -1,45 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:46542 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263AbaFQJkt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17990 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbaFDNra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:40:49 -0400
-Subject: [PATCH 0/6] ath6kl: add ar6004 hw3.0
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Jun 2014 12:40:45 +0300
-Message-ID: <20140617093836.22040.99081.stgit@potku.adurom.net> (sfid-20140617_114053_175345_F7317125)
+	Wed, 4 Jun 2014 09:47:30 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 13/13] ath9k: save tsf in channel context
+Date: Wed, 4 Jun 2014 19:16:39 +0530
+Message-ID: <1401889599-412-14-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154754_316149_BD340BDA)
+In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for frequently requested ar6004 hw3.0 version. 
+From: Felix Fietkau <nbd@openwrt.org>
 
-Kalle
+Save TSF in channel context for multiple operating channels.
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  3 +++
+ drivers/net/wireless/ath/ath9k/channel.c |  5 +++++
+ drivers/net/wireless/ath/ath9k/hw.c      | 23 ++++++++++++++++++-----
+ drivers/net/wireless/ath/ath9k/hw.h      |  1 +
+ drivers/net/wireless/ath/ath9k/main.c    | 10 ++++++++++
+ 5 files changed, 37 insertions(+), 5 deletions(-)
 
-Jessica Wu (3):
-      ath6kl: implement rx flush for htc pipe
-      ath6kl: add support wmi rate tables with mcs15
-      ath6kl: add support for ar6004 hw3.0
-
-Kalle Valo (3):
-      ath6kl: convert ar6004 hardware flags to firmware feature flags
-      ath6kl: don't set hi_refclk_hz if hardware version doesn't need it
-      ath6kl: properly null terminate the firmware string
-
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +-
- drivers/net/wireless/ath/ath6kl/core.c     |   16 +++++
- drivers/net/wireless/ath/ath6kl/core.h     |   36 ++++++++++--
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |   32 +++++++++-
- drivers/net/wireless/ath/ath6kl/init.c     |   86 ++++++++++++++++++++++------
- drivers/net/wireless/ath/ath6kl/main.c     |   17 ++++--
- drivers/net/wireless/ath/ath6kl/usb.c      |    7 ++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   72 ++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |    2 -
- 9 files changed, 232 insertions(+), 42 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7776094..a5ff4ab 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/leds.h>
+ #include <linux/completion.h>
++#include <linux/time.h>
+ 
+ #include "common.h"
+ #include "debug.h"
+@@ -328,6 +329,8 @@ struct ath_chanctx {
+ 	struct list_head acq[IEEE80211_NUM_ACS];
+ 
+ 	struct ath9k_hw_cal_data caldata;
++	struct timespec tsf_ts;
++	u64 tsf_val;
+ 
+ 	u16 txpower;
+ 	bool offchannel;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 3cb86f4..716967c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -263,6 +263,11 @@ void ath_chanctx_work(struct work_struct *work)
+ 
+ 		send_ps = true;
+ 		spin_lock_bh(&sc->chan_lock);
++
++		if (!sc->cur_chan->offchannel) {
++			getrawmonotonic(&sc->cur_chan->tsf_ts);
++			sc->cur_chan->tsf_val = ath9k_hw_gettsf64(sc->sc_ah);
++		}
+ 	}
+ 	sc->cur_chan = &sc->chanctx[sc->next_chanctx_idx];
+ 	sc->cur_chan->stopped = false;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2a8ed83..ace4fe2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1730,6 +1730,23 @@ fail:
+ 	return -EINVAL;
+ }
+ 
++u32 ath9k_hw_get_tsf_offset(struct timespec *last, struct timespec *cur)
++{
++	struct timespec ts;
++	s64 usec;
++
++	if (!cur) {
++		getrawmonotonic(&ts);
++		cur = &ts;
++	}
++
++	usec = cur->tv_sec * 1000000ULL + cur->tv_nsec / 1000;
++	usec -= last->tv_sec * 1000000ULL + last->tv_nsec / 1000;
++
++	return (u32) usec;
++}
++EXPORT_SYMBOL(ath9k_hw_get_tsf_offset);
++
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   struct ath9k_hw_cal_data *caldata, bool fastcc)
+ {
+@@ -1739,7 +1756,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
+ 	u64 tsf = 0;
+-	s64 usec = 0;
+ 	int r;
+ 	bool start_mci_reset = false;
+ 	bool save_fullsleep = ah->chip_fullsleep;
+@@ -1785,7 +1801,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/* Save TSF before chip reset, a cold reset clears it */
+ 	tsf = ath9k_hw_gettsf64(ah);
+ 	getrawmonotonic(&ts);
+-	usec = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
+ 
+ 	saveLedState = REG_READ(ah, AR_CFG_LED) &
+ 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
+@@ -1818,9 +1833,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	}
+ 
+ 	/* Restore TSF */
+-	getrawmonotonic(&ts);
+-	usec = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000 - usec;
+-	ath9k_hw_settsf64(ah, tsf + usec);
++	ath9k_hw_settsf64(ah, tsf + ath9k_hw_get_tsf_offset(&ts, NULL));
+ 
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0acd4b5..51b4ebe 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1000,6 +1000,7 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ u64 ath9k_hw_gettsf64(struct ath_hw *ah);
+ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
+ void ath9k_hw_reset_tsf(struct ath_hw *ah);
++u32 ath9k_hw_get_tsf_offset(struct timespec *last, struct timespec *cur);
+ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, bool set);
+ void ath9k_hw_init_global_settings(struct ath_hw *ah);
+ u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fa9d915..3b6b030 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -241,6 +241,16 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+ 	if (!sc->cur_chan->offchannel && start) {
++		/* restore per chanctx TSF timer */
++		if (sc->cur_chan->tsf_val) {
++			u32 offset;
++
++			offset = ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts,
++							 NULL);
++			ath9k_hw_settsf64(ah, sc->cur_chan->tsf_val + offset);
++		}
++
++
+ 		if (!test_bit(ATH_OP_BEACONS, &common->op_flags))
+ 			goto work;
+ 
+-- 
+2.0.0
 
