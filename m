@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:52294 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781AbaFNNxH (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52430 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbaFDRLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:53:07 -0400
-Received: by mail-pb0-f43.google.com with SMTP id um1so423153pbc.16
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:53:07 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id ga1sm8997937pbb.82.2014.06.14.06.53.05
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:53:06 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/16] rsi: Use SGI if configured for fixed rate transmission.
-Date: Sat, 14 Jun 2014 19:22:57 +0530
-Message-Id: <1402753977-14104-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155317_948024_34C0F998)
+	Wed, 4 Jun 2014 13:11:23 -0400
+Message-ID: <538F533A.3050808@candelatech.com> (sfid-20140604_191126_868586_9B265FBB)
+Date: Wed, 04 Jun 2014 10:11:22 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 1/4] ath10k: provide firmware crash info via debugfs.
+References: <1401812719-25061-1-git-send-email-greearb@candelatech.com> <CA+BoTQnvAzCHvKwib39dOZnN6SEyNG_=U9Jgx5arM819dUoMYw@mail.gmail.com>
+In-Reply-To: <CA+BoTQnvAzCHvKwib39dOZnN6SEyNG_=U9Jgx5arM819dUoMYw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use SGI if configured while sending data packets at a fixed rate.
+On 06/04/2014 02:04 AM, Michal Kazior wrote:
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_pkt.c |    6 ++++++
- drivers/net/wireless/rsi/rsi_mgmt.h    |    1 +
- 2 files changed, 7 insertions(+), 0 deletions(-)
+>> +               if (dbufp == dbg_hdr.dbuf) {
+>> +                       /* It is a circular buffer it seems, bail if next
+>> +                        * is head
+>> +                        */
+> 
+> Hmm, we seem to be mixing comment styles in ath10k now I guess (this
+> applies to other instances of multi-line comments in your patch). What
+> multi-line comment style should we really be using in ath10k? Kalle?
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-index 8e48e72..229ef3a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-@@ -81,6 +81,12 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 		/* Send fixed rate */
- 		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
- 		frame_desc[4] = cpu_to_le16(common->min_rate);
-+		if (common->vif_info[0].sgi) {
-+			if (common->min_rate & 0x100) /* Only MCS rates */
-+				frame_desc[4] |=
-+					cpu_to_le16(ENABLE_SHORTGI_RATE);
-+		}
-+
- 	}
- 
- 	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 6ccf9d9..8bff664 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -69,6 +69,7 @@
- 
- #define RSI_LMAC_CLOCK_80MHZ            0x1
- #define RSI_ENABLE_40MHZ                (0x1 << 3)
-+#define ENABLE_SHORTGI_RATE		BIT(9)
- 
- #define RX_BA_INDICATION                1
- #define RSI_TBL_SZ                      40
+Check-patch bitches if you do it differently than what is above, so I say
+we keep it as I have it.  Not worth cleaning up other comments to match
+unless someone actually cares enough to do it...
+
+Thanks,
+Ben
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
