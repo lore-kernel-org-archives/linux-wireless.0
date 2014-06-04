@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34104 "EHLO sipsolutions.net"
+Received: from plane.gmane.org ([80.91.229.3]:51903 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754405AbaFLIfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 04:35:54 -0400
-Message-ID: <1402562114.8095.3.camel@jlt4.sipsolutions.net> (sfid-20140612_103558_525847_209A5C98)
-Subject: net_timedelta() affected by settimeofday() (was: [patch 12/13] net:
- mac80211: Remove silly timespec dance)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	linux-netdev <linux-netdev@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>
-Date: Thu, 12 Jun 2014 10:35:14 +0200
-In-Reply-To: <alpine.DEB.2.10.1406121017500.5170@nanos>
-References: <20140611234024.103571777@linutronix.de>
-	  <20140611234607.683770899@linutronix.de>
-	 <1402555774.4224.1.camel@jlt4.sipsolutions.net>
-	 <alpine.DEB.2.10.1406121017500.5170@nanos>
-Content-Type: text/plain; charset="UTF-8"
+	id S1752317AbaFDXZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 19:25:30 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1WsKTo-0008WE-WE
+	for linux-wireless@vger.kernel.org; Thu, 05 Jun 2014 01:20:27 +0200
+Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 01:20:24 +0200
+Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 01:20:24 +0200
+To: linux-wireless@vger.kernel.org
+From: piotr <pitkotko@gmail.com>
+Subject: Re: [Ilw] Wireless Centrino 2230-N issues
+Date: Wed, 4 Jun 2014 22:55:52 +0000 (UTC)
+Message-ID: <loom.20140605T005101-221@post.gmane.org> (sfid-20140605_012542_512154_69FB35DC)
+References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com> <loom.20140530T020912-598@post.gmane.org> <53882EAD.4010609@gmail.com> <53882EF4.4070105@gmail.com> <loom.20140530T111920-677@post.gmane.org> <CANUX_P0JenW+GDT3N0Qj5BPGqMXqUWiBnj=TQ+nMEsjS4HFm1w@mail.gmail.com> <loom.20140603T000209-622@post.gmane.org> <CANUX_P22M85RN_+-GnZ0fEtz7Ch-ei_KbXhjcZ5H7i0Sn30Vhg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+netdev, Stephen
+Emmanuel Grumbach <egrumbach@...> writes:
 
-On Thu, 2014-06-12 at 10:19 +0200, Thomas Gleixner wrote:
-> On Thu, 12 Jun 2014, Johannes Berg wrote:
 > 
-> > On Wed, 2014-06-11 at 23:59 +0000, Thomas Gleixner wrote:
-> > 
-> > > +	msrmnt = ktime_to_ms(net_timedelta(skb_arv));
-> > 
-> > This is probably more of a question about net_timedelta(), but is
-> > ktime_get_real() really appropriate for duration measurements? Isn't
-> > that non-monotonic?
+> Ok, please do the following:
 > 
-> Well, it's monotonic, but might be affected by settimeofday().
+> modprobe -r iwldvm
+> modprobe iwlwifi fw_restart=0 debug=0xffffffff
+> 
+> then, please send the whole dmesg output.
 
-Right, but isn't that odd? Suddenly your delay measurement here might be
-minutes, hours, or years if you settimeofday() between timestamping and
-calculating the delta. That seems very strange to me, why would that be
-the right behaviour in any way?
+Please find below the output of the commands:
 
-Now, it seems that there are only two current users of net_timedelta()
-(in DCCP) so perhaps it's not too late to change some of this?
+piotr@pk:~$ sudo modprobe -rv iwldvm
+rmmod iwldvm
+rmmod mac80211
+rmmod iwlwifi
+rmmod cfg80211
+piotr@pk:~$ sudo modprobe -v iwlwifi fw_restart=0 debug=0xffffffff
+insmod /lib/modules/3.13.0-24-generic/kernel/net/wireless/cfg80211.ko 
+insmod /lib/modules/3.13.0-24-generic/kernel/drivers
+/net/wireless/iwlwifi/iwlwifi.ko fw_restart=0 debug=0xffffffff
+piotr@pk:~$ dmesg
+[  976.624087] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
+[  976.624372] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+[  976.624414] iwlwifi 0000:01:00.0: Unable to initialize device.
+[  976.626379] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[  976.633440] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+[  976.680112] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
+FW Error
+[  976.680125] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
+[  976.680412] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+[  976.680453] iwlwifi 0000:01:00.0: Unable to initialize device.
+[  976.680957] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[  976.688020] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+[  976.732150] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
+FW Error
+[  976.732163] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
+[  976.732449] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
+[  976.732490] iwlwifi 0000:01:00.0: Unable to initialize device.
+[  976.734505] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[  976.741567] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
+[  976.788131] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
+FW Error
+[... repeats several times ...]
 
-Maybe in general the skb timestamp should be based on a different clock
-and only adjusted to real time when used in userspace?
+The kernel messages didn't change. Am I doing something wrong?
 
-johannes
-
+Piotr
 
