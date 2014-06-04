@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34722 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253AbaFUKLX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 06:11:23 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/8] brcmfmac: new USB devices, vendor command, and cleanup
-Date: Sat, 21 Jun 2014 12:11:11 +0200
-Message-ID: <1403345479-13467-1-git-send-email-arend@broadcom.com> (sfid-20140621_121137_573081_BF680AF9)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:33654 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754659AbaFDHDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 03:03:35 -0400
+Message-ID: <1401865406.6079.5.camel@jlt4.sipsolutions.net> (sfid-20140604_090337_954817_A513C05F)
+Subject: Re: [PATCH] mac80211: allow tx via monitor iface when DFS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 04 Jun 2014 09:03:26 +0200
+In-Reply-To: <CALhHN=qXjGa09JNox5qOvjR6RDv_=N-465cV-LmgU-NCCyA53w@mail.gmail.com> (sfid-20140604_071327_912548_8FB96E1A)
+References: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1401825537.4157.43.camel@jlt4.sipsolutions.net>
+	 <CALhHN=qXjGa09JNox5qOvjR6RDv_=N-465cV-LmgU-NCCyA53w@mail.gmail.com>
+	 (sfid-20140604_071327_912548_8FB96E1A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch series add driver support for new USB device. These are 11ac fullmac
-devices with USB3.0 interface. Also opting for the vendor-specific netlink
-command instead of cfg80211 testmode. The remaining patches are small cleanup
-patches.
+On Wed, 2014-06-04 at 07:13 +0200, Janusz Dziedzic wrote:
+> On 3 June 2014 21:58, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2014-05-30 at 11:44 +0200, Janusz Dziedzic wrote:
+> >
+> >> +     struct cfg80211_chan_def chandef;
+> >>       u16 len_rthdr;
+> >>       int hdrlen;
+> >>
+> >> @@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+> >>       }
+> >>
+> >>       if (chanctx_conf)
+> >> -             chan = chanctx_conf->def.chan;
+> >> +             chandef = chanctx_conf->def;
+> >>       else if (!local->use_chanctx)
+> >> -             chan = local->_oper_chandef.chan;
+> >> +             chandef = local->_oper_chandef;
+> >
+> > Why are you making a copy of the chandef - wouldn't a pointer work just
+> > as well?
+> >
+> No special reason (chandef is quite small), should I change this to
+> pointer and send v2?
 
-This series is intended for 3.17 and applies to the master branch of the
-wireless-next repository.
+Yeah, I agree that it's pretty small, it just seemed odd, like you
+wanted to locally modify it or something. I'd prefer a pointer here.
 
-Arend van Spriel (3):
-  brcmfmac: clear ht info during attach phase
-  brcmfmac: correct logging levels in btcoex source
-  brcmfmac: reduce log level in fwil if firmware returns error
-
-Daniel Kim (1):
-  brcmfmac: Don't control mpc setting during scan operation
-
-Franky Lin (1):
-  brcmfmac: replace cfg80211 testmode with vendor command
-
-Hante Meuleman (3):
-  brcmfmac: Add 43569 USB support.
-  brcmfmac: Add USB device 43566 to supported devices.
-  brcmfmac: Change USB probe routine to support Composite USB
-
- drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
- drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |   38 ++--
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   10 -
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    7 +
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  214 +++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/vendor.c   |  115 +++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/vendor.h   |   64 ++++++
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   56 ++---
- 9 files changed, 326 insertions(+), 183 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/vendor.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/vendor.h
-
--- 
-1.7.9.5
+johannes
 
