@@ -1,150 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25227 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251AbaFKKuB (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:34250 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbaFDR0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:50:01 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 20/28] ath9k: Adjust AP beacon tsf based on station context
-Date: Wed, 11 Jun 2014 16:18:08 +0530
-Message-ID: <1402483696-2498-21-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_125026_330784_C93684CD)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 4 Jun 2014 13:26:35 -0400
+Received: by mail-we0-f176.google.com with SMTP id q59so8665453wes.21
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:34 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/15] staging: vt6656: FIRMWAREbDownload remove camel case
+Date: Wed,  4 Jun 2014 18:25:27 +0100
+Message-Id: <1401902735-3882-7-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192638_481249_82C9421E)
+In-Reply-To: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
+References: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+camel case changes
+pDevice -> priv
+NdisStatus -> status
+pBuffer -> buffer
+wLength -> length
 
-In multi channel context (AP + STA case), adjust the TSF time of
-the AP chanctx to keep its beacons at half beacon interval offset
-relative to the STA chanctx.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
- drivers/net/wireless/ath/ath9k/channel.c | 48 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c    |  5 ++++
- 3 files changed, 55 insertions(+)
+ drivers/staging/vt6656/firmware.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 02f3098..a4646a0 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -335,6 +335,7 @@ struct ath_chanctx {
- 	struct ath9k_hw_cal_data caldata;
- 	struct timespec tsf_ts;
- 	u64 tsf_val;
-+	u32 last_beacon;
+diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
+index 1159f0b..9e31e6c 100644
+--- a/drivers/staging/vt6656/firmware.c
++++ b/drivers/staging/vt6656/firmware.c
+@@ -43,14 +43,14 @@ static int msglevel = MSG_LEVEL_INFO;
  
- 	u16 txpower;
- 	bool offchannel;
-@@ -348,6 +349,7 @@ enum ath_chanctx_event {
- 	ATH_CHANCTX_EVENT_BEACON_PREPARE,
- 	ATH_CHANCTX_EVENT_BEACON_SENT,
- 	ATH_CHANCTX_EVENT_TSF_TIMER,
-+	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
- };
+ #define FIRMWARE_CHUNK_SIZE	0x400
  
- enum ath_chanctx_state {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 4793de0..6ea806c 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -382,10 +382,51 @@ void ath_chanctx_offchan_switch(struct ath_softc *sc,
- 	ath_chanctx_switch(sc, &sc->offchannel.chan, &chandef);
- }
- 
-+static struct ath_chanctx *
-+ath_chanctx_get_next(struct ath_softc *sc, struct ath_chanctx *ctx)
-+{
-+	int idx = ctx - &sc->chanctx[0];
-+
-+	return &sc->chanctx[!idx];
-+}
-+
-+static void ath_chanctx_adjust_tbtt_delta(struct ath_softc *sc)
-+{
-+	struct ath_chanctx *prev, *cur;
-+	struct timespec ts;
-+	u32 cur_tsf, prev_tsf, beacon_int;
-+	s32 offset;
-+
-+	beacon_int = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
-+
-+	cur = sc->cur_chan;
-+	prev = ath_chanctx_get_next(sc, cur);
-+
-+	getrawmonotonic(&ts);
-+	cur_tsf = (u32) cur->tsf_val +
-+		  ath9k_hw_get_tsf_offset(&cur->tsf_ts, &ts);
-+
-+	prev_tsf = prev->last_beacon - (u32) prev->tsf_val + cur_tsf;
-+	prev_tsf -= ath9k_hw_get_tsf_offset(&prev->tsf_ts, &ts);
-+
-+	/* Adjust the TSF time of the AP chanctx to keep its beacons
-+	 * at half beacon interval offset relative to the STA chanctx.
-+	 */
-+	offset = cur_tsf - prev_tsf;
-+
-+	/* Ignore stale data or spurious timestamps */
-+	if (offset < 0 || offset > 3 * beacon_int)
-+		return;
-+
-+	offset = beacon_int / 2 - (offset % beacon_int);
-+	prev->tsf_val += offset;
-+}
-+
- void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		       enum ath_chanctx_event ev)
+-int FIRMWAREbDownload(struct vnt_private *pDevice)
++int FIRMWAREbDownload(struct vnt_private *priv)
  {
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = NULL;
- 	u32 tsf_time;
- 	bool noa_changed = false;
-@@ -410,6 +451,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		tsf_time = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
- 		tsf_time = sc->sched.next_tbtt + tsf_time / 4;
- 		sc->sched.switch_start_time = tsf_time;
-+		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+-	struct device *dev = &pDevice->usb->dev;
++	struct device *dev = &priv->usb->dev;
+ 	const struct firmware *fw;
+-	int NdisStatus;
+-	void *pBuffer = NULL;
++	int status;
++	void *buffer = NULL;
+ 	bool result = false;
+-	u16 wLength;
++	u16 length;
+ 	int ii, rc;
  
- 		if (sc->sched.offchannel_duration) {
- 			noa_changed = true;
-@@ -441,6 +483,12 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.state = ATH_CHANCTX_STATE_SWITCH;
- 		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
- 		break;
-+	case ATH_CHANCTX_EVENT_BEACON_RECEIVED:
-+		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
-+			break;
-+
-+		ath_chanctx_adjust_tbtt_delta(sc);
-+		break;
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Download firmware\n");
+@@ -62,24 +62,24 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
+ 			goto out;
  	}
  
- 	spin_unlock_bh(&sc->chan_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 7b9c7e5..74ab1d0 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -892,6 +892,11 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		return -EINVAL;
+-	pBuffer = kmalloc(FIRMWARE_CHUNK_SIZE, GFP_KERNEL);
+-	if (!pBuffer)
++	buffer = kmalloc(FIRMWARE_CHUNK_SIZE, GFP_KERNEL);
++	if (!buffer)
+ 		goto out;
+ 
+ 	for (ii = 0; ii < fw->size; ii += FIRMWARE_CHUNK_SIZE) {
+-		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
+-		memcpy(pBuffer, fw->data + ii, wLength);
++		length = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
++		memcpy(buffer, fw->data + ii, length);
+ 
+-		NdisStatus = vnt_control_out(pDevice,
++		status = vnt_control_out(priv,
+ 						0,
+ 						0x1200+ii,
+ 						0x0000,
+-						wLength,
+-						pBuffer);
++						length,
++						buffer);
+ 
+ 		DBG_PRT(MSG_LEVEL_DEBUG,
+ 			KERN_INFO"Download firmware...%d %zu\n", ii, fw->size);
+-		if (NdisStatus != STATUS_SUCCESS)
++		if (status != STATUS_SUCCESS)
+ 			goto free_fw;
  	}
  
-+	if (rx_stats->is_mybeacon) {
-+		sc->sched.next_tbtt = rx_stats->rs_tstamp;
-+		ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_BEACON_RECEIVED);
-+	}
-+
- 	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
+@@ -88,7 +88,7 @@ free_fw:
+ 	release_firmware(fw);
  
- 	rx_status->band = ah->curchan->chan->band;
+ out:
+-	kfree(pBuffer);
++	kfree(buffer);
+ 
+ 	return result;
+ }
 -- 
-2.0.0
+1.9.1
 
