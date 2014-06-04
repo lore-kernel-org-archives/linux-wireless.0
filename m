@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63181 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755369AbaFPQis (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:48 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 20/25] wil6210: map additional registers on target
-Date: Mon, 16 Jun 2014 19:37:18 +0300
-Message-ID: <1402936643-31819-21-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190456_861134_CAB5404F)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:34725 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753300AbaFDOBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 10:01:04 -0400
+Message-ID: <1401890446.6079.31.camel@jlt4.sipsolutions.net> (sfid-20140604_160112_276133_BDC7EAF4)
+Subject: Re: [PATCH 00/13] ath9k: Channel context support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Wed, 04 Jun 2014 16:00:46 +0200
+In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154730_462216_8279F744)
+References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+	 (sfid-20140604_154730_462216_8279F744)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New registers area introduced, mark corresponded address range as valid
+On Wed, 2014-06-04 at 19:16 +0530, Rajkumar Manoharan wrote:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 1 +
- 1 file changed, 1 insertion(+)
+> These patches adds a basic infrastruture for multi channel
+> context. Currently channel context usage is restricted by
+> modparam "use_chanctx" as it is not yet fully implemented.
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 281a28f..b92a042 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -75,6 +75,7 @@ static const struct {
- 	{0x800000, 0x808000, 0x900000}, /* FW data RAM 32k */
- 	{0x840000, 0x860000, 0x908000}, /* peripheral data RAM 128k/96k used */
- 	{0x880000, 0x88a000, 0x880000}, /* various RGF */
-+	{0x88b000, 0x88c000, 0x88b000}, /* Pcie_ext_rgf */
- 	{0x8c0000, 0x949000, 0x8c0000}, /* trivial mapping for upper area */
- 	/*
- 	 * 920000..930000 ucode code RAM
--- 
-1.9.1
+This isn't really a review - just a note. You should probably also tell
+mac80211 that you use multiple HW queues (at least per chanctx) so you
+avoid a situation where stopping one channel context leads to stopping
+the entire traffic for that AC even on other contexts, otherwise you
+could unfairly stop the other interface?
+
+I guess I'm also surprised by the implementation just switching from a
+worker, I would have thought you'd switch from a HW timer interrupt and
+use different hardware queues, but hey :)
+
+> Rajkumar Manoharan (1):
+>   ath9k: Fetch appropriate opereting channel context
+
+Also: typo: "operating"
+
+johannes
 
