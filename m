@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55110 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755056AbaFYTaO (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:62980 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbaFDCGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 15:30:14 -0400
-Date: Wed, 25 Jun 2014 15:18:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-06-24
-Message-ID: <20140625191847.GH3445@tuxdriver.com> (sfid-20140625_213024_764641_4533EC11)
-References: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
+	Tue, 3 Jun 2014 22:06:13 -0400
+Received: by mail-la0-f45.google.com with SMTP id s18so2023341lam.32
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2014 19:06:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 3 Jun 2014 19:05:52 -0700
+Message-ID: <CAB=NE6W=FubasHV6QsAO8Jrdhbh_xM1SmYqCScvRf8g0FY4GHw@mail.gmail.com> (sfid-20140604_040617_412509_34A453E6)
+Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	mhocko@suse.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 06:22:44PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Not so much (yet?), but here it goes ... I'm planning to pull in the CSA
-> work, of course.
-> 
-> The biggest thing here is probably Arik's TDLS rework, beyond that we
-> have smaller improvements and features like David's scanning IE thing,
-> Luca's queue work, some CSA work, etc. Also your PID rate control
-> removal, of course.
-> 
-> Let me know if any issues show up.
-> 
-> johannes
-> 
-> The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626b38f:
-> 
->   Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git HEAD
-> 
-> for you to fetch changes up to 79c3cc0d22358a383b1196aea869e620ec2faf37:
-> 
->   mac80211: split sched scan IEs (2014-06-24 15:47:52 +0200)
+On Thu, Feb 20, 2014 at 12:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -478,6 +478,19 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+>                        sta->sta.addr, sta->sta.aid, ac);
+>                 if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+>                         purge_old_ps_buffers(tx->local);
+> +
+> +               /* sync with ieee80211_sta_ps_deliver_wakeup */
+> +               spin_lock(&sta->ps_lock);
+> +               /*
+> +                * STA woke up the meantime and all the frames on ps_tx_buf have
+> +                * been queued to pending queue. No reordering can happen, go
+> +                * ahead and Tx the packet.
+> +                */
+> +               if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+> +                       spin_unlock(&sta->ps_lock);
+> +                       return TX_CONTINUE;
+> +               }
+> +
+>                 if (skb_queue_len(&sta->ps_tx_buf[ac]) >= STA_MAX_TX_BUFFER) {
+>                         struct sk_buff *old = skb_dequeue(&sta->ps_tx_buf[ac]);
+>                         ps_dbg(tx->sdata,
 
-Pulling now...
+This fixes the race for the case where the API introduced via commit
+af81858172cc but that code also *moved* code, the API added simply
+added a new way to let driver to hit a trigger to send buffered
+frames, are we sure that through mechanisms that don't use this API
+this race doesn't exist? That is can we not race between
+ieee80211_rx_h_sta_process() and ieee80211_tx_h_unicast_ps_buf()?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
