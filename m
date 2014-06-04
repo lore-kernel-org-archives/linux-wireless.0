@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35760 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158AbaF0EJD (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52920 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaFDSBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 00:09:03 -0400
-Date: Thu, 26 Jun 2014 20:20:52 -0400
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Malcolm Priestley <tvboxspy@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/17] staging: vt6656: conversion to mac80211
-Message-ID: <20140627002052.GA26828@kroah.com> (sfid-20140627_060906_907450_37AC7DEB)
-References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
- <1403764178.4131.5.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403764178.4131.5.camel@jlt4.sipsolutions.net>
+	Wed, 4 Jun 2014 14:01:52 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/4] ath10k:  save firmware debug log messages.
+Date: Wed,  4 Jun 2014 11:01:40 -0700
+Message-Id: <1401904902-5842-2-git-send-email-greearb@candelatech.com> (sfid-20140604_200158_149100_FED8ABF0)
+In-Reply-To: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 26, 2014 at 08:29:38AM +0200, Johannes Berg wrote:
-> On Wed, 2014-06-25 at 21:14 +0100, Malcolm Priestley wrote:
-> > The patches in this series convert the driver to mac80211.
-> 
-> Impressive! I didn't think it was actually *possible* to convert a
-> driver, I used to think a rewrite with selective copy/pasting would be
-> the right approach :-)
+From: Ben Greear <greearb@candelatech.com>
 
-I agree, very nice job with all of this, great to see this happen.
+They may be dumped through the firmware dump debugfs
+file.
 
-greg k-h
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 4b7782a..40a1d8d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1089,6 +1089,12 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_dbglog(skb->data, skb->len);
+ 
++	/* First 4 bytes are a messages-dropped-due-to-overflow counter,
++	 * and should not be recorded in the dbglog buffer, so we skip
++	 * them.
++	 */
++	ath10k_dbg_save_fw_dbg_buffer(ar, skb->data + 4, skb->len - 4);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.11.7
+
