@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:51903 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752317AbaFDXZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 19:25:30 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1WsKTo-0008WE-WE
-	for linux-wireless@vger.kernel.org; Thu, 05 Jun 2014 01:20:27 +0200
-Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 01:20:24 +0200
-Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 01:20:24 +0200
-To: linux-wireless@vger.kernel.org
-From: piotr <pitkotko@gmail.com>
-Subject: Re: [Ilw] Wireless Centrino 2230-N issues
-Date: Wed, 4 Jun 2014 22:55:52 +0000 (UTC)
-Message-ID: <loom.20140605T005101-221@post.gmane.org> (sfid-20140605_012542_512154_69FB35DC)
-References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com> <loom.20140530T020912-598@post.gmane.org> <53882EAD.4010609@gmail.com> <53882EF4.4070105@gmail.com> <loom.20140530T111920-677@post.gmane.org> <CANUX_P0JenW+GDT3N0Qj5BPGqMXqUWiBnj=TQ+nMEsjS4HFm1w@mail.gmail.com> <loom.20140603T000209-622@post.gmane.org> <CANUX_P22M85RN_+-GnZ0fEtz7Ch-ei_KbXhjcZ5H7i0Sn30Vhg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail2.candelatech.com ([208.74.158.173]:53721 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbaFDT3H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 15:29:07 -0400
+Message-ID: <538F7381.4070100@candelatech.com> (sfid-20140604_212911_677300_33CF3829)
+Date: Wed, 04 Jun 2014 12:29:05 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com> <538CD507.1050803@candelatech.com> <CANUX_P1iaTtFccraAF_p1dFZ3SJFpdNfF=i=eAVXP8yM3GrM4A@mail.gmail.com>
+In-Reply-To: <CANUX_P1iaTtFccraAF_p1dFZ3SJFpdNfF=i=eAVXP8yM3GrM4A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@...> writes:
+On 06/04/2014 12:23 PM, Emmanuel Grumbach wrote:
 
+>> Do you have a link to your patch that defines the types you used?
+>>
 > 
-> Ok, please do the following:
+> Take a look at 1bd3cbc1a0e9ed977a6bd470c5bc7bd36fd87e26.
+> But I am adding more and more content to this file.
+
+Yeah, after implementing it in ath10k it seems there would
+be very little over-lap, so probably each driver should just
+do their own.
+
+We can keep the debugfs file names the same, and the udev
+event types the same, which should help user-space a bit.
+
+
+>> It does not resolve my interest in firmware logs interleaved with
+>> kernel logs and possibly supplicant, however.
+>>
+>> Looks like trace-cmds could do that, but it will not be
+>> running for normal users when they experience crashes.
+>>
+>> Any suggestions other than printk for this feature?
 > 
-> modprobe -r iwldvm
-> modprobe iwlwifi fw_restart=0 debug=0xffffffff
-> 
-> then, please send the whole dmesg output.
+> I seems you found a way already :)
 
-Please find below the output of the commands:
+I can get firmware logs, but they are not interleaved.
+Probably good enough for now..and we can always add
+printk or similar in the future if we all decide it's
+useful.
 
-piotr@pk:~$ sudo modprobe -rv iwldvm
-rmmod iwldvm
-rmmod mac80211
-rmmod iwlwifi
-rmmod cfg80211
-piotr@pk:~$ sudo modprobe -v iwlwifi fw_restart=0 debug=0xffffffff
-insmod /lib/modules/3.13.0-24-generic/kernel/net/wireless/cfg80211.ko 
-insmod /lib/modules/3.13.0-24-generic/kernel/drivers
-/net/wireless/iwlwifi/iwlwifi.ko fw_restart=0 debug=0xffffffff
-piotr@pk:~$ dmesg
-[  976.624087] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
-[  976.624372] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-[  976.624414] iwlwifi 0000:01:00.0: Unable to initialize device.
-[  976.626379] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[  976.633440] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-[  976.680112] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
-FW Error
-[  976.680125] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
-[  976.680412] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-[  976.680453] iwlwifi 0000:01:00.0: Unable to initialize device.
-[  976.680957] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[  976.688020] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-[  976.732150] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
-FW Error
-[  976.732163] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
-[  976.732449] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-[  976.732490] iwlwifi 0000:01:00.0: Unable to initialize device.
-[  976.734505] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[  976.741567] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-[  976.788131] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD failed:
-FW Error
-[... repeats several times ...]
+Being able to look at your iwlwifi work made my patches lot easier,
+so thanks for taking the initiative!
 
-The kernel messages didn't change. Am I doing something wrong?
+Thanks,
+Ben
 
-Piotr
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
