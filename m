@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38008 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbaFENEB (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:53665 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751973AbaFDJqm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 09:04:01 -0400
-Received: by mail-wi0-f174.google.com with SMTP id r20so10478664wiv.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 06:04:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v8 5/5] cfg80211: remove channel_switch combination check
-Date: Thu,  5 Jun 2014 14:56:20 +0200
-Message-Id: <1401972980-21484-6-git-send-email-michal.kazior@tieto.com> (sfid-20140605_150408_604950_D967AECE)
-In-Reply-To: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
-References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
- <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 4 Jun 2014 05:46:42 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 02416-09 for <linux-wireless@vger.kernel.org>;
+ Wed,  4 Jun 2014 10:46:38 +0100 (BST)
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Julia Lawall' <julia.lawall@lip6.fr>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+CC: linux-rdma <linux-rdma@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	scsi <linux-scsi@vger.kernel.org>,
+	linux-s390 <linux-s390@vger.kernel.org>,
+	"adi-buildroot-devel@lists.sourceforge.net"
+	<adi-buildroot-devel@lists.sourceforge.net>
+Subject: RE: [PATCH 0/10] use safer test on the result of find_first_zero_bit
+Date: Wed, 4 Jun 2014 09:46:17 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com> (sfid-20140604_114650_700642_790E047A)
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
+ <alpine.DEB.2.10.1406041137270.2441@hadrien>
+In-Reply-To: <alpine.DEB.2.10.1406041137270.2441@hadrien>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver is now responsible for veryfing if the
-switch is possible.
+From: Julia Lawall
+> On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
+> 
+> > Hi Julia,
+> >
+> > On Wed, Jun 4, 2014 at 11:07 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+> > > Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
+> > > return a larger number than the maximum position argument if that position
+> > > is not a multiple of BITS_PER_LONG.
+> >
+> > Shouldn't this be fixed in find_first_zero_bit() instead?
+> 
+> OK, I could do that as well.  Most of the callers currently test with >=.
+> Should they be left as is, or changed to use ==?
 
-Since this is inherently tricky driver may decide
-to disconnect an interface later with
-cfg80211_stop_iface().
+Do we want to add an extra test to find_first_zero_bit() and effectively
+slow down all the calls - especially those where the length is a
+multiple of 8 (probably the most common).
 
-This doesn't mean driver can accept everything. It
-should do it's best to verify requests and reject
-them as soon as possible.
+Maybe the documented return code should be changed to allow for the
+existing behaviour.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+	David
 
-Notes:
-    v7:
-     * emphasize channel switching verification should not be
-       taken lightly [Johannes]
-     * update channel_switch description in cfg80211.h
 
- include/net/cfg80211.h |  7 ++++++-
- net/wireless/nl80211.c | 11 -----------
- 2 files changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 920ec8c..c62d48e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2315,7 +2315,12 @@ struct cfg80211_qos_map {
-  *	reliability. This operation can not fail.
-  * @set_coalesce: Set coalesce parameters.
-  *
-- * @channel_switch: initiate channel-switch procedure (with CSA)
-+ * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
-+ *	responsible for veryfing if the switch is possible. Since this is
-+ *	inherently tricky driver may decide to disconnect an interface later
-+ *	with cfg80211_stop_iface(). This doesn't mean driver can accept
-+ *	everything. It should do it's best to verify requests and reject them
-+ *	as soon as possible.
-  *
-  * @set_qos_map: Set QoS mapping information to the driver
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ba4f172..d70f542 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6012,17 +6012,6 @@ skip_beacons:
- 		params.radar_required = true;
- 	}
- 
--	/* TODO: I left this here for now.  With channel switch, the
--	 * verification is a bit more complicated, because we only do
--	 * it later when the channel switch really happens.
--	 */
--	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
--					   params.chandef.chan,
--					   CHAN_MODE_SHARED,
--					   radar_detect_width);
--	if (err)
--		return err;
--
- 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
- 		params.block_tx = true;
- 
--- 
-1.8.5.3
 
