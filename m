@@ -1,118 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33560 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369AbaFBS6T (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:57172 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611AbaFDMMY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:58:19 -0400
-Message-ID: <538CC949.5020901@candelatech.com> (sfid-20140602_205822_314842_E21BCFD1)
-Date: Mon, 02 Jun 2014 11:58:17 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 4 Jun 2014 08:12:24 -0400
+Received: by mail-wg0-f42.google.com with SMTP id y10so8198833wgg.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 05:12:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
-In-Reply-To: <538CC68C.10808@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1401815433.4157.16.camel@jlt4.sipsolutions.net>
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+	<1401348851-26732-2-git-send-email-michal.kazior@tieto.com>
+	<1401708800.5528.62.camel@dubbel>
+	<CA+BoTQnhOePTuDrzv_YNU6dmroRydqWfNjSj_e0UT6=SWu5r9w@mail.gmail.com>
+	<1401815433.4157.16.camel@jlt4.sipsolutions.net>
+Date: Wed, 4 Jun 2014 14:12:22 +0200
+Message-ID: <CA+BoTQn=rpLqg4AU9Q6jXSo3D1os76B7bFhnqPyk=47QX5T1SQ@mail.gmail.com> (sfid-20140604_141230_654878_E06FC4F5)
+Subject: Re: [PATCH v7 1/5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/2014 11:46 AM, Emmanuel Grumbach wrote:
->> [Good stuff snipped, adding linux-wireless as this is a more
->> general issue if we are going to consider general framework]
+On 3 June 2014 19:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-06-03 at 08:15 +0200, Michal Kazior wrote:
+>
+>> Hmm... (my brain..)
 >>
+>> Consider the following: 3 ctx, 6 vifs. cannot create more ctx.
+>> ctx1=vif1+vif2, ctx2=vif3+vif4, ctx3=vif5+vif6. ctx1..3 have
+>> chandef1..3.
 >>
->> Maybe we should start with goals before getting to implementation
->> details.  Here's my wish list that is ath10k specific, but probably
->> similar to other firmware users:
+>> vif5 wants chandef4 so it allocates ctx4 and sets `replaces` to ctx3.
+>> vif6 wants chandef5 so it allocates ctx5 and sets `replaces` to ctx1.
+>> [ note ctx1 with its assigned vif1 and vif2 ]
+>> vif3 wants chandef5 so it reserves ctx5.
+>> vif4 wants chandef5 so it reserves ctx5.
+>> [ ctx2 could be considered now as "free" and could be set as
+>> `replaces` for ctx5 instead of ctx1 ]
 >>
->> 1)  We need the firmware crash text currently printed to
->> /var/log/messages.
->>
->> 2)  It would be nice to get the firmware RAM and stack dumps at time of
->> crash to debug more interesting crashes.
-> 
-> Right - but typically you'll have closed source / IP / whatever there..
+>> It's pretty far fetched for now I'd say - are there any devices that
+>> support more than 2 channels now?
+>
+> Not right now, afaik, but in theory I think our device could have such
+> cases. But it wouldn't have enough vifs ;-)
 
-I mean that we need the raw data (ie, binary dump, something printed
-in ascii-hex, etc).  I understand it will take proprietary tools to
-decode it to something a developer can actually debug.
-
->> 3)  It would be nice to know about firmware debug messages for
->> the period of time directly before the crash (maybe 2-5 minutes?)
->>
->> 4)  It would be nice to have this interleaved with kernel, supplicant,
->> and related logs.
->>
->>
->> We need a solution for different types of users.  I suspect the number
->> of crashes seen in the wild will be more for users nearer the top
->> of this list.
->>
->> a) Normal Fedora/Ubuntu/etc default-installed distribution user
->> with ath10k NIC has wifi issues, firmware crashes, they don't
->> really know what firmware means or that it crashed, but some automated crash-log
->> tool notices and gathers debug info for automated bug reporting.
-> 
-> I am working on that for our firmware. I recently added such capability relying on udev to notify the userspace that something bad happens. I gather all the data and prepare a binary file that is sent through debugfs (pulled by a script triggered by udev). I remember the first crash only.
-
-How is this binary blob encoded?
-
-At least for drivers that can recover from firmware crashes, I think
-we should continue to report crashes, not just the first.
-
-Maybe could store another one after initial crash has been read
-and 1 minute has elapsed, or if initial crash has not been read
-in 1 day, or something like that.
-
-Also, if we use debugfs then we require upstream kernels to have this
-compiled in and mounted if we want to handle this class of user.
-
-I am not sure this is really the case currently.  But, once the
-blob is generated and stored in RAM, it would be easily enough to
-add ethtool option to dump it w/out debugfs support.  This will
-still not really address my concerns because it may take a year
-or two for the latest ethtool binary to make it to normal-ish users.
-
->>
->> b) Slightly more advanced user actually notices the problem at coffee shop
->> earlier today, posts about it when they get home, and we ask for
->> debug info.
->>
->> c) Experienced and determined user has similar issues, but is able to
->> reproduce the problem and/or turn on more advanced debugging efforts.
->>
->> d)  Even more determined user that can and will recompile kernels and/or
->> try patches.
->>
->>
->> Anything that has to be enabled before-hand will not help a) and b) above.
->>
->> If support is not compiled into default kernels, c) will not help you either.
->>
->> If it is difficult or requires acquiring cutting edge tools not in their
->> distribution by default, many of c) and some of d) will just ignore the problem or use
->> different hardware.
->>
->> If we are storing crashes for something like ethtool to report, we need
->> RAM and/or disk storage so the firmware RAM dumps and such can be stored until
->> the user and/or automated tools ask for them.  We need some way to automatically
->> clean up old crashes so disk/ram is not overly utilized.  For APs,
->> they are low on both RAM and 'disk', so storing crash logs for any
->> length of time may be problematic.
->  
-> I did something simpler - but it works. I don't really know the ethtool infrastructure though.
-
-I think ethtool would not be overly hard to implement...basic framework is already
-in the wifi stack.
-
-Thanks,
-Ben
+Sounds "fun" ;-)
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+>> >> +     struct ieee80211_sub_if_data *sdata, *sdata_tmp;
+>> >> +     struct ieee80211_chanctx *new_ctx = NULL, *ctx, *ctx_tmp;
+>> >
+>> > I prefer if declarations with assignments are in lines of their own, but
+>> > maybe it's just me.
+>>
+>> Actually fair point. I'm declaring multiple vars here..
+>
+> I think the above is fine, but if you want to declare on multiple lines
+> that's OK too. Maybe just separate the one with from the ones without
+> initialization?
 
+Sounds good as well.
+
+
+>> >> +     list_for_each_entry(ctx, &local->chanctx_list, list) {
+>> >> +             if (!(ctx->replaces && !ctx->replaced_by))
+>> >> +                     continue;
+>> >
+>> > if (!ctx->replaces || ctx->replaced_by) looks more natural to me. (Same
+>> > thing for some other cases in this patch).
+>>
+>> I find it easier to reason with my condition. But yeah. Popular vote? :-)
+>
+> Uh, I find them almost equally unreadable, but then again I have no idea
+> what "replaces" and "replaced_by" means :-)
+>
+> *looking*...
+>
+> Oh, those are pointers. I thought they were bool, reviewing without
+> paying attention is the one case where using bools as pointers is no
+> good I guess ;-)
+>
+> I'm assuming that "ctx->replaces && ctx->replaced_by" is always false,
+> right? Or are some sort of concurrent replacement chains possible? In
+> this case though I don't understand the logic at all - shouldn't it be
+> equivalent to just checking ctx->replaces then?
+>
+> Maybe for such logic it would be easier to understand to have
+>
+> enum {
+>         NOT_AFFECTED,
+>         WILL_BE_REPLACED,
+>         IS_REPLACEMENT,
+> } replacement_state;
+> struct chanctx *replace_ctx;
+>
+> then you can replace (pun intended) this check with
+>
+>         if (ctx->replacement_state != IS_REPLACEMENT)
+>                 continue;
+>
+> But maybe I'm misunderstanding something entirely.
+
+Hmm.. Right now `replaces` and `replaced_by` shouldn't be both set at
+the same time. It wouldn't even work with how
+drv_switch_vif_chanctx(..., SWAP) is designed. It might make sense to
+use the enum+pointer instead of 2 pointers, but I'm worried it might
+complicate some conditions/access. I'll look into it.
+
+
+>> > Hadn't we decided to disconnect the vifs that didn't follow? Can't
+>> > remember anymore. :) But now you're just canceling the whole switch?
+>>
+>> I'm not sure myself anymore either. This keeps the current behaviour
+>> (i.e. disconnect interfaces that are switching on failure). Johannes?
+>
+> I think I'd prefer to disconnect the failing switch ones, rather than
+> the other ones - seems simpler (since we know which ones are affected)
+> and easier to understand as it's a more localized operation. Any
+> arguments for the other way?
+
+I'm okay with this. One less thing for me to worry about fixing :-)
+
+
+>> >> +     if (!(old_ctx->replaced_by && new_ctx->replaces)) {
+>> >
+>> > Isn't !old->ctx->replaced_by enough here? Do you really care if the
+>> > new_ctx will replace something else at this point?
+>>
+>> Hmm..
+>>
+>> Now that I think this should actually be just:
+>>
+>>  if (!new_ctx->replaces) { ... }
+>
+> Oh ... I think that's what I asked above. Nah. This check actually means
+> that it *is* possible that replaced_by and replaces are true at the same
+> time? *confused*
+
+If you refer to the original condition do note the *old_ctx* and *new_ctx*.
+
+As I stated above for a single channel context both `replaces` and
+`replaced_by` shouldn't be set at the same time.
+
+
+Michał
