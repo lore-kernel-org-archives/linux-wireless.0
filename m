@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:48910 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164AbaFHKgM (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:55593 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbaFDR00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 06:36:12 -0400
-Received: by mail-ob0-f172.google.com with SMTP id uy5so2750249obc.17
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2014 03:36:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1436639.AmJiDmeQZF@al>
-References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CAFo99gZ+iu3FA9Nuwdo_AT1xZkno7w=6JidWYcm8g0bOvshwTw@mail.gmail.com>
-	<5393A7D0.2080700@lwfinger.net>
-	<1436639.AmJiDmeQZF@al>
-Date: Sun, 8 Jun 2014 12:36:11 +0200
-Message-ID: <CAFo99gb2gzLjv_4b3O-e0B1R8P5BTGbPJLuYYAmoyww9hkmrvA@mail.gmail.com> (sfid-20140608_123616_870586_CB37C025)
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up
- conjunction always evaluates to false
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 4 Jun 2014 13:26:26 -0400
+Received: by mail-wg0-f51.google.com with SMTP id x13so8868946wgg.10
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:25 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 02/15] staging: vt6656: PSvDisablePowerSaving remove camel case
+Date: Wed,  4 Jun 2014 18:25:22 +0100
+Message-Id: <1401902735-3882-2-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192630_262551_02E70E9B)
+In-Reply-To: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
+References: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+pDevice -> priv
 
-Damn, there I was bit too fast :-(
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/power.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Then we use MSR_MASK instead, new patch then. But I will wait a day?
-Or what is long enough to be sure that nobody else have any
-objections? How is this usually resolved?
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index 718443f..b7c2720 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -125,24 +125,24 @@ void PSvEnablePowerSaving(struct vnt_private *priv, u16 listen_interval)
+  *
+  */
+ 
+-void PSvDisablePowerSaving(struct vnt_private *pDevice)
++void PSvDisablePowerSaving(struct vnt_private *priv)
+ {
+ 
+ 	/* disable power saving hw function */
+-	vnt_control_out(pDevice, MESSAGE_TYPE_DISABLE_PS, 0,
++	vnt_control_out(priv, MESSAGE_TYPE_DISABLE_PS, 0,
+ 						0, 0, NULL);
+ 
+ 	/* clear AutoSleep */
+-	vnt_mac_reg_bits_off(pDevice, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
++	vnt_mac_reg_bits_off(priv, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
+ 
+ 	/* set always listen beacon */
+-	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_ALBCN);
+-	pDevice->bEnablePSMode = false;
++	vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
++	priv->bEnablePSMode = false;
+ 
+-	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
+-		PSbSendNullPacket(pDevice);
++	if (priv->op_mode == NL80211_IFTYPE_STATION)
++		PSbSendNullPacket(priv);
+ 
+-	pDevice->bPWBitOn = false;
++	priv->bPWBitOn = false;
+ }
+ 
+ /*
+-- 
+1.9.1
 
-Sure, I can send a patch for all the files instead. However, earlier
-received complaints when I sent patches extending over more than one
-file.
-
-I'll check again how the cover letter works. Although when I try with
-my send patch mail script it did not work as I wanted.
-
-
-Best regards
-Rickard Strandqvist
-
-
-2014-06-08 11:26 GMT+02:00 Peter Wu <peter@lekensteyn.nl>:
-> On Saturday 07 June 2014 19:01:20 Larry Finger wrote:
->> As you have learned here, automatically making changes suggested by some tool
->> may convert a visible bug into one that is invisible, and only found by a
->> detailed line-by-line examination of the code, and that is unlikely to happen.
->> Please be careful.
->>
->>  From everything I see, the test in all drivers should be
->>
->>         if ((bt_msr & MSR_AP) == MSR_AP)
->
-> That only happens to be case because MSR_INFRA | MSR_ADHOC == MSR_AP. This
-> seems to be the intent:
->
->     #define MSR_MASK 0x03
->     if ((bt_msr & MSR_MASK) == MSR_AP)
->
-> In rtl8192se, there are also MSR_LINK_... constants covering MSR_...
-> and in addition, there is a MSR_LINK_MASK. These macros are quite
-> redundant though given the other definitions, but the mask is still
-> nice to have I guess.
->
-> Also, personally I would submit just one patch touching all drivers, but
-> I see that Rickard has submitted a bunch of patches (without cover letter
-> either, making it more difficult to group them). What would you prefer,
-> a single patch touching multiple drivers (as the changes are mostly the
-> same) or split patches?
->
-> Kind regards,
-> Peter
->
