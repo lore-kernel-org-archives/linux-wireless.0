@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:36436 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbaFKOSm (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:46812 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbaFDQLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 10:18:42 -0400
-Received: by mail-we0-f169.google.com with SMTP id t60so3987610wes.28
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 07:18:41 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 05/10] mac80211: use TDLS initiator in tdls_mgmt operations
-Date: Wed, 11 Jun 2014 17:18:22 +0300
-Message-Id: <1402496307-32522-5-git-send-email-arik@wizery.com> (sfid-20140611_161846_094028_BCFB0865)
-In-Reply-To: <1402496307-32522-1-git-send-email-arik@wizery.com>
-References: <1402496307-32522-1-git-send-email-arik@wizery.com>
+	Wed, 4 Jun 2014 12:11:47 -0400
+Message-ID: <538F4540.9080002@lwfinger.net> (sfid-20140604_181155_962802_489BF4BC)
+Date: Wed, 04 Jun 2014 11:11:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+CC: Ben Hutchings <ben@decadent.org.uk>, dwmw2@infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Add firmware for r8723au
+References: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>	 <1390174519.3651.3.camel@deadeye.wl.decadent.org.uk> <1401833651.2412.35.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1401833651.2412.35.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TDLS initiator is set once during link setup. If determines the
-address ordering in the link identifier IE.
-Use the value from userspace in order to have a correct teardown packet.
-With the current code, a teardown from the responder side fails the TDLS
-MIC check because of a bad link identifier IE.
+On 06/03/2014 05:14 PM, Ben Hutchings wrote:
+> On Sun, 2014-01-19 at 23:35 +0000, Ben Hutchings wrote:
+>> On Thu, 2014-01-02 at 18:42 -0600, Larry Finger wrote:
+>>> This firmware is for a driver that will soon be submitted to the kernel.
+>>> It occurs as data statements in Realtek driver rtl8723A_WiFi_linux_v4.1.3_6044.20121224.
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> ---
+>>>   WHENCE                         |  13 +++++++++++++
+>>>   rtlwifi/rtl8723aufw_A.bin      | Bin 0 -> 22172 bytes
+>>>   rtlwifi/rtl8723aufw_B.bin      | Bin 0 -> 24118 bytes
+>>>   rtlwifi/rtl8723aufw_B_NoBT.bin | Bin 0 -> 19200 bytes
+>>>   4 files changed, 13 insertions(+)
+>>>   create mode 100644 rtlwifi/rtl8723aufw_A.bin
+>>>   create mode 100644 rtlwifi/rtl8723aufw_B.bin
+>>>   create mode 100644 rtlwifi/rtl8723aufw_B_NoBT.bin
+>> [...]
+>>
+>> Applied, thanks.
+>
+> I just noticed that the driver in Linux 3.15 seems to ask for
+> rtlwifi/rtl8723aufw.bin and not rtlwifi/rtl8723aufw_A.bin.  You'll need
+> to change the filename on one side or the other.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tdls.c | 40 ++++++++++++++++++++++++++++------------
- 1 file changed, 28 insertions(+), 12 deletions(-)
+Jes,
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 0b3ca2c..c4a9af3 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -193,13 +193,14 @@ static int
- ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 				const u8 *peer, u8 action_code,
- 				u8 dialog_token, u16 status_code,
--				u32 peer_capability, const u8 *extra_ies,
--				size_t extra_ies_len)
-+				u32 peer_capability, bool initiator,
-+				const u8 *extra_ies, size_t extra_ies_len)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = NULL;
- 	bool send_direct;
-+	const u8 *init_addr, *rsp_addr;
- 	int ret;
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-@@ -242,27 +243,42 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	if (extra_ies_len)
- 		memcpy(skb_put(skb, extra_ies_len), extra_ies, extra_ies_len);
- 
--	/* the TDLS link IE is always added last */
-+	/* sanity check for initiator */
- 	switch (action_code) {
- 	case WLAN_TDLS_SETUP_REQUEST:
- 	case WLAN_TDLS_SETUP_CONFIRM:
--	case WLAN_TDLS_TEARDOWN:
- 	case WLAN_TDLS_DISCOVERY_REQUEST:
--		/* we are the initiator */
--		ieee80211_tdls_add_link_ie(skb, sdata->vif.addr, peer,
--					   sdata->u.mgd.bssid);
-+		if (!initiator) {
-+			ret = -EINVAL;
-+			goto fail;
-+		}
- 		break;
- 	case WLAN_TDLS_SETUP_RESPONSE:
- 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
--		/* we are the responder */
--		ieee80211_tdls_add_link_ie(skb, peer, sdata->vif.addr,
--					   sdata->u.mgd.bssid);
-+		if (initiator) {
-+			ret = -EINVAL;
-+			goto fail;
-+		}
-+		break;
-+	case WLAN_TDLS_TEARDOWN:
-+		/* any value is ok */
- 		break;
- 	default:
- 		ret = -ENOTSUPP;
- 		goto fail;
- 	}
- 
-+	if (initiator) {
-+		init_addr = sdata->vif.addr;
-+		rsp_addr = peer;
-+	} else {
-+		init_addr = peer;
-+		rsp_addr = sdata->vif.addr;
-+	}
-+
-+	ieee80211_tdls_add_link_ie(skb, init_addr, rsp_addr,
-+				   sdata->u.mgd.bssid);
-+
- 	if (send_direct) {
- 		ieee80211_tx_skb(sdata, skb);
- 		return 0;
-@@ -327,8 +343,8 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 
- 	ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer, action_code,
- 					      dialog_token, status_code,
--					      peer_capability, extra_ies,
--					      extra_ies_len);
-+					      peer_capability, initiator,
-+					      extra_ies, extra_ies_len);
- 	if (ret < 0)
- 		goto exit;
- 
--- 
-1.9.1
+As Ben points out, I messed up the firmware names, and one of them needs to be 
+changed. Keeping the name "rtlwifi/rtl8723aufw_A.bin" would retain a certain 
+amount of symmetry, but is may be easier to retain "rtlwifi/rtl8723aufw.bin" in 
+the code. A third option would be to try for one of the names and fall back to 
+the other if it fails. What do you think?
+
+In any case, we need additional MODULE_FIRMWARE macros for the other two 
+firmware files.
+
+Larry
+
 
