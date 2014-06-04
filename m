@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:53665 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751973AbaFDJqm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 05:46:42 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 02416-09 for <linux-wireless@vger.kernel.org>;
- Wed,  4 Jun 2014 10:46:38 +0100 (BST)
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Julia Lawall' <julia.lawall@lip6.fr>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-CC: linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	"adi-buildroot-devel@lists.sourceforge.net"
-	<adi-buildroot-devel@lists.sourceforge.net>
-Subject: RE: [PATCH 0/10] use safer test on the result of find_first_zero_bit
-Date: Wed, 4 Jun 2014 09:46:17 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com> (sfid-20140604_114650_700642_790E047A)
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
- <alpine.DEB.2.10.1406041137270.2441@hadrien>
-In-Reply-To: <alpine.DEB.2.10.1406041137270.2441@hadrien>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from purkki.adurom.net ([80.68.90.206]:40092 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752401AbaFDMsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 08:48:22 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Severin Kacianka <severin.kacianka@aau.at>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: A question about monitor mode
+References: <538EBB1C.3060106@aau.at>
+Date: Wed, 04 Jun 2014 15:48:20 +0300
+In-Reply-To: <538EBB1C.3060106@aau.at> (Severin Kacianka's message of "Wed, 04
+	Jun 2014 08:22:20 +0200")
+Message-ID: <87ha40263v.fsf@purkki.adurom.net> (sfid-20140604_144825_246007_AA3BF8E0)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall
-> On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
-> 
-> > Hi Julia,
-> >
-> > On Wed, Jun 4, 2014 at 11:07 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> > > Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
-> > > return a larger number than the maximum position argument if that position
-> > > is not a multiple of BITS_PER_LONG.
-> >
-> > Shouldn't this be fixed in find_first_zero_bit() instead?
-> 
-> OK, I could do that as well.  Most of the callers currently test with >=.
-> Should they be left as is, or changed to use ==?
+Severin Kacianka <severin.kacianka@aau.at> writes:
 
-Do we want to add an extra test to find_first_zero_bit() and effectively
-slow down all the calls - especially those where the length is a
-multiple of 8 (probably the most common).
+> I have a question about monitor mode and the monitor interface: When
+> will a frame show up in the monitor interface?
 
-Maybe the documented return code should be changed to allow for the
-existing behaviour.
+The question doesn't really make sense, at least not to me. But I'll try
+to answer anyway :)
 
-	David
+To simplify, the path when a frame is received with a monitor interface is:
 
+1. hardware
+2. firmware
+3. driver (eg. ath9k or ath10k)
+4. mac80211
+5. netdevice
+6. user space
 
+And all steps above can cause different amount of latency. So there is
+not really a good answer how long it will take the frame to reach user
+space.
 
+> If I understand 802.11 correctly, there will first be a Request to
+> Send (RTS), then a Clear to Send (CTS) signal. Then the actual frame
+> will be send followed by an ACK. I did some testing and it seems, that
+> the frame shows up in the monitoring interface after the ACK is
+> received.
+>
+> My test setup was to record the socket.send call of an UDP packet with
+> an unique ID and then measure the time it takes for that packet to be
+> read on the monitor interface. As the measured time was not constant,
+> but seemed to vary in relation to the network conditions I suppose
+> that the frame only shows up after its delivery was acknowledged.
+
+There is a strict timing requirements when the ack frame must be sent so
+in most of the designs hardware or firmware transmits the ack, host
+software (driver/mac80211) cannot provide such accuracy.
+
+-- 
+Kalle Valo
