@@ -1,77 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51850 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755273AbaFXTxG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17990 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753401AbaFDNr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:53:06 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so6592665wib.11
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:53:05 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/27] iwlwivi: mvm: BT Coex - properly set the priority of beacons
-Date: Tue, 24 Jun 2014 22:52:20 +0300
-Message-Id: <1403639541-4621-26-git-send-email-egrumbach@gmail.com> (sfid-20140624_215951_692270_34C25640)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+	Wed, 4 Jun 2014 09:47:29 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 10/13] ath9k: Fetch appropriate opereting channel context
+Date: Wed, 4 Jun 2014 19:16:36 +0530
+Message-ID: <1401889599-412-11-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154758_908986_A0D14797)
+In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Retrieve appropriate operating channel context while switching
+between operating and off channels.
 
-Since the new API allows multiple priorities, we need to
-properly set the beacon's prorities in the TX cmd associated
-to it.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
+ drivers/net/wireless/ath/ath9k/channel.c |  9 +++++++--
+ drivers/net/wireless/ath/ath9k/main.c    | 11 +++++++----
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 3b0390b..aad3621 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -904,7 +904,7 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 	struct iwl_mac_beacon_cmd beacon_cmd = {};
- 	struct ieee80211_tx_info *info;
- 	u32 beacon_skb_len;
--	u32 rate;
-+	u32 rate, tx_flags;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3c7ec1c..7634960 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -382,7 +382,7 @@ void ath_offchannel_timer(unsigned long data);
+ void ath_offchannel_channel_change(struct ath_softc *sc);
+ void ath_chanctx_offchan_switch(struct ath_softc *sc,
+ 				struct ieee80211_channel *chan);
+-u8 ath_chanctx_get_oper_chan(struct ath_softc *sc);
++u8 ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active);
  
- 	if (WARN_ON(!beacon))
- 		return -EINVAL;
-@@ -914,14 +914,17 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 	/* TODO: for now the beacon template id is set to be the mac context id.
- 	 * Might be better to handle it as another resource ... */
- 	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
-+	info = IEEE80211_SKB_CB(beacon);
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ int ath_startrecv(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 099e673..f7842ee 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -275,12 +275,17 @@ void ath_chanctx_switch(struct ath_softc *sc, u8 next_chanctx_idx)
+ 	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+ }
  
- 	/* Set up TX command fields */
- 	beacon_cmd.tx.len = cpu_to_le16((u16)beacon_skb_len);
- 	beacon_cmd.tx.sta_id = mvmvif->bcast_sta.sta_id;
- 	beacon_cmd.tx.life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
--	beacon_cmd.tx.tx_flags = cpu_to_le32(TX_CMD_FLG_SEQ_CTL |
--					     TX_CMD_FLG_BT_DIS  |
--					     TX_CMD_FLG_TSF);
-+	tx_flags = TX_CMD_FLG_SEQ_CTL | TX_CMD_FLG_TSF;
-+	tx_flags |=
-+		iwl_mvm_bt_coex_tx_prio(mvm, (void *)beacon->data, info, 0) <<
-+						TX_CMD_FLG_BT_PRIO_POS;
-+	beacon_cmd.tx.tx_flags = cpu_to_le32(tx_flags);
+-u8 ath_chanctx_get_oper_chan(struct ath_softc *sc)
++u8 ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active)
+ {
++	struct ath_chanctx *ctx;
+ 	u8 i;
  
- 	mvm->mgmt_last_antenna_idx =
- 		iwl_mvm_next_antenna(mvm, mvm->fw->valid_tx_ant,
-@@ -931,8 +934,6 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
- 			    RATE_MCS_ANT_POS);
+ 	for (i = 0; i < ARRAY_SIZE(sc->chanctx); i++) {
+-		if (!list_empty(&sc->chanctx[i].vifs))
++		ctx = &sc->chanctx[i];
++		if (!ctx->assigned || list_empty(&ctx->vifs))
++			continue;
++
++		if (active && ctx->active)
+ 			return i;
+ 	}
  
--	info = IEEE80211_SKB_CB(beacon);
--
- 	if (info->band == IEEE80211_BAND_5GHZ || vif->p2p) {
- 		rate = IWL_FIRST_OFDM_RATE;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7326eca..2d619b7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2168,7 +2168,7 @@ ath_scan_next_channel(struct ath_softc *sc)
+ 
+ 	if (sc->offchannel.scan_idx >= req->n_channels) {
+ 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+-		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 		return;
+ 	}
+ 
+@@ -2191,7 +2191,7 @@ static void ath_offchannel_next(struct ath_softc *sc)
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
+ 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
  	} else {
+-		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+ 		if (sc->ps_idle)
+ 			ath_cancel_work(sc);
+@@ -2212,7 +2212,7 @@ static void ath_scan_complete(struct ath_softc *sc, bool abort)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+-	ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++	ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 	sc->offchannel.scan_req = NULL;
+ 	sc->offchannel.scan_vif = NULL;
+ 	sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+@@ -2325,7 +2325,7 @@ void ath_offchannel_channel_change(struct ath_softc *sc)
+ void ath_offchannel_timer(unsigned long data)
+ {
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+-	u8 idx = ath_chanctx_get_oper_chan(sc);
++	u8 idx = ath_chanctx_get_oper_chan(sc, false);
+ 	struct ath_chanctx *ctx = &sc->chanctx[idx];
+ 
+ 	if (!sc->offchannel.scan_req)
+@@ -2336,6 +2336,9 @@ void ath_offchannel_timer(unsigned long data)
+ 		if (!sc->offchannel.scan_req)
+ 			return;
+ 
++		/* get first active channel context */
++		idx = ath_chanctx_get_oper_chan(sc, true);
++		ctx = &sc->chanctx[idx];
+ 		if (ctx->active) {
+ 			sc->offchannel.state = ATH_OFFCHANNEL_SUSPEND;
+ 			ath_chanctx_switch(sc, idx);
 -- 
-1.8.3.2
+2.0.0
 
