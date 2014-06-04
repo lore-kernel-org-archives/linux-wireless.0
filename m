@@ -1,64 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60581 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbaFEKjF (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:50208 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbaFDR0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 06:39:05 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Andy Lutomirski <luto@amacapital.net>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
-In-Reply-To: <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com>
-	(Andy Lutomirski's message of "Thu, 29 May 2014 10:52:32 -0700")
-References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com>
-	<CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
-	<CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com>
-Date: Thu, 5 Jun 2014 13:26:43 +0300
-Message-ID: <87r433ps7w.fsf@kamboji.qca.qualcomm.com> (sfid-20140605_123909_585733_50D4E121)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 4 Jun 2014 13:26:31 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so8649320wgh.26
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:30 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/15] staging: vt6656: rename PSvDisablePowerSaving to vnt_disable_power_saving
+Date: Wed,  4 Jun 2014 18:25:25 +0100
+Message-Id: <1401902735-3882-5-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192635_276735_81089728)
+In-Reply-To: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
+References: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Lutomirski <luto@amacapital.net> writes:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/iwctl.c | 2 +-
+ drivers/staging/vt6656/power.c | 2 +-
+ drivers/staging/vt6656/power.h | 2 +-
+ drivers/staging/vt6656/wcmd.c  | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-> On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> +ath10k@lists.infradead.org
->>
->> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
->>> It dies with 'otp calibration failed: 2'.
->>>
->>> Some older version of the driver seemed to work fine.
->>
->> ath10k did not verify otp result before so it could load successfully
->> despite errors.
->>
->> Someone raised this problem yesterday on IRC. I'm not really sure how
->> we should deal with this properly.
->
-> Ideally, someone from Atheros could figure out what the error is.
-
-Michal already did. The error means that for some reason the
-calibaration data was not found from OTP. OTP is the storage area where
-the calibration data is normally stored within QCA9880.
-
-> Barring that, the card seems to work okay without otp (I don't even
-> know what otp is), so just warning and continuing to load might be
-> better than bailing.
-
-This means that your card is not properly calibrated and it doesn't
-function in an optimal way (for example range or throughput is less than
-what it could be).
-
-Do you see that with all Archer C7 v2 devices or with just one? One
-possibility is that the calibration data is actually stored outside of
-QCA9880 board, for example in the host flash or similar. I don't have
-that AP, can someone else see where the calibration data is stored?
-
-I know that ath9k supports this kind of setup, most likely ath10k should
-as well.
-
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 73b7794..3e144ed 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -1323,7 +1323,7 @@ int iwctl_siwpower(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	if (wrq->disabled) {
+ 		pDevice->ePSMode = WMAC_POWER_CAM;
+-		PSvDisablePowerSaving(pDevice);
++		vnt_disable_power_saving(pDevice);
+ 		return rc;
+ 	}
+ 	if ((wrq->flags & IW_POWER_TYPE) == IW_POWER_TIMEOUT) {
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index ae136b2..e5462ed 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -125,7 +125,7 @@ void vnt_enable_power_saving(struct vnt_private *priv, u16 listen_interval)
+  *
+  */
+ 
+-void PSvDisablePowerSaving(struct vnt_private *priv)
++void vnt_disable_power_saving(struct vnt_private *priv)
+ {
+ 
+ 	/* disable power saving hw function */
+diff --git a/drivers/staging/vt6656/power.h b/drivers/staging/vt6656/power.h
+index 0642f18..ef669b7 100644
+--- a/drivers/staging/vt6656/power.h
++++ b/drivers/staging/vt6656/power.h
+@@ -38,7 +38,7 @@
+ 
+ int PSbConsiderPowerDown(struct vnt_private *, int bCheckRxDMA,
+ 	int bCheckCountToWakeUp);
+-void PSvDisablePowerSaving(struct vnt_private *);
++void vnt_disable_power_saving(struct vnt_private *);
+ void vnt_enable_power_saving(struct vnt_private *, u16);
+ void PSvSendPSPOLL(struct vnt_private *);
+ int PSbSendNullPacket(struct vnt_private *);
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 55c5563..b2d7865 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -480,7 +480,7 @@ void vRunCommand(struct work_struct *work)
+ 		// set initial state
+ 		pMgmt->eCurrState = WMAC_STATE_IDLE;
+ 		pMgmt->eCurrMode = WMAC_MODE_STANDBY;
+-		PSvDisablePowerSaving((void *) pDevice);
++		vnt_disable_power_saving(pDevice);
+ 		BSSvClearNodeDBTable(pDevice, 0);
+ 		vMgrJoinBSSBegin((void *) pDevice, &Status);
+ 		// if Infra mode
 -- 
-Kalle Valo
+1.9.1
+
