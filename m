@@ -1,89 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:50373 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752718AbaF2KnW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 06:43:22 -0400
-Date: Sun, 29 Jun 2014 13:43:18 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 05/10] mac80211: use TDLS initiator in tdls_mgmt
- operations
-Message-ID: <20140629104318.GA32230@w1.fi> (sfid-20140629_124344_246091_C3F8C1E1)
-References: <1402496307-32522-1-git-send-email-arik@wizery.com>
- <1402496307-32522-5-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402496307-32522-5-git-send-email-arik@wizery.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:34680 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752876AbaFDNqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 09:46:14 -0400
+Message-ID: <1401889560.6079.26.camel@jlt4.sipsolutions.net> (sfid-20140604_154617_407794_63AB5633)
+Subject: Re: [RFC] cfg80211/mac80211: Add support for Proxy ARP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 04 Jun 2014 15:46:00 +0200
+In-Reply-To: <20140604134217.GA21759@jouni.qca.qualcomm.com>
+References: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com>
+	 <1400231795.4112.21.camel@jlt4.sipsolutions.net>
+	 <E3DE377D7E4999489B304A8FF33FC0D103A211A7@nasanexd01g.na.qualcomm.com>
+	 <1401882426.6079.20.camel@jlt4.sipsolutions.net>
+	 <20140604134217.GA21759@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 05:18:22PM +0300, Arik Nemtsov wrote:
-> The TDLS initiator is set once during link setup. If determines the
-> address ordering in the link identifier IE.
-> Use the value from userspace in order to have a correct teardown packet.
-> With the current code, a teardown from the responder side fails the TDLS
-> MIC check because of a bad link identifier IE.
+On Wed, 2014-06-04 at 16:42 +0300, Jouni Malinen wrote:
+> On Wed, Jun 04, 2014 at 01:47:06PM +0200, Johannes Berg wrote:
+> > It seems to me that ebtables should be able to filter on the ports
+> > already, so I'm not really sure what you mean by this.
+> > 
+> > The real issue is the internal forwarding. Is that even necessary? Maybe
+> > instead the bridge could forward back to the same port in some cases,
+> > and you could just disable the internal forwarding in mac80211 entirely?
+> 
+> I'd assume that for most Hotspot 2.0 use cases, internal forwarding
+> would be disabled completely, but there may very well be cases where one
+> would like to use ProxyARP with forwarding between associated stations.
+> Doing that through the bridge code above mac80211 should be fine,
+> though, i.e., there is no particular reason why the internal forwarding
+> really needs to be internal within mac80211 as long as the
+> implementation outside is doable (forward back to same port).
 
-This series, and in particular, this patch, seems to break number of
-TDLS use cases (well, almost all use of TDLS) with "old" user space
-tools. This should be fixed or reverted until the changes are in state
-that avoid such breaking of the old user interface. We cannot assume
-that everyone will be updating kernel and wpa_supplicant in sync.
+Right - I think currently the forward back to the same port part would
+be missing. We should probably have a wider discussion with
+bridging/nftables/etc. folks.
 
-I would recommend running through full mac80211_hwsim test cases from
-hostap.git when doing any changes to existing nl80211
-commands/attributes or how they are used.
+> > Beyond that, even the "only reply when you have a response" part could
+> > be done using the nftables framework, it has quick hash/tree data
+> > structures that say the DHCP server could manage (somehow.)
+> 
+> Getting DHCP server involved in Proxy ARP management sounds complex and
+> quite impractical for many cases. I'd expect Hotspot 2.0 APs to work
+> with any deployed DHCP setup and there is not really going to be any
+> coordination between the two apart from the AP obviously seeing the DHCP
+> messages flowing through it.
+> 
+> Sure, there could be an interface that allows external control, but I
+> think there needs to be capability to learn automatically from ARP (and
+> IPv6 neighbor messages) and DHCP frames flowing through the AP.
 
-> diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-> @@ -242,27 +243,42 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
-> -	/* the TDLS link IE is always added last */
-> +	/* sanity check for initiator */
+Oh, sure, I agree - and it doesn't really matter where the learning
+comes from. I was just trying to say that the filtering part of "drop
+frame only when going to reply" should be entirely doable with something
+like nftables' set datastructure (or whatever it's called)
 
-These sanity checks do not work with old user space since initiator will
-be hardcoded to false for those cases.
+johannes
 
->  	switch (action_code) {
->  	case WLAN_TDLS_SETUP_REQUEST:
->  	case WLAN_TDLS_SETUP_CONFIRM:
-> -	case WLAN_TDLS_TEARDOWN:
->  	case WLAN_TDLS_DISCOVERY_REQUEST:
-> -		/* we are the initiator */
-> -		ieee80211_tdls_add_link_ie(skb, sdata->vif.addr, peer,
-> -					   sdata->u.mgd.bssid);
-> +		if (!initiator) {
-> +			ret = -EINVAL;
-> +			goto fail;
-> +		}
-
-This will reject all new request frames unless user space tools are
-modified to add NL80211_ATTR_TDLS_INITIATOR.
-
-For most of these, it should be possible to set initiator based on
-action_code if the attribute had been designed to support backwards
-compatibility, but it wasn't, i.e., there is no way of knowing whether
-the user space is aware of this new attribute since it is a flag
-attribute. For example, an u32 encoding an enum that indicates whether
-the device is the initiator would have allowed cfg80211 to figure out on
-its own which role the device is in if the new attribute is not
-included.
-
-Is it already too late to change the nl80211 attribute since this hit
-wireless-testing.git? I was about to commit wpa_supplicant changes to
-start using this new attribute, but I don't think I'll do it now to
-avoid getting any actual users added for this until the kernel side
-design gets fixed to address existing user space behavior.
-
-
-PS.
-
-This location and patch is not the only one that breaks TDLS tests.
-'mac80211: make sure TDLS peer STA exists during setup' is also breaking
-things at least for special test functionality (e.g.,
-ap_wpa2_tdls_bssid_mismatch and ap_wpa2_tdls_concurrent_init). I'm not
-sure what to do about those, though.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
