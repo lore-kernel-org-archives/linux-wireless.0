@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:45828 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbaF2WLR (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:55129 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbaFDKzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 18:11:17 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so7962820obc.29
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 15:11:16 -0700 (PDT)
-Message-ID: <53B08F07.3000308@lwfinger.net> (sfid-20140630_001120_707134_8542B0C6)
-Date: Sun, 29 Jun 2014 17:11:19 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 Jun 2014 06:55:31 -0400
 MIME-Version: 1.0
-To: John Talbut <jt@dpets.co.uk>, linux-wireless@vger.kernel.org
-Subject: Re: Firmware loading with static kernel and initramfs
-References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk>
-In-Reply-To: <53B066A5.4070003@dpets.co.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <alpine.DEB.2.10.1406041148590.2441@hadrien>
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
+	<CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
+	<alpine.DEB.2.10.1406041137270.2441@hadrien>
+	<063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
+	<alpine.DEB.2.10.1406041148590.2441@hadrien>
+Date: Wed, 4 Jun 2014 12:55:29 +0200
+Message-ID: <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com> (sfid-20140604_125553_166313_573153B1)
+Subject: Re: [PATCH 0/10] use safer test on the result of find_first_zero_bit
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: David Laight <David.Laight@aculab.com>,
+	linux-rdma <linux-rdma@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	scsi <linux-scsi@vger.kernel.org>,
+	linux-s390 <linux-s390@vger.kernel.org>,
+	"adi-buildroot-devel@lists.sourceforge.net"
+	<adi-buildroot-devel@lists.sourceforge.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/29/2014 02:19 PM, John Talbut wrote:
-> I originally had the problem with a Broadcom BCM43225 wireless.  This was with a
-> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver and this
-> is still working with a 3.14 kernel.
+Hi Julia,
 
-What sort of patch was that? Driver brcmsmac is still using request_firmware().
+On Wed, Jun 4, 2014 at 11:52 AM, Julia Lawall <julia.lawall@lip6.fr> wrote:
+>> Maybe the documented return code should be changed to allow for the
+>> existing behaviour.
+>
+> Sorry, I'm not sure to understand what you suggest here.
 
-> Currently I have the problem with an Intel Centrino Wireless-N 130.  The problem
-> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev version
-> 204-5linuxmint.
+include/asm-generic/bitops/find.h:
 
-The current Intel drivers all use request_firmware_nowait(), but I'm not sure 
-when they were changed.
+| /**
+|  * find_first_zero_bit - find the first cleared bit in a memory region
+|  * @addr: The address to start the search at
+|  * @size: The maximum number of bits to search
+|  *
+|  * Returns the bit number of the first cleared bit.
+|  * If no bits are zero, returns @size.
 
-> A friend seems to have the problem with a Realtek 8129se wireless but we are
-> still checking out that this is the problem.
+"If no bits are zero, returns @size or a number larger than @size."
 
-To my knowledge, there is no Realtek 8129se driver. Do you mean rtl8192se? If 
-so, that one has used request_firmware_nowait() for some time.
+|  */
+| extern unsigned long find_first_zero_bit(const unsigned long *addr,
+|                                          unsigned long size);
 
-Larry
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
