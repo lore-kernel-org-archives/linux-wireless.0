@@ -1,48 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60984 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932753AbaFQJlG (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:7781 "EHLO
+	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751327AbaFDJJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:41:06 -0400
-Subject: [PATCH 3/6] ath6kl: don't set hi_refclk_hz if hardware version
- doesn't need it
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Jun 2014 12:41:04 +0300
-Message-ID: <20140617094104.22040.98561.stgit@potku.adurom.net> (sfid-20140617_114109_981283_9855B7A0)
-In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 4 Jun 2014 05:09:59 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-rdma@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	adi-buildroot-devel@lists.sourceforge.net
+Subject: [PATCH 0/10] use safer test on the result of find_first_zero_bit
+Date: Wed,  4 Jun 2014 11:07:50 +0200
+Message-Id: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140604_111221_360568_B801AC76)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed for ar6004 hw3.0 support.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c2ec36ab8121..3eb4508331e3 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -624,9 +624,12 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 		return status;
- 
- 	/* Configure target refclk_hz */
--	status = ath6kl_bmi_write_hi32(ar, hi_refclk_hz, ar->hw.refclk_hz);
--	if (status)
--		return status;
-+	if (ar->hw.refclk_hz != 0) {
-+		status = ath6kl_bmi_write_hi32(ar, hi_refclk_hz,
-+					       ar->hw.refclk_hz);
-+		if (status)
-+			return status;
-+	}
- 
- 	return 0;
- }
+Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
+return a larger number than the maximum position argument if that position
+is not a multiple of BITS_PER_LONG.
 
