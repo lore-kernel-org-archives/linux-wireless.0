@@ -1,166 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:38141 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932740AbaFLIbt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 04:31:49 -0400
-Date: Thu, 12 Jun 2014 10:31:34 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bing Zhao <bzhao@marvell.com>
-cc: LKML <linux-kernel@vger.kernel.org>,
-	John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [patch V2] wireless: mwifiex: Use the proper interfaces
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE1F8B507@SC-VEXCH1.marvell.com>
-Message-ID: <alpine.DEB.2.10.1406121029530.5170@nanos> (sfid-20140612_103227_131521_9EAF500A)
-References: <20140611234024.103571777@linutronix.de> <20140611234607.607201623@linutronix.de> <477F20668A386D41ADCC57781B1F70430FE1F8B507@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from s3.sipsolutions.net ([5.9.151.49]:34481 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751734AbaFDMiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 08:38:24 -0400
+Message-ID: <1401885493.6079.22.camel@jlt4.sipsolutions.net> (sfid-20140604_143827_289525_0882D83F)
+Subject: Re: [PATCH v7 1/5] mac80211: implement multi-vif in-place
+ reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 04 Jun 2014 14:38:13 +0200
+In-Reply-To: <CA+BoTQn=rpLqg4AU9Q6jXSo3D1os76B7bFhnqPyk=47QX5T1SQ@mail.gmail.com> (sfid-20140604_141223_261913_438F9888)
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+	 <1401348851-26732-2-git-send-email-michal.kazior@tieto.com>
+	 <1401708800.5528.62.camel@dubbel>
+	 <CA+BoTQnhOePTuDrzv_YNU6dmroRydqWfNjSj_e0UT6=SWu5r9w@mail.gmail.com>
+	 <1401815433.4157.16.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQn=rpLqg4AU9Q6jXSo3D1os76B7bFhnqPyk=47QX5T1SQ@mail.gmail.com>
+	 (sfid-20140604_141223_261913_438F9888)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Why is converting time formats so desired if there are proper
-interfaces for this?
+On Wed, 2014-06-04 at 14:12 +0200, Michal Kazior wrote:
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/mwifiex/cfg80211.c |    4 +---
- drivers/net/wireless/mwifiex/main.c     |    4 +---
- drivers/net/wireless/mwifiex/tdls.c     |    8 ++------
- drivers/net/wireless/mwifiex/uap_txrx.c |    4 +---
- drivers/net/wireless/mwifiex/wmm.c      |    9 +--------
- 5 files changed, 6 insertions(+), 23 deletions(-)
+> >> >> +     if (!(old_ctx->replaced_by && new_ctx->replaces)) {
+> >> >
+> >> > Isn't !old->ctx->replaced_by enough here? Do you really care if the
+> >> > new_ctx will replace something else at this point?
+> >>
+> >> Hmm..
+> >>
+> >> Now that I think this should actually be just:
+> >>
+> >>  if (!new_ctx->replaces) { ... }
+> >
+> > Oh ... I think that's what I asked above. Nah. This check actually means
+> > that it *is* possible that replaced_by and replaces are true at the same
+> > time? *confused*
+> 
+> If you refer to the original condition do note the *old_ctx* and *new_ctx*.
+> 
+> As I stated above for a single channel context both `replaces` and
+> `replaced_by` shouldn't be set at the same time.
 
-Index: linux/drivers/net/wireless/mwifiex/cfg80211.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/cfg80211.c
-+++ linux/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -151,7 +151,6 @@ mwifiex_form_mgmt_frame(struct sk_buff *
- 	u8 addr[ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
- 	u16 pkt_len;
- 	u32 tx_control = 0, pkt_type = PKT_TYPE_MGMT;
--	struct timeval tv;
- 
- 	pkt_len = len + ETH_ALEN;
- 
-@@ -173,8 +172,7 @@ mwifiex_form_mgmt_frame(struct sk_buff *
- 	       len - sizeof(struct ieee80211_hdr_3addr));
- 
- 	skb->priority = LOW_PRIO_TID;
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 
- 	return 0;
- }
-Index: linux/drivers/net/wireless/mwifiex/main.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/main.c
-+++ linux/drivers/net/wireless/mwifiex/main.c
-@@ -611,7 +611,6 @@ mwifiex_hard_start_xmit(struct sk_buff *
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	struct sk_buff *new_skb;
- 	struct mwifiex_txinfo *tx_info;
--	struct timeval tv;
- 
- 	dev_dbg(priv->adapter->dev, "data: %lu BSS(%d-%d): Data <= kernel\n",
- 		jiffies, priv->bss_type, priv->bss_num);
-@@ -658,8 +657,7 @@ mwifiex_hard_start_xmit(struct sk_buff *
- 	 * firmware for aggregate delay calculation for stats and
- 	 * MSDU lifetime expiry.
- 	 */
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
-Index: linux/drivers/net/wireless/mwifiex/tdls.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/tdls.c
-+++ linux/drivers/net/wireless/mwifiex/tdls.c
-@@ -474,7 +474,6 @@ int mwifiex_send_tdls_data_frame(struct
- {
- 	struct sk_buff *skb;
- 	struct mwifiex_txinfo *tx_info;
--	struct timeval tv;
- 	int ret;
- 	u16 skb_len;
- 
-@@ -552,8 +551,7 @@ int mwifiex_send_tdls_data_frame(struct
- 	tx_info->bss_num = priv->bss_num;
- 	tx_info->bss_type = priv->bss_type;
- 
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
- 	return 0;
-@@ -645,7 +643,6 @@ int mwifiex_send_tdls_action_frame(struc
- {
- 	struct sk_buff *skb;
- 	struct mwifiex_txinfo *tx_info;
--	struct timeval tv;
- 	u8 *pos;
- 	u32 pkt_type, tx_control;
- 	u16 pkt_len, skb_len;
-@@ -710,8 +707,7 @@ int mwifiex_send_tdls_action_frame(struc
- 	pkt_len = skb->len - MWIFIEX_MGMT_FRAME_HEADER_SIZE - sizeof(pkt_len);
- 	memcpy(skb->data + MWIFIEX_MGMT_FRAME_HEADER_SIZE, &pkt_len,
- 	       sizeof(pkt_len));
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
- 	return 0;
-Index: linux/drivers/net/wireless/mwifiex/uap_txrx.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ linux/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -96,7 +96,6 @@ static void mwifiex_uap_queue_bridged_pk
- 	struct sk_buff *new_skb;
- 	struct mwifiex_txinfo *tx_info;
- 	int hdr_chop;
--	struct timeval tv;
- 	struct ethhdr *p_ethhdr;
- 
- 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
-@@ -192,8 +191,7 @@ static void mwifiex_uap_queue_bridged_pk
- 		tx_info->pkt_len = skb->len;
- 	}
- 
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
- 	atomic_inc(&adapter->tx_pending);
- 	atomic_inc(&adapter->pending_bridged_pkts);
-Index: linux/drivers/net/wireless/mwifiex/wmm.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/wmm.c
-+++ linux/drivers/net/wireless/mwifiex/wmm.c
-@@ -886,15 +886,8 @@ u8
- mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
- 				  const struct sk_buff *skb)
- {
-+	u32 queue_delay = ktime_to_ms(net_timedelta(skb->tstamp));
- 	u8 ret_val;
--	struct timeval out_tstamp, in_tstamp;
--	u32 queue_delay;
--
--	do_gettimeofday(&out_tstamp);
--	in_tstamp = ktime_to_timeval(skb->tstamp);
--
--	queue_delay = (out_tstamp.tv_sec - in_tstamp.tv_sec) * 1000;
--	queue_delay += (out_tstamp.tv_usec - in_tstamp.tv_usec) / 1000;
- 
- 	/*
- 	 * Queue delay is passed as a uint8 in units of 2ms (ms shifted
+Ah, right, I did mix that up, thanks for the clarification.
+
+johannes
+
