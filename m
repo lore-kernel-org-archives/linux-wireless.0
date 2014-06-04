@@ -1,51 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43999 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbaFFQCl (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:58179 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753254AbaFDNec convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 12:02:41 -0400
-Message-ID: <5391E620.4090706@candelatech.com> (sfid-20140606_180244_257378_678FD385)
-Date: Fri, 06 Jun 2014 09:02:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 4 Jun 2014 09:34:32 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 06368-08 for <linux-wireless@vger.kernel.org>;
+ Wed,  4 Jun 2014 14:34:29 +0100 (BST)
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Julia Lawall' <julia.lawall@lip6.fr>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+CC: linux-rdma <linux-rdma@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	scsi <linux-scsi@vger.kernel.org>,
+	linux-s390 <linux-s390@vger.kernel.org>,
+	"adi-buildroot-devel@lists.sourceforge.net"
+	<adi-buildroot-devel@lists.sourceforge.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"sebott@linux.vnet.ibm.com" <sebott@linux.vnet.ibm.com>
+Subject: RE: [PATCH 0/10] use safer test on the result of find_first_zero_bit
+Date: Wed, 4 Jun 2014 13:34:08 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D172571DB@AcuExch.aculab.com> (sfid-20140604_153455_401557_9CF03577)
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
+ <alpine.DEB.2.10.1406041137270.2441@hadrien>
+ <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
+ <alpine.DEB.2.10.1406041148590.2441@hadrien>
+ <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com>
+ <alpine.DEB.2.10.1406041258200.2441@hadrien>
+ <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com>
+ <alpine.DEB.2.10.1406041510520.2441@hadrien>
+In-Reply-To: <alpine.DEB.2.10.1406041510520.2441@hadrien>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com> <538CD507.1050803@candelatech.com> <87bnu7pqe2.fsf@kamboji.qca.qualcomm.com> <53909372.1040707@candelatech.com> <87fvjimsxj.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fvjimsxj.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2014 11:51 PM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
+From: Julia Lawall
+> On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
 > 
->>> Why do you want to put the crash dump in kernel log, can you describe
->>> your "use case" here? For me it would be enough to have a UUID for each
->>> crash dump and then have the driver print that to kernel log:
->>>
->>> ath10k: firmware crashed (uuid 1234567890-4321)
->>>
->>> And then you just need to find the correct dump from the file system and
->>> start debugging. Would that be enough for you?
->>
->> Not all systems will have fancy user-space able to deal with this.
->>
->> At the very least, please leave in the current firmware crash
->> dump text.
+> > Hi Julia,
+> >
+> > On Wed, Jun 4, 2014 at 1:00 PM, Julia Lawall <julia.lawall@lip6.fr> wrote:
+> > > OK, thanks.  I was only looking at the C code.
+> > >
+> > > But the C code contains a loop that is followed by:
+> > >
+> > >         if (!size)
+> > >                 return result;
+> > >         tmp = *p;
+> > >
+> > > found_first:
+> > >         tmp |= ~0UL << size;
+> > >         if (tmp == ~0UL)        /* Are any bits zero? */
+> > >                 return result + size;   /* Nope. */
+> > >
+> > > In the first return, it would seem that result == size.  Could the second
+> > > one be changed to just return size?  It should not hurt performance.
+> >
+> > "size" may have been changed between function entry and this line.
+> > So you have to store it in a temporary.
 > 
-> I'm not removing anything. That was just an example how we can identify
-> crashes.
+> Sorry, after reflection it seems that indeed size + result is always the
+> original size, so it is actually all of the code that uses >= that is
+> doing something unnecessary.  == for the failure test is fine.
 
-Perhaps the time-stamp is good enough?  I don't see a need for
-a uuid, but perhaps I am missing something?
+There is nothing wrong with defensive coding.
+The 'tmp |= ~0UL << size' ensures that the return value is 'correct'
+when there are no bits set.
+The function could have been defined so that this wasn't needed.
 
-Thanks,
-Ben
+If you assume that the 'no zero bits' is unlikely, then checking the
+return value from ffz() could well be slightly faster.
+Not that anything is likely to notice.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+	David
+
+
 
