@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:46812 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbaFDQLr (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:61888 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752422AbaFDMAI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 12:11:47 -0400
-Message-ID: <538F4540.9080002@lwfinger.net> (sfid-20140604_181155_962802_489BF4BC)
-Date: Wed, 04 Jun 2014 11:11:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 Jun 2014 08:00:08 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x12so8358719wgg.30
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 05:00:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Ben Hutchings <ben@decadent.org.uk>, dwmw2@infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Add firmware for r8723au
-References: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>	 <1390174519.3651.3.camel@deadeye.wl.decadent.org.uk> <1401833651.2412.35.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1401833651.2412.35.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1401824450.4157.33.camel@jlt4.sipsolutions.net>
+References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
+	<1401824450.4157.33.camel@jlt4.sipsolutions.net>
+Date: Wed, 4 Jun 2014 14:00:06 +0200
+Message-ID: <CA+BoTQm+GPUzgxTut+umhuSQZS6m+=e5FzeSGpg64Xy=2A3cUQ@mail.gmail.com> (sfid-20140604_140013_155814_BE033F1B)
+Subject: Re: [PATCH v2 0/2] mac80211: fix csa counters
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Luciano Coelho <luciano.coelho@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2014 05:14 PM, Ben Hutchings wrote:
-> On Sun, 2014-01-19 at 23:35 +0000, Ben Hutchings wrote:
->> On Thu, 2014-01-02 at 18:42 -0600, Larry Finger wrote:
->>> This firmware is for a driver that will soon be submitted to the kernel.
->>> It occurs as data statements in Realtek driver rtl8723A_WiFi_linux_v4.1.3_6044.20121224.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> ---
->>>   WHENCE                         |  13 +++++++++++++
->>>   rtlwifi/rtl8723aufw_A.bin      | Bin 0 -> 22172 bytes
->>>   rtlwifi/rtl8723aufw_B.bin      | Bin 0 -> 24118 bytes
->>>   rtlwifi/rtl8723aufw_B_NoBT.bin | Bin 0 -> 19200 bytes
->>>   4 files changed, 13 insertions(+)
->>>   create mode 100644 rtlwifi/rtl8723aufw_A.bin
->>>   create mode 100644 rtlwifi/rtl8723aufw_B.bin
->>>   create mode 100644 rtlwifi/rtl8723aufw_B_NoBT.bin
->> [...]
+On 3 June 2014 21:40, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-29 at 08:38 +0200, Michal Kazior wrote:
+>> Hi,
 >>
->> Applied, thanks.
+>> I was seeing strange WARN_ON splat loops and
+>> crashes while I was testing my multi-vif CSA.
+>>
+>> CSA counters weren't properly reset and on some
+>> failpaths this caused a mess. There were also
+>> possible SMP inconsitencies/races.
 >
-> I just noticed that the driver in Linux 3.15 seems to ask for
-> rtlwifi/rtl8723aufw.bin and not rtlwifi/rtl8723aufw_A.bin.  You'll need
-> to change the filename on one side or the other.
+> Thanks. This doesn't seem to apply any more though, something in
+> ieee80211_csa_is_complete(). I think the fixup is easy, but would prefer
+> if you'd do it since (hopefully :) ) you can also check the result.
+>
+> I'm guessing the conflict is with some of Andrei's recent patches.
 
-Jes,
+That's strange. I thought I've based it on top of latest
+mac80211-next/master when I sent it.
 
-As Ben points out, I messed up the firmware names, and one of them needs to be 
-changed. Keeping the name "rtlwifi/rtl8723aufw_A.bin" would retain a certain 
-amount of symmetry, but is may be easier to retain "rtlwifi/rtl8723aufw.bin" in 
-the code. A third option would be to try for one of the names and fall back to 
-the other if it fails. What do you think?
+I've also just rebased it locally on latest mac80211-next/master and
+git wasn't complaining about conflicts at all.
 
-In any case, we need additional MODULE_FIRMWARE macros for the other two 
-firmware files.
-
-Larry
+Anyway, I'll re-send it later.
 
 
+Michał
