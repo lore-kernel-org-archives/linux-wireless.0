@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:62640 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbaF1W4f (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:57696 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751340AbaFDJwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:35 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so4357007wib.13
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6656: set BBvSetVGAGainOffset inside vnt_set_bss_mode
-Date: Sat, 28 Jun 2014 23:55:45 +0100
-Message-Id: <1403996146-4082-7-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005640_332873_5ACAB63B)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 4 Jun 2014 05:52:40 -0400
+Date: Wed, 4 Jun 2014 11:52:32 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: David Laight <David.Laight@ACULAB.COM>
+cc: 'Julia Lawall' <julia.lawall@lip6.fr>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-rdma <linux-rdma@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	scsi <linux-scsi@vger.kernel.org>,
+	linux-s390 <linux-s390@vger.kernel.org>,
+	"adi-buildroot-devel@lists.sourceforge.net"
+	<adi-buildroot-devel@lists.sourceforge.net>
+Subject: RE: [PATCH 0/10] use safer test on the result of
+ find_first_zero_bit
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
+Message-ID: <alpine.DEB.2.10.1406041148590.2441@hadrien> (sfid-20140604_115302_987411_E124039A)
+References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com> <alpine.DEB.2.10.1406041137270.2441@hadrien> <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vnt_set_bss_mode changes the state of abyBBVGA so move
-BBvSetVGAGainOffset to the function.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c     | 2 ++
- drivers/staging/vt6656/main_usb.c | 5 -----
- 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 82d6b64..1849e34 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -825,4 +825,6 @@ void vnt_set_bss_mode(struct vnt_private *priv)
- 		priv->abyBBVGA[2] = 0x0;
- 		priv->abyBBVGA[3] = 0x0;
- 	}
-+
-+	BBvSetVGAGainOffset(priv, priv->abyBBVGA[0]);
- }
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index d8164ec..e0ed1bb 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -440,11 +440,6 @@ static int device_init_registers(struct vnt_private *pDevice)
- 	BBvSetShortSlotTime(pDevice);
- 	vnt_set_bss_mode(pDevice);
- 
--	pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
--	pDevice->byBBVGANew = pDevice->byBBVGACurrent;
--
--	BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
--
- 	pDevice->byRadioCtl = pDevice->abyEEPROM[EEP_OFS_RADIOCTL];
- 	pDevice->bHWRadioOff = false;
- 
--- 
-1.9.1
+On Wed, 4 Jun 2014, David Laight wrote:
 
+> From: Julia Lawall
+> > On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
+> >
+> > > Hi Julia,
+> > >
+> > > On Wed, Jun 4, 2014 at 11:07 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+> > > > Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
+> > > > return a larger number than the maximum position argument if that position
+> > > > is not a multiple of BITS_PER_LONG.
+> > >
+> > > Shouldn't this be fixed in find_first_zero_bit() instead?
+> >
+> > OK, I could do that as well.  Most of the callers currently test with >=.
+> > Should they be left as is, or changed to use ==?
+>
+> Do we want to add an extra test to find_first_zero_bit() and effectively
+> slow down all the calls - especially those where the length is a
+> multiple of 8 (probably the most common).
+
+Currently, most of the calls test with >=, and most of the others seem to
+need to (either the size value did not look like a multiple of anything in
+particular, or it was eg read from a device).
+
+Note that it is BITS_PER_LONG, so it seems like it is typically 32 or 64,
+not 8.
+
+> Maybe the documented return code should be changed to allow for the
+> existing behaviour.
+
+Sorry, I'm not sure to understand what you suggest here.
+
+thanks,
+julia
