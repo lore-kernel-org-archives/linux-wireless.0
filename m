@@ -1,197 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:40818 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbaFMOou (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17990 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342AbaFDNr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 10:44:50 -0400
-Received: by mail-pb0-f53.google.com with SMTP id uo5so1937505pbc.12
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2014 07:44:50 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id pr4sm4016355pbb.53.2014.06.13.07.44.49
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Fri, 13 Jun 2014 07:44:49 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] Adding support for 5GHz.
-Date: Fri, 13 Jun 2014 20:14:42 +0530
-Message-Id: <1402670682-8914-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140613_164456_226712_8CEC1891)
+	Wed, 4 Jun 2014 09:47:28 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 04/13] ath9k: Add channel context worker thread
+Date: Wed, 4 Jun 2014 19:16:30 +0530
+Message-ID: <1401889599-412-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154733_900566_69D8EBE8)
+In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding support for 5GHz.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+The channel context worker is used to switch to next requested
+channel context.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |   17 +++--
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   81 +++++++++++++++++++++++++--
- drivers/net/wireless/rsi/rsi_mgmt.h         |    1 +
- 3 files changed, 87 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  7 ++++++
+ drivers/net/wireless/ath/ath9k/channel.c | 41 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c    |  2 ++
+ drivers/net/wireless/ath/ath9k/main.c    | 14 +++++++----
+ drivers/net/wireless/ath/ath9k/wow.c     |  1 +
+ drivers/net/wireless/ath/ath9k/xmit.c    |  7 ++++++
+ 6 files changed, 68 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 45bdb99..4700714 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -723,17 +723,17 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	enum ieee80211_band band = hw->conf.chandef.chan->band;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4906c55..052a2f9 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -327,11 +327,13 @@ struct ath_chanctx {
  
- 	mutex_lock(&common->mutex);
-+	common->fixedrate_mask[band] = 0;
+ 	u16 txpower;
+ 	bool offchannel;
++	bool stopped;
+ };
  
--	common->fixedrate_mask[IEEE80211_BAND_2GHZ] = 0;
--
--	if (mask->control[IEEE80211_BAND_2GHZ].legacy == 0xfff) {
--		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
--			(mask->control[IEEE80211_BAND_2GHZ].ht_mcs[0] << 12);
-+	if (mask->control[band].legacy == 0xfff) {
-+		common->fixedrate_mask[band] =
-+			(mask->control[band].ht_mcs[0] << 12);
- 	} else {
--		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
--			mask->control[IEEE80211_BAND_2GHZ].legacy;
-+		common->fixedrate_mask[band] =
-+			mask->control[band].legacy;
- 	}
- 	mutex_unlock(&common->mutex);
+ void ath_chanctx_init(struct ath_softc *sc);
+ int ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			      struct cfg80211_chan_def *chandef);
++void ath_chanctx_switch(struct ath_softc *sc, u8 next_chanctx_idx);
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ int ath_startrecv(struct ath_softc *sc);
+ bool ath_stoprecv(struct ath_softc *sc);
+@@ -469,6 +471,7 @@ void ath9k_csa_update(struct ath_softc *sc);
+ #define ATH_PAPRD_TIMEOUT         100 /* msecs */
+ #define ATH_PLL_WORK_INTERVAL     100
  
-@@ -980,6 +980,7 @@ int rsi_mac80211_attach(struct rsi_common *common)
++void ath_chanctx_work(struct work_struct *work);
+ void ath_tx_complete_poll_work(struct work_struct *work);
+ void ath_reset_work(struct work_struct *work);
+ bool ath_hw_check(struct ath_softc *sc);
+@@ -484,6 +487,7 @@ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
+ void ath_ps_full_sleep(unsigned long data);
+ void ath9k_p2p_ps_timer(void *priv);
+ void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif);
++void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
  
- 	hw->max_tx_aggregation_subframes = 6;
- 	rsi_register_rates_channels(adapter, IEEE80211_BAND_2GHZ);
-+	rsi_register_rates_channels(adapter, IEEE80211_BAND_5GHZ);
- 	hw->rate_control_algorithm = "AARF";
+ /**********/
+ /* BTCOEX */
+@@ -733,6 +737,7 @@ struct ath_softc {
+ 	struct mutex mutex;
+ 	struct work_struct paprd_work;
+ 	struct work_struct hw_reset_work;
++	struct work_struct chanctx_work;
+ 	struct completion paprd_complete;
+ 	wait_queue_head_t tx_wait;
  
- 	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
-@@ -997,6 +998,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 	wiphy->available_antennas_tx = 1;
- 	wiphy->bands[IEEE80211_BAND_2GHZ] =
- 		&adapter->sbands[IEEE80211_BAND_2GHZ];
-+	wiphy->bands[IEEE80211_BAND_5GHZ] =
-+		&adapter->sbands[IEEE80211_BAND_5GHZ];
+@@ -757,6 +762,8 @@ struct ath_softc {
  
- 	status = ieee80211_register_hw(hw);
- 	if (status)
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 38e7692..8f3fcdb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -620,6 +620,9 @@ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode)
- {
- 	struct sk_buff *skb = NULL;
- 	struct rsi_vap_caps *vap_caps;
-+	struct rsi_hw *adapter = common->priv;
-+	struct ieee80211_hw *hw = adapter->hw;
-+	struct ieee80211_conf *conf = &hw->conf;
- 	u16 vap_id = 0;
+ 	struct ath_chanctx chanctx[ATH9K_NUM_CHANCTX];
+ 	struct ath_chanctx *cur_chan;
++	spinlock_t chan_lock;
++	s8 next_chanctx_idx;
  
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
-@@ -649,13 +652,24 @@ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode)
- 	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
+ #ifdef CONFIG_MAC80211_LEDS
+ 	bool led_registered;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index c8d91df..ecc4d50 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -134,3 +134,44 @@ int ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
  
- 	vap_caps->rts_threshold = cpu_to_le16(common->rts_threshold);
--	vap_caps->default_mgmt_rate = 0;
--	if (conf_is_ht40(&common->priv->hw->conf)) {
--		vap_caps->default_ctrl_rate =
--				cpu_to_le32(RSI_RATE_6 | FULL40M_ENABLE << 16);
--	} else {
-+	vap_caps->default_mgmt_rate = cpu_to_le32(RSI_RATE_6);
-+
-+	if (common->band == IEEE80211_BAND_5GHZ) {
- 		vap_caps->default_ctrl_rate = cpu_to_le32(RSI_RATE_6);
-+		if (conf_is_ht40(&common->priv->hw->conf)) {
-+			vap_caps->default_ctrl_rate |=
-+				cpu_to_le32(FULL40M_ENABLE << 16);
-+		}
-+	} else {
-+		vap_caps->default_ctrl_rate = cpu_to_le32(RSI_RATE_1);
-+		if (conf_is_ht40_minus(conf))
-+			vap_caps->default_ctrl_rate |=
-+				cpu_to_le32(UPPER_20_ENABLE << 16);
-+		else if (conf_is_ht40_plus(conf))
-+			vap_caps->default_ctrl_rate |=
-+				cpu_to_le32(LOWER_20_ENABLE << 16);
- 	}
-+
- 	vap_caps->default_data_rate = 0;
- 	vap_caps->beacon_interval = cpu_to_le16(200);
- 	vap_caps->dtim_period = cpu_to_le16(4);
-@@ -832,6 +846,63 @@ static int rsi_send_reset_mac(struct rsi_common *common)
+ 	return ath_set_channel(sc);
  }
- 
- /**
-+ * rsi_band_check() - This function programs the band
-+ * @common: Pointer to the driver private structure.
-+ *
-+ * Return: 0 on success, corresponding error code on failure.
-+ */
-+int rsi_band_check(struct rsi_common *common)
++
++void ath_chanctx_work(struct work_struct *work)
 +{
-+	struct rsi_hw *adapter = common->priv;
-+	struct ieee80211_hw *hw = adapter->hw;
-+	u8 prev_bw = common->channel_width;
-+	u8 prev_ep = common->endpoint;
-+	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
-+	int status = 0;
++	struct ath_softc *sc = container_of(work, struct ath_softc,
++					    chanctx_work);
 +
-+	if (common->band != curchan->band) {
-+		common->rf_reset = 1;
-+		common->band = curchan->band;
++	mutex_lock(&sc->mutex);
++	spin_lock_bh(&sc->chan_lock);
++	if ((sc->next_chanctx_idx < 0) ||
++	    (sc->next_chanctx_idx >= ATH9K_NUM_CHANCTX)) {
++		spin_unlock_bh(&sc->chan_lock);
++		mutex_unlock(&sc->mutex);
++		return;
 +	}
 +
-+	if ((hw->conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) ||
-+	    (hw->conf.chandef.width == NL80211_CHAN_WIDTH_20))
-+		common->channel_width = BW_20MHZ;
-+	else
-+		common->channel_width = BW_40MHZ;
++	if (sc->cur_chan != &sc->chanctx[sc->next_chanctx_idx]) {
++		sc->cur_chan->stopped = true;
++		spin_unlock_bh(&sc->chan_lock);
 +
-+	if (common->band == IEEE80211_BAND_2GHZ) {
-+		if (common->channel_width)
-+			common->endpoint = EP_2GHZ_40MHZ;
-+		else
-+			common->endpoint = EP_2GHZ_20MHZ;
-+	} else {
-+		if (common->channel_width)
-+			common->endpoint = EP_5GHZ_40MHZ;
-+		else
-+			common->endpoint = EP_5GHZ_20MHZ;
++		__ath9k_flush(sc->hw, ~0, true);
++
++		spin_lock_bh(&sc->chan_lock);
 +	}
++	sc->cur_chan = &sc->chanctx[sc->next_chanctx_idx];
++	sc->cur_chan->stopped = false;
++	sc->next_chanctx_idx = -1;
++	spin_unlock_bh(&sc->chan_lock);
 +
-+	if (common->endpoint != prev_ep) {
-+		status = rsi_program_bb_rf(common);
-+		if (status)
-+			return status;
-+	}
-+
-+	if (common->channel_width != prev_bw) {
-+		status = rsi_load_bootup_params(common);
-+		if (status)
-+			return status;
-+
-+		status = rsi_load_radio_caps(common);
-+		if (status)
-+			return status;
-+	}
-+
-+	return status;
++	ath_set_channel(sc);
++	mutex_unlock(&sc->mutex);
 +}
 +
-+/**
-  * rsi_set_channel() - This function programs the channel.
-  * @common: Pointer to the driver private structure.
-  * @channel: Channel value to be set.
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 8bff664..f10d6c6 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -304,4 +304,5 @@ void rsi_core_qos_processor(struct rsi_common *common);
- void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_mgmt_pkt(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
-+int rsi_band_check(struct rsi_common *common);
- #endif
++void ath_chanctx_switch(struct ath_softc *sc, u8 next_chanctx_idx)
++{
++
++	WARN_ON(next_chanctx_idx >= ATH9K_NUM_CHANCTX);
++	spin_lock_bh(&sc->chan_lock);
++	sc->next_chanctx_idx = next_chanctx_idx;
++	spin_unlock_bh(&sc->chan_lock);
++	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ffd42bf..8bd3e42 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -555,6 +555,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	spin_lock_init(&common->cc_lock);
+ 	spin_lock_init(&sc->sc_serial_rw);
+ 	spin_lock_init(&sc->sc_pm_lock);
++	spin_lock_init(&sc->chan_lock);
+ 	mutex_init(&sc->mutex);
+ 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
+ 	tasklet_init(&sc->bcon_tasklet, ath9k_beacon_tasklet,
+@@ -563,6 +564,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	setup_timer(&sc->sleep_timer, ath_ps_full_sleep, (unsigned long)sc);
+ 	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
++	INIT_WORK(&sc->chanctx_work, ath_chanctx_work);
+ 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9a2177d..e4aa29b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -803,6 +803,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	bool prev_idle;
+ 
++	cancel_work_sync(&sc->chanctx_work);
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
+@@ -1957,23 +1958,29 @@ static void ath9k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			u32 queues, bool drop)
+ {
+ 	struct ath_softc *sc = hw->priv;
++
++	mutex_lock(&sc->mutex);
++	__ath9k_flush(hw, queues, drop);
++	mutex_unlock(&sc->mutex);
++}
++
++void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
++{
++	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int timeout = HZ / 5; /* 200 ms */
+ 	bool drain_txq;
+ 
+-	mutex_lock(&sc->mutex);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 
+ 	if (ah->ah_flags & AH_UNPLUGGED) {
+ 		ath_dbg(common, ANY, "Device has been unplugged!\n");
+-		mutex_unlock(&sc->mutex);
+ 		return;
+ 	}
+ 
+ 	if (test_bit(ATH_OP_INVALID, &common->op_flags)) {
+ 		ath_dbg(common, ANY, "Device not present\n");
+-		mutex_unlock(&sc->mutex);
+ 		return;
+ 	}
+ 
+@@ -1995,7 +2002,6 @@ static void ath9k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+-	mutex_unlock(&sc->mutex);
+ }
+ 
+ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 2879887..a4f4f0d 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -193,6 +193,7 @@ int ath9k_suspend(struct ieee80211_hw *hw,
+ 	u32 wow_triggers_enabled = 0;
+ 	int ret = 0;
+ 
++	cancel_work_sync(&sc->chanctx_work);
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a84fe1a..0c9571a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1823,18 +1823,24 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 	if (txq->mac80211_qnum < 0)
+ 		return;
+ 
++	spin_lock_bh(&sc->chan_lock);
+ 	ac_list = &sc->cur_chan->acq[txq->mac80211_qnum];
++	spin_unlock_bh(&sc->chan_lock);
+ 
+ 	if (test_bit(ATH_OP_HW_RESET, &common->op_flags) ||
+ 	    list_empty(ac_list))
+ 		return;
+ 
++	spin_lock_bh(&sc->chan_lock);
+ 	rcu_read_lock();
+ 
+ 	last_ac = list_entry(ac_list->prev, struct ath_atx_ac, list);
+ 	while (!list_empty(ac_list)) {
+ 		bool stop = false;
+ 
++		if (sc->cur_chan->stopped)
++			break;
++
+ 		ac = list_first_entry(ac_list, struct ath_atx_ac, list);
+ 		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
+ 		list_del(&ac->list);
+@@ -1880,6 +1886,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 	}
+ 
+ 	rcu_read_unlock();
++	spin_unlock_bh(&sc->chan_lock);
+ }
+ 
+ /***********/
 -- 
-1.7.1
+2.0.0
 
