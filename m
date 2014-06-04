@@ -1,116 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:19559 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754032AbaFKKtn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:49:43 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 17/28] ath9k: Store current offchannel duration
-Date: Wed, 11 Jun 2014 16:18:05 +0530
-Message-ID: <1402483696-2498-18-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124946_435927_D4530BA5)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:51181 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752566AbaFDNUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 09:20:38 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org,
+	Matthias Fend <Matthias.Fend@wolfvision.net>
+Subject: [RFC/RFT 1/5] rt2x00: change beaconing locking
+Date: Wed,  4 Jun 2014 15:19:11 +0200
+Message-Id: <1401887955-11361-1-git-send-email-sgruszka@redhat.com> (sfid-20140604_152042_221634_E4D5BD58)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update current offchannel duration during scan or roc request.
+This patch is needed for further changes to keep global variables
+consisent when chaning beaconing on diffrent vif's.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 28 +++++++++++++++++++---------
- 2 files changed, 20 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |  7 +++++--
+ drivers/net/wireless/rt2x00/rt2x00mac.c   |  6 ++----
+ drivers/net/wireless/rt2x00/rt2x00queue.c | 21 ++-------------------
+ 3 files changed, 9 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b657115..6487c47 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -385,6 +385,7 @@ struct ath_offchannel {
- 	struct ieee80211_channel *roc_chan;
- 	struct ieee80211_vif *roc_vif;
- 	int roc_duration;
-+	int duration;
- };
- #define ath_for_each_chanctx(_sc, _ctx)                             \
- 	for (ctx = &sc->chanctx[0];                                 \
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2393af0..0ba496d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2171,6 +2171,17 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- 	clear_bit(ATH_OP_SCANNING, &common->op_flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 2bde672..72e3e81 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -141,8 +141,11 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
+ 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+-	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags))
++	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags)) {
++		mutex_lock(&intf->beacon_skb_mutex);
+ 		rt2x00queue_update_beacon(rt2x00dev, vif);
++		mutex_unlock(&intf->beacon_skb_mutex);
++	}
  }
  
-+static int ath_scan_channel_duration(struct ath_softc *sc,
-+				     struct ieee80211_channel *chan)
-+{
-+	struct cfg80211_scan_request *req = sc->offchannel.scan_req;
-+
-+	if (!req->n_ssids || (chan->flags & IEEE80211_CHAN_NO_IR))
-+		return (HZ / 9); /* ~110 ms */
-+
-+	return (HZ / 16); /* ~60 ms */
-+}
-+
- static void
- ath_scan_next_channel(struct ath_softc *sc)
- {
-@@ -2185,6 +2196,7 @@ ath_scan_next_channel(struct ath_softc *sc)
+ static void rt2x00lib_intf_scheduled(struct work_struct *work)
+@@ -216,7 +219,7 @@ static void rt2x00lib_beaconupdate_iter(void *data, u8 *mac,
+ 	 * never be called for USB devices.
+ 	 */
+ 	WARN_ON(rt2x00_is_usb(rt2x00dev));
+-	rt2x00queue_update_beacon_locked(rt2x00dev, vif);
++	rt2x00queue_update_beacon(rt2x00dev, vif);
+ }
+ 
+ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 212ac48..0aad22d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -624,6 +624,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 	 * Start/stop beaconing.
+ 	 */
+ 	if (changes & BSS_CHANGED_BEACON_ENABLED) {
++		mutex_lock(&intf->beacon_skb_mutex);
+ 		if (!bss_conf->enable_beacon && intf->enable_beacon) {
+ 			rt2x00dev->intf_beaconing--;
+ 			intf->enable_beacon = false;
+@@ -639,9 +640,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 				 * Last beaconing interface disabled
+ 				 * -> stop beacon queue.
+ 				 */
+-				mutex_lock(&intf->beacon_skb_mutex);
+ 				rt2x00queue_stop_queue(rt2x00dev->bcn);
+-				mutex_unlock(&intf->beacon_skb_mutex);
+ 			}
+ 		} else if (bss_conf->enable_beacon && !intf->enable_beacon) {
+ 			rt2x00dev->intf_beaconing++;
+@@ -658,11 +657,10 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 				 * First beaconing interface enabled
+ 				 * -> start beacon queue.
+ 				 */
+-				mutex_lock(&intf->beacon_skb_mutex);
+ 				rt2x00queue_start_queue(rt2x00dev->bcn);
+-				mutex_unlock(&intf->beacon_skb_mutex);
+ 			}
+ 		}
++		mutex_unlock(&intf->beacon_skb_mutex);
  	}
  
- 	chan = req->channels[sc->offchannel.scan_idx++];
-+	sc->offchannel.duration = ath_scan_channel_duration(sc, chan);
- 	sc->offchannel.state = ATH_OFFCHANNEL_PROBE_SEND;
- 	ath_chanctx_offchan_switch(sc, chan);
- }
-@@ -2200,6 +2212,7 @@ static void ath_offchannel_next(struct ath_softc *sc)
- 	} else if (sc->offchannel.roc_vif) {
- 		vif = sc->offchannel.roc_vif;
- 		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
-+		sc->offchannel.duration = sc->offchannel.roc_duration;
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
- 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
- 	} else {
-@@ -2275,20 +2288,17 @@ error:
- static void ath_scan_channel_start(struct ath_softc *sc)
- {
- 	struct cfg80211_scan_request *req = sc->offchannel.scan_req;
--	int i, dwell;
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 5642ccc..8e68f87 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -754,8 +754,6 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
+ 	if (unlikely(!intf->beacon))
+ 		return -ENOBUFS;
+ 
+-	mutex_lock(&intf->beacon_skb_mutex);
 -
--	if ((sc->cur_chan->chandef.chan->flags & IEEE80211_CHAN_NO_IR) ||
--			!req->n_ssids) {
--		dwell = HZ / 9; /* ~110 ms */
--	} else {
--		dwell = HZ / 16; /* ~60 ms */
-+	int i;
+ 	/*
+ 	 * Clean up the beacon skb.
+ 	 */
+@@ -768,13 +766,11 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
+ 	if (rt2x00dev->ops->lib->clear_beacon)
+ 		rt2x00dev->ops->lib->clear_beacon(intf->beacon);
  
-+	if (!(sc->cur_chan->chandef.chan->flags & IEEE80211_CHAN_NO_IR) &&
-+	    req->n_ssids) {
- 		for (i = 0; i < req->n_ssids; i++)
- 			ath_scan_send_probe(sc, &req->ssids[i]);
-+
- 	}
- 
- 	sc->offchannel.state = ATH_OFFCHANNEL_PROBE_WAIT;
--	mod_timer(&sc->offchannel.timer, jiffies + dwell);
-+	mod_timer(&sc->offchannel.timer, jiffies + sc->offchannel.duration);
+-	mutex_unlock(&intf->beacon_skb_mutex);
+-
+ 	return 0;
  }
  
- void ath_offchannel_channel_change(struct ath_softc *sc)
-@@ -2316,7 +2326,7 @@ void ath_offchannel_channel_change(struct ath_softc *sc)
+-int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
+-				     struct ieee80211_vif *vif)
++int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
++			      struct ieee80211_vif *vif)
+ {
+ 	struct rt2x00_intf *intf = vif_to_intf(vif);
+ 	struct skb_frame_desc *skbdesc;
+@@ -815,19 +811,6 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
  
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
- 		mod_timer(&sc->offchannel.timer, jiffies +
--			  msecs_to_jiffies(sc->offchannel.roc_duration));
-+			  msecs_to_jiffies(sc->offchannel.duration));
- 		ieee80211_ready_on_channel(sc->hw);
- 		break;
- 	case ATH_OFFCHANNEL_ROC_DONE:
+ }
+ 
+-int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
+-			      struct ieee80211_vif *vif)
+-{
+-	struct rt2x00_intf *intf = vif_to_intf(vif);
+-	int ret;
+-
+-	mutex_lock(&intf->beacon_skb_mutex);
+-	ret = rt2x00queue_update_beacon_locked(rt2x00dev, vif);
+-	mutex_unlock(&intf->beacon_skb_mutex);
+-
+-	return ret;
+-}
+-
+ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 				enum queue_index start,
+ 				enum queue_index end,
 -- 
-2.0.0
+1.8.3.1
 
