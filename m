@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:52830 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbaFJWLS (ORCPT
+Received: from mailsrv0.aau.at ([143.205.180.48]:58194 "EHLO
+	mailsrv.uni-klu.ac.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752190AbaFDOsF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 18:11:18 -0400
-Received: by mail-lb0-f169.google.com with SMTP id s7so4373256lbd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 15:11:16 -0700 (PDT)
+	Wed, 4 Jun 2014 10:48:05 -0400
+Message-ID: <538F3165.5090707@aau.at> (sfid-20140604_164812_396530_C3FCC36A)
+Date: Wed, 04 Jun 2014 16:47:01 +0200
+From: Severin Kacianka <severin.kacianka@aau.at>
 MIME-Version: 1.0
-In-Reply-To: <1402385153-5056-2-git-send-email-janusz.dziedzic@tieto.com>
-References: <1402385153-5056-1-git-send-email-janusz.dziedzic@tieto.com> <1402385153-5056-2-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 10 Jun 2014 15:10:56 -0700
-Message-ID: <CAB=NE6X=Uzu_SQbaHuA-uVoU+tdz=yW6PuBOgDyB75VOG1EFOw@mail.gmail.com> (sfid-20140611_001121_831620_E63511CD)
-Subject: Re: [RFC 2/2] crda: add crda_tiny implementation
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@adurom.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: A question about monitor mode
+References: <538EBB1C.3060106@aau.at> <87ha40263v.fsf@purkki.adurom.net>
+In-Reply-To: <87ha40263v.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 12:25 AM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> add crda_tiny and crda.sh implementation.
-> This implementation base on db.txt file
-> signed via PGP. Next crda.sh do db.txt veryfication.
-> crda_tiny as a input get regulatory domain
-> in text format, parse this and send using
-> nl80211 to the kernel.
-> This implementation skip regulatory.bin file and
-> works directly on signed db.txt file.
->
-> Added gpg directory with db_signed.txt file and public key
-> required for veryfication.
->
-> crda.sh require installed gpg.
->
-> To test just run:
-> - make && make install
-> - sh gpg/install.sh
-> - cp /sbin/crda.sh /sbin/crda (or change udev rule)
->
-> All logs will be available in /tmp/crda.err file
+On 06/04/2014 02:48 PM, Kalle Valo wrote:
+> The question doesn't really make sense, at least not to me. But I'll try
+> to answer anyway :)
 
-It seems Felix had some other ideas on how to scale binary
-compatibility, this doesn't seem to care for it.
+Thank you - I will try to better state my question. Let's say we have
+two nodes A and B and A sends a packet to B while monitoring all
+wireless traffic on mon0. We now have two scenarios when A sees its
+packet in its monitor interface.
+The first scenario is, that the packet shows up right after it is send
+(i.e. after calling socket.send). The other is, that the packet is held
+in some layer (probably the firmware) until the ACK is received and the
+packet was really "send" before being passed to the monitoring interface.
 
-  Luis
+In my concrete case, I have a program that sends RTP packets to an other
+host. It logs the time of the socket.send call and then also logs the
+time the packet is read from mon0 (RTP packets have sequence numbers, so
+it is easy to match the packets).
+I then noticed that this delay is usually extremely small (around 0.001
+sec), but will quickly rise when the receiver is moved away from the
+sender (up to 10 seconds and more). Along with this rise in the delay
+the video quality will degrade to unwatchable when the delay rises
+quickly (and quickly improves when the delay gets smaller).
+
+My assumption is that the packet first has to be acknowledged, before it
+shows up in the monitoring interface. Due to the movement the connection
+quality is probably reduced and thus may require retransmissions (and so
+increase this delay).
+
+I am however not sure if this is how it really works :)
+
+Thank you,
+Severin
+
+
+
