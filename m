@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52219 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752564AbaFCTTt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 15:19:49 -0400
-Message-ID: <1401823439.2412.3.camel@deadeye.wl.decadent.org.uk> (sfid-20140603_211955_839618_2C3D0AB5)
-Subject: Re: [PATCH] rtlwifi: rtl8723be: Add firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-firmware@kernel.org
-Date: Tue, 03 Jun 2014 20:23:59 +0100
-In-Reply-To: <1398630504-11649-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1398630504-11649-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-jW+mTe3oI9jIn3Why0hv"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34734 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753374AbaFDOIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2014 10:08:37 -0400
+Message-ID: <1401890908.6079.32.camel@jlt4.sipsolutions.net> (sfid-20140604_160840_359749_0728FE84)
+Subject: Re: [PATCH] mac80211: remove ignore_plink_timer flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 04 Jun 2014 16:08:28 +0200
+In-Reply-To: <1401888451-9612-1-git-send-email-me@bobcopeland.com> (sfid-20140604_152812_599798_BB7E8B6B)
+References: <1401888451-9612-1-git-send-email-me@bobcopeland.com>
+	 (sfid-20140604_152812_599798_BB7E8B6B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2014-06-04 at 09:27 -0400, Bob Copeland wrote:
+> The mesh_plink code is doing some interesting things with the
+> ignore_plink_timer flag.  It seems the original intent was to
+> handle this race:
+> 
+> cpu 0                           cpu 1
+> -----                           -----
+>                                 start timer handler for state X
+> acquire sta_lock
+> change state from X to Y
+> mod_timer() / del_timer()
+> release sta_lock
+>                                 acquire sta_lock
+>                                 execute state Y timer too soon
+> 
+> However, using the mod_timer()/del_timer() return values to
+> detect these cases is broken.  As a result, timers get ignored
+> unnecessarily, and stations can get stuck in the peering state
+> machine.
+> 
+> Instead, we can detect the case by looking at the timer expiration.
+> In the case of del_timer, just ignore the timers in the following
+> (LISTEN/ESTAB) states since they won't have timers anyway.
 
---=-jW+mTe3oI9jIn3Why0hv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm not entirely sure about the expiration thing - doesn't seem
+different from the outside flag? But anyway - applied.
 
-On Sun, 2014-04-27 at 15:28 -0500, Larry Finger wrote:
-> This commit provides firmware for the RTL8723CE, which is in kernel 3.15.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  WHENCE                  |   9 +++++++++
->  rtlwifi/rtl8723befw.bin | Bin 0 -> 30996 bytes
->  2 files changed, 9 insertions(+)
->  create mode 100644 rtlwifi/rtl8723befw.bin
-[...]
+johannes
 
-Applied, sorry for the delay.
-
-Ben.
-
---=20
-Ben Hutchings
-If more than one person is responsible for a bug, no one is at fault.
-
---=-jW+mTe3oI9jIn3Why0hv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUAU44g0Oe/yOyVhhEJAQrrtQ/9FSGxKIbKPfXnmNxKUuFPb6dqRgwWDOUg
-npS1waFl0oEZ4Q83h0HEgJncG5Zhb8opwTF7GOLayFPYW4sRO+1JXnNzhegQ+Gub
-uuDnIaYIb+2p8TtPrQiPvrWMh7u4rWXSz566AVNsy0ECWwU1jb+9LI1LkKXB77+Y
-frKSTYgn8ry2NvLnCBHT9yXJckfL0KMS35PMVoaXPVjodvaYW0jyPXhfbaX8lrU1
-IXADvgonmJEnPvSfTGzv1lVeNUsWoM+ksUjFzXkV+q+zyiysVJpUIq6lP+SIWvJe
-OfaxSJpyczkDjaGEjkXrXtUl19B1TBeja0K5yeNJUFP1glWWAGA2C1WWrlMpj1n7
-6Makaa5Zwa9/yiymLaDrwxop/Zr5xQ3BAA7Lccnr80z65u+JxpoHdT5sWAvgVcQ5
-2lm8/tLHwrTqtpseN0IIr59Q0v9yo9DeXFNACr2Z2UsrWhnxEt/RBZHn5PsiKT/r
-TzpyiHOFf8ZjiB/5+y+BXbi3tNzObsN8E5GT1S4a9AyLCnBeAuy0AZfLfJ2laiXh
-p/wJzleqXSW6VPx3P7qP+a/3h4gsLmMDLemXfgIBQyIG/7wNvJojc7oRPRUyvJT9
-QWXacrY7SR36Z3jhCnAVKSbeqkyffmg4O0aLS3S5/dM8Ui/cbXgGSbnxshdiEba4
-Ol9jLZPM7do=
-=Snyf
------END PGP SIGNATURE-----
-
---=-jW+mTe3oI9jIn3Why0hv--
