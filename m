@@ -1,71 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59475 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbaFATGO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18000 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345AbaFDNr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 15:06:14 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n15so2025124lbi.5
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 12:06:12 -0700 (PDT)
-Message-ID: <538B79A3.1080104@cogentembedded.com> (sfid-20140601_210636_367991_2697AE81)
-Date: Sun, 01 Jun 2014 23:06:11 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Wed, 4 Jun 2014 09:47:28 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 05/13] ath9k: channel context based transmission
+Date: Wed, 4 Jun 2014 19:16:31 +0530
+Message-ID: <1401889599-412-6-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154802_863783_3D6CA6BC)
+In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Michael Braun <michael-dev@fami-braun.de>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-CC: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] rt2800usb:fix efuse detection
-References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de> <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de>
-In-Reply-To: <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+From: Felix Fietkau <nbd@openwrt.org>
 
-On 06/01/2014 09:52 PM, Michael Braun wrote:
+Force queueing of all frames that belong to a virtual interface on
+a different channel context, to ensure that they are sent on the
+correct channel.
 
-> The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
-> load. One thing observed is that the vendors driver detects EFUSE mode
-> for this device, but rt2800usb does not. This is due to rt2800usb
-> lacking a check for the firmware mode present in the vendors driver,
-> that this patch adopts for rt2800usb.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  3 ++-
+ drivers/net/wireless/ath/ath9k/xmit.c  | 24 +++++++++++++++++++++---
+ 2 files changed, 23 insertions(+), 4 deletions(-)
 
-> With this patch applied, the 'RF chipset' detection does no longer fail.
-
-> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
-> ---
->   drivers/net/wireless/rt2x00/rt2800usb.c |   16 +++++++++++++++-
->   1 file changed, 15 insertions(+), 1 deletion(-)
-
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index a49c3d7..b601422 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -735,11 +735,25 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->   /*
->    * Device probe functions.
->    */
-> +static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	__le32 fwMode;
-> +
-> +	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-> +				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
-> +				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
-> +
-> +	if ((fwMode & 0x00000003) == 2)
-
-    Operating directly on '__le32'? That doesn't look right.
-
-> +		return 1;
-> +
-> +	return rt2800_efuse_detect(rt2x00dev);
-> +}
-> +
-
-WBR, Sergei
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 052a2f9..3457234 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -275,8 +275,9 @@ struct ath_node {
+ struct ath_tx_control {
+ 	struct ath_txq *txq;
+ 	struct ath_node *an;
+-	u8 paprd;
+ 	struct ieee80211_sta *sta;
++	u8 paprd;
++	bool force_channel;
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 0c9571a..10a35cd 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2168,13 +2168,18 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = txctl->sta;
+ 	struct ieee80211_vif *vif = info->control.vif;
++	struct ath_vif *avp = NULL;
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_txq *txq = txctl->txq;
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
++	bool queue;
+ 	int q;
+ 	int ret;
+ 
++	if (vif)
++		avp = (void *)vif->drv_priv;
++
+ 	ret = ath_tx_prepare(hw, skb, txctl);
+ 	if (ret)
+ 	    return ret;
+@@ -2195,15 +2200,28 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		txq->stopped = true;
+ 	}
+ 
+-	if (txctl->an && ieee80211_is_data_present(hdr->frame_control))
++	queue = ieee80211_is_data_present(hdr->frame_control);
++
++	/* Force queueing of all frames that belong to a virtual interface on
++	 * a different channel context, to ensure that they are sent on the
++	 * correct channel.
++	 */
++	if (((avp && avp->chanctx != sc->cur_chan) ||
++	     sc->cur_chan->stopped) && !txctl->force_channel) {
++		if (!txctl->an)
++			txctl->an = &avp->mcast_node;
++		info->flags &= ~IEEE80211_TX_CTL_PS_RESPONSE;
++		queue = true;
++	}
++
++	if (txctl->an && queue)
+ 		tid = ath_get_skb_tid(sc, txctl->an, skb);
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
+ 		ath_txq_unlock(sc, txq);
+ 		txq = sc->tx.uapsdq;
+ 		ath_txq_lock(sc, txq);
+-	} else if (txctl->an &&
+-		   ieee80211_is_data_present(hdr->frame_control)) {
++	} else if (txctl->an && queue) {
+ 		WARN_ON(tid->ac->txq != txctl->txq);
+ 
+ 		if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
+-- 
+2.0.0
 
