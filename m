@@ -1,40 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60264 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932924AbaFCT7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 15:59:11 -0400
-Message-ID: <1401825537.4157.43.camel@jlt4.sipsolutions.net> (sfid-20140603_215914_628343_4AD2B8DE)
-Subject: Re: [PATCH] mac80211: allow tx via monitor iface when DFS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Jun 2014 21:58:57 +0200
-In-Reply-To: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140530_114451_903305_71F74C94)
-References: <1401443081-10277-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140530_114451_903305_71F74C94)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38008 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043AbaFENEB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 09:04:01 -0400
+Received: by mail-wi0-f174.google.com with SMTP id r20so10478664wiv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 06:04:00 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v8 5/5] cfg80211: remove channel_switch combination check
+Date: Thu,  5 Jun 2014 14:56:20 +0200
+Message-Id: <1401972980-21484-6-git-send-email-michal.kazior@tieto.com> (sfid-20140605_150408_604950_D967AECE)
+In-Reply-To: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+ <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-05-30 at 11:44 +0200, Janusz Dziedzic wrote:
+Driver is now responsible for veryfing if the
+switch is possible.
 
-> +	struct cfg80211_chan_def chandef;
->  	u16 len_rthdr;
->  	int hdrlen;
->  
-> @@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
->  	}
->  
->  	if (chanctx_conf)
-> -		chan = chanctx_conf->def.chan;
-> +		chandef = chanctx_conf->def;
->  	else if (!local->use_chanctx)
-> -		chan = local->_oper_chandef.chan;
-> +		chandef = local->_oper_chandef;
+Since this is inherently tricky driver may decide
+to disconnect an interface later with
+cfg80211_stop_iface().
 
-Why are you making a copy of the chandef - wouldn't a pointer work just
-as well?
+This doesn't mean driver can accept everything. It
+should do it's best to verify requests and reject
+them as soon as possible.
 
-johannes
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+Notes:
+    v7:
+     * emphasize channel switching verification should not be
+       taken lightly [Johannes]
+     * update channel_switch description in cfg80211.h
+
+ include/net/cfg80211.h |  7 ++++++-
+ net/wireless/nl80211.c | 11 -----------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 920ec8c..c62d48e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2315,7 +2315,12 @@ struct cfg80211_qos_map {
+  *	reliability. This operation can not fail.
+  * @set_coalesce: Set coalesce parameters.
+  *
+- * @channel_switch: initiate channel-switch procedure (with CSA)
++ * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
++ *	responsible for veryfing if the switch is possible. Since this is
++ *	inherently tricky driver may decide to disconnect an interface later
++ *	with cfg80211_stop_iface(). This doesn't mean driver can accept
++ *	everything. It should do it's best to verify requests and reject them
++ *	as soon as possible.
+  *
+  * @set_qos_map: Set QoS mapping information to the driver
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba4f172..d70f542 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6012,17 +6012,6 @@ skip_beacons:
+ 		params.radar_required = true;
+ 	}
+ 
+-	/* TODO: I left this here for now.  With channel switch, the
+-	 * verification is a bit more complicated, because we only do
+-	 * it later when the channel switch really happens.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   params.chandef.chan,
+-					   CHAN_MODE_SHARED,
+-					   radar_detect_width);
+-	if (err)
+-		return err;
+-
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
+ 
+-- 
+1.8.5.3
 
