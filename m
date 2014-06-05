@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:64874 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753809AbaFHUrd (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:62382 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118AbaFEM3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 16:47:33 -0400
-Received: by mail-oa0-f43.google.com with SMTP id l6so5132090oag.2
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2014 13:47:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1406081333550.19183@chino.kir.corp.google.com>
-References: <1402191743-26177-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<alpine.DEB.2.02.1406081333550.19183@chino.kir.corp.google.com>
-Date: Sun, 8 Jun 2014 22:47:31 +0200
-Message-ID: <CAFo99gZtZWEwgNoMzxOS-S_XG+p83_T3GypMdcDyhswe2-r3MA@mail.gmail.com> (sfid-20140608_224803_857041_2D1769E7)
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8723be: hw.c: Cleaning up if
- statement that always evaluates to false
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: David Rientjes <rientjes@google.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, Peter Wu <lekensteyn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 5 Jun 2014 08:29:25 -0400
+Received: by mail-we0-f173.google.com with SMTP id u57so1018830wes.32
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 05:29:24 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 0/2] mac80211: fix csa counters
+Date: Thu,  5 Jun 2014 14:21:35 +0200
+Message-Id: <1401970897-21389-1-git-send-email-michal.kazior@tieto.com> (sfid-20140605_142929_087424_52CF452C)
+In-Reply-To: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
+References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi,
 
-Quite right!
-I found this error in some of the files. And after discussion with
-Larry Finger and Peter Wu, it was decided that all files with this if
-statement should change.
+I was seeing strange WARN_ON splat loops and
+crashes while I was testing my multi-vif CSA.
 
-But of course I should update the comment to something more suitable.
-
-
-Kind regards
-Rickard Strandqvist
+CSA counters weren't properly reset and on some
+failpaths this caused a mess. There were also
+possible SMP inconsitencies/races.
 
 
-2014-06-08 22:35 GMT+02:00 David Rientjes <rientjes@google.com>:
-> On Sun, 8 Jun 2014, Rickard Strandqvist wrote:
->
->> I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
->>
->
-> Where is the 0xfc that your converting?
->
->> After pointing this out, Larry Finger informed what would be the correct one.
->> '(X & 0x3) == 0x3'
->>
->
-> This is already what it is, just say that you're replacing it with the
-> constant.
->
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/net/wireless/rtlwifi/rtl8723be/hw.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
->> index 0fdf090..b61044f 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
->> @@ -1197,7 +1197,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
->>       }
->>       rtl_write_byte(rtlpriv, (MSR), bt_msr);
->>       rtlpriv->cfg->ops->led_control(hw, ledaction);
->> -     if ((bt_msr & 0x03) == MSR_AP)
->> +     if ((bt_msr & MSR_AP) == MSR_AP)
->>               rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->>       else
->>               rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+v2:
+ * dropped the atomic counter patch
+ * fix patch 1
+
+v3:
+ * change sizeof(*x) -> sizeof(x[0]) [Johannes]
+ * rebase to 1238bbdc6c2cee366eea5ce5d56170b7fdd6ffd7
+
+Michal Kazior (2):
+  mac80211: move csa counters from sdata to beacon/presp
+  mac80211: use csa counter offsets instead of csa_active
+
+ net/mac80211/cfg.c         |  67 ++++++++++++++++++---------
+ net/mac80211/ibss.c        |   2 +-
+ net/mac80211/ieee80211_i.h |  16 +++++--
+ net/mac80211/mesh.c        |   2 +-
+ net/mac80211/tx.c          | 113 +++++++++++++++++++++++++--------------------
+ 5 files changed, 122 insertions(+), 78 deletions(-)
+
+-- 
+1.8.5.3
+
