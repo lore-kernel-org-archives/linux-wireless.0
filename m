@@ -1,30 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:53437 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752001AbaFLFon (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 01:44:43 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so811228obc.15
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 22:44:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140611230513.GC913@drone.musicnaut.iki.fi>
-References: <20140611230513.GC913@drone.musicnaut.iki.fi>
-Date: Thu, 12 Jun 2014 07:44:42 +0200
-Message-ID: <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com> (sfid-20140612_074459_845202_AEF2F304)
-Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Aaro Koskinen <aaro.koskinen@iki.fi>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:57959 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbaFELxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 07:53:55 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com,
+	Matthias Fend <Matthias.Fend@wolfvision.net>
+Subject: [PATCH 5/5] rt2x00: do not initialize BCN_OFFSET registers
+Date: Thu,  5 Jun 2014 13:52:27 +0200
+Message-Id: <1401969147-3532-5-git-send-email-sgruszka@redhat.com> (sfid-20140605_135403_661735_F79088C6)
+In-Reply-To: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
+References: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 June 2014 01:05, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
-> While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
-> cannot find anything on my WRT54GL router anymore:
+We setup BCN_OFFSET{0,1} registers dynamically, don't have to
+initialize them.
 
-I believe it's BCM5352E SoC wth G-PHY rev 7 and radio 0x2050 rev 2. Is
-that correct? Provide us a boot log.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c | 22 ----------------------
+ 1 file changed, 22 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a9cdddd..893c9d5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4562,28 +4562,6 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	rt2800_register_read(rt2x00dev, BCN_OFFSET0, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0,
+-			   rt2800_get_beacon_offset(rt2x00dev, 0));
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1,
+-			   rt2800_get_beacon_offset(rt2x00dev, 1));
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2,
+-			   rt2800_get_beacon_offset(rt2x00dev, 2));
+-	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3,
+-			   rt2800_get_beacon_offset(rt2x00dev, 3));
+-	rt2800_register_write(rt2x00dev, BCN_OFFSET0, reg);
+-
+-	rt2800_register_read(rt2x00dev, BCN_OFFSET1, &reg);
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4,
+-			   rt2800_get_beacon_offset(rt2x00dev, 4));
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5,
+-			   rt2800_get_beacon_offset(rt2x00dev, 5));
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6,
+-			   rt2800_get_beacon_offset(rt2x00dev, 6));
+-	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7,
+-			   rt2800_get_beacon_offset(rt2x00dev, 7));
+-	rt2800_register_write(rt2x00dev, BCN_OFFSET1, reg);
+-
+ 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
+ 	rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
+ 
+-- 
+1.8.3.1
+
