@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:55209 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752821AbaFGPuV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 11:50:21 -0400
-Received: by mail-pb0-f54.google.com with SMTP id jt11so3673817pbb.41
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:50:21 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Jahnavi Meher <jahnavi.meher@gmail.com>
-Subject: [PATCH 0/4] rsi: Code fixes and adding support for 5GHz and bgscan.
-Date: Sun,  8 Jun 2014 02:49:41 +0530
-Message-Id: <1402175981-8414-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175237_868022_299ADBEE)
+Received: from mx1.redhat.com ([209.132.183.28]:36912 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809AbaFEMoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 08:44:22 -0400
+From: Jes.Sorensen@redhat.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/1] ieee80211.h: Add definitions for 20/40 BSS Coexist Mgmt action frame
+Date: Thu,  5 Jun 2014 14:44:14 +0200
+Message-Id: <1401972255-18815-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20140605_144425_879891_75684557)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches contains some fixes and adds support for 5GHz
-and bgscan.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Jahnavi Meher (4):
-  rsi: Fixes and clean up of code.
-  rsi: Adding support for 5GHz
-  rsi: Change the logic for dequeuing packets in hal.
-  rsi: Adding support for host based bgscan
+Hi,
 
- drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  141 +++++++++++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  149 ++++++++++++++++++++-------
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    4 +-
- drivers/net/wireless/rsi/rsi_main.h         |   12 ++
- drivers/net/wireless/rsi/rsi_mgmt.h         |    4 +-
- drivers/net/wireless/rsi/rsi_sdio.h         |    4 +-
- 8 files changed, 315 insertions(+), 94 deletions(-)
+The 8723au driver issues BSS Coexistence Mgmt Action Frames, so rather
+keeping defines for this in a private driver header, I added it to the
+shared ieee80211.h header.
+
+This is from section 8.5.8.2 in the 802.11-2012 spec.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (1):
+  ieee80211.h: Add definitions for 20/40 BSS Coexistence Management
+    action frame
+
+ include/linux/ieee80211.h | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+-- 
+1.9.3
 
