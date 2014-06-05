@@ -1,74 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:49259 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754392AbaFNNsq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34577 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380AbaFEPvk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:48:46 -0400
-Received: by mail-pb0-f50.google.com with SMTP id rp16so2997179pbb.23
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:48:45 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id sh5sm9005987pbc.21.2014.06.14.06.48.43
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:48:44 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/16] rsi: Mapping the debugfs stats to the correct s/w queues.
-Date: Sat, 14 Jun 2014 19:18:28 +0530
-Message-Id: <1402753708-13851-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_154850_280401_511D46A1)
+	Thu, 5 Jun 2014 11:51:40 -0400
+Message-ID: <5390920B.7000903@candelatech.com> (sfid-20140605_175150_176354_82BA9145)
+Date: Thu, 05 Jun 2014 08:51:39 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com> <538CD507.1050803@candelatech.com> <CANUX_P1iaTtFccraAF_p1dFZ3SJFpdNfF=i=eAVXP8yM3GrM4A@mail.gmail.com> <538F7381.4070100@candelatech.com> <877g4vpq6i.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877g4vpq6i.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed the queue numbers to macros, and corrected the mappings.
+On 06/05/2014 04:10 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> On 06/04/2014 12:23 PM, Emmanuel Grumbach wrote:
+>>
+>>>> Do you have a link to your patch that defines the types you used?
+>>>>
+>>>
+>>> Take a look at 1bd3cbc1a0e9ed977a6bd470c5bc7bd36fd87e26.
+>>> But I am adding more and more content to this file.
+>>
+>> Yeah, after implementing it in ath10k it seems there would
+>> be very little over-lap, so probably each driver should just
+>> do their own.
+>>
+>> We can keep the debugfs file names the same, and the udev
+>> event types the same, which should help user-space a bit.
+> 
+> In the future I would actually want to take this a step further and put
+> all that to cfg80211. That way the driver would only need to call
+> cfg80211_firmware_crashed(wiphy, dump) and cfg80211 will handle the
+> rest. This would make sure that all drivers use the exactly same user
+> space interfaces and hopefully also motivate other drivers to use it.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+Sounds like a good goal, but let's get the drivers well implemented first
+while we have flexibility to change the API.  When things are solid, can
+move some common functionality upwards in the stack.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index c466246..828a042 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -145,7 +145,7 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
- 	seq_printf(seq, "total_mgmt_pkt_send : %d\n",
- 		   common->tx_stats.total_tx_pkt_send[MGMT_SOFT_Q]);
- 	seq_printf(seq, "total_mgmt_pkt_queued : %d\n",
--		   skb_queue_len(&common->tx_queue[4]));
-+		   skb_queue_len(&common->tx_queue[MGMT_SOFT_Q]));
- 	seq_printf(seq, "total_mgmt_pkt_freed  : %d\n",
- 		   common->tx_stats.total_tx_pkt_freed[MGMT_SOFT_Q]);
- 
-@@ -153,25 +153,25 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
- 	seq_printf(seq, "total_data_vo_pkt_send: %8d\t",
- 		   common->tx_stats.total_tx_pkt_send[VO_Q]);
- 	seq_printf(seq, "total_data_vo_pkt_queued:  %8d\t",
--		   skb_queue_len(&common->tx_queue[0]));
-+		   skb_queue_len(&common->tx_queue[VO_Q]));
- 	seq_printf(seq, "total_vo_pkt_freed: %8d\n",
- 		   common->tx_stats.total_tx_pkt_freed[VO_Q]);
- 	seq_printf(seq, "total_data_vi_pkt_send: %8d\t",
- 		   common->tx_stats.total_tx_pkt_send[VI_Q]);
- 	seq_printf(seq, "total_data_vi_pkt_queued:  %8d\t",
--		   skb_queue_len(&common->tx_queue[1]));
-+		   skb_queue_len(&common->tx_queue[VI_Q]));
- 	seq_printf(seq, "total_vi_pkt_freed: %8d\n",
- 		   common->tx_stats.total_tx_pkt_freed[VI_Q]);
- 	seq_printf(seq,  "total_data_be_pkt_send: %8d\t",
- 		   common->tx_stats.total_tx_pkt_send[BE_Q]);
- 	seq_printf(seq, "total_data_be_pkt_queued:  %8d\t",
--		   skb_queue_len(&common->tx_queue[2]));
-+		   skb_queue_len(&common->tx_queue[BE_Q]));
- 	seq_printf(seq, "total_be_pkt_freed: %8d\n",
- 		   common->tx_stats.total_tx_pkt_freed[BE_Q]);
- 	seq_printf(seq, "total_data_bk_pkt_send: %8d\t",
- 		   common->tx_stats.total_tx_pkt_send[BK_Q]);
- 	seq_printf(seq, "total_data_bk_pkt_queued:  %8d\t",
--		   skb_queue_len(&common->tx_queue[3]));
-+		   skb_queue_len(&common->tx_queue[BK_Q]));
- 	seq_printf(seq, "total_bk_pkt_freed: %8d\n",
- 		   common->tx_stats.total_tx_pkt_freed[BK_Q]);
- 
+For instance, the ath10k can get wedged where even cold resets fail
+over and over...I'm thinking that could have it's own uevent so
+user-space can know we need a reboot to recover the NIC...
+
+Thanks,
+Ben
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
