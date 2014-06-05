@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:34960 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754789AbaFUU7k (ORCPT
+Received: from gesmail.globaledgesoft.com ([106.51.250.152]:45888 "EHLO
+	gesmail.globaledgesoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751667AbaFEJDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 16:59:40 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n3so2299356wiv.9
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 13:59:39 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Peter Wu <lekensteyn@gmail.com>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192cu: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sat, 21 Jun 2014 23:00:37 +0200
-Message-Id: <1403384437-9615-2-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230034_812434_8C8CD8FB)
-In-Reply-To: <1403384437-9615-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1403384437-9615-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	Thu, 5 Jun 2014 05:03:24 -0400
+Received: from [172.16.6.109] (unknown [172.16.6.109])
+	by gesmail.globaledgesoft.com (Postfix) with ESMTP id 841E658836C
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Jun 2014 14:20:10 +0530 (IST)
+Message-ID: <539030ED.4020006@globaledgesoft.com> (sfid-20140605_110331_495286_57DDD02B)
+Date: Thu, 05 Jun 2014 14:27:17 +0530
+From: Gaurav Kumar Chauhan <ck.gaurav@globaledgesoft.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Physical carrier sensing (CCA)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a logical error in an if statement that always evaluates to false.
+Hi,
 
-This has after same discussion resulted in that we add a macro to handle this.
+I am working on measuring channel load which requires knowledge of 
+carrier sensing.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 +
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  |    2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+I am comfortable with virtual carrier sensing but not with physical 
+carrier sensing.
+I tried to google it but didn't get more than basics. I want to know 
+about physical carrier
+sensing in detail and where code for physical sensing is present.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 55adf04..5050938 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1206,7 +1206,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
- 
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-index ed703a1..dc8460c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -375,6 +375,7 @@
- #define	MSR_ADHOC				0x01
- #define	MSR_INFRA				0x02
- #define	MSR_AP					0x03
-+#define	MSR_MASK				0x03
- 
- #define	RRSR_RSC_OFFSET				21
- #define	RRSR_SHORT_OFFSET			23
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 07cb06d..87c0a27 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
--- 
-1.7.10.4
+Is it in driver or in firmware?
+I am using atheros pci-express card and ath9k driver.
 
+Please help me. Thanks in advance.
+
+Regards,
+Gaurav
