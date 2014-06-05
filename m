@@ -1,68 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:40585 "EHLO
-	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbaFAR7m (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34844 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbaFEQIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 13:59:42 -0400
-Subject: [PATCH 2/2] rt2800usb:fix hang during firmware load
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-From: Michael Braun <michael-dev@fami-braun.de>
-Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Date: Sun, 01 Jun 2014 19:52:52 +0200
-Message-ID: <20140601175252.7980.64143.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140601_200000_749624_A6D0FD14)
-In-Reply-To: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
-References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
+	Thu, 5 Jun 2014 12:08:35 -0400
+Message-ID: <53909602.5010703@candelatech.com> (sfid-20140605_180842_617163_B0AEF0AD)
+Date: Thu, 05 Jun 2014 09:08:34 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Andy Lutomirski <luto@amacapital.net>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
+References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com> <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com> <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) boots into a state that does not actually require loading a firmware file.
-The vendors driver finds out about this by checking a firmware state
-register, so this patch adopts this here.
+On 06/05/2014 03:26 AM, Kalle Valo wrote:
+> Andy Lutomirski <luto@amacapital.net> writes:
+> 
+>> On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> +ath10k@lists.infradead.org
+>>>
+>>> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
+>>>> It dies with 'otp calibration failed: 2'.
+>>>>
+>>>> Some older version of the driver seemed to work fine.
+>>>
+>>> ath10k did not verify otp result before so it could load successfully
+>>> despite errors.
+>>>
+>>> Someone raised this problem yesterday on IRC. I'm not really sure how
+>>> we should deal with this properly.
+>>
+>> Ideally, someone from Atheros could figure out what the error is.
+> 
+> Michal already did. The error means that for some reason the
+> calibaration data was not found from OTP. OTP is the storage area where
+> the calibration data is normally stored within QCA9880.
 
-Finally, with this patch applied, my wifi dongle actually becomes
-usefull (scan + connect to wpa network works).
+I fought this with .387 firmware and WLE900VX NICs.  If it's a common
+problem with more than a single NIC (ie, not just a bad piece of
+hardware), then one could load my firmware and my ath10k patches.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+I have a way to effectively get text debug messages out of the
+OTP firmware code and can probably debug this (eventually...busy
+with other things currently).
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index b601422..71bf101 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -240,6 +240,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	int status;
- 	u32 offset;
- 	u32 length;
-+	__le32 fwMode;
- 
- 	/*
- 	 * Check which section of the firmware we need.
-@@ -257,8 +258,17 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Write firmware to device.
- 	 */
--	rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
--				      data + offset, length);
-+	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-+				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
-+				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
-+
-+	if ((fwMode & 0x00000003) == 2) {
-+		rt2x00_info(rt2x00dev,
-+		      "Firmware loading not required - NIC in AutoRun mode\n");
-+	} else {
-+		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-+					      data + offset, length);
-+	}
- 
- 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
- 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
+If you know the basic hardware architecture of the NIC, then you can at least
+make a better guess of the calibration data and choose an eeprom
+table that is a better match than just total failure of OTP.
+
+>> Barring that, the card seems to work okay without otp (I don't even
+>> know what otp is), so just warning and continuing to load might be
+>> better than bailing.
+> 
+> This means that your card is not properly calibrated and it doesn't
+> function in an optimal way (for example range or throughput is less than
+> what it could be).
+
+And, your MAC address will be wrong and identical to all other devices of this
+type, which means the second one of these NICs
+on your network will make everything go to hell.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
