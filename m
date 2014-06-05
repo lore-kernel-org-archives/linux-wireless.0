@@ -1,99 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:39268 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbaFDR0k (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:33113 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbaFEH4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 13:26:40 -0400
-Received: by mail-wi0-f174.google.com with SMTP id r20so9012797wiv.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:39 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Thu, 5 Jun 2014 03:56:21 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so634336wes.15
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 00:56:20 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/15] staging: vt6656: firmware.c replace DBG_PRT debug messages
-Date: Wed,  4 Jun 2014 18:25:30 +0100
-Message-Id: <1401902735-3882-10-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192645_444103_BACEF390)
-In-Reply-To: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
-References: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: fix bmi exchange tx/rx race
+Date: Thu,  5 Jun 2014 09:48:39 +0200
+Message-Id: <1401954520-3365-2-git-send-email-michal.kazior@tieto.com> (sfid-20140605_095623_882983_1064CFF4)
+In-Reply-To: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
+References: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with dev_dbg
+It was possible for tx completion not to be
+processed. In that case an old stack pointer was
+left on copy engine tx ring. Next bmi exchange
+would immediately pop it and use complete() on the
+completion struct there causing corruption.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Make sure to wait for both tx and rx completions
+properly.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/firmware.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 11 +++--------
+ drivers/net/wireless/ath/ath10k/pci.h |  3 ++-
+ 2 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
-index a74a42d..83680bc 100644
---- a/drivers/staging/vt6656/firmware.c
-+++ b/drivers/staging/vt6656/firmware.c
-@@ -35,9 +35,6 @@
- #include "firmware.h"
- #include "usbpipe.h"
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index d0004d5..06840d1 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1362,8 +1362,6 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+ 		ath10k_ce_recv_buf_enqueue(ce_rx, &xfer, resp_paddr);
+ 	}
  
--static int msglevel = MSG_LEVEL_INFO;
--/* static int msglevel = MSG_LEVEL_DEBUG; */
+-	init_completion(&xfer.done);
 -
- #define FIRMWARE_VERSION	0x133		/* version 1.51 */
- #define FIRMWARE_NAME		"vntwusb.fw"
+ 	ret = ath10k_ce_send(ce_tx, &xfer, req_paddr, req_len, -1, 0);
+ 	if (ret)
+ 		goto err_resp;
+@@ -1414,10 +1412,7 @@ static void ath10k_pci_bmi_send_done(struct ath10k_ce_pipe *ce_state)
+ 					  &nbytes, &transfer_id))
+ 		return;
  
-@@ -53,7 +50,7 @@ int FIRMWAREbDownload(struct vnt_private *priv)
- 	u16 length;
- 	int ii, rc;
+-	if (xfer->wait_for_resp)
+-		return;
+-
+-	complete(&xfer->done);
++	xfer->tx_done = true;
+ }
  
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Download firmware\n");
-+	dev_dbg(dev, "---->Download firmware\n");
- 
- 	rc = request_firmware(&fw, FIRMWARE_NAME, dev);
- 	if (rc) {
-@@ -77,8 +74,8 @@ int FIRMWAREbDownload(struct vnt_private *priv)
- 						length,
- 						buffer);
- 
--		DBG_PRT(MSG_LEVEL_DEBUG,
--			KERN_INFO"Download firmware...%d %zu\n", ii, fw->size);
-+		dev_dbg(dev, "Download firmware...%d %zu\n", ii, fw->size);
-+
- 		if (status != STATUS_SUCCESS)
- 			goto free_fw;
+ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
+@@ -1438,7 +1433,7 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
  	}
-@@ -98,7 +95,7 @@ int FIRMWAREbBrach2Sram(struct vnt_private *priv)
- {
- 	int status;
  
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Branch to Sram\n");
-+	dev_dbg(&priv->usb->dev, "---->Branch to Sram\n");
+ 	xfer->resp_len = nbytes;
+-	complete(&xfer->done);
++	xfer->rx_done = true;
+ }
  
- 	status = vnt_control_out(priv,
- 					1,
-@@ -123,18 +120,21 @@ int FIRMWAREbCheckVersion(struct vnt_private *priv)
- 					2,
- 					(u8 *) &(priv->wFirmwareVersion));
+ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+@@ -1451,7 +1446,7 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ 		ath10k_pci_bmi_send_done(tx_pipe);
+ 		ath10k_pci_bmi_recv_data(rx_pipe);
  
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Firmware Version [%04x]\n",
-+	dev_dbg(&priv->usb->dev, "Firmware Version [%04x]\n",
- 						priv->wFirmwareVersion);
-+
- 	if (status != STATUS_SUCCESS) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Firmware Invalid.\n");
-+		dev_dbg(&priv->usb->dev, "Firmware Invalid.\n");
- 		return false;
- 	}
- 	if (priv->wFirmwareVersion == 0xFFFF) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"In Loader.\n");
-+		dev_dbg(&priv->usb->dev, "In Loader.\n");
- 		return false;
- 	}
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Firmware Version [%04x]\n",
-+
-+	dev_dbg(&priv->usb->dev, "Firmware Version [%04x]\n",
- 						priv->wFirmwareVersion);
-+
- 	if (priv->wFirmwareVersion < FIRMWARE_VERSION) {
- 		/* branch to loader for download new firmware */
- 		FIRMWAREbBrach2Sram(priv);
+-		if (completion_done(&xfer->done))
++		if (xfer->tx_done && (xfer->rx_done == xfer->wait_for_resp))
+ 			return 0;
+ 
+ 		schedule();
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index dfdebb4..9401292 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -38,7 +38,8 @@
+ #define DIAG_TRANSFER_LIMIT 2048
+ 
+ struct bmi_xfer {
+-	struct completion done;
++	bool tx_done;
++	bool rx_done;
+ 	bool wait_for_resp;
+ 	u32 resp_len;
+ };
 -- 
-1.9.1
+1.8.5.3
 
