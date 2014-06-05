@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55109 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550AbaFYTaJ (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34526 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbaFESVC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 15:30:09 -0400
-Date: Wed, 25 Jun 2014 15:29:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Subject: Re: pull request: iwlwifi-next 2014-06-24
-Message-ID: <20140625192934.GI3445@tuxdriver.com> (sfid-20140625_213018_253033_62A4558F)
-References: <53A9D6CF.9040100@gmail.com>
+	Thu, 5 Jun 2014 14:21:02 -0400
+Received: by mail-wi0-f174.google.com with SMTP id r20so11090708wiv.13
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 11:21:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: gpio: register all 32 GPIOs on BCM53572
+Date: Thu,  5 Jun 2014 20:20:44 +0200
+Message-Id: <1401992444-4121-1-git-send-email-zajec5@gmail.com> (sfid-20140605_202108_193863_8862A829)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 10:51:43PM +0300, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> This is a pull request for 3.17.
-> 
-> I have here a whole bunch of various things. Andy contributes better debug prints for dvm specific flows and a module parameter to completely disable power save for dvm. Andrei is sharing the premises of his work on CSA - more to come. Eran and Liad keep on working on the new devices. I have the regular amount of BT Coex stuff and I continue to work on the firmware error report system adding more debug capabilities. More to come on that subject too.
-> 
-> I merged iwlwifi-fixes in order to be able to apply patches that relied on patches there.
-> 
-> Let me know if you have problems - please pull.
-> 
-> The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626b38f:
-> 
->   Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git master
-> 
-> for you to fetch changes up to c47af22ad630e03053f3eeefd19bd8274989ffbb:
-> 
->   iwlwifi: mvm: handle device start failures during restart (2014-06-24 21:55:41 +0300)
+I've here a device detected as:
+bcma: bus0: Found chip with id 0xD144, rev 0x01 and package 0x08
+I couldn't find GPIO handling hw button until trying GPIO 20. It seems
+BCM53572 also has 32 GPIOs.
 
-Pulling now...
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/driver_gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-John
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index d7f81ad..aec9f85 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -220,6 +220,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ #endif
+ 	switch (cc->core->bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM5357:
++	case BCMA_CHIP_ID_BCM53572:
+ 		chip->ngpio	= 32;
+ 		break;
+ 	default:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.5
+
