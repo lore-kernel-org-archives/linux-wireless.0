@@ -1,61 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49072 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752199AbaFXOUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 10:20:15 -0400
-Message-ID: <1403619592.10831.9.camel@jlt4.sipsolutions.net> (sfid-20140624_162019_776218_0A308EFD)
-Subject: pull-request: mac80211 2014-06-24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Jun 2014 16:19:52 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-39ZX1aPuXgw9Z6MhP3gS"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:61108 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776AbaFEFt5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 01:49:57 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 10/13] ath9k: Fetch appropriate operating channel context
+Date: Thu, 5 Jun 2014 11:20:37 +0530
+Message-ID: <1401947437-31302-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140605_075001_985900_A41A26DD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Retrieve appropriate operating channel context while switching
+between operating and off channels.
 
---=-39ZX1aPuXgw9Z6MhP3gS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
+ drivers/net/wireless/ath/ath9k/channel.c |  9 +++++++--
+ drivers/net/wireless/ath/ath9k/main.c    | 11 +++++++----
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-Hi John,
-
-Due to travel etc. I've been a little slow this cycle, but we do have a
-few fixes that should go into the current rc series ...
-
-We have a fix from Eliad for a time calculation, a fix from Max for
-head/tailroom when sending authentication packets, a revert that Felix
-requested since the patch in question broke regulatory and a fix from
-myself for an issue with a new command that we advertised in the wrong
-place.
-
-Let me know if there are any issues.
-
-johannes
-
---=-39ZX1aPuXgw9Z6MhP3gS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTqYkLAAoJEDBSmw7B7bqr8iEP/A+mfPtVZj76mpc874TUM7Ks
-QzdNc4hsjSvj5YRg+sI4vlzfyHGcac+AUmnIHaWzJ0zAkQHMi3adqQz1D1JFJfSv
-dZYje4sHu+Xu/Kelfxs3aiDfGCOrhBWI2owfxjbV5RQVnLdK4TQ/o2l4BpMKzy7H
-d4VU+W8WyZMH3AorHnKEbHmI8Cw5UKYhhfqjhpFzjuQQZdcSSqW57ZQJVHEMt1ME
-4kxDTnBZqt2wtMTh0tRsO5NdvL6mLlIVuJ4gpzlPe2ANnQNjwCeABdny/EhY5gKn
-Op5CekuvRPx126m85WQZv3ZA2kZLYtHERfB9scnCJxqW2R6neEEdTUY4Sk1atQGr
-/M/G/y1ZAEseqqCq8Raw/k7G6Fs+XsDH13nPwhmQUo0Ao1dV2CmXmkONagQlWdMG
-H5PisOaoz1gJNNM5ZieklaFHna7c7xjj+p3L+JK2VWoi6rm+ojc+vQyaAzIA36eG
-0sxup290oMSMe9tkHoIyJwtRyJG+yqEC+5LHxzf+/xIL9N6+KislKdkZa4F5AZkC
-DkcWrBOoUta7azKYVcbsWl/jGAAU1rbfki3CDnlQibJ/gyiDEGUezZcJMGWE2tdO
-i+hkYSty59PJ1QuY+kM09kmdn6qFXbXJ4GwJtXc1Q00q9o01566PApLTmoZfY/Eu
-iNp0MkOVSBw5j8WRrtcM
-=eOj4
------END PGP SIGNATURE-----
-
---=-39ZX1aPuXgw9Z6MhP3gS--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3c7ec1c..7634960 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -382,7 +382,7 @@ void ath_offchannel_timer(unsigned long data);
+ void ath_offchannel_channel_change(struct ath_softc *sc);
+ void ath_chanctx_offchan_switch(struct ath_softc *sc,
+ 				struct ieee80211_channel *chan);
+-u8 ath_chanctx_get_oper_chan(struct ath_softc *sc);
++u8 ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active);
+ 
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ int ath_startrecv(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 099e673..f7842ee 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -275,12 +275,17 @@ void ath_chanctx_switch(struct ath_softc *sc, u8 next_chanctx_idx)
+ 	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+ }
+ 
+-u8 ath_chanctx_get_oper_chan(struct ath_softc *sc)
++u8 ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active)
+ {
++	struct ath_chanctx *ctx;
+ 	u8 i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sc->chanctx); i++) {
+-		if (!list_empty(&sc->chanctx[i].vifs))
++		ctx = &sc->chanctx[i];
++		if (!ctx->assigned || list_empty(&ctx->vifs))
++			continue;
++
++		if (active && ctx->active)
+ 			return i;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7326eca..2d619b7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2168,7 +2168,7 @@ ath_scan_next_channel(struct ath_softc *sc)
+ 
+ 	if (sc->offchannel.scan_idx >= req->n_channels) {
+ 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+-		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 		return;
+ 	}
+ 
+@@ -2191,7 +2191,7 @@ static void ath_offchannel_next(struct ath_softc *sc)
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
+ 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
+ 	} else {
+-		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+ 		if (sc->ps_idle)
+ 			ath_cancel_work(sc);
+@@ -2212,7 +2212,7 @@ static void ath_scan_complete(struct ath_softc *sc, bool abort)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+-	ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc));
++	ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false));
+ 	sc->offchannel.scan_req = NULL;
+ 	sc->offchannel.scan_vif = NULL;
+ 	sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+@@ -2325,7 +2325,7 @@ void ath_offchannel_channel_change(struct ath_softc *sc)
+ void ath_offchannel_timer(unsigned long data)
+ {
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+-	u8 idx = ath_chanctx_get_oper_chan(sc);
++	u8 idx = ath_chanctx_get_oper_chan(sc, false);
+ 	struct ath_chanctx *ctx = &sc->chanctx[idx];
+ 
+ 	if (!sc->offchannel.scan_req)
+@@ -2336,6 +2336,9 @@ void ath_offchannel_timer(unsigned long data)
+ 		if (!sc->offchannel.scan_req)
+ 			return;
+ 
++		/* get first active channel context */
++		idx = ath_chanctx_get_oper_chan(sc, true);
++		ctx = &sc->chanctx[idx];
+ 		if (ctx->active) {
+ 			sc->offchannel.state = ATH_OFFCHANNEL_SUSPEND;
+ 			ath_chanctx_switch(sc, idx);
+-- 
+2.0.0
 
