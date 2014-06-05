@@ -1,96 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:33949 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaFPOOX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 10:14:23 -0400
-Received: by mail-pd0-f170.google.com with SMTP id z10so3030330pdj.29
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:14:23 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id iv2sm19054075pbc.19.2014.06.16.07.14.21
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Mon, 16 Jun 2014 07:14:22 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 10/16] rsi: Changed the SDIO interrupt variables and some clean up.
-Date: Mon, 16 Jun 2014 19:44:12 +0530
-Message-Id: <1402928052-4047-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161426_112939_66A72FFD)
+Received: from mx1.redhat.com ([209.132.183.28]:61101 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbaFELxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 07:53:49 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com,
+	Matthias Fend <Matthias.Fend@wolfvision.net>
+Subject: [PATCH 2/5] rt2x00: change beaconing setup on RT2800
+Date: Thu,  5 Jun 2014 13:52:24 +0200
+Message-Id: <1401969147-3532-2-git-send-email-sgruszka@redhat.com> (sfid-20140605_135352_831649_D0476B9D)
+In-Reply-To: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
+References: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed the SDIO interrupt variables and some clean ups.
+As reported by Matthias, on 5572 chip, even if we clear up TXWI
+of corresponding beacon, hardware still try to send it or do other
+action that increase power consumption peak up to 1A.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+To avoid the issue, setup beaconing dynamically by configuring offsets
+of currently active beacons and MAC_BSSID_DW1_BSS_BCN_NUM variable,
+which limit number of beacons that hardware will try to send.
+
+Reported-by: Matthias Fend <Matthias.Fend@wolfvision.net>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +++++---
- drivers/net/wireless/rsi/rsi_sdio.h         |    8 ++++----
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c   | 45 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00queue.h |  1 +
+ 2 files changed, 46 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 20d11cc..4834a9a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -401,14 +401,16 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 			case BUFFER_AVAILABLE:
- 				dev->rx_info.watch_bufferfull_count = 0;
- 				dev->rx_info.buffer_full = false;
-+				dev->rx_info.semi_buffer_full = false;
- 				dev->rx_info.mgmt_buffer_full = false;
- 				rsi_sdio_ack_intr(common->priv,
- 						  (1 << PKT_BUFF_AVAILABLE));
--				rsi_set_event((&common->tx_thread.event));
-+				rsi_set_event(&common->tx_thread.event);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c17fcf2..c45b2d3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -947,6 +947,40 @@ static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
+ 	return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
+ }
+ 
++static void rt2800_update_beacons_setup(struct rt2x00_dev *rt2x00dev)
++{
++	struct data_queue *queue = rt2x00dev->bcn;
++	struct queue_entry *entry;
++	int i, bcn_num = 0;
++	u64 off, reg = 0;
++	u32 bssid_dw1;
 +
- 				rsi_dbg(ISR_ZONE,
--					"%s: ==> BUFFER_AVILABLE <==\n",
-+					"%s: ==> BUFFER_AVAILABLE <==\n",
- 					__func__);
--				dev->rx_info.buf_avilable_counter++;
-+				dev->rx_info.buf_available_counter++;
- 				break;
++	/*
++	 * Setup offsets of all active beacons in BCN_OFFSET{0,1} registers.
++	 */
++	for (i = 0; i < queue->limit; i++) {
++		entry = &queue->entries[i];
++		if (!test_bit(ENTRY_BCN_ENABLED, &entry->flags))
++			continue;
++		off = rt2800_get_beacon_offset(rt2x00dev, entry->entry_idx);
++		reg |= off << (8 * bcn_num);
++		bcn_num++;
++	}
++
++	WARN_ON_ONCE(bcn_num != rt2x00dev->intf_beaconing);
++
++	rt2800_register_write(rt2x00dev, BCN_OFFSET0, (u32) reg);
++	rt2800_register_write(rt2x00dev, BCN_OFFSET1, (u32) (reg >> 32));
++
++	/*
++	 * H/W sends up to MAC_BSSID_DW1_BSS_BCN_NUM + 1 consecutive beacons.
++	 */
++	rt2800_register_read(rt2x00dev, MAC_BSSID_DW1, &bssid_dw1);
++	rt2x00_set_field32(&bssid_dw1, MAC_BSSID_DW1_BSS_BCN_NUM,
++			   bcn_num > 0 ? bcn_num - 1 : 0);
++	rt2800_register_write(rt2x00dev, MAC_BSSID_DW1, bssid_dw1);
++}
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -1003,6 +1037,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
  
- 			case FIRMWARE_ASSERT_IND:
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index df4b5e2..c7e8f2b 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -30,7 +30,7 @@
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
++	__set_bit(ENTRY_BCN_ENABLED, &entry->flags);
++
++	/*
++	 * Change global beacons settings.
++	 */
++	rt2800_update_beacons_setup(rt2x00dev);
  
- enum sdio_interrupt_type {
- 	BUFFER_FULL         = 0x0,
--	BUFFER_AVAILABLE    = 0x1,
-+	BUFFER_AVAILABLE    = 0x2,
- 	FIRMWARE_ASSERT_IND = 0x3,
- 	MSDU_PACKET_PENDING = 0x4,
- 	UNKNOWN_INT         = 0XE
-@@ -42,7 +42,7 @@ enum sdio_interrupt_type {
- #define PKT_MGMT_BUFF_FULL                      2
- #define MSDU_PKT_PENDING                        3
- /* Interrupt Bit Related Macros */
--#define PKT_BUFF_AVAILABLE                      0
-+#define PKT_BUFF_AVAILABLE                      1
- #define FW_ASSERT_IND                           2
+ 	/*
+ 	 * Restore beaconing state.
+@@ -1053,8 +1093,13 @@ void rt2800_clear_beacon(struct queue_entry *entry)
+ 	 * Clear beacon.
+ 	 */
+ 	rt2800_clear_beacon_register(rt2x00dev, entry->entry_idx);
++	__clear_bit(ENTRY_BCN_ENABLED, &entry->flags);
  
- #define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
-@@ -84,7 +84,7 @@ enum sdio_interrupt_type {
- #define TA_HOLD_THREAD_VALUE         cpu_to_le32(0xF)
- #define TA_RELEASE_THREAD_VALUE      cpu_to_le32(0xF)
- #define TA_BASE_ADDR                 0x2200
--#define MISC_CFG_BASE_ADDR           0x4150
-+#define MISC_CFG_BASE_ADDR           0x4105
- 
- struct receive_info {
- 	bool buffer_full;
-@@ -98,7 +98,7 @@ struct receive_info {
- 	u32 total_sdio_msdu_pending_intr;
- 	u32 total_sdio_unknown_intr;
- 	u32 buf_full_counter;
--	u32 buf_avilable_counter;
-+	u32 buf_available_counter;
- };
- 
- struct rsi_91x_sdiodev {
+ 	/*
++	 * Change global beacons settings.
++	 */
++	rt2800_update_beacons_setup(rt2x00dev);
++	/*
+ 	 * Restore beaconing state.
+ 	 */
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index c48125b..2233b91 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -353,6 +353,7 @@ struct txentry_desc {
+  */
+ enum queue_entry_flags {
+ 	ENTRY_BCN_ASSIGNED,
++	ENTRY_BCN_ENABLED,
+ 	ENTRY_OWNER_DEVICE_DATA,
+ 	ENTRY_DATA_PENDING,
+ 	ENTRY_DATA_IO_FAILED,
 -- 
-1.7.1
+1.8.3.1
 
