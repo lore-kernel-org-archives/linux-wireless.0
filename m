@@ -1,80 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:34403 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbaF0Ojr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 10:39:47 -0400
-MIME-Version: 1.0
-Date: Fri, 27 Jun 2014 16:39:42 +0200
-Message-ID: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com> (sfid-20140627_163953_850269_AAC37D9E)
-Subject: mwifiex card reset
-From: Andreas Fenkart <afenkart@gmail.com>
-To: Bing Zhao <bzhao@marvell.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>, devicetree@vger.kernel.org
-Cc: Tony Lindgren <tony@atomide.com>, Daniel Mack <daniel@zonque.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:31025 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750907AbaFEQ3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 12:29:46 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/3] mac80211: stop only the queues assigned to the vif during channel switch
+Date: Thu,  5 Jun 2014 19:26:07 +0300
+Message-Id: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140605_182949_680495_AEE16D6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have an mwifiex module(sd8787) behind omap_hsmmc(am33xx-soc)
-The module is non-removable wired fix to soc. Now the wifi module
-needs 2 clocks; one is a sleep clock the other used when not
-sleeping.
-While the sleep clock is fixed, @32 kHz, the system clock can be
-one out of several values, but can be be derived automatically
-from the sleep clock. But this requires the clock to be present
-when the wifi module comes out of reset.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Another problem is software reboot, at initial power on the wifi
-card will react to mmc discovery. After a software reset of the
-host it will not, because it has already been disvovered and
-didn't notice the host rebooted, unless we reset it as well.
-While this seems obvious, the problem is that the reset is needed
-before the card can be discovered. Which means we cannot move the
-reset logic into the mwifiex driver, since that driver has not
-yet been selected through vendor/product id.
+Instead of stopping all the hardware queues during channel switch,
+which is especially bad when we have large CSA counts, stop only the
+queues that are assigned to the vif that is performing the channel
+switch.
 
-the reset logic:
-        gpiod_set_value(card->gpiod_reset, 0);
-        clk_enable(card->sleep_clock);
-        udelay(1000);
-        gpiod_set_value(card->gpiod_reset, 1);
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/cfg.c   | 10 ++++------
+ net/mac80211/iface.c |  5 ++---
+ net/mac80211/mlme.c  | 20 ++++++++------------
+ 3 files changed, 14 insertions(+), 21 deletions(-)
 
-The idea so far was to extend the device-tree node of the
-mmc slot by some reset leafs;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c6fe358..5215abb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1142,9 +1142,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	kfree(sdata->u.ap.next_beacon);
+@@ -3146,9 +3145,8 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+ 
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 9b9d804..c7417db 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -842,9 +842,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 003d17e..2d3b3a5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -993,9 +993,8 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 	sdata->vif.csa_active = false;
+ 	/* XXX: wait for a beacon first? */
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+@@ -1109,9 +1108,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	sdata->csa_block_tx = csa_ie.mode;
+ 
+ 	if (sdata->csa_block_tx)
+-		ieee80211_stop_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_stop_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	cfg80211_ch_switch_started_notify(sdata->dev, &csa_ie.chandef,
+@@ -1830,9 +1828,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->vif.csa_active = false;
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
+@@ -2078,9 +2075,8 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
+ 	if (!ieee80211_csa_needs_block_tx(local))
+-		ieee80211_wake_queues_by_reason(&local->hw,
+-					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++		ieee80211_wake_vif_queues(local, sdata,
++					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-- 
+1.9.1
 
-&mmc {
-        ti,non-removable;
-        ..
-        peripheral-clocks = <&clk &clk2 ...>;
-        peripheral-reset-gpios = <&gpio0 1 1 &gpio1 2 3 ...>;
-}
-
-in mmc_add_host, all clocks will be enabled and gpios be pulled
-low for 1 msec
-
-Is this a feasible solution?
-
-
-Another related issue, is the card reset in mwifiex driver:
-
-static void sdio_card_reset_worker(struct work_struct *work)
-{
-        struct mmc_host *target = reset_host;
-
-        pr_err("Resetting card...\n");
-        mmc_remove_host(target);
-        /* 20ms delay is based on experiment with sdhci controller */
-        mdelay(20);
-        mmc_add_host(target);
-}
-static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
-
-There are obviously a lot of problems with this, e.g. custom debugfs
-entries created in the driver will be lost. But sometimes this
-code might avert disaster in case the command handlers between
-driver and firmware lost synchronization
-
-How could this be done in a better way?
