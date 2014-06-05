@@ -1,114 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:55827 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbaFNNv7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:51:59 -0400
-Received: by mail-pb0-f41.google.com with SMTP id ma3so3031055pbc.0
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:51:59 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id ln2sm37726387pab.35.2014.06.14.06.51.57
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:51:58 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/16] rsi: Changed rate handling.
-Date: Sat, 14 Jun 2014 19:21:49 +0530
-Message-Id: <1402753909-14040-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155201_822963_3E01E241)
+Received: from mx1.redhat.com ([209.132.183.28]:26462 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750715AbaFEGnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 02:43:46 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ben Hutchings <ben@decadent.org.uk>, dwmw2@infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Add firmware for r8723au
+References: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1390174519.3651.3.camel@deadeye.wl.decadent.org.uk>
+	<1401833651.2412.35.camel@deadeye.wl.decadent.org.uk>
+	<538F4540.9080002@lwfinger.net>
+Date: Thu, 05 Jun 2014 08:43:12 +0200
+In-Reply-To: <538F4540.9080002@lwfinger.net> (Larry Finger's message of "Wed,
+	04 Jun 2014 11:11:44 -0500")
+Message-ID: <wrfjfvjjn9fj.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140605_084429_961940_703B4B47)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed rate handling.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 06/03/2014 05:14 PM, Ben Hutchings wrote:
+>> On Sun, 2014-01-19 at 23:35 +0000, Ben Hutchings wrote:
+>>> On Thu, 2014-01-02 at 18:42 -0600, Larry Finger wrote:
+>>>> This firmware is for a driver that will soon be submitted to the kernel.
+>>>> It occurs as data statements in Realtek driver
+>>>> rtl8723A_WiFi_linux_v4.1.3_6044.20121224.
+>>>>
+>>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>>> ---
+>>>>   WHENCE                         |  13 +++++++++++++
+>>>>   rtlwifi/rtl8723aufw_A.bin      | Bin 0 -> 22172 bytes
+>>>>   rtlwifi/rtl8723aufw_B.bin      | Bin 0 -> 24118 bytes
+>>>>   rtlwifi/rtl8723aufw_B_NoBT.bin | Bin 0 -> 19200 bytes
+>>>>   4 files changed, 13 insertions(+)
+>>>>   create mode 100644 rtlwifi/rtl8723aufw_A.bin
+>>>>   create mode 100644 rtlwifi/rtl8723aufw_B.bin
+>>>>   create mode 100644 rtlwifi/rtl8723aufw_B_NoBT.bin
+>>> [...]
+>>>
+>>> Applied, thanks.
+>>
+>> I just noticed that the driver in Linux 3.15 seems to ask for
+>> rtlwifi/rtl8723aufw.bin and not rtlwifi/rtl8723aufw_A.bin.  You'll need
+>> to change the filename on one side or the other.
+>
+> Jes,
+>
+> As Ben points out, I messed up the firmware names, and one of them
+> needs to be changed. Keeping the name "rtlwifi/rtl8723aufw_A.bin"
+> would retain a certain amount of symmetry, but is may be easier to
+> retain "rtlwifi/rtl8723aufw.bin" in the code. A third option would be
+> to try for one of the names and fall back to the other if it
+> fails. What do you think?
+>
+> In any case, we need additional MODULE_FIRMWARE macros for the other
+> two firmware files.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |   35 ++++++++++++++----------------
- 1 files changed, 16 insertions(+), 19 deletions(-)
+I'd opt for keeping the _A filename in place. It's for the rev A chip,
+and I haven't had any complaints for the current code failing due to the
+naming, so unlikely that a lot of people are trying to use it.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 5c122e8..f5182cd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -942,7 +942,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	struct ieee80211_hw *hw = common->priv->hw;
- 	u8 band = hw->conf.chandef.chan->band;
- 	u8 num_supported_rates = 0;
--	u8 rate_offset = 0;
-+	u8 rate_table_offset, rate_offset = 0;
- 	u32 rate_bitmap = common->bitrate_mask[band];
- 
- 	u16 *selected_rates, min_rate;
-@@ -978,14 +978,18 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	if (common->channel_width == BW_40MHZ)
- 		auto_rate->desc_word[7] |= cpu_to_le16(1);
- 
--	if (band == IEEE80211_BAND_2GHZ)
--		min_rate = STD_RATE_01;
--	else
--		min_rate = STD_RATE_06;
-+	if (band == IEEE80211_BAND_2GHZ) {
-+		min_rate = RSI_RATE_1;
-+		rate_table_offset = 0;
-+	} else {
-+		min_rate = RSI_RATE_6;
-+		rate_table_offset = 4;
-+	}
- 
- 	for (ii = 0, jj = 0; ii < ARRAY_SIZE(rsi_rates); ii++) {
- 		if (rate_bitmap & BIT(ii)) {
--			selected_rates[jj++] = (rsi_rates[ii].bitrate / 5);
-+			selected_rates[jj++] =
-+			(rsi_rates[ii + rate_table_offset].bitrate / 5);
- 			rate_offset++;
- 		}
- 	}
-@@ -998,13 +1002,6 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 		rate_offset += ARRAY_SIZE(mcs);
- 	}
- 
--	if (rate_offset < (RSI_TBL_SZ / 2) - 1) {
--		for (ii = jj; ii < (RSI_TBL_SZ / 2); ii++) {
--			selected_rates[jj++] = min_rate;
--			rate_offset++;
--		}
--	}
--
- 	sort(selected_rates, jj, sizeof(u16), &rsi_compare, NULL);
- 
- 	/* mapping the rates to RSI rates */
-@@ -1020,25 +1017,25 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 
- 	/* loading HT rates in the bottom half of the auto rate table */
- 	if (common->vif_info[0].is_ht) {
--		if (common->vif_info[0].sgi)
--			auto_rate->supported_rates[rate_offset++] =
--				cpu_to_le16(RSI_RATE_MCS7_SG);
--
- 		for (ii = rate_offset, kk = ARRAY_SIZE(rsi_mcsrates) - 1;
- 		     ii < rate_offset + 2 * ARRAY_SIZE(rsi_mcsrates); ii++) {
--			if (common->vif_info[0].sgi)
-+			if (common->vif_info[0].sgi ||
-+			    conf_is_ht40(&common->priv->hw->conf))
- 				auto_rate->supported_rates[ii++] =
- 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
- 			auto_rate->supported_rates[ii] =
- 				cpu_to_le16(rsi_mcsrates[kk--]);
- 		}
- 
--		for (; ii < RSI_TBL_SZ; ii++) {
-+		for (; ii < (RSI_TBL_SZ - 1); ii++) {
- 			auto_rate->supported_rates[ii] =
- 				cpu_to_le16(rsi_mcsrates[0]);
- 		}
- 	}
- 
-+	for (; ii < RSI_TBL_SZ; ii++)
-+		auto_rate->supported_rates[ii] = min_rate;
-+
- 	auto_rate->num_supported_rates = cpu_to_le16(num_supported_rates * 2);
- 	auto_rate->moderate_rate_inx = cpu_to_le16(num_supported_rates / 2);
- 	auto_rate->desc_word[7] |= cpu_to_le16(0 << 8);
--- 
-1.7.1
+I'll change the name in the code here and submit it with my next
+changeset. I'll add the MODULE_FIRMWARE bits with it.
 
+Cheers,
+Jes
