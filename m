@@ -1,482 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17988 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbaFDNr0 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19809 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaFEQST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:47:26 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 01/13] ath9k: Add channel context structure
-Date: Wed, 4 Jun 2014 19:16:27 +0530
-Message-ID: <1401889599-412-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154738_084398_88EDF77A)
-In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Thu, 5 Jun 2014 12:18:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+Date: Thu, 5 Jun 2014 19:18:12 +0300
+In-Reply-To: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Wed, 4 Jun 2014 11:01:39
+	-0700")
+Message-ID: <87egz3nxdn.fsf@kamboji.qca.qualcomm.com> (sfid-20140605_181830_020263_D4EF03AE)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+greearb@candelatech.com writes:
 
-The channel context structure is defined to enable
-multi-channel concurrency support.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Store the firmware crash registers and last 128 or so
+> firmware debug-log ids and present them to user-space
+> via debugfs.
+>
+> Should help with figuring out why the firmware crashed.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Makefile  |   3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h   |  18 +++++
- drivers/net/wireless/ath/ath9k/channel.c | 133 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c    |   1 +
- drivers/net/wireless/ath/ath9k/link.c    |   2 +-
- drivers/net/wireless/ath/ath9k/main.c    | 111 +++-----------------------
- drivers/net/wireless/ath/ath9k/recv.c    |   4 +-
- 7 files changed, 169 insertions(+), 103 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/channel.c
+My first comments, more later. But my first impression is that I like
+this, we just need to sort out some implementation issues.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 8fcd586..6b4020a 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -5,7 +5,8 @@ ath9k-y +=	beacon.o \
- 		recv.o \
- 		xmit.o \
- 		link.o \
--		antenna.o
-+		antenna.o \
-+		channel.o
- 
- ath9k-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += mci.o
- ath9k-$(CONFIG_ATH9K_PCI) += pci.o
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2ca8f7e..cc75b9d 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -325,6 +325,16 @@ struct ath_rx {
- 	u32 ampdu_ref;
- };
- 
-+struct ath_chanctx {
-+	struct cfg80211_chan_def chandef;
-+	struct list_head vifs;
-+	bool offchannel;
-+};
-+
-+void ath_chanctx_init(struct ath_softc *sc);
-+int ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
-+			      struct cfg80211_chan_def *chandef);
-+int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
- int ath_startrecv(struct ath_softc *sc);
- bool ath_stoprecv(struct ath_softc *sc);
- u32 ath_calcrxfilter(struct ath_softc *sc);
-@@ -370,12 +380,15 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- /********/
- 
- struct ath_vif {
-+	struct list_head list;
-+
- 	struct ieee80211_vif *vif;
- 	struct ath_node mcast_node;
- 	int av_bslot;
- 	bool primary_sta_vif;
- 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
- 	struct ath_buf *av_bcbuf;
-+	struct ath_chanctx *chanctx;
- 
- 	/* P2P Client */
- 	struct ieee80211_noa_data noa;
-@@ -702,6 +715,8 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- #define PS_BEACON_SYNC            BIT(4)
- #define PS_WAIT_FOR_ANI           BIT(5)
- 
-+#define ATH9K_NUM_CHANCTX  3 /* 2 oper_channel + 1 off_channel */
-+
- struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
-@@ -743,6 +758,9 @@ struct ath_softc {
- 	struct ath_tx tx;
- 	struct ath_beacon beacon;
- 
-+	struct ath_chanctx chanctx[ATH9K_NUM_CHANCTX];
-+	struct ath_chanctx *cur_chan;
-+
- #ifdef CONFIG_MAC80211_LEDS
- 	bool led_registered;
- 	char led_name[32];
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-new file mode 100644
-index 0000000..aee6cdb
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -0,0 +1,133 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "ath9k.h"
-+
-+/* Set/change channels.  If the channel is really being changed, it's done
-+ * by reseting the chip.  To accomplish this we must first cleanup any pending
-+ * DMA, then restart stuff.
-+ */
-+static int ath_set_channel(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ath9k_channel *hchan;
-+	struct cfg80211_chan_def *chandef = &sc->cur_chan->chandef;
-+	struct ieee80211_channel *chan = chandef->chan;
-+	int pos = chan->hw_value;
-+	int old_pos = -1;
-+	int r;
-+
-+	if (test_bit(ATH_OP_INVALID, &common->op_flags))
-+		return -EIO;
-+
-+	if (ah->curchan)
-+		old_pos = ah->curchan - &ah->channels[0];
-+
-+	ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
-+		chan->center_freq, chandef->width);
-+
-+	/* update survey stats for the old channel before switching */
-+	spin_lock_bh(&common->cc_lock);
-+	ath_update_survey_stats(sc);
-+	spin_unlock_bh(&common->cc_lock);
-+
-+	ath9k_cmn_get_channel(hw, ah, chandef);
-+
-+	/* If the operating channel changes, change the survey in-use flags
-+	 * along with it.
-+	 * Reset the survey data for the new channel, unless we're switching
-+	 * back to the operating channel from an off-channel operation.
-+	 */
-+	if (!sc->cur_chan->offchannel && sc->cur_survey != &sc->survey[pos]) {
-+		if (sc->cur_survey)
-+			sc->cur_survey->filled &= ~SURVEY_INFO_IN_USE;
-+
-+		sc->cur_survey = &sc->survey[pos];
-+
-+		memset(sc->cur_survey, 0, sizeof(struct survey_info));
-+		sc->cur_survey->filled |= SURVEY_INFO_IN_USE;
-+	} else if (!(sc->survey[pos].filled & SURVEY_INFO_IN_USE)) {
-+		memset(&sc->survey[pos], 0, sizeof(struct survey_info));
-+	}
-+
-+	hchan = &sc->sc_ah->channels[pos];
-+	r = ath_reset_internal(sc, hchan);
-+	if (r)
-+		return r;
-+
-+	/* The most recent snapshot of channel->noisefloor for the old
-+	 * channel is only available after the hardware reset. Copy it to
-+	 * the survey stats now.
-+	 */
-+	if (old_pos >= 0)
-+		ath_update_survey_nf(sc, old_pos);
-+
-+	/* Enable radar pulse detection if on a DFS channel. Spectral
-+	 * scanning and radar detection can not be used concurrently.
-+	 */
-+	if (hw->conf.radar_enabled) {
-+		u32 rxfilter;
-+
-+		/* set HW specific DFS configuration */
-+		ath9k_hw_set_radar_params(ah);
-+		rxfilter = ath9k_hw_getrxfilter(ah);
-+		rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
-+				ATH9K_RX_FILTER_PHYERR;
-+		ath9k_hw_setrxfilter(ah, rxfilter);
-+		ath_dbg(common, DFS, "DFS enabled at freq %d\n",
-+			chan->center_freq);
-+	} else {
-+		/* perform spectral scan if requested. */
-+		if (test_bit(ATH_OP_SCANNING, &common->op_flags) &&
-+			sc->spectral_mode == SPECTRAL_CHANSCAN)
-+			ath9k_spectral_scan_trigger(hw);
-+	}
-+
-+	return 0;
-+}
-+
-+void ath_chanctx_init(struct ath_softc *sc)
-+{
-+	struct ath_chanctx *ctx;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan;
-+	int i;
-+
-+	sband = &common->sbands[IEEE80211_BAND_2GHZ];
-+	if (!sband->n_channels)
-+		sband = &common->sbands[IEEE80211_BAND_5GHZ];
-+
-+	chan = &sband->channels[0];
-+	for (i = 0; i < ATH9K_NUM_CHANCTX; i++) {
-+		ctx = &sc->chanctx[i];
-+		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
-+		INIT_LIST_HEAD(&ctx->vifs);
-+	}
-+	sc->cur_chan = &sc->chanctx[0];
-+}
-+
-+int ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
-+			      struct cfg80211_chan_def *chandef)
-+{
-+	memcpy(&ctx->chandef, chandef, sizeof(ctx->chandef));
-+	if (ctx != sc->cur_chan)
-+		return 0;
-+
-+	return ath_set_channel(sc);
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 0246b99..32d9542 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -599,6 +599,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
- 	ath_fill_led_pin(sc);
-+	ath_chanctx_init(sc);
- 
- 	if (common->bus_ops->aspm_init)
- 		common->bus_ops->aspm_init(common);
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 72a715f..6f91974 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -416,7 +416,7 @@ void ath_start_ani(struct ath_softc *sc)
- 
- 	if (common->disable_ani ||
- 	    !test_bit(ATH_OP_ANI_RUN, &common->op_flags) ||
--	    (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
-+	    sc->cur_chan->offchannel)
- 		return;
- 
- 	common->ani.longcal_timer = timestamp;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 62ac95d..2e7cce7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -233,7 +233,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
--	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
-+	if (!sc->cur_chan->offchannel && start) {
- 		if (!test_bit(ATH_OP_BEACONS, &common->op_flags))
- 			goto work;
- 
-@@ -266,7 +266,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	return true;
- }
- 
--static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
-+int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -279,7 +279,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	tasklet_disable(&sc->intr_tq);
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
-+	if (!sc->cur_chan->offchannel) {
- 		fastcc = false;
- 		caldata = &sc->caldata;
- 	}
-@@ -307,7 +307,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	}
- 
- 	if (ath9k_hw_mci_is_enabled(sc->sc_ah) &&
--	    (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
-+	    sc->cur_chan->offchannel)
- 		ath9k_mci_set_txpower(sc, true, false);
- 
- 	if (!ath_complete_reset(sc, true))
-@@ -320,98 +320,6 @@ out:
- 	return r;
- }
- 
--
--/*
-- * Set/change channels.  If the channel is really being changed, it's done
-- * by reseting the chip.  To accomplish this we must first cleanup any pending
-- * DMA, then restart stuff.
--*/
--static int ath_set_channel(struct ath_softc *sc, struct cfg80211_chan_def *chandef)
--{
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_hw *hw = sc->hw;
--	struct ath9k_channel *hchan;
--	struct ieee80211_channel *chan = chandef->chan;
--	bool offchannel;
--	int pos = chan->hw_value;
--	int old_pos = -1;
--	int r;
--
--	if (test_bit(ATH_OP_INVALID, &common->op_flags))
--		return -EIO;
--
--	offchannel = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
--
--	if (ah->curchan)
--		old_pos = ah->curchan - &ah->channels[0];
--
--	ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
--		chan->center_freq, chandef->width);
--
--	/* update survey stats for the old channel before switching */
--	spin_lock_bh(&common->cc_lock);
--	ath_update_survey_stats(sc);
--	spin_unlock_bh(&common->cc_lock);
--
--	ath9k_cmn_get_channel(hw, ah, chandef);
--
--	/*
--	 * If the operating channel changes, change the survey in-use flags
--	 * along with it.
--	 * Reset the survey data for the new channel, unless we're switching
--	 * back to the operating channel from an off-channel operation.
--	 */
--	if (!offchannel && sc->cur_survey != &sc->survey[pos]) {
--		if (sc->cur_survey)
--			sc->cur_survey->filled &= ~SURVEY_INFO_IN_USE;
--
--		sc->cur_survey = &sc->survey[pos];
--
--		memset(sc->cur_survey, 0, sizeof(struct survey_info));
--		sc->cur_survey->filled |= SURVEY_INFO_IN_USE;
--	} else if (!(sc->survey[pos].filled & SURVEY_INFO_IN_USE)) {
--		memset(&sc->survey[pos], 0, sizeof(struct survey_info));
--	}
--
--	hchan = &sc->sc_ah->channels[pos];
--	r = ath_reset_internal(sc, hchan);
--	if (r)
--		return r;
--
--	/*
--	 * The most recent snapshot of channel->noisefloor for the old
--	 * channel is only available after the hardware reset. Copy it to
--	 * the survey stats now.
--	 */
--	if (old_pos >= 0)
--		ath_update_survey_nf(sc, old_pos);
--
--	/*
--	 * Enable radar pulse detection if on a DFS channel. Spectral
--	 * scanning and radar detection can not be used concurrently.
--	 */
--	if (hw->conf.radar_enabled) {
--		u32 rxfilter;
--
--		/* set HW specific DFS configuration */
--		ath9k_hw_set_radar_params(ah);
--		rxfilter = ath9k_hw_getrxfilter(ah);
--		rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
--				ATH9K_RX_FILTER_PHYERR;
--		ath9k_hw_setrxfilter(ah, rxfilter);
--		ath_dbg(common, DFS, "DFS enabled at freq %d\n",
--			chan->center_freq);
--	} else {
--		/* perform spectral scan if requested. */
--		if (test_bit(ATH_OP_SCANNING, &common->op_flags) &&
--			sc->spectral_mode == SPECTRAL_CHANSCAN)
--			ath9k_spectral_scan_trigger(hw);
--	}
--
--	return 0;
--}
--
- static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 			    struct ieee80211_vif *vif)
- {
-@@ -713,6 +621,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
-+	struct ath_chanctx *ctx = sc->cur_chan;
- 	struct ath9k_channel *init_channel;
- 	int r;
- 
-@@ -723,7 +632,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
- 
--	init_channel = ath9k_cmn_get_channel(hw, ah, &hw->conf.chandef);
-+	memcpy(&ctx->chandef, &hw->conf.chandef, sizeof(ctx->chandef));
-+	init_channel = ath9k_cmn_get_channel(hw, ah, &ctx->chandef);
- 
- 	/* Reset SERDES registers */
- 	ath9k_hw_configpcipowersave(ah, false);
-@@ -934,7 +844,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	}
- 
- 	if (!ah->curchan)
--		ah->curchan = ath9k_cmn_get_channel(hw, ah, &hw->conf.chandef);
-+		ah->curchan = ath9k_cmn_get_channel(hw, ah,
-+						    &sc->cur_chan->chandef);
- 
- 	ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
- 	ath9k_hw_phy_disable(ah);
-@@ -1345,6 +1256,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &hw->conf;
-+	struct ath_chanctx *ctx = sc->cur_chan;
- 	bool reset_channel = false;
- 
- 	ath9k_ps_wakeup(sc);
-@@ -1392,7 +1304,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
--		if (ath_set_channel(sc, &hw->conf.chandef) < 0) {
-+		ctx->offchannel = !!(conf->flags & IEEE80211_CONF_OFFCHANNEL);
-+		if (ath_chanctx_set_channel(sc, ctx, &hw->conf.chandef) < 0) {
- 			ath_err(common, "Unable to set channel\n");
- 			mutex_unlock(&sc->mutex);
- 			ath9k_ps_restore(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 9105a92..de5684a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -259,7 +259,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_HP);
- 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_LP);
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(sc->sc_ah, sc->cur_chan->offchannel);
- }
- 
- static void ath_edma_stop_recv(struct ath_softc *sc)
-@@ -457,7 +457,7 @@ int ath_startrecv(struct ath_softc *sc)
- 
- start_recv:
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(ah, sc->cur_chan->offchannel);
- 
- 	return 0;
- }
+kbuild found some warnings:
+
+drivers/net/wireless/ath/ath10k/debug.c:725:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
+drivers/net/wireless/ath/ath10k/debug.c:624:2: error: implicit declaration of function 'vmalloc' [-Werror=implicit-function-declaration]
+drivers/net/wireless/ath/ath10k/debug.c:624:6: warning: assignment makes pointer from integer without a cast [enabled by default]
+
+The naming of structures and functions are a bit too long, but I'll
+comment on that later. That's easy to change as the last thing.
+
+> +/**
+> + * enum ath10k_fw_error_dump_type - types of data in the dump file
+> + * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
+> + * @ATH10K_FW_ERROR_DUMP_CRASH:   Crash dump in binary format
+> + */
+> +enum ath10k_fw_error_dump_type {
+> +	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
+> +	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
+> +
+> +	ATH10K_FW_ERROR_DUMP_MAX,
+> +};
+> +
+> +
+
+Extra newline.
+
+> +struct ath10k_tlv_dump_data {
+> +	u32 type; /* see ath10k_fw_error_dump_type above */
+> +	u32 tlv_len; /* in bytes */
+> +	u8 tlv_data[]; /* Pad to 32-bit boundaries as needed. */
+> +} __packed;
+> +
+> +struct ath10k_dump_file_data {
+> +	/* Dump file information */
+> +	u32 len;
+> +	u32 magic; /* 0x01020304, tells us byte-order of host if we care */
+> +	u32 version; /* File dump version, 1 for now. */
+
+Actually I would prefer to have magic first and have ASCII string as
+string, for example "ATH10K-FW-DUMP".
+
+> +	/* Some info we can get from ath10k struct that might help. */
+> +	u32 chip_id;
+> +	u32 target_version;
+
+bus_type or something like that would be good to add already now.
+
+> +	u8 fw_version_major;
+> +	u8 unused8; /* pad fw_version_major */
+> +	u16 unused16; /* pad fw_version_major */
+
+I don't see any point of using u8 or u16. Would it be simpler just to
+use u32 for everything?
+
+> +	u32 fw_version_minor;
+> +	u16 fw_version_release;
+> +	u16 fw_version_build;
+> +	u32 phy_capability;
+> +	u32 hw_min_tx_power;
+> +	u32 hw_max_tx_power;
+> +	u32 ht_cap_info;
+> +	u32 vht_cap_info;
+> +	u32 num_rf_chains;
+> +	char fw_ver[64]; /* Firmware version string */
+
+Can we reuse ETHTOOL_FWVERS_LEN? cfg80211 already uses that.
+
+#define ETHTOOL_FWVERS_LEN	32
+
+> +	/* Kernel related information */
+> +	u32 kernel_ver_code; /* LINUX_VERSION_CODE */
+> +	char kernel_ver[64]; /* VERMAGIC_STRING */
+> +
+> +	u8 unused[64]; /* Room for growth w/out changing binary format */
+
+Maybe 128 bytes, just so that we don't need to change it for some time?
+
+> +	struct ath10k_tlv_dump_data data; /* more may follow */
+
+I would prefer:
+
+u8 data[0];
+
+So that this struct is only about the header.
+
+> +} __packed;
+> +
+> +/* This will store at least the last 128 entries.  Each dbglog message
+> + * is a max of 7 32-bit integers in length, but the length can be less
+> + * than that as well.
+> + */
+> +#define ATH10K_DBGLOG_DATA_LEN (128 * 7 * 4)
+
+Empty line after the define.
+
+> @@ -488,6 +555,12 @@ struct ath10k {
+>  
+>  	struct dfs_pattern_detector *dfs_detector;
+>  
+> +	/* Used for crash-dump storage */
+> +	/* Don't over-write dump info until someone reads the data. */
+> +	bool crashed_since_read;
+> +	struct ath10k_dbglog_entry_storage dbglog_entry_data;
+> +	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
+
+I think these should be in struct ath10k_debug.
+
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> index 1b7ff4b..a7d7877 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -17,6 +17,8 @@
+>  
+>  #include <linux/module.h>
+>  #include <linux/debugfs.h>
+> +#include <linux/version.h>
+> +#include <linux/vermagic.h>
+>  
+>  #include "core.h"
+>  #include "debug.h"
+> @@ -577,6 +579,145 @@ static const struct file_operations fops_chip_id = {
+>  	.llseek = default_llseek,
+>  };
+>  
+> +void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, u8 *buffer, int len)
+> +{
+> +	int i;
+> +	int z = ar->dbglog_entry_data.next_idx;
+> +
+> +	/* Don't save any new logs until user-space reads this. */
+> +	if (ar->crashed_since_read)
+> +		return;
+
+Locking? If this functions depends on something, please document that
+with lockdep_assert_held().
+
+> +	for (i = 0; i < len; i++) {
+> +		ar->dbglog_entry_data.data[z] = buffer[i];
+> +		z++;
+> +		if (z >= ATH10K_DBGLOG_DATA_LEN)
+> +			z = 0;
+> +	}
+
+Empty line here.
+
+> +	ar->dbglog_entry_data.next_idx = z;
+> +}
+> +EXPORT_SYMBOL(ath10k_dbg_save_fw_dbg_buffer);
+> +
+> +static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+> +{
+> +	unsigned int len = (sizeof(ar->dbglog_entry_data)
+
+Unneeded parenthesis.
+
+> +			    + sizeof(ar->reg_dump_values));
+> +	unsigned int sofar = 0;
+> +	char *buf;
+> +	struct ath10k_tlv_dump_data *dump_tlv;
+> +	struct ath10k_dump_file_data *dump_data;
+> +	int hdr_len = sizeof(*dump_data) - sizeof(dump_data->data);
+
+I prefer separating variable declarations and definitions.
+
+> +
+> +	lockdep_assert_held(&ar->conf_mutex);
+> +
+> +	len += hdr_len;
+> +	sofar += hdr_len;
+> +
+> +	/* So we can add headers to the data dump */
+> +	len += 2 * sizeof(*dump_tlv);
+
+This is a bit awkward way of defining the length. Something like this
+would be easier to read:
+
+len = sizeof (*dump_tlv) + sizeof(ar->dbglog_entry_data);
+len +=	sizeof (*dump_tlv) + sizeof(ar->reg_dump_values));
+
+> +
+> +	/* This is going to get big when we start dumping FW RAM and such,
+> +	 * so go ahead and use vmalloc.
+> +	 */
+> +	buf = vmalloc(len);
+> +	if (!buf)
+> +		return NULL;
+> +
+> +	memset(buf, 0, len);
+> +	dump_data = (struct ath10k_dump_file_data *)(buf);
+> +	dump_data->len = len;
+> +	dump_data->magic = 0x01020304;
+> +	dump_data->version = 1;
+> +	dump_data->chip_id = ar->chip_id;
+> +	dump_data->target_version = ar->target_version;
+> +	dump_data->fw_version_major = ar->fw_version_major;
+> +	dump_data->fw_version_minor = ar->fw_version_minor;
+> +	dump_data->fw_version_release = ar->fw_version_release;
+> +	dump_data->fw_version_build = ar->fw_version_build;
+> +	dump_data->phy_capability = ar->phy_capability;
+> +	dump_data->hw_min_tx_power = ar->hw_min_tx_power;
+> +	dump_data->hw_max_tx_power = ar->hw_max_tx_power;
+> +	dump_data->ht_cap_info = ar->ht_cap_info;
+> +	dump_data->vht_cap_info = ar->vht_cap_info;
+> +	dump_data->num_rf_chains = ar->num_rf_chains;
+> +
+> +	strncpy(dump_data->fw_ver, ar->hw->wiphy->fw_version,
+> +		sizeof(dump_data->fw_ver) - 1);
+
+BUILD_BUG_ON(sizeof(dump_data->fw_ver) != sizeof(ar->hw->wiphy->fw_version))?
+
+And wouldn't strlcpy() be safer?
+
+> +	dump_data->kernel_ver_code = LINUX_VERSION_CODE;
+
+checkpatch actually complains about this:
+
+drivers/net/wireless/ath/ath10k/debug.c:649: WARNING: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+
+But I guess there's nothing we can do for that.
+
+> +	strncpy(dump_data->kernel_ver, VERMAGIC_STRING,
+> +		sizeof(dump_data->kernel_ver) - 1);
+
+strlcpy()?
+
+> +	/* Gather dbg-log */
+> +	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+> +	dump_tlv->type = ATH10K_FW_ERROR_DUMP_DBGLOG;
+> +	dump_tlv->tlv_len = sizeof(ar->dbglog_entry_data);
+> +	memcpy(dump_tlv->tlv_data, &ar->dbglog_entry_data, dump_tlv->tlv_len);
+> +	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
+> +
+> +	/* Gather crash-dump */
+> +	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+> +	dump_tlv->type = ATH10K_FW_ERROR_DUMP_REGDUMP;
+> +	dump_tlv->tlv_len = sizeof(ar->reg_dump_values);
+> +	memcpy(dump_tlv->tlv_data, &ar->reg_dump_values, dump_tlv->tlv_len);
+> +	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
+> +
+> +	return dump_data;
+> +}
+> +
+> +static int ath10k_fw_error_dump_open(struct inode *inode, struct file *file)
+> +{
+> +	struct ath10k *ar = inode->i_private;
+> +	int ret;
+> +	struct ath10k_dump_file_data *dump;
+> +
+> +	if (!ar)
+> +		return -EINVAL;
+
+Is this cheak necessary? In what cases is i_private NULL?
+
+> --- a/drivers/net/wireless/ath/ath10k/debug.h
+> +++ b/drivers/net/wireless/ath/ath10k/debug.h
+> @@ -19,6 +19,7 @@
+>  #define _DEBUG_H_
+>  
+>  #include <linux/types.h>
+> +#include "pci.h"
+
+debug.h shouldn't access pci.h directly. All access should happen
+through hif.
+
+>  
+>  enum ath10k_debug_mask {
+> @@ -110,4 +111,28 @@ static inline void ath10k_dbg_dump(enum ath10k_debug_mask mask,
+>  {
+>  }
+>  #endif /* CONFIG_ATH10K_DEBUG */
+> +
+> +
+> +/* Target debug log related defines and structs */
+> +
+> +/* Target is 32-bit CPU, so we just use u32 for
+> + * the pointers.  The memory space is relative to the
+> + * target, not the host.
+> + */
+> +struct ath10k_fw_dbglog_buf {
+> +	u32 next; /* pointer to dblog_buf_s. */
+> +	u32 buffer; /* pointer to u8 buffer */
+> +	u32 bufsize;
+> +	u32 length;
+> +	u32 count;
+> +	u32 free;
+> +} __packed;
+> +
+> +struct ath10k_fw_dbglog_hdr {
+> +	u32 dbuf; /* pointer to dbglog_buf_s */
+> +	u32 dropped;
+> +} __packed;
+
+Should these be in hw.h?
+
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -19,7 +19,7 @@
+>  #include <linux/module.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/spinlock.h>
+> -#include <linux/bitops.h>
+
+Why remove bitops.h?
+
+Have to stop here, more later.
+
 -- 
-2.0.0
-
+Kalle Valo
