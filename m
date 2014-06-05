@@ -1,77 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:50217 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbaFNNvn (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52372 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbaFEL3k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:51:43 -0400
-Received: by mail-pa0-f46.google.com with SMTP id eu11so3019552pac.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:51:43 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id fe3sm9000107pbd.66.2014.06.14.06.51.41
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:51:42 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/16] rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
-Date: Sat, 14 Jun 2014 19:21:33 +0530
-Message-Id: <1402753893-14010-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155145_980962_E72D3C0E)
+	Thu, 5 Jun 2014 07:29:40 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC 1/4] ath10k: provide firmware crash info via debugfs.
+References: <1401812719-25061-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQnvAzCHvKwib39dOZnN6SEyNG_=U9Jgx5arM819dUoMYw@mail.gmail.com>
+	<538F4DEE.6040405@candelatech.com>
+Date: Thu, 5 Jun 2014 14:29:29 +0300
+In-Reply-To: <538F4DEE.6040405@candelatech.com> (Ben Greear's message of "Wed,
+	04 Jun 2014 09:48:46 -0700")
+Message-ID: <8738fjppba.fsf@kamboji.qca.qualcomm.com> (sfid-20140605_132944_424220_CA1DA38B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Made required changes to rsi_set_channel() and rsi_program_bb_rf()
-functions.
+Ben Greear <greearb@candelatech.com> writes:
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+> On 06/04/2014 02:04 AM, Michal Kazior wrote:
+>> On 3 June 2014 18:25,  <greearb@candelatech.com> wrote:
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>>> @@ -41,6 +41,8 @@
+>>>  #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
+>>>  #define ATH10K_NUM_CHANS 38
+>>>
+>>> +#define REG_DUMP_COUNT_QCA988X 60 /* from pci.h */
+>> 
+>> I don't like this.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index c3d8da9..5c122e8 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -596,7 +596,7 @@ static int rsi_program_bb_rf(struct rsi_common *common)
- 
- 	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
- 	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
--	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
-+	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
- 
- 	if (common->rf_reset) {
- 		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
-@@ -849,23 +849,6 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
- 	rsi_dbg(MGMT_TX_ZONE,
- 		"%s: Sending scan req frame\n", __func__);
- 
--	if (common->band == IEEE80211_BAND_5GHZ) {
--		if ((channel >= 36) && (channel <= 64))
--			channel = ((channel - 32) / 4);
--		else if ((channel > 64) && (channel <= 140))
--			channel = ((channel - 102) / 4) + 8;
--		else if (channel >= 149)
--			channel = ((channel - 151) / 4) + 18;
--		else
--			return -EINVAL;
--	} else {
--		if (channel > 14) {
--			rsi_dbg(ERR_ZONE, "%s: Invalid chno %d, band = %d\n",
--				__func__, channel, common->band);
--			return -EINVAL;
--		}
--	}
--
- 	skb = dev_alloc_skb(FRAME_DESC_SZ);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
-@@ -885,6 +868,7 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
- 					       (RSI_RF_TYPE << 4));
- 
- 	mgmt_frame->desc_word[5] = cpu_to_le16(0x01);
-+	mgmt_frame->desc_word[6] = cpu_to_le16(0x12);
- 
- 	if (common->channel_width == BW_40MHZ)
- 		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
+Me neither.
+
+> You want me to make a different define for this that duplicates
+> the '60' value?  At least with my method above, we should get compile
+> errors if the values ever diverge in the two files.
+
+There should be only one define. Somewhere (forgot where) Michal
+suggested hw.h, I think this define would be a good candidate to move
+there too.
+
+>>> +struct ath10k_tlv_dump_data {
+>>> +       u32 type; /* see ath10k_fw_error_dump_type above */
+>>> +       u32 tlv_len; /* in bytes */
+>>> +       u8 tlv_data[]; /* Pad to 32-bit boundaries as needed. */
+>>> +} __packed;
+>>> +
+>>> +struct ath10k_dump_file_data {
+>>> +       u32 len;
+>>> +       u32 magic; /* 0x01020304, tells us byte-order of host if we care */
+>>> +       struct ath10k_tlv_dump_data data; /* more may follow */
+>>> +} __packed;
+>>> +
+>>> +/* This will store at least the last 128 entries. */
+>>> +#define ATH10K_DBGLOG_DATA_LEN (128 * 7 * 4)
+>> 
+>> Where does the 7 and 4 come from? Can't we use sizeof() to compute this?
+>
+> It is from the guts of how the firmware does debug logs.
+>
+> Each entry is a max of 7 32-bit integers in length.
+>
+>> The 128 should probably be a separate #define?
+>
+> I don't see why...
+
+To make the code more readable.
+
+> dbglog messages are variable number of 32-bit integers in length, so
+> the 128 is fairly arbitrary.
+
+A person should immeaditely understand where the numbers are coming from
+and not start googling about it. The minimum is to put your description
+above to the comment. And it would be clearer to replace 4 with
+sizeof(u32).
+
 -- 
-1.7.1
-
+Kalle Valo
