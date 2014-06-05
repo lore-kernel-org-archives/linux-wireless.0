@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:62591 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964AbaFEQEn (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:46914 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbaFEGNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 12:04:43 -0400
-Received: by mail-ve0-f176.google.com with SMTP id jz11so1459261veb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 09:04:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
-References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com>
- <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com>
- <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Thu, 5 Jun 2014 09:04:22 -0700
-Message-ID: <CALCETrUQxF68b86POMfAurBcR0bZbXc8NmhXopksWh3nojeauA@mail.gmail.com> (sfid-20140605_180452_589433_0A41B03A)
-Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 5 Jun 2014 02:13:24 -0400
+Received: by mail-we0-f172.google.com with SMTP id k48so510324wev.17
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 23:13:22 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2] mac80211: allow tx via monitor iface when DFS
+Date: Thu,  5 Jun 2014 08:12:57 +0200
+Message-Id: <1401948777-3262-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140605_081328_015751_F0990FD2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 5, 2014 at 3:26 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Andy Lutomirski <luto@amacapital.net> writes:
->
->> On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> +ath10k@lists.infradead.org
->>>
->>> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
->>>> It dies with 'otp calibration failed: 2'.
->>>>
->>>> Some older version of the driver seemed to work fine.
->>>
->>> ath10k did not verify otp result before so it could load successfully
->>> despite errors.
->>>
->>> Someone raised this problem yesterday on IRC. I'm not really sure how
->>> we should deal with this properly.
->>
->> Ideally, someone from Atheros could figure out what the error is.
->
-> Michal already did. The error means that for some reason the
-> calibaration data was not found from OTP. OTP is the storage area where
-> the calibration data is normally stored within QCA9880.
+Allow send frames using monitor interface
+when DFS chandef and we pass CAC (beaconing
+allowed).
 
-Ah -- I misunderstood.  I assumed that the OTP read was failing
-mysteriously and that expert input was needed to resolve that mystery
-:)
+This fix problem when old kernel and new backports used,
+in such case hostapd create/use also monitor interface.
+Before this patch all frames hostapd send using monitor
+iface were dropped when AP was configured on DFS channel.
 
->
->> Barring that, the card seems to work okay without otp (I don't even
->> know what otp is), so just warning and continuing to load might be
->> better than bailing.
->
-> This means that your card is not properly calibrated and it doesn't
-> function in an optimal way (for example range or throughput is less than
-> what it could be).
->
-> Do you see that with all Archer C7 v2 devices or with just one? One
-> possibility is that the calibration data is actually stored outside of
-> QCA9880 board, for example in the host flash or similar. I don't have
-> that AP, can someone else see where the calibration data is stored?
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/mac80211/tx.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-I only have one of these.  I put a likely looking directory of the GPL
-sources here:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5214686..43d1e5c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1618,12 +1618,12 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_channel *chan;
+ 	struct ieee80211_radiotap_header *prthdr =
+ 		(struct ieee80211_radiotap_header *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
++	struct cfg80211_chan_def *chandef;
+ 	u16 len_rthdr;
+ 	int hdrlen;
+ 
+@@ -1721,9 +1721,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	}
+ 
+ 	if (chanctx_conf)
+-		chan = chanctx_conf->def.chan;
++		chandef = &chanctx_conf->def;
+ 	else if (!local->use_chanctx)
+-		chan = local->_oper_chandef.chan;
++		chandef = &local->_oper_chandef;
+ 	else
+ 		goto fail_rcu;
+ 
+@@ -1743,10 +1743,11 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * radar detection by itself. We can do that later by adding a
+ 	 * monitor flag interfaces used for AP support.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
++	if (!cfg80211_reg_can_beacon(local->hw.wiphy, chandef,
++				     sdata->vif.type))
+ 		goto fail_rcu;
+ 
+-	ieee80211_xmit(sdata, skb, chan->band);
++	ieee80211_xmit(sdata, skb, chandef->chan->band);
+ 	rcu_read_unlock();
+ 
+ 	return NETDEV_TX_OK;
+-- 
+1.7.9.5
 
-http://web.mit.edu/luto/www/archerc7_gpl/atheros/
-
-I'm not entirely sure what I'm looking for, but this might be it:
-
-http://web.mit.edu/luto/www/archerc7_gpl/atheros/otp.c
-
-I don't really know what I'm looking for, though.
-
---Andy
