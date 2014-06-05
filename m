@@ -1,117 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:50503 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751035AbaF1HXc (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:33697 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbaFENDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 03:23:32 -0400
-Date: Sat, 28 Jun 2014 10:23:23 +0300
-From: Tony Lindgren <tony@atomide.com>
-To: James Cameron <quozl@laptop.org>
-Cc: Andreas Fenkart <afenkart@gmail.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	devicetree@vger.kernel.org, Daniel Mack <daniel@zonque.org>
-Subject: Re: mwifiex card reset
-Message-ID: <20140628072322.GC7410@atomide.com> (sfid-20140628_092345_384247_8A7E7035)
-References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
- <20140628052220.GG10407@us.netrek.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140628052220.GG10407@us.netrek.org>
+	Thu, 5 Jun 2014 09:03:54 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hi2so9667192wib.2
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 06:03:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v8 0/5] cfg/mac80211: implement multi-vif csa
+Date: Thu,  5 Jun 2014 14:56:15 +0200
+Message-Id: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com> (sfid-20140605_150358_067955_A30BBF68)
+In-Reply-To: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* James Cameron <quozl@laptop.org> [140628 08:24]:
-> On Fri, Jun 27, 2014 at 04:39:42PM +0200, Andreas Fenkart wrote:
-> > I have an mwifiex module(sd8787) behind omap_hsmmc(am33xx-soc)
-> > The module is non-removable wired fix to soc. Now the wifi module
-> > needs 2 clocks; one is a sleep clock the other used when not
-> > sleeping.
-> > While the sleep clock is fixed, @32 kHz, the system clock can be
-> > one out of several values, but can be be derived automatically
-> > from the sleep clock. But this requires the clock to be present
-> > when the wifi module comes out of reset.
-> > 
-> > Another problem is software reboot, at initial power on the wifi
-> > card will react to mmc discovery. After a software reset of the
-> > host it will not, because it has already been disvovered and
-> > didn't notice the host rebooted, unless we reset it as well.
-> > While this seems obvious, the problem is that the reset is needed
-> > before the card can be discovered. Which means we cannot move the
-> > reset logic into the mwifiex driver, since that driver has not
-> > yet been selected through vendor/product id.
-> > 
-> 
-> we had same problem with sd8787 and a different system design.  we
-> added reset-gpios property [1] and used it in sdhci-pxav3.c [2] as
-> sdhci_pxav3_toggle_reset_gpio()
-> 
-> 1.
-> 
-> http://code.coreboot.org/p/openfirmware/source/tree/HEAD/cpu/arm/olpc/sdhci.fth#L104
-> 
-> 2.
-> 
-> http://dev.laptop.org/git/olpc-kernel/tree/drivers/mmc/host/sdhci-pxav3.c?h=arm-3.5#n229
-> 
-> > the reset logic:
-> >         gpiod_set_value(card->gpiod_reset, 0);
-> >         clk_enable(card->sleep_clock);
-> >         udelay(1000);
-> >         gpiod_set_value(card->gpiod_reset, 1);
-> > 
-> > The idea so far was to extend the device-tree node of the
-> > mmc slot by some reset leafs;
-> > 
-> > &mmc {
-> >         ti,non-removable;
-> >         ..
-> >         peripheral-clocks = <&clk &clk2 ...>;
-> >         peripheral-reset-gpios = <&gpio0 1 1 &gpio1 2 3 ...>;
-> > }
-> > 
-> > in mmc_add_host, all clocks will be enabled and gpios be pulled
-> > low for 1 msec
-> 
-> we used 5ms.
-> 
-> > Is this a feasible solution?
-> > 
-> > 
-> > Another related issue, is the card reset in mwifiex driver:
-> > 
-> > static void sdio_card_reset_worker(struct work_struct *work)
-> > {
-> >         struct mmc_host *target = reset_host;
-> > 
-> >         pr_err("Resetting card...\n");
-> >         mmc_remove_host(target);
-> >         /* 20ms delay is based on experiment with sdhci controller */
-> >         mdelay(20);
-> >         mmc_add_host(target);
-> > }
-> > static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
-> > 
-> > There are obviously a lot of problems with this, e.g. custom debugfs
-> > entries created in the driver will be lost. But sometimes this
-> > code might avert disaster in case the command handlers between
-> > driver and firmware lost synchronization
-> > 
-> > How could this be done in a better way?
-> 
-> i'm interested as well.
+Hi,
 
-Wouldn't it be best to have the mwifiex properly handle the
-reset GPIOs and idle status pins?
+I am sooo getting used to re-spinning :-)
 
-Those are not part of the SDIO spec AFAIK, and the mmc
-controller should not need to care about those.
+Hopefully I won't need to respin 42 times.
 
-Also, at least omaps also have an issue where suspend won't
-work with mwifiex loaded FYI.
 
-Regards,
+v8:
+ * a lot of updates, see patch notes
 
-Tony
+Michal Kazior (5):
+  mac80211: implement multi-vif in-place reservations
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  cfg80211: remove channel_switch combination check
+
+ include/net/cfg80211.h     |   7 +-
+ include/net/mac80211.h     |   7 -
+ net/mac80211/cfg.c         |  82 +++--
+ net/mac80211/chan.c        | 727 ++++++++++++++++++++++++++++++++++++---------
+ net/mac80211/ieee80211_i.h |  30 +-
+ net/mac80211/mlme.c        |  99 +++---
+ net/mac80211/util.c        |  44 ++-
+ net/wireless/nl80211.c     |  11 -
+ 8 files changed, 771 insertions(+), 236 deletions(-)
+
+-- 
+1.8.5.3
+
