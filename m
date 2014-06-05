@@ -1,85 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8005 "EHLO
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49889 "EHLO
 	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbaFKKr7 (ORCPT
+	with ESMTP id S1751783AbaFEKvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:47:59 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 00/28] ath9k: Multi-channel concurrency support
-Date: Wed, 11 Jun 2014 16:17:48 +0530
-Message-ID: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124804_963165_07F4C543)
+	Thu, 5 Jun 2014 06:51:49 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com>
+	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>
+	<538CA904.4000508@candelatech.com>
+	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
+	<538CB782.1000509@candelatech.com>
+Date: Thu, 5 Jun 2014 13:51:43 +0300
+In-Reply-To: <538CB782.1000509@candelatech.com> (Ben Greear's message of "Mon,
+	2 Jun 2014 10:42:26 -0700")
+Message-ID: <87k38vpr28.fsf@kamboji.qca.qualcomm.com> (sfid-20140605_125154_952594_30D19DE7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Hi,
 
-The below patches add multi channel concurrency support in two diffent
-channel context. This support can be enabled by modparam "use_chanctx".
-As DFS and WDS are not supported in channel context, this feature
-is limited modparam.
+sorry for jumping in late, I get too much email as usual :/
 
-Thanks Felix for his initial prototype changes and this work is based
-on Felix's initial patches for MCC.
+Ben Greear <greearb@candelatech.com> writes:
 
--Rajkumar
+> [Good stuff snipped, adding linux-wireless as this is a more
+> general issue if we are going to consider general framework]
+>
+>
+> Maybe we should start with goals before getting to implementation
+> details.  Here's my wish list that is ath10k specific, but probably
+> similar to other firmware users:
+>
+> 1)  We need the firmware crash text currently printed to
+> /var/log/messages.
+>
+> 2)  It would be nice to get the firmware RAM and stack dumps at time of
+> crash to debug more interesting crashes.
+>
+> 3)  It would be nice to know about firmware debug messages for
+> the period of time directly before the crash (maybe 2-5 minutes?)
+>
+> 4)  It would be nice to have this interleaved with kernel, supplicant,
+> and related logs.
 
-Felix Fietkau (22):
-  ath9k: Add channel context structure
-  ath9k: Move txpower limit to channel context
-  ath9k: Move acq to channel context
-  ath9k: Add channel context worker thread
-  ath9k: channel context based transmission
-  ath9k: send powersave frame on channel switch
-  ath9k: Implement hw_scan support
-  ath9k: Implement remain-on-channal support
-  ath9k: Implement channel context ops
-  ath9k: Move caldata into channel context
-  ath9k: Add ATH_OP_MULTI_CHANNEL
-  ath9k: save tsf in channel context
-  ath9k: switch channel context for beaconing
-  ath9k: Add p2p go NoA attribute
-  ath9k: switch channel after sending beacon
-  ath9k: Adjust AP beacon tsf based on station context
-  ath9k: Implement mgd_prepare_tx
-  ath9k: Add multi-channel scheduling support
-  ath9k: Add periodic NoA support
-  ath9k: Handle beacon miss on multi channel context
-  ath9k: Update channel switch timer
-  ath9k: Add recovery mechanism for hw TSF timer
+I would add:
 
-Rajkumar Manoharan (6):
-  ath9k: Fetch appropriate operating channel context
-  ath9k: Move beacon config to channel context
-  ath9k: Summarize hw state per channel context
-  ath9k: Store current offchannel duration
-  ath9k: use separate HW queue for each channel context
-  ath9k: Advertise multichannel support
+5) A generic user space interface so that the same user space tool can
+   store firmware crash dumps from all wireless drivers and no need to
+   reinvent the wheel.
 
- drivers/net/wireless/ath/ath.h           |   1 +
- drivers/net/wireless/ath/ath9k/Makefile  |   3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h   | 159 +++++-
- drivers/net/wireless/ath/ath9k/beacon.c  |  97 +++-
- drivers/net/wireless/ath/ath9k/channel.c | 685 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/debug.c   |  28 +-
- drivers/net/wireless/ath/ath9k/hw.c      |  23 +-
- drivers/net/wireless/ath/ath9k/hw.h      |   1 +
- drivers/net/wireless/ath/ath9k/init.c    |  55 +-
- drivers/net/wireless/ath/ath9k/link.c    |   6 +-
- drivers/net/wireless/ath/ath9k/main.c    | 892 ++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/mci.c     |   4 +-
- drivers/net/wireless/ath/ath9k/pci.c     |   1 +
- drivers/net/wireless/ath/ath9k/recv.c    |  16 +-
- drivers/net/wireless/ath/ath9k/tx99.c    |   2 +-
- drivers/net/wireless/ath/ath9k/wow.c     |   1 +
- drivers/net/wireless/ath/ath9k/xmit.c    | 114 +++-
- 17 files changed, 1743 insertions(+), 345 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/channel.c
+> If we are storing crashes for something like ethtool to report, we need
+> RAM and/or disk storage so the firmware RAM dumps and such can be stored until
+> the user and/or automated tools ask for them.  We need some way to automatically
+> clean up old crashes so disk/ram is not overly utilized.  For APs,
+> they are low on both RAM and 'disk', so storing crash logs for any
+> length of time may be problematic.
+
+I think most, if not all, wireless drivers store the firmware binary in
+RAM forever. I'm having hard time to believe that storing one instance
+(the latest one) of firmware crash dump would make any difference.
+That's why I'm not worried about RAM usage.
 
 -- 
-2.0.0
-
+Kalle Valo
