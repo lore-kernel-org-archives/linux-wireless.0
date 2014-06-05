@@ -1,214 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60967 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263AbaFQJkz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3267 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbaFEK7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:40:55 -0400
-Subject: [PATCH 1/6] ath6kl: convert ar6004 hardware flags to firmware feature
- flags
-To: ath6kl@lists.infradead.org
+	Thu, 5 Jun 2014 06:59:10 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Jun 2014 12:40:52 +0300
-Message-ID: <20140617094052.22040.84064.stgit@potku.adurom.net> (sfid-20140617_114058_195969_CE1757BF)
-In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+To: Ben Greear <greearb@candelatech.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com>
+	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>
+	<538CA904.4000508@candelatech.com>
+	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
+	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
+	<538CC949.5020901@candelatech.com>
+Date: Thu, 5 Jun 2014 13:58:49 +0300
+In-Reply-To: <538CC949.5020901@candelatech.com> (Ben Greear's message of "Mon,
+	2 Jun 2014 11:58:17 -0700")
+Message-ID: <87fvjjpqqe.fsf@kamboji.qca.qualcomm.com> (sfid-20140605_125914_109229_6D2E9632)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functionality defined through these flags were actually firmware features
-which can change between firmware versions. To make it possible to support
-different firmware versions with the same driver, convert the flags to firmware
-feature flags.
+Ben Greear <greearb@candelatech.com> writes:
 
-For backwards compatibility support for old ar6004 firmware FW
-API 3 or smaller images we forcefully set the feature bits in the driver.
-Starting from FW API 5 the firmware image needs to set them.
+> I am not sure this is really the case currently.  But, once the
+> blob is generated and stored in RAM, it would be easily enough to
+> add ethtool option to dump it w/out debugfs support.  This will
+> still not really address my concerns because it may take a year
+> or two for the latest ethtool binary to make it to normal-ish users.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
- drivers/net/wireless/ath/ath6kl/core.c     |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |   12 +++++++++---
- drivers/net/wireless/ath/ath6kl/init.c     |   16 +++++++---------
- drivers/net/wireless/ath/ath6kl/usb.c      |    6 ++++--
- drivers/net/wireless/ath/ath6kl/wmi.c      |    3 ++-
- 6 files changed, 42 insertions(+), 17 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0e26f4a34fda..d139f2a7160a 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2899,7 +2899,8 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (info->inactivity_timeout) {
- 		inactivity_timeout = info->inactivity_timeout;
- 
--		if (ar->hw.flags & ATH6KL_HW_AP_INACTIVITY_MINS)
-+		if (test_bit(ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
-+			     ar->fw_capabilities))
- 			inactivity_timeout = DIV_ROUND_UP(inactivity_timeout,
- 							  60);
- 
-@@ -3782,7 +3783,8 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 		ath6kl_band_5ghz.ht_cap.ht_supported = false;
- 	}
- 
--	if (ar->hw.flags & ATH6KL_HW_64BIT_RATES) {
-+	if (test_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
-+		     ar->fw_capabilities)) {
- 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[0] = 0xff;
- 		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
- 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[1] = 0xff;
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index b0b652042760..0df74b245af4 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -123,6 +123,22 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- 
- 	/* FIXME: we should free all firmwares in the error cases below */
- 
-+	/*
-+	 * Backwards compatibility support for older ar6004 firmware images
-+	 * which do not set these feature flags.
-+	 */
-+	if (ar->target_type == TARGET_TYPE_AR6004 &&
-+	    ar->fw_api <= 4) {
-+		__set_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
-+			  ar->fw_capabilities);
-+		__set_bit(ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
-+			  ar->fw_capabilities);
-+
-+		if (ar->hw.id == AR6004_HW_1_3_VERSION)
-+			__set_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
-+				  ar->fw_capabilities);
-+	}
-+
- 	/* Indicate that WMI is enabled (although not ready yet) */
- 	set_bit(WMI_ENABLED, &ar->flag);
- 	ar->wmi = ath6kl_wmi_init(ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 26b0f92424e1..bd91c4465580 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -136,6 +136,15 @@ enum ath6kl_fw_capability {
- 	 */
- 	ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL,
- 
-+	/* WMI_SET_TX_SELECT_RATES_CMDID uses 64 bit size rate table */
-+	ATH6KL_FW_CAPABILITY_64BIT_RATES,
-+
-+	/* WMI_AP_CONN_INACT_CMDID uses minutes as units */
-+	ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
-+
-+	/* use low priority endpoint for all data */
-+	ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-@@ -149,9 +158,6 @@ struct ath6kl_fw_ie {
- };
- 
- enum ath6kl_hw_flags {
--	ATH6KL_HW_64BIT_RATES		= BIT(0),
--	ATH6KL_HW_AP_INACTIVITY_MINS	= BIT(1),
--	ATH6KL_HW_MAP_LP_ENDPOINT	= BIT(2),
- 	ATH6KL_HW_SDIO_CRC_ERROR_WAR	= BIT(3),
- };
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index d5ef211f261c..c2ec36ab8121 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -93,8 +93,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.board_addr			= 0x433900,
- 		.refclk_hz			= 26000000,
- 		.uarttx_pin			= 11,
--		.flags				= ATH6KL_HW_64BIT_RATES |
--						  ATH6KL_HW_AP_INACTIVITY_MINS,
-+		.flags				= 0,
- 
- 		.fw = {
- 			.dir		= AR6004_HW_1_0_FW_DIR,
-@@ -114,8 +113,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.board_addr			= 0x43d400,
- 		.refclk_hz			= 40000000,
- 		.uarttx_pin			= 11,
--		.flags				= ATH6KL_HW_64BIT_RATES |
--						  ATH6KL_HW_AP_INACTIVITY_MINS,
-+		.flags				= 0,
- 		.fw = {
- 			.dir		= AR6004_HW_1_1_FW_DIR,
- 			.fw		= AR6004_HW_1_1_FIRMWARE_FILE,
-@@ -134,8 +132,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.board_addr			= 0x435c00,
- 		.refclk_hz			= 40000000,
- 		.uarttx_pin			= 11,
--		.flags				= ATH6KL_HW_64BIT_RATES |
--						  ATH6KL_HW_AP_INACTIVITY_MINS,
-+		.flags				= 0,
- 
- 		.fw = {
- 			.dir		= AR6004_HW_1_2_FW_DIR,
-@@ -154,9 +151,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.board_addr			= 0x436400,
- 		.refclk_hz                      = 40000000,
- 		.uarttx_pin                     = 11,
--		.flags				= ATH6KL_HW_64BIT_RATES |
--						  ATH6KL_HW_AP_INACTIVITY_MINS |
--						  ATH6KL_HW_MAP_LP_ENDPOINT,
-+		.flags				= 0,
- 
- 		.fw = {
- 			.dir            = AR6004_HW_1_3_FW_DIR,
-@@ -1567,6 +1562,9 @@ static const struct fw_capa_str_map {
- 	{ ATH6KL_FW_CAPABILITY_REGDOMAIN, "regdomain" },
- 	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_V2, "sched-scan-v2" },
- 	{ ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL, "hb-poll" },
-+	{ ATH6KL_FW_CAPABILITY_64BIT_RATES, "64bit-rates" },
-+	{ ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS, "ap-inactivity-mins" },
-+	{ ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT, "map-lp-endpoint" },
- };
- 
- static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index 3afc5a463d06..e5a9e7fe2cea 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -802,7 +802,8 @@ static int ath6kl_usb_map_service_pipe(struct ath6kl *ar, u16 svc_id,
- 		break;
- 	case WMI_DATA_VI_SVC:
- 
--		if (ar->hw.flags & ATH6KL_HW_MAP_LP_ENDPOINT)
-+		if (test_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
-+			     ar->fw_capabilities))
- 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_LP;
- 		else
- 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_MP;
-@@ -814,7 +815,8 @@ static int ath6kl_usb_map_service_pipe(struct ath6kl *ar, u16 svc_id,
- 		break;
- 	case WMI_DATA_VO_SVC:
- 
--		if (ar->hw.flags & ATH6KL_HW_MAP_LP_ENDPOINT)
-+		if (test_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
-+			     ar->fw_capabilities))
- 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_LP;
- 		else
- 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_MP;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 4d7f9e4712e9..6ecc0a419c1a 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2838,7 +2838,8 @@ int ath6kl_wmi_set_bitrate_mask(struct wmi *wmi, u8 if_idx,
- {
- 	struct ath6kl *ar = wmi->parent_dev;
- 
--	if (ar->hw.flags & ATH6KL_HW_64BIT_RATES)
-+	if (test_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
-+		     ar->fw_capabilities))
- 		return ath6kl_set_bitrate_mask64(wmi, if_idx, mask);
- 	else
- 		return ath6kl_set_bitrate_mask32(wmi, if_idx, mask);
+> I think ethtool would not be overly hard to implement...basic framework is already
+> in the wifi stack.
 
+Few weeks back John Linville sent ethtool related patches to support
+something like this. Did you notice that?
+
+-- 
+Kalle Valo
