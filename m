@@ -1,96 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:52437 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781AbaFNNxY (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34539 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbaFEPtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:53:24 -0400
-Received: by mail-pb0-f44.google.com with SMTP id md12so2171916pbc.31
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:53:24 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id is5sm9029986pbb.8.2014.06.14.06.53.22
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:53:23 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/16] rsi: Changed the SDIO interrupt variables and some clean up.
-Date: Sat, 14 Jun 2014 19:23:15 +0530
-Message-Id: <1402753995-14133-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155329_169154_016868F5)
+	Thu, 5 Jun 2014 11:49:10 -0400
+Message-ID: <53909175.30009@candelatech.com> (sfid-20140605_174919_306848_F9E70519)
+Date: Thu, 05 Jun 2014 08:49:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC 1/4] ath10k: provide firmware crash info via debugfs.
+References: <1401812719-25061-1-git-send-email-greearb@candelatech.com> <CA+BoTQnvAzCHvKwib39dOZnN6SEyNG_=U9Jgx5arM819dUoMYw@mail.gmail.com> <538F4DEE.6040405@candelatech.com> <8738fjppba.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <8738fjppba.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed the SDIO interrupt variables and some clean ups.
+On 06/05/2014 04:29 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> On 06/04/2014 02:04 AM, Michal Kazior wrote:
+>>> On 3 June 2014 18:25,  <greearb@candelatech.com> wrote:
+>>>
+>>>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>>>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>>>> @@ -41,6 +41,8 @@
+>>>>  #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
+>>>>  #define ATH10K_NUM_CHANS 38
+>>>>
+>>>> +#define REG_DUMP_COUNT_QCA988X 60 /* from pci.h */
+>>>
+>>> I don't like this.
+> 
+> Me neither.
+> 
+>> You want me to make a different define for this that duplicates
+>> the '60' value?  At least with my method above, we should get compile
+>> errors if the values ever diverge in the two files.
+> 
+> There should be only one define. Somewhere (forgot where) Michal
+> suggested hw.h, I think this define would be a good candidate to move
+> there too.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +++++---
- drivers/net/wireless/rsi/rsi_sdio.h         |    8 ++++----
- 2 files changed, 9 insertions(+), 7 deletions(-)
+Ok, I'll move it to hw.h
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 20d11cc..4834a9a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -401,14 +401,16 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 			case BUFFER_AVAILABLE:
- 				dev->rx_info.watch_bufferfull_count = 0;
- 				dev->rx_info.buffer_full = false;
-+				dev->rx_info.semi_buffer_full = false;
- 				dev->rx_info.mgmt_buffer_full = false;
- 				rsi_sdio_ack_intr(common->priv,
- 						  (1 << PKT_BUFF_AVAILABLE));
--				rsi_set_event((&common->tx_thread.event));
-+				rsi_set_event(&common->tx_thread.event);
-+
- 				rsi_dbg(ISR_ZONE,
--					"%s: ==> BUFFER_AVILABLE <==\n",
-+					"%s: ==> BUFFER_AVAILABLE <==\n",
- 					__func__);
--				dev->rx_info.buf_avilable_counter++;
-+				dev->rx_info.buf_available_counter++;
- 				break;
- 
- 			case FIRMWARE_ASSERT_IND:
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index df4b5e2..c7e8f2b 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -30,7 +30,7 @@
- 
- enum sdio_interrupt_type {
- 	BUFFER_FULL         = 0x0,
--	BUFFER_AVAILABLE    = 0x1,
-+	BUFFER_AVAILABLE    = 0x2,
- 	FIRMWARE_ASSERT_IND = 0x3,
- 	MSDU_PACKET_PENDING = 0x4,
- 	UNKNOWN_INT         = 0XE
-@@ -42,7 +42,7 @@ enum sdio_interrupt_type {
- #define PKT_MGMT_BUFF_FULL                      2
- #define MSDU_PKT_PENDING                        3
- /* Interrupt Bit Related Macros */
--#define PKT_BUFF_AVAILABLE                      0
-+#define PKT_BUFF_AVAILABLE                      1
- #define FW_ASSERT_IND                           2
- 
- #define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
-@@ -84,7 +84,7 @@ enum sdio_interrupt_type {
- #define TA_HOLD_THREAD_VALUE         cpu_to_le32(0xF)
- #define TA_RELEASE_THREAD_VALUE      cpu_to_le32(0xF)
- #define TA_BASE_ADDR                 0x2200
--#define MISC_CFG_BASE_ADDR           0x4150
-+#define MISC_CFG_BASE_ADDR           0x4105
- 
- struct receive_info {
- 	bool buffer_full;
-@@ -98,7 +98,7 @@ struct receive_info {
- 	u32 total_sdio_msdu_pending_intr;
- 	u32 total_sdio_unknown_intr;
- 	u32 buf_full_counter;
--	u32 buf_avilable_counter;
-+	u32 buf_available_counter;
- };
- 
- struct rsi_91x_sdiodev {
+>>>> +/* This will store at least the last 128 entries. */
+>>>> +#define ATH10K_DBGLOG_DATA_LEN (128 * 7 * 4)
+>>>
+>>> Where does the 7 and 4 come from? Can't we use sizeof() to compute this?
+>>
+>> It is from the guts of how the firmware does debug logs.
+>>
+>> Each entry is a max of 7 32-bit integers in length.
+>>
+>>> The 128 should probably be a separate #define?
+>>
+>> I don't see why...
+> 
+> To make the code more readable.
+> 
+>> dbglog messages are variable number of 32-bit integers in length, so
+>> the 128 is fairly arbitrary.
+> 
+> A person should immeaditely understand where the numbers are coming from
+> and not start googling about it. The minimum is to put your description
+> above to the comment. And it would be clearer to replace 4 with
+> sizeof(u32).
+
+Would the comments I put in the PATCH 1/4 combined with the sizeof(4)
+be sufficient, or do you want actual defines?  To really understand
+this code you need details from how the firmware encodes the messages.
+I would rather a QCA person add that info just in case it is considered
+protected info...
+
+Thanks,
+Ben
+
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
