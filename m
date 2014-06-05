@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:46664 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032AbaF1W4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:37 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so6597831wgg.8
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:36 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from mga09.intel.com ([134.134.136.24]:31025 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750853AbaFEQ3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2014 12:29:45 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 8/8] staging: vt6656: device_init_registers move out vnt_set_bss_mode
-Date: Sat, 28 Jun 2014 23:55:46 +0100
-Message-Id: <1403996146-4082-8-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005641_723503_D10FDD90)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] mac80211: don't stop all queues when flushing
+Date: Thu,  5 Jun 2014 19:26:05 +0300
+Message-Id: <1401985567-27336-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140605_182948_422755_5F5B7445)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move to vnt_add_interface and allow to refresh at the start
-of every software scan in vnt_sw_scan_start
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+There is no need to stop all queues when we want to flush specific
+queues, so stop only the queues that will be flushed.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/main_usb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/util.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index e0ed1bb..14845ec 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -438,7 +438,6 @@ static int device_init_registers(struct vnt_private *pDevice)
- 		pDevice->bShortSlotTime = false;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 6886601..6d29e40 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -551,12 +551,12 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 		queues = BIT(local->hw.queues) - 1;
+ 	}
  
- 	BBvSetShortSlotTime(pDevice);
--	vnt_set_bss_mode(pDevice);
+-	ieee80211_stop_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
++	ieee80211_stop_queues_by_reason(&local->hw, queues,
+ 					IEEE80211_QUEUE_STOP_REASON_FLUSH);
  
- 	pDevice->byRadioCtl = pDevice->abyEEPROM[EEP_OFS_RADIOCTL];
- 	pDevice->bHWRadioOff = false;
-@@ -749,6 +748,8 @@ static int vnt_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	drv_flush(local, sdata, queues, false);
  
- 	priv->op_mode = vif->type;
- 
-+	vnt_set_bss_mode(priv);
-+
- 	/* LED blink on TX */
- 	vnt_mac_set_led(priv, LEDSTS_STS, LEDSTS_INTER);
- 
-@@ -992,6 +993,7 @@ static void vnt_sw_scan_start(struct ieee80211_hw *hw)
- {
- 	struct vnt_private *priv = hw->priv;
- 
-+	vnt_set_bss_mode(priv);
- 	/* Set max sensitivity*/
- 	BBvUpdatePreEDThreshold(priv, true);
+-	ieee80211_wake_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
++	ieee80211_wake_queues_by_reason(&local->hw, queues,
+ 					IEEE80211_QUEUE_STOP_REASON_FLUSH);
  }
+ 
 -- 
 1.9.1
 
