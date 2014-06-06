@@ -1,152 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45552 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072AbaFFTIt (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:60652 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbaFFGoO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 15:08:49 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 3/4] ath10k:  save firmware stack upon firmware crash.
-Date: Fri,  6 Jun 2014 12:08:42 -0700
-Message-Id: <1402081723-30040-3-git-send-email-greearb@candelatech.com> (sfid-20140606_210913_904510_A6DD612C)
-In-Reply-To: <1402081723-30040-1-git-send-email-greearb@candelatech.com>
-References: <1402081723-30040-1-git-send-email-greearb@candelatech.com>
+	Fri, 6 Jun 2014 02:44:14 -0400
+Received: by mail-we0-f179.google.com with SMTP id q59so2345348wes.10
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 23:44:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1402036258.2004.10.camel@dubbel>
+References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
+	<CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
+	<1402036258.2004.10.camel@dubbel>
+Date: Fri, 6 Jun 2014 08:44:12 +0200
+Message-ID: <CA+BoTQ=wZV8dviGE8HAFC1j=XNqJDkxUaHV5HFkiLMs2arCVHQ@mail.gmail.com> (sfid-20140606_084418_042564_FC2E4637)
+Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
+ during channel switch
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 6 June 2014 08:31, Coelho, Luciano <luciano.coelho@intel.com> wrote:
+> On Fri, 2014-06-06 at 07:51 +0200, Michal Kazior wrote:
+>> On 5 June 2014 18:26, Emmanuel Grumbach <emmanuel.grumbach@intel.com> wrote:
+[...]
+>> > @@ -3146,9 +3145,8 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+>> >         cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+>> >
+>> >         if (!ieee80211_csa_needs_block_tx(local))
+>> > -               ieee80211_wake_queues_by_reason(&local->hw,
+>> > -                                       IEEE80211_MAX_QUEUE_MAP,
+>> > -                                       IEEE80211_QUEUE_STOP_REASON_CSA);
+>> > +               ieee80211_wake_vif_queues(local, sdata,
+>> > +                                         IEEE80211_QUEUE_STOP_REASON_CSA);
+>>
+>> I don't think this is going to work with the upcomming multi-vif
+>> channel switching.
+>>
+>> The ieee80211_csa_needs_block_tx() will become false upon *last*
+>> interface switch completion. This means preceeding interface csa
+>> finalizations won't call ieee80211_wake_vif_queues() so you actually
+>> end up not waking all of the queues when you finish csa.
+>
+> I think the right way to do it would be to traverse the vifs that
+> switched and wake up their queues when the switch is finished.
+>
+>
+>> I think this can be solved with:
+>>
+>>  if (!ieee80211_csa_needs_block_tx(local))
+>>    list_for_each(sdata, &local->interfaces, list)
+>>      ieee80211_wake_vif_queues(local, sdata, REASON_CSA);
+>>
+>> But then I guess it's just a convoluted way of saying:
+>>
+>>  if (!ieee80211_csa_needs_block_tx(local))
+>>    ieee80211_wake_queues_by_reason(hw, REASON_CSA);
+>>
+>> IOW waking should remain as it was while stopping can be done per-vif.
+>>
+>> This goes for all instances calling wake_vif_queues() in the patch.
+>
+> Actually I had it like this in my first version, I had only added the
+> stop part, leaving the wake as it was.  But then I thought that we would
+> be restarting queues from other vifs that we don't know about.  If
+> another vif is switching separately, we would restart its queues at the
+> wrong time.  I think we shouldn't assume that all vifs are part of the
+> same switch.
 
-Should help debug firmware crashes, and give users a way
-to provide some useful debug reports to firmware developers.
+Well, not really.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |  2 ++
- drivers/net/wireless/ath/ath10k/debug.c |  9 ++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |  1 +
- drivers/net/wireless/ath/ath10k/pci.c   | 39 +++++++++++++++++++++++++++++++++
- 4 files changed, 51 insertions(+)
+There is no "vif switching separately" when it comes to block_tx. The
+condition checks if ANY interface still needs queues to be locked for
+the *REASON_CSA*. If the condition is false (i.e. "no interface needs
+block_tx") then you are safe to wake *all* queues for *REASON_CSA* on
+all interfaces because channel switches that don't need block_tx don't
+stop their queues for REASON_CSA in the first place.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index a86a5f9..ea91847 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -346,6 +346,7 @@ enum ath10k_dev_flags {
- enum ath10k_fw_error_dump_type {
- 	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
- 	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
-+	ATH10K_FW_ERROR_DUMP_STACK = 2,
- 
- 	ATH10K_FW_ERROR_DUMP_MAX,
- };
-@@ -558,6 +559,7 @@ struct ath10k {
- 	bool crashed_since_read;
- 	struct ath10k_dbglog_entry_storage dbglog_entry_data;
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
-+	unsigned char stack_buf[ATH10K_FW_STACK_SIZE];
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
- 	struct ath10k_debug debug;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 6da7e3c..837ca17 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -619,6 +619,7 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len = hdr_len;
- 	len += sizeof(*dump_tlv) + sizeof(ar->reg_dump_values);
- 	len += sizeof(*dump_tlv) + sizeof(ar->dbglog_entry_data);
-+	len += sizeof(*dump_tlv) + sizeof(ar->stack_buf);
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -685,8 +686,16 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	memcpy(dump_tlv->tlv_data, &ar->reg_dump_values, dump_tlv->tlv_len);
- 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
- 
-+	/* Gather firmware stack dump */
-+	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+	dump_tlv->type = ATH10K_FW_ERROR_DUMP_STACK;
-+	dump_tlv->tlv_len = sizeof(ar->stack_buf);
-+	memcpy(dump_tlv->tlv_data, &ar->stack_buf, dump_tlv->tlv_len);
-+	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+
- 	spin_unlock_irqrestore(&ar->crash_data_lock, flags);
- 
-+	WARN_ON(sofar != len);
- 	return dump_data;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index d4df3f0..38a03e4 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -39,6 +39,7 @@
- #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
- 
- #define REG_DUMP_COUNT_QCA988X 60
-+#define ATH10K_FW_STACK_SIZE 4096
- 
- struct ath10k_fw_ie {
- 	__le32 id;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index a7df582..e26f1f8 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -834,6 +834,38 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
- }
- 
-+static void ath10k_save_firmware_mem_helper(struct ath10k *ar, u32 sz,
-+					    unsigned char *to, u32 addr)
-+{
-+	u32 host_addr;
-+	u32 reg_dump_area;
-+	int ret;
-+
-+	host_addr = host_interest_item_address(addr);
-+
-+	ret = ath10k_pci_diag_read_mem(ar, host_addr, &reg_dump_area,
-+				       sizeof(u32));
-+	if (ret != 0) {
-+		ath10k_warn("failed to read FW addr: %d (addr %d)\n",
-+			    ret, addr);
-+		return;
-+	}
-+
-+	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area, to, sz);
-+	if (ret != 0)
-+		ath10k_err("failed to read FW memory: %d (addr %d sz %d)\n",
-+			   ret, reg_dump_area, sz);
-+}
-+
-+/* Save the main firmware stack */
-+static void ath10k_save_firmware_stack(struct ath10k *ar)
-+{
-+	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
-+	ath10k_save_firmware_mem_helper(ar, ATH10K_FW_STACK_SIZE,
-+					ar->stack_buf, HI_ITEM(hi_stack));
-+}
-+
-+
- static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- {
- 	u32 reg_dump_area = 0;
-@@ -881,6 +913,13 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 			   reg_dump_values[i + 2],
- 			   reg_dump_values[i + 3]);
- 
-+	spin_lock_irqsave(&ar->crash_data_lock, flags);
-+
-+	if (!ar->crashed_since_read)
-+		ath10k_save_firmware_stack(ar);
-+
-+	spin_unlock_irqrestore(&ar->crash_data_lock, flags);
-+
- 	/* Dump the debug logs on the target */
- 	host_addr = host_interest_item_address(HI_ITEM(hi_dbglog_hdr));
- 	ret = ath10k_pci_diag_read_mem(ar, host_addr,
--- 
-1.7.11.7
+You could argue current queue locking for CSA is not efficient and
+you'd be right. It was a simplification I came up with to get things
+at least work correctly not efficiently.
 
+
+>> Generally I don't think having wake_vif_queues() is a good idea. It's
+>> really tricky. Sure, you can have a stop_vif_queues() which will
+>> behave as you might expect (i.e. first call stops queues and
+>> overlapping vif-queue mappings are not a concern). But
+>> wake_vif_queues() seems to have little practical use to me without any
+>> kind of per-queue reference counting.
+>
+> Yeah, this could be a problem for vifs that are sharing the same queues.
+> But that case would be really tricky with channel-switch anyway. because
+> if the channel of one vif is changed but not the other, the queue would
+> probably have to be split...
+
+Hmm. That's a very good point. Can we even re-map this during the switch now?
+
+If we can't then doesn't it imply that if there are shared vif-queue
+mappings then channel switching should be limited/prevented? I.e. it
+might be okay if you have 2 vifs sharing a queue to switch to the
+exact same channel but it won't work if you try to switch them to
+separate channels. Single-channel devices won't have to worry about it
+(single-channel combination cases for that matter).
+
+
+Michał
