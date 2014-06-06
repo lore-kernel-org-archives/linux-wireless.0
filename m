@@ -1,127 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:58194 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbaFHBPQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6247 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbaFFGSw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 21:15:16 -0400
-Received: by mail-we0-f176.google.com with SMTP id q59so4413781wes.35
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:15:14 -0700 (PDT)
+	Fri, 6 Jun 2014 02:18:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
+	<5390B632.7030305@candelatech.com>
+Date: Fri, 6 Jun 2014 09:10:15 +0300
+In-Reply-To: <5390B632.7030305@candelatech.com> (Ben Greear's message of "Thu,
+	5 Jun 2014 11:25:54 -0700")
+Message-ID: <87wqcumuuw.fsf@kamboji.qca.qualcomm.com> (sfid-20140606_081901_431927_135E36FD)
 MIME-Version: 1.0
-In-Reply-To: <5393A7D0.2080700@lwfinger.net>
-References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<1670424.dXK6NPb10R@al>
-	<CAFo99gZ+iu3FA9Nuwdo_AT1xZkno7w=6JidWYcm8g0bOvshwTw@mail.gmail.com>
-	<5393A7D0.2080700@lwfinger.net>
-Date: Sun, 8 Jun 2014 03:15:14 +0200
-Message-ID: <CAFo99gbO6CbxoYyqivFzYTKOjgyo034fHasFT2KuXb06oB9jSg@mail.gmail.com> (sfid-20140608_031539_862340_3CBDEFA4)
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up
- conjunction always evaluates to false
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Peter Wu <peter@lekensteyn.nl>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all
+Ben Greear <greearb@candelatech.com> writes:
 
-Good. New patches are on the way :)
+> On 06/05/2014 09:18 AM, Kalle Valo wrote:
+>
+>>> +struct ath10k_tlv_dump_data {
+>>> +	u32 type; /* see ath10k_fw_error_dump_type above */
+>>> +	u32 tlv_len; /* in bytes */
+>>> +	u8 tlv_data[]; /* Pad to 32-bit boundaries as needed. */
+>>> +} __packed;
+>>> +
+>>> +struct ath10k_dump_file_data {
+>>> +	/* Dump file information */
+>>> +	u32 len;
+>>> +	u32 magic; /* 0x01020304, tells us byte-order of host if we care */
+>>> +	u32 version; /* File dump version, 1 for now. */
+>> 
+>> Actually I would prefer to have magic first and have ASCII string as
+>> string, for example "ATH10K-FW-DUMP".
+>
+> I'd like magic number to stay, was planning to use it to detect byte
+> ordering (ie, dumps might come from various different platforms, to
+> be decoded on some different platform).
 
-Best regards
-Rickard Strandqvist
+If you want to know the endianess, I would prefer to do it the proper
+way, for example something like this:
 
+#ifdef __BIG_ENDIAN
+        dump_data->big_endian = 1;
+#else
+        dump_data->big_endian = 0;
+#endif
 
-2014-06-08 2:01 GMT+02:00 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 06/07/2014 10:24 AM, Rickard Strandqvist wrote:
->>
->> Hi!
->>
->> Yes, 0x3 was one of the most likely :)
->> But wanted someone who knows the code better would be heard.
->> All agreed? Then I do a new patch.
->>
->> Looks like it is the same error in the files below, I'll fix them all them
->> to.
->>
->> rtl8192cu/hw.c:1363:    if ((bt_msr & 0xfc) == MSR_AP)
->> rtl8192ce/hw.c:1209:    if ((bt_msr & 0xfc) == MSR_AP)
->> rtl8188ee/hw.c:1234:    if ((bt_msr & 0xfc) == MSR_AP)
->> rtl8192de/hw.c:1131:    if ((bt_msr & 0xfc) == MSR_AP)
->>
->>
->> Best regards
->> Rickard Strandqvist
->>
->>
->> 2014-06-07 17:02 GMT+02:00 Peter Wu <peter@lekensteyn.nl>:
->>>
->>> On Saturday 07 June 2014 16:30:19 Rickard Strandqvist wrote:
->>>>
->>>> Expression '(X & 0xfc) == 0x3' is always false
->>>
->>>
->>> While this is true, I believe that some other mistake is made.
->>>
->>>> I chose to remove this code, because it will not make any difference.
->>>> But obviously it is rather a properly designed if statement that is
->>>> needed.
->>>>
->>>> This was partly found using a static code analysis program called
->>>> cppcheck.
->>>>
->>>> Signed-off-by: Rickard Strandqvist
->>>> <rickard_strandqvist@spectrumdigital.se>
->>>> ---
->>>>   drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    5 +----
->>>>   1 file changed, 1 insertion(+), 4 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->>>> b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->>>> index 2b08671..a1520d5 100644
->>>> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->>>> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->>>> @@ -1128,10 +1128,7 @@ static int _rtl92de_set_media_status(struct
->>>> ieee80211_hw *hw,
->>>>        }
->>>>        rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
->>>>        rtlpriv->cfg->ops->led_control(hw, ledaction);
->>>> -     if ((bt_msr & 0xfc) == MSR_AP)
->>>
->>>
->>> If you look a few lines up, then you see that bt_msr is OR-ed with MSR_AP
->>> for AP interfaces. The 0xfc should be 0x03, see other drivers for
->>> example:
->>>
->>> rtl8723ae/hw.c:1112:    if ((bt_msr & 0x03) == MSR_AP)
->>> rtl8723be/hw.c:1200:    if ((bt_msr & 0x03) == MSR_AP)
->>> rtl8192cu/hw.c:1363:    if ((bt_msr & 0xfc) == MSR_AP)
->>> rtl8192ce/hw.c:1209:    if ((bt_msr & 0xfc) == MSR_AP)
->>> rtl8188ee/hw.c:1234:    if ((bt_msr & 0xfc) == MSR_AP)
->>> rtl8192de/hw.c:1131:    if ((bt_msr & 0xfc) == MSR_AP)
->>>
->>>> -             rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->>>> -     else
->>>> -             rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
->>>> +     rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
->>>>        return 0;
->>>>   }
+>>> +	/* Some info we can get from ath10k struct that might help. */
+>>> +	u32 chip_id;
+>>> +	u32 target_version;
+>> 
+>> bus_type or something like that would be good to add already now.
 >
+> Can you be more specific on what info you want here?  I don't see
+> any mention of bus_type in the ath10k dir.
+
+I was thinking of adding a new field named "bus_type" which will contain
+just zero for now. This is so that we don't need to make any changes to
+the format if/when we add a new bus along with pci.
+
+>>> +	u32 fw_version_minor;
+>>> +	u16 fw_version_release;
+>>> +	u16 fw_version_build;
+>>> +	u32 phy_capability;
+>>> +	u32 hw_min_tx_power;
+>>> +	u32 hw_max_tx_power;
+>>> +	u32 ht_cap_info;
+>>> +	u32 vht_cap_info;
+>>> +	u32 num_rf_chains;
+>>> +	char fw_ver[64]; /* Firmware version string */
+>> 
+>> Can we reuse ETHTOOL_FWVERS_LEN? cfg80211 already uses that.
+>> 
+>> #define ETHTOOL_FWVERS_LEN	32
 >
-> Peter,
+> I prefer not to..that way, firmware format will remain the same even if
+> the kernel changes the fwvers-len some day.
+
+That is defined in the ethtool user space interface so changing that
+would break a lot of things. And also used by cfg80211 and other
+drivers. I would prefer to be consistent here and use
+ETHTOOL_FWVERS_LEN.
+
+>>> @@ -488,6 +555,12 @@ struct ath10k {
+>>>  
+>>>  	struct dfs_pattern_detector *dfs_detector;
+>>>  
+>>> +	/* Used for crash-dump storage */
+>>> +	/* Don't over-write dump info until someone reads the data. */
+>>> +	bool crashed_since_read;
+>>> +	struct ath10k_dbglog_entry_storage dbglog_entry_data;
+>>> +	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
+>> 
+>> I think these should be in struct ath10k_debug.
 >
-> As you have learned here, automatically making changes suggested by some
-> tool may convert a visible bug into one that is invisible, and only found by
-> a detailed line-by-line examination of the code, and that is unlikely to
-> happen. Please be careful.
+> I did not do this because I figure we will want ethtool support w/out
+> forcing debugfs to be enabled someday soon.
+
+When we add ethtool support, it's easy to move these back. And then we
+need to move the code out from debug.c anyway.
+
+>>> +void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, u8 *buffer, int len)
+>>> +{
+>>> +	int i;
+>>> +	int z = ar->dbglog_entry_data.next_idx;
+>>> +
+>>> +	/* Don't save any new logs until user-space reads this. */
+>>> +	if (ar->crashed_since_read)
+>>> +		return;
+>> 
+>> Locking? If this functions depends on something, please document that
+>> with lockdep_assert_held().
 >
-> From everything I see, the test in all drivers should be
->
->         if ((bt_msr & MSR_AP) == MSR_AP)
->
-> Larry
->
+> To be honest, I was going to ignore locking and assume that firmware
+> will not crash that often.  Worst case would be a garbled crash dump
+> as there is no memory allocation involved in gathering the crash,
+> and the length of the crash dump will not change based on anything in
+> the crash logic.
+
+Ignoring locking means that in few years we have a big mess in our
+hands. I prefer to do the locking right from day one.
+
+> I'm a bit leery of adding spin-locks in the dump routine just for
+> this, but I can add and use a new spin-lock if you prefer.
+
+Why a new spinlock? I didn't review the locking requirements, but I
+would first check ar->data_lock can be used.
+
+> If so, any idea if we can do the reads of the target's memory while
+> holding a spin-lock, or would I need some temporary buffers and only
+> lock while copying that in to the storage in the 'ar'?
+
+I don't see why you would need special locks for reading target's
+memory. If there is something needed, pci.c should handle that. Michal?
+
+-- 
+Kalle Valo
