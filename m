@@ -1,151 +1,538 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:37544 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752207AbaFFIEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 04:04:07 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
- during channel switch
-Date: Fri, 6 Jun 2014 08:04:02 +0000
-Message-ID: <1402041842.2004.24.camel@dubbel> (sfid-20140606_100413_845932_74D94BE3)
-References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
-	 <CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
-	 <1402036258.2004.10.camel@dubbel>
-	 <CA+BoTQ=wZV8dviGE8HAFC1j=XNqJDkxUaHV5HFkiLMs2arCVHQ@mail.gmail.com>
-	 <1402040251.2004.20.camel@dubbel>
-	 <CA+BoTQ=X9Vg+=PvdRuFTcL+1hA6Yg6Vne3_NfBx_A6yS91b0PA@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=X9Vg+=PvdRuFTcL+1hA6Yg6Vne3_NfBx_A6yS91b0PA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:45550 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbaFFTIs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2014 15:08:48 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 1/4] ath10k:  provide firmware crash info via debugfs.
+Date: Fri,  6 Jun 2014 12:08:40 -0700
+Message-Id: <1402081723-30040-1-git-send-email-greearb@candelatech.com> (sfid-20140606_210853_672952_0FF085F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE0LTA2LTA2IGF0IDA5OjU2ICswMjAwLCBNaWNoYWwgS2F6aW9yIHdyb3RlOg0K
-PiBPbiA2IEp1bmUgMjAxNCAwOTozNywgQ29lbGhvLCBMdWNpYW5vIDxsdWNpYW5vLmNvZWxob0Bp
-bnRlbC5jb20+IHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxNC0wNi0wNiBhdCAwODo0NCArMDIwMCwg
-TWljaGFsIEthemlvciB3cm90ZToNCj4gPj4gT24gNiBKdW5lIDIwMTQgMDg6MzEsIENvZWxobywg
-THVjaWFubyA8bHVjaWFuby5jb2VsaG9AaW50ZWwuY29tPiB3cm90ZToNCj4gPj4gPiBPbiBGcmks
-IDIwMTQtMDYtMDYgYXQgMDc6NTEgKzAyMDAsIE1pY2hhbCBLYXppb3Igd3JvdGU6DQo+ID4+ID4+
-IE9uIDUgSnVuZSAyMDE0IDE4OjI2LCBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJh
-Y2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPj4gWy4uLl0NCj4gPj4gPj4gPiBAQCAtMzE0Niw5ICsz
-MTQ1LDggQEAgc3RhdGljIGludCBfX2llZWU4MDIxMV9jc2FfZmluYWxpemUoc3RydWN0IGllZWU4
-MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEpDQo+ID4+ID4+ID4gICAgICAgICBjZmc4MDIxMV9jaF9z
-d2l0Y2hfbm90aWZ5KHNkYXRhLT5kZXYsICZzZGF0YS0+Y3NhX2NoYW5kZWYpOw0KPiA+PiA+PiA+
-DQo+ID4+ID4+ID4gICAgICAgICBpZiAoIWllZWU4MDIxMV9jc2FfbmVlZHNfYmxvY2tfdHgobG9j
-YWwpKQ0KPiA+PiA+PiA+IC0gICAgICAgICAgICAgICBpZWVlODAyMTFfd2FrZV9xdWV1ZXNfYnlf
-cmVhc29uKCZsb2NhbC0+aHcsDQo+ID4+ID4+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIElFRUU4MDIxMV9NQVhfUVVFVUVfTUFQLA0KPiA+PiA+PiA+IC0gICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBJRUVFODAyMTFfUVVFVUVfU1RPUF9SRUFT
-T05fQ1NBKTsNCj4gPj4gPj4gPiArICAgICAgICAgICAgICAgaWVlZTgwMjExX3dha2VfdmlmX3F1
-ZXVlcyhsb2NhbCwgc2RhdGEsDQo+ID4+ID4+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgSUVFRTgwMjExX1FVRVVFX1NUT1BfUkVBU09OX0NTQSk7DQo+ID4+ID4+
-DQo+ID4+ID4+IEkgZG9uJ3QgdGhpbmsgdGhpcyBpcyBnb2luZyB0byB3b3JrIHdpdGggdGhlIHVw
-Y29tbWluZyBtdWx0aS12aWYNCj4gPj4gPj4gY2hhbm5lbCBzd2l0Y2hpbmcuDQo+ID4+ID4+DQo+
-ID4+ID4+IFRoZSBpZWVlODAyMTFfY3NhX25lZWRzX2Jsb2NrX3R4KCkgd2lsbCBiZWNvbWUgZmFs
-c2UgdXBvbiAqbGFzdCoNCj4gPj4gPj4gaW50ZXJmYWNlIHN3aXRjaCBjb21wbGV0aW9uLiBUaGlz
-IG1lYW5zIHByZWNlZWRpbmcgaW50ZXJmYWNlIGNzYQ0KPiA+PiA+PiBmaW5hbGl6YXRpb25zIHdv
-bid0IGNhbGwgaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVlcygpIHNvIHlvdSBhY3R1YWxseQ0KPiA+
-PiA+PiBlbmQgdXAgbm90IHdha2luZyBhbGwgb2YgdGhlIHF1ZXVlcyB3aGVuIHlvdSBmaW5pc2gg
-Y3NhLg0KPiA+PiA+DQo+ID4+ID4gSSB0aGluayB0aGUgcmlnaHQgd2F5IHRvIGRvIGl0IHdvdWxk
-IGJlIHRvIHRyYXZlcnNlIHRoZSB2aWZzIHRoYXQNCj4gPj4gPiBzd2l0Y2hlZCBhbmQgd2FrZSB1
-cCB0aGVpciBxdWV1ZXMgd2hlbiB0aGUgc3dpdGNoIGlzIGZpbmlzaGVkLg0KPiA+PiA+DQo+ID4+
-ID4NCj4gPj4gPj4gSSB0aGluayB0aGlzIGNhbiBiZSBzb2x2ZWQgd2l0aDoNCj4gPj4gPj4NCj4g
-Pj4gPj4gIGlmICghaWVlZTgwMjExX2NzYV9uZWVkc19ibG9ja190eChsb2NhbCkpDQo+ID4+ID4+
-ICAgIGxpc3RfZm9yX2VhY2goc2RhdGEsICZsb2NhbC0+aW50ZXJmYWNlcywgbGlzdCkNCj4gPj4g
-Pj4gICAgICBpZWVlODAyMTFfd2FrZV92aWZfcXVldWVzKGxvY2FsLCBzZGF0YSwgUkVBU09OX0NT
-QSk7DQo+ID4+ID4+DQo+ID4+ID4+IEJ1dCB0aGVuIEkgZ3Vlc3MgaXQncyBqdXN0IGEgY29udm9s
-dXRlZCB3YXkgb2Ygc2F5aW5nOg0KPiA+PiA+Pg0KPiA+PiA+PiAgaWYgKCFpZWVlODAyMTFfY3Nh
-X25lZWRzX2Jsb2NrX3R4KGxvY2FsKSkNCj4gPj4gPj4gICAgaWVlZTgwMjExX3dha2VfcXVldWVz
-X2J5X3JlYXNvbihodywgUkVBU09OX0NTQSk7DQo+ID4+ID4+DQo+ID4+ID4+IElPVyB3YWtpbmcg
-c2hvdWxkIHJlbWFpbiBhcyBpdCB3YXMgd2hpbGUgc3RvcHBpbmcgY2FuIGJlIGRvbmUgcGVyLXZp
-Zi4NCj4gPj4gPj4NCj4gPj4gPj4gVGhpcyBnb2VzIGZvciBhbGwgaW5zdGFuY2VzIGNhbGxpbmcg
-d2FrZV92aWZfcXVldWVzKCkgaW4gdGhlIHBhdGNoLg0KPiA+PiA+DQo+ID4+ID4gQWN0dWFsbHkg
-SSBoYWQgaXQgbGlrZSB0aGlzIGluIG15IGZpcnN0IHZlcnNpb24sIEkgaGFkIG9ubHkgYWRkZWQg
-dGhlDQo+ID4+ID4gc3RvcCBwYXJ0LCBsZWF2aW5nIHRoZSB3YWtlIGFzIGl0IHdhcy4gIEJ1dCB0
-aGVuIEkgdGhvdWdodCB0aGF0IHdlIHdvdWxkDQo+ID4+ID4gYmUgcmVzdGFydGluZyBxdWV1ZXMg
-ZnJvbSBvdGhlciB2aWZzIHRoYXQgd2UgZG9uJ3Qga25vdyBhYm91dC4gIElmDQo+ID4+ID4gYW5v
-dGhlciB2aWYgaXMgc3dpdGNoaW5nIHNlcGFyYXRlbHksIHdlIHdvdWxkIHJlc3RhcnQgaXRzIHF1
-ZXVlcyBhdCB0aGUNCj4gPj4gPiB3cm9uZyB0aW1lLiAgSSB0aGluayB3ZSBzaG91bGRuJ3QgYXNz
-dW1lIHRoYXQgYWxsIHZpZnMgYXJlIHBhcnQgb2YgdGhlDQo+ID4+ID4gc2FtZSBzd2l0Y2guDQo+
-ID4+DQo+ID4+IFdlbGwsIG5vdCByZWFsbHkuDQo+ID4+DQo+ID4+IFRoZXJlIGlzIG5vICJ2aWYg
-c3dpdGNoaW5nIHNlcGFyYXRlbHkiIHdoZW4gaXQgY29tZXMgdG8gYmxvY2tfdHguIFRoZQ0KPiA+
-PiBjb25kaXRpb24gY2hlY2tzIGlmIEFOWSBpbnRlcmZhY2Ugc3RpbGwgbmVlZHMgcXVldWVzIHRv
-IGJlIGxvY2tlZCBmb3INCj4gPj4gdGhlICpSRUFTT05fQ1NBKi4gSWYgdGhlIGNvbmRpdGlvbiBp
-cyBmYWxzZSAoaS5lLiAibm8gaW50ZXJmYWNlIG5lZWRzDQo+ID4+IGJsb2NrX3R4IikgdGhlbiB5
-b3UgYXJlIHNhZmUgdG8gd2FrZSAqYWxsKiBxdWV1ZXMgZm9yICpSRUFTT05fQ1NBKiBvbg0KPiA+
-PiBhbGwgaW50ZXJmYWNlcyBiZWNhdXNlIGNoYW5uZWwgc3dpdGNoZXMgdGhhdCBkb24ndCBuZWVk
-IGJsb2NrX3R4IGRvbid0DQo+ID4+IHN0b3AgdGhlaXIgcXVldWVzIGZvciBSRUFTT05fQ1NBIGlu
-IHRoZSBmaXJzdCBwbGFjZS4NCj4gPg0KPiA+IFJpZ2h0LCBhbmQgdGhpcyB1c2VkIHRvIG1ha2Ug
-c2Vuc2Ugd2hlbiB3ZSB3ZXJlIHN0b3BwaW5nICphbGwqIGh3X3F1ZXVlcw0KPiA+IHdoZW4gd2Ug
-aGFkIGJsb2NrX3R4Lg0KPiA+DQo+ID4gTWF5YmUgd2Ugc2hvdWxkIG1ha2UgYSBuZXcgZnVuY3Rp
-b24gdGhhdCByZXR1cm5zIGFsbCB0aGUgcXVldWVzIHRoYXQgb3VyDQo+ID4gdmlmIHdhcyBibG9j
-a2luZyBidXQgdGhhdCBhcmUgbm90IGJsb2NrZWQgYnkgYW55IG90aGVyIHZpZnMuICBNYXliZQ0K
-PiA+IHNvbWV0aGluZyBsaWtlIHRoaXM6DQo+ID4NCj4gPiBzdGF0aWMgdTMyIGllZWU4MDIxMV92
-aWZfcXVldWVzX3RvX3dha2Uoc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwsDQo+ID4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBpZWVlODAyMTFfc3Vi
-X2lmX2RhdGEgKnNkYXRhLA0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICBlbnVtIHF1ZXVlX3N0b3BfcmVhc29uIHJlYXNvbikNCj4gPiB7DQo+ID4gICAgICAgICBz
-dHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YV9pdGVyOw0KPiA+ICAgICAgICAgdW5z
-aWduZWQgbG9uZyBxdWV1ZXMsIHF1ZXVlc19pdGVyLCBxOw0KPiA+ICAgICAgICAgaW50IGk7DQo+
-ID4NCj4gPiAgICAgICAgIGxvY2tkZXBfYXNzZXJ0X2hlbGQoJmxvY2FsLT5tdHgpOw0KPiA+DQo+
-ID4gICAgICAgICBxdWV1ZXMgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9jYWwsIHNkYXRh
-KTsNCj4gPg0KPiA+ICAgICAgICAgcmN1X3JlYWRfbG9jaygpOw0KPiA+ICAgICAgICAgbGlzdF9m
-b3JfZWFjaF9lbnRyeV9yY3Uoc2RhdGFfaXRlciwgJmxvY2FsLT5pbnRlcmZhY2VzLCBsaXN0KSB7
-DQo+ID4gICAgICAgICAgICAgICAgIGlmICghaWVlZTgwMjExX3NkYXRhX3J1bm5pbmcoc2RhdGFf
-aXRlcikpDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+ID4NCj4gPiAg
-ICAgICAgICAgICAgICAgcXVldWVzX2l0ZXIgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9j
-YWwsIHNkYXRhX2l0ZXIpOw0KPiA+ICAgICAgICAgICAgICAgICBmb3JfZWFjaF9zZXRfYml0KGks
-ICZxdWV1ZXNfaXRlciwgbG9jYWwtPmh3LnF1ZXVlcykgew0KPiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIHEgPSBzZGF0YS0+dmlmLmh3X3F1ZXVlW2ldOw0KPiA+DQo+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgaWYgKHRlc3RfYml0KHJlYXNvbiwgJmxvY2FsLT5xdWV1ZV9zdG9wX3JlYXNv
-bnNbcV0pKQ0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcXVldWVzICY9IH5x
-Ow0KPiA+ICAgICAgICAgICAgICAgICB9DQo+ID4gICAgICAgICB9DQo+ID4gICAgICAgICByY3Vf
-cmVhZF91bmxvY2soKTsNCj4gPg0KPiA+ICAgICAgICAgcmV0dXJuIHF1ZXVlczsNCj4gPiB9DQo+
-ID4NCj4gPiB2b2lkIGllZWU4MDIxMV93YWtlX3ZpZl9xdWV1ZXMoc3RydWN0IGllZWU4MDIxMV9s
-b2NhbCAqbG9jYWwsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBp
-ZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLA0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICBlbnVtIHF1ZXVlX3N0b3BfcmVhc29uIHJlYXNvbikNCj4gPiB7DQo+ID4gICAgICAg
-ICB1bnNpZ25lZCBpbnQgcXVldWVzID0gaWVlZTgwMjExX3ZpZl9xdWV1ZXNfdG9fd2FrZShsb2Nh
-bCwgc2RhdGEsIHJlYXNvbik7DQo+ID4NCj4gPiAgICAgICAgIGllZWU4MDIxMV93YWtlX3F1ZXVl
-c19ieV9yZWFzb24oJmxvY2FsLT5odywgcXVldWVzLCByZWFzb24pOw0KPiA+IH0NCj4gDQo+IE9u
-Y2UgeW91IHNldCBsb2NhbC0+cXVldWVfc3RvcF9yZWFzb25zW10gZm9yIGFuIG92ZXJsYXBwaW5n
-IHF1ZXVlIHlvdQ0KPiB3b24ndCBiZSBhYmxlIHRvIHdha2UgaXQgd2l0aCBpZWVlODAyMTFfd2Fr
-ZV92aWZfcXVldWVzKCkgYWxvbmUuDQo+IFlvdSdsbCBuZWVkIHRvIGNhbGwgaWVlZTgwMjExX3dh
-a2VfcXVldWVzKCkgdG8gZG8gdGhhdC4gSXMgdGhhdCB3aGF0DQo+IHlvdSBpbnRlbmRlZD8NCg0K
-TW9yZSBvciBsZXNzLiAgTXkgaWRlYSBpcyB0aGF0IG9ubHkgdGhlICpsYXN0KiB2aWYgdGhhdCB0
-cmllcyB0byB3YWtlDQp0aGUgb3ZlcmxhcHBpbmcgcXVldWUsIHdpbGwgYWN0dWFsbHkgZG8gc28u
-DQoNCg0KPiA+PiA+PiBHZW5lcmFsbHkgSSBkb24ndCB0aGluayBoYXZpbmcgd2FrZV92aWZfcXVl
-dWVzKCkgaXMgYSBnb29kIGlkZWEuIEl0J3MNCj4gPj4gPj4gcmVhbGx5IHRyaWNreS4gU3VyZSwg
-eW91IGNhbiBoYXZlIGEgc3RvcF92aWZfcXVldWVzKCkgd2hpY2ggd2lsbA0KPiA+PiA+PiBiZWhh
-dmUgYXMgeW91IG1pZ2h0IGV4cGVjdCAoaS5lLiBmaXJzdCBjYWxsIHN0b3BzIHF1ZXVlcyBhbmQN
-Cj4gPj4gPj4gb3ZlcmxhcHBpbmcgdmlmLXF1ZXVlIG1hcHBpbmdzIGFyZSBub3QgYSBjb25jZXJu
-KS4gQnV0DQo+ID4+ID4+IHdha2VfdmlmX3F1ZXVlcygpIHNlZW1zIHRvIGhhdmUgbGl0dGxlIHBy
-YWN0aWNhbCB1c2UgdG8gbWUgd2l0aG91dCBhbnkNCj4gPj4gPj4ga2luZCBvZiBwZXItcXVldWUg
-cmVmZXJlbmNlIGNvdW50aW5nLg0KPiA+PiA+DQo+ID4+ID4gWWVhaCwgdGhpcyBjb3VsZCBiZSBh
-IHByb2JsZW0gZm9yIHZpZnMgdGhhdCBhcmUgc2hhcmluZyB0aGUgc2FtZSBxdWV1ZXMuDQo+ID4+
-ID4gQnV0IHRoYXQgY2FzZSB3b3VsZCBiZSByZWFsbHkgdHJpY2t5IHdpdGggY2hhbm5lbC1zd2l0
-Y2ggYW55d2F5LiBiZWNhdXNlDQo+ID4+ID4gaWYgdGhlIGNoYW5uZWwgb2Ygb25lIHZpZiBpcyBj
-aGFuZ2VkIGJ1dCBub3QgdGhlIG90aGVyLCB0aGUgcXVldWUgd291bGQNCj4gPj4gPiBwcm9iYWJs
-eSBoYXZlIHRvIGJlIHNwbGl0Li4uDQo+ID4+DQo+ID4+IEhtbS4gVGhhdCdzIGEgdmVyeSBnb29k
-IHBvaW50LiBDYW4gd2UgZXZlbiByZS1tYXAgdGhpcyBkdXJpbmcgdGhlIHN3aXRjaCBub3c/DQo+
-ID4+DQo+ID4+IElmIHdlIGNhbid0IHRoZW4gZG9lc24ndCBpdCBpbXBseSB0aGF0IGlmIHRoZXJl
-IGFyZSBzaGFyZWQgdmlmLXF1ZXVlDQo+ID4+IG1hcHBpbmdzIHRoZW4gY2hhbm5lbCBzd2l0Y2hp
-bmcgc2hvdWxkIGJlIGxpbWl0ZWQvcHJldmVudGVkPyBJLmUuIGl0DQo+ID4+IG1pZ2h0IGJlIG9r
-YXkgaWYgeW91IGhhdmUgMiB2aWZzIHNoYXJpbmcgYSBxdWV1ZSB0byBzd2l0Y2ggdG8gdGhlDQo+
-ID4+IGV4YWN0IHNhbWUgY2hhbm5lbCBidXQgaXQgd29uJ3Qgd29yayBpZiB5b3UgdHJ5IHRvIHN3
-aXRjaCB0aGVtIHRvDQo+ID4+IHNlcGFyYXRlIGNoYW5uZWxzLiBTaW5nbGUtY2hhbm5lbCBkZXZp
-Y2VzIHdvbid0IGhhdmUgdG8gd29ycnkgYWJvdXQgaXQNCj4gPj4gKHNpbmdsZS1jaGFubmVsIGNv
-bWJpbmF0aW9uIGNhc2VzIGZvciB0aGF0IG1hdHRlcikuDQo+ID4NCj4gPiBZZWFoLCBpdCBzaG91
-bGQgcHJvYmFibHkgYmUgcHJldmVudGVkIGZvciBzdWNoIGRyaXZlcnMuICBCdXQgdGhlbiwgYXQN
-Cj4gPiB3aGF0IHBvaW50PyBQcmV2ZW50IHRoZSBjaGFubmVsIHN3aXRjaCB0byBvY2N1ciBjb21w
-bGV0ZWx5IGlmIGFub3RoZXINCj4gPiB2aWYgc2hhcmVzIHRoZSBzYW1lIHF1ZXVlPyBPciBmYWls
-IHRoZSBzd2l0Y2ggaWYgdGhlIG90aGVyIHZpZiBkb2Vzbid0DQo+ID4gam9pbiB0aGUgc3dpdGNo
-Pw0KPiANCj4gVGhhdCdzIGEgZ29vZCBxdWVzdGlvbiB0b28uIEkgd291bGQgcHJlZmVyIHRvIGxl
-YXZlIGl0IHVudGlsIHRoZSBsYXN0DQo+IHNlY29uZCwgZS5nLiBnaXZlIHRoZSBvcHBvcnR1bml0
-eSB0byByZS1tYXAgaW4NCj4gZHJ2X3N3aXRjaF92aWZfY2hhbmN0eCgpIG1heWJlIHNvIGRyaXZl
-ciBjYW4gZmFpbCBpZiBpdCdzIHVuYWJsZSB0bw0KPiBjb21wbHk/DQoNClllcywgSSB0ZW5kIHRv
-IGFncmVlLg0KDQotLQ0KTHVjYS4NCg==
+From: Ben Greear <greearb@candelatech.com>
+
+Store the firmware crash registers and last 128 or so
+firmware debug-log ids and present them to user-space
+via debugfs.
+
+Should help with figuring out why the firmware crashed.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c  |   1 +
+ drivers/net/wireless/ath/ath10k/core.h  |  71 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c | 166 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |   3 +
+ drivers/net/wireless/ath/ath10k/hw.h    |  24 +++++
+ drivers/net/wireless/ath/ath10k/pci.c   | 103 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/pci.h   |   3 -
+ 7 files changed, 366 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f2b24b1..afcf03e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1068,6 +1068,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 
+ 	mutex_init(&ar->conf_mutex);
+ 	spin_lock_init(&ar->data_lock);
++	spin_lock_init(&ar->crash_data_lock);
+ 
+ 	INIT_LIST_HEAD(&ar->peers);
+ 	init_waitqueue_head(&ar->peer_mapping_wq);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 68ceef6..a86a5f9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -338,6 +338,70 @@ enum ath10k_dev_flags {
+ 	ATH10K_FLAG_CORE_REGISTERED,
+ };
+ 
++/**
++ * enum ath10k_fw_error_dump_type - types of data in the dump file
++ * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
++ * @ATH10K_FW_ERROR_DUMP_CRASH:   Crash dump in binary format
++ */
++enum ath10k_fw_error_dump_type {
++	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
++	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
++
++	ATH10K_FW_ERROR_DUMP_MAX,
++};
++
++struct ath10k_tlv_dump_data {
++	u32 type; /* see ath10k_fw_error_dump_type above */
++	u32 tlv_len; /* in bytes */
++	u8 tlv_data[]; /* Pad to 32-bit boundaries as needed. */
++} __packed;
++
++struct ath10k_dump_file_data {
++	/* Dump file information */
++	char df_magic[16]; /* ATH10K-FW-DUMP */
++	u32 len;
++	u32 big_endian; /* 0x1 if host is big-endian */
++	u32 version; /* File dump version, 1 for now. */
++
++	/* Some info we can get from ath10k struct that might help. */
++	u32 chip_id;
++	u32 bus_type; /* 0 for now, in place for later hardware */
++	u32 target_version;
++	u32 fw_version_major;
++	u32 fw_version_minor;
++	u32 fw_version_release;
++	u32 fw_version_build;
++	u32 phy_capability;
++	u32 hw_min_tx_power;
++	u32 hw_max_tx_power;
++	u32 ht_cap_info;
++	u32 vht_cap_info;
++	u32 num_rf_chains;
++	char fw_ver[ETHTOOL_FWVERS_LEN]; /* Firmware version string */
++
++	/* Kernel related information */
++	u32 tv_sec_hi; /* time-of-day stamp, high 32-bits for seconds */
++	u32 tv_sec_lo; /* time-of-day stamp, low 32-bits for seconds */
++	u32 tv_nsec_hi; /* time-of-day stamp, nano-seconds, high bits */
++	u32 tv_nsec_lo; /* time-of-day stamp, nano-seconds, low bits */
++	u32 kernel_ver_code; /* LINUX_VERSION_CODE */
++	char kernel_ver[64]; /* VERMAGIC_STRING */
++
++	u8 unused[128]; /* Room for growth w/out changing binary format */
++
++	u8 data[0]; /* struct ath10k_tlv_dump_data + more */
++} __packed;
++
++/* This will store at least the last 128 entries.  Each dbglog message
++ * is a max of 7 32-bit integers in length, but the length can be less
++ * than that as well.
++ */
++#define ATH10K_DBGLOG_DATA_LEN (128 * 7 * sizeof(u32))
++struct ath10k_dbglog_entry_storage {
++	u32 next_idx; /* Where to write next chunk of data */
++	u8 data[ATH10K_DBGLOG_DATA_LEN];
++};
++
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -488,6 +552,13 @@ struct ath10k {
+ 
+ 	struct dfs_pattern_detector *dfs_detector;
+ 
++	/* Used for crash-dump storage */
++	/* Don't over-write dump info until someone reads the data. */
++	spinlock_t crash_data_lock;
++	bool crashed_since_read;
++	struct ath10k_dbglog_entry_storage dbglog_entry_data;
++	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
++
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 1b7ff4b..6da7e3c 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -17,6 +17,9 @@
+ 
+ #include <linux/module.h>
+ #include <linux/debugfs.h>
++#include <linux/version.h>
++#include <linux/vermagic.h>
++#include <linux/vmalloc.h>
+ 
+ #include "core.h"
+ #include "debug.h"
+@@ -577,6 +580,166 @@ static const struct file_operations fops_chip_id = {
+ 	.llseek = default_llseek,
+ };
+ 
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, u8 *buffer, int len)
++{
++	int i;
++	int z = ar->dbglog_entry_data.next_idx;
++	unsigned long flags;
++
++	spin_lock_irqsave(&ar->crash_data_lock, flags);
++
++	/* Don't save any new logs until user-space reads this. */
++	if (ar->crashed_since_read)
++		goto exit;
++
++	for (i = 0; i < len; i++) {
++		ar->dbglog_entry_data.data[z] = buffer[i];
++		z++;
++		if (z >= ATH10K_DBGLOG_DATA_LEN)
++			z = 0;
++	}
++
++	ar->dbglog_entry_data.next_idx = z;
++exit:
++	spin_unlock_irqrestore(&ar->crash_data_lock, flags);
++}
++EXPORT_SYMBOL(ath10k_dbg_save_fw_dbg_buffer);
++
++static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
++{
++	unsigned int len;
++	unsigned int sofar = 0;
++	unsigned char *buf;
++	struct ath10k_tlv_dump_data *dump_tlv;
++	struct ath10k_dump_file_data *dump_data;
++	int hdr_len = sizeof(*dump_data);
++	unsigned long flags;
++	struct timespec timestamp;
++
++	len = hdr_len;
++	len += sizeof(*dump_tlv) + sizeof(ar->reg_dump_values);
++	len += sizeof(*dump_tlv) + sizeof(ar->dbglog_entry_data);
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	sofar += hdr_len;
++
++	/* This is going to get big when we start dumping FW RAM and such,
++	 * so go ahead and use vmalloc.
++	 */
++	buf = vmalloc(len);
++	if (!buf)
++		return NULL;
++
++	memset(buf, 0, len);
++	dump_data = (struct ath10k_dump_file_data *)(buf);
++	strlcpy(dump_data->df_magic, "ATH10K-FW-DUMP",
++		sizeof(dump_data->df_magic));
++	dump_data->len = len;
++#ifdef __BIG_ENDIAN
++	dump_data->big_endian = 1;
++#else
++	dump_data->big_endian = 0;
++#endif
++	dump_data->version = 1;
++	dump_data->chip_id = ar->chip_id;
++	dump_data->bus_type = 0;
++	dump_data->target_version = ar->target_version;
++	dump_data->fw_version_major = ar->fw_version_major;
++	dump_data->fw_version_minor = ar->fw_version_minor;
++	dump_data->fw_version_release = ar->fw_version_release;
++	dump_data->fw_version_build = ar->fw_version_build;
++	dump_data->phy_capability = ar->phy_capability;
++	dump_data->hw_min_tx_power = ar->hw_min_tx_power;
++	dump_data->hw_max_tx_power = ar->hw_max_tx_power;
++	dump_data->ht_cap_info = ar->ht_cap_info;
++	dump_data->vht_cap_info = ar->vht_cap_info;
++	dump_data->num_rf_chains = ar->num_rf_chains;
++
++	strlcpy(dump_data->fw_ver, ar->hw->wiphy->fw_version,
++		sizeof(dump_data->fw_ver));
++
++	dump_data->kernel_ver_code = LINUX_VERSION_CODE;
++	strlcpy(dump_data->kernel_ver, VERMAGIC_STRING,
++		sizeof(dump_data->kernel_ver));
++
++	getnstimeofday(&timestamp);
++	dump_data->tv_sec_hi = timestamp.tv_sec >> 32;
++	dump_data->tv_sec_lo = timestamp.tv_sec;
++	dump_data->tv_nsec_hi = timestamp.tv_nsec >> 32;
++	dump_data->tv_nsec_lo = timestamp.tv_nsec;
++
++	spin_lock_irqsave(&ar->crash_data_lock, flags);
++
++	/* Gather dbg-log */
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = ATH10K_FW_ERROR_DUMP_DBGLOG;
++	dump_tlv->tlv_len = sizeof(ar->dbglog_entry_data);
++	memcpy(dump_tlv->tlv_data, &ar->dbglog_entry_data, dump_tlv->tlv_len);
++	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
++
++	/* Gather crash-dump */
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = ATH10K_FW_ERROR_DUMP_REGDUMP;
++	dump_tlv->tlv_len = sizeof(ar->reg_dump_values);
++	memcpy(dump_tlv->tlv_data, &ar->reg_dump_values, dump_tlv->tlv_len);
++	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
++
++	spin_unlock_irqrestore(&ar->crash_data_lock, flags);
++
++	return dump_data;
++}
++
++static int ath10k_fw_error_dump_open(struct inode *inode, struct file *file)
++{
++	struct ath10k *ar = inode->i_private;
++	int ret;
++	struct ath10k_dump_file_data *dump;
++
++	mutex_lock(&ar->conf_mutex);
++
++	dump = ath10k_build_dump_file(ar);
++	if (!dump) {
++		ret = -ENODATA;
++		goto out;
++	}
++
++	file->private_data = dump;
++	ar->crashed_since_read = false;
++	ret = 0;
++
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static ssize_t ath10k_fw_error_dump_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct ath10k_dump_file_data *dump_file = file->private_data;
++
++	return simple_read_from_buffer(user_buf, count, ppos,
++				       dump_file,
++				       dump_file->len);
++}
++
++static int ath10k_fw_error_dump_release(struct inode *inode,
++					struct file *file)
++{
++	vfree(file->private_data);
++
++	return 0;
++}
++
++static const struct file_operations fops_fw_error_dump = {
++	.open = ath10k_fw_error_dump_open,
++	.read = ath10k_fw_error_dump_read,
++	.release = ath10k_fw_error_dump_release,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static int ath10k_debug_htt_stats_req(struct ath10k *ar)
+ {
+ 	u64 cookie;
+@@ -861,6 +1024,9 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	debugfs_create_file("simulate_fw_crash", S_IRUSR, ar->debug.debugfs_phy,
+ 			    ar, &fops_simulate_fw_crash);
+ 
++	debugfs_create_file("fw_error_dump", S_IRUSR, ar->debug.debugfs_phy,
++			    ar, &fops_fw_error_dump);
++
+ 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
+ 			    ar, &fops_chip_id);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index a582499..ae54804 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -110,4 +110,7 @@ static inline void ath10k_dbg_dump(enum ath10k_debug_mask mask,
+ {
+ }
+ #endif /* CONFIG_ATH10K_DEBUG */
++
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, u8 *buffer, int len);
++
+ #endif /* _DEBUG_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 007e855..d4df3f0 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -38,6 +38,8 @@
+ /* includes also the null byte */
+ #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
+ 
++#define REG_DUMP_COUNT_QCA988X 60
++
+ struct ath10k_fw_ie {
+ 	__le32 id;
+ 	__le32 len;
+@@ -361,4 +363,26 @@ enum ath10k_mcast2ucast_mode {
+ 
+ #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
+ 
++
++/* Target debug log related defines and structs */
++
++/* Target is 32-bit CPU, so we just use u32 for
++ * the pointers.  The memory space is relative to the
++ * target, not the host.
++ */
++struct ath10k_fw_dbglog_buf {
++	u32 next; /* pointer to dblog_buf_s. */
++	u32 buffer; /* pointer to u8 buffer */
++	u32 bufsize;
++	u32 length;
++	u32 count;
++	u32 free;
++} __packed;
++
++struct ath10k_fw_dbglog_hdr {
++	u32 dbuf; /* pointer to dbglog_buf_s */
++	u32 dropped;
++} __packed;
++
++
+ #endif /* _HW_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index d0004d5..a7df582 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -20,6 +20,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/spinlock.h>
+ #include <linux/bitops.h>
++#include <linux/ctype.h>
+ 
+ #include "core.h"
+ #include "debug.h"
+@@ -840,6 +841,11 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 	u32 host_addr;
+ 	int ret;
+ 	u32 i;
++	struct ath10k_fw_dbglog_hdr dbg_hdr;
++	u32 dbufp; /* pointer in target memory space */
++	struct ath10k_fw_dbglog_buf dbuf;
++	u8 *buffer;
++	unsigned long flags;
+ 
+ 	ath10k_err("firmware crashed!\n");
+ 	ath10k_err("hardware name %s version 0x%x\n",
+@@ -851,7 +857,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 				       &reg_dump_area, sizeof(u32));
+ 	if (ret) {
+ 		ath10k_err("failed to read FW dump area address: %d\n", ret);
+-		return;
++		goto exit;
+ 	}
+ 
+ 	ath10k_err("target register Dump Location: 0x%08X\n", reg_dump_area);
+@@ -861,7 +867,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 				       REG_DUMP_COUNT_QCA988X * sizeof(u32));
+ 	if (ret != 0) {
+ 		ath10k_err("failed to read FW dump area: %d\n", ret);
+-		return;
++		goto exit;
+ 	}
+ 
+ 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
+@@ -875,6 +881,99 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 			   reg_dump_values[i + 2],
+ 			   reg_dump_values[i + 3]);
+ 
++	/* Dump the debug logs on the target */
++	host_addr = host_interest_item_address(HI_ITEM(hi_dbglog_hdr));
++	ret = ath10k_pci_diag_read_mem(ar, host_addr,
++				       &reg_dump_area, sizeof(u32));
++	if (ret != 0) {
++		ath10k_warn("failed to read hi_dbglog_hdr: %d\n", ret);
++		goto exit_save_regs;
++	}
++
++	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area,
++				       &dbg_hdr, sizeof(dbg_hdr));
++	if (ret != 0) {
++		ath10k_err("failed to dump debug log area: %d (addr 0x%x)\n",
++			   ret, reg_dump_area);
++		goto exit_save_regs;
++	}
++
++	ath10k_dbg(ATH10K_DBG_PCI,
++		   "Debug Log Header, dbuf: 0x%x  dropped: %i\n",
++		   dbg_hdr.dbuf, dbg_hdr.dropped);
++	dbufp = dbg_hdr.dbuf;
++
++	/* i is for logging purposes and sanity check in case firmware buffers
++	 * are corrupted and will not properly terminate the list.
++	 * In standard firmware, it appears there are no more than 2
++	 * buffers, so 10 should be safe upper limit even if firmware
++	 * changes quite a bit.
++	 */
++	i = 0;
++	while (dbufp && i < 10) {
++		ret = ath10k_pci_diag_read_mem(ar, dbufp,
++					       &dbuf, sizeof(dbuf));
++		if (ret != 0) {
++			ath10k_err("failed to read debug log area: %d (addr 0x%x)\n",
++				   ret, dbufp);
++			goto exit_save_regs;
++		}
++
++		/* We have a buffer of data */
++		ath10k_dbg(ATH10K_DBG_PCI,
++			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
++			   i, dbuf.next, dbuf.buffer, dbuf.bufsize, dbuf.length,
++			   dbuf.count, dbuf.free);
++		if (dbuf.buffer == 0 || dbuf.length == 0)
++			goto next;
++
++		/* Pick arbitrary upper bound in case firmware is corrupted for
++		 * whatever reason.
++		 */
++		if (dbuf.length > 16000) {
++			ath10k_err("debuglog buf length is out of bounds: %d\n",
++				   dbuf.length);
++			/* Do not trust the next pointer either... */
++			goto exit_save_regs;
++		}
++
++		buffer = kmalloc(dbuf.length, GFP_ATOMIC);
++
++		if (!buffer)
++			goto next;
++
++		ret = ath10k_pci_diag_read_mem(ar, dbuf.buffer, buffer,
++					       dbuf.length);
++		if (ret != 0) {
++			ath10k_err("failed to read debug log buffer: %d (addr 0x%x)\n",
++				   ret, dbuf.buffer);
++			kfree(buffer);
++			goto exit_save_regs;
++		}
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, dbuf.length);
++		kfree(buffer);
++
++next:
++		dbufp = dbuf.next;
++		if (dbufp == dbg_hdr.dbuf) {
++			/* It is a circular buffer it seems, bail if next
++			 * is head
++			 */
++			break;
++		}
++		i++;
++	} /* While we have a debug buffer to read */
++
++exit_save_regs:
++	spin_lock_irqsave(&ar->crash_data_lock, flags);
++	if (!ar->crashed_since_read) {
++		ar->crashed_since_read = true;
++		memcpy(ar->reg_dump_values, reg_dump_values,
++		       sizeof(ar->reg_dump_values));
++	}
++	spin_unlock_irqrestore(&ar->crash_data_lock, flags);
++exit:
+ 	queue_work(ar->workqueue, &ar->restart_work);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index dfdebb4..c04dbfb 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -23,9 +23,6 @@
+ #include "hw.h"
+ #include "ce.h"
+ 
+-/* FW dump area */
+-#define REG_DUMP_COUNT_QCA988X 60
+-
+ /*
+  * maximum number of bytes that can be handled atomically by DiagRead/DiagWrite
+  */
+-- 
+1.7.11.7
+
