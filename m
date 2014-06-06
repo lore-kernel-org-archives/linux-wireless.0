@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:56799 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbaFXTjA (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:59735 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802AbaFFGaL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:39:00 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/3] iwlwifi: update the 7265 series HW IDs
-Date: Tue, 24 Jun 2014 22:38:50 +0300
-Message-Id: <1403638731-2381-2-git-send-email-egrumbach@gmail.com> (sfid-20140624_213908_000038_62733583)
-In-Reply-To: <53A9D396.1020306@gmail.com>
-References: <53A9D396.1020306@gmail.com>
+	Fri, 6 Jun 2014 02:30:11 -0400
+Received: by mail-wg0-f48.google.com with SMTP id n12so2012152wgh.31
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 23:30:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
+	<5390B632.7030305@candelatech.com>
+	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 6 Jun 2014 08:30:09 +0200
+Message-ID: <CA+BoTQkzVLQJcsNfSr=r8d0F_opsHEim0fgxMGhPHGyhz0KBzw@mail.gmail.com> (sfid-20140606_083015_669916_D4963E5D)
+Subject: Re: [PATCH 1/4] ath10k: provide firmware crash info via debugfs.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On 6 June 2014 08:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+[...]
+>> I'm a bit leery of adding spin-locks in the dump routine just for
+>> this, but I can add and use a new spin-lock if you prefer.
+>
+> Why a new spinlock? I didn't review the locking requirements, but I
+> would first check ar->data_lock can be used.
+>
+>> If so, any idea if we can do the reads of the target's memory while
+>> holding a spin-lock, or would I need some temporary buffers and only
+>> lock while copying that in to the storage in the 'ar'?
+>
+> I don't see why you would need special locks for reading target's
+> memory. If there is something needed, pci.c should handle that. Michal?
 
-Add one more 7265 series HW ID.
-Edit one existing 7265 series HW ID.
+By definition the diagnostic window access must be serialized. We
+don't do this with locks now but rely ON driver states/sequences. We
+might have some problems lurking there already but I'd need to analyze
+it to tell for sure.
 
-CC: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/drv.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Calling pci_diag_* functions while holding a spinlock should otherwise
+be fine because these functions use mdelay() and poll the diagnostic
+window copy engine pipe.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 7091a18..98950e4 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -367,6 +367,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x095A, 0x5012, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5412, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5410, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5510, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5400, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x1010, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5000, iwl7265_2n_cfg)},
-@@ -380,7 +381,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9112, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x095A, 0x9200, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095B, 0x9200, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9510, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9310, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9410, iwl7265_2ac_cfg)},
--- 
-1.8.3.2
+Using ar->data_lock for a pci transport specific requirement (the
+diagnostic window) seems wrong though.
 
+
+Michał
