@@ -1,95 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f44.google.com ([209.85.213.44]:45036 "EHLO
-	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753958AbaFBOGl (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:59049 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997AbaFFJpK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 10:06:41 -0400
-Date: Mon, 2 Jun 2014 11:06:36 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-06-01
-Message-ID: <20140602140636.GA1659@joana> (sfid-20140602_160701_390757_7435C224)
+	Fri, 6 Jun 2014 05:45:10 -0400
+Received: by mail-we0-f181.google.com with SMTP id w61so2485695wes.40
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2014 02:45:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+In-Reply-To: <877g4umn7b.fsf@kamboji.qca.qualcomm.com>
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
+	<5390B632.7030305@candelatech.com>
+	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQkzVLQJcsNfSr=r8d0F_opsHEim0fgxMGhPHGyhz0KBzw@mail.gmail.com>
+	<877g4umn7b.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 6 Jun 2014 11:45:08 +0200
+Message-ID: <CA+BoTQmyXy1dSdhugSiXq50C4DpjbRWBcopn0b3anJ4W55oCwA@mail.gmail.com> (sfid-20140606_114514_697650_D939AA32)
+Subject: Re: [PATCH 1/4] ath10k: provide firmware crash info via debugfs.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 6 June 2014 10:55, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 6 June 2014 08:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Ben Greear <greearb@candelatech.com> writes:
+>> [...]
+>>>> I'm a bit leery of adding spin-locks in the dump routine just for
+>>>> this, but I can add and use a new spin-lock if you prefer.
+>>>
+>>> Why a new spinlock? I didn't review the locking requirements, but I
+>>> would first check ar->data_lock can be used.
+>>>
+>>>> If so, any idea if we can do the reads of the target's memory while
+>>>> holding a spin-lock, or would I need some temporary buffers and only
+>>>> lock while copying that in to the storage in the 'ar'?
+>>>
+>>> I don't see why you would need special locks for reading target's
+>>> memory. If there is something needed, pci.c should handle that. Michal?
+>>
+>> By definition the diagnostic window access must be serialized. We
+>> don't do this with locks now but rely ON driver states/sequences. We
+>> might have some problems lurking there already but I'd need to analyze
+>> it to tell for sure.
+>
+> Should that serialisation happen within pci.c?
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+You can but that's not a requirement I guess. E.g. exchange_bmi_msg
+hif callback requires the caller to serialize calls.
 
-Hi John,
 
-Here some more patches for 3.16. We know that Linus already opened the merge
-window, but this is fix only pull request, and most of the patches here are
-also tagged for stable.
-
-Please pull! or let me know of any issues. Thanks!
-
-	Gustavo
-
----
-The following changes since commit d7b2545023ecfde94d3ea9c03c5480ac18da96c9:
-
-  Bluetooth: Clearly distinguish mgmt LTK type from authenticated property (2014-05-23 11:24:04 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to 8a96f3cd22878fc0bb564a8478a6e17c0b8dca73:
-
-  Bluetooth: Fix L2CAP deadlock (2014-06-02 13:38:19 +0300)
-
-----------------------------------------------------------------
-Adam Lee (1):
-      Bluetooth: ath3k: no need to set same pipe multiple times
-
-Johan Hedberg (4):
-      Bluetooth: Fix properly ignoring LTKs of unknown types
-      Bluetooth: Fix authentication check for FIPS security level
-      Bluetooth: Fix requiring SMP MITM for outgoing connections
-      Bluetooth: Fix missing check for FIPS security level
-
-Jukka Rissanen (2):
-      Bluetooth: 6LoWPAN: Fix MAC address universal/local bit handling
-      Bluetooth: l2cap: Set more channel defaults
-
-Jukka Taimisto (1):
-      Bluetooth: Fix L2CAP deadlock
-
- drivers/bluetooth/ath3k.c  |  3 ++-
- net/bluetooth/6lowpan.c    | 65 +++++++++++++++++++++++++++++-------------------------
- net/bluetooth/hci_event.c  |  4 +++-
- net/bluetooth/l2cap_core.c |  6 +++++
- net/bluetooth/l2cap_sock.c |  5 ++++-
- net/bluetooth/mgmt.c       | 10 +++++++--
- net/bluetooth/smp.c        |  7 +++---
- 7 files changed, 62 insertions(+), 38 deletions(-)
-
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTjITsAAoJEPs3PUX4s20oFSEQAKpJqns+h74NOPIqHPOfv+pr
-hGvKvstASH9IeuA+km+BHDFSS0Eqwkc1M8AnS8sZIrVq8sML+89bpBMyhYSIOzwM
-sugpDuGXn0rMQ4Ia24gEwjgLBs94j0NcG1Q5/AjsaJcQ/8JOo7Or19lcB/yASZ1b
-gHQ9H9niF6kpQnxfConkfT+UvhSxtSFro1/wFoM1+9kyiMujFXxLgFQcEo32xHdE
-2NycQWRJe81fB7m1USuzBtBbMPp0DL0qTOPDR/i6K4TmEOgCgPvT/RReJxLTVm+J
-jZBrh7q5UPXF7NG9A7+Vu2heKh1jcXrrkSzLQ1jRDM2Wy77JRsaQ+RITgnRHKmCm
-KyAa/oRobEtx8sCv8465klw33LoVKtbuN6nDmNzFLBXYrA5A5I+v6IvqoQEtsklP
-uCqxLDswRkdg3xbOiad5bxd3X5cLEQ2S158yqi+UQEO84kN33ylsaEfxVAlxnzEJ
-4ehhsOZVOkTPUhSQzwyVEy4iq4d3urgQwTlH2aj7RQS4DzZ5Tfow8uth7jUAOpFW
-k6Qj59UZsR2aOCiPZgIpQzaHWI7L8mT0nraOq2Bqq2dcbOucHAqFX3pyt7+c3Kqc
-QSrX2zrowJ5S1J4LkaMa8HsKHH2DBusbBelLth6q6JxP9AnWczOHeP3rySMNjrxT
-9XWfb9s6lAIiDKbN2cvo
-=Gn+6
------END PGP SIGNATURE-----
-
---wRRV7LY7NUeQGEoC--
+Michał
