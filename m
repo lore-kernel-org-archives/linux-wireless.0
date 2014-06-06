@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:23240 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbaFUQ5B (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:44032 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbaFFQFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 12:57:01 -0400
-Message-ID: <53A5B95B.2040705@broadcom.com> (sfid-20140621_185717_308400_5C805B5F)
-Date: Sat, 21 Jun 2014 18:56:59 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 6 Jun 2014 12:05:23 -0400
+Message-ID: <5391E6C2.7030602@candelatech.com> (sfid-20140606_180526_754509_EDCC10FD)
+Date: Fri, 06 Jun 2014 09:05:22 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 2/8] brcmfmac: Add USB device 43566 to supported devices.
-References: <1403345479-13467-1-git-send-email-arend@broadcom.com>	<1403345479-13467-3-git-send-email-arend@broadcom.com> <CACna6rz81wbFET4GJH8xQ8aTqGfGccPGmD5vwfmmw9KWsZRPWg@mail.gmail.com>
-In-Reply-To: <CACna6rz81wbFET4GJH8xQ8aTqGfGccPGmD5vwfmmw9KWsZRPWg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Andy Lutomirski <luto@amacapital.net>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
+References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com> <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com> <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> <87r433ps7w.fsf@kamboji.qca.qualcomm.com> <53909602.5010703@candelatech.com> <87oay6mthk.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87oay6mthk.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/14 17:55, Rafał Miłecki wrote:
-> On 21 June 2014 12:11, Arend van Spriel<arend@broadcom.com>  wrote:
->> From: Hante Meuleman<meuleman@broadcom.com>
+On 06/05/2014 11:39 PM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>>> Michal already did. The error means that for some reason the
+>>> calibaration data was not found from OTP. OTP is the storage area where
+>>> the calibration data is normally stored within QCA9880.
 >>
->> Add the USB 43566 device to the supported devices list. The 43566
->> is a WiFi-only variant of the 43569. It uses the same FW as 43569.
->
-> What about USB ID of this device? You didn't add any. Is it shared
-> with some different one? A 0a5c:bd27 maybe?
+>> I fought this with .387 firmware and WLE900VX NICs.  If it's a common
+>> problem with more than a single NIC (ie, not just a bad piece of
+>> hardware), then one could load my firmware and my ath10k patches.
+> 
+> That's XB143, right? I think that's different as firmware started to
+> support XB143 only starting from 10.1.467.
 
-The 43566 has exactly the same USB ID as the 43569. The bootloader in 
-the device will tell brcmfmac what it is during probe. These devices are 
-exactly the same for the WiFi part, but 43569 additionally has BT logic 
-inside being a composite USB device. Patch 4 probably is needed to make 
-that work. That probably would have been clear when mentioned in the 
-43569 patch.
 
-Regards,
-Arend
+Yes.  My point is that I have the ability to get debug info out of
+of the otp in my modified firmware, so it is possible to debug why
+the otp is failing in the first place, and possibly fix otp to work
+with that NIC.
+
+I'll start begging to get my CT firmware support in upstream kernels
+as soon as we get the firmware-crash stuff ironed out :)
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
