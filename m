@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:60294 "EHLO lekensteyn.nl"
+Received: from mga01.intel.com ([192.55.52.88]:51887 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870AbaFWWaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 18:30:06 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCHv3 6/6] drivers/staging/rtl8821ae: replace magic number by macro
-Date: Tue, 24 Jun 2014 00:29:54 +0200
-Message-ID: <1455413.BevQxGKhmu@al> (sfid-20140624_003011_465147_6979B31C)
-In-Reply-To: <1403561511-8117-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1403561511-8117-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	id S1751872AbaFFLO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2014 07:14:56 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
+ during channel switch
+Date: Fri, 6 Jun 2014 11:13:42 +0000
+Message-ID: <1402053222.2004.27.camel@dubbel> (sfid-20140606_131459_743256_E98F8CAA)
+References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
+	 <CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
+	 <1402036258.2004.10.camel@dubbel>
+	 <CA+BoTQ=wZV8dviGE8HAFC1j=XNqJDkxUaHV5HFkiLMs2arCVHQ@mail.gmail.com>
+	 <1402040251.2004.20.camel@dubbel>
+	 <CA+BoTQ=X9Vg+=PvdRuFTcL+1hA6Yg6Vne3_NfBx_A6yS91b0PA@mail.gmail.com>
+	 <1402041842.2004.24.camel@dubbel>
+	 <CA+BoTQnKmJONd3Rp5MjKRPrRxs8DagA4p3Ww2VTEwYA6U1ogVQ@mail.gmail.com>
+In-Reply-To: <CA+BoTQnKmJONd3Rp5MjKRPrRxs8DagA4p3Ww2VTEwYA6U1ogVQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(staging drivers are handled by Greg KH, cc'ing him)
-
-On Tuesday 24 June 2014 00:11:51 Rickard Strandqvist wrote:
-> For consistency with other drivers, replace a magic number by a macro.
-> 
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> Reviewed-by: Peter Wu <peter@lekensteyn.nl>
-> ---
->  drivers/staging/rtl8821ae/rtl8821ae/hw.c  |    2 +-
->  drivers/staging/rtl8821ae/rtl8821ae/reg.h |    1 +
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/rtl8821ae/rtl8821ae/hw.c b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
-> index 1b8583b..1aa1661 100644
-> --- a/drivers/staging/rtl8821ae/rtl8821ae/hw.c
-> +++ b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
-> @@ -1623,7 +1623,7 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
->  
->  	rtl_write_byte(rtlpriv, (MSR), bt_msr);
->  	rtlpriv->cfg->ops->led_control(hw, ledaction);
-> -	if ((bt_msr & ~0xfc) == MSR_AP)
-> +	if ((bt_msr & MSR_MASK) == MSR_AP)
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->  	else
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-> diff --git a/drivers/staging/rtl8821ae/rtl8821ae/reg.h b/drivers/staging/rtl8821ae/rtl8821ae/reg.h
-> index beffb42..4cb3ca9 100644
-> --- a/drivers/staging/rtl8821ae/rtl8821ae/reg.h
-> +++ b/drivers/staging/rtl8821ae/rtl8821ae/reg.h
-> @@ -431,6 +431,7 @@
->  #define	MSR_ADHOC					0x01
->  #define	MSR_INFRA					0x02
->  #define	MSR_AP						0x03
-> +#define	MSR_MASK					0x03
->  
->  #define	RRSR_RSC_OFFSET				21
->  #define	RRSR_SHORT_OFFSET			23
-> 
-
+T24gRnJpLCAyMDE0LTA2LTA2IGF0IDEwOjEyICswMjAwLCBNaWNoYWwgS2F6aW9yIHdyb3RlOg0K
+PiBPbiA2IEp1bmUgMjAxNCAxMDowNCwgQ29lbGhvLCBMdWNpYW5vIDxsdWNpYW5vLmNvZWxob0Bp
+bnRlbC5jb20+IHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxNC0wNi0wNiBhdCAwOTo1NiArMDIwMCwg
+TWljaGFsIEthemlvciB3cm90ZToNCj4gPj4gT24gNiBKdW5lIDIwMTQgMDk6MzcsIENvZWxobywg
+THVjaWFubyA8bHVjaWFuby5jb2VsaG9AaW50ZWwuY29tPiB3cm90ZToNCj4gWy4uLl0NCj4gPj4g
+PiBzdGF0aWMgdTMyIGllZWU4MDIxMV92aWZfcXVldWVzX3RvX3dha2Uoc3RydWN0IGllZWU4MDIx
+MV9sb2NhbCAqbG9jYWwsDQo+ID4+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLA0KPiA+PiA+ICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIHF1ZXVlX3N0b3BfcmVhc29u
+IHJlYXNvbikNCj4gPj4gPiB7DQo+ID4+ID4gICAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9p
+Zl9kYXRhICpzZGF0YV9pdGVyOw0KPiA+PiA+ICAgICAgICAgdW5zaWduZWQgbG9uZyBxdWV1ZXMs
+IHF1ZXVlc19pdGVyLCBxOw0KPiA+PiA+ICAgICAgICAgaW50IGk7DQo+ID4+ID4NCj4gPj4gPiAg
+ICAgICAgIGxvY2tkZXBfYXNzZXJ0X2hlbGQoJmxvY2FsLT5tdHgpOw0KPiA+PiA+DQo+ID4+ID4g
+ICAgICAgICBxdWV1ZXMgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9jYWwsIHNkYXRhKTsN
+Cj4gPj4gPg0KPiA+PiA+ICAgICAgICAgcmN1X3JlYWRfbG9jaygpOw0KPiA+PiA+ICAgICAgICAg
+bGlzdF9mb3JfZWFjaF9lbnRyeV9yY3Uoc2RhdGFfaXRlciwgJmxvY2FsLT5pbnRlcmZhY2VzLCBs
+aXN0KSB7DQo+ID4+ID4gICAgICAgICAgICAgICAgIGlmICghaWVlZTgwMjExX3NkYXRhX3J1bm5p
+bmcoc2RhdGFfaXRlcikpDQo+ID4+ID4gICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7
+DQo+IA0KPiBIbW0sIGFjdHVhbGx5LCBzaG91bGRuJ3Qgd2UgYGlmIChzZGF0YSA9PSBzZGF0YV9p
+dGVyKSBjb250aW51ZWA/DQo+IE90aGVyd2lzZSB5b3UnbGwgbmV2ZXIgd2FrZSBxdWV1ZXMsIHdp
+bGwgeW91Pw0KDQpBaG1tbS4uLiBZZXMgb2YgY291cnNlLiA6KQ0KDQoNCj4gPj4gPiAgICAgICAg
+ICAgICAgICAgcXVldWVzX2l0ZXIgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9jYWwsIHNk
+YXRhX2l0ZXIpOw0KPiA+PiA+ICAgICAgICAgICAgICAgICBmb3JfZWFjaF9zZXRfYml0KGksICZx
+dWV1ZXNfaXRlciwgbG9jYWwtPmh3LnF1ZXVlcykgew0KPiA+PiA+ICAgICAgICAgICAgICAgICAg
+ICAgICAgIHEgPSBzZGF0YS0+dmlmLmh3X3F1ZXVlW2ldOw0KPiA+PiA+DQo+ID4+ID4gICAgICAg
+ICAgICAgICAgICAgICAgICAgaWYgKHRlc3RfYml0KHJlYXNvbiwgJmxvY2FsLT5xdWV1ZV9zdG9w
+X3JlYXNvbnNbcV0pKQ0KPiA+PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcXVl
+dWVzICY9IH5xOw0KPiA+PiA+ICAgICAgICAgICAgICAgICB9DQo+ID4+ID4gICAgICAgICB9DQo+
+ID4+ID4gICAgICAgICByY3VfcmVhZF91bmxvY2soKTsNCj4gPj4gPg0KPiA+PiA+ICAgICAgICAg
+cmV0dXJuIHF1ZXVlczsNCj4gPj4gPiB9DQo+ID4+ID4NCj4gPj4gPiB2b2lkIGllZWU4MDIxMV93
+YWtlX3ZpZl9xdWV1ZXMoc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwsDQo+ID4+ID4gICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEg
+KnNkYXRhLA0KPiA+PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIHF1ZXVl
+X3N0b3BfcmVhc29uIHJlYXNvbikNCj4gPj4gPiB7DQo+ID4+ID4gICAgICAgICB1bnNpZ25lZCBp
+bnQgcXVldWVzID0gaWVlZTgwMjExX3ZpZl9xdWV1ZXNfdG9fd2FrZShsb2NhbCwgc2RhdGEsIHJl
+YXNvbik7DQo+ID4+ID4NCj4gPj4gPiAgICAgICAgIGllZWU4MDIxMV93YWtlX3F1ZXVlc19ieV9y
+ZWFzb24oJmxvY2FsLT5odywgcXVldWVzLCByZWFzb24pOw0KPiA+PiA+IH0NCj4gPj4NCj4gPj4g
+T25jZSB5b3Ugc2V0IGxvY2FsLT5xdWV1ZV9zdG9wX3JlYXNvbnNbXSBmb3IgYW4gb3ZlcmxhcHBp
+bmcgcXVldWUgeW91DQo+ID4+IHdvbid0IGJlIGFibGUgdG8gd2FrZSBpdCB3aXRoIGllZWU4MDIx
+MV93YWtlX3ZpZl9xdWV1ZXMoKSBhbG9uZS4NCj4gPj4gWW91J2xsIG5lZWQgdG8gY2FsbCBpZWVl
+ODAyMTFfd2FrZV9xdWV1ZXMoKSB0byBkbyB0aGF0LiBJcyB0aGF0IHdoYXQNCj4gPj4geW91IGlu
+dGVuZGVkPw0KPiA+DQo+ID4gTW9yZSBvciBsZXNzLiAgTXkgaWRlYSBpcyB0aGF0IG9ubHkgdGhl
+ICpsYXN0KiB2aWYgdGhhdCB0cmllcyB0byB3YWtlDQo+ID4gdGhlIG92ZXJsYXBwaW5nIHF1ZXVl
+LCB3aWxsIGFjdHVhbGx5IGRvIHNvLg0KPiANCj4gU28gaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVl
+cygpIHdvdWxkIGJlIGNhbGxlZCByZWdhcmRsZXNzIG9mIHRoZQ0KPiBpZWVlODAyMTFfY3NhX25l
+ZWRzX2Jsb2NrX3R4KCkgYW5kIGllZWU4MDIxMV93YWtlX3F1ZXVlcygpIGlzIGNhbGxlZA0KPiBs
+aWtlIGl0IHdhcyBiZWZvcmUgKGkuZS4gd2hlbiBhbGwgYmxvY2tfdHggaW50ZXJmYWNlcyBhcmUg
+ZG9uZSkuDQoNClllcywgaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVlcygpIHdvdWxkIGJlIGNhbGxl
+ZCByZWdhcmRsZXNzIG9mIHRoZQ0KaWVlZTgwMjExX2NzYV9uZWVkc19ibG9ja190eCgpLCBidXQg
+d2Ugc2hvdWxkIHByb2JhYmx5IHN0aWxsIGNoZWNrIGlmDQp0aGUgdmlmIGluIHF1ZXN0aW9uIGhh
+cyBibG9ja190eCBzZXQ/DQoNCkFuZCBJIGRvbid0IHNlZSB3aHkgd2Ugd291bGQgaGF2ZSB0byBj
+YWxsIGllZWU4MDIxMV93YWtlX3F1ZXVlcygpIGFnYWluDQphdCB0aGUgZW5kLi4uIHdvdWxkIHRo
+YXQgc3RpbGwgYmUgbmVjZXNzYXJ5Pw0KDQotLQ0KTHVjYS4NCg==
