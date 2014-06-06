@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:58263 "EHLO
-	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964867AbaFLRem (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43956 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851AbaFFQB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 13:34:42 -0400
-Subject: [PATCH v2 2/2] rt2800usb:fix hang during firmware load
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-From: Michael Braun <michael-dev@fami-braun.de>
-Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 12 Jun 2014 19:33:41 +0200
-Message-ID: <20140612173341.15935.7058.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140612_193449_420305_EBEA208C)
-In-Reply-To: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
-References: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
+	Fri, 6 Jun 2014 12:01:27 -0400
+Message-ID: <5391E5D7.1030302@candelatech.com> (sfid-20140606_180131_874127_42617108)
+Date: Fri, 06 Jun 2014 09:01:27 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com> <87bnu6msra.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87bnu6msra.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) boots into a state that does
-not actually require loading a firmware file. The vendors driver finds out
-about this by checking a firmware state register, so this patch adds this here.
+On 06/05/2014 11:55 PM, Kalle Valo wrote:
+> greearb@candelatech.com writes:
+> 
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Store the firmware crash registers and last 128 or so
+>> firmware debug-log ids and present them to user-space
+>> via debugfs.
+>>
+>> Should help with figuring out why the firmware crashed.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> 
+> [...]
+> 
+>> +	dump_data->kernel_ver_code = LINUX_VERSION_CODE;
+>> +	strncpy(dump_data->kernel_ver, VERMAGIC_STRING,
+>> +		sizeof(dump_data->kernel_ver) - 1);
+> 
+> Other thing nice to have here is the kernel timestamp in the kernel log
+> "[123456.4321]". How difficult would it be to add that to the dump?
 
-Finally, with this patch applied, my wifi dongle actually becomes
-useful (scan + connect to wpa network works).
+It's easy to get the time-of-day, if that is what you mean.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+I'll add that...
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 11583ca..e11dab2 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -278,8 +278,13 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Write firmware to device.
- 	 */
--	rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
--				      data + offset, length);
-+	if (rt2800usb_autorun_detect(rt2x00dev)) {
-+		rt2x00_info(rt2x00dev,
-+			    "Firmware loading not required - NIC in AutoRun mode\n");
-+	} else {
-+		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-+					      data + offset, length);
-+	}
- 
- 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
- 	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
