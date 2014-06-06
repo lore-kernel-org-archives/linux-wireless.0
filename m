@@ -1,154 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63181 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932230AbaFPQij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:39 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 15/25] wil6210: add 'freq' and 'link' debugfs entries
-Date: Mon, 16 Jun 2014 19:37:13 +0300
-Message-ID: <1402936643-31819-16-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190458_478101_3D95EA22)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mga14.intel.com ([192.55.52.115]:37204 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751426AbaFFGcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2014 02:32:08 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
+ during channel switch
+Date: Fri, 6 Jun 2014 06:31:03 +0000
+Message-ID: <1402036258.2004.10.camel@dubbel> (sfid-20140606_083212_773092_60F2FEF5)
+References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
+	 <CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
+In-Reply-To: <CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Expose operational frequency and link info
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  4 +-
- drivers/net/wireless/ath/wil6210/debugfs.c  | 76 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +
- 3 files changed, 80 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 850a2f1..4ac2c20 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -104,8 +104,8 @@ int wil_iftype_nl2wmi(enum nl80211_iftype type)
- 	return -EOPNOTSUPP;
- }
- 
--static int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
--			      struct station_info *sinfo)
-+int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
-+		       struct station_info *sinfo)
- {
- 	struct wmi_notify_req_cmd cmd = {
- 		.cid = cid,
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 89f0d09..d6acb30 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -773,6 +773,80 @@ static const struct file_operations fops_temp = {
- 	.llseek		= seq_lseek,
- };
- 
-+/*---------freq------------*/
-+static int wil_freq_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	struct wireless_dev *wdev = wil_to_wdev(wil);
-+	u16 freq = wdev->chandef.chan ? wdev->chandef.chan->center_freq : 0;
-+
-+	seq_printf(s, "Freq = %d\n", freq);
-+
-+	return 0;
-+}
-+
-+static int wil_freq_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_freq_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_freq = {
-+	.open		= wil_freq_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
-+/*---------link------------*/
-+static int wil_link_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	struct station_info sinfo;
-+	int i, rc;
-+
-+	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
-+		struct wil_sta_info *p = &wil->sta[i];
-+		char *status = "unknown";
-+		switch (p->status) {
-+		case wil_sta_unused:
-+			status = "unused   ";
-+			break;
-+		case wil_sta_conn_pending:
-+			status = "pending  ";
-+			break;
-+		case wil_sta_connected:
-+			status = "connected";
-+			break;
-+		}
-+		seq_printf(s, "[%d] %pM %s%s\n", i, p->addr, status,
-+			   (p->data_port_open ? " data_port_open" : ""));
-+
-+		if (p->status == wil_sta_connected) {
-+			rc = wil_cid_fill_sinfo(wil, i, &sinfo);
-+			if (rc)
-+				return rc;
-+
-+			seq_printf(s, "  Tx_mcs = %d\n", sinfo.txrate.mcs);
-+			seq_printf(s, "  Rx_mcs = %d\n", sinfo.rxrate.mcs);
-+			seq_printf(s, "  SQ     = %d\n", sinfo.signal);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int wil_link_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_link_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_link = {
-+	.open		= wil_link_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- /*---------Station matrix------------*/
- static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
- {
-@@ -880,6 +954,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 	debugfs_create_file("tx_mgmt", S_IWUSR, dbg, wil, &fops_txmgmt);
- 	debugfs_create_file("wmi_send", S_IWUSR, dbg, wil, &fops_wmi);
- 	debugfs_create_file("temp", S_IRUGO, dbg, wil, &fops_temp);
-+	debugfs_create_file("freq", S_IRUGO, dbg, wil, &fops_freq);
-+	debugfs_create_file("link", S_IRUGO, dbg, wil, &fops_link);
- 
- 	wil->rgf_blob.data = (void * __force)wil->csr + 0;
- 	wil->rgf_blob.size = 0xa000;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 4cbb8ce..fd6ff09 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -512,6 +512,8 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- int wil6210_debugfs_init(struct wil6210_priv *wil);
- void wil6210_debugfs_remove(struct wil6210_priv *wil);
-+int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
-+		       struct station_info *sinfo);
- 
- struct wireless_dev *wil_cfg80211_init(struct device *dev);
- void wil_wdev_free(struct wil6210_priv *wil);
--- 
-1.9.1
-
+T24gRnJpLCAyMDE0LTA2LTA2IGF0IDA3OjUxICswMjAwLCBNaWNoYWwgS2F6aW9yIHdyb3RlOg0K
+PiBPbiA1IEp1bmUgMjAxNCAxODoyNiwgRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1i
+YWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogTHVjaWFubyBDb2VsaG8gPGx1Y2lhbm8u
+Y29lbGhvQGludGVsLmNvbT4NCj4gPg0KPiA+IEluc3RlYWQgb2Ygc3RvcHBpbmcgYWxsIHRoZSBo
+YXJkd2FyZSBxdWV1ZXMgZHVyaW5nIGNoYW5uZWwgc3dpdGNoLA0KPiA+IHdoaWNoIGlzIGVzcGVj
+aWFsbHkgYmFkIHdoZW4gd2UgaGF2ZSBsYXJnZSBDU0EgY291bnRzLCBzdG9wIG9ubHkgdGhlDQo+
+ID4gcXVldWVzIHRoYXQgYXJlIGFzc2lnbmVkIHRvIHRoZSB2aWYgdGhhdCBpcyBwZXJmb3JtaW5n
+IHRoZSBjaGFubmVsDQo+ID4gc3dpdGNoLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogTHVjaWFu
+byBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBF
+bW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+IC0tLQ0K
+PiA+ICBuZXQvbWFjODAyMTEvY2ZnLmMgICB8IDEwICsrKystLS0tLS0NCj4gPiAgbmV0L21hYzgw
+MjExL2lmYWNlLmMgfCAgNSArKy0tLQ0KPiA+ICBuZXQvbWFjODAyMTEvbWxtZS5jICB8IDIwICsr
+KysrKysrLS0tLS0tLS0tLS0tDQo+ID4gIDMgZmlsZXMgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygr
+KSwgMjEgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL2Nm
+Zy5jIGIvbmV0L21hYzgwMjExL2NmZy5jDQo+ID4gaW5kZXggYzZmZTM1OC4uNTIxNWFiYiAxMDA2
+NDQNCj4gPiAtLS0gYS9uZXQvbWFjODAyMTEvY2ZnLmMNCj4gPiArKysgYi9uZXQvbWFjODAyMTEv
+Y2ZnLmMNCj4gPiBAQCAtMTE0Miw5ICsxMTQyLDggQEAgc3RhdGljIGludCBpZWVlODAyMTFfc3Rv
+cF9hcChzdHJ1Y3Qgd2lwaHkgKndpcGh5LCBzdHJ1Y3QgbmV0X2RldmljZSAqZGV2KQ0KPiA+ICAg
+ICAgICAgbXV0ZXhfbG9jaygmbG9jYWwtPm10eCk7DQo+ID4gICAgICAgICBzZGF0YS0+dmlmLmNz
+YV9hY3RpdmUgPSBmYWxzZTsNCj4gPiAgICAgICAgIGlmICghaWVlZTgwMjExX2NzYV9uZWVkc19i
+bG9ja190eChsb2NhbCkpDQo+ID4gLSAgICAgICAgICAgICAgIGllZWU4MDIxMV93YWtlX3F1ZXVl
+c19ieV9yZWFzb24oJmxvY2FsLT5odywNCj4gPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgSUVFRTgwMjExX01BWF9RVUVVRV9NQVAsDQo+ID4gLSAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIElFRUU4MDIxMV9RVUVVRV9TVE9QX1JFQVNPTl9DU0Ep
+Ow0KPiA+ICsgICAgICAgICAgICAgICBpZWVlODAyMTFfd2FrZV92aWZfcXVldWVzKGxvY2FsLCBz
+ZGF0YSwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBJRUVF
+ODAyMTFfUVVFVUVfU1RPUF9SRUFTT05fQ1NBKTsNCj4gPiAgICAgICAgIG11dGV4X3VubG9jaygm
+bG9jYWwtPm10eCk7DQo+ID4NCj4gPiAgICAgICAgIGtmcmVlKHNkYXRhLT51LmFwLm5leHRfYmVh
+Y29uKTsNCj4gPiBAQCAtMzE0Niw5ICszMTQ1LDggQEAgc3RhdGljIGludCBfX2llZWU4MDIxMV9j
+c2FfZmluYWxpemUoc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEpDQo+ID4gICAg
+ICAgICBjZmc4MDIxMV9jaF9zd2l0Y2hfbm90aWZ5KHNkYXRhLT5kZXYsICZzZGF0YS0+Y3NhX2No
+YW5kZWYpOw0KPiA+DQo+ID4gICAgICAgICBpZiAoIWllZWU4MDIxMV9jc2FfbmVlZHNfYmxvY2tf
+dHgobG9jYWwpKQ0KPiA+IC0gICAgICAgICAgICAgICBpZWVlODAyMTFfd2FrZV9xdWV1ZXNfYnlf
+cmVhc29uKCZsb2NhbC0+aHcsDQo+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIElFRUU4MDIxMV9NQVhfUVVFVUVfTUFQLA0KPiA+IC0gICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBJRUVFODAyMTFfUVVFVUVfU1RPUF9SRUFTT05fQ1NBKTsNCj4g
+PiArICAgICAgICAgICAgICAgaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVlcyhsb2NhbCwgc2RhdGEs
+DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSUVFRTgwMjEx
+X1FVRVVFX1NUT1BfUkVBU09OX0NTQSk7DQo+IA0KPiBJIGRvbid0IHRoaW5rIHRoaXMgaXMgZ29p
+bmcgdG8gd29yayB3aXRoIHRoZSB1cGNvbW1pbmcgbXVsdGktdmlmDQo+IGNoYW5uZWwgc3dpdGNo
+aW5nLg0KPiANCj4gVGhlIGllZWU4MDIxMV9jc2FfbmVlZHNfYmxvY2tfdHgoKSB3aWxsIGJlY29t
+ZSBmYWxzZSB1cG9uICpsYXN0Kg0KPiBpbnRlcmZhY2Ugc3dpdGNoIGNvbXBsZXRpb24uIFRoaXMg
+bWVhbnMgcHJlY2VlZGluZyBpbnRlcmZhY2UgY3NhDQo+IGZpbmFsaXphdGlvbnMgd29uJ3QgY2Fs
+bCBpZWVlODAyMTFfd2FrZV92aWZfcXVldWVzKCkgc28geW91IGFjdHVhbGx5DQo+IGVuZCB1cCBu
+b3Qgd2FraW5nIGFsbCBvZiB0aGUgcXVldWVzIHdoZW4geW91IGZpbmlzaCBjc2EuDQoNCkkgdGhp
+bmsgdGhlIHJpZ2h0IHdheSB0byBkbyBpdCB3b3VsZCBiZSB0byB0cmF2ZXJzZSB0aGUgdmlmcyB0
+aGF0DQpzd2l0Y2hlZCBhbmQgd2FrZSB1cCB0aGVpciBxdWV1ZXMgd2hlbiB0aGUgc3dpdGNoIGlz
+IGZpbmlzaGVkLg0KDQoNCj4gSSB0aGluayB0aGlzIGNhbiBiZSBzb2x2ZWQgd2l0aDoNCj4gDQo+
+ICBpZiAoIWllZWU4MDIxMV9jc2FfbmVlZHNfYmxvY2tfdHgobG9jYWwpKQ0KPiAgICBsaXN0X2Zv
+cl9lYWNoKHNkYXRhLCAmbG9jYWwtPmludGVyZmFjZXMsIGxpc3QpDQo+ICAgICAgaWVlZTgwMjEx
+X3dha2VfdmlmX3F1ZXVlcyhsb2NhbCwgc2RhdGEsIFJFQVNPTl9DU0EpOw0KPiANCj4gQnV0IHRo
+ZW4gSSBndWVzcyBpdCdzIGp1c3QgYSBjb252b2x1dGVkIHdheSBvZiBzYXlpbmc6DQo+IA0KPiAg
+aWYgKCFpZWVlODAyMTFfY3NhX25lZWRzX2Jsb2NrX3R4KGxvY2FsKSkNCj4gICAgaWVlZTgwMjEx
+X3dha2VfcXVldWVzX2J5X3JlYXNvbihodywgUkVBU09OX0NTQSk7DQo+IA0KPiBJT1cgd2FraW5n
+IHNob3VsZCByZW1haW4gYXMgaXQgd2FzIHdoaWxlIHN0b3BwaW5nIGNhbiBiZSBkb25lIHBlci12
+aWYuDQo+IA0KPiBUaGlzIGdvZXMgZm9yIGFsbCBpbnN0YW5jZXMgY2FsbGluZyB3YWtlX3ZpZl9x
+dWV1ZXMoKSBpbiB0aGUgcGF0Y2guDQoNCkFjdHVhbGx5IEkgaGFkIGl0IGxpa2UgdGhpcyBpbiBt
+eSBmaXJzdCB2ZXJzaW9uLCBJIGhhZCBvbmx5IGFkZGVkIHRoZQ0Kc3RvcCBwYXJ0LCBsZWF2aW5n
+IHRoZSB3YWtlIGFzIGl0IHdhcy4gIEJ1dCB0aGVuIEkgdGhvdWdodCB0aGF0IHdlIHdvdWxkDQpi
+ZSByZXN0YXJ0aW5nIHF1ZXVlcyBmcm9tIG90aGVyIHZpZnMgdGhhdCB3ZSBkb24ndCBrbm93IGFi
+b3V0LiAgSWYNCmFub3RoZXIgdmlmIGlzIHN3aXRjaGluZyBzZXBhcmF0ZWx5LCB3ZSB3b3VsZCBy
+ZXN0YXJ0IGl0cyBxdWV1ZXMgYXQgdGhlDQp3cm9uZyB0aW1lLiAgSSB0aGluayB3ZSBzaG91bGRu
+J3QgYXNzdW1lIHRoYXQgYWxsIHZpZnMgYXJlIHBhcnQgb2YgdGhlDQpzYW1lIHN3aXRjaC4NCg0K
+DQo+IEdlbmVyYWxseSBJIGRvbid0IHRoaW5rIGhhdmluZyB3YWtlX3ZpZl9xdWV1ZXMoKSBpcyBh
+IGdvb2QgaWRlYS4gSXQncw0KPiByZWFsbHkgdHJpY2t5LiBTdXJlLCB5b3UgY2FuIGhhdmUgYSBz
+dG9wX3ZpZl9xdWV1ZXMoKSB3aGljaCB3aWxsDQo+IGJlaGF2ZSBhcyB5b3UgbWlnaHQgZXhwZWN0
+IChpLmUuIGZpcnN0IGNhbGwgc3RvcHMgcXVldWVzIGFuZA0KPiBvdmVybGFwcGluZyB2aWYtcXVl
+dWUgbWFwcGluZ3MgYXJlIG5vdCBhIGNvbmNlcm4pLiBCdXQNCj4gd2FrZV92aWZfcXVldWVzKCkg
+c2VlbXMgdG8gaGF2ZSBsaXR0bGUgcHJhY3RpY2FsIHVzZSB0byBtZSB3aXRob3V0IGFueQ0KPiBr
+aW5kIG9mIHBlci1xdWV1ZSByZWZlcmVuY2UgY291bnRpbmcuDQoNClllYWgsIHRoaXMgY291bGQg
+YmUgYSBwcm9ibGVtIGZvciB2aWZzIHRoYXQgYXJlIHNoYXJpbmcgdGhlIHNhbWUgcXVldWVzLg0K
+QnV0IHRoYXQgY2FzZSB3b3VsZCBiZSByZWFsbHkgdHJpY2t5IHdpdGggY2hhbm5lbC1zd2l0Y2gg
+YW55d2F5LiBiZWNhdXNlDQppZiB0aGUgY2hhbm5lbCBvZiBvbmUgdmlmIGlzIGNoYW5nZWQgYnV0
+IG5vdCB0aGUgb3RoZXIsIHRoZSBxdWV1ZSB3b3VsZA0KcHJvYmFibHkgaGF2ZSB0byBiZSBzcGxp
+dC4uLg0KDQotLQ0KTHVjYS4NCg==
