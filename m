@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay008.isp.belgacom.be ([195.238.6.174]:54885 "EHLO
-	mailrelay008.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751398AbaFRRtZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 13:49:25 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] LIBERTAS_CS: ioport_map/unmap relies on HAS_IOPORT_MAP
-Date: Wed, 18 Jun 2014 19:48:02 +0200
-Message-Id: <1403113682-7787-1-git-send-email-fabf@skynet.be> (sfid-20140618_194941_973449_9B5810BC)
+Received: from mga01.intel.com ([192.55.52.88]:29681 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752262AbaFFHBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2014 03:01:49 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/3] mac80211: add functions to stop and wake all queues
+ assigned to a vif
+Date: Fri, 6 Jun 2014 07:01:35 +0000
+Message-ID: <1402038095.2004.17.camel@dubbel> (sfid-20140606_090209_863224_97F1E479)
+References: <1401985567-27336-2-git-send-email-emmanuel.grumbach@intel.com>
+In-Reply-To: <1401985567-27336-2-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing following sh-allmodconfig errors reported on kisskb
-
-"
-drivers/net/wireless/libertas/if_cs.c:826:3: error: implicit declaration of function 'ioport_unmap' [-Werror=implicit-function-declaration]
-drivers/net/wireless/libertas/if_cs.c:878:2: error: implicit declaration of function 'ioport_map' [-Werror=implicit-function-declaration]
-"
-
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
-This is untested.
-
- drivers/net/wireless/libertas/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/libertas/Kconfig b/drivers/net/wireless/libertas/Kconfig
-index 0485c99..e6268ce 100644
---- a/drivers/net/wireless/libertas/Kconfig
-+++ b/drivers/net/wireless/libertas/Kconfig
-@@ -16,7 +16,7 @@ config LIBERTAS_USB
- 
- config LIBERTAS_CS
- 	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
--	depends on LIBERTAS && PCMCIA
-+	depends on LIBERTAS && PCMCIA && HAS_IOPORT_MAP
- 	---help---
- 	  A driver for Marvell Libertas 8385 CompactFlash devices.
- 
--- 
-1.8.4.5
-
+T24gVGh1LCAyMDE0LTA2LTA1IGF0IDE5OjI2ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
+ZToNCj4gRnJvbTogTHVjaWFubyBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCj4g
+DQo+IEluIHNvbWUgY2FzZXMgd2UgbWF5IHdhbnQgdG8gc3RvcCB0aGUgcXVldWVzIG9mIGEgc2lu
+Z2xlIHZpZiAoZm9yDQo+IGluc3RhbmNlIGR1cmluZyBhIGNoYW5uZWwtc3dpdGNoKS4gIEFkZCBh
+IGZ1bmN0aW9uIHRoYXQgc3RvcHMgYWxsIHRoZQ0KPiBxdWV1ZXMgdGhhdCBhcmUgYXNzaWduZWQg
+dG8gYSB2aWYuICBJZiBhIHF1ZXVlIGlzIGFzc2lnbmVkIHRvIG1vcmUNCj4gdGhhbiBvbmUgdmlm
+LCB0aGUgY29ycmVzcG9uZGluZyBuZXRkZXYgc3VicXVldWUgb2YgdGhlIG90aGVyIHZpZihzKQ0K
+PiB3aWxsIGFsc28gYmUgc3RvcHBlZC4gIElmIHRoZSBIVyBkb2Vzbid0IHNldCB0aGUNCj4gSUVF
+RTgwMjExX0hXX1FVRVVFX0NPTlRST0wgZmxhZywgdGhlbiBhbGwgcXVldWVzIGFyZSBzdG9wcGVk
+Lg0KPiANCj4gQWxzbyBhZGQgYSBjb3JyZXNwb25kaW5nIGZ1bmN0aW9uIHRvIHdha2UgdGhlIHF1
+ZXVlcyBvZiBhIHZpZiBiYWNrLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogTHVjaWFubyBDb2VsaG8g
+PGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1
+bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gLS0tDQoNClsuLi5dDQoNCj4g
+K3ZvaWQgaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVlcyhzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICps
+b2NhbCwNCj4gKwkJCSAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwN
+Cj4gKwkJCSAgICAgICBlbnVtIHF1ZXVlX3N0b3BfcmVhc29uIHJlYXNvbikNCj4gK3sNCj4gKwlp
+ZWVlODAyMTFfd2FrZV9xdWV1ZXNfYnlfcmVhc29uKCZsb2NhbC0+aHcsDQo+ICsJCQkJCWllZWU4
+MDIxMV9nZXRfdmlmX3F1ZXVlcyhsb2NhbCwgc2RhdGEpLA0KPiArCQkJCQlJRUVFODAyMTFfUVVF
+VUVfU1RPUF9SRUFTT05fRFJJVkVSKTsNCg0KT29vcHMsIHRoaXMgaXMgd3JvbmcsIGl0IHNob3Vs
+ZCBiZSByZWFzb24gaW5zdGVhZC4NCg0KLS0NCkx1Y2EuDQo=
