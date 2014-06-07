@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:44361 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754972AbaFAAiN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2014 20:38:13 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so3511759wgg.6
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2014 17:38:11 -0700 (PDT)
+Received: from nm14-vm5.bullet.mail.sg3.yahoo.com ([106.10.149.36]:21606 "EHLO
+	nm14-vm5.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752895AbaFGScW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jun 2014 14:32:22 -0400
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com> <539356EA.1070004@lwfinger.net>
+Message-ID: <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com> (sfid-20140607_203234_557700_88B721FC)
+Date: Sun, 8 Jun 2014 02:25:31 +0800 (SGT)
+From: Powerful Notageek <powerfulnotageek@yahoo.in>
+Reply-To: Powerful Notageek <powerfulnotageek@yahoo.in>
+Subject: Re: MT7630e availability in kernel by default
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <539356EA.1070004@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <20140531200556.GL17724@mwanda>
-References: <1401553786-7603-1-git-send-email-andrea.merello@gmail.com> <20140531200556.GL17724@mwanda>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Sun, 1 Jun 2014 02:37:51 +0200
-Message-ID: <CAN8YU5OFqTa0Ywwhgt_MzTA5+5v9YON_YkQyD3L+syCyjO+OKw@mail.gmail.com> (sfid-20140601_024032_579005_E4F3F0B9)
-Subject: Re: [PATCH 1/3] rtl818x_pci: make RSSI code more readable
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IHMO it does not matter.
+I tried them and here's the output: (verbose)
 
-The 10 is a stub value for rtl8187se (because of not-implemented-yet
-RSSI calculation), and indeed it is still here, in the rtl8187se case.
-This has the functional role of providing a valid >0 value for reported RSSI.
-This should hopefully go away soon :)
-So, for rtl8187se case, it always reported 10, and it does continue to do this.
+[root@localhost ~]# modprobe -v rt2800pci 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/lib/crc-ccitt.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/wireless/cfg80211.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/mac80211/mac80211.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/misc/eeprom/eeprom_93cx6.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00mmio.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800lib.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800mmio.ko 
+insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800pci.ko 
+[root@localhost ~]# echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+[root@localhost ~]# iwconfig 
+p3p1      no wireless extensions.
 
-The initialization to 1 has no any functional role, it is just to shut
-up gcc complaints about not initialized variable, but it should be
-always overwritten by one of the three cases, and we should never see
-this value really reported on RSSI measure.
+lo        no wireless extensions.
 
-Indeed they are two random values (chosen >0, just in case it does matter..)..
 
-Andrea
+Also lspci -v 
 
-On Sat, May 31, 2014 at 10:05 PM, Dan Carpenter
-<dan.carpenter@oracle.com> wrote:
-> On Sat, May 31, 2014 at 06:29:46PM +0200, Andrea Merello wrote:
->> remove the if-else chains and use switch-case to make code more
->> readable and avoiding long lines that broke in several lines
->>
->> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
->> ---
->>  drivers/net/wireless/rtl818x/rtl8180/dev.c | 13 ++++++++-----
->>  1 file changed, 8 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
->> index 2c1c02b..c2dd5e6 100644
->> --- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
->> +++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
->> @@ -209,7 +209,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
->>       struct rtl8180_priv *priv = dev->priv;
->>       struct rtl818x_rx_cmd_desc *cmd_desc;
->>       unsigned int count = 32;
->> -     u8 signal, agc, sq;
->> +     u8 agc, sq, signal = 1;
+03:00.0 Network controller: MEDIATEK Corp. MT7630e 802.11bgn Wireless Network Adapter
+ Subsystem: Foxconn International, Inc. Device e074
+ Flags: fast devsel, IRQ 17
+ Memory at f7900000 (32-bit, non-prefetchable) [size=1M]
+ Capabilities: [40] Power Management version 3
+ Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+ Capabilities: [70] Express Endpoint, MSI 00
+ Capabilities: [100] Advanced Error Reporting
+ Capabilities: [140] Device Serial Number 00-00-b1-93-a0-b6-5a-48
+ Capabilities: [150] Latency Tolerance Reporting
+
+[root@localhost ~]# uname -r 
+3.14.4-200.fc20.x86_64
+
+Thanks you. 
+
+
+
+
+On Saturday, 7 June 2014 11:46 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On 06/07/2014 12:59 PM, Powerful Notageek wrote:
+> Here's lspci -nn
 >
-> Shouldn't the 1 be 10?  Why did the defaults change?
+> 03:00.0 Network controller [0280]: MEDIATEK Corp. MT7630e 802.11bgn Wireless Network Adapter [14c3:7630]
 >
-> regards,
-> dan carpenter
+> I have tried using the drivers available on RALink/Mediatek on a pretty recent kernel of Fedora20, didn't seem to work.
 >
->>       dma_addr_t mapping;
->>
->>       while (count--) {
->> @@ -266,18 +266,21 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
->>                       rx_status.rate_idx = (flags >> 20) & 0xF;
->>                       agc = (flags2 >> 17) & 0x7F;
->>
->> -                     if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185) {
->> +                     switch (priv->chip_family) {
->> +                     case RTL818X_CHIP_FAMILY_RTL8185:
->>                               if (rx_status.rate_idx > 3)
->>                                       signal = 90 - clamp_t(u8, agc, 25, 90);
->>                               else
->>                                       signal = 95 - clamp_t(u8, agc, 30, 95);
->> -                     } else if (priv->chip_family ==
->> -                                RTL818X_CHIP_FAMILY_RTL8180) {
->> +                             break;
->> +                     case RTL818X_CHIP_FAMILY_RTL8180:
->>                               sq = flags2 & 0xff;
->>                               signal = priv->rf->calc_rssi(agc, sq);
->> -                     } else {
->> +                             break;
->> +                     case RTL818X_CHIP_FAMILY_RTL8187SE:
->>                               /* TODO: rtl8187se rssi */
->>                               signal = 10;
->> +                             break;
->>                       }
->>                       rx_status.signal = signal;
->>                       rx_status.freq = dev->conf.chandef.chan->center_freq;
->> --
->> 1.9.1
+> Thanks
+
+That PCI ID is not in the latest Ralink driver, which is essentially what will 
+be in kernel 3.16.
+
+Please try the following:
+
+su -
+modprobe -v rt2800pci
+echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+
+Does that yield a wireless lan device?
+
+
+
+
+Larry
