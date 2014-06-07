@@ -1,88 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55550 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbaFYH1D (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:55800 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769AbaFGO31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 03:27:03 -0400
-Message-ID: <53AA799F.7030807@broadcom.com> (sfid-20140625_092730_139638_A11E212A)
-Date: Wed, 25 Jun 2014 09:26:23 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, <tiwai@suse.de>,
-	<chunkeey@googlemail.com>, <leedom@chelsio.com>,
-	<cocci@systeme.lip6.fr>
-CC: <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<gregkh@linuxfoundation.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] p54: use request_firmware_direct() for optional EEPROM
- override
-References: <1403649583-12707-1-git-send-email-mcgrof@do-not-panic.com> <1403649583-12707-4-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1403649583-12707-4-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sat, 7 Jun 2014 10:29:27 -0400
+Received: by mail-la0-f47.google.com with SMTP id pn19so2176019lab.20
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 07:29:24 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Peter Wu <lekensteyn@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up conjunction always evaluates to false
+Date: Sat,  7 Jun 2014 16:30:19 +0200
+Message-Id: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140607_162949_763037_7AE427FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-06-14 00:39, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->
-> The p54 driver uses request_firmware() twice, once for actual
-> firmware and then another time for an optional user overide on
-> EEPROM, 3826.eeprom. The custom EEPROM  is optional but if not
-> present we'll introduce an extra lag of 60 seconds with udev
-> present. Annotate we don't want udev nonsense here to avoid
-> the lag in case its not present.
+Expression '(X & 0xfc) == 0x3' is always false
 
-I guess the fact that EEPROM is optional does not matter much. If doing 
-a second request you could always use request_firmware_direct(), right?
+I chose to remove this code, because it will not make any difference.
+But obviously it is rather a properly designed if statement that is needed.
 
-Regards,
-Arend
+This was partly found using a static code analysis program called cppcheck.
 
-> This was found with the following SmPL patch.
->
-> @ firmware_not_critical @
-> expression cf;
-> expression config_file;
-> expression dev;
-> int ret;
-> identifier l;
-> statement S;
-> @@
->
-> -	ret = request_firmware(&cf, config_file, dev);
-> +	ret = request_firmware_direct(&cf, config_file, dev);
-> 	if (ret < 0) {
-> 		... when != goto l;
-> 		    when != return ret;
-> 		    when any
-> 	} else {
-> 		...
-> 		release_firmware(cf);
-> 		...
-> 	}
->
-> Cc: Takashi Iwai <tiwai@suse.de>
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: cocci@systeme.lip6.fr
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->   drivers/net/wireless/p54/p54spi.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index de15171..63de5ee 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -193,7 +193,7 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
->   	/* allow users to customize their eeprom.
->   	 */
->
-> -	ret = request_firmware(&eeprom, "3826.eeprom", &priv->spi->dev);
-> +	ret = request_firmware_direct(&eeprom, "3826.eeprom", &priv->spi->dev);
->   	if (ret < 0) {
->   #ifdef CONFIG_P54_SPI_DEFAULT_EEPROM
->   		dev_info(&priv->spi->dev, "loading default eeprom...\n");
->
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 2b08671..a1520d5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1128,10 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
+-		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+-	else
+-		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
++	rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
