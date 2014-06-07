@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55106 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754513AbaFYTaJ (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:53842 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbaFGRvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 15:30:09 -0400
-Date: Wed, 25 Jun 2014 15:18:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-06-24
-Message-ID: <20140625191834.GG3445@tuxdriver.com> (sfid-20140625_213015_212667_603845DA)
-References: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
- <1403629678.10831.14.camel@jlt4.sipsolutions.net>
+	Sat, 7 Jun 2014 13:51:50 -0400
+Received: by mail-ob0-f178.google.com with SMTP id wp4so214163obc.9
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 10:51:49 -0700 (PDT)
+Message-ID: <53935133.5020303@lwfinger.net> (sfid-20140607_195153_217267_2BF11F10)
+Date: Sat, 07 Jun 2014 12:51:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403629678.10831.14.camel@jlt4.sipsolutions.net>
+To: Powerful Notageek <powerfulnotageek@yahoo.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: MT7630e availability in kernel by default
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com>
+In-Reply-To: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 07:07:58PM +0200, Johannes Berg wrote:
-> On Tue, 2014-06-24 at 18:22 +0200, Johannes Berg wrote:
-> 
-> > The biggest thing here is probably Arik's TDLS rework, beyond that we
-> > have smaller improvements and features like David's scanning IE thing,
-> 
-> The latter seems to cause some issues with the ath9k multi-channel code,
-> I didn't realize you'd merged that in.
-> 
-> The fix is not very difficult, so maybe you can just fix it when you
-> merge? See commit eb6a61549f530f1cc435512df3799f656094ba83 for how all
-> the other drivers were changed.
+On 06/07/2014 11:38 AM, Powerful Notageek wrote:
+> Hello,
+>
+> I was wondering if anyone here would know when the drivers for this card will be added to the kernel by default.
+>
+> 03:00.0 Network controller: MEDIATEK Corp. MT7630e 802.11bgn Wireless Network Adapter
 
-I don't see that commit ID anywhere...?
+Supplying the line from 'lspci -nn' is a lot more helpful than just lspci.
 
-The merge seemed to be clean too.  Are we looking at the same things?
+According to the Web, the wireless chip is from Ralink. There is a git repo that 
+is supposed to have a driver for the device, but it is full of the standard 
+rt2xxx driver files. Perhaps it will work with newer kernels, or by adding the 
+PCI ID to an existing driver. In any case, we need the PCI ID.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
+
