@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52721 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932123AbaFKPWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 11:22:46 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: rtl8723au: Add compiler check for -Wtype-limits
-References: <1402498666-5018-1-git-send-email-geert@linux-m68k.org>
-Date: Wed, 11 Jun 2014 17:22:36 +0200
-In-Reply-To: <1402498666-5018-1-git-send-email-geert@linux-m68k.org> (Geert
-	Uytterhoeven's message of "Wed, 11 Jun 2014 16:57:46 +0200")
-Message-ID: <wrfjfvjb4gjn.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140611_172251_216799_218110AE)
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:53435 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbaFGSQM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jun 2014 14:16:12 -0400
+Received: by mail-ob0-f181.google.com with SMTP id wm4so4213332obc.40
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 11:16:11 -0700 (PDT)
+Message-ID: <539356EA.1070004@lwfinger.net> (sfid-20140607_201616_573975_A980FFEB)
+Date: Sat, 07 Jun 2014 13:16:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Powerful Notageek <powerfulnotageek@yahoo.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: MT7630e availability in kernel by default
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+In-Reply-To: <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
-> Gcc versions before 4.3 do not support -Wtype-limits:
+On 06/07/2014 12:59 PM, Powerful Notageek wrote:
+> Here's lspci -nn
 >
-> cc1: error: unrecognized command line option "-Wtype-limits"
+> 03:00.0 Network controller [0280]: MEDIATEK Corp. MT7630e 802.11bgn Wireless Network Adapter [14c3:7630]
 >
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> ---
->  drivers/staging/rtl8723au/Makefile | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-
-Museum support is fine with me :)
-
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-
+> I have tried using the drivers available on RALink/Mediatek on a pretty recent kernel of Fedora20, didn't seem to work.
 >
-> diff --git a/drivers/staging/rtl8723au/Makefile
-> b/drivers/staging/rtl8723au/Makefile
-> index a6316af94b79..6b3f25555c74 100644
-> --- a/drivers/staging/rtl8723au/Makefile
-> +++ b/drivers/staging/rtl8723au/Makefile
-> @@ -53,4 +53,5 @@ r8723au-$(CONFIG_8723AU_AP_MODE) += core/rtw_ap.o
->  
->  obj-$(CONFIG_R8723AU)	:= r8723au.o
->  
-> -ccflags-y += -Wtype-limits -D__CHECK_ENDIAN__ -I$(src)/include
-> +ccflags-y += $(call cc-option,-Wtype-limits,)
-> +ccflags-y += -D__CHECK_ENDIAN__ -I$(src)/include
+> Thanks
+
+That PCI ID is not in the latest Ralink driver, which is essentially what will 
+be in kernel 3.16.
+
+Please try the following:
+
+su -
+modprobe -v rt2800pci
+echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+
+Does that yield a wireless lan device?
+
+Larry
+
+
