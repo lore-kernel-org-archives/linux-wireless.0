@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38435 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbaFBSrJ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50197 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864AbaFGP3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:47:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
-References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Mon, 2 Jun 2014 21:47:01 +0300
-In-Reply-To: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Thu, 29 May 2014 15:36:07 +0200")
-Message-ID: <87k38zxi6y.fsf@kamboji.qca.qualcomm.com> (sfid-20140602_204713_237900_3FDA21F8)
+	Sat, 7 Jun 2014 11:29:38 -0400
+Message-ID: <53932FE1.6090506@candelatech.com> (sfid-20140607_172940_575913_06E03C39)
+Date: Sat, 07 Jun 2014 08:29:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>	<87y4xal6vb.fsf@kamboji.qca.qualcomm.com>	<5391F51B.4020103@candelatech.com> <87zjhoj2rt.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zjhoj2rt.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-> Firmware 10.x supports up to 8 virtual AP interfaces
-> (comparing to 7 for main firmware). Previous vdev map
-> initialization was missing enough space for 8 + 1 vdevs
-> (we may spent one for mac monitor), due to wrong define used.
+
+On 06/07/2014 05:57 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
 >
-> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
+>> On 06/06/2014 02:33 AM, Kalle Valo wrote:
+>>
+>>>> +					kfree(buffer);
+>>>> +					goto save_regs_and_restart;
+>>>> +				}
+>>>> +
+>>>> +				ath10k_dbg_save_fw_dbg_buffer(ar, buffer,
+>>>> +							      dbuf.length);
+>>>> +				kfree(buffer);
+>>>
+>>> Instead of doing atomic allocations multiple times in a loop, would it
+>>> be better to allocate just one buffer before the loop and free it
+>>> afterwards?
+>>
+>> There is no hard guarantee that the buffer lengths are the same,
+>> so I think it needs to remain as is.  Would rather not crap out
+>> because firmware suddenly got more clever...
 >
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> This is related to my earlier comment about having a max len for the
+> buffers. So why not come up with a sane max length, allocate once a
+> temporary buffer of that length and use the same buffer in the loop?
 
-Thanks, applied to ath-current with this commit log:
+I can fix it at a 4k chunk if you want.  Current firmware uses around 2k chunk
+I believe, and only two buffers, so either way it's not a lot of work for CPU.
 
-commit dfa413de1e4388818f7dcdce0a90d6212e74895b
-Author: Bartosz Markowski <bartosz.markowski@tieto.com>
-Date:   Mon Jun 2 21:19:45 2014 +0300
-
-    ath10k: fix 8th virtual AP interface with DFS
-    
-    Firmware 10.x supports up to 8 virtual AP interfaces, but in a DFS
-    channel it was possible to create only 7 interfaces as ath10k internal
-    creates a monitor interface for DFS. Previous vdev map initialization
-    was missing enough space for 8 + 1 vdevs due to wrong define used and
-    that's why there was no space for 8th interface. Use the correct define
-    TARGET_10X_NUM_VDEVS with 10.x firmware to make it possible to create
-    the 8th virtual interface.
-    
-    Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
