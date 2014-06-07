@@ -1,106 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0225.hostedemail.com ([216.40.44.225]:40905 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755980AbaFWNm1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 09:42:27 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-	iss_storagedev@hp.com, linux-crypto@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-eata@i-connect.net,
-	devel@driverdev.osuosl.org, linux-arch@vger.kernel.org
-Subject: [PATCH 00/22] Add and use pci_zalloc_consistent
-Date: Mon, 23 Jun 2014 06:41:28 -0700
-Message-Id: <cover.1403530604.git.joe@perches.com> (sfid-20140623_154912_377178_F9D37D62)
+Received: from nm29.bullet.mail.sg3.yahoo.com ([106.10.151.24]:46407 "EHLO
+	nm29.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751368AbaFGTNq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jun 2014 15:13:46 -0400
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com> <539356EA.1070004@lwfinger.net> <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com> <53935FFE.10708@lwfinger.net>
+Message-ID: <1402168424.40608.YahooMailNeo@web193005.mail.sg3.yahoo.com> (sfid-20140607_211414_235896_51F26AB1)
+Date: Sun, 8 Jun 2014 03:13:44 +0800 (SGT)
+From: Powerful Notageek <powerfulnotageek@yahoo.in>
+Reply-To: Powerful Notageek <powerfulnotageek@yahoo.in>
+Subject: Re: MT7630e availability in kernel by default
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <53935FFE.10708@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding the helper reduces object code size as well as overall
-source size line count.
+dmesg says nothing and there's probably no firmware for the device (although linux-firmware is installed) 
 
-It's also consistent with all the various zalloc mechanisms
-in the kernel.
+These are the firmwares available to me: 
 
-Done with a simple cocci script and some typing.
+[root@localhost ~]# ll /usr/lib/firmware/rt2*
+-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561.bin
+-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561s.bin
+-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2661.bin
+-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2860.bin
+-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2870.bin
 
-Joe Perches (22):
-  pci-dma-compat: Add pci_zalloc_consistent helper
-  atm: Use pci_zalloc_consistent
-  block: Use pci_zalloc_consistent
-  crypto: Use pci_zalloc_consistent
-  infiniband: Use pci_zalloc_consistent
-  i810: Use pci_zalloc_consistent
-  media: Use pci_zalloc_consistent
-  amd: Use pci_zalloc_consistent
-  atl1e: Use pci_zalloc_consistent
-  enic: Use pci_zalloc_consistent
-  sky2: Use pci_zalloc_consistent
-  micrel: Use pci_zalloc_consistent
-  qlogic: Use pci_zalloc_consistent
-  irda: Use pci_zalloc_consistent
-  ipw2100: Use pci_zalloc_consistent
-  mwl8k: Use pci_zalloc_consistent
-  rtl818x: Use pci_zalloc_consistent
-  rtlwifi: Use pci_zalloc_consistent
-  scsi: Use pci_zalloc_consistent
-  staging: Use pci_zalloc_consistent
-  synclink_gt: Use pci_zalloc_consistent
-  vme: bridges: Use pci_zalloc_consistent
+Thank you. 
 
- drivers/atm/he.c                                   | 31 ++++++++---------
- drivers/atm/idt77252.c                             | 15 ++++----
- drivers/block/DAC960.c                             | 18 +++++-----
- drivers/block/cciss.c                              | 11 +++---
- drivers/block/skd_main.c                           | 25 +++++---------
- drivers/crypto/hifn_795x.c                         |  5 ++-
- drivers/gpu/drm/i810/i810_dma.c                    |  5 ++-
- drivers/infiniband/hw/amso1100/c2.c                |  6 ++--
- drivers/infiniband/hw/nes/nes_hw.c                 | 12 +++----
- drivers/infiniband/hw/nes/nes_verbs.c              |  5 ++-
- drivers/media/common/saa7146/saa7146_core.c        | 15 ++++----
- drivers/media/common/saa7146/saa7146_fops.c        |  5 +--
- drivers/media/pci/bt8xx/bt878.c                    | 16 +++------
- drivers/media/pci/ngene/ngene-core.c               |  7 ++--
- drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c  | 11 ++----
- drivers/media/usb/ttusb-dec/ttusb_dec.c            | 11 ++----
- drivers/net/ethernet/amd/pcnet32.c                 | 16 ++++-----
- drivers/net/ethernet/atheros/atl1e/atl1e_main.c    |  7 ++--
- drivers/net/ethernet/cisco/enic/vnic_dev.c         |  8 ++---
- drivers/net/ethernet/marvell/sky2.c                |  5 ++-
- drivers/net/ethernet/micrel/ksz884x.c              |  7 ++--
- .../net/ethernet/qlogic/netxen/netxen_nic_ctx.c    |  4 +--
- drivers/net/ethernet/qlogic/qlge/qlge_main.c       | 11 +++---
- drivers/net/irda/vlsi_ir.c                         |  4 +--
- drivers/net/wireless/ipw2x00/ipw2100.c             | 16 +++------
- drivers/net/wireless/mwl8k.c                       |  6 ++--
- drivers/net/wireless/rtl818x/rtl8180/dev.c         | 11 +++---
- drivers/net/wireless/rtlwifi/pci.c                 | 17 +++------
- drivers/scsi/3w-sas.c                              |  5 ++-
- drivers/scsi/a100u2w.c                             |  8 ++---
- drivers/scsi/be2iscsi/be_main.c                    | 10 +++---
- drivers/scsi/be2iscsi/be_mgmt.c                    |  3 +-
- drivers/scsi/csiostor/csio_wr.c                    |  8 +----
- drivers/scsi/eata.c                                |  5 ++-
- drivers/scsi/hpsa.c                                |  8 ++---
- drivers/scsi/megaraid/megaraid_mbox.c              | 16 ++++-----
- drivers/scsi/megaraid/megaraid_sas_base.c          |  8 ++---
- drivers/scsi/mesh.c                                |  6 ++--
- drivers/scsi/mvumi.c                               |  9 ++---
- drivers/scsi/pm8001/pm8001_sas.c                   |  5 ++-
- drivers/staging/rtl8192e/rtl8192e/rtl_core.c       | 15 +++-----
- drivers/staging/rtl8192ee/pci.c                    | 37 +++++++-------------
- drivers/staging/rtl8821ae/pci.c                    | 36 +++++++------------
- drivers/staging/slicoss/slicoss.c                  |  9 ++---
- drivers/staging/vt6655/device_main.c               | 40 +++++++---------------
- drivers/tty/synclink_gt.c                          |  5 ++-
- drivers/vme/bridges/vme_ca91cx42.c                 |  6 ++--
- drivers/vme/bridges/vme_tsi148.c                   |  6 ++--
- include/asm-generic/pci-dma-compat.h               |  8 +++++
- 49 files changed, 209 insertions(+), 354 deletions(-)
 
--- 
-1.8.1.2.459.gbcd45b4.dirty
 
+On Sunday, 8 June 2014 12:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On 06/07/2014 01:25 PM, Powerful Notageek wrote:
+> I tried them and here's the output: (verbose)
+>
+> [root@localhost ~]# modprobe -v rt2800pci
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/lib/crc-ccitt.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/wireless/cfg80211.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/mac80211/mac80211.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/misc/eeprom/eeprom_93cx6.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00mmio.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800lib.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800mmio.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800pci.ko
+> [root@localhost ~]# echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+> [root@localhost ~]# iwconfig
+> p3p1      no wireless extensions.
+>
+> lo        no wireless extensions.
+
+When you do the above, what ends up in the dmesg output? In particular, is the 
+firmware available?
+
+
+
+
+Larry
