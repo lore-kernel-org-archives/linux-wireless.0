@@ -1,95 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:33113 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbaFEH4V (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:56682 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752987AbaFGPyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 03:56:21 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so634336wes.15
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 00:56:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: fix bmi exchange tx/rx race
-Date: Thu,  5 Jun 2014 09:48:39 +0200
-Message-Id: <1401954520-3365-2-git-send-email-michal.kazior@tieto.com> (sfid-20140605_095623_882983_1064CFF4)
-In-Reply-To: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
-References: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 7 Jun 2014 11:54:00 -0400
+Received: by mail-pb0-f42.google.com with SMTP id md12so3721974pbc.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:53:59 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Jahnavi Meher <jahnavi.meher@redpinesignals.com>,
+	Jahnavi Meher <jahnavi.meher@gmail.com>
+Subject: [PATCH 4/4] rsi: Adding support for host based bgscan
+Date: Sun,  8 Jun 2014 02:53:21 +0530
+Message-Id: <1402176201-8573-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175405_949502_6E001FC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible for tx completion not to be
-processed. In that case an old stack pointer was
-left on copy engine tx ring. Next bmi exchange
-would immediately pop it and use complete() on the
-completion struct there causing corruption.
+From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 
-Make sure to wait for both tx and rx completions
-properly.
+Added support for performing host based bgscan.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 11 +++--------
- drivers/net/wireless/ath/ath10k/pci.h |  3 ++-
- 2 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  117 ++++++++++++++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   44 ++++++++++
+ drivers/net/wireless/rsi/rsi_main.h         |    9 ++
+ drivers/net/wireless/rsi/rsi_mgmt.h         |    3 +-
+ 4 files changed, 161 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d0004d5..06840d1 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1362,8 +1362,6 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
- 		ath10k_ce_recv_buf_enqueue(ce_rx, &xfer, resp_paddr);
- 	}
- 
--	init_completion(&xfer.done);
--
- 	ret = ath10k_ce_send(ce_tx, &xfer, req_paddr, req_len, -1, 0);
- 	if (ret)
- 		goto err_resp;
-@@ -1414,10 +1412,7 @@ static void ath10k_pci_bmi_send_done(struct ath10k_ce_pipe *ce_state)
- 					  &nbytes, &transfer_id))
- 		return;
- 
--	if (xfer->wait_for_resp)
--		return;
--
--	complete(&xfer->done);
-+	xfer->tx_done = true;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 4700714..1cb3164 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -341,6 +341,59 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
  }
  
- static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
-@@ -1438,7 +1433,7 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
- 	}
+ /**
++ * rsi_channel_change() - This function is a performs the checks
++ *			  required for changing a channel and sets
++ *			  the channel accordingly.
++ * @hw: Pointer to the ieee80211_hw structure.
++ *
++ * Return: 0 on success, negative error code on failure.
++ */
++static int rsi_channel_change(struct ieee80211_hw *hw)
++{
++	struct rsi_hw *adapter = hw->priv;
++	struct rsi_common *common = adapter->priv;
++	int status = -EOPNOTSUPP;
++	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
++	u16 channel = curchan->hw_value;
++	struct ieee80211_bss_conf *bss = &adapter->vifs[0]->bss_conf;
++
++	rsi_dbg(INFO_ZONE,
++		"%s: Set channel: %d MHz type: %d channel_no %d\n",
++		__func__, curchan->center_freq,
++		curchan->flags, channel);
++
++	if (bss->assoc) {
++		if (!common->hw_data_qs_blocked &&
++		    (rsi_get_connected_channel(adapter) != channel)) {
++			rsi_dbg(INFO_ZONE, "blk data q %d\n", channel);
++			if (!rsi_send_block_unblock_frame(common, true))
++				common->hw_data_qs_blocked = true;
++		}
++	}
++
++	status = rsi_band_check(common);
++	if (!status)
++		status = rsi_set_channel(adapter->priv, channel);
++
++	if (bss->assoc) {
++		if (common->hw_data_qs_blocked &&
++		    (rsi_get_connected_channel(adapter) == channel)) {
++			rsi_dbg(INFO_ZONE, "unblk data q %d\n", channel);
++			if (!rsi_send_block_unblock_frame(common, false))
++				common->hw_data_qs_blocked = false;
++		}
++	} else {
++		if (common->hw_data_qs_blocked) {
++			rsi_dbg(INFO_ZONE, "unblk data q %d\n", channel);
++			if (!rsi_send_block_unblock_frame(common, false))
++				common->hw_data_qs_blocked = false;
++		}
++	}
++
++	return status;
++}
++
++/**
+  * rsi_mac80211_config() - This function is a handler for configuration
+  *			   requests. The stack calls this function to
+  *			   change hardware configuration, e.g., channel.
+@@ -357,17 +410,10 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
+ 	int status = -EOPNOTSUPP;
  
- 	xfer->resp_len = nbytes;
--	complete(&xfer->done);
-+	xfer->rx_done = true;
+ 	mutex_lock(&common->mutex);
+-	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
+-		u16 channel = curchan->hw_value;
+-
+-		rsi_dbg(INFO_ZONE,
+-			"%s: Set channel: %d MHz type: %d channel_no %d\n",
+-			__func__, curchan->center_freq,
+-			curchan->flags, channel);
+-		common->band = curchan->band;
+-		status = rsi_set_channel(adapter->priv, channel);
+-	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
++		status = rsi_channel_change(hw);
++
+ 	mutex_unlock(&common->mutex);
+ 
+ 	return status;
+@@ -421,6 +467,15 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
+ 				      bss_conf->qos,
+ 				      bss_conf->aid);
+ 	}
++
++	if (changed & BSS_CHANGED_CQM) {
++		common->cqm_info.last_cqm_event_rssi = 0;
++		common->cqm_info.rssi_thold = bss_conf->cqm_rssi_thold;
++		common->cqm_info.rssi_hyst = bss_conf->cqm_rssi_hyst;
++		rsi_dbg(INFO_ZONE, "RSSI throld & hysteresis are: %d %d\n",
++			common->cqm_info.rssi_thold,
++			common->cqm_info.rssi_hyst);
++	}
+ 	mutex_unlock(&common->mutex);
  }
  
- static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
-@@ -1451,7 +1446,7 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
- 		ath10k_pci_bmi_send_done(tx_pipe);
- 		ath10k_pci_bmi_recv_data(rx_pipe);
+@@ -741,6 +796,37 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
+ }
  
--		if (completion_done(&xfer->done))
-+		if (xfer->tx_done && (xfer->rx_done == xfer->wait_for_resp))
- 			return 0;
+ /**
++ * rsi_perform_cqm() - This function performs cqm.
++ * @common: Pointer to the driver private structure.
++ * @bssid: pointer to the bssid.
++ * @rssi: RSSI value.
++ */
++static void rsi_perform_cqm(struct rsi_common *common,
++			    u8 *bssid,
++			    s8 rssi)
++{
++	struct rsi_hw *adapter = common->priv;
++	s8 last_event = common->cqm_info.last_cqm_event_rssi;
++	int thold = common->cqm_info.rssi_thold;
++	u32 hyst = common->cqm_info.rssi_hyst;
++	enum nl80211_cqm_rssi_threshold_event event;
++
++	if (rssi < thold && (last_event == 0 || rssi < (last_event - hyst)))
++		event = NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW;
++	else if (rssi > thold &&
++		 (last_event == 0 || rssi > (last_event + hyst)))
++		event = NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
++	else
++		return;
++
++	common->cqm_info.last_cqm_event_rssi = rssi;
++	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
++	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
++
++	return;
++}
++
++/**
+  * rsi_fill_rx_status() - This function fills rx status in
+  *			  ieee80211_rx_status structure.
+  * @hw: Pointer to the ieee80211_hw structure.
+@@ -755,6 +841,7 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 			       struct rsi_common *common,
+ 			       struct ieee80211_rx_status *rxs)
+ {
++	struct ieee80211_bss_conf *bss = &common->priv->vifs[0]->bss_conf;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct skb_info *rx_params = (struct skb_info *)info->driver_data;
+ 	struct ieee80211_hdr *hdr;
+@@ -789,6 +876,14 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 		rxs->flag |= RX_FLAG_DECRYPTED;
+ 		rxs->flag |= RX_FLAG_IV_STRIPPED;
+ 	}
++
++	/* CQM only for connected AP beacons, the RSSI is a weighted avg */
++	if (bss->assoc && !(memcmp(bss->bssid, hdr->addr2, ETH_ALEN))) {
++		if (ieee80211_is_beacon(hdr->frame_control))
++			rsi_perform_cqm(common, hdr->addr2, rxs->signal);
++	}
++
++	return;
+ }
  
- 		schedule();
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index dfdebb4..9401292 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -38,7 +38,8 @@
- #define DIAG_TRANSFER_LIMIT 2048
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index ab14151..d1b454e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -217,6 +217,7 @@ static void rsi_set_default_parameters(struct rsi_common *common)
+ 	common->min_rate = 0xffff;
+ 	common->fsm_state = FSM_CARD_NOT_READY;
+ 	common->iface_down = true;
++	common->endpoint = 0;
+ }
  
- struct bmi_xfer {
--	struct completion done;
-+	bool tx_done;
-+	bool rx_done;
- 	bool wait_for_resp;
- 	u32 resp_len;
+ /**
+@@ -1174,6 +1175,49 @@ static int rsi_eeprom_read(struct rsi_common *common)
+ }
+ 
+ /**
++ * This function sends a frame to block/unblock
++ * data queues in the firmware
++ *
++ * @param common Pointer to the driver private structure.
++ * @param block event - block if true, unblock if false
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_send_block_unblock_frame(struct rsi_common *common, bool block_event)
++{
++	struct rsi_mac_frame *mgmt_frame;
++	struct sk_buff *skb;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending block/unblock frame\n", __func__);
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame = (struct rsi_mac_frame *)skb->data;
++
++	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++	mgmt_frame->desc_word[1] = cpu_to_le16(BLOCK_HW_QUEUE);
++
++	if (block_event == true) {
++		rsi_dbg(INFO_ZONE, "blocking the data qs\n");
++		mgmt_frame->desc_word[4] = cpu_to_le16(0xf);
++	} else {
++		rsi_dbg(INFO_ZONE, "unblocking the data qs\n");
++		mgmt_frame->desc_word[5] = cpu_to_le16(0xf);
++	}
++
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++
++}
++
++
++/**
+  * rsi_handle_ta_confirm_type() - This function handles the confirm frames.
+  * @common: Pointer to the driver private structure.
+  * @msg: Pointer to received packet.
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 8629131..5baed94 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -142,6 +142,12 @@ struct rsi_thread {
+ 	atomic_t thread_done;
  };
+ 
++struct cqm_info {
++	s8 last_cqm_event_rssi;
++	int rssi_thold;
++	u32 rssi_hyst;
++};
++
+ struct rsi_hw;
+ 
+ struct rsi_common {
+@@ -194,6 +200,9 @@ struct rsi_common {
+ 	u32 pkt_cnt;
+ 	u8 min_weight;
+ 
++	/* bgscan related */
++	struct cqm_info cqm_info;
++
+ 	bool hw_data_qs_blocked;
+ };
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 5470d01..8b3c5c3 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -153,7 +153,7 @@ enum cmd_frame_type {
+ 	SCAN_REQUEST,
+ 	TSF_UPDATE,
+ 	PEER_NOTIFY,
+-	BLOCK_UNBLOCK,
++	BLOCK_HW_QUEUE,
+ 	SET_KEY_REQ,
+ 	AUTO_RATE_IND,
+ 	BOOTUP_PARAMS_REQUEST,
+@@ -272,6 +272,7 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
+ int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
+ 		     u8 key_type, u8 key_id, u32 cipher);
+ int rsi_set_channel(struct rsi_common *common, u16 chno);
++int rsi_send_block_unblock_frame(struct rsi_common *common, bool event);
+ void rsi_inform_bss_status(struct rsi_common *common, u8 status,
+ 			   const u8 *bssid, u8 qos_enable, u16 aid);
+ void rsi_indicate_pkt_to_os(struct rsi_common *common, struct sk_buff *skb);
 -- 
-1.8.5.3
+1.7.1
 
