@@ -1,100 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0170.hostedemail.com ([216.40.44.170]:36010 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752591AbaFOUir (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:60584 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368AbaFGSy4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2014 16:38:47 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: [PATCH -next 13/26] ath: Use dma_zalloc_coherent
-Date: Sun, 15 Jun 2014 13:37:42 -0700
-Message-Id: <55b103a2ec78c0031b348e103603bf9a0d9cac3b.1402863905.git.joe@perches.com> (sfid-20140615_224348_048697_C5A4C1FC)
-In-Reply-To: <cover.1402863904.git.joe@perches.com>
-References: <cover.1402863904.git.joe@perches.com>
+	Sat, 7 Jun 2014 14:54:56 -0400
+Received: by mail-oa0-f52.google.com with SMTP id j17so661446oag.11
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 11:54:56 -0700 (PDT)
+Message-ID: <53935FFE.10708@lwfinger.net> (sfid-20140607_205514_825256_B4CA5872)
+Date: Sat, 07 Jun 2014 13:54:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Powerful Notageek <powerfulnotageek@yahoo.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: MT7630e availability in kernel by default
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com> <539356EA.1070004@lwfinger.net> <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+In-Reply-To: <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+On 06/07/2014 01:25 PM, Powerful Notageek wrote:
+> I tried them and here's the output: (verbose)
+>
+> [root@localhost ~]# modprobe -v rt2800pci
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/lib/crc-ccitt.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/wireless/cfg80211.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/mac80211/mac80211.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/misc/eeprom/eeprom_93cx6.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00mmio.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800lib.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800mmio.ko
+> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800pci.ko
+> [root@localhost ~]# echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+> [root@localhost ~]# iwconfig
+> p3p1      no wireless extensions.
+>
+> lo        no wireless extensions.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath10k/pci.c  | 8 ++------
- drivers/net/wireless/ath/ath10k/wmi.c  | 8 ++------
- drivers/net/wireless/ath/wcn36xx/dxe.c | 6 ++----
- 3 files changed, 6 insertions(+), 16 deletions(-)
+When you do the above, what ends up in the dmesg output? In particular, is the 
+firmware available?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d0004d5..35045a4 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -359,16 +359,12 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 	 *   2) Buffer in DMA-able space
- 	 */
- 	orig_nbytes = nbytes;
--	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
--						       orig_nbytes,
--						       &ce_data_base,
--						       GFP_ATOMIC);
--
-+	data_buf = dma_zalloc_coherent(ar->dev, orig_nbytes, &ce_data_base,
-+				       GFP_ATOMIC);
- 	if (!data_buf) {
- 		ret = -ENOMEM;
- 		goto done;
- 	}
--	memset(data_buf, 0, orig_nbytes);
- 
- 	remaining_bytes = orig_nbytes;
- 	ce_data = ce_data_base;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 4b7782a..0093269 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1889,17 +1889,13 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
- 	if (!pool_size)
- 		return -EINVAL;
- 
--	ar->wmi.mem_chunks[idx].vaddr = dma_alloc_coherent(ar->dev,
--							   pool_size,
--							   &paddr,
--							   GFP_ATOMIC);
-+	ar->wmi.mem_chunks[idx].vaddr = dma_zalloc_coherent(ar->dev, pool_size,
-+							    &paddr, GFP_ATOMIC);
- 	if (!ar->wmi.mem_chunks[idx].vaddr) {
- 		ath10k_warn("failed to allocate memory chunk\n");
- 		return -ENOMEM;
- 	}
- 
--	memset(ar->wmi.mem_chunks[idx].vaddr, 0, pool_size);
--
- 	ar->wmi.mem_chunks[idx].paddr = paddr;
- 	ar->wmi.mem_chunks[idx].len = pool_size;
- 	ar->wmi.mem_chunks[idx].req_id = req_id;
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 73f12f1..1975a1a 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -177,13 +177,11 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
- 	int i;
- 
- 	size = wcn_ch->desc_num * sizeof(struct wcn36xx_dxe_desc);
--	wcn_ch->cpu_addr = dma_alloc_coherent(NULL, size, &wcn_ch->dma_addr,
--					      GFP_KERNEL);
-+	wcn_ch->cpu_addr = dma_zalloc_coherent(NULL, size, &wcn_ch->dma_addr,
-+					       GFP_KERNEL);
- 	if (!wcn_ch->cpu_addr)
- 		return -ENOMEM;
- 
--	memset(wcn_ch->cpu_addr, 0, size);
--
- 	cur_dxe = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
- 	cur_ctl = wcn_ch->head_blk_ctl;
- 
--- 
-1.8.1.2.459.gbcd45b4.dirty
+Larry
+
 
