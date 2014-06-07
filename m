@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:48393 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbaFKXxo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 19:53:44 -0400
-Received: by mail-oa0-f54.google.com with SMTP id eb12so559976oac.27
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 16:53:43 -0700 (PDT)
-Message-ID: <5398EC04.2090108@lwfinger.net> (sfid-20140612_015347_992911_DDBB8158)
-Date: Wed, 11 Jun 2014 18:53:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from lekensteyn.nl ([178.21.112.251]:40084 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752870AbaFGPaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jun 2014 11:30:00 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up conjunction always evaluates to false
+Date: Sat, 07 Jun 2014 17:02:30 +0200
+Message-ID: <1670424.dXK6NPb10R@al> (sfid-20140607_173016_524232_9452B34E)
+In-Reply-To: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 MIME-Version: 1.0
-To: James Cameron <quozl@laptop.org>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
-References: <20140611230513.GC913@drone.musicnaut.iki.fi> <20140611233407.GA13823@us.netrek.org>
-In-Reply-To: <20140611233407.GA13823@us.netrek.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/11/2014 06:34 PM, James Cameron wrote:
-> Check that the driver reports the channel the probe was heard on?
->
-> Another driver hit this and was fixed:
->
-> 	at76c50x: fix scan does not work with latest mac80211
->
+On Saturday 07 June 2014 16:30:19 Rickard Strandqvist wrote:
+> Expression '(X & 0xfc) == 0x3' is always false
 
-It would also be helpful to report what device you have as shown by 'lspci -nn'. 
-This problem does not occur with my BCM4312 with PCI ID 14e4:4315.
+While this is true, I believe that some other mistake is made.
 
-Larry
+> I chose to remove this code, because it will not make any difference.
+> But obviously it is rather a properly designed if statement that is needed.
+> 
+> This was partly found using a static code analysis program called cppcheck.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index 2b08671..a1520d5 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -1128,10 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+>  	}
+>  	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
+>  	rtlpriv->cfg->ops->led_control(hw, ledaction);
+> -	if ((bt_msr & 0xfc) == MSR_AP)
+
+If you look a few lines up, then you see that bt_msr is OR-ed with MSR_AP
+for AP interfaces. The 0xfc should be 0x03, see other drivers for example:
+
+rtl8723ae/hw.c:1112:    if ((bt_msr & 0x03) == MSR_AP)
+rtl8723be/hw.c:1200:    if ((bt_msr & 0x03) == MSR_AP)
+rtl8192cu/hw.c:1363:    if ((bt_msr & 0xfc) == MSR_AP)
+rtl8192ce/hw.c:1209:    if ((bt_msr & 0xfc) == MSR_AP)
+rtl8188ee/hw.c:1234:    if ((bt_msr & 0xfc) == MSR_AP)
+rtl8192de/hw.c:1131:    if ((bt_msr & 0xfc) == MSR_AP)
+
+> -		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> -	else
+> -		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+> +	rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+>  	return 0;
+>  }
+
+Kind regards,
+Peter
 
