@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:45487 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909AbaFDLHf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 07:07:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.10.1406041258200.2441@hadrien>
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
-	<CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
-	<alpine.DEB.2.10.1406041137270.2441@hadrien>
-	<063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
-	<alpine.DEB.2.10.1406041148590.2441@hadrien>
-	<CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com>
-	<alpine.DEB.2.10.1406041258200.2441@hadrien>
-Date: Wed, 4 Jun 2014 13:07:34 +0200
-Message-ID: <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com> (sfid-20140604_130748_537888_AA878683)
-Subject: Re: [PATCH 0/10] use safer test on the result of find_first_zero_bit
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: David Laight <David.Laight@aculab.com>,
-	linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	"adi-buildroot-devel@lists.sourceforge.net"
-	<adi-buildroot-devel@lists.sourceforge.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.ispras.ru ([83.149.199.45]:48456 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752753AbaFGDS4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2014 23:18:56 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Fariya Fatima <fariyaf@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH 2/2] rsi_91x_sdio: add error handling into rsi_module_init()
+Date: Sat,  7 Jun 2014 07:18:31 +0400
+Message-Id: <1402111111-8676-2-git-send-email-khoroshilov@ispras.ru> (sfid-20140607_051911_604576_71CD63D7)
+In-Reply-To: <1402111111-8676-1-git-send-email-khoroshilov@ispras.ru>
+References: <1402111111-8676-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+Fix rsi_module_init() to propagate sdio_register_driver() errors.
 
-On Wed, Jun 4, 2014 at 1:00 PM, Julia Lawall <julia.lawall@lip6.fr> wrote:
-> OK, thanks.  I was only looking at the C code.
->
-> But the C code contains a loop that is followed by:
->
->         if (!size)
->                 return result;
->         tmp = *p;
->
-> found_first:
->         tmp |= ~0UL << size;
->         if (tmp == ~0UL)        /* Are any bits zero? */
->                 return result + size;   /* Nope. */
->
-> In the first return, it would seem that result == size.  Could the second
-> one be changed to just return size?  It should not hurt performance.
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-"size" may have been changed between function entry and this line.
-So you have to store it in a temporary.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 2e39d38d6a9e..f2991682a66a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -822,9 +822,11 @@ static struct sdio_driver rsi_driver = {
+  */
+ static int rsi_module_init(void)
+ {
+-	sdio_register_driver(&rsi_driver);
++	int ret;
++
++	ret = sdio_register_driver(&rsi_driver);
+ 	rsi_dbg(INIT_ZONE, "%s: Registering driver\n", __func__);
+-	return 0;
++	return ret;
+ }
+ 
+ /**
+-- 
+1.8.3.2
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
