@@ -1,154 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:41660 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674AbaFLOKE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5102 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456AbaFGM4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 10:10:04 -0400
-Date: Thu, 12 Jun 2014 16:09:32 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: LKML <linux-kernel@vger.kernel.org>,
-	John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: net_timedelta() affected by settimeofday() (was: [patch 12/13]
- net: mac80211: Remove silly timespec dance)
-In-Reply-To: <1402564914.8095.9.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.DEB.2.10.1406121605470.5170@nanos> (sfid-20140612_161010_793019_8B26F57C)
-References: <20140611234024.103571777@linutronix.de>   <20140611234607.683770899@linutronix.de>   <1402555774.4224.1.camel@jlt4.sipsolutions.net>   <alpine.DEB.2.10.1406121017500.5170@nanos>   <1402562114.8095.3.camel@jlt4.sipsolutions.net>  
- (sfid-20140612_103558_525847_209A5C98) <1402562399.8095.5.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.10.1406121047280.5170@nanos> <1402564914.8095.9.camel@jlt4.sipsolutions.net>
+	Sat, 7 Jun 2014 08:56:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
+	<5390B632.7030305@candelatech.com>
+	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
+	<5391E842.4010401@candelatech.com>
+Date: Sat, 7 Jun 2014 15:55:56 +0300
+In-Reply-To: <5391E842.4010401@candelatech.com> (Ben Greear's message of "Fri,
+	6 Jun 2014 09:11:46 -0700")
+Message-ID: <874mzwkher.fsf@kamboji.qca.qualcomm.com> (sfid-20140607_145640_319158_42B96A0B)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Jun 2014, Johannes Berg wrote:
+Ben Greear <greearb@candelatech.com> writes:
 
-> On Thu, 2014-06-12 at 10:57 +0200, Thomas Gleixner wrote:
-> 
-> > > > Right, but isn't that odd? Suddenly your delay measurement here might be
-> > > > minutes, hours, or years if you settimeofday() between timestamping and
-> > > > calculating the delta. That seems very strange to me, why would that be
-> > > > the right behaviour in any way?
-> > 
-> > Indeed. clock monotonic is the appropriate one for measurements.
-> 
-> And that's what we had here with ktime_get_ts()? I thought so, just
-> making sure.
->  
-> > > > Now, it seems that there are only two current users of net_timedelta()
-> > > > (in DCCP) so perhaps it's not too late to change some of this?
-> > > > 
-> > > > Maybe in general the skb timestamp should be based on a different clock
-> > > > and only adjusted to real time when used in userspace?
-> > 
-> > You have the same problem then, just at a different place:
-> > 
-> >     ts = ktime_get();
-> > 
-> > 			settimeofday()
-> > 			   offset_mono_to_real = new value;
-> > 
-> >     userts = mono_to_real(ts);
-> 
-> Right. I'm not really sure if that's an issue though.
-> 
-> > But maybe that's not a real issue, as ktime_get_real() can race with
-> > settimeofday() or NTP as well.
-> > 
-> >    ts = ktime_get_real();
-> > 				settimeofday();
-> >    userts = ts;
-> > 
-> > So the user might see a weird timestamp for a packet, which cannot be
-> > correlated with the user space gettimeofday().
-> 
-> Right, once settimeofday() is called the timestamps from before/during
-> it can't really be correlated any more.
-> 
-> This is part of the userspace API already, but might it have been better
-> to expose the monotonic clock, since userspace can also get at it? Not
-> sure.
-> 
-> Either way it's an issue I guess; however I'm thinking your patch is
-> making it worse for the measurement in this particular code (where the
-> userspace issue doesn't come in, it should never be accessible there)
+> On 06/05/2014 11:10 PM, Kalle Valo wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>> 
+>>> I did not do this because I figure we will want ethtool support w/out
+>>> forcing debugfs to be enabled someday soon.
+>> 
+>> When we add ethtool support, it's easy to move these back. And then we
+>> need to move the code out from debug.c anyway.
+>
+> Well, it seems like needless churn and makes it harder to follow
+> 'git blame' when you move big chunks around.
 
-Fair enough. Still the timespec is silly. Here is an updated version.
+I don't care about 'git blame', the actual code is far more important to
+me. If git blame is so important, someone else can improve 'git blame'
+to detect moving code chunks.
 
-Thanks,
+> We would not have to move the code out of debug.c, but if you do want
+> it moved, lets pick that place now and just put it there to begin
+> with.
 
-	tglx
+Code in debug.c should have the data it owns in struct ath10k_debug.
 
------------------->
+>>> I'm a bit leery of adding spin-locks in the dump routine just for
+>>> this, but I can add and use a new spin-lock if you prefer.
+>> 
+>> Why a new spinlock? I didn't review the locking requirements, but I
+>> would first check ar->data_lock can be used.
+>
+> I think it has to be a spin-lock because the crash dump is gathered
+> in the irq handler, so I can't use a mutex as far as I know...
+>
+> I'll work on adding such a lock today.
 
-Subject: net: Mac80211: Remove silly timespec dance
-From: Thomas Gleixner <tglx@linutronix.de>
-Date: Wed, 11 Jun 2014 23:59:18 -0000
+I asked why add a _new_ spinlock as ar->data_lock is already a spinlock.
 
-Converting time from one format to another seems to give coders a warm
-and fuzzy feeling.
-
-Use the proper interfaces.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: John Stultz <john.stultz@linaro.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/status.c |    7 ++-----
- net/mac80211/tx.c     |    5 +----
- 2 files changed, 3 insertions(+), 9 deletions(-)
-
-
-Index: tip/net/mac80211/status.c
-===================================================================
---- tip.orig/net/mac80211/status.c
-+++ tip/net/mac80211/status.c
-@@ -473,8 +473,6 @@ static void ieee80211_tx_latency_end_msr
- 					    struct sta_info *sta,
- 					    struct ieee80211_hdr *hdr)
- {
--	ktime_t skb_dprt;
--	struct timespec dprt_time;
- 	u32 msrmnt;
- 	u16 tid;
- 	u8 *qc;
-@@ -506,9 +504,8 @@ static void ieee80211_tx_latency_end_msr
- 
- 	tx_lat = &sta->tx_lat[tid];
- 
--	ktime_get_ts(&dprt_time); /* time stamp completion time */
--	skb_dprt = ktime_set(dprt_time.tv_sec, dprt_time.tv_nsec);
--	msrmnt = ktime_to_ms(ktime_sub(skb_dprt, skb_arv));
-+	/* Calculate the latency */
-+	msrmnt = ktime_to_ms(ktime_sub(ktime_get(), skb_arv);
- 
- 	if (tx_lat->max < msrmnt) /* update stats */
- 		tx_lat->max = msrmnt;
-Index: tip/net/mac80211/tx.c
-===================================================================
---- tip.orig/net/mac80211/tx.c
-+++ tip/net/mac80211/tx.c
-@@ -1767,15 +1767,12 @@ fail:
- static void ieee80211_tx_latency_start_msrmnt(struct ieee80211_local *local,
- 					      struct sk_buff *skb)
- {
--	struct timespec skb_arv;
- 	struct ieee80211_tx_latency_bin_ranges *tx_latency;
- 
- 	tx_latency = rcu_dereference(local->tx_latency);
- 	if (!tx_latency)
- 		return;
--
--	ktime_get_ts(&skb_arv);
--	skb->tstamp = ktime_set(skb_arv.tv_sec, skb_arv.tv_nsec);
-+	skb->tstamp = ktime_get();
- }
- 
- /**
+-- 
+Kalle Valo
