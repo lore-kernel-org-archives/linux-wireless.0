@@ -1,138 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1046 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbaFELxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 07:53:48 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
-Subject: [PATCH 1/5] rt2x00: change beaconing locking
-Date: Thu,  5 Jun 2014 13:52:23 +0200
-Message-Id: <1401969147-3532-1-git-send-email-sgruszka@redhat.com> (sfid-20140605_135350_647355_BAAF6C5B)
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:64412 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070AbaFGPye (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jun 2014 11:54:34 -0400
+Received: by mail-pb0-f45.google.com with SMTP id um1so3713985pbc.4
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:54:34 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Jahnavi Meher <jahnavi.meher@gmail.com>
+Subject: [PATCH 0/4] rsi: Code fixes and adding support for 5GHz and bgscan.
+Date: Sun,  8 Jun 2014 02:53:55 +0530
+Message-Id: <1402176235-8605-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175439_227548_37D0FE15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is needed for further changes to keep global variables
-consistent when changing beaconing on diffrent vif's.
+This series of patches contains some fixes and adds support for 5GHz
+and bgscan.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c   |  7 +++++--
- drivers/net/wireless/rt2x00/rt2x00mac.c   |  6 ++----
- drivers/net/wireless/rt2x00/rt2x00queue.c | 21 ++-------------------
- 3 files changed, 9 insertions(+), 25 deletions(-)
+Jahnavi Meher (4):
+  rsi: Fixes and clean up of code.
+  rsi: Adding support for 5GHz
+  rsi: Change the logic for dequeuing packets in hal.
+  rsi: Adding support for host based bgscan
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 2bde672..72e3e81 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -141,8 +141,11 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
- 
--	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags))
-+	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags)) {
-+		mutex_lock(&intf->beacon_skb_mutex);
- 		rt2x00queue_update_beacon(rt2x00dev, vif);
-+		mutex_unlock(&intf->beacon_skb_mutex);
-+	}
- }
- 
- static void rt2x00lib_intf_scheduled(struct work_struct *work)
-@@ -216,7 +219,7 @@ static void rt2x00lib_beaconupdate_iter(void *data, u8 *mac,
- 	 * never be called for USB devices.
- 	 */
- 	WARN_ON(rt2x00_is_usb(rt2x00dev));
--	rt2x00queue_update_beacon_locked(rt2x00dev, vif);
-+	rt2x00queue_update_beacon(rt2x00dev, vif);
- }
- 
- void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 212ac48..0aad22d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -624,6 +624,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 * Start/stop beaconing.
- 	 */
- 	if (changes & BSS_CHANGED_BEACON_ENABLED) {
-+		mutex_lock(&intf->beacon_skb_mutex);
- 		if (!bss_conf->enable_beacon && intf->enable_beacon) {
- 			rt2x00dev->intf_beaconing--;
- 			intf->enable_beacon = false;
-@@ -639,9 +640,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 				 * Last beaconing interface disabled
- 				 * -> stop beacon queue.
- 				 */
--				mutex_lock(&intf->beacon_skb_mutex);
- 				rt2x00queue_stop_queue(rt2x00dev->bcn);
--				mutex_unlock(&intf->beacon_skb_mutex);
- 			}
- 		} else if (bss_conf->enable_beacon && !intf->enable_beacon) {
- 			rt2x00dev->intf_beaconing++;
-@@ -658,11 +657,10 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 				 * First beaconing interface enabled
- 				 * -> start beacon queue.
- 				 */
--				mutex_lock(&intf->beacon_skb_mutex);
- 				rt2x00queue_start_queue(rt2x00dev->bcn);
--				mutex_unlock(&intf->beacon_skb_mutex);
- 			}
- 		}
-+		mutex_unlock(&intf->beacon_skb_mutex);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 5642ccc..8e68f87 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -754,8 +754,6 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
- 
--	mutex_lock(&intf->beacon_skb_mutex);
--
- 	/*
- 	 * Clean up the beacon skb.
- 	 */
-@@ -768,13 +766,11 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 	if (rt2x00dev->ops->lib->clear_beacon)
- 		rt2x00dev->ops->lib->clear_beacon(intf->beacon);
- 
--	mutex_unlock(&intf->beacon_skb_mutex);
--
- 	return 0;
- }
- 
--int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
--				     struct ieee80211_vif *vif)
-+int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
-+			      struct ieee80211_vif *vif)
- {
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	struct skb_frame_desc *skbdesc;
-@@ -815,19 +811,6 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
- 
- }
- 
--int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
--			      struct ieee80211_vif *vif)
--{
--	struct rt2x00_intf *intf = vif_to_intf(vif);
--	int ret;
--
--	mutex_lock(&intf->beacon_skb_mutex);
--	ret = rt2x00queue_update_beacon_locked(rt2x00dev, vif);
--	mutex_unlock(&intf->beacon_skb_mutex);
--
--	return ret;
--}
--
- bool rt2x00queue_for_each_entry(struct data_queue *queue,
- 				enum queue_index start,
- 				enum queue_index end,
--- 
-1.8.3.1
+ drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  141 +++++++++++++++++++++----
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  149 ++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    4 +-
+ drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+ drivers/net/wireless/rsi/rsi_mgmt.h         |    4 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         |    4 +-
+ 8 files changed, 315 insertions(+), 94 deletions(-)
 
