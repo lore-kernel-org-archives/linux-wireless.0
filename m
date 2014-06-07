@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:62003 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbaFJWFZ (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:55066 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbaFGPzl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 18:05:25 -0400
-Received: by mail-lb0-f169.google.com with SMTP id s7so4370359lbd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 15:05:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A319017BCEBA@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A319017BCEBA@sbs2003.acksys.local>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 10 Jun 2014 15:05:04 -0700
-Message-ID: <CAB=NE6UysThA_SOtoL-E5_+3wGsMA3af24vNN8EnS-bP6Wvd1w@mail.gmail.com> (sfid-20140611_000535_743902_1CA62C33)
-Subject: Re: cfg80211: enable chanel with CRDA issue
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 7 Jun 2014 11:55:41 -0400
+Received: by mail-pd0-f178.google.com with SMTP id v10so3642106pde.9
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:55:41 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Jahnavi Meher <jahnavi.meher@gmail.com>
+Subject: [PATCH 0/4] rsi: Code fixes and adding support for 5GHz and bgscan.
+Date: Sun,  8 Jun 2014 02:55:02 +0530
+Message-Id: <1402176302-8644-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175547_721569_2904A10A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 3, 2014 at 6:14 AM, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
->         Hi,
->
-> I'm using a compat-wireless 2014-05-22 from openwrt.
-> I changed the package/kernel/mac80211 Makefile to use the CRDA (I
-> removed the CFG80211_INTERNAL_REGDB flags)
->
-> My product boot on US regulatory domain. I set the FR regulatory domain
-> with iw command.
+This series of patches contains some fixes and adds support for 5GHz
+and bgscan.
 
-Setting regulatory domain with iw is not what you want for a product,
-using iw just helps compliance further meaning that it will likely end
-up restricting your device further. If a device booted with a US
-regulatory domain then it can mean that the device was programmed with
-a US regulatory domain on the EEPROM / OTP / whatever, it all depends
-on the driver you are using. Furthermore for ath9k / ath5k devices AP
-manufacturers ended up programming tons of EEPROM / OTPs with a
-regulatory domain set to 0x0, which for STA devices Atheros code
-defaults that to mean "US". Users for products by these Atheros
-customers had gotten the impression that Atheros supports setting
-"0x0" to mean the debug regulatory domain, or to enable all channels,
-and this is wrong -- Atheros gives out code and gives out stuff to
-customers so that they program their hardware / calibrate it, if they
-end up doing something funky its on them. Some APs then ship with 0x0
-and default to US whereby they actually wanted to use regulatory
-domain control in software. For OpenWrt then you're best off to enable
-the hack they have that lets it override regulatory for those devices
-but be careful, if its a product you certify it so its on you to do
-the right thing.
+Jahnavi Meher (4):
+  rsi: Fixes and clean up of code.
+  rsi: Adding support for 5GHz
+  rsi: Change the logic for dequeuing packets in hal.
+  rsi: Adding support for host based bgscan
 
-For more details see:
+ drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  141 +++++++++++++++++++++----
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  149 ++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    4 +-
+ drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+ drivers/net/wireless/rsi/rsi_mgmt.h         |    4 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         |    4 +-
+ 8 files changed, 315 insertions(+), 94 deletions(-)
 
-http://wireless.kernel.org/en/users/Drivers/ath#The_0x0_regulatory_domain
-
-  Luis
