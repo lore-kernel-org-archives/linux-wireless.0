@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:62382 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbaFEM3Z (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15763 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753414AbaFHI27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 08:29:25 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so1018830wes.32
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 05:29:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/2] mac80211: fix csa counters
-Date: Thu,  5 Jun 2014 14:21:35 +0200
-Message-Id: <1401970897-21389-1-git-send-email-michal.kazior@tieto.com> (sfid-20140605_142929_087424_52CF452C)
-In-Reply-To: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
-References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 8 Jun 2014 04:28:59 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
+References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
+	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
+	<5390B632.7030305@candelatech.com>
+	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
+	<5391E842.4010401@candelatech.com>
+	<874mzwkher.fsf@kamboji.qca.qualcomm.com>
+	<539330A1.9050307@candelatech.com>
+Date: Sun, 8 Jun 2014 11:28:51 +0300
+In-Reply-To: <539330A1.9050307@candelatech.com> (Ben Greear's message of "Sat,
+	7 Jun 2014 08:32:49 -0700")
+Message-ID: <877g4riz3w.fsf@kamboji.qca.qualcomm.com> (sfid-20140608_102911_428603_5303D27B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Ben Greear <greearb@candelatech.com> writes:
 
-I was seeing strange WARN_ON splat loops and
-crashes while I was testing my multi-vif CSA.
+> On 06/07/2014 05:55 AM, Kalle Valo wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>>>> I'm a bit leery of adding spin-locks in the dump routine just for
+>>>>> this, but I can add and use a new spin-lock if you prefer.
+>>>>
+>>>> Why a new spinlock? I didn't review the locking requirements, but I
+>>>> would first check ar->data_lock can be used.
+>>>
+>>> I think it has to be a spin-lock because the crash dump is gathered
+>>> in the irq handler, so I can't use a mutex as far as I know...
+>>>
+>>> I'll work on adding such a lock today.
+>>
+>> I asked why add a _new_ spinlock as ar->data_lock is already a spinlock.
+>
+> Surely we do not want to impede traffic flow just to dump debug info?
 
-CSA counters weren't properly reset and on some
-failpaths this caused a mess. There were also
-possible SMP inconsitencies/races.
+I don't see data_lock being used anywhere in hotpath, but of course I
+might have missed something. Anyway, if for optimisation reasons we need
+to introduce a new lock that should happen for a specific case in hot
+path. Handling firmware debug log events is not in that category.
 
+> And, it is easier to review a specific spinlock rather than use one big
+> global-ish lock and have to review every use of that lock for issues.
 
-v2:
- * dropped the atomic counter patch
- * fix patch 1
-
-v3:
- * change sizeof(*x) -> sizeof(x[0]) [Johannes]
- * rebase to 1238bbdc6c2cee366eea5ce5d56170b7fdd6ffd7
-
-Michal Kazior (2):
-  mac80211: move csa counters from sdata to beacon/presp
-  mac80211: use csa counter offsets instead of csa_active
-
- net/mac80211/cfg.c         |  67 ++++++++++++++++++---------
- net/mac80211/ibss.c        |   2 +-
- net/mac80211/ieee80211_i.h |  16 +++++--
- net/mac80211/mesh.c        |   2 +-
- net/mac80211/tx.c          | 113 +++++++++++++++++++++++++--------------------
- 5 files changed, 122 insertions(+), 78 deletions(-)
+Sure, it's easier for you to just add a new lock and then forget :) But
+not for me who would have to maintain 20 different locks for years to
+come. My view is that a new lock should be added on very exceptional
+cases and with good justifications.
 
 -- 
-1.8.5.3
-
+Kalle Valo
