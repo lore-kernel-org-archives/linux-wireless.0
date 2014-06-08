@@ -1,26 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:35515 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750723AbaFBSRw (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:48910 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbaFHKgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:17:52 -0400
-Date: Mon, 02 Jun 2014 11:17:51 -0700 (PDT)
-Message-Id: <20140602.111751.811732928855674375.davem@davemloft.net> (sfid-20140602_201815_624896_278ACCDF)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-06-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140602170914.GA13192@tuxdriver.com>
-References: <20140602170914.GA13192@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 8 Jun 2014 06:36:12 -0400
+Received: by mail-ob0-f172.google.com with SMTP id uy5so2750249obc.17
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2014 03:36:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1436639.AmJiDmeQZF@al>
+References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<CAFo99gZ+iu3FA9Nuwdo_AT1xZkno7w=6JidWYcm8g0bOvshwTw@mail.gmail.com>
+	<5393A7D0.2080700@lwfinger.net>
+	<1436639.AmJiDmeQZF@al>
+Date: Sun, 8 Jun 2014 12:36:11 +0200
+Message-ID: <CAFo99gb2gzLjv_4b3O-e0B1R8P5BTGbPJLuYYAmoyww9hkmrvA@mail.gmail.com> (sfid-20140608_123616_870586_CB37C025)
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up
+ conjunction always evaluates to false
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 2 Jun 2014 13:09:14 -0400
+Hi
 
-> Please pull this remaining batch of updates intended for the 3.16 stream...
+Damn, there I was bit too fast :-(
 
-Pulled, thanks John.
+Then we use MSR_MASK instead, new patch then. But I will wait a day?
+Or what is long enough to be sure that nobody else have any
+objections? How is this usually resolved?
+
+Sure, I can send a patch for all the files instead. However, earlier
+received complaints when I sent patches extending over more than one
+file.
+
+I'll check again how the cover letter works. Although when I try with
+my send patch mail script it did not work as I wanted.
+
+
+Best regards
+Rickard Strandqvist
+
+
+2014-06-08 11:26 GMT+02:00 Peter Wu <peter@lekensteyn.nl>:
+> On Saturday 07 June 2014 19:01:20 Larry Finger wrote:
+>> As you have learned here, automatically making changes suggested by some tool
+>> may convert a visible bug into one that is invisible, and only found by a
+>> detailed line-by-line examination of the code, and that is unlikely to happen.
+>> Please be careful.
+>>
+>>  From everything I see, the test in all drivers should be
+>>
+>>         if ((bt_msr & MSR_AP) == MSR_AP)
+>
+> That only happens to be case because MSR_INFRA | MSR_ADHOC == MSR_AP. This
+> seems to be the intent:
+>
+>     #define MSR_MASK 0x03
+>     if ((bt_msr & MSR_MASK) == MSR_AP)
+>
+> In rtl8192se, there are also MSR_LINK_... constants covering MSR_...
+> and in addition, there is a MSR_LINK_MASK. These macros are quite
+> redundant though given the other definitions, but the mask is still
+> nice to have I guess.
+>
+> Also, personally I would submit just one patch touching all drivers, but
+> I see that Rickard has submitted a bunch of patches (without cover letter
+> either, making it more difficult to group them). What would you prefer,
+> a single patch touching multiple drivers (as the changes are mostly the
+> same) or split patches?
+>
+> Kind regards,
+> Peter
+>
