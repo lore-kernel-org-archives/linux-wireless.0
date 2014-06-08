@@ -1,111 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:60652 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbaFFGoO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 02:44:14 -0400
-Received: by mail-we0-f179.google.com with SMTP id q59so2345348wes.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 23:44:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1402036258.2004.10.camel@dubbel>
-References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
-	<CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
-	<1402036258.2004.10.camel@dubbel>
-Date: Fri, 6 Jun 2014 08:44:12 +0200
-Message-ID: <CA+BoTQ=wZV8dviGE8HAFC1j=XNqJDkxUaHV5HFkiLMs2arCVHQ@mail.gmail.com> (sfid-20140606_084418_042564_FC2E4637)
-Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
- during channel switch
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:47841 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753415AbaFHJN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2014 05:13:27 -0400
+Message-ID: <1402218792.4406.2.camel@jlt4.sipsolutions.net> (sfid-20140608_111711_962953_5C4ECA50)
+Subject: Re: Firmware debugging patches?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sun, 08 Jun 2014 11:13:12 +0200
+In-Reply-To: <8738ffiysv.fsf@kamboji.qca.qualcomm.com> (sfid-20140608_103606_337478_803FD86E)
+References: <53891ACD.7070902@candelatech.com>
+	 <87wqczz3h9.fsf@kamboji.qca.qualcomm.com>
+	 <538CA904.4000508@candelatech.com>
+	 <87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
+	 <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
+	 <538CC949.5020901@candelatech.com>
+	 <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
+	 <538CD507.1050803@candelatech.com>
+	 <87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>
+	 <53909372.1040707@candelatech.com>
+	 <87fvjimsxj.fsf@kamboji.qca.qualcomm.com>
+	 <5391E620.4090706@candelatech.com>
+	 <87vbscj2ho.fsf@kamboji.qca.qualcomm.com>
+	 <53932F52.2030203@candelatech.com>
+	 <8738ffiysv.fsf@kamboji.qca.qualcomm.com>
+	 (sfid-20140608_103606_337478_803FD86E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 June 2014 08:31, Coelho, Luciano <luciano.coelho@intel.com> wrote:
-> On Fri, 2014-06-06 at 07:51 +0200, Michal Kazior wrote:
->> On 5 June 2014 18:26, Emmanuel Grumbach <emmanuel.grumbach@intel.com> wrote:
-[...]
->> > @@ -3146,9 +3145,8 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->> >         cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
->> >
->> >         if (!ieee80211_csa_needs_block_tx(local))
->> > -               ieee80211_wake_queues_by_reason(&local->hw,
->> > -                                       IEEE80211_MAX_QUEUE_MAP,
->> > -                                       IEEE80211_QUEUE_STOP_REASON_CSA);
->> > +               ieee80211_wake_vif_queues(local, sdata,
->> > +                                         IEEE80211_QUEUE_STOP_REASON_CSA);
->>
->> I don't think this is going to work with the upcomming multi-vif
->> channel switching.
->>
->> The ieee80211_csa_needs_block_tx() will become false upon *last*
->> interface switch completion. This means preceeding interface csa
->> finalizations won't call ieee80211_wake_vif_queues() so you actually
->> end up not waking all of the queues when you finish csa.
->
-> I think the right way to do it would be to traverse the vifs that
-> switched and wake up their queues when the switch is finished.
->
->
->> I think this can be solved with:
->>
->>  if (!ieee80211_csa_needs_block_tx(local))
->>    list_for_each(sdata, &local->interfaces, list)
->>      ieee80211_wake_vif_queues(local, sdata, REASON_CSA);
->>
->> But then I guess it's just a convoluted way of saying:
->>
->>  if (!ieee80211_csa_needs_block_tx(local))
->>    ieee80211_wake_queues_by_reason(hw, REASON_CSA);
->>
->> IOW waking should remain as it was while stopping can be done per-vif.
->>
->> This goes for all instances calling wake_vif_queues() in the patch.
->
-> Actually I had it like this in my first version, I had only added the
-> stop part, leaving the wake as it was.  But then I thought that we would
-> be restarting queues from other vifs that we don't know about.  If
-> another vif is switching separately, we would restart its queues at the
-> wrong time.  I think we shouldn't assume that all vifs are part of the
-> same switch.
+On Sun, 2014-06-08 at 11:35 +0300, Kalle Valo wrote:
 
-Well, not really.
+> > I was thinking we should not add a MAC to the dump, for privacy concerns,
+> > but whatever user-space tools gather the dump could add MAC if user perfers.
+> 
+> The MAC addresses can be extracted from the target memory anyway so I
+> don't see harm from including that in the dump. Is it even possible to
+> address all privacy issues when dealing with firmware dumps?
 
-There is no "vif switching separately" when it comes to block_tx. The
-condition checks if ANY interface still needs queues to be locked for
-the *REASON_CSA*. If the condition is false (i.e. "no interface needs
-block_tx") then you are safe to wake *all* queues for *REASON_CSA* on
-all interfaces because channel switches that don't need block_tx don't
-stop their queues for REASON_CSA in the first place.
+We had something of a discussion about this - it's usually not just
+BSSIDs/MAC addresses, but also encryption keys (say WEP keys, or at
+least temporal keys, sometimes more), SSIDs, etc. In short, there's a
+whole bunch of private data that can be included in such dumps.
 
-You could argue current queue locking for CSA is not efficient and
-you'd be right. It was a simplification I came up with to get things
-at least work correctly not efficiently.
+However, we haven't really found a good solution. Popping up big scary
+warnings to the user is unlikely to be productive, trying to keep the
+data private and only accessible to (the right) developers is not going
+to work ... encryption might work, but who manages that?
 
+Certainly the data shouldn't be attached to a public bug tracker
+automatically...
 
->> Generally I don't think having wake_vif_queues() is a good idea. It's
->> really tricky. Sure, you can have a stop_vif_queues() which will
->> behave as you might expect (i.e. first call stops queues and
->> overlapping vif-queue mappings are not a concern). But
->> wake_vif_queues() seems to have little practical use to me without any
->> kind of per-queue reference counting.
->
-> Yeah, this could be a problem for vifs that are sharing the same queues.
-> But that case would be really tricky with channel-switch anyway. because
-> if the channel of one vif is changed but not the other, the queue would
-> probably have to be split...
+johannes
 
-Hmm. That's a very good point. Can we even re-map this during the switch now?
-
-If we can't then doesn't it imply that if there are shared vif-queue
-mappings then channel switching should be limited/prevented? I.e. it
-might be okay if you have 2 vifs sharing a queue to switch to the
-exact same channel but it won't work if you try to switch them to
-separate channels. Single-channel devices won't have to worry about it
-(single-channel combination cases for that matter).
-
-
-Michał
