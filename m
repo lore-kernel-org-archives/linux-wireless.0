@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mdfmta004.mxout.tbr.inty.net ([91.221.168.45]:34042 "EHLO
-	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754997AbaF3JIo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 05:08:44 -0400
-Message-ID: <53B12918.1060806@dpets.co.uk> (sfid-20140630_110856_329605_D784924F)
-Date: Mon, 30 Jun 2014 10:08:40 +0100
-From: John Talbut <jt@dpets.co.uk>
+Received: from lekensteyn.nl ([178.21.112.251]:34774 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752819AbaFHKng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2014 06:43:36 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up conjunction always evaluates to false
+Date: Sun, 08 Jun 2014 12:43:25 +0200
+Message-ID: <3239222.FyGtueg2aO@al> (sfid-20140608_124355_864415_0503128D)
+In-Reply-To: <CAFo99gb2gzLjv_4b3O-e0B1R8P5BTGbPJLuYYAmoyww9hkmrvA@mail.gmail.com>
+References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1436639.AmJiDmeQZF@al> <CAFo99gb2gzLjv_4b3O-e0B1R8P5BTGbPJLuYYAmoyww9hkmrvA@mail.gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Firmware loading with static kernel and initramfs
-References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net> <53B0F10D.7030801@dpets.co.uk> <53B11E34.60601@broadcom.com>
-In-Reply-To: <53B11E34.60601@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 08 June 2014 12:36:11 Rickard Strandqvist wrote:
+> Then we use MSR_MASK instead, new patch then. But I will wait a day?
+> Or what is long enough to be sure that nobody else have any
+> objections? How is this usually resolved?
 
+Well, Larry is the maintainer, so he will ultimately pick up patches.
+One or two days should give people some time to read and reply.
 
-On 30/06/14 09:22, Arend van Spriel wrote:
-> On 30-06-14 07:09, John Talbut wrote:
->> On 29/06/14 23:11, Larry Finger wrote:
->>> On 06/29/2014 02:19 PM, John Talbut wrote:
->>>> I originally had the problem with a Broadcom BCM43225 wireless.  This
->>>> was with a
->>>> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
->>>> and this
->>>> is still working with a 3.14 kernel.
->>>
->>> What sort of patch was that? Driver brcmsmac is still using
->>> request_firmware().
->>
->> I believe it was this patch:
->> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
->
-> Correct. IFF_UP was recommended event to consider user-space ready to
-> handle request_firmware. However, this may not work for drivers that
-> initialize the wiphy information based on info retrieved from firmware.
->
-> Regards,
-> Arend
->
-The command, based on your suggestion, Arend, for the Broadcom wireless,:
-echo 0000:01:00.1 > /sys/bus/pci/drivers/iwlwifi/bind
-brings up the Intel wireless.
+As for MSR_MASK, that macro does not exist yet, I was wondering whether
+it's OK to add a new macro? (Larry?)
 
-Regards
-John
+> Sure, I can send a patch for all the files instead. However, earlier
+> received complaints when I sent patches extending over more than one
+> file.
+> 
+> I'll check again how the cover letter works. Although when I try with
+> my send patch mail script it did not work as I wanted.
 
->>>
->>>> Currently I have the problem with an Intel Centrino Wireless-N 130.
->>>> The problem
->>>> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
->>>> version
->>>> 204-5linuxmint.
->>>
->>> The current Intel drivers all use request_firmware_nowait(), but I'm not
->>> sure when they were changed.
->>>
->>>> A friend seems to have the problem with a Realtek 8129se wireless but
->>>> we are
->>>> still checking out that this is the problem.
->>>
->>> To my knowledge, there is no Realtek 8129se driver. Do you mean
->>> rtl8192se? If so, that one has used request_firmware_nowait() for some
->>> time.
->>
->> Yes, the rtl8192se driver.
->>
->> John
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+See the manual page git-send-email(1) and git-format-patch(1). In
+particular the Example section of git-send-email(1).
+
+Kind regards,
+Peter
+
