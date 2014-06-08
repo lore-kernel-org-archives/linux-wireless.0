@@ -1,93 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:46996 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755564AbaFYUP1 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:33176 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203AbaFHBhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:15:27 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so2616387wes.27
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/17] staging: vt6656: mac80211 conversion: vnt_update_ifs change basic rates
-Date: Wed, 25 Jun 2014 21:14:28 +0100
-Message-Id: <1403727278-6666-8-git-send-email-tvboxspy@gmail.com> (sfid-20140625_221549_558855_5185D357)
-In-Reply-To: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
-References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 7 Jun 2014 21:37:53 -0400
+Received: by mail-wi0-f173.google.com with SMTP id bs8so2680987wib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:37:52 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192ce: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sun,  8 Jun 2014 03:38:48 +0200
+Message-Id: <1402191528-25757-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140608_033812_214539_782283BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use wBasicRate to find ofdm_rate.
+I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
 
-wBasicRate is changed to u32 to match struct ieee80211_bss_conf -> basic_rates
+After pointing this out, Larry Finger informed what would be the correct one.
+'(X & 0x3) == 0x3'
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/staging/vt6656/card.c   | 22 ++--------------------
- drivers/staging/vt6656/device.h |  2 +-
- 2 files changed, 3 insertions(+), 21 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 8be3a89..1b3e0af 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -402,10 +402,8 @@ void vnt_update_ifs(struct vnt_private *priv)
- 		priv->uCwMin = C_CWMIN_B;
- 		max_min = 5;
- 	} else {/* PK_TYPE_11GA & PK_TYPE_11GB */
--		u8 rate = 0;
- 		bool ofdm_rate = false;
- 		unsigned int ii = 0;
--		PWLAN_IE_SUPP_RATES item_rates = NULL;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 55adf04..135b351 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1206,7 +1206,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
  
- 		priv->uSIFS = C_SIFS_BG;
- 
-@@ -416,29 +414,13 @@ void vnt_update_ifs(struct vnt_private *priv)
- 
- 		priv->uDIFS = C_SIFS_BG + 2 * priv->uSlot;
- 
--		item_rates =
--			(PWLAN_IE_SUPP_RATES)priv->vnt_mgmt.abyCurrSuppRates;
--
--		for (ii = 0; ii < item_rates->len; ii++) {
--			rate = (u8)(item_rates->abyRates[ii] & 0x7f);
--			if (RATEwGetRateIdx(rate) > RATE_11M) {
-+		for (ii = RATE_54M; ii >= RATE_6M; ii--) {
-+			if (priv->wBasicRate & ((u32)(0x1 << ii))) {
- 				ofdm_rate = true;
- 				break;
- 			}
- 		}
- 
--		if (ofdm_rate == false) {
--			item_rates = (PWLAN_IE_SUPP_RATES)priv->vnt_mgmt
--				.abyCurrExtSuppRates;
--			for (ii = 0; ii < item_rates->len; ii++) {
--				rate = (u8)(item_rates->abyRates[ii] & 0x7f);
--				if (RATEwGetRateIdx(rate) > RATE_11M) {
--					ofdm_rate = true;
--					break;
--				}
--			}
--		}
--
- 		if (ofdm_rate == true) {
- 			priv->uCwMin = C_CWMIN_A;
- 			max_min = 4;
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 46584c7..2bd9830 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -522,7 +522,7 @@ struct vnt_private {
- 	/* Rate */
- 	u8 byBBType; /* 0: 11A, 1:11B, 2:11G */
- 	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
--	u16 wBasicRate;
-+	u32 wBasicRate;
- 	u8 byTopOFDMBasicRate;
- 	u8 byTopCCKBasicRate;
- 
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_AP) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
 -- 
-1.9.1
+1.7.10.4
 
