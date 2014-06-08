@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34951 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbaFBRaO (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:43092 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbaFHBij (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 13:30:14 -0400
-Date: Mon, 2 Jun 2014 13:21:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Subject: [ANN] wireless-regdb: master-2014-06-02
-Message-ID: <20140602172126.GB13192@tuxdriver.com> (sfid-20140602_193019_114803_E5AA821F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Sat, 7 Jun 2014 21:38:39 -0400
+Received: by mail-wi0-f176.google.com with SMTP id n3so24139wiv.9
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:38:38 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <lekensteyn@gmail.com>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192cu: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sun,  8 Jun 2014 03:39:33 +0200
+Message-Id: <1402191573-25878-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140608_033857_808532_7F27FD3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2014-06-02) is available at:
+I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
 
-http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2014.06.02.tar.gz
+After pointing this out, Larry Finger informed what would be the correct one.
+'(X & 0x3) == 0x3'
 
-Here is the short log of the changes included since the 2014-05-29
-release:
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-John W. Linville (1):
-      wireless-regdb: update regulatory.bin based on preceding changes.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 07cb06d..40b9ad6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_AP) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+-- 
+1.7.10.4
 
-Jouni Malinen (8):
-      wireless-regdb: Add Ghana (GH) regulatory rules
-      wireless-regdb: Add Burkina Faso (BF) regulatory rules
-      wireless-regdb: Add Central African Republic (CF) regulatory rules
-      wireless-regdb: Add Micronesia (FM) and Palau (PW) regulatory rules
-      wireless-regdb: Add Senegal (SN) regulatory rules
-      wireless-regdb: Add Vanuatu (VU) regulatory rules
-      wireless-regdb: Add Côte d'Ivoire (CI) regulatory rules
-      wireless-regdb: Update Haiti (HT) regulatory rules
-
---
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
