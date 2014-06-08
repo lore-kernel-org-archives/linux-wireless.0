@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:50970 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933323AbaFIQ1s (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:41135 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbaFHPpy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 12:27:48 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so543538igc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2014 09:27:48 -0700 (PDT)
+	Sun, 8 Jun 2014 11:45:54 -0400
+Message-ID: <5394852E.1000601@lwfinger.net> (sfid-20140608_174608_003175_00E9DA10)
+Date: Sun, 08 Jun 2014 10:45:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1401972980-21484-2-git-send-email-michal.kazior@tieto.com>
-References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
-	<1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
-	<1401972980-21484-2-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 9 Jun 2014 19:27:47 +0300
-Message-ID: <CAB3XZEc9+Ny2tVxdRHeokAd6+BLBqrZ_FmCNFdHHHkViZs=39Q@mail.gmail.com> (sfid-20140609_182751_957071_20C8BA66)
-Subject: Re: [PATCH v8 1/5] mac80211: implement multi-vif in-place reservations
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: Peter Wu <peter@lekensteyn.nl>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up
+ conjunction always evaluates to false
+References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1436639.AmJiDmeQZF@al> <CAFo99gb2gzLjv_4b3O-e0B1R8P5BTGbPJLuYYAmoyww9hkmrvA@mail.gmail.com> <3239222.FyGtueg2aO@al>
+In-Reply-To: <3239222.FyGtueg2aO@al>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Michal,
-
-On Thu, Jun 5, 2014 at 3:56 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Multi-vif in-place reservations happen when
-> it is impossible to allocate more channel contexts
-> as indicated by interface combinations.
+On 06/08/2014 05:43 AM, Peter Wu wrote:
+> On Sunday 08 June 2014 12:36:11 Rickard Strandqvist wrote:
+>> Then we use MSR_MASK instead, new patch then. But I will wait a day?
+>> Or what is long enough to be sure that nobody else have any
+>> objections? How is this usually resolved?
 >
-> Such reservations are not finalized until all
-> assigned interfaces are ready.
->
-> This still doesn't handle all possible cases
-> (i.e. degradation of number of channels) properly.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+> Well, Larry is the maintainer, so he will ultimately pick up patches.
+> One or two days should give people some time to read and reply.
 
-> +static int
-> +ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
->  {
-[...]
-> +
-> +       vif_chsw[0].vif = &sdata->vif;
-> +       vif_chsw[0].old_ctx = &old_ctx->conf;
-> +       vif_chsw[0].new_ctx = &new_ctx->conf;
-> +
-> +       list_del(&sdata->reserved_chanctx_list);
-> +       sdata->reserved_chanctx = NULL;
-> +
-> +       err = drv_switch_vif_chanctx(local, vif_chsw, 1,
-> +                                    CHANCTX_SWMODE_REASSIGN_VIF);
-> +       if (err) {
-> +               if (ieee80211_chanctx_refcount(local, new_ctx) == 0)
-> +                       ieee80211_free_chanctx(local, new_ctx);
-> +
-> +               return err;
->         }
->
-> -       old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-> +       list_move(&sdata->assigned_chanctx_list, &new_ctx->assigned_vifs);
-> +
-> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
-> +               __ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-> +
-> +       if (ieee80211_chanctx_refcount(local, old_ctx) == 0)
-> +               ieee80211_free_chanctx(local, old_ctx);
+My role as maintainer is a little different than others. As I have a private 
+broadband connection with only 1 Mbps upload, it is not practical for me to 
+operate a git server. I used to have an account at kernel.org, but I lost it 
+after the break-in there. As I have never met face-to-face with another Linux 
+developer, I have had no chance to have my credentials signed, so that resource 
+is unavailable. As a result, I ACK or NACK patches and they are picked up by 
+John Linville for drivers in the regular wireless tree, and Greg Kroah-Hartman 
+for the staging drivers.
 
-i gave it a quick run, and it crashed quickly due to use-after-free.
-adding:
-rcu_assign_pointer(sdata->vif.chanctx_conf, &new_ctx->conf);
+> As for MSR_MASK, that macro does not exist yet, I was wondering whether
+> it's OK to add a new macro? (Larry?)
 
-after the list_move (before freeing it...) seemed to solve it.
-other than that, it seems to work well so far :)
+Yes, that is OK.
 
-Eliad.
+>> Sure, I can send a patch for all the files instead. However, earlier
+>> received complaints when I sent patches extending over more than one
+>> file.
+
+These do really need to be split a little. There must be at least one patch for 
+the wireless tree, and a second for staging. In fact, I prefer the way they are 
+with one for each driver.
+
+Larry
+
