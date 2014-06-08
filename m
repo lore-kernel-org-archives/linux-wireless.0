@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:39736 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753906AbaF3Jzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 05:55:37 -0400
-Date: Mon, 30 Jun 2014 11:55:09 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Victor <silentworks@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux
- 3.15.1 (was: No channels available (no IR) in 5Ghz band for intel 7260-ac
-Message-ID: <20140630095508.GA23387@sig21.net> (sfid-20140630_115541_456842_EE8BA7B9)
-References: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:54870 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbaFHPjb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2014 11:39:31 -0400
+Message-ID: <539483B1.5020401@candelatech.com> (sfid-20140608_174351_215432_ED84FE6C)
+Date: Sun, 08 Jun 2014 08:39:29 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com>	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>	<538CA904.4000508@candelatech.com>	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>	<538CC949.5020901@candelatech.com>	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>	<538CD507.1050803@candelatech.com>	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>	<53909372.1040707@candelatech.com>	<87fvjimsxj.fsf@kamboji.qca.qualcomm.com>	<5391E620.4090706@candelatech.com>	<87vbscj2ho.fsf@kamboji.qca.qualcomm.com>	<53932F52.2030203@candelatech.com> <8738ffiysv.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <8738ffiysv.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
 
-On Tue, Jun 24, 2014 at 03:50:43PM +0300, Emmanuel Grumbach wrote:
-> >> On 06/24/2014 03:50 AM, Luis R. Rodriguez wrote:
-> >>> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
-> >>>> Hello, first of all i'm not sure if this is the proper place to ask
-> >>>> since it seems mostly dev-related, but i have been looking everywhere
-> >>>> trying to find a solution without luck, so i'm not sure if i
-> >>>> encountered some kind of bug.
-> >>>>
-> >>>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
-> >>
-> >> This configuration is not supported.
-> >
-> > Do you know why? it is supported in other kernel version?, i got the
-> > device mainly for to be used as 802.11ac AP  :/, on the product brief
-> > they state it is designed for AP mode
-> > http://www.intel.es/content/dam/www/public/us/en/documents/product-briefs/dual-band-wireless-ac-7260-bluetooth-brief.pdf,
-> > and in iw it appears as supported too
-> 
-> AP mode is supported - not on 5.2 GHz band.
 
-Just out of curiosity, may I ask why?  Shouldn't regdb/crda allow
-you to support it?
+On 06/08/2014 01:35 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>>>> Perhaps the time-stamp is good enough?  I don't see a need for
+>>>> a uuid, but perhaps I am missing something?
+>>>
+>>> UUID is supposed to be unique. If we use walltime there's no guarantee
+>>> that the clock is correct and if we use local_clock() (my preference) it
+>>> will be reset after every boot.
+>>>
+>>> I just think using something like UUID is more robust. Especially if one
+>>> implements an automatic crash dump collector from thousands of deployed
+>>> APs, having an UUID makes it a lot easier to manage.
+>>
+>> I can add since-boot timestamp as well.  Time-since-boot is less likely
+>> to be unique than wall-time, and for systems that do have proper wall-time
+>> clock configured, I think that provides some useful info.  (Would be interesting
+>> if all APs in a stadium crashed near the same time, for instance.)
+>>
+>> I was thinking we should not add a MAC to the dump, for privacy concerns,
+>> but whatever user-space tools gather the dump could add MAC if user perfers.
+>
+> The MAC addresses can be extracted from the target memory anyway so I
+> don't see harm from including that in the dump. Is it even possible to
+> address all privacy issues when dealing with firmware dumps?
+
+It would be more difficult to find it in debug-log messages (and in most cases,
+it is probably not the debug-log at all).  Probably not in the stack dump
+most of the time either.
+
+I'm not sure it will be in the BSS regions or not.  I have no plans to dump the
+non-bss RAM on the firmware because I have no tools that can decode it anyway,
+so probably the patches I've posted so far are relatively OK as far as privacy
+is concerned.  Someone who is very paranoid should not be using this feature
+anyway.
+
+
+>> With time-of-day, time-since-boot, and MAC, each dump should be unique.
+>
+> But I would like to easily match from kernel log that the crash dump
+> matches with log. uuid would provide that in a simple way (check that
+> the uuid in the log matches with the uuid in the dump). What's so bad
+> from using uuid?
+
+Just tell me how you want me to create the uuid and I'll do so.
 
 Thanks,
-Johannes
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
