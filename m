@@ -1,80 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34046 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960AbaFBTsY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 15:48:24 -0400
-Message-ID: <538CD507.1050803@candelatech.com> (sfid-20140602_214827_974744_2A1E9885)
-Date: Mon, 02 Jun 2014 12:48:23 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
-In-Reply-To: <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:18525 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932653AbaFIQbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2014 12:31:35 -0400
+Message-ID: <1402331489.7405.2.camel@dcbw.local> (sfid-20140609_183138_953281_9AA48069)
+Subject: Re: [PATCH 2/4] rsi: Adding support for 5GHz
+From: Dan Williams <dcbw@redhat.com>
+To: Jahnavi Meher <jahnavi.meher@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+Date: Mon, 09 Jun 2014 11:31:29 -0500
+In-Reply-To: <1402176137-8485-1-git-send-email-jahnavi.meher@gmail.com>
+References: <1402176137-8485-1-git-send-email-jahnavi.meher@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/2014 12:29 PM, Emmanuel Grumbach wrote:
-
->>>> a) Normal Fedora/Ubuntu/etc default-installed distribution user
->>>> with ath10k NIC has wifi issues, firmware crashes, they don't
->>>> really know what firmware means or that it crashed, but some automated crash-log
->>>> tool notices and gathers debug info for automated bug reporting.
->>>
->>> I am working on that for our firmware. I recently added such capability relying on udev to notify the userspace that something bad happens. I gather all the data and prepare a binary file that is sent through debugfs (pulled by a script triggered by udev). I remember the first crash only.
->>
->> How is this binary blob encoded?
+On Sun, 2014-06-08 at 02:52 +0530, Jahnavi Meher wrote:
+> From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 > 
-> Different TLV based binary blobs concatenated. The actual encoding of
-> each of them is another story.
-
-Should we try to make the 'Type' in TLV be consistent as convenient
-across different drivers?  That might someday help auto-reporting tools?
-
-Do you have a link to your patch that defines the types you used?
-
->> At least for drivers that can recover from firmware crashes, I think
->> we should continue to report crashes, not just the first.
->>
+> Adding support for 5GHz.
 > 
-> I remember the first until udev kicks the script that will empty the
-> buffer. Then I take the second crash's log.
-
-Sounds good enough to me.
-
->> Maybe could store another one after initial crash has been read
->> and 1 minute has elapsed, or if initial crash has not been read
->> in 1 day, or something like that.
->>
->> Also, if we use debugfs then we require upstream kernels to have this
->> compiled in and mounted if we want to handle this class of user.
+> Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+> ---
+>  drivers/net/wireless/rsi/rsi_91x_mac80211.c |   17 +++++---
+>  drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   56 ++++++++++++++++++++++++++-
+>  drivers/net/wireless/rsi/rsi_mgmt.h         |    1 +
+>  3 files changed, 66 insertions(+), 8 deletions(-)
 > 
-> Agreed. I rely on debugfs. But this is "just" the way to reach the filesystem.
-> Give me another way and I am fine with it.
-> FWIW Ubuntu which is not exactly the distribution of the super
-> advanced users has it mounted by default.
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> index 45bdb99..4700714 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> @@ -723,17 +723,17 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
+>  {
+>  	struct rsi_hw *adapter = hw->priv;
+>  	struct rsi_common *common = adapter->priv;
+> +	enum ieee80211_band band = hw->conf.chandef.chan->band;
+>  
+>  	mutex_lock(&common->mutex);
+> +	common->fixedrate_mask[band] = 0;
+>  
+> -	common->fixedrate_mask[IEEE80211_BAND_2GHZ] = 0;
+> -
+> -	if (mask->control[IEEE80211_BAND_2GHZ].legacy == 0xfff) {
+> -		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
+> -			(mask->control[IEEE80211_BAND_2GHZ].ht_mcs[0] << 12);
+> +	if (mask->control[band].legacy == 0xfff) {
+> +		common->fixedrate_mask[band] =
+> +			(mask->control[band].ht_mcs[0] << 12);
+>  	} else {
+> -		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
+> -			mask->control[IEEE80211_BAND_2GHZ].legacy;
+> +		common->fixedrate_mask[band] =
+> +			mask->control[band].legacy;
+>  	}
+>  	mutex_unlock(&common->mutex);
+>  
+> @@ -980,6 +980,7 @@ int rsi_mac80211_attach(struct rsi_common *common)
+>  
+>  	hw->max_tx_aggregation_subframes = 6;
+>  	rsi_register_rates_channels(adapter, IEEE80211_BAND_2GHZ);
+> +	rsi_register_rates_channels(adapter, IEEE80211_BAND_5GHZ);
+>  	hw->rate_control_algorithm = "AARF";
+>  
+>  	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
+> @@ -997,6 +998,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
+>  	wiphy->available_antennas_tx = 1;
+>  	wiphy->bands[IEEE80211_BAND_2GHZ] =
+>  		&adapter->sbands[IEEE80211_BAND_2GHZ];
+> +	wiphy->bands[IEEE80211_BAND_5GHZ] =
+> +		&adapter->sbands[IEEE80211_BAND_5GHZ];
+>  
+>  	status = ieee80211_register_hw(hw);
+>  	if (status)
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> index be9f5ca..ab14151 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> @@ -588,7 +588,13 @@ static int rsi_program_bb_rf(struct rsi_common *common)
+>  
+>  	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
+>  	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
+> -	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
+> +
+> +	if (common->band == IEEE80211_BAND_2GHZ)
+> +		common->endpoint = 0;
+> +	else
+> +		common->endpoint = 2;
 
-That sounds promising...Looks like Fedora 20 does as well, so maybe
-debugfs will be good enough for crash dumps.
+Here the endpoint is 2 for 5GHz...
 
+> +	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
+>  
+>  	if (common->rf_reset) {
+>  		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
+> @@ -827,6 +833,54 @@ static int rsi_send_reset_mac(struct rsi_common *common)
+>  }
+>  
+>  /**
+> + * rsi_band_check() - This function programs the band
+> + * @common: Pointer to the driver private structure.
+> + *
+> + * Return: 0 on success, corresponding error code on failure.
+> + */
+> +int rsi_band_check(struct rsi_common *common)
+> +{
+> +	struct rsi_hw *adapter = common->priv;
+> +	struct ieee80211_hw *hw = adapter->hw;
+> +	u8 current_bw = common->channel_width;
+> +	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
+> +	int status = 0;
+> +
+> +	if (common->band != curchan->band) {
+> +		common->rf_reset = 1;
+> +		common->band = curchan->band;
+> +
+> +		if (common->band == IEEE80211_BAND_2GHZ)
+> +			common->endpoint = 0;
+> +		else
+> +			common->endpoint = 1;
 
-It does not resolve my interest in firmware logs interleaved with
-kernel logs and possibly supplicant, however.
+But here it's 1 for 5GHz?  Is that intended or should both these cases
+be 2 for 5GHz?  In fact, I don't think you need to set common->endpoint
+here, because it just gets overwritten by:
 
-Looks like trace-cmds could do that, but it will not be
-running for normal users when they experience crashes.
+> +		status = rsi_program_bb_rf(common);
 
-Any suggestions other than printk for this feature?
+which might be why this didn't show up in testing.
 
-Thanks,
-Ben
+Dan
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> +		if (status)
+> +			return status;
+> +	}
+> +
+> +	if ((hw->conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) ||
+> +	    (hw->conf.chandef.width == NL80211_CHAN_WIDTH_20))
+> +		common->channel_width = BW_20MHZ;
+> +	else
+> +		common->channel_width = BW_40MHZ;
+> +
+> +	if (current_bw != common->channel_width) {
+> +		common->rf_reset = 1;
+> +		status = rsi_load_bootup_params(common);
+> +		if (status)
+> +			return status;
+> +
+> +		status = rsi_load_radio_caps(common);
+> +		if (status)
+> +			return status;
+> +	}
+> +
+> +	return status;
+> +}
+> +
+> +/**
+>   * rsi_set_channel() - This function programs the channel.
+>   * @common: Pointer to the driver private structure.
+>   * @channel: Channel value to be set.
+> diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+> index 225215a..5470d01 100644
+> --- a/drivers/net/wireless/rsi/rsi_mgmt.h
+> +++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+> @@ -283,4 +283,5 @@ void rsi_core_qos_processor(struct rsi_common *common);
+>  void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb);
+>  int rsi_send_mgmt_pkt(struct rsi_common *common, struct sk_buff *skb);
+>  int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
+> +int rsi_band_check(struct rsi_common *common);
+>  #endif
+
 
