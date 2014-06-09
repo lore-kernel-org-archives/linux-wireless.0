@@ -1,122 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15058 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751441AbaFTEjK (ORCPT
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:36026 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753037AbaFIMoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 00:39:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/7] mwifiex: use generic 'iface_work' workqueue for SDIO interface
-Date: Thu, 19 Jun 2014 21:38:53 -0700
-Message-ID: <1403239138-3113-2-git-send-email-bzhao@marvell.com> (sfid-20140620_063913_976786_7B608B8A)
-In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
-References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
+	Mon, 9 Jun 2014 08:44:07 -0400
+Received: by mail-qc0-f181.google.com with SMTP id x3so556829qcv.40
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2014 05:44:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1402109264-7095-1-git-send-email-bzhao@marvell.com>
+References: <1402109264-7095-1-git-send-email-bzhao@marvell.com>
+Date: Mon, 9 Jun 2014 14:44:06 +0200
+Message-ID: <CALtMJEAddX_O2bmi-bPRxXsmSVk8yCr7K8eLTBZOy-f_MfLRNw@mail.gmail.com> (sfid-20140609_144459_946599_065374F4)
+Subject: Re: [PATCH 1/3] mwifiex: support wowlan magic-packet encapsulated as
+ UDP packet
+From: Andreas Fenkart <afenkart@gmail.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chin-Ran Lo <crlo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Zhiyuan Yang <yangzy@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+H Bing,
 
-Existing dedicated card_reset work queue is replaced with the
-interface specific workqueue pointer provided by mwifiex module.
-Also new work flag is added for card reset task.
+lgtm,
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h |  1 +
- drivers/net/wireless/mwifiex/sdio.c | 24 ++++++++++++++++++++----
- 2 files changed, 21 insertions(+), 4 deletions(-)
+one question about the followup patch,
+http://www.spinics.net/lists/linux-wireless/msg123503.html
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 24791e2..582a9f9 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -431,6 +431,7 @@ enum rdwr_status {
- 
- enum mwifiex_iface_work_flags {
- 	MWIFIEX_IFACE_WORK_FW_DUMP,
-+	MWIFIEX_IFACE_WORK_CARD_RESET,
- };
- 
- struct mwifiex_adapter;
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 4ce3d7b..2ae4dd7 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -179,6 +179,8 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	cancel_work_sync(&adapter->iface_work);
-+
- 	if (user_rmmod) {
- 		if (adapter->is_suspended)
- 			mwifiex_sdio_resume(adapter->dev);
-@@ -1915,7 +1917,7 @@ mwifiex_update_mp_end_port(struct mwifiex_adapter *adapter, u16 port)
- }
- 
- static struct mmc_host *reset_host;
--static void sdio_card_reset_worker(struct work_struct *work)
-+static void mwifiex_sdio_card_reset_work(struct work_struct *work)
- {
- 	struct mmc_host *target = reset_host;
- 
-@@ -1933,15 +1935,29 @@ static void sdio_card_reset_worker(struct work_struct *work)
- 	mdelay(20);
- 	mmc_add_host(target);
- }
--static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
-+
-+static void mwifiex_sdio_work(struct work_struct *work)
-+{
-+	struct mwifiex_adapter *adapter =
-+			container_of(work, struct mwifiex_adapter, iface_work);
-+
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
-+			       &adapter->iface_work_flags))
-+		mwifiex_sdio_card_reset_work(work);
-+}
- 
- /* This function resets the card */
- static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 
-+	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags))
-+		return;
-+
-+	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags);
-+
- 	reset_host = card->func->card->host;
--	schedule_work(&card_reset_work);
-+	schedule_work(&adapter->iface_work);
- }
- 
- static struct mwifiex_if_ops sdio_ops = {
-@@ -1964,6 +1980,7 @@ static struct mwifiex_if_ops sdio_ops = {
- 	.cmdrsp_complete = mwifiex_sdio_cmdrsp_complete,
- 	.event_complete = mwifiex_sdio_event_complete,
- 	.card_reset = mwifiex_sdio_card_reset,
-+	.iface_work = mwifiex_sdio_work,
- };
- 
- /*
-@@ -2001,7 +2018,6 @@ mwifiex_sdio_cleanup_module(void)
- 	/* Set the flag as user is removing this module. */
- 	user_rmmod = 1;
- 
--	cancel_work_sync(&card_reset_work);
- 	sdio_unregister_driver(&mwifiex_sdio);
- }
- 
--- 
-1.8.2.3
+how will mac events be supported in the future?
+ethtool wol p  - Wake on phy activity
 
+Guess they can't be modeled with patterns
+
+/Andreas
+
+2014-06-07 4:47 GMT+02:00 Bing Zhao <bzhao@marvell.com>:
+> From: Zhiyuan Yang <yangzy@marvell.com>
+>
+> When magic-packet is generated as a UDP packet the offset should
+> be 20+8 more bytes to cover IPv4 header and UDP header. So the
+> total offset become 56.
+> Add a new MEF entry to support both magic-packet patterns
+> generated by different tools.
+>
+> Cc: Andreas Fenkart <afenkart@gmail.com>
+> Signed-off-by: Zhiyuan Yang <yangzy@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/cfg80211.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> index e95dec9..9afac2b 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -2483,6 +2483,16 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+>                 mef_entry->filter[filt_num].filt_type = TYPE_EQ;
+>                 if (filt_num)
+>                         mef_entry->filter[filt_num].filt_action = TYPE_OR;
+> +
+> +               filt_num++;
+> +               mef_entry->filter[filt_num].repeat = 16;
+> +               memcpy(mef_entry->filter[filt_num].byte_seq, priv->curr_addr,
+> +                      ETH_ALEN);
+> +               mef_entry->filter[filt_num].byte_seq[MWIFIEX_MEF_MAX_BYTESEQ] =
+> +                                                               ETH_ALEN;
+> +               mef_entry->filter[filt_num].offset = 56;
+> +               mef_entry->filter[filt_num].filt_type = TYPE_EQ;
+> +               mef_entry->filter[filt_num].filt_action = TYPE_OR;
+>         }
+>
+>         if (!mef_cfg.criteria)
+> --
+> 1.8.2.3
+>
