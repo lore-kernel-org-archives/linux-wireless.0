@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33652 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933223AbaFIQ1z (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:50970 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933323AbaFIQ1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 12:27:55 -0400
-Message-ID: <5395E089.1000601@candelatech.com> (sfid-20140609_182757_876207_9BA4B70E)
-Date: Mon, 09 Jun 2014 09:27:53 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 9 Jun 2014 12:27:48 -0400
+Received: by mail-ig0-f180.google.com with SMTP id h18so543538igc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2014 09:27:48 -0700 (PDT)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com>	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>	<538CA904.4000508@candelatech.com>	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>	<538CC949.5020901@candelatech.com>	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>	<538CD507.1050803@candelatech.com>	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>	<53909372.1040707@candelatech.com>	<87fvjimsxj.fsf@kamboji.qca.qualcomm.com>	<5391E620.4090706@candelatech.com>	<87vbscj2ho.fsf@kamboji.qca.qualcomm.com>	<53932F52.2030203@candelatech.com>	<8738ffiysv.fsf@kamboji.qca.qualcomm.com>	<539483B1.5020401@candelatech.com> <87ppiih4zk.fsf@kamboji.qca.qualcomm.com> <5395CE36.30407@candelatech.com> <5395D718.4090704@candelatech.com>
-In-Reply-To: <5395D718.4090704@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1401972980-21484-2-git-send-email-michal.kazior@tieto.com>
+References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
+	<1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+	<1401972980-21484-2-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 9 Jun 2014 19:27:47 +0300
+Message-ID: <CAB3XZEc9+Ny2tVxdRHeokAd6+BLBqrZ_FmCNFdHHHkViZs=39Q@mail.gmail.com> (sfid-20140609_182751_957071_20C8BA66)
+Subject: Re: [PATCH v8 1/5] mac80211: implement multi-vif in-place reservations
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/09/2014 08:47 AM, Ben Greear wrote:
-> On 06/09/2014 08:09 AM, Ben Greear wrote:
->>
->>
->> On 06/09/2014 01:17 AM, Kalle Valo wrote:
->>> Ben Greear <greearb@candelatech.com> writes:
->>>
->>>>>> With time-of-day, time-since-boot, and MAC, each dump should be unique.
->>>>>
->>>>> But I would like to easily match from kernel log that the crash dump
->>>>> matches with log. uuid would provide that in a simple way (check that
->>>>> the uuid in the log matches with the uuid in the dump). What's so bad
->>>>> from using uuid?
->>>>
->>>> Just tell me how you want me to create the uuid and I'll do so.
->>>
->>> As kbuild found some compilation problems, I think it would be easier if
->>> I make the final changes to your patches and send that for review. Would
->>> that be ok for you?
->>
->> Yes, that would be great.
-> 
-> In case it helps, let me post my latest patches...will get those up
-> in an hour or two.
+hi Michal,
 
-Actually, I seem to have just forgotten everything over the weekend...the
-v2 patches I posted last Friday are current with my own tree.  So,
-if you can tweak them to your satisfaction, that should work fine for
-me.
+On Thu, Jun 5, 2014 at 3:56 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Multi-vif in-place reservations happen when
+> it is impossible to allocate more channel contexts
+> as indicated by interface combinations.
+>
+> Such reservations are not finalized until all
+> assigned interfaces are ready.
+>
+> This still doesn't handle all possible cases
+> (i.e. degradation of number of channels) properly.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+[...]
 
-Thanks,
-Ben
+> +static int
+> +ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
+>  {
+[...]
+> +
+> +       vif_chsw[0].vif = &sdata->vif;
+> +       vif_chsw[0].old_ctx = &old_ctx->conf;
+> +       vif_chsw[0].new_ctx = &new_ctx->conf;
+> +
+> +       list_del(&sdata->reserved_chanctx_list);
+> +       sdata->reserved_chanctx = NULL;
+> +
+> +       err = drv_switch_vif_chanctx(local, vif_chsw, 1,
+> +                                    CHANCTX_SWMODE_REASSIGN_VIF);
+> +       if (err) {
+> +               if (ieee80211_chanctx_refcount(local, new_ctx) == 0)
+> +                       ieee80211_free_chanctx(local, new_ctx);
+> +
+> +               return err;
+>         }
+>
+> -       old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+> +       list_move(&sdata->assigned_chanctx_list, &new_ctx->assigned_vifs);
+> +
+> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
+> +               __ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+> +
+> +       if (ieee80211_chanctx_refcount(local, old_ctx) == 0)
+> +               ieee80211_free_chanctx(local, old_ctx);
 
+i gave it a quick run, and it crashed quickly due to use-after-free.
+adding:
+rcu_assign_pointer(sdata->vif.chanctx_conf, &new_ctx->conf);
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+after the list_move (before freeing it...) seemed to solve it.
+other than that, it seems to work well so far :)
 
+Eliad.
