@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:45697 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752130AbaFAMdG (ORCPT
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:42484 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbaFIFew convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 08:33:06 -0400
-Date: Sun, 1 Jun 2014 15:26:33 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: P2P GO operating channel width
-Message-ID: <20140601122633.GB22695@w1.fi> (sfid-20140601_143312_136427_D58A60BF)
-References: <5370CBFF.8060206@broadcom.com>
+	Mon, 9 Jun 2014 01:34:52 -0400
+Received: by mail-vc0-f179.google.com with SMTP id id10so3992556vcb.38
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2014 22:34:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5370CBFF.8060206@broadcom.com>
+In-Reply-To: <1402080365-15462-1-git-send-email-luca@coelho.fi>
+References: <1402068423-23359-1-git-send-email-luca@coelho.fi>
+	<1402080365-15462-1-git-send-email-luca@coelho.fi>
+Date: Mon, 9 Jun 2014 07:34:50 +0200
+Message-ID: <CA+BoTQkX=ZpDc=R+nWxsrj026XyaaEiwrosaB2buRVif2aOnxQ@mail.gmail.com> (sfid-20140609_073506_684708_48D3D980)
+Subject: Re: [RFC option 2] mac80211: introduce refcount for queue_stop_reasons
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2014 at 03:26:23PM +0200, Arend van Spriel wrote:
-> I was wondering how to configure the bandwidth of the operating
-> channel in P2P-GO scenario. In nl80211.c I do see the use of
-> .set_ap_chanwidth() callback. Reading the spec it seems the
-> operating channel is exchanged during GO negotiation, but I do not
-> see any reference about the bandwidth. It does exchange the
-> operating class and I found some info in p2p_supplicant.c (see
-> below). I am just not sure how this is configured to the driver, ie.
-> what nl80211 commands will be used.
+On 6 June 2014 20:46, Luca Coelho <luca@coelho.fi> wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+>
+> Sometimes different vifs may be stopping the queues for the same
+> reason (e.g. when several interfaces are performing a channel switch).
+> Instead of using a bitmask for the reasons, use an integer that holds
+> a refcount instead.
+>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>
+> This looks much simpler now.  The only thing is that we need to make
+> sure the bitmask never gets out of sync with the refcounts, which
+> shouldn't be too difficult, as long as we keep the refcounts usage
+> restricted to the queues start/stopping functions.
 
-In theory, operating class could be used to negotiate channel bandwidth
-during GO Negotiation. In practice, though, most implementations do not
-do this. Instead, the device that becomes the GO can just decide to
-enable 40 MHz (or 80/80+80/160 MHz for VHT) on its own regardless of
-which operating class was used. This should still be done in a way that
-the primary channel ends up being where indicating during GO Negotiation
-to allow the P2P Client to find the GO more easily.
+I think you need to make sure all stop/wake calls are balanced
+everywhere (including device drivers). Otherwise you risk breaking
+things silently in some cases.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+It might also be worth to update exported stop/wake symbol documentation too.
+
+
+Michał
