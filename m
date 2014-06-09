@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:50163 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbaFIOJS (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:28429 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934020AbaFIJfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 10:09:18 -0400
-Message-ID: <1402322954.11505.10.camel@umadbro> (sfid-20140609_160936_014589_45D5B783)
-Subject: Re: [RFC 0/4 v2] cfg80211/mac80211: Add new interface type for OCB
- (Outside the Context of a BSS) mode
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Mon, 09 Jun 2014 16:09:14 +0200
-In-Reply-To: <1401826536.4157.54.camel@jlt4.sipsolutions.net>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140530_185636_416967_38B72FDB) <1401826536.4157.54.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 9 Jun 2014 05:35:30 -0400
+Date: Mon, 9 Jun 2014 12:35:18 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: qca_vkondrat@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: re: wil6210: improve debug for WMI receive
+Message-ID: <20140609093518.GA10589@mwanda> (sfid-20140609_113537_426998_6B8E648C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-03 at 22:15 +0200, Johannes Berg wrote:
-> it's unclear to me how the bitrate is
-> selected, are there even different bitrates?
+Hello Vladimir Kondratiev,
 
-My understanding is that since we are using OFDM we have to support at
-least 3, 6, 12 Mb/s data rates (says 802.11-2012, Chapter 18.1.1, second
-paragraph). How to choose it when transmitting? That should probably be
-defined in some standard built on top of "802.11p" -- the European
-"Intelligent Transport System" standard ETSI EN 302 663 defines
-different channels in 5.9 Ghz band along with the "default data
-rate" (Table 2, Chapter 4.3). For example Control Channel (nr. 180) has
-data rate 6 Mb/s, while Service Channel 2 (nr. 178) has data rate 12
-Mb/s.
+The patch a715c7ddd65a: "wil6210: improve debug for WMI receive" from
+May 29, 2014, leads to the following static checker warning:
 
-Regards;
-Rostislav
+	drivers/net/wireless/ath/wil6210/wmi.c:746 wmi_recv_cmd()
+	info: ignoring unreachable code.
 
+drivers/net/wireless/ath/wil6210/wmi.c
+   739                  spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
+   740                  {
+   741                          int q = queue_work(wil->wmi_wq,
+   742                                             &wil->wmi_event_worker);
+   743                          wil_dbg_wmi(wil, "queue_work -> %d\n", q);
+   744                  }
+   745          }
+   746          if (n > 1)
+                ^^^^^^^^^^
+We never reach this if statemtent.
+
+   747                  wil_dbg_wmi(wil, "%s -> %d events processed\n", __func__, n);
+   748  }
+
+regards,
+dan carpenter
