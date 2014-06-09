@@ -1,349 +1,550 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:63278 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755955AbaFLNCj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 09:02:39 -0400
-Received: by mail-wi0-f171.google.com with SMTP id n15so6945118wiw.16
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 06:02:37 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v9 4/5] mac80211: use chanctx reservation for STA CSA
-Date: Thu, 12 Jun 2014 14:54:39 +0200
-Message-Id: <1402577680-17888-5-git-send-email-michal.kazior@tieto.com> (sfid-20140612_150243_136790_8C4C1EE1)
-In-Reply-To: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
-References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
- <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:56570 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933603AbaFIPA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2014 11:00:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net, michal.kazior@tieto.com
+Cc: linux-wireless@vger.kernel.org
+Date: Mon,  9 Jun 2014 18:00:41 +0300
+Message-Id: <1402326041-32102-1-git-send-email-luca@coelho.fi> (sfid-20140609_170100_272013_2868D1DA)
+In-Reply-To: <1402325549.2004.41.camel@dubbel>
+References: <1402325549.2004.41.camel@dubbel>
+Subject: [RFC option 2 v2] mac80211: introduce refcount for queue_stop_reasons
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel switch finalization is now 2-step. First
-step is when driver calls chswitch_done(), the
-other is when reservation is actually finalized
-(which be defered for in-place reservation).
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-It is now safe to call ieee80211_chswitch_done()
-more than once.
+Sometimes different vifs may be stopping the queues for the same
+reason (e.g. when several interfaces are performing a channel switch).
+Instead of using a bitmask for the reasons, use an integer that holds
+a refcount instead.  In order to keep it backwards compatible,
+introduce a boolean in some functions that tell us whether the queue
+stopping should be refcounted or not.  For now, use not refcounted for
+all calls to keep it functionally the same as before.
 
-Also remove the ieee80211_vif_change_channel()
-because it is no longer used.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
 
-Notes:
-    v3:
-     * fix comment style [Johannes]
-     * add resilience for multiple ieee80211_chswitch_done() calls
-    
-    v3:
-     * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
-     * fix comment style [Johannes]
-     * use goto for cleaner unlocking/returning [Johannes]
-     * squash with ieee80211_vif_change_channel() removal patch [Johannes]
-     * fix commit message [Johannes]
-     * add resilience for multiple ieee80211_csa_finish() calls
-    
-    v4:
-     * squash with removal of ieee80211_vif_change_channel()
-    
-    v7:
-     * add local->mtx locking when reserving (for ieee80211_chanctx_alloc)
+In v2:
 
- net/mac80211/chan.c        | 69 ++------------------------------
- net/mac80211/ieee80211_i.h |  5 ---
- net/mac80211/mlme.c        | 99 ++++++++++++++++++++++++++++++----------------
- 3 files changed, 69 insertions(+), 104 deletions(-)
+   * Introduce a "refcounted" argument to the queue functions to allow
+     for a slow transition to the world of refcounted
+     queue-stopping [Michal/Johannes];
+   * For now, we use !refcounted for all calls;
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index e50c263..4cf4cac 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -799,70 +799,6 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
+ net/mac80211/agg-tx.c      |  8 +++--
+ net/mac80211/cfg.c         |  9 ++++--
+ net/mac80211/debugfs.c     | 13 +++++---
+ net/mac80211/ieee80211_i.h | 15 ++++++---
+ net/mac80211/iface.c       |  3 +-
+ net/mac80211/main.c        |  3 +-
+ net/mac80211/mlme.c        | 15 ++++++---
+ net/mac80211/offchannel.c  |  6 ++--
+ net/mac80211/pm.c          |  6 ++--
+ net/mac80211/tx.c          |  3 +-
+ net/mac80211/util.c        | 76 +++++++++++++++++++++++++++++++---------------
+ 11 files changed, 106 insertions(+), 51 deletions(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index ce9633a..d6986f3 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -170,10 +170,13 @@ ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+ {
+ 	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+ 
++	/* we do refcounting here, so don't use the queue reason refcounting */
++
+ 	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
+ 		ieee80211_stop_queue_by_reason(
+ 			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
++			IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
++			false);
+ 	__acquire(agg_queue);
  }
  
--static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--					  struct ieee80211_chanctx *ctx,
--					  u32 *changed)
--{
--	struct ieee80211_local *local = sdata->local;
--	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	u32 chanctx_changed = 0;
--
--	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
--				     IEEE80211_CHAN_DISABLED))
--		return -EINVAL;
--
--	if (ieee80211_chanctx_refcount(local, ctx) != 1)
--		return -EINVAL;
--
--	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
--		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
--		*changed |= BSS_CHANGED_BANDWIDTH;
--	}
--
--	sdata->vif.bss_conf.chandef = *chandef;
--	ctx->conf.def = *chandef;
--
--	chanctx_changed |= IEEE80211_CHANCTX_CHANGE_CHANNEL;
--	drv_change_chanctx(local, ctx, chanctx_changed);
--
--	ieee80211_recalc_chanctx_chantype(local, ctx);
--	ieee80211_recalc_smps_chanctx(local, ctx);
--	ieee80211_recalc_radar_chanctx(local, ctx);
--	ieee80211_recalc_chanctx_min_def(local, ctx);
--
--	return 0;
--}
--
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
--	int ret;
--
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--
--	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-- out:
--	mutex_unlock(&local->chanctx_mtx);
--	return ret;
--}
--
- static void
- __ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
- 				      bool clear)
-@@ -1044,8 +980,11 @@ ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_queue_work(&sdata->local->hw,
- 				     &sdata->csa_finalize_work);
- 		break;
--	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_STATION:
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &sdata->u.mgd.chswitch_work);
-+		break;
-+	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_MONITOR:
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4c6dd32..341bc6c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -787,7 +787,6 @@ struct ieee80211_sub_if_data {
- 	struct mac80211_qos_map __rcu *qos_map;
+@@ -185,7 +188,8 @@ ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+ 	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
+ 		ieee80211_wake_queue_by_reason(
+ 			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
++			IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
++			false);
+ 	__release(agg_queue);
+ }
  
- 	struct work_struct csa_finalize_work;
--	bool csa_radar_required;
- 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
- 	struct cfg80211_chan_def csa_chandef;
- 
-@@ -1829,10 +1828,6 @@ int __must_check
- ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u32 *changed);
--/* NOTE: only use ieee80211_vif_change_channel() for channel switch */
--int __must_check
--ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--			     u32 *changed);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7f073ef..baea348 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -940,51 +940,69 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data, u.mgd.chswitch_work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	u32 changed = 0;
- 	int ret;
- 
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
- 
- 	sdata_lock(sdata);
-+	mutex_lock(&local->mtx);
-+	mutex_lock(&local->chanctx_mtx);
-+
- 	if (!ifmgd->associated)
- 		goto out;
- 
--	mutex_lock(&local->mtx);
--	ret = ieee80211_vif_change_channel(sdata, &changed);
--	mutex_unlock(&local->mtx);
--	if (ret) {
-+	if (!sdata->vif.csa_active)
-+		goto out;
-+
-+	/*
-+	 * using reservation isn't immediate as it may be deferred until later
-+	 * with multi-vif. once reservation is complete it will re-schedule the
-+	 * work with no reserved_chanctx so verify chandef to check if it
-+	 * completed successfully
-+	 */
-+
-+	if (sdata->reserved_chanctx) {
-+		/*
-+		 * with multi-vif csa driver may call ieee80211_csa_finish()
-+		 * many times while waiting for other interfaces to use their
-+		 * reservations
-+		 */
-+		if (sdata->reserved_ready)
-+			goto out;
-+
-+		ret = ieee80211_vif_use_reserved_context(sdata);
-+		if (ret) {
-+			sdata_info(sdata,
-+				   "failed to use reserved channel context, disconnecting (err=%d)\n",
-+				   ret);
-+			ieee80211_queue_work(&sdata->local->hw,
-+					     &ifmgd->csa_connection_drop_work);
-+			goto out;
-+		}
-+
-+		goto out;
-+	}
-+
-+	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
-+					&sdata->csa_chandef)) {
- 		sdata_info(sdata,
--			   "vif channel switch failed, disconnecting\n");
-+			   "failed to finalize channel switch, disconnecting\n");
- 		ieee80211_queue_work(&sdata->local->hw,
- 				     &ifmgd->csa_connection_drop_work);
- 		goto out;
- 	}
- 
--	if (!local->use_chanctx) {
--		local->_oper_chandef = sdata->csa_chandef;
--		/* Call "hw_config" only if doing sw channel switch.
--		 * Otherwise update the channel directly
--		 */
--		if (!local->ops->channel_switch)
--			ieee80211_hw_config(local, 0);
--		else
--			local->hw.conf.chandef = local->_oper_chandef;
--	}
--
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
- 	ifmgd->associated->channel = sdata->csa_chandef.chan;
- 
--	ieee80211_bss_info_change_notify(sdata, changed);
--
--	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
-+
- 	/* XXX: wait for a beacon first? */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index af3eac4..e920d48 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -837,7 +837,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
  	if (!ieee80211_csa_needs_block_tx(local))
  		ieee80211_wake_queues_by_reason(&local->hw,
  					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
--	mutex_unlock(&local->mtx);
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	kfree(sdata->u.ap.next_beacon);
+@@ -2828,7 +2829,8 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 
+ 	return 0;
+ }
+@@ -3060,7 +3062,8 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	if (sdata->csa_block_tx)
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 
+ 	if (changed) {
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 0e963bc1..3ca4d78 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -332,13 +332,16 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
+ 	struct ieee80211_local *local = file->private_data;
+ 	unsigned long flags;
+ 	char buf[IEEE80211_MAX_QUEUES * 20];
+-	int q, res = 0;
++	int q, r, res = 0;
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	for (q = 0; q < local->hw.queues; q++)
+-		res += sprintf(buf + res, "%02d: %#.8lx/%d\n", q,
+-				local->queue_stop_reasons[q],
+-				skb_queue_len(&local->pending[q]));
++	for (q = 0; q < local->hw.queues; q++) {
++		for (r = 0; r < IEEE80211_QUEUE_STOP_REASONS; r++)
++			res += sprintf(buf + res,
++				       "%02d: reason[%02d] = %d/%d\n", q, r,
++				       local->q_stop_reasons[q][r],
++				       skb_queue_len(&local->pending[q]));
++	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 677e9c8..f2b59c6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -921,6 +921,8 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+ 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
+ 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
++
++	IEEE80211_QUEUE_STOP_REASONS,
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+@@ -1017,6 +1019,7 @@ struct ieee80211_local {
+ 	struct workqueue_struct *workqueue;
+ 
+ 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
++	int q_stop_reasons[IEEE80211_MAX_QUEUES][IEEE80211_QUEUE_STOP_REASONS];
+ 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
+ 	spinlock_t queue_stop_reason_lock;
+ 
+@@ -1714,14 +1717,18 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     unsigned long queues,
+-				     enum queue_stop_reason reason);
++				     enum queue_stop_reason reason,
++				     bool refcounted);
+ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+ 				     unsigned long queues,
+-				     enum queue_stop_reason reason);
++				     enum queue_stop_reason reason,
++				     bool refcounted);
+ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason);
++				    enum queue_stop_reason reason,
++				    bool refcounted);
+ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason);
++				    enum queue_stop_reason reason,
++				    bool refcounted);
+ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue);
+ void ieee80211_add_pending_skb(struct ieee80211_local *local,
+ 			       struct sk_buff *skb);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 00762a1..5e7b371 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -844,7 +844,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 54e632b..89170c8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -270,7 +270,8 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
+ 
+ 	/* use this reason, ieee80211_reconfig will unblock it */
+ 	ieee80211_stop_queues_by_reason(hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
++					false);
+ 
+ 	/*
+ 	 * Stop all Rx during the reconfig. We don't want state changes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7f073ef..8b73476 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -983,7 +983,8 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
  
  	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
+@@ -1115,7 +1116,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->csa_block_tx)
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
  
-@@ -992,6 +1010,8 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	ieee80211_sta_reset_conn_monitor(sdata);
+ 	if (local->ops->channel_switch) {
+@@ -1385,7 +1387,8 @@ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
  
- out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	mutex_unlock(&local->mtx);
- 	sdata_unlock(sdata);
+ 	ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_PS);
++					IEEE80211_QUEUE_STOP_REASON_PS,
++					false);
  }
  
-@@ -1028,6 +1048,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct cfg80211_bss *cbss = ifmgd->associated;
-+	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
- 	enum ieee80211_band current_band;
- 	struct ieee80211_csa_ie csa_ie;
-@@ -1071,7 +1092,22 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+@@ -1833,7 +1836,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
  
- 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+ 	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
+@@ -2082,7 +2086,8 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_QUEUE_STOP_REASON_CSA,
++					false);
+ 	mutex_unlock(&local->mtx);
  
-+	mutex_lock(&local->mtx);
- 	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		sdata_info(sdata,
-+			   "no channel context assigned to vif?, disconnecting\n");
-+		ieee80211_queue_work(&local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+		mutex_unlock(&local->chanctx_mtx);
-+		mutex_unlock(&local->mtx);
-+		return;
-+	}
-+
-+	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
- 	if (local->use_chanctx) {
- 		u32 num_chanctx = 0;
- 		list_for_each_entry(chanctx, &local->chanctx_list, list)
-@@ -1084,32 +1120,27 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_queue_work(&local->hw,
- 					     &ifmgd->csa_connection_drop_work);
- 			mutex_unlock(&local->chanctx_mtx);
-+			mutex_unlock(&local->mtx);
- 			return;
- 		}
- 	}
+ 	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 0c2a294..1a523e0 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -119,7 +119,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 	 * before sending nullfunc to enable powersave at the AP.
+ 	 */
+ 	ieee80211_stop_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
++					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
++					false);
+ 	ieee80211_flush_queues(local, NULL);
  
--	if (WARN_ON(!rcu_access_pointer(sdata->vif.chanctx_conf))) {
--		ieee80211_queue_work(&local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		mutex_unlock(&local->chanctx_mtx);
--		return;
--	}
--	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
--			       struct ieee80211_chanctx, conf);
--	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
-+	res = ieee80211_vif_reserve_chanctx(sdata, &csa_ie.chandef,
-+					    chanctx->mode, false);
-+	if (res) {
- 		sdata_info(sdata,
--			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
-+			   "failed to reserve channel context for channel switch, disconnecting (err=%d)\n",
-+			   res);
+ 	mutex_lock(&local->iflist_mtx);
+@@ -182,7 +183,8 @@ void ieee80211_offchannel_return(struct ieee80211_local *local)
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+ 	ieee80211_wake_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
++					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
++					false);
+ }
+ 
+ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc)
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index d478b88..4c5192e 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -35,7 +35,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	ieee80211_stop_queues_by_reason(hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
++					false);
+ 
+ 	/* flush out all packets */
+ 	synchronize_net();
+@@ -74,7 +75,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			}
+ 			ieee80211_wake_queues_by_reason(hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
++					false);
+ 			return err;
+ 		} else if (err > 0) {
+ 			WARN_ON(err != 1);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0a519a5..662a984 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -250,7 +250,8 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 						IEEE80211_MAX_QUEUE_MAP,
+-						IEEE80211_QUEUE_STOP_REASON_PS);
++						IEEE80211_QUEUE_STOP_REASON_PS,
++						false);
+ 		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
  		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
- 		mutex_unlock(&local->chanctx_mtx);
-+		mutex_unlock(&local->mtx);
+ 				     &local->dynamic_ps_disable_work);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 04e5f5c..8552fe4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -317,7 +317,8 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ }
+ 
+ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+-				   enum queue_stop_reason reason)
++				   enum queue_stop_reason reason,
++				   bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+@@ -329,7 +330,13 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+ 	if (!test_bit(reason, &local->queue_stop_reasons[queue]))
  		return;
+ 
+-	__clear_bit(reason, &local->queue_stop_reasons[queue]);
++	if (!refcounted)
++		local->q_stop_reasons[queue][reason] = 0;
++	else
++		local->q_stop_reasons[queue][reason]--;
++
++	if (local->q_stop_reasons[queue][reason] == 0)
++		__clear_bit(reason, &local->queue_stop_reasons[queue]);
+ 
+ 	if (local->queue_stop_reasons[queue] != 0)
+ 		/* someone still has this queue stopped */
+@@ -344,25 +351,28 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+ }
+ 
+ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason)
++				    enum queue_stop_reason reason,
++				    bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	__ieee80211_wake_queue(hw, queue, reason);
++	__ieee80211_wake_queue(hw, queue, reason, refcounted);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+ 
+ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ {
+ 	ieee80211_wake_queue_by_reason(hw, queue,
+-				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
++				       IEEE80211_QUEUE_STOP_REASON_DRIVER,
++				       false);
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queue);
+ 
+ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+-				   enum queue_stop_reason reason)
++				   enum queue_stop_reason reason,
++				   bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -373,10 +383,13 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	if (WARN_ON(queue >= hw->queues))
+ 		return;
+ 
+-	if (test_bit(reason, &local->queue_stop_reasons[queue]))
+-		return;
++	if (!refcounted)
++		local->q_stop_reasons[queue][reason] = 1;
++	else
++		local->q_stop_reasons[queue][reason]++;
+ 
+-	__set_bit(reason, &local->queue_stop_reasons[queue]);
++	if (__test_and_set_bit(reason, &local->queue_stop_reasons[queue]))
++		return;
+ 
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		n_acs = 1;
+@@ -398,20 +411,22 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ }
+ 
+ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason)
++				    enum queue_stop_reason reason,
++				    bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	__ieee80211_stop_queue(hw, queue, reason);
++	__ieee80211_stop_queue(hw, queue, reason, refcounted);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+ 
+ void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
+ {
+ 	ieee80211_stop_queue_by_reason(hw, queue,
+-				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
++				       IEEE80211_QUEUE_STOP_REASON_DRIVER,
++				       false);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queue);
+ 
+@@ -429,9 +444,11 @@ void ieee80211_add_pending_skb(struct ieee80211_local *local,
  	}
- 	mutex_unlock(&local->chanctx_mtx);
  
--	sdata->csa_chandef = csa_ie.chandef;
--
--	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = true;
-+	sdata->csa_chandef = csa_ie.chandef;
- 	sdata->csa_block_tx = csa_ie.mode;
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
++	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
++			       false);
+ 	__skb_queue_tail(&local->pending[queue], skb);
+-	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
++	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
++			       false);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
  
- 	if (sdata->csa_block_tx)
+@@ -455,20 +472,23 @@ void ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ 		queue = info->hw_queue;
+ 
+ 		__ieee80211_stop_queue(hw, queue,
+-				IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
++				IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
++				false);
+ 
+ 		__skb_queue_tail(&local->pending[queue], skb);
+ 	}
+ 
+ 	for (i = 0; i < hw->queues; i++)
+ 		__ieee80211_wake_queue(hw, i,
+-			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
++			IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
++			false);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+ 
+ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+ 				     unsigned long queues,
+-				     enum queue_stop_reason reason)
++				     enum queue_stop_reason reason,
++				     bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+@@ -477,7 +497,7 @@ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 
+ 	for_each_set_bit(i, &queues, hw->queues)
+-		__ieee80211_stop_queue(hw, i, reason);
++		__ieee80211_stop_queue(hw, i, reason, refcounted);
+ 
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+@@ -485,7 +505,8 @@ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+ void ieee80211_stop_queues(struct ieee80211_hw *hw)
+ {
+ 	ieee80211_stop_queues_by_reason(hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_DRIVER);
++					IEEE80211_QUEUE_STOP_REASON_DRIVER,
++					false);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
+@@ -508,7 +529,8 @@ EXPORT_SYMBOL(ieee80211_queue_stopped);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     unsigned long queues,
+-				     enum queue_stop_reason reason)
++				     enum queue_stop_reason reason,
++				     bool refcounted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+@@ -517,7 +539,7 @@ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 
+ 	for_each_set_bit(i, &queues, hw->queues)
+-		__ieee80211_wake_queue(hw, i, reason);
++		__ieee80211_wake_queue(hw, i, reason, refcounted);
+ 
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+@@ -525,7 +547,8 @@ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ void ieee80211_wake_queues(struct ieee80211_hw *hw)
+ {
+ 	ieee80211_wake_queues_by_reason(hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_DRIVER);
++					IEEE80211_QUEUE_STOP_REASON_DRIVER,
++					false);
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queues);
+ 
+@@ -552,12 +575,14 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 	}
+ 
+ 	ieee80211_stop_queues_by_reason(&local->hw, queues,
+-					IEEE80211_QUEUE_STOP_REASON_FLUSH);
++					IEEE80211_QUEUE_STOP_REASON_FLUSH,
++					false);
+ 
+ 	drv_flush(local, sdata, queues, false);
+ 
+ 	ieee80211_wake_queues_by_reason(&local->hw, queues,
+-					IEEE80211_QUEUE_STOP_REASON_FLUSH);
++					IEEE80211_QUEUE_STOP_REASON_FLUSH,
++					false);
+ }
+ 
+ static void __iterate_active_interfaces(struct ieee80211_local *local,
+@@ -1797,7 +1822,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	ieee80211_wake_queues_by_reason(hw, IEEE80211_MAX_QUEUE_MAP,
+-					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
++					false);
+ 
+ 	/*
+ 	 * Reconfigure sched scan if it was interrupted by FW restart or
 -- 
-1.8.5.3
+2.0.0.rc2
 
