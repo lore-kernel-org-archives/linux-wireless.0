@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37707 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753926AbaFMWIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 18:08:07 -0400
-Message-ID: <539B7639.30104@openwrt.org> (sfid-20140614_000811_076979_D375B80D)
-Date: Sat, 14 Jun 2014 00:07:53 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:52830 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459AbaFJWLS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2014 18:11:18 -0400
+Received: by mail-lb0-f169.google.com with SMTP id s7so4373256lbd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 15:11:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Mathy Vanhoef <vanhoefm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 2/2] ath5k: capture CCK and OFDM restarts
-References: <539B7019.1050801@gmail.com>
-In-Reply-To: <539B7019.1050801@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1402385153-5056-2-git-send-email-janusz.dziedzic@tieto.com>
+References: <1402385153-5056-1-git-send-email-janusz.dziedzic@tieto.com> <1402385153-5056-2-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 10 Jun 2014 15:10:56 -0700
+Message-ID: <CAB=NE6X=Uzu_SQbaHuA-uVoU+tdz=yW6PuBOgDyB75VOG1EFOw@mail.gmail.com> (sfid-20140611_001121_831620_E63511CD)
+Subject: Re: [RFC 2/2] crda: add crda_tiny implementation
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-06-13 23:41, Mathy Vanhoef wrote:
-> Hi all,
-> 
-> This patch allows users to see CCK and OFDM restarts when FIF_FCSFAIL is set.
-> Without this patch only the stronger frame (causing the restart) would be
-> visible.
-> 
-> The patch has been tested using our reactive jammer. The prefix of the weaker
-> frame is being correctly passed on as a frame with bad CRC!
-> --
-> From: "Mathy Vanhoef" <vanhoefm@gmail.com>
-> 
-> Treat frames that underwent a CCK or OFDM restart as frames with an invalid CRC.
-> 
-> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 39ba642..1bbc850 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -1462,7 +1462,19 @@ ath5k_receive_frame_ok(struct ath5k_hw *ah, struct ath5k_rx_status *rs)
->  			ah->stats.rxerr_phy++;
->  			if (rs->rs_phyerr > 0 && rs->rs_phyerr < 32)
->  				ah->stats.rxerr_phy_code[rs->rs_phyerr]++;
-> -			return false;
-> +
-> +			/*
-> +			 * Threat packets that underwent a CCK of OFDM reset as having a bad CRC.
-> +			 * These restarts happen when the radio resynchronizes to a stronger frame
-> +			 * while receiving a weaker frame. Here we receive the prefix of the weak
-> +			 * frame. Since these are incomplete packets, mark their CRC as invalid.
-> +			 */
-> +			if (rs->rs_phyerr == AR5K_RX_PHY_ERROR_OFDM_RESTART ||
-> +			    rs->rs_phyerr == AR5K_RX_PHY_ERROR_CCK_RESTART) {
-> +				rs->rs_status |= AR5K_RXERR_CRC;
-> +				rs->rs_status &= (~AR5K_RXERR_PHY);
-Unnecessary braces
+On Tue, Jun 10, 2014 at 12:25 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> add crda_tiny and crda.sh implementation.
+> This implementation base on db.txt file
+> signed via PGP. Next crda.sh do db.txt veryfication.
+> crda_tiny as a input get regulatory domain
+> in text format, parse this and send using
+> nl80211 to the kernel.
+> This implementation skip regulatory.bin file and
+> works directly on signed db.txt file.
+>
+> Added gpg directory with db_signed.txt file and public key
+> required for veryfication.
+>
+> crda.sh require installed gpg.
+>
+> To test just run:
+> - make && make install
+> - sh gpg/install.sh
+> - cp /sbin/crda.sh /sbin/crda (or change udev rule)
+>
+> All logs will be available in /tmp/crda.err file
 
-> +			}
-What about the return statement you removed, shouldn't you add that back
-for the 'else' case?
+It seems Felix had some other ideas on how to scale binary
+compatibility, this doesn't seem to care for it.
 
-- Felix
+  Luis
