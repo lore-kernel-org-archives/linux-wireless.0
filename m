@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:38570 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189AbaFYBKI (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:46177 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbaFJJ6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 21:10:08 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: tiwai@suse.de, leedom@chelsio.com, cocci@systeme.lip6.fr,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RESEND][PATCH 3/3] p54: use request_firmware_direct() for optional EEPROM override
-Date: Wed, 25 Jun 2014 03:10:02 +0200
-Message-ID: <1582751.494RL7XPxB@blech> (sfid-20140625_031038_389025_99A8110D)
-In-Reply-To: <1403649583-12707-4-git-send-email-mcgrof@do-not-panic.com>
-References: <1403649583-12707-1-git-send-email-mcgrof@do-not-panic.com> <1403649583-12707-4-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 10 Jun 2014 05:58:05 -0400
+Received: by mail-lb0-f169.google.com with SMTP id s7so3759495lbd.14
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 02:58:02 -0700 (PDT)
+Message-ID: <5396D6A7.2010005@gmail.com> (sfid-20140610_115809_157364_5018DE4D)
+Date: Tue, 10 Jun 2014 11:57:59 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: IvDoorn@gmail.com, helmut.schaa@googlemail.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: rt2800usb: scheduling while atomic
+References: <5396C150.6030601@gmail.com> <20140610090655.GF1720@redhat.com>
+In-Reply-To: <20140610090655.GF1720@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, June 24, 2014 03:39:43 PM Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> The p54 driver uses request_firmware() twice, once for actual
-> firmware and then another time for an optional user overide on
-> EEPROM, 3826.eeprom. The custom EEPROM  is optional but if not
-> present we'll introduce an extra lag of 60 seconds with udev
-> present. Annotate we don't want udev nonsense here to avoid
-> the lag in case its not present.
-> [...]
-> Cc: Takashi Iwai <tiwai@suse.de>
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: cocci@systeme.lip6.fr
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-By: Christian Lamparter <chunkeey@googlemail.com>
+On 2014-06-10 11:06, Stanislaw Gruszka wrote:
+> On Tue, Jun 10, 2014 at 10:26:56AM +0200, Pontus Fuchs wrote:
+>> I have a reproducible sleep in atomic when I set up hostapd with
+>> TKIP on a rt2800 based USB dongle. As soon as a client connects I
+>> see this. I guess get_tkip_seq may not sleep.
+>
+> Someone else reported that already, but fails to test provided patch:
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2014-January/006538.html
+>
+> Does attached patch make the problem gone for you?
+
+Yes. Thanks :)
+
+Cheers,
+
+Pontus
+
 
