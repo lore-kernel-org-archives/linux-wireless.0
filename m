@@ -1,69 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:51222 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754416AbaFUVgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 17:36:10 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sat, 21 Jun 2014 23:35:58 +0200
-Message-ID: <1721891.8jxoA0ODQg@al> (sfid-20140621_233630_269678_3EA38F93)
-In-Reply-To: <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:49887 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbaFJVw0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2014 17:52:26 -0400
+Received: by mail-lb0-f178.google.com with SMTP id w7so4280202lbi.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 14:52:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1399624723-9167-3-git-send-email-janusz.dziedzic@tieto.com>
+References: <1399624723-9167-1-git-send-email-janusz.dziedzic@tieto.com> <1399624723-9167-3-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 10 Jun 2014 14:52:05 -0700
+Message-ID: <CAB=NE6WGEuKTGxj=ZyCso5TdUp7=sskJ4Q1VGzxkfWycPU00=Q@mail.gmail.com> (sfid-20140610_235230_410746_8A2340AB)
+Subject: Re: [PATCH 2/2] crda: add AUTO-BW rule flag support
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 21 June 2014 23:03:42 Rickard Strandqvist wrote:
-> I found a logical error in an if statement that always evaluates to false.
-> 
-> This has after same discussion resulted in that we add a macro to handle this.
+On Fri, May 9, 2014 at 1:38 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-See other mail, this subject and commit message still suck. The change itself
-is fine.
+Applied and pushed, thanks.
 
-Don't forget those other drivers. You are aware that the *e drivers are for PCI(e)
-devices, and *u for USB right?
-
-Kind regards,
-Peter
-
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
->  drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> index 2b08671..280c3da 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> @@ -1128,7 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
->  	}
->  	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
->  	rtlpriv->cfg->ops->led_control(hw, ledaction);
-> -	if ((bt_msr & 0xfc) == MSR_AP)
-> +	if ((bt_msr & MSR_MASK) == MSR_AP)
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->  	else
->  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-> index 7f29b8d..315a298 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-> @@ -369,6 +369,7 @@
->  #define	MSR_ADHOC			0x01
->  #define	MSR_INFRA			0x02
->  #define	MSR_AP				0x03
-> +#define	MSR_MASK			0x03
->  
->  /* 6. Adaptive Control Registers  (Offset: 0x0160 - 0x01CF) */
->  /* ----------------------------------------------------- */
-> 
-
+  Luis
