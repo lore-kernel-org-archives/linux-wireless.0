@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:38546 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754329AbaF3S4I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 14:56:08 -0400
-Received: by mail-lb0-f175.google.com with SMTP id n15so6084818lbi.6
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 11:56:05 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:19016 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751273AbaFJGjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2014 02:39:52 -0400
+Date: Tue, 10 Jun 2014 08:38:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Powerful Notageek <powerfulnotageek@yahoo.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Subject: Re: MT7630e availability in kernel by default
+Message-ID: <20140610063824.GD1720@redhat.com> (sfid-20140610_083956_134700_9C9BCF9B)
+References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com>
+ <53935133.5020303@lwfinger.net>
+ <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+ <539356EA.1070004@lwfinger.net>
+ <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com>
+ <53935FFE.10708@lwfinger.net>
+ <1402168424.40608.YahooMailNeo@web193005.mail.sg3.yahoo.com>
+ <53936C6E.8070800@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20140630095508.GA23387@sig21.net>
-References: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com>
-	<20140630095508.GA23387@sig21.net>
-Date: Mon, 30 Jun 2014 21:56:05 +0300
-Message-ID: <CANUX_P05otaoL4UTwDBukPcFfZaAfayokPkm3ZQ_L-Tp_m3QZA@mail.gmail.com> (sfid-20140630_205611_311126_66D13B92)
-Subject: Re: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux
- 3.15.1 (was: No channels available (no IR) in 5Ghz band for intel 7260-ac
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Victor <silentworks@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53936C6E.8070800@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 12:55 PM, Johannes Stezenbach <js@sig21.net> wrote:
-> Hi Emmanuel,
->
-> On Tue, Jun 24, 2014 at 03:50:43PM +0300, Emmanuel Grumbach wrote:
->> >> On 06/24/2014 03:50 AM, Luis R. Rodriguez wrote:
->> >>> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
->> >>>> Hello, first of all i'm not sure if this is the proper place to ask
->> >>>> since it seems mostly dev-related, but i have been looking everywhere
->> >>>> trying to find a solution without luck, so i'm not sure if i
->> >>>> encountered some kind of bug.
->> >>>>
->> >>>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
->> >>
->> >> This configuration is not supported.
->> >
->> > Do you know why? it is supported in other kernel version?, i got the
->> > device mainly for to be used as 802.11ac AP  :/, on the product brief
->> > they state it is designed for AP mode
->> > http://www.intel.es/content/dam/www/public/us/en/documents/product-briefs/dual-band-wireless-ac-7260-bluetooth-brief.pdf,
->> > and in iw it appears as supported too
->>
->> AP mode is supported - not on 5.2 GHz band.
->
-> Just out of curiosity, may I ask why?  Shouldn't regdb/crda allow
-> you to support it?
->
+On Sat, Jun 07, 2014 at 02:47:58PM -0500, Larry Finger wrote:
+> On 06/07/2014 02:13 PM, Powerful Notageek wrote:
+> >dmesg says nothing and there's probably no firmware for the device (although linux-firmware is installed)
+> >
+> >These are the firmwares available to me:
+> >
+> >[root@localhost ~]# ll /usr/lib/firmware/rt2*
+> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561.bin
+> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561s.bin
+> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2661.bin
+> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2860.bin
+> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2870.bin
+> 
+> I looked more closely at the code in
+> https://github.com/anthonywong/mt7630. There are a number of places
+> where there are branches specific to the MT7630.
+This driver is quite nice mix of rt2800pci and Mediatek/Ralink driver,
+where MT7xx code was copied into rt2x00 from venodr driver. It can be
+good start for adding support for mt7xx devices to rt2x00.
 
-We don't use CRDA - we enforce the regulatory in the device itself -
-hence it can't change its behavior based on the location.
+> It also needs a
+> firmware file named mt7630.bin. Unfortunately, that file is not
+> found in the repo, and a quick Google search failed to find it. The
+> linux-firmware git repo has a file named mt7650.bin, but I think
+> that is Bluetooth firmware.
+
+Indeed, it is hard to find it.
+
+> Unfortunately, there does not seem to be an easy fix, and only
+> someone with the hardware could modify rt2800pci to support this
+> device.
+
+Yep, some substantial amount of work is needed to add support to new
+MT7xxx chips properly to rt2x00.
+
+Stanislaw
