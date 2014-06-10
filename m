@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:54404 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755140AbaFRVDH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 17:03:07 -0400
-Received: by mail-la0-f44.google.com with SMTP id ty20so912083lab.31
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:03:05 -0700 (PDT)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45073 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750717AbaFJPmS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2014 11:42:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Chin-Ran Lo <crlo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Andreas Fenkart <afenkart@gmail.com>
+Date: Tue, 10 Jun 2014 08:41:57 -0700
+Subject: RE: [PATCH 2/3] mwifiex: get rid of 'ethtool wol' code
+Message-ID: <477F20668A386D41ADCC57781B1F70430FE1BF390F@SC-VEXCH1.marvell.com> (sfid-20140610_174221_344015_52AB7341)
+References: <1402109264-7095-1-git-send-email-bzhao@marvell.com>
+ <1402109264-7095-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1402109264-7095-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1402554938-4495-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1402554938-4495-1-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 18 Jun 2014 14:02:45 -0700
-Message-ID: <CAB=NE6UeSD29K9FuzAtvH08WqM7HEeobEw9TbLpGMpf+caGQvQ@mail.gmail.com> (sfid-20140618_230312_479338_3C3D00C6)
-Subject: Re: [PATCH v2] crda: simplify text parsing for country/rules
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 11:35 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> Remove strange parsers.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Hi John,
 
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> "iw wowlan" command takes care all wake on wlan use cases.
+> So we will remove older configuration option through 'ethtool'
+> utility.
 
-Applied and pushed, thanks!
+Please drop this patch.
+As Andreas Fenkart pointed out, "ethtool wol p" option isn't covered by "iw wowlan" command and some users may still need "ethtool wol p" feature.
 
-  Luis
+The other two patches 1/3 and 3/3 are still valid.
+
+Thanks,
+Bing
+
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/Makefile   |  1 -
+>  drivers/net/wireless/mwifiex/cfg80211.c |  1 -
+> drivers/net/wireless/mwifiex/ethtool.c  | 70 ---------------------------------
+>  drivers/net/wireless/mwifiex/main.h     |  2 -
+>  4 files changed, 74 deletions(-)
+>  delete mode 100644 drivers/net/wireless/mwifiex/ethtool.c
+
