@@ -1,127 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:64192 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaF2Jli (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 05:41:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140628072322.GC7410@atomide.com>
-References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
-	<20140628052220.GG10407@us.netrek.org>
-	<20140628072322.GC7410@atomide.com>
-Date: Sun, 29 Jun 2014 11:41:37 +0200
-Message-ID: <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com> (sfid-20140629_114143_993201_53723873)
-Subject: Re: mwifiex card reset
-From: Andreas Fenkart <afenkart@gmail.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: James Cameron <quozl@laptop.org>, Bing Zhao <bzhao@marvell.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	devicetree@vger.kernel.org, Daniel Mack <daniel@zonque.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:43836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751664AbaFJKwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2014 06:52:31 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH] rt2x00: disable TKIP on USB
+Date: Tue, 10 Jun 2014 12:51:06 +0200
+Message-Id: <1402397466-8243-1-git-send-email-sgruszka@redhat.com> (sfid-20140610_125237_035074_608ABB2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-06-28 9:23 GMT+02:00 Tony Lindgren <tony@atomide.com>:
-> * James Cameron <quozl@laptop.org> [140628 08:24]:
->> On Fri, Jun 27, 2014 at 04:39:42PM +0200, Andreas Fenkart wrote:
->> > I have an mwifiex module(sd8787) behind omap_hsmmc(am33xx-soc)
->> > The module is non-removable wired fix to soc. Now the wifi module
->> > needs 2 clocks; one is a sleep clock the other used when not
->> > sleeping.
->> > While the sleep clock is fixed, @32 kHz, the system clock can be
->> > one out of several values, but can be be derived automatically
->> > from the sleep clock. But this requires the clock to be present
->> > when the wifi module comes out of reset.
->> >
+On USB we can not get atomically TKIP key. We have to disable support
+for TKIP acceleration on USB hardware to avoid bug as showed bellow.
 
-ref 1)
+[  860.827243] BUG: scheduling while atomic: hostapd/3397/0x00000002
+<snip>
+[  860.827280] Call Trace:
+[  860.827282]  [<ffffffff81682ea6>] dump_stack+0x4d/0x66
+[  860.827284]  [<ffffffff8167eb9b>] __schedule_bug+0x47/0x55
+[  860.827285]  [<ffffffff81685bb3>] __schedule+0x733/0x7b0
+[  860.827287]  [<ffffffff81685c59>] schedule+0x29/0x70
+[  860.827289]  [<ffffffff81684f8a>] schedule_timeout+0x15a/0x2b0
+[  860.827291]  [<ffffffff8105ac50>] ? ftrace_raw_event_tick_stop+0xc0/0xc0
+[  860.827294]  [<ffffffff810c13c2>] ? __module_text_address+0x12/0x70
+[  860.827296]  [<ffffffff81686823>] wait_for_completion_timeout+0xb3/0x140
+[  860.827298]  [<ffffffff81080fc0>] ? wake_up_state+0x20/0x20
+[  860.827301]  [<ffffffff814d5b3d>] usb_start_wait_urb+0x7d/0x150
+[  860.827303]  [<ffffffff814d5cd5>] usb_control_msg+0xc5/0x110
+[  860.827305]  [<ffffffffa02fb0c6>] rt2x00usb_vendor_request+0xc6/0x160  [rt2x00usb]
+[  860.827307]  [<ffffffffa02fb215>] rt2x00usb_vendor_req_buff_lock+0x75/0x150 [rt2x00usb]
+[  860.827309]  [<ffffffffa02fb393>] rt2x00usb_vendor_request_buff+0xa3/0xe0 [rt2x00usb]
+[  860.827311]  [<ffffffffa023d1a3>] rt2x00usb_register_multiread+0x33/0x40 [rt2800usb]
+[  860.827314]  [<ffffffffa05805f9>] rt2800_get_tkip_seq+0x39/0x50  [rt2800lib]
+[  860.827321]  [<ffffffffa0480f88>] ieee80211_get_key+0x218/0x2a0  [mac80211]
+[  860.827322]  [<ffffffff815cc68c>] ? __nlmsg_put+0x6c/0x80
+[  860.827329]  [<ffffffffa051b02e>] nl80211_get_key+0x22e/0x360 [cfg80211]
 
->> > Another problem is software reboot, at initial power on the wifi
->> > card will react to mmc discovery. After a software reset of the
->> > host it will not, because it has already been discovered and
->> > didn't notice the host rebooted, unless we reset it as well.
->> > While this seems obvious, the problem is that the reset is needed
->> > before the card can be discovered. Which means we cannot move the
->> > reset logic into the mwifiex driver, since that driver has not
->> > yet been selected through vendor/product id.
->> >
->>
->> we had same problem with sd8787 and a different system design.  we
->> added reset-gpios property [1] and used it in sdhci-pxav3.c [2] as
->> sdhci_pxav3_toggle_reset_gpio()
->>
->> 1.
->>
->> http://code.coreboot.org/p/openfirmware/source/tree/HEAD/cpu/arm/olpc/sdhci.fth#L104
->>
->> 2.
->>
->> http://dev.laptop.org/git/olpc-kernel/tree/drivers/mmc/host/sdhci-pxav3.c?h=arm-3.5#n229
->>
->> > the reset logic:
->> >         gpiod_set_value(card->gpiod_reset, 0);
->> >         clk_enable(card->sleep_clock);
->> >         udelay(1000);
->> >         gpiod_set_value(card->gpiod_reset, 1);
->> >
->> > The idea so far was to extend the device-tree node of the
->> > mmc slot by some reset leafs;
->> >
->> > &mmc {
->> >         ti,non-removable;
->> >         ..
->> >         peripheral-clocks = <&clk &clk2 ...>;
->> >         peripheral-reset-gpios = <&gpio0 1 1 &gpio1 2 3 ...>;
->> > }
->> >
->> > in mmc_add_host, all clocks will be enabled and gpios be pulled
->> > low for 1 msec
->>
->> we used 5ms.
->>
->> > Is this a feasible solution?
->> >
->> >
->> > Another related issue, is the card reset in mwifiex driver:
->> >
->> > static void sdio_card_reset_worker(struct work_struct *work)
->> > {
->> >         struct mmc_host *target = reset_host;
->> >
->> >         pr_err("Resetting card...\n");
->> >         mmc_remove_host(target);
->> >         /* 20ms delay is based on experiment with sdhci controller */
->> >         mdelay(20);
->> >         mmc_add_host(target);
->> > }
->> > static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
->> >
->> > There are obviously a lot of problems with this, e.g. custom debugfs
->> > entries created in the driver will be lost. But sometimes this
->> > code might avert disaster in case the command handlers between
->> > driver and firmware lost synchronization
->> >
->> > How could this be done in a better way?
->>
->> i'm interested as well.
->
-> Wouldn't it be best to have the mwifiex properly handle the
-> reset GPIOs and idle status pins?
+Cc: stable@vger.kernel.org
+Reported-by: Peter Wu <lekensteyn@gmail.com>
+Reported-and-tested-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-doesn't work see ref 1) above
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 212ac48..004dff9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -487,6 +487,8 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	crypto.cipher = rt2x00crypto_key_to_cipher(key);
+ 	if (crypto.cipher == CIPHER_NONE)
+ 		return -EOPNOTSUPP;
++	if (crypto.cipher == CIPHER_TKIP && rt2x00_is_usb(rt2x00dev))
++		return -EOPNOTSUPP;
+ 
+ 	crypto.cmd = cmd;
+ 
+-- 
+1.8.3.1
 
-> Those are not part of the SDIO spec AFAIK, and the mmc
-> controller should not need to care about those.
->
-> Also, at least omaps also have an issue where suspend won't
-> work with mwifiex loaded FYI.
-
-first command after resume needs to be cmd52, not cmd53 as the
-driver would by default. it's another issue
-
->
-> Regards,
->
-> Tony
