@@ -1,141 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:54259 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbaFWSqy (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:45827 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755426AbaFKLky (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 14:46:54 -0400
-Received: by mail-pd0-f177.google.com with SMTP id y10so5971206pdj.22
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 11:46:54 -0700 (PDT)
+	Wed, 11 Jun 2014 07:40:54 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h3so626651igd.14
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 04:40:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XzDYA-YG4Q=cSWeLpMNbaGV5Gy3F85Q-zduubCn57kWw@mail.gmail.com>
-References: <1402469724-22358-1-git-send-email-arik@wizery.com>
- <1402469724-22358-5-git-send-email-arik@wizery.com> <CAB=NE6XzDYA-YG4Q=cSWeLpMNbaGV5Gy3F85Q-zduubCn57kWw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 23 Jun 2014 21:46:39 +0300
-Message-ID: <CA+XVXfdu7gds1T3p=VFZeDoJKwEHDvnJfo8zmA=QgaBQ8Y=10A@mail.gmail.com> (sfid-20140623_204658_502736_C505D4BC)
-Subject: Re: [PATCH 5/5] cfg80211: leave invalid channels on regdomain change
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1401969147-3532-2-git-send-email-sgruszka@redhat.com>
+References: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
+	<1401969147-3532-2-git-send-email-sgruszka@redhat.com>
+Date: Wed, 11 Jun 2014 13:40:53 +0200
+Message-ID: <CAGXE3d8wQscwEnk04L7LFh6RoasmJ4JumqCUT_44hKepdM_Xvw@mail.gmail.com> (sfid-20140611_134108_105603_6FD59023)
+Subject: Re: [PATCH 2/5] rt2x00: change beaconing setup on RT2800
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Matthias Fend <Matthias.Fend@wolfvision.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 3:13 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> When the regulatory settings change, some channels might become invalid.
->> Disconnect interfaces acting on these channels, after giving userspace
->> code a grace period to leave them.
->>
->> Because of cfg80211 channel tracking limitations, only disconnect
->> STA/P2P_CL interfaces if their current center channel became disabled.
->>
->> Change-Id: I308cc02c06a11cfc30b206efaeabe64d67186228
->> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->> Reviewed-on: https://gerrit.rds.intel.com/32422
->> Tested-by: IWL Jenkins
->> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jun 5, 2014 at 1:52 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> As reported by Matthias, on 5572 chip, even if we clear up TXWI
+> of corresponding beacon, hardware still try to send it or do other
+> action that increase power consumption peak up to 1A.
 >
-> I welcome this change, and thanks for the work! But I think we need to
-> think about the cases where this really would be required. This should
-> not be an issue drivers using the public wireless-regd completely
-> given that the default world regulatory domain is a mathematical
-> intersection, and as such its restrictive by nature and only
-> world-allowed channels with the the minimum max EIRP would be allowed.
-> For drivers using an initial custom world regdomain with custom apply
-> API a change in regulatory would be permissive and as such we can lift
-> some restrictions when we associate to an AP with a country IE
-> specified. For the dynamic firmware juju that Intel wants to introduce
-> this race is intrinsically unavoidable although the likelihood of it
-> remains unclear.
+> To avoid the issue, setup beaconing dynamically by configuring offsets
+> of currently active beacons and MAC_BSSID_DW1_BSS_BCN_NUM variable,
+> which limit number of beacons that hardware will try to send.
 
-It can happen if we're a connected AP/STA and are crossing some state
-borders. Though I agree it's a corner case, they consider it mandatory
-to certification.
+I was thinking of doing that for a long time, glad you've picked it up!
+Thanks a lot Stanislaw.
 
+> Reported-by: Matthias Fend <Matthias.Fend@wolfvision.net>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+
+No extensive review but still looks good to me:
+
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c   | 45 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/rt2x00/rt2x00queue.h |  1 +
+>  2 files changed, 46 insertions(+)
 >
-> It should then be possible for some drivers to not have to use this
-> sanity check. For example drivers that use ath properly (ath5k, ath9k,
-> ath10k) could likely skip this stuff, unless I'm missing something.
-> For drivers without regulatory data, that should also be the case as
-> the public regdb would be used.
-
-I think this should be useful for all drivers, no matter which
-regulatory framework they use. If they defined the flags/settings
-correctly, then everything should always be ok in the checks right?
-
-But I agree it can expose bugs in a pretty nasty way (disconnections),
-so maybe I'll add a new regulatory flag to enable this behavior?
-
-Btw, we're also planning on adding tracking channel bandwidth, which
-can also be disallowed in some circumstances. But that will probably
-be handled within mac80211, since cfg80211 doesn't really know track
-this info.
-
-> It'd be interesting to see if that'
-> not the case though so an informative print for now would be useful
-> for the case where bailing out does happen, in fact perhaps it makes
-> sense to issue a multicast nl80211 event for this so that userspace
-> knows something has happened and why. Since we already have a reg
-> change multicast event this seems then to provide a "safe" proactive
-> measure for the loose cases, as perhaps an API can be added to let
-> userspace acknowledge a regulatory change event -- that way upon
-> receipt we should be able to cancel this work. Thoughts?v
-
-The 60 second grace period is not accidental, it's enough time for
-userspace to "move" the offending interfaces. In fact that's what the
-Intel wpa_s does in the GO scenario - move it.
-Upon a regulatory change it re-queries channels, and if the channel if
-forbidden, ...
-
-Therefore I don't really think there's a need for a more complicated
-"ack" policy. We can always add it if the need arises?
-
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index c17fcf2..c45b2d3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -947,6 +947,40 @@ static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
+>         return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
+>  }
 >
->> ---
->>  net/wireless/reg.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 83 insertions(+), 1 deletion(-)
-
->> +
->> +               /* TODO: more elaborate tracking for wide channels */
->> +               ch = wdev->current_bss->pub.channel;
->> +               ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
+> +static void rt2800_update_beacons_setup(struct rt2x00_dev *rt2x00dev)
+> +{
+> +       struct data_queue *queue = rt2x00dev->bcn;
+> +       struct queue_entry *entry;
+> +       int i, bcn_num = 0;
+> +       u64 off, reg = 0;
+> +       u32 bssid_dw1;
+> +
+> +       /*
+> +        * Setup offsets of all active beacons in BCN_OFFSET{0,1} registers.
+> +        */
+> +       for (i = 0; i < queue->limit; i++) {
+> +               entry = &queue->entries[i];
+> +               if (!test_bit(ENTRY_BCN_ENABLED, &entry->flags))
+> +                       continue;
+> +               off = rt2800_get_beacon_offset(rt2x00dev, entry->entry_idx);
+> +               reg |= off << (8 * bcn_num);
+> +               bcn_num++;
+> +       }
+> +
+> +       WARN_ON_ONCE(bcn_num != rt2x00dev->intf_beaconing);
+> +
+> +       rt2800_register_write(rt2x00dev, BCN_OFFSET0, (u32) reg);
+> +       rt2800_register_write(rt2x00dev, BCN_OFFSET1, (u32) (reg >> 32));
+> +
+> +       /*
+> +        * H/W sends up to MAC_BSSID_DW1_BSS_BCN_NUM + 1 consecutive beacons.
+> +        */
+> +       rt2800_register_read(rt2x00dev, MAC_BSSID_DW1, &bssid_dw1);
+> +       rt2x00_set_field32(&bssid_dw1, MAC_BSSID_DW1_BSS_BCN_NUM,
+> +                          bcn_num > 0 ? bcn_num - 1 : 0);
+> +       rt2800_register_write(rt2x00dev, MAC_BSSID_DW1, bssid_dw1);
+> +}
+> +
+>  void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>  {
+>         struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+> @@ -1003,6 +1037,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
 >
-> That does not seem enough, the max EIRP could have changed too for
-> example -- but the reg_notifier() should be used for ensuring changes
-> to power requirements are respected, at least the Atheros shared ath
-> module does this, that after all is one of the reasons for the
-> reg_notifier(). Documenting as part of this change would be
-> appreciated.
-
-Not sure what kind of documentation you mean (that only channels are
-tracked?), and where to put it.
-
+>         rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+>                                    entry->skb->len + padding_len);
+> +       __set_bit(ENTRY_BCN_ENABLED, &entry->flags);
+> +
+> +       /*
+> +        * Change global beacons settings.
+> +        */
+> +       rt2800_update_beacons_setup(rt2x00dev);
 >
->> +               break;
->> +       default:
->> +               /* others not implemented for now */
->> +               break;
->> +       }
->> +
->> +out:
->> +       wdev_unlock(wdev);
->> +       return ret;
->> +}
->> +
->> +static void reg_leave_invalid_chans(struct wiphy *wiphy)
->> +{
->> +       struct wireless_dev *wdev;
->> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
->> +
->> +       ASSERT_RTNL();
->> +
->> +       list_for_each_entry(wdev, &rdev->wdev_list, list)
->> +               if (!reg_wdev_chan_valid(wiphy, wdev))
->> +                       cfg80211_leave(rdev, wdev);
+>         /*
+>          * Restore beaconing state.
+> @@ -1053,8 +1093,13 @@ void rt2800_clear_beacon(struct queue_entry *entry)
+>          * Clear beacon.
+>          */
+>         rt2800_clear_beacon_register(rt2x00dev, entry->entry_idx);
+> +       __clear_bit(ENTRY_BCN_ENABLED, &entry->flags);
 >
-> An informative print or multicast event and reason would be nice here.
-
-I'll add a print.
-
-Arik
+>         /*
+> +        * Change global beacons settings.
+> +        */
+> +       rt2800_update_beacons_setup(rt2x00dev);
+> +       /*
+>          * Restore beaconing state.
+>          */
+>         rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> index c48125b..2233b91 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> @@ -353,6 +353,7 @@ struct txentry_desc {
+>   */
+>  enum queue_entry_flags {
+>         ENTRY_BCN_ASSIGNED,
+> +       ENTRY_BCN_ENABLED,
+>         ENTRY_OWNER_DEVICE_DATA,
+>         ENTRY_DATA_PENDING,
+>         ENTRY_DATA_IO_FAILED,
+> --
+> 1.8.3.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
