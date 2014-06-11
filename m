@@ -1,140 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46190 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbaFKKsL (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:36436 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbaFKOSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:48:11 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 02/28] ath9k: Move txpower limit to channel context
-Date: Wed, 11 Jun 2014 16:17:50 +0530
-Message-ID: <1402483696-2498-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124815_189775_47C610C8)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 11 Jun 2014 10:18:42 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so3987610wes.28
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 07:18:41 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 05/10] mac80211: use TDLS initiator in tdls_mgmt operations
+Date: Wed, 11 Jun 2014 17:18:22 +0300
+Message-Id: <1402496307-32522-5-git-send-email-arik@wizery.com> (sfid-20140611_161846_094028_BCFB0865)
+In-Reply-To: <1402496307-32522-1-git-send-email-arik@wizery.com>
+References: <1402496307-32522-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+The TDLS initiator is set once during link setup. If determines the
+address ordering in the link identifier IE.
+Use the value from userspace in order to have a correct teardown packet.
+With the current code, a teardown from the responder side fails the TDLS
+MIC check because of a bad link identifier IE.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h   | 6 +-----
- drivers/net/wireless/ath/ath9k/channel.c | 1 +
- drivers/net/wireless/ath/ath9k/init.c    | 5 ++---
- drivers/net/wireless/ath/ath9k/main.c    | 6 +++---
- drivers/net/wireless/ath/ath9k/mci.c     | 2 +-
- 5 files changed, 8 insertions(+), 12 deletions(-)
+ net/mac80211/tdls.c | 40 ++++++++++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8c87eb7..b6f6444 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -36,10 +36,6 @@ extern int ath9k_modparam_nohwcrypt;
- extern int led_blink;
- extern bool is_ath9k_unloaded;
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 0b3ca2c..c4a9af3 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -193,13 +193,14 @@ static int
+ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 				const u8 *peer, u8 action_code,
+ 				u8 dialog_token, u16 status_code,
+-				u32 peer_capability, const u8 *extra_ies,
+-				size_t extra_ies_len)
++				u32 peer_capability, bool initiator,
++				const u8 *extra_ies, size_t extra_ies_len)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = NULL;
+ 	bool send_direct;
++	const u8 *init_addr, *rsp_addr;
+ 	int ret;
  
--struct ath_config {
--	u16 txpowlimit;
--};
--
- /*************************/
- /* Descriptor Management */
- /*************************/
-@@ -328,6 +324,7 @@ struct ath_rx {
- struct ath_chanctx {
- 	struct cfg80211_chan_def chandef;
- 	struct list_head vifs;
-+	u16 txpower;
- 	bool offchannel;
- };
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+@@ -242,27 +243,42 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	if (extra_ies_len)
+ 		memcpy(skb_put(skb, extra_ies_len), extra_ies, extra_ies_len);
  
-@@ -753,7 +750,6 @@ struct ath_softc {
- 	short nvifs;
- 	unsigned long ps_usecount;
- 
--	struct ath_config config;
- 	struct ath_rx rx;
- 	struct ath_tx tx;
- 	struct ath_beacon beacon;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index aee6cdb..1b40cf5 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -118,6 +118,7 @@ void ath_chanctx_init(struct ath_softc *sc)
- 		ctx = &sc->chanctx[i];
- 		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
- 		INIT_LIST_HEAD(&ctx->vifs);
-+		ctx->txpower = ATH_TXPOWER_MAX;
- 	}
- 	sc->cur_chan = &sc->chanctx[0];
- }
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 32d9542..ffd42bf 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -169,9 +169,9 @@ static void ath9k_reg_notifier(struct wiphy *wiphy,
- 
- 	/* Set tx power */
- 	if (ah->curchan) {
--		sc->config.txpowlimit = 2 * ah->curchan->chan->max_power;
-+		sc->cur_chan->txpower = 2 * ah->curchan->chan->max_power;
- 		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
- 		sc->curtxpow = ath9k_hw_regulatory(ah)->power_limit;
- 		/* synchronize DFS detector if regulatory domain changed */
- 		if (sc->dfs_detector != NULL)
-@@ -335,7 +335,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
- 
- 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
--	sc->config.txpowlimit = ATH_TXPOWER_MAX;
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2e7cce7..5a9cee4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -227,7 +227,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+-	/* the TDLS link IE is always added last */
++	/* sanity check for initiator */
+ 	switch (action_code) {
+ 	case WLAN_TDLS_SETUP_REQUEST:
+ 	case WLAN_TDLS_SETUP_CONFIRM:
+-	case WLAN_TDLS_TEARDOWN:
+ 	case WLAN_TDLS_DISCOVERY_REQUEST:
+-		/* we are the initiator */
+-		ieee80211_tdls_add_link_ie(skb, sdata->vif.addr, peer,
+-					   sdata->u.mgd.bssid);
++		if (!initiator) {
++			ret = -EINVAL;
++			goto fail;
++		}
+ 		break;
+ 	case WLAN_TDLS_SETUP_RESPONSE:
+ 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
+-		/* we are the responder */
+-		ieee80211_tdls_add_link_ie(skb, peer, sdata->vif.addr,
+-					   sdata->u.mgd.bssid);
++		if (initiator) {
++			ret = -EINVAL;
++			goto fail;
++		}
++		break;
++	case WLAN_TDLS_TEARDOWN:
++		/* any value is ok */
+ 		break;
+ 	default:
+ 		ret = -ENOTSUPP;
+ 		goto fail;
  	}
  
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
-+			       sc->cur_chan->txpower, &sc->curtxpow);
++	if (initiator) {
++		init_addr = sdata->vif.addr;
++		rsp_addr = peer;
++	} else {
++		init_addr = peer;
++		rsp_addr = sdata->vif.addr;
++	}
++
++	ieee80211_tdls_add_link_ie(skb, init_addr, rsp_addr,
++				   sdata->u.mgd.bssid);
++
+ 	if (send_direct) {
+ 		ieee80211_tx_skb(sdata, skb);
+ 		return 0;
+@@ -327,8 +343,8 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
  
- 	clear_bit(ATH_OP_HW_RESET, &common->op_flags);
- 	ath9k_hw_set_interrupts(ah);
-@@ -1315,9 +1315,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer, action_code,
+ 					      dialog_token, status_code,
+-					      peer_capability, extra_ies,
+-					      extra_ies_len);
++					      peer_capability, initiator,
++					      extra_ies, extra_ies_len);
+ 	if (ret < 0)
+ 		goto exit;
  
- 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
- 		ath_dbg(common, CONFIG, "Set power: %d\n", conf->power_level);
--		sc->config.txpowlimit = 2 * conf->power_level;
-+		sc->cur_chan->txpower = 2 * conf->power_level;
- 		ath9k_cmn_update_txpow(ah, sc->curtxpow,
--				       sc->config.txpowlimit, &sc->curtxpow);
-+				       sc->cur_chan->txpower, &sc->curtxpow);
- 	}
- 
- 	mutex_unlock(&sc->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index a0dbcc4..313ed99 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -720,7 +720,7 @@ void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
- 		mci_hw->concur_tx = concur_tx;
- 
- 	if (old_concur_tx != mci_hw->concur_tx)
--		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
- }
- 
- static void ath9k_mci_stomp_audio(struct ath_softc *sc)
 -- 
-2.0.0
+1.9.1
 
