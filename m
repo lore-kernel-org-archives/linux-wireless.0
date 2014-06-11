@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38578 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbaFMTaM (ORCPT
+Received: from filtteri5.pp.htv.fi ([213.243.153.188]:53764 "EHLO
+	filtteri5.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885AbaFKXFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 15:30:12 -0400
-Date: Fri, 13 Jun 2014 15:25:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wireless-regdb] [ANN] wireless-regdb: master-2014-05-19
-Message-ID: <20140613192530.GB8392@tuxdriver.com> (sfid-20140613_213016_822415_F5A73975)
-References: <20140519185046.GH7650@tuxdriver.com>
- <CALhHN=pEo5H4AnWpOAhPs8LyK35wyhGJyvHTrh12nauQ-tOpDg@mail.gmail.com>
+	Wed, 11 Jun 2014 19:05:22 -0400
+Date: Thu, 12 Jun 2014 02:05:13 +0300
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Linux 3.15: WLAN regression on WRL54GL/B43?
+Message-ID: <20140611230513.GC913@drone.musicnaut.iki.fi> (sfid-20140612_010529_423149_E4C9E927)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CALhHN=pEo5H4AnWpOAhPs8LyK35wyhGJyvHTrh12nauQ-tOpDg@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 09:15:19PM +0200, Janusz Dziedzic wrote:
-> On 19 May 2014 20:50, John W. Linville <linville@tuxdriver.com> wrote:
-> > A new release of wireless-regdb (master-2014-05-19) is available at:
-> >
-> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2014.05.19.tar.gz
-> >
-> > Here is the short log of the changes included since the 2013-11-27
-> > release:
-> >
-> > Bjørn Mork (1):
-> >       wireless-regdb: update NO's regulatory rules
-> >
-> > Janusz Dziedzic (3):
-> >       wireless-regdb: allow max bandwidth to be AUTO calculated
-> >       wireless-regdb: set AUTO bandwidth for world regulatory
-> This two above should not be merged. That was first version of auto
-> bandwidth calculation, we skip :)
+Hi,
 
-OK -- obviously I got confused...
+While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
+cannot find anything on my WRT54GL router anymore:
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+	# iwlist wlan0 scanning
+	wlan0     No scan results
+
+I bisected this to:
+
+	3afc2167f60a327a2c1e1e2600ef209a3c2b75b7 is the first bad commit
+	commit 3afc2167f60a327a2c1e1e2600ef209a3c2b75b7
+	Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	Date:   Tue Mar 4 16:50:13 2014 +0200
+
+	    cfg80211/mac80211: ignore signal if the frame was heard on wrong channel
+
+Test case: I simply test it after the boot as follows:
+
+	modprobe b43
+	ifconfig wlan0 up
+	iwlist wlan0 scanning
+
+Any ideas?
+
+A.
