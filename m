@@ -1,102 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:44471 "EHLO
-	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964868AbaFLRen (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56384 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265AbaFKUIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 13:34:43 -0400
-Subject: [PATCH v2 1/2] rt2800usb:fix efuse detection
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-From: Michael Braun <michael-dev@fami-braun.de>
-Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 12 Jun 2014 19:33:36 +0200
-Message-ID: <20140612173336.15935.17359.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140612_193613_680378_5A04F1F9)
-In-Reply-To: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
-References: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 11 Jun 2014 16:08:39 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com, Ben Greear <greearb@candelatech.com>
+Subject: [RFC] wireless:  improve dfs-region intersection.
+Date: Wed, 11 Jun 2014 13:08:34 -0700
+Message-Id: <1402517314-20110-1-git-send-email-greearb@candelatech.com> (sfid-20140611_220842_585447_8B907753)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
-load. One thing observed is that the vendors driver detects EFUSE mode
-for this device, but rt2800usb does not. This is due to rt2800usb
-lacking a check for the firmware mode present in the vendors driver,
-that this patch adopts for rt2800usb.
+From: Ben Greear <greearb@candelatech.com>
 
-With this patch applied, the 'RF chipset' detection does no longer fail.
+If one is UN-SET, use the other.  Seems this would
+be more correct that what we have now.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c |   30 +++++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00usb.h |    1 +
- 2 files changed, 30 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a49c3d7..11583ca 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -229,6 +229,27 @@ static enum hrtimer_restart rt2800usb_tx_sta_fifo_timeout(struct hrtimer *timer)
- /*
-  * Firmware functions
-  */
-+static int rt2800usb_autorun_detect(struct rt2x00_dev *rt2x00dev)
-+{
-+	__le32 reg;
-+	u32 fw_mode;
-+
-+	/* cannot use rt2x00usb_register_read here as it uses different
-+	 * mode (MULTI_READ vs. DEVICE_MODE) and does not pass the
-+	 * magic value USB_MODE_AUTORUN (0x11) to the device, thus the
-+	 * returned value would be invalid.
-+	 */
-+	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-+				 USB_VENDOR_REQUEST_IN, 0, USB_MODE_AUTORUN,
-+				 &reg, sizeof(reg), REGISTER_TIMEOUT_FIRMWARE);
-+	fw_mode = le32_to_cpu(reg);
-+
-+	if ((fw_mode & 0x00000003) == 2)
-+		return 1;
-+
-+	return 0;
-+}
-+
- static char *rt2800usb_get_firmware_name(struct rt2x00_dev *rt2x00dev)
+Someone that understands this code better than I
+do should review this well before it is considered
+for upstream.  I'm not sure it is actually needed.
+
+ net/wireless/reg.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 785e516..b87035f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -727,8 +727,15 @@ static enum nl80211_dfs_regions
+ reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
+ 			 const enum nl80211_dfs_regions dfs_region2)
  {
- 	return FIRMWARE_RT2870;
-@@ -735,11 +756,18 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- /*
-  * Device probe functions.
-  */
-+static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2800usb_autorun_detect(rt2x00dev))
-+		return 1;
-+	return rt2800_efuse_detect(rt2x00dev);
-+}
-+
- static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
+-	if (dfs_region1 != dfs_region2)
++	if (dfs_region1 != dfs_region2) {
++		pr_info("intersect-dfs-region, region1: %d  region2: %d\n",
++			dfs_region1, dfs_region2);
++		if (dfs_region1 == NL80211_DFS_UNSET)
++			return dfs_region2;
++		if (dfs_region2 == NL80211_DFS_UNSET)
++			return dfs_region1;
+ 		return NL80211_DFS_UNSET;
++	}
+ 	return dfs_region1;
+ }
  
--	if (rt2800_efuse_detect(rt2x00dev))
-+	if (rt2800usb_efuse_detect(rt2x00dev))
- 		retval = rt2800_read_eeprom_efuse(rt2x00dev);
- 	else
- 		retval = rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
-index e7bcf62..831b65f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-@@ -93,6 +93,7 @@ enum rt2x00usb_mode_offset {
- 	USB_MODE_SLEEP = 7,	/* RT73USB */
- 	USB_MODE_FIRMWARE = 8,	/* RT73USB */
- 	USB_MODE_WAKEUP = 9,	/* RT73USB */
-+	USB_MODE_AUTORUN = 17, /* RT2800USB */
- };
- 
- /**
+-- 
+1.7.11.7
 
