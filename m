@@ -1,287 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:47095 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755955AbaFLNCg (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:35160 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555AbaFKJKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 09:02:36 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so1216841wes.41
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 06:02:35 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v9 3/5] mac80211: use chanctx reservation for AP CSA
-Date: Thu, 12 Jun 2014 14:54:38 +0200
-Message-Id: <1402577680-17888-4-git-send-email-michal.kazior@tieto.com> (sfid-20140612_150240_905336_2925CA1D)
-In-Reply-To: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
-References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
- <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 11 Jun 2014 05:10:46 -0400
+Received: by mail-la0-f42.google.com with SMTP id el20so4692818lab.15
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 02:10:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53979E9A.5010308@candelatech.com>
+References: <53979E9A.5010308@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 11 Jun 2014 02:10:24 -0700
+Message-ID: <CAB=NE6VDr8C=2XZZhnyFKeowDMA-K05_ySw=jDS5gz4+7xs3NA@mail.gmail.com> (sfid-20140611_111102_638203_B30091ED)
+Subject: Re: More confusion with regulatory issues.
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel switch finalization is now 2-step. First
-step is when driver calls csa_finish(), the other
-is when reservation is actually finalized (which
-can be deferred for in-place reservation).
+On Tue, Jun 10, 2014 at 5:11 PM, Ben Greear <greearb@candelatech.com> wrote:
+> I have a Fedora 19 system with two ath10k NICs in them.  I'm not sure
+> they have any regulatory info in them at all, based on logs
+> and some poking at what firmware reports.
+>
+> I have /etc/sysconfig/regdomain set to:
+>
+> COUNTRY=US
 
-It is now safe to call ieee80211_csa_finish() more
-than once.
+I don't know who thought adding a sysconfig / default file with
+regdomain with a value specified would be a good idea but users should
+then just be aware that user regulatory settings *help* compliance
+further, specially with cards that have regulatory stuff designed into
+it, like ath5k, ath9k and ath10k.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+There is one caveat too -- Atheros sells 802.11 cards to manufacturers
+and for some time and maybe still today they set the regulatory domain
+to 0x0 and override the regulatory setting in software since this is
+economically cheaper than overriding it through changing the EEPROM /
+OTP / whatever. This is actually not allowed in certain countries like
+the US and JP, and what makes this worse is that the 0x0 regulatory
+domain maps to the US on the ath module given that that is what is
+designed by Atheros for STAs so that is what we do for ath. AP
+manufacturers have the regulatory onus on them though -- so Atheros
+cannot control what they do -- they can only provide EEPROM tools,
+etc, and if folk are doing stupid things in software or using software
+to do sloppy things -- Atheros needs to educate customers that that is
+not a feature that is supported, and actually issue a bulletin on it,
+otherwise boneheads that have been doing it for a long time will not
+change.
 
-Notes:
-    v3:
-     * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
-     * fix comment style [Johannes]
-     * use goto for cleaner unlocking/returning [Johannes]
-     * squash with ieee80211_vif_change_channel() removal patch [Johannes]
-     * fix commit message [Johannes]
-     * add resilience for multiple ieee80211_csa_finish() calls
-    
-    v4:
-     * split removal of ieee80211_vif_change_channel()
-    
-    v7:
-     * tune commit message
-     * put the initial ieee80211_vif_chanctx_reservation_complete()
-       implementation here [Johannes]
-     * remove 'default' case and use all iftypes explicitly and WARN_ON
-    
-    v8:
-     * fix typo in commit message [Johannes]
+In short don't use the userspace stuff to set the regulatory domain
+and use the OTP / EEPROM tools to set it. Setting it in software is
+not allowed explicitly at least by the US and JP. It may be allowed in
+other countries and if your country has that option you can look at
+the ath module for some kconfig options I added before leaving Atheros
+that enables some of this functionality for those countries.
 
- net/mac80211/cfg.c  | 82 +++++++++++++++++++++++++++++++++++------------------
- net/mac80211/chan.c | 35 +++++++++++++++++++++--
- 2 files changed, 88 insertions(+), 29 deletions(-)
+Apart from all this -- the fact that you get an intersection for all
+reg hints going for US seems rather odd and should not be happening,
+specially since if a regdomain was set to US then -EALREADY should be
+issued and that regulatory domain should just be used to set onto the
+cards (if the cards had an EEPROM / OTP thing with US). Even if the
+user sets US twice, -EALREADY and the implications of it should
+happen.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index af3eac4..32c3cf8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2805,17 +2805,35 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	sdata_assert_lock(sdata);
- 	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
- 
--	sdata->radar_required = sdata->csa_radar_required;
--	err = ieee80211_vif_change_channel(sdata, &changed);
--	if (err < 0)
--		return err;
-+	/*
-+	 * using reservation isn't immediate as it may be deferred until later
-+	 * with multi-vif. once reservation is complete it will re-schedule the
-+	 * work with no reserved_chanctx so verify chandef to check if it
-+	 * completed successfully
-+	 */
- 
--	if (!local->use_chanctx) {
--		local->_oper_chandef = sdata->csa_chandef;
--		ieee80211_hw_config(local, 0);
-+	if (sdata->reserved_chanctx) {
-+		/*
-+		 * with multi-vif csa driver may call ieee80211_csa_finish()
-+		 * many times while waiting for other interfaces to use their
-+		 * reservations
-+		 */
-+		if (sdata->reserved_ready)
-+			return 0;
-+
-+		err = ieee80211_vif_use_reserved_context(sdata);
-+		if (err)
-+			return err;
-+
-+		return 0;
- 	}
- 
-+	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
-+					&sdata->csa_chandef))
-+		return -EINVAL;
-+
- 	sdata->vif.csa_active = false;
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
-@@ -2851,6 +2869,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
-+	mutex_lock(&local->chanctx_mtx);
- 
- 	/* AP might have been stopped while waiting for the lock. */
- 	if (!sdata->vif.csa_active)
-@@ -2862,6 +2881,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	ieee80211_csa_finalize(sdata);
- 
- unlock:
-+	mutex_unlock(&local->chanctx_mtx);
- 	mutex_unlock(&local->mtx);
- 	sdata_unlock(sdata);
- }
-@@ -3007,7 +3027,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
--	int err, num_chanctx, changed = 0;
-+	int err, changed = 0;
- 
- 	sdata_assert_lock(sdata);
- 	lockdep_assert_held(&local->mtx);
-@@ -3022,37 +3042,43 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 				       &sdata->vif.bss_conf.chandef))
- 		return -EINVAL;
- 
-+	/* don't allow another channel switch if one is already active. */
-+	if (sdata->vif.csa_active)
-+		return -EBUSY;
-+
- 	mutex_lock(&local->chanctx_mtx);
- 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
- 					 lockdep_is_held(&local->chanctx_mtx));
- 	if (!conf) {
--		mutex_unlock(&local->chanctx_mtx);
--		return -EBUSY;
-+		err = -EBUSY;
-+		goto out;
- 	}
- 
--	/* don't handle for multi-VIF cases */
- 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
--		mutex_unlock(&local->chanctx_mtx);
--		return -EBUSY;
-+	if (!chanctx) {
-+		err = -EBUSY;
-+		goto out;
- 	}
--	num_chanctx = 0;
--	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
--		num_chanctx++;
--	mutex_unlock(&local->chanctx_mtx);
- 
--	if (num_chanctx > 1)
--		return -EBUSY;
-+	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
-+					    chanctx->mode,
-+					    params->radar_required);
-+	if (err)
-+		goto out;
- 
--	/* don't allow another channel switch if one is already active. */
--	if (sdata->vif.csa_active)
--		return -EBUSY;
-+	/* if reservation is invalid then this will fail */
-+	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
-+	if (err) {
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+		goto out;
-+	}
- 
- 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
--	if (err)
--		return err;
-+	if (err) {
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+		goto out;
-+	}
- 
--	sdata->csa_radar_required = params->radar_required;
- 	sdata->csa_chandef = params->chandef;
- 	sdata->csa_block_tx = params->block_tx;
- 	sdata->vif.csa_active = true;
-@@ -3070,7 +3096,9 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		ieee80211_csa_finalize(sdata);
- 	}
- 
--	return 0;
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return err;
- }
- 
- int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 159f4c3..e50c263 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1034,6 +1034,30 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+static void
-+ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
-+{
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &sdata->csa_finalize_work);
-+		break;
-+	case NL80211_IFTYPE_UNSPECIFIED:
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_WDS:
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NUM_NL80211_IFTYPES:
-+		WARN_ON(1);
-+		break;
-+	}
-+}
-+
- static int
- ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- {
-@@ -1081,7 +1105,7 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- 		if (ieee80211_chanctx_refcount(local, new_ctx) == 0)
- 			ieee80211_free_chanctx(local, new_ctx);
- 
--		return err;
-+		goto out;
- 	}
- 
- 	list_move(&sdata->assigned_chanctx_list, &new_ctx->assigned_vifs);
-@@ -1101,6 +1125,8 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- 	if (changed)
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 
-+out:
-+	ieee80211_vif_chanctx_reservation_complete(sdata);
- 	return err;
- }
- 
-@@ -1145,6 +1171,7 @@ ieee80211_vif_use_reserved_assign(struct ieee80211_sub_if_data *sdata)
- 	}
- 
- out:
-+	ieee80211_vif_chanctx_reservation_complete(sdata);
- 	return err;
- }
- 
-@@ -1365,6 +1392,8 @@ ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
- 			list_move(&sdata->assigned_chanctx_list,
- 				  &new_ctx->assigned_vifs);
- 			sdata->reserved_chanctx = NULL;
-+
-+			ieee80211_vif_chanctx_reservation_complete(sdata);
- 		}
- 
- 		/*
-@@ -1428,8 +1457,10 @@ err:
- 			continue;
- 
- 		list_for_each_entry_safe(sdata, sdata_tmp, &ctx->reserved_vifs,
--					 reserved_chanctx_list)
-+					 reserved_chanctx_list) {
- 			ieee80211_vif_unreserve_chanctx(sdata);
-+			ieee80211_vif_chanctx_reservation_complete(sdata);
-+		}
- 	}
- 
- 	return err;
--- 
-1.8.5.3
-
+  Luis
