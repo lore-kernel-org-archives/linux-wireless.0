@@ -1,145 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:55502 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbaFSAOB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25227 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753251AbaFKKuB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 20:14:01 -0400
-Received: by mail-la0-f46.google.com with SMTP id el20so945760lab.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 17:13:59 -0700 (PDT)
+	Wed, 11 Jun 2014 06:50:01 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 20/28] ath9k: Adjust AP beacon tsf based on station context
+Date: Wed, 11 Jun 2014 16:18:08 +0530
+Message-ID: <1402483696-2498-21-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_125026_330784_C93684CD)
+In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1402469724-22358-5-git-send-email-arik@wizery.com>
-References: <1402469724-22358-1-git-send-email-arik@wizery.com> <1402469724-22358-5-git-send-email-arik@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 18 Jun 2014 17:13:38 -0700
-Message-ID: <CAB=NE6XzDYA-YG4Q=cSWeLpMNbaGV5Gy3F85Q-zduubCn57kWw@mail.gmail.com> (sfid-20140619_021412_801435_6C737B43)
-Subject: Re: [PATCH 5/5] cfg80211: leave invalid channels on regdomain change
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> When the regulatory settings change, some channels might become invalid.
-> Disconnect interfaces acting on these channels, after giving userspace
-> code a grace period to leave them.
->
-> Because of cfg80211 channel tracking limitations, only disconnect
-> STA/P2P_CL interfaces if their current center channel became disabled.
->
-> Change-Id: I308cc02c06a11cfc30b206efaeabe64d67186228
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> Reviewed-on: https://gerrit.rds.intel.com/32422
-> Tested-by: IWL Jenkins
-> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+From: Felix Fietkau <nbd@openwrt.org>
 
-I welcome this change, and thanks for the work! But I think we need to
-think about the cases where this really would be required. This should
-not be an issue drivers using the public wireless-regd completely
-given that the default world regulatory domain is a mathematical
-intersection, and as such its restrictive by nature and only
-world-allowed channels with the the minimum max EIRP would be allowed.
-For drivers using an initial custom world regdomain with custom apply
-API a change in regulatory would be permissive and as such we can lift
-some restrictions when we associate to an AP with a country IE
-specified. For the dynamic firmware juju that Intel wants to introduce
-this race is intrinsically unavoidable although the likelihood of it
-remains unclear.
+In multi channel context (AP + STA case), adjust the TSF time of
+the AP chanctx to keep its beacons at half beacon interval offset
+relative to the STA chanctx.
 
-It should then be possible for some drivers to not have to use this
-sanity check. For example drivers that use ath properly (ath5k, ath9k,
-ath10k) could likely skip this stuff, unless I'm missing something.
-For drivers without regulatory data, that should also be the case as
-the public regdb would be used. It'd be interesting to see if that'
-not the case though so an informative print for now would be useful
-for the case where bailing out does happen, in fact perhaps it makes
-sense to issue a multicast nl80211 event for this so that userspace
-knows something has happened and why. Since we already have a reg
-change multicast event this seems then to provide a "safe" proactive
-measure for the loose cases, as perhaps an API can be added to let
-userspace acknowledge a regulatory change event -- that way upon
-receipt we should be able to cancel this work. Thoughts?v
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
+ drivers/net/wireless/ath/ath9k/channel.c | 48 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c    |  5 ++++
+ 3 files changed, 55 insertions(+)
 
-> ---
->  net/wireless/reg.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 83 insertions(+), 1 deletion(-)
->
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index d6b83f9..1d6afe6 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -221,6 +221,9 @@ struct reg_beacon {
->         struct ieee80211_channel chan;
->  };
->
-> +static void reg_check_chans_work(struct work_struct *work);
-> +static DECLARE_DELAYED_WORK(reg_check_chans, reg_check_chans_work);
-> +
->  static void reg_todo(struct work_struct *work);
->  static DECLARE_WORK(reg_work, reg_todo);
->
-> @@ -1520,6 +1523,80 @@ static void reg_call_notifier(struct wiphy *wiphy,
->                 wiphy->reg_notifier(wiphy, request);
->  }
->
-> +static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
-> +{
-> +       struct ieee80211_channel *ch;
-> +       bool ret = true;
-> +
-> +       wdev_lock(wdev);
-> +
-> +       if (!wdev->netdev || !netif_running(wdev->netdev))
-> +               goto out;
-> +
-> +       switch (wdev->iftype) {
-> +       case NL80211_IFTYPE_AP:
-> +       case NL80211_IFTYPE_P2P_GO:
-> +               if (!wdev->beacon_interval)
-> +                       goto out;
-> +
-> +               ret = cfg80211_reg_can_beacon(wiphy,
-> +                                             &wdev->chandef, wdev->iftype);
-> +               break;
-> +       case NL80211_IFTYPE_STATION:
-> +       case NL80211_IFTYPE_P2P_CLIENT:
-> +               if (!wdev->current_bss ||
-> +                   !wdev->current_bss->pub.channel)
-> +                       goto out;
-> +
-> +               /* TODO: more elaborate tracking for wide channels */
-> +               ch = wdev->current_bss->pub.channel;
-> +               ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 02f3098..a4646a0 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -335,6 +335,7 @@ struct ath_chanctx {
+ 	struct ath9k_hw_cal_data caldata;
+ 	struct timespec tsf_ts;
+ 	u64 tsf_val;
++	u32 last_beacon;
+ 
+ 	u16 txpower;
+ 	bool offchannel;
+@@ -348,6 +349,7 @@ enum ath_chanctx_event {
+ 	ATH_CHANCTX_EVENT_BEACON_PREPARE,
+ 	ATH_CHANCTX_EVENT_BEACON_SENT,
+ 	ATH_CHANCTX_EVENT_TSF_TIMER,
++	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
+ };
+ 
+ enum ath_chanctx_state {
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 4793de0..6ea806c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -382,10 +382,51 @@ void ath_chanctx_offchan_switch(struct ath_softc *sc,
+ 	ath_chanctx_switch(sc, &sc->offchannel.chan, &chandef);
+ }
+ 
++static struct ath_chanctx *
++ath_chanctx_get_next(struct ath_softc *sc, struct ath_chanctx *ctx)
++{
++	int idx = ctx - &sc->chanctx[0];
++
++	return &sc->chanctx[!idx];
++}
++
++static void ath_chanctx_adjust_tbtt_delta(struct ath_softc *sc)
++{
++	struct ath_chanctx *prev, *cur;
++	struct timespec ts;
++	u32 cur_tsf, prev_tsf, beacon_int;
++	s32 offset;
++
++	beacon_int = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
++
++	cur = sc->cur_chan;
++	prev = ath_chanctx_get_next(sc, cur);
++
++	getrawmonotonic(&ts);
++	cur_tsf = (u32) cur->tsf_val +
++		  ath9k_hw_get_tsf_offset(&cur->tsf_ts, &ts);
++
++	prev_tsf = prev->last_beacon - (u32) prev->tsf_val + cur_tsf;
++	prev_tsf -= ath9k_hw_get_tsf_offset(&prev->tsf_ts, &ts);
++
++	/* Adjust the TSF time of the AP chanctx to keep its beacons
++	 * at half beacon interval offset relative to the STA chanctx.
++	 */
++	offset = cur_tsf - prev_tsf;
++
++	/* Ignore stale data or spurious timestamps */
++	if (offset < 0 || offset > 3 * beacon_int)
++		return;
++
++	offset = beacon_int / 2 - (offset % beacon_int);
++	prev->tsf_val += offset;
++}
++
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_vif *avp = NULL;
+ 	u32 tsf_time;
+ 	bool noa_changed = false;
+@@ -410,6 +451,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		tsf_time = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
+ 		tsf_time = sc->sched.next_tbtt + tsf_time / 4;
+ 		sc->sched.switch_start_time = tsf_time;
++		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+ 
+ 		if (sc->sched.offchannel_duration) {
+ 			noa_changed = true;
+@@ -441,6 +483,12 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.state = ATH_CHANCTX_STATE_SWITCH;
+ 		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+ 		break;
++	case ATH_CHANCTX_EVENT_BEACON_RECEIVED:
++		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++			break;
++
++		ath_chanctx_adjust_tbtt_delta(sc);
++		break;
+ 	}
+ 
+ 	spin_unlock_bh(&sc->chan_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 7b9c7e5..74ab1d0 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -892,6 +892,11 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		return -EINVAL;
+ 	}
+ 
++	if (rx_stats->is_mybeacon) {
++		sc->sched.next_tbtt = rx_stats->rs_tstamp;
++		ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_BEACON_RECEIVED);
++	}
++
+ 	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
+ 
+ 	rx_status->band = ah->curchan->chan->band;
+-- 
+2.0.0
 
-That does not seem enough, the max EIRP could have changed too for
-example -- but the reg_notifier() should be used for ensuring changes
-to power requirements are respected, at least the Atheros shared ath
-module does this, that after all is one of the reasons for the
-reg_notifier(). Documenting as part of this change would be
-appreciated.
-
-> +               break;
-> +       default:
-> +               /* others not implemented for now */
-> +               break;
-> +       }
-> +
-> +out:
-> +       wdev_unlock(wdev);
-> +       return ret;
-> +}
-> +
-> +static void reg_leave_invalid_chans(struct wiphy *wiphy)
-> +{
-> +       struct wireless_dev *wdev;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-> +
-> +       ASSERT_RTNL();
-> +
-> +       list_for_each_entry(wdev, &rdev->wdev_list, list)
-> +               if (!reg_wdev_chan_valid(wiphy, wdev))
-> +                       cfg80211_leave(rdev, wdev);
-
-An informative print or multicast event and reason would be nice here.
-
-  Luis
