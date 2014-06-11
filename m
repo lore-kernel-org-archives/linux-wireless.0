@@ -1,93 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36665 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbaFPNID (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:36078 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755306AbaFKX7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 09:08:03 -0400
-Message-ID: <539EEC30.2040703@broadcom.com> (sfid-20140616_150825_948606_C8B4C0BD)
-Date: Mon, 16 Jun 2014 15:08:00 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 11 Jun 2014 19:59:43 -0400
+Message-Id: <20140611234607.607201623@linutronix.de> (sfid-20140612_015956_964277_2B9F24B0)
+Date: Wed, 11 Jun 2014 23:59:18 -0000
+From: Thomas Gleixner <tglx@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: John Stultz <john.stultz@linaro.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Bing Zhao <bzhao@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [patch 11/13] wireless: mwifiex: Use the proper interfaces
+References: <20140611234024.103571777@linutronix.de>
 MIME-Version: 1.0
-To: Jahnavi Meher <jahnavi.meher@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/16] Fixes, adding support for 5GHz, bgscan and 40MHz.
-References: <1402753689-13819-1-git-send-email-jahnavi.meher@gmail.com>	<539D56CE.9090209@broadcom.com> <CAPD+p4LAu-_NPG0Ly6zahWRmi4hsEHGDKyS2GznSTtUSgxnYOg@mail.gmail.com>
-In-Reply-To: <CAPD+p4LAu-_NPG0Ly6zahWRmi4hsEHGDKyS2GznSTtUSgxnYOg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-06-14 12:38, Jahnavi Meher wrote:
-> On Sun, Jun 15, 2014 at 1:48 PM, Arend van Spriel <arend@broadcom.com> wrote:
->>
->> On 14-06-14 15:48, Jahnavi Meher wrote:
->>>
->>> This series of patches contains fixes, adds support for
->>> 5GHz and bgscan and 40MHz.
->>
->>
->> Thanks for splitting up this series. It would be good to version the series, ie. [PATCH v2 xx/16] and indicate this replaces the previous patch series referring to the Message-ID. In this case
->>
->> Message-ID: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
->>
->> Regards,
->> Arend
->
-> How can I indicate that this patch series is referring to a particular
-> Message-ID? Should I specify it
-> in the "Message-ID to be used as In-Reply-To for the first email?"
-> field that appears while sending out
-> a mail via git? I have just started using git and am not sure if this
-> was what you meant.
+Why is converting time formats so desired if there are proper
+interfaces for this?
 
-I meant to add a paragraph to the cover-letter stating "This series 
-replaces the previous series with Message-ID: 
-<123456789-5679-some-message-id@somemailer.com>" so John can clean his 
-patch queue. Using the git In-Reply-To can also be useful as it will 
-group the patch series together in online archives.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 +---
+ drivers/net/wireless/mwifiex/main.c     |    4 +---
+ drivers/net/wireless/mwifiex/tdls.c     |    6 ++----
+ drivers/net/wireless/mwifiex/uap_txrx.c |    4 +---
+ drivers/net/wireless/mwifiex/wmm.c      |    9 +--------
+ 5 files changed, 6 insertions(+), 21 deletions(-)
 
-Regards,
-Arend
+Index: linux/drivers/net/wireless/mwifiex/cfg80211.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/cfg80211.c
++++ linux/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -151,7 +151,6 @@ mwifiex_form_mgmt_frame(struct sk_buff *
+ 	u8 addr[ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+ 	u16 pkt_len;
+ 	u32 tx_control = 0, pkt_type = PKT_TYPE_MGMT;
+-	struct timeval tv;
+ 
+ 	pkt_len = len + ETH_ALEN;
+ 
+@@ -173,8 +172,7 @@ mwifiex_form_mgmt_frame(struct sk_buff *
+ 	       len - sizeof(struct ieee80211_hdr_3addr));
+ 
+ 	skb->priority = LOW_PRIO_TID;
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 
+ 	return 0;
+ }
+Index: linux/drivers/net/wireless/mwifiex/main.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/main.c
++++ linux/drivers/net/wireless/mwifiex/main.c
+@@ -611,7 +611,6 @@ mwifiex_hard_start_xmit(struct sk_buff *
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	struct sk_buff *new_skb;
+ 	struct mwifiex_txinfo *tx_info;
+-	struct timeval tv;
+ 
+ 	dev_dbg(priv->adapter->dev, "data: %lu BSS(%d-%d): Data <= kernel\n",
+ 		jiffies, priv->bss_type, priv->bss_num);
+@@ -658,8 +657,7 @@ mwifiex_hard_start_xmit(struct sk_buff *
+ 	 * firmware for aggregate delay calculation for stats and
+ 	 * MSDU lifetime expiry.
+ 	 */
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+Index: linux/drivers/net/wireless/mwifiex/tdls.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/tdls.c
++++ linux/drivers/net/wireless/mwifiex/tdls.c
+@@ -552,8 +552,7 @@ int mwifiex_send_tdls_data_frame(struct
+ 	tx_info->bss_num = priv->bss_num;
+ 	tx_info->bss_type = priv->bss_type;
+ 
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+ 	return 0;
+@@ -710,8 +709,7 @@ int mwifiex_send_tdls_action_frame(struc
+ 	pkt_len = skb->len - MWIFIEX_MGMT_FRAME_HEADER_SIZE - sizeof(pkt_len);
+ 	memcpy(skb->data + MWIFIEX_MGMT_FRAME_HEADER_SIZE, &pkt_len,
+ 	       sizeof(pkt_len));
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+ 	return 0;
+Index: linux/drivers/net/wireless/mwifiex/uap_txrx.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/uap_txrx.c
++++ linux/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -96,7 +96,6 @@ static void mwifiex_uap_queue_bridged_pk
+ 	struct sk_buff *new_skb;
+ 	struct mwifiex_txinfo *tx_info;
+ 	int hdr_chop;
+-	struct timeval tv;
+ 	struct ethhdr *p_ethhdr;
+ 
+ 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+@@ -192,8 +191,7 @@ static void mwifiex_uap_queue_bridged_pk
+ 		tx_info->pkt_len = skb->len;
+ 	}
+ 
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_wmm_add_buf_txqueue(priv, skb);
+ 	atomic_inc(&adapter->tx_pending);
+ 	atomic_inc(&adapter->pending_bridged_pkts);
+Index: linux/drivers/net/wireless/mwifiex/wmm.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/wmm.c
++++ linux/drivers/net/wireless/mwifiex/wmm.c
+@@ -886,15 +886,8 @@ u8
+ mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
+ 				  const struct sk_buff *skb)
+ {
++	u32 queue_delay = ktime_to_ms(net_timedelta(skb->tstamp));
+ 	u8 ret_val;
+-	struct timeval out_tstamp, in_tstamp;
+-	u32 queue_delay;
+-
+-	do_gettimeofday(&out_tstamp);
+-	in_tstamp = ktime_to_timeval(skb->tstamp);
+-
+-	queue_delay = (out_tstamp.tv_sec - in_tstamp.tv_sec) * 1000;
+-	queue_delay += (out_tstamp.tv_usec - in_tstamp.tv_usec) / 1000;
+ 
+ 	/*
+ 	 * Queue delay is passed as a uint8 in units of 2ms (ms shifted
 
->>
->>
->>> Jahnavi Meher (16):
->>>     rsi: Mapping the debugfs stats to the correct s/w queues.
->>>     rsi: Fixed the kernel doc
->>>     rsi: Using band from rsi_common to fill in ieee80211_rx_status
->>>     rsi: Add macros for endpoints and set default value of endpoint.
->>>     rsi: Changed the radio caps frame.
->>>     rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
->>>     rsi: Changed rate handling.
->>>     rsi: Lower level debug messages and changed handling of confirm
->>>       received for rsi_program_bb_rf().
->>>     rsi: Use SGI if configured for fixed rate transmission.
->>>     rsi: Changed the SDIO interrupt variables and some clean up.
->>>     rsi: Changed the logic of dequeuing packets from hal queues.
->>>     rsi: Added debug messages.
->>>     rsi: Sending QoS null packet via the mgmt queue.
->>>     rsi: Adding support for 5GHz
->>>     rsi: Adding support for host based bgscan.
->>>     rsi: Changes for 40MHz
->>>
->>>    drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
->>>    drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
->>>    drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
->>>    drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  236 +++++++++++++++++++--------
->>>    drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
->>>    drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
->>>    drivers/net/wireless/rsi/rsi_main.h         |   12 ++
->>>    drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
->>>    drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
->>>    9 files changed, 416 insertions(+), 128 deletions(-)
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
->
->
 
