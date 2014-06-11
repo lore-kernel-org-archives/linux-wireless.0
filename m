@@ -1,63 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm29.bullet.mail.sg3.yahoo.com ([106.10.151.24]:46407 "EHLO
-	nm29.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751368AbaFGTNq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 15:13:46 -0400
-References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com> <539356EA.1070004@lwfinger.net> <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com> <53935FFE.10708@lwfinger.net>
-Message-ID: <1402168424.40608.YahooMailNeo@web193005.mail.sg3.yahoo.com> (sfid-20140607_211414_235896_51F26AB1)
-Date: Sun, 8 Jun 2014 03:13:44 +0800 (SGT)
-From: Powerful Notageek <powerfulnotageek@yahoo.in>
-Reply-To: Powerful Notageek <powerfulnotageek@yahoo.in>
-Subject: Re: MT7630e availability in kernel by default
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <53935FFE.10708@lwfinger.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25376 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbaFKKuZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 06:50:25 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 24/28] ath9k: Handle beacon miss on multi channel context
+Date: Wed, 11 Jun 2014 16:18:12 +0530
+Message-ID: <1402483696-2498-25-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_130502_192928_097205A0)
+In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dmesg says nothing and there's probably no firmware for the device (although linux-firmware is installed) 
+From: Felix Fietkau <nbd@openwrt.org>
 
-These are the firmwares available to me: 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 30 ++++++++++++++++++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-[root@localhost ~]# ll /usr/lib/firmware/rt2*
--rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561.bin
--rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561s.bin
--rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2661.bin
--rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2860.bin
--rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2870.bin
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a5afd4a..ee00ddb 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -368,6 +368,7 @@ struct ath_chanctx_sched {
+ 	bool beacon_pending;
+ 	bool offchannel_pending;
+ 	enum ath_chanctx_state state;
++	u8 beacon_miss;
+ 
+ 	u32 next_tbtt;
+ 	u32 switch_start_time;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 3d9776c..55165d5 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -478,6 +478,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	struct ath_vif *avp = NULL;
+ 	struct ath_chanctx *ctx;
+ 	u32 tsf_time;
++	u32 beacon_int;
+ 	bool noa_changed = false;
+ 
+ 	if (vif)
+@@ -516,9 +517,10 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.next_tbtt = REG_READ(ah, AR_NEXT_TBTT_TIMER);
+ 
+ 		cur_conf = &sc->cur_chan->beacon;
++		beacon_int = TU_TO_USEC(cur_conf->beacon_interval);
++
+ 		/* defer channel switch by a quarter beacon interval */
+-		tsf_time = TU_TO_USEC(cur_conf->beacon_interval);
+-		tsf_time = sc->sched.next_tbtt + tsf_time / 4;
++		tsf_time = sc->sched.next_tbtt + beacon_int / 4;
+ 		sc->sched.switch_start_time = tsf_time;
+ 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+ 
+@@ -538,6 +540,13 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			noa_changed = true;
+ 		}
+ 
++		/* If at least two consecutive beacons were missed on the STA
++		 * chanctx, stay on the STA channel for one extra beacon period,
++		 * to resync the timer properly.
++		 */
++		if (ctx->active && sc->sched.beacon_miss >= 2)
++			sc->sched.offchannel_duration = 3 * beacon_int / 2;
++
+ 		if (sc->sched.offchannel_duration) {
+ 			noa_changed = true;
+ 			avp->offchannel_start = tsf_time;
+@@ -565,6 +574,10 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_TIMER)
+ 			break;
+ 
++		if (!sc->cur_chan->switch_after_beacon &&
++		    sc->sched.beacon_pending)
++			sc->sched.beacon_miss++;
++
+ 		sc->sched.state = ATH_CHANCTX_STATE_SWITCH;
+ 		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+ 		break;
+@@ -574,6 +587,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 
+ 		ath_chanctx_adjust_tbtt_delta(sc);
++		sc->sched.beacon_pending = false;
++		sc->sched.beacon_miss = 0;
+ 		break;
+ 	case ATH_CHANCTX_EVENT_ASSOC:
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
+@@ -596,13 +611,20 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		cur_conf = &sc->cur_chan->beacon;
+ 
+ 		sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_TIMER;
+-		tsf_time = ath9k_hw_gettsf32(sc->sc_ah);
+-		tsf_time += TU_TO_USEC(cur_conf->beacon_interval) / 2;
++
++		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
++		if (sc->sched.beacon_miss >= 2) {
++			sc->sched.beacon_miss = 0;
++			tsf_time *= 3;
++		}
++
+ 		tsf_time -= sc->sched.channel_switch_time;
++		tsf_time += ath9k_hw_gettsf32(sc->sc_ah);
+ 		sc->sched.switch_start_time = tsf_time;
+ 
+ 		ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer,
+ 					 tsf_time, 1000000);
++		sc->sched.beacon_pending = true;
+ 		break;
+ 	case ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL:
+ 		if (sc->cur_chan == &sc->offchannel.chan ||
+-- 
+2.0.0
 
-Thank you. 
-
-
-
-On Sunday, 8 June 2014 12:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-On 06/07/2014 01:25 PM, Powerful Notageek wrote:
-> I tried them and here's the output: (verbose)
->
-> [root@localhost ~]# modprobe -v rt2800pci
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/lib/crc-ccitt.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/wireless/cfg80211.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/net/mac80211/mac80211.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/misc/eeprom/eeprom_93cx6.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00mmio.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800lib.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800mmio.ko
-> insmod /lib/modules/3.14.4-200.fc20.x86_64/kernel/drivers/net/wireless/rt2x00/rt2800pci.ko
-> [root@localhost ~]# echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
-> [root@localhost ~]# iwconfig
-> p3p1      no wireless extensions.
->
-> lo        no wireless extensions.
-
-When you do the above, what ends up in the dmesg output? In particular, is the 
-firmware available?
-
-
-
-
-Larry
