@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40722 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750926AbaFENXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 09:23:19 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/1] ieee80211.h: Add definitions for 20/40 BSS Coexist Mgmt action frame
-References: <1401972255-18815-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1401972383.4168.5.camel@jlt4.sipsolutions.net>
-Date: Thu, 05 Jun 2014 15:23:14 +0200
-In-Reply-To: <1401972383.4168.5.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Thu, 05 Jun 2014 14:46:23 +0200")
-Message-ID: <wrfjwqcvjxrx.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140605_152323_531628_4628F6A1)
+Received: from mail-la0-f41.google.com ([209.85.215.41]:50285 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbaFKIuS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 04:50:18 -0400
+Received: by mail-la0-f41.google.com with SMTP id hz20so239453lab.14
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 01:50:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CALhHN=rzHzSr67W9KoC8u5cARrckOgQA-m26fmhXwX85aEcKoA@mail.gmail.com>
+References: <1402385153-5056-1-git-send-email-janusz.dziedzic@tieto.com>
+ <CAB=NE6VZs7d2bJNW0cp7NhPUMKr=bHn+pKwhvtk2U71rno4VMA@mail.gmail.com> <CALhHN=rzHzSr67W9KoC8u5cARrckOgQA-m26fmhXwX85aEcKoA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 11 Jun 2014 01:49:56 -0700
+Message-ID: <CAB=NE6VwBB-_G6JfLo81PYsjxBbw+C4Y40ZogNh4-eG910rXuw@mail.gmail.com> (sfid-20140611_105024_616605_91FB09DC)
+Subject: Re: [RFC 1/2] crda: simplify text parsing for country/rules
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
->> The 8723au driver issues BSS Coexistence Mgmt Action Frames, so rather
->> keeping defines for this in a private driver header, I added it to the
->> shared ieee80211.h header.
+On Tue, Jun 10, 2014 at 10:03 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> On 11 June 2014 00:09, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+>> On Tue, Jun 10, 2014 at 12:25 AM, Janusz Dziedzic
+>> <janusz.dziedzic@tieto.com> wrote:
+>>> Remove strange parsers.
+>>>
+>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>> Did you test this with the different types of accepted rules?
+>>
 >
-> Arguably, it shouldn't, since wpa_supplicant also handles this - or is
-> it offloaded in some way to the firmware?
+> Tested with current db.txt (+AUTO-BW in some cases).
 
-Per our IRC discussion, I'd say lets drop this patch for now. I'll
-remove the BSS Coexist packet generation from the driver instead, on the
-base that these packets should be coming from wpa_s if needed.
+I was curious more about the different use cases of the output power,
+sometimes we use dBm, sometimes mW I think. I think I tried your
+approach and ended up getting inconsistent results for the different
+cases, so that's why all the parser junk got added. If you found a way
+to successfully get rid of it though that's awesome, just want to be
+sure we tested all cases. I purposely tried to upkeep the output to
+match the input preference, some folks are picky about mW and others
+like dB, this helps with regulatory rules as they vary depending on
+the country and the country typically uses one or the other for the
+definitions.
 
-Cheers,
-Jes
+  Luis
