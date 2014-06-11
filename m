@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f177.google.com ([209.85.160.177]:52772 "EHLO
-	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966109AbaFRLKW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 07:10:22 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:58168 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127AbaFKJNv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 05:13:51 -0400
+Message-ID: <53981D9E.8010401@redhat.com> (sfid-20140611_111358_608518_86DF67D9)
+Date: Wed, 11 Jun 2014 11:13:02 +0200
+From: Hans de Goede <hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1403087119.1984.93.camel@x220>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
- <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
- <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
- <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
- <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
- <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com> <1403087119.1984.93.camel@x220>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Wed, 18 Jun 2014 15:10:02 +0400
-Message-ID: <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com> (sfid-20140618_131040_136735_07525327)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+To: Linus Walleij <linus.walleij@linaro.org>
+CC: Chris Ball <chris@printf.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arend van Spriel <arend@broadcom.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Subject: Re: [PATCH 04/11] pinctrl: sunxi: Properly handle level triggered
+ gpio interrupts
+References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>	<1401090486-4414-5-git-send-email-hdegoede@redhat.com> <CACRpkdZ5_21aFBSJBXDzgorcEKeR9Pv5fVgmeVrBw1zDawVptA@mail.gmail.com>
+In-Reply-To: <CACRpkdZ5_21aFBSJBXDzgorcEKeR9Pv5fVgmeVrBw1zDawVptA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+Hi Linus,
 
-2014-06-18 14:25 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> Jiri, Nick, Luis, John,
->
-> On Wed, 2014-04-16 at 13:20 +0400, Sergey Ryazanov wrote:
->> 2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
->> > On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
->> >> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
->> >> > John, can you delay the merging of this patch for a few months, I will
->> >> > try to prepare the necessary patches to add AR231x architecture to the
->> >> > kernel and send them to linux-mips.
->> >>
->> >> OK -- looking forward to your patches.
->> >
->> > So am I. Is there any news on this front?
->> >
+On 06/11/2014 11:00 AM, Linus Walleij wrote:
+> On Mon, May 26, 2014 at 9:47 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+> 
+>> For level triggered gpio interrupts we need to use handle_fasteoi_irq,
+>> like we do with the irq-sunxi-nmi driver. This is necessary to give threaded
+>> interrupt handlers a chance to actuall clear the source of the interrupt
+>> (which may involve sleeping waitnig for i2c / spi / mmc transfers), before
+>> acknowledging the interrupt.
 >>
->> Work still in progress :(
->
-> ATHEROS_AR231X and the things depending on it, like AHB bus support,
-> have been discussed for three years now. When will you (re)consider a
-> patch to remove all currently dead code?
->
-> And to state the obvious: AHB bus support, and the other code depending
-> on ATHEROS_AR231X, can always be re-added once ATHEROS_AR231X gets added
-> to the tree.
->
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> I haven't seen any feedback on the pin controller patches in this
+> series from Maxime, I might have missed it due to being tied to
+> some other patch in the series.
+> 
+> Anyway, this needs to be rebased and reposted anyway, I
+> just merged some base patches from Maxime for external
+> interrupts that will go in after the merge window, I need some
+> help to figure out what and how to merge here.
 
-Work in progress, I don't stop it. Just work is progressing slower
-than I had planned. I am already cleanup the code (mostly checkpatch
-errors and warnings) and send patches to OpenWRT tree. Further I plan
-to simplify initialization and I will be ready to send patches
-upstream.
+No problem I plan to do a rebased v2 of the pinctrl bits in
+this series (and only the pinctrl bits) with some remarks
+from Maxime fixed soon.
 
-I need a couple of weeks for this. Is its reasonable time to not make
-a mess of remove/add commits?
+Regards,
 
--- 
-BR,
-Sergey
+Hans
