@@ -1,81 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51887 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872AbaFFLO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 07:14:56 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] mac80211: stop only the queues assigned to the vif
- during channel switch
-Date: Fri, 6 Jun 2014 11:13:42 +0000
-Message-ID: <1402053222.2004.27.camel@dubbel> (sfid-20140606_131459_743256_E98F8CAA)
-References: <1401985567-27336-3-git-send-email-emmanuel.grumbach@intel.com>
-	 <CA+BoTQn7H7808DFhAmfBtNsO+o0CEsy3_=4QMnxU4eML7JUCQQ@mail.gmail.com>
-	 <1402036258.2004.10.camel@dubbel>
-	 <CA+BoTQ=wZV8dviGE8HAFC1j=XNqJDkxUaHV5HFkiLMs2arCVHQ@mail.gmail.com>
-	 <1402040251.2004.20.camel@dubbel>
-	 <CA+BoTQ=X9Vg+=PvdRuFTcL+1hA6Yg6Vne3_NfBx_A6yS91b0PA@mail.gmail.com>
-	 <1402041842.2004.24.camel@dubbel>
-	 <CA+BoTQnKmJONd3Rp5MjKRPrRxs8DagA4p3Ww2VTEwYA6U1ogVQ@mail.gmail.com>
-In-Reply-To: <CA+BoTQnKmJONd3Rp5MjKRPrRxs8DagA4p3Ww2VTEwYA6U1ogVQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from shards.monkeyblade.net ([149.20.54.216]:47854 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885AbaFKXAk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 19:00:40 -0400
+Date: Wed, 11 Jun 2014 16:00:39 -0700 (PDT)
+Message-Id: <20140611.160039.1155018073951602634.davem@davemloft.net> (sfid-20140612_010048_909095_3AA5947D)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: No new networking changes
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE0LTA2LTA2IGF0IDEwOjEyICswMjAwLCBNaWNoYWwgS2F6aW9yIHdyb3RlOg0K
-PiBPbiA2IEp1bmUgMjAxNCAxMDowNCwgQ29lbGhvLCBMdWNpYW5vIDxsdWNpYW5vLmNvZWxob0Bp
-bnRlbC5jb20+IHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxNC0wNi0wNiBhdCAwOTo1NiArMDIwMCwg
-TWljaGFsIEthemlvciB3cm90ZToNCj4gPj4gT24gNiBKdW5lIDIwMTQgMDk6MzcsIENvZWxobywg
-THVjaWFubyA8bHVjaWFuby5jb2VsaG9AaW50ZWwuY29tPiB3cm90ZToNCj4gWy4uLl0NCj4gPj4g
-PiBzdGF0aWMgdTMyIGllZWU4MDIxMV92aWZfcXVldWVzX3RvX3dha2Uoc3RydWN0IGllZWU4MDIx
-MV9sb2NhbCAqbG9jYWwsDQo+ID4+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLA0KPiA+PiA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIHF1ZXVlX3N0b3BfcmVhc29u
-IHJlYXNvbikNCj4gPj4gPiB7DQo+ID4+ID4gICAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9p
-Zl9kYXRhICpzZGF0YV9pdGVyOw0KPiA+PiA+ICAgICAgICAgdW5zaWduZWQgbG9uZyBxdWV1ZXMs
-IHF1ZXVlc19pdGVyLCBxOw0KPiA+PiA+ICAgICAgICAgaW50IGk7DQo+ID4+ID4NCj4gPj4gPiAg
-ICAgICAgIGxvY2tkZXBfYXNzZXJ0X2hlbGQoJmxvY2FsLT5tdHgpOw0KPiA+PiA+DQo+ID4+ID4g
-ICAgICAgICBxdWV1ZXMgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9jYWwsIHNkYXRhKTsN
-Cj4gPj4gPg0KPiA+PiA+ICAgICAgICAgcmN1X3JlYWRfbG9jaygpOw0KPiA+PiA+ICAgICAgICAg
-bGlzdF9mb3JfZWFjaF9lbnRyeV9yY3Uoc2RhdGFfaXRlciwgJmxvY2FsLT5pbnRlcmZhY2VzLCBs
-aXN0KSB7DQo+ID4+ID4gICAgICAgICAgICAgICAgIGlmICghaWVlZTgwMjExX3NkYXRhX3J1bm5p
-bmcoc2RhdGFfaXRlcikpDQo+ID4+ID4gICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7
-DQo+IA0KPiBIbW0sIGFjdHVhbGx5LCBzaG91bGRuJ3Qgd2UgYGlmIChzZGF0YSA9PSBzZGF0YV9p
-dGVyKSBjb250aW51ZWA/DQo+IE90aGVyd2lzZSB5b3UnbGwgbmV2ZXIgd2FrZSBxdWV1ZXMsIHdp
-bGwgeW91Pw0KDQpBaG1tbS4uLiBZZXMgb2YgY291cnNlLiA6KQ0KDQoNCj4gPj4gPiAgICAgICAg
-ICAgICAgICAgcXVldWVzX2l0ZXIgPSBpZWVlODAyMTFfZ2V0X3ZpZl9xdWV1ZXMobG9jYWwsIHNk
-YXRhX2l0ZXIpOw0KPiA+PiA+ICAgICAgICAgICAgICAgICBmb3JfZWFjaF9zZXRfYml0KGksICZx
-dWV1ZXNfaXRlciwgbG9jYWwtPmh3LnF1ZXVlcykgew0KPiA+PiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIHEgPSBzZGF0YS0+dmlmLmh3X3F1ZXVlW2ldOw0KPiA+PiA+DQo+ID4+ID4gICAgICAg
-ICAgICAgICAgICAgICAgICAgaWYgKHRlc3RfYml0KHJlYXNvbiwgJmxvY2FsLT5xdWV1ZV9zdG9w
-X3JlYXNvbnNbcV0pKQ0KPiA+PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcXVl
-dWVzICY9IH5xOw0KPiA+PiA+ICAgICAgICAgICAgICAgICB9DQo+ID4+ID4gICAgICAgICB9DQo+
-ID4+ID4gICAgICAgICByY3VfcmVhZF91bmxvY2soKTsNCj4gPj4gPg0KPiA+PiA+ICAgICAgICAg
-cmV0dXJuIHF1ZXVlczsNCj4gPj4gPiB9DQo+ID4+ID4NCj4gPj4gPiB2b2lkIGllZWU4MDIxMV93
-YWtlX3ZpZl9xdWV1ZXMoc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwsDQo+ID4+ID4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEg
-KnNkYXRhLA0KPiA+PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIHF1ZXVl
-X3N0b3BfcmVhc29uIHJlYXNvbikNCj4gPj4gPiB7DQo+ID4+ID4gICAgICAgICB1bnNpZ25lZCBp
-bnQgcXVldWVzID0gaWVlZTgwMjExX3ZpZl9xdWV1ZXNfdG9fd2FrZShsb2NhbCwgc2RhdGEsIHJl
-YXNvbik7DQo+ID4+ID4NCj4gPj4gPiAgICAgICAgIGllZWU4MDIxMV93YWtlX3F1ZXVlc19ieV9y
-ZWFzb24oJmxvY2FsLT5odywgcXVldWVzLCByZWFzb24pOw0KPiA+PiA+IH0NCj4gPj4NCj4gPj4g
-T25jZSB5b3Ugc2V0IGxvY2FsLT5xdWV1ZV9zdG9wX3JlYXNvbnNbXSBmb3IgYW4gb3ZlcmxhcHBp
-bmcgcXVldWUgeW91DQo+ID4+IHdvbid0IGJlIGFibGUgdG8gd2FrZSBpdCB3aXRoIGllZWU4MDIx
-MV93YWtlX3ZpZl9xdWV1ZXMoKSBhbG9uZS4NCj4gPj4gWW91J2xsIG5lZWQgdG8gY2FsbCBpZWVl
-ODAyMTFfd2FrZV9xdWV1ZXMoKSB0byBkbyB0aGF0LiBJcyB0aGF0IHdoYXQNCj4gPj4geW91IGlu
-dGVuZGVkPw0KPiA+DQo+ID4gTW9yZSBvciBsZXNzLiAgTXkgaWRlYSBpcyB0aGF0IG9ubHkgdGhl
-ICpsYXN0KiB2aWYgdGhhdCB0cmllcyB0byB3YWtlDQo+ID4gdGhlIG92ZXJsYXBwaW5nIHF1ZXVl
-LCB3aWxsIGFjdHVhbGx5IGRvIHNvLg0KPiANCj4gU28gaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVl
-cygpIHdvdWxkIGJlIGNhbGxlZCByZWdhcmRsZXNzIG9mIHRoZQ0KPiBpZWVlODAyMTFfY3NhX25l
-ZWRzX2Jsb2NrX3R4KCkgYW5kIGllZWU4MDIxMV93YWtlX3F1ZXVlcygpIGlzIGNhbGxlZA0KPiBs
-aWtlIGl0IHdhcyBiZWZvcmUgKGkuZS4gd2hlbiBhbGwgYmxvY2tfdHggaW50ZXJmYWNlcyBhcmUg
-ZG9uZSkuDQoNClllcywgaWVlZTgwMjExX3dha2VfdmlmX3F1ZXVlcygpIHdvdWxkIGJlIGNhbGxl
-ZCByZWdhcmRsZXNzIG9mIHRoZQ0KaWVlZTgwMjExX2NzYV9uZWVkc19ibG9ja190eCgpLCBidXQg
-d2Ugc2hvdWxkIHByb2JhYmx5IHN0aWxsIGNoZWNrIGlmDQp0aGUgdmlmIGluIHF1ZXN0aW9uIGhh
-cyBibG9ja190eCBzZXQ/DQoNCkFuZCBJIGRvbid0IHNlZSB3aHkgd2Ugd291bGQgaGF2ZSB0byBj
-YWxsIGllZWU4MDIxMV93YWtlX3F1ZXVlcygpIGFnYWluDQphdCB0aGUgZW5kLi4uIHdvdWxkIHRo
-YXQgc3RpbGwgYmUgbmVjZXNzYXJ5Pw0KDQotLQ0KTHVjYS4NCg==
+
+I am going to do a merge window submission either tonight or first thing
+tomorrow.
+
+The netdev patchwork queue is completely empty, and I want it to stay
+that way sans real serious bug fixes.
+
+I will send a notice here when the net-next tree opens back up, thank
+you.
