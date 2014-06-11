@@ -1,30 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:42269 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbaFRXet (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11779 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbaFKKub (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 19:34:49 -0400
-Received: by mail-la0-f51.google.com with SMTP id mc6so964346lab.24
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 16:34:47 -0700 (PDT)
+	Wed, 11 Jun 2014 06:50:31 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 25/28] ath9k: Update channel switch timer
+Date: Wed, 11 Jun 2014 16:18:13 +0530
+Message-ID: <1402483696-2498-26-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_130456_611316_C04EA73B)
+In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1402469724-22358-4-git-send-email-arik@wizery.com>
-References: <1402469724-22358-1-git-send-email-arik@wizery.com> <1402469724-22358-4-git-send-email-arik@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 18 Jun 2014 16:34:27 -0700
-Message-ID: <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com> (sfid-20140619_013452_437916_D22F49AB)
-Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> Allow driver and user hints to set the "world" regulatory domain,
+From: Felix Fietkau <nbd@openwrt.org>
 
-NACK - as expressed in the other patch, letting the drivers to use the
-new API to set the world regulatory domain doesn't make sense as we
-have custom apply stuff, and the world regulatory domain is not
-something dynamic.
+TSF time might have been updated by the incoming beacon,
+need update the channel switch timer to reflect the change.
 
-  Luis
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 55165d5..0a38eea 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -589,6 +589,17 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		ath_chanctx_adjust_tbtt_delta(sc);
+ 		sc->sched.beacon_pending = false;
+ 		sc->sched.beacon_miss = 0;
++
++		/* TSF time might have been updated by the incoming beacon,
++		 * need update the channel switch timer to reflect the change.
++		 */
++		tsf_time = sc->sched.switch_start_time;
++		tsf_time -= (u32) sc->cur_chan->tsf_val +
++			ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts, NULL);
++		tsf_time += ath9k_hw_gettsf32(ah);
++
++		ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer,
++					 tsf_time, 1000000);
+ 		break;
+ 	case ATH_CHANCTX_EVENT_ASSOC:
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
+-- 
+2.0.0
+
