@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:55129 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbaFDKzb (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:52180 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253AbaFKFAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 06:55:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.10.1406041148590.2441@hadrien>
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
-	<CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com>
-	<alpine.DEB.2.10.1406041137270.2441@hadrien>
-	<063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
-	<alpine.DEB.2.10.1406041148590.2441@hadrien>
-Date: Wed, 4 Jun 2014 12:55:29 +0200
-Message-ID: <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com> (sfid-20140604_125553_166313_573153B1)
-Subject: Re: [PATCH 0/10] use safer test on the result of find_first_zero_bit
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: David Laight <David.Laight@aculab.com>,
-	linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	"adi-buildroot-devel@lists.sourceforge.net"
-	<adi-buildroot-devel@lists.sourceforge.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Jun 2014 01:00:45 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so5031872wib.5
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 22:00:44 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, mcgrof@do-not-panic.com,
+	johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] cfg80211: reg: setup correct alpha2 after intersection
+Date: Wed, 11 Jun 2014 07:00:35 +0200
+Message-Id: <1402462835-3281-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140611_070049_521164_E0228DDE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+Setup correct alfa2 in last request after intersection.
+In other case after intersection we could not change/set
+new country using eg. iw reg set
 
-On Wed, Jun 4, 2014 at 11:52 AM, Julia Lawall <julia.lawall@lip6.fr> wrote:
->> Maybe the documented return code should be changed to allow for the
->> existing behaviour.
->
-> Sorry, I'm not sure to understand what you suggest here.
+Failed scenario:
+- insmod cfg80211.ko
+- iw reg set FR
+- modprobe ath10k_pci (US hint)
+- intersection and country set as "98"
+- no way to setup new country using iw reg set
 
-include/asm-generic/bitops/find.h:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+@Luis I am not sure this is the best way to fix it, please review.
 
-| /**
-|  * find_first_zero_bit - find the first cleared bit in a memory region
-|  * @addr: The address to start the search at
-|  * @size: The maximum number of bits to search
-|  *
-|  * Returns the bit number of the first cleared bit.
-|  * If no bits are zero, returns @size.
+ net/wireless/reg.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-"If no bits are zero, returns @size or a number larger than @size."
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 82948c8..8fd82b2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -271,6 +271,7 @@ static void reset_regdomains(bool full_reset,
+ 			     const struct ieee80211_regdomain *new_regdom)
+ {
+ 	const struct ieee80211_regdomain *r;
++	struct regulatory_request *lr;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -284,6 +285,12 @@ static void reset_regdomains(bool full_reset,
+ 	if (r == &world_regdom)
+ 		r = NULL;
+ 
++	lr = get_last_request();
++	if (lr && new_regdom) {
++		lr->alpha2[0] = new_regdom->alpha2[0];
++		lr->alpha2[1] = new_regdom->alpha2[1];
++	}
++
+ 	rcu_free_regdom(r);
+ 	rcu_free_regdom(cfg80211_world_regdom);
+ 
+-- 
+1.7.9.5
 
-|  */
-| extern unsigned long find_first_zero_bit(const unsigned long *addr,
-|                                          unsigned long size);
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
