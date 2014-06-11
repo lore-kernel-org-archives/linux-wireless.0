@@ -1,73 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:49321 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753711AbaFHU5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 16:57:37 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8723be: hw.c: Cleaning up if statement that always evaluates to false
-Date: Sun, 08 Jun 2014 22:57:33 +0200
-Message-ID: <4553641.FfvMsmmpFu@al> (sfid-20140608_225802_993480_AD010176)
-In-Reply-To: <CAFo99gZtZWEwgNoMzxOS-S_XG+p83_T3GypMdcDyhswe2-r3MA@mail.gmail.com>
-References: <1402191743-26177-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <alpine.DEB.2.02.1406081333550.19183@chino.kir.corp.google.com> <CAFo99gZtZWEwgNoMzxOS-S_XG+p83_T3GypMdcDyhswe2-r3MA@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24858 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbaFKKsf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 06:48:35 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 06/28] ath9k: send powersave frame on channel switch
+Date: Wed, 11 Jun 2014 16:17:54 +0530
+Message-ID: <1402483696-2498-7-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124837_953502_43CB3244)
+In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Please do not top-post.)
+From: Felix Fietkau <nbd@openwrt.org>
 
-On Sunday 08 June 2014 22:47:31 Rickard Strandqvist wrote:
-> I found this error in some of the files. And after discussion with
-> Larry Finger and Peter Wu, it was decided that all files with this if
-> statement should change.
-> 
-> But of course I should update the comment to something more suitable.
+While leaving from or entering to active channel context, send out
+nullfunc frame to inform to the AP about the presence of station.
 
-Right, do not forget to use [PATCH v2] as prefix and adjust the subject
-too as this is no longer just "cleaning up a statement that always
-evaluates to false", but rather "fix [insert stuff here] mask" (for
-the 0xfc cases). The commit message must describe why the change is
-beneficial, see other commit messages for examples.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  3 +
+ drivers/net/wireless/ath/ath9k/channel.c | 97 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/main.c    |  6 ++
+ 3 files changed, 106 insertions(+)
 
-Kind regards,
-Peter
-
-> 2014-06-08 22:35 GMT+02:00 David Rientjes <rientjes@google.com>:
-> > On Sun, 8 Jun 2014, Rickard Strandqvist wrote:
-> >
-> >> I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
-> >>
-> >
-> > Where is the 0xfc that your converting?
-> >
-> >> After pointing this out, Larry Finger informed what would be the correct one.
-> >> '(X & 0x3) == 0x3'
-> >>
-> >
-> > This is already what it is, just say that you're replacing it with the
-> > constant.
-> >
-> >> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> >> ---
-> >>  drivers/net/wireless/rtlwifi/rtl8723be/hw.c |    2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> >> index 0fdf090..b61044f 100644
-> >> --- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> >> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> >> @@ -1197,7 +1197,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
-> >>       }
-> >>       rtl_write_byte(rtlpriv, (MSR), bt_msr);
-> >>       rtlpriv->cfg->ops->led_control(hw, ledaction);
-> >> -     if ((bt_msr & 0x03) == MSR_AP)
-> >> +     if ((bt_msr & MSR_AP) == MSR_AP)
-> >>               rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> >>       else
-> >>               rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index ddd2e81..d5a586b 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -329,6 +329,7 @@ struct ath_chanctx {
+ 	u16 txpower;
+ 	bool offchannel;
+ 	bool stopped;
++	bool active;
+ };
+ 
+ void ath_chanctx_init(struct ath_softc *sc);
+@@ -336,6 +337,8 @@ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			     struct cfg80211_chan_def *chandef);
+ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			struct cfg80211_chan_def *chandef);
++void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
++
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ int ath_startrecv(struct ath_softc *sc);
+ bool ath_stoprecv(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 86404d3..26fc98b 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -101,10 +101,99 @@ static int ath_set_channel(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static bool
++ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
++			      bool powersave)
++{
++	struct ieee80211_vif *vif = avp->vif;
++	struct ieee80211_sta *sta = NULL;
++	struct ieee80211_hdr_3addr *nullfunc;
++	struct ath_tx_control txctl;
++	struct sk_buff *skb;
++	int band = sc->cur_chan->chandef.chan->band;
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		if (!vif->bss_conf.assoc)
++			return false;
++
++		skb = ieee80211_nullfunc_get(sc->hw, vif);
++		if (!skb)
++			return false;
++
++		nullfunc = (struct ieee80211_hdr_3addr *) skb->data;
++		if (powersave)
++			nullfunc->frame_control |=
++				cpu_to_le16(IEEE80211_FCTL_PM);
++
++		skb_set_queue_mapping(skb, IEEE80211_AC_VO);
++		if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, &sta)) {
++			dev_kfree_skb_any(skb);
++			return false;
++		}
++		break;
++	default:
++		return false;
++	}
++
++	memset(&txctl, 0, sizeof(txctl));
++	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
++	txctl.sta = sta;
++	txctl.force_channel = true;
++	if (ath_tx_start(sc->hw, skb, &txctl)) {
++		ieee80211_free_txskb(sc->hw, skb);
++		return false;
++	}
++
++	return true;
++}
++
++void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
++{
++	struct ath_vif *avp;
++	bool active = false;
++
++	if (!ctx)
++		return;
++
++	list_for_each_entry(avp, &ctx->vifs, list) {
++		struct ieee80211_vif *vif = avp->vif;
++
++		switch (vif->type) {
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_STATION:
++			if (vif->bss_conf.assoc)
++				active = true;
++			break;
++		default:
++			active = true;
++			break;
++		}
++	}
++	ctx->active = active;
++}
++
++static bool
++ath_chanctx_send_ps_frame(struct ath_softc *sc, bool powersave)
++{
++	struct ath_vif *avp;
++	bool sent = false;
++
++	rcu_read_lock();
++	list_for_each_entry(avp, &sc->cur_chan->vifs, list) {
++		if (ath_chanctx_send_vif_ps_frame(sc, avp, powersave))
++			sent = true;
++	}
++	rcu_read_unlock();
++
++	return sent;
++}
++
+ void ath_chanctx_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc,
+ 					    chanctx_work);
++	bool send_ps = false;
+ 
+ 	mutex_lock(&sc->mutex);
+ 	spin_lock_bh(&sc->chan_lock);
+@@ -120,6 +209,10 @@ void ath_chanctx_work(struct work_struct *work)
+ 
+ 		__ath9k_flush(sc->hw, ~0, true);
+ 
++		if (ath_chanctx_send_ps_frame(sc, true))
++			__ath9k_flush(sc->hw, BIT(IEEE80211_AC_VO), false);
++
++		send_ps = true;
+ 		spin_lock_bh(&sc->chan_lock);
+ 	}
+ 	sc->cur_chan = sc->next_chan;
+@@ -131,6 +224,10 @@ void ath_chanctx_work(struct work_struct *work)
+ 	    memcmp(&sc->cur_chandef, &sc->cur_chan->chandef,
+ 		   sizeof(sc->cur_chandef)))
+ 		ath_set_channel(sc);
++
++	if (send_ps)
++		ath_chanctx_send_ps_frame(sc, false);
++
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index bb73a23..d8a4510 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1043,6 +1043,7 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	/* XXX - will be removed once chanctx ops are added */
+ 	avp->chanctx = sc->cur_chan;
+ 	list_add_tail(&avp->list, &sc->cur_chan->vifs);
++	ath_chanctx_check_active(sc, avp->chanctx);
+ 
+ 	an->sc = sc;
+ 	an->sta = NULL;
+@@ -1061,6 +1062,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -1083,6 +1085,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
++	ath_chanctx_check_active(sc, avp->chanctx);
+ 
+ 	mutex_unlock(&sc->mutex);
+ 	return 0;
+@@ -1141,6 +1144,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	ath9k_ps_restore(sc);
+ 
+ 	ath_tx_node_cleanup(sc, &avp->mcast_node);
++	ath_chanctx_check_active(sc, avp->chanctx);
+ 
+ 	mutex_unlock(&sc->mutex);
+ }
+@@ -1733,6 +1737,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+ 				ath9k_mci_update_wlan_channels(sc, true);
+ 		}
++
++		ath_chanctx_check_active(sc, avp->chanctx);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_IBSS) {
+-- 
+2.0.0
 
