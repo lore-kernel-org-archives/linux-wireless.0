@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:62542 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754170AbaFWTPK (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:37826 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753842AbaFKGzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 15:15:10 -0400
-Received: by mail-pd0-f174.google.com with SMTP id y10so5990075pdj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 12:15:09 -0700 (PDT)
-Date: Mon, 23 Jun 2014 12:15:04 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
-	wireless-regdb@lists.infradead.org
-Subject: Re: [RFC] wireless:  improve dfs-region intersection.
-Message-ID: <20140623191504.GD1390@garbanzo.do-not-panic.com> (sfid-20140623_211517_601454_D6850E48)
-References: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
+	Wed, 11 Jun 2014 02:55:35 -0400
+Received: by mail-we0-f179.google.com with SMTP id w62so4181249wes.10
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 23:55:33 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 3/5] cfg80211: treat the special "unknown" alpha2 as valid
+Date: Wed, 11 Jun 2014 09:55:22 +0300
+Message-Id: <1402469724-22358-3-git-send-email-arik@wizery.com> (sfid-20140611_085539_642507_B3A6B630)
+In-Reply-To: <1402469724-22358-1-git-send-email-arik@wizery.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If the regulatory request contains the special "99" unknown-country code,
+allow a different alpha2 as response.
 
-Adding wireless-regdb.
+This special alpha2 is used when the real alpha2 is unknown and should
+be provided by the driver via its get_regd() wiphy callback, as part of
+the regdomain info.
 
-Regulatory folks:
+Change-Id: I286e3aed828cabf22292b6fe320fdcfa61f0b951
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/32266
+Tested-by: IWL Jenkins
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-if two cards are present on a system, in the worst case consider
-two different cards for AP mode, and one has a DFS region set for the
-country its on but the other does not, do we want to use the DFS region
-for both? DFS would not be allowed on system unless the DFS region is
-set. DFS operation requires a card to explicitly support DFS though so
-even though it can be set as an intersection each card would still
-require DFS suport for that region.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e2f33d7..c429ec5 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -418,7 +418,8 @@ static bool is_user_regdom_saved(void)
+ 		return false;
+ 
+ 	/* This would indicate a mistake on the design */
+-	if (WARN(!is_world_regdom(user_alpha2) && !is_an_alpha2(user_alpha2),
++	if (WARN(!is_world_regdom(user_alpha2) && !is_an_alpha2(user_alpha2) &&
++		 !is_unknown_alpha2(user_alpha2),
+ 		 "Unexpected user alpha2: %c%c\n",
+ 		 user_alpha2[0], user_alpha2[1]))
+ 		return false;
+@@ -595,7 +596,8 @@ bool reg_is_valid_request(const char *alpha2)
+ 	if (!lr || lr->processed)
+ 		return false;
+ 
+-	return alpha2_equal(lr->alpha2, alpha2);
++	return alpha2_equal(lr->alpha2, alpha2) ||
++	       is_unknown_alpha2(lr->alpha2);
+ }
+ 
+ static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+-- 
+1.9.1
 
-As I see it this will depend on what we want cards to do if the DFS
-region is unknown for a region. If the DFS region is not known can
-we use any DFS algorithm? If we cannot then I think a DFS intersection
-would require agreement on the DFS region. That would also mean though
-that when shipping products if a system is built with one card that has
-DFS for ETSI for example, and then a secondary card is present and its
-regulatory domain does not have DFS then the first card would not be
-able to operate on the DFS. I think this is reasonable given that 
-the two cards must at least agree on the regulatory domain, otherwise
-the folks doing system integration probably did a bad job at thinking
-of things ahead of time. Even though this can be technically true I
-foresee folks this misconfiguration happening in the future and folks
-beingp puzzled by this as an issue. This means this should be documented
-for folks selling devices in a combined wifi system.
-
-As such NACK for now.
-
-  Luis
-
-On Wed, Jun 11, 2014 at 01:08:34PM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> If one is UN-SET, use the other.  Seems this would
-> be more correct that what we have now.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> Someone that understands this code better than I
-> do should review this well before it is considered
-> for upstream.  I'm not sure it is actually needed.
-> 
->  net/wireless/reg.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 785e516..b87035f 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -727,8 +727,15 @@ static enum nl80211_dfs_regions
->  reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
->  			 const enum nl80211_dfs_regions dfs_region2)
->  {
-> -	if (dfs_region1 != dfs_region2)
-> +	if (dfs_region1 != dfs_region2) {
-> +		pr_info("intersect-dfs-region, region1: %d  region2: %d\n",
-> +			dfs_region1, dfs_region2);
-> +		if (dfs_region1 == NL80211_DFS_UNSET)
-> +			return dfs_region2;
-> +		if (dfs_region2 == NL80211_DFS_UNSET)
-> +			return dfs_region1;
->  		return NL80211_DFS_UNSET;
-> +	}
->  	return dfs_region1;
->  }
->  
