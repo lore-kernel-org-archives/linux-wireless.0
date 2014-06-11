@@ -1,110 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:58275 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbaFMVk0 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53242 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbaFKKuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 17:40:26 -0400
-Received: by mail-wi0-f175.google.com with SMTP id r20so1568866wiv.14
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2014 14:40:25 -0700 (PDT)
-Message-ID: <539B6FC6.8000803@gmail.com> (sfid-20140613_234031_465454_42D56A91)
-Date: Fri, 13 Jun 2014 23:40:22 +0200
-From: Mathy Vanhoef <vanhoefm@gmail.com>
+	Wed, 11 Jun 2014 06:50:13 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 22/28] ath9k: Add multi-channel scheduling support
+Date: Wed, 11 Jun 2014 16:18:10 +0530
+Message-ID: <1402483696-2498-23-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_130457_261562_45E73B28)
+In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ath5k-devel@lists.ath5k.org
-Subject: [PATCH 1/2] ath5k: support for FIF_FCSFAIL filter
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Felix Fietkau <nbd@openwrt.org>
 
-Currently ath5k can't report frames with CRC errors. In ath5k_configure_filter
-it actually sets the hardware filter properly when the FIF_FCSFAIL flag is set.
-However, in other functions the necessary checks weren't being done.
-
-This patch fixes that.
---
-From: "Mathy Vanhoef" <vanhoefm@gmail.com>
-
-When the FIF_FCSFAIL filter flag is set, pass frames with CRC errors.
-
-Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h        |  1 +
- drivers/net/wireless/ath/ath5k/base.c         | 16 ++++++++++++++--
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |  2 ++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  5 ++
+ drivers/net/wireless/ath/ath9k/channel.c | 95 ++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/main.c    |  3 +
+ 3 files changed, 99 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index d03e4dd..1054f19 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1285,6 +1285,7 @@ struct ath5k_hw {
- #define ATH_STAT_STARTED	3		/* opened & irqs enabled */
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7947909..0bc63bd 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -350,6 +350,10 @@ enum ath_chanctx_event {
+ 	ATH_CHANCTX_EVENT_BEACON_SENT,
+ 	ATH_CHANCTX_EVENT_TSF_TIMER,
+ 	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
++	ATH_CHANCTX_EVENT_ASSOC,
++	ATH_CHANCTX_EVENT_SWITCH,
++	ATH_CHANCTX_EVENT_UNASSIGN,
++	ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL,
+ };
  
- 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
-+	unsigned int		fif_filter_flags; /* Current FIF_* filter flags */
- 	struct ieee80211_channel *curchan;	/* current h/w channel */
+ enum ath_chanctx_state {
+@@ -362,6 +366,7 @@ enum ath_chanctx_state {
  
- 	u16			nvifs;
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index e9aed98..39ba642 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1382,6 +1382,9 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 	rxs->flag = 0;
- 	if (unlikely(rs->rs_status & AR5K_RXERR_MIC))
- 		rxs->flag |= RX_FLAG_MMIC_ERROR;
-+	if (unlikely(rs->rs_status & AR5K_RXERR_CRC))
-+		rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
-+
+ struct ath_chanctx_sched {
+ 	bool beacon_pending;
++	bool offchannel_pending;
+ 	enum ath_chanctx_state state;
  
- 	/*
- 	 * always extend the mac timestamp, since this information is
-@@ -1449,6 +1452,8 @@ ath5k_receive_frame_ok(struct ath5k_hw *ah, struct ath5k_rx_status *rs)
- 	ah->stats.rx_bytes_count += rs->rs_datalen;
- 
- 	if (unlikely(rs->rs_status)) {
-+		unsigned int filters;
-+
- 		if (rs->rs_status & AR5K_RXERR_CRC)
- 			ah->stats.rxerr_crc++;
- 		if (rs->rs_status & AR5K_RXERR_FIFO)
-@@ -1480,8 +1485,15 @@ ath5k_receive_frame_ok(struct ath5k_hw *ah, struct ath5k_rx_status *rs)
- 			return true;
- 		}
- 
--		/* reject any frames with non-crypto errors */
--		if (rs->rs_status & ~(AR5K_RXERR_DECRYPT))
-+		/*
-+		 * Reject any frames with non-crypto errors, and take into account the
-+		 * current FIF_* filters.
-+		 */
-+		filters = AR5K_RXERR_DECRYPT;
-+		if (ah->fif_filter_flags & FIF_FCSFAIL)
-+			filters |= AR5K_RXERR_CRC;
-+
-+		if (rs->rs_status & ~filters)
- 			return false;
+ 	u32 next_tbtt;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 8d56b79..1cb2909 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -180,10 +180,13 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+ 		n_active++;
  	}
  
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index afb23b3..b65c38f 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -473,6 +473,8 @@ ath5k_configure_filter(struct ieee80211_hw *hw, unsigned int changed_flags,
- 	/* Set the cached hw filter flags, this will later actually
- 	 * be set in HW */
- 	ah->filter_flags = rfilt;
-+	/* Store current FIF filter flags */
-+	ah->fif_filter_flags = *new_flags;
- 
- 	mutex_unlock(&ah->lock);
+-	if (n_active > 1)
+-		set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
+-	else
++	if (n_active <= 1) {
+ 		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
++		return;
++	}
++	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++		return;
++	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL);
  }
+ 
+ static bool
+@@ -282,6 +285,7 @@ static void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 		ath_chanctx_send_ps_frame(sc, false);
+ 
+ 	ath_offchannel_channel_change(sc);
++	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_SWITCH);
+ }
+ 
+ void ath_chanctx_work(struct work_struct *work)
+@@ -357,8 +361,17 @@ void ath9k_chanctx_force_active(struct ieee80211_hw *hw,
+ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			struct cfg80211_chan_def *chandef)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+ 	spin_lock_bh(&sc->chan_lock);
++
++	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
++	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
++		sc->sched.offchannel_pending = true;
++		spin_unlock_bh(&sc->chan_lock);
++		return;
++	}
++
+ 	sc->next_chan = ctx;
+ 	if (chandef)
+ 		ctx->chandef = *chandef;
+@@ -462,6 +475,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_vif *avp = NULL;
++	struct ath_chanctx *ctx;
+ 	u32 tsf_time;
+ 	bool noa_changed = false;
+ 
+@@ -475,6 +489,25 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		if (avp->offchannel_duration)
+ 			avp->offchannel_duration = 0;
+ 
++		if (avp->chanctx != sc->cur_chan)
++			break;
++
++		if (sc->sched.offchannel_pending) {
++			sc->sched.offchannel_pending = false;
++			sc->next_chan = &sc->offchannel.chan;
++			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
++		}
++
++		ctx = ath_chanctx_get_next(sc, sc->cur_chan);
++		if (ctx->active && sc->sched.state == ATH_CHANCTX_STATE_IDLE) {
++			sc->next_chan = ctx;
++			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
++		}
++
++		/* if the timer missed its window, use the next interval */
++		if (sc->sched.state == ATH_CHANCTX_STATE_WAIT_FOR_TIMER)
++			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
++
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
+ 			break;
+ 
+@@ -518,11 +551,65 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+ 		break;
+ 	case ATH_CHANCTX_EVENT_BEACON_RECEIVED:
+-		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) ||
++		    sc->cur_chan == &sc->offchannel.chan)
+ 			break;
+ 
+ 		ath_chanctx_adjust_tbtt_delta(sc);
+ 		break;
++	case ATH_CHANCTX_EVENT_ASSOC:
++		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
++		    avp->chanctx != sc->cur_chan)
++			break;
++
++		sc->sched.state = ATH_CHANCTX_STATE_IDLE;
++		/* fall through */
++	case ATH_CHANCTX_EVENT_SWITCH:
++		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) ||
++		    sc->sched.state == ATH_CHANCTX_STATE_FORCE_ACTIVE ||
++		    sc->cur_chan->switch_after_beacon ||
++		    sc->cur_chan == &sc->offchannel.chan)
++			break;
++
++		/* If this is a station chanctx, stay active for a half
++		 * beacon period (minus channel switch time)
++		 */
++		sc->next_chan = ath_chanctx_get_next(sc, sc->cur_chan);
++
++		sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_TIMER;
++		tsf_time = ath9k_hw_gettsf32(sc->sc_ah);
++		tsf_time +=
++			TU_TO_USEC(sc->cur_chan->beacon.beacon_interval) / 2;
++		tsf_time -= sc->sched.channel_switch_time;
++		sc->sched.switch_start_time = tsf_time;
++
++		ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer,
++					 tsf_time, 1000000);
++		break;
++	case ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL:
++		if (sc->cur_chan == &sc->offchannel.chan ||
++		    sc->cur_chan->switch_after_beacon)
++			break;
++
++		sc->next_chan = ath_chanctx_get_next(sc, sc->cur_chan);
++		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
++		break;
++	case ATH_CHANCTX_EVENT_UNASSIGN:
++		if (sc->cur_chan->assigned) {
++			if (sc->next_chan && !sc->next_chan->assigned &&
++			    sc->next_chan != &sc->offchannel.chan)
++				sc->sched.state = ATH_CHANCTX_STATE_IDLE;
++			break;
++		}
++
++		ctx = ath_chanctx_get_next(sc, sc->cur_chan);
++		sc->sched.state = ATH_CHANCTX_STATE_IDLE;
++		if (!ctx->assigned)
++			break;
++
++		sc->next_chan = ctx;
++		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
++		break;
+ 	}
+ 
+ 	spin_unlock_bh(&sc->chan_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b8975f0..f7d8dda 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1747,6 +1747,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 			bss_conf->bssid, bss_conf->assoc);
+ 
+ 		ath9k_calculate_summary_state(sc, avp->chanctx);
++		if (bss_conf->assoc)
++			ath_chanctx_event(sc, vif, ATH_CHANCTX_EVENT_ASSOC);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_IBSS) {
+@@ -2492,6 +2494,7 @@ static void ath9k_remove_chanctx(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&sc->mutex);
+ 	ctx->assigned = false;
++	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_UNASSIGN);
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
 -- 
-1.8.1.2
+2.0.0
 
