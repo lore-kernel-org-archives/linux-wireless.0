@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44339 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbaFBSDb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:03:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: remove unused len variables from wmi process rx functions
-References: <20140528074110.8437.58039.stgit@potku.adurom.net>
-Date: Mon, 2 Jun 2014 21:03:25 +0300
-In-Reply-To: <20140528074110.8437.58039.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 28 May 2014 10:41:10 +0300")
-Message-ID: <871tv7yys2.fsf@kamboji.qca.qualcomm.com> (sfid-20140602_200334_304820_C2B8FAAE)
+Received: from mx1.redhat.com ([209.132.183.28]:52721 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932123AbaFKPWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2014 11:22:46 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: rtl8723au: Add compiler check for -Wtype-limits
+References: <1402498666-5018-1-git-send-email-geert@linux-m68k.org>
+Date: Wed, 11 Jun 2014 17:22:36 +0200
+In-Reply-To: <1402498666-5018-1-git-send-email-geert@linux-m68k.org> (Geert
+	Uytterhoeven's message of "Wed, 11 Jun 2014 16:57:46 +0200")
+Message-ID: <wrfjfvjb4gjn.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140611_172251_216799_218110AE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> These len variables are not used anywhere.
+Geert Uytterhoeven <geert@linux-m68k.org> writes:
+> Gcc versions before 4.3 do not support -Wtype-limits:
 >
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> cc1: error: unrecognized command line option "-Wtype-limits"
+>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> ---
+>  drivers/staging/rtl8723au/Makefile | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 
-Applied.
+Museum support is fine with me :)
 
--- 
-Kalle Valo
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+>
+> diff --git a/drivers/staging/rtl8723au/Makefile
+> b/drivers/staging/rtl8723au/Makefile
+> index a6316af94b79..6b3f25555c74 100644
+> --- a/drivers/staging/rtl8723au/Makefile
+> +++ b/drivers/staging/rtl8723au/Makefile
+> @@ -53,4 +53,5 @@ r8723au-$(CONFIG_8723AU_AP_MODE) += core/rtw_ap.o
+>  
+>  obj-$(CONFIG_R8723AU)	:= r8723au.o
+>  
+> -ccflags-y += -Wtype-limits -D__CHECK_ENDIAN__ -I$(src)/include
+> +ccflags-y += $(call cc-option,-Wtype-limits,)
+> +ccflags-y += -D__CHECK_ENDIAN__ -I$(src)/include
