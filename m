@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:56745 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbaFAMi1 (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:63984 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbaFKOSs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 08:38:27 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so3205831wib.17
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 05:38:26 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: libertas: cmd.c:  Cleaning up uninitialized variables
-Date: Sun,  1 Jun 2014 14:39:20 +0200
-Message-Id: <1401626360-15505-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_143831_357112_3E2AF54C)
+	Wed, 11 Jun 2014 10:18:48 -0400
+Received: by mail-we0-f178.google.com with SMTP id p10so7161856wes.9
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 07:18:47 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 09/10] mac80211: make sure TDLS peer STA exists during setup
+Date: Wed, 11 Jun 2014 17:18:26 +0300
+Message-Id: <1402496307-32522-9-git-send-email-arik@wizery.com> (sfid-20140611_161854_089952_59DDDAF6)
+In-Reply-To: <1402496307-32522-1-git-send-email-arik@wizery.com>
+References: <1402496307-32522-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a risk that the variable will be used without being initialized.
+Make sure userspace added a TDLS peer station before invoking the
+transmission of the first setup frame. This ensures packets to the peer
+won't go through the AP path.
 
-This was largely found by using a static code analysis program called cppcheck.
-
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/libertas/cmd.c |    1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/tdls.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index aaa2973..0387a5b 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1111,6 +1111,7 @@ int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on)
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 009601a..f100c12 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -332,6 +332,19 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
+ 		goto exit;
+ 	}
  
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_ACT_SET);
-+	cmd.control = 0;
++	/*
++	 * make sure we have a STA representing the peer so we drop or buffer
++	 * non-TDLS-setup frames to the peer. We can't send other packets
++	 * during setup through the AP path
++	 */
++	rcu_read_lock();
++	if (!sta_info_get(sdata, peer)) {
++		rcu_read_unlock();
++		ret = -ENOLINK;
++		goto exit;
++	}
++	rcu_read_unlock();
++
+ 	ieee80211_flush_queues(local, sdata);
  
- 	/* Only v8 and below support setting the preamble */
- 	if (priv->fwrelease < 0x09000000) {
+ 	ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer, action_code,
 -- 
-1.7.10.4
+1.9.1
 
