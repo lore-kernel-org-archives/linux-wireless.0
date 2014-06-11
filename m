@@ -1,101 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f176.google.com ([209.85.220.176]:57101 "EHLO
-	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128AbaFBQzE (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:59168 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753842AbaFKGzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 12:55:04 -0400
-Received: by mail-vc0-f176.google.com with SMTP id la4so5351838vcb.7
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2014 09:55:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2AKnUvUyddsGC5JST51bbjpavG3X-VbJhS1Mf7fDNPcw@mail.gmail.com>
-References: <CALCETrUffJLp+AM2-13HEE5+cKtyMMSjJFsJnhcd5kMzebs3NA@mail.gmail.com>
- <CALCETrU58grNoqQh5ZutHa8CEt4rqS6FrMWwpC6DaQ0cXqxXhw@mail.gmail.com>
- <CANUX_P22a2eC0VAw-NCKrnVQRs9t=uy1VHrBF-2dAsW+s=YfUQ@mail.gmail.com>
- <CALCETrUXGKpHfTwYti9Rzgv-ZM--_d9pW8_Jx9oR1L+GsBeZcQ@mail.gmail.com>
- <CANUX_P2sH1yzx5aeLbHXBGHAsXmkZ70ioEhH1Ad_xNrCEJbJRg@mail.gmail.com>
- <CANUX_P2XpeDOmNOX=p4yMUe5ZAZv-UQ97M0ayFcFSsTrEDS3CA@mail.gmail.com>
- <CALCETrVpvFk+qhq3PFgK+5kTnBcbtv8H_Ko+kHV0jay0ZTfmcQ@mail.gmail.com>
- <CANUX_P3NrA2GgZ-Nqgvk7do7Kzqa9kgjtpn4t9TuLKzhmqTqjQ@mail.gmail.com>
- <CALCETrX1s504Ej7sQV292NfHgrKrV-Wigk0GP7wo6GyALaM9xA@mail.gmail.com>
- <CANUX_P3jMcV=7stRtPAFZBJVG9bE10iTC0sRK_o-7vTxpy9+9w@mail.gmail.com>
- <CALCETrVPXwedhPGtDJQDSK5Kxa4NpeSDck4-nHyox_xriPBcZQ@mail.gmail.com>
- <CALCETrW0NQ6aW06WD6ZAi8-o7fZSiKPOf0xYCSEw2egYBfqyQQ@mail.gmail.com>
- <CALCETrUTsKCw_G7V=YDeP-v_GF8cK8ezY-wqcpxeuw3dzBQhQg@mail.gmail.com>
- <CANUX_P2_GZGhd7X4Ntzi5Jeng52i9Jam22DQTTU2akESPL1ffQ@mail.gmail.com>
- <CALCETrWdQwvMcgC=PESyECzkyMD8-vzjNEHOCkm5z=ENH7coHg@mail.gmail.com> <CANUX_P2AKnUvUyddsGC5JST51bbjpavG3X-VbJhS1Mf7fDNPcw@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Mon, 2 Jun 2014 09:54:42 -0700
-Message-ID: <CALCETrX8Km4dc-XM4Ga8T7spDJzN00jx162A3iuTo5+NWhGTZg@mail.gmail.com> (sfid-20140602_185509_063491_6B675A2E)
-Subject: Re: Help debugging iwldvm / ath10k stalls
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Jun 2014 02:55:37 -0400
+Received: by mail-we0-f179.google.com with SMTP id w62so3935052wes.24
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 23:55:36 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 5/5] cfg80211: leave invalid channels on regdomain change
+Date: Wed, 11 Jun 2014 09:55:24 +0300
+Message-Id: <1402469724-22358-5-git-send-email-arik@wizery.com> (sfid-20140611_085540_895410_3C96CB94)
+In-Reply-To: <1402469724-22358-1-git-send-email-arik@wizery.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 28, 2014 at 5:09 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>
->> I doubt I can bisect -- the trigger was a new AP, not a new kernel.  I
->> can't exactly cut the AP in half :)
->
-> I see.. This is really weird though. Anyway.
->
->>
->>
->> Pre-suspend, i.e., working:
->>
->> [   20.949900] enabled = 1, wowlan = 0
->> [   20.950177] enabled = 1, wowlan = 0
->> [   21.614016] enabled = 1, wowlan = 0
->> [   21.614658] enabled = 1, wowlan = 0
->> [   42.667586] enabled = 0, wowlan = 0
->> [   42.672514] enabled = 1, wowlan = 0
->> [   53.088165] fuse init (API version 7.23)
->> [   53.102082] SELinux: initialized (dev fuse, type fuse), uses genfs_contexts
->> [   53.130945] SELinux: initialized (dev fusectl, type fusectl), uses
->> genfs_contexts
->> [   85.627558] enabled = 0, wowlan = 0
->> [   85.631686] enabled = 1, wowlan = 0
->> [  134.649346] e1000e: em1 NIC Link is Down
->> [  137.682277] wlan0: deauthenticating from 02:c6:26:cc:b4:c7 by local
->> choice (Reason: 3=DEAUTH_LEAVING)
->> [  137.682780] enabled = 0, wowlan = 0
->> [  137.693889] enabled = 0, wowlan = 0
->>
->> Post-suspend, i.e., not working:
->>
->> [  144.406303] enabled = 1, wowlan = 0
->> [  144.406496] enabled = 1, wowlan = 0
->> [  145.026827] enabled = 1, wowlan = 0
->> [  145.028211] enabled = 1, wowlan = 0
->> [  165.688632] enabled = 0, wowlan = 0
->> [  165.689960] enabled = 0, wowlan = 0
->> [  165.693988] enabled = 1, wowlan = 0
->> [  165.694245] enabled = 1, wowlan = 0
->> [  208.641426] enabled = 0, wowlan = 0
->> [  208.641786] enabled = 0, wowlan = 0
->> [  208.647499] enabled = 1, wowlan = 0
->> [  208.647639] enabled = 1, wowlan = 0
->> [  271.435558] enabled = 0, wowlan = 0
->> [  271.435767] enabled = 0, wowlan = 0
->> [  271.440125] enabled = 1, wowlan = 0
->> [  271.440405] enabled = 1, wowlan = 0
->>
->> With even more instrumentation added, I did get a glitch before
->> suspend/resume, but it came with more than two power setting updates.
->> Logs and patch attached, complete with call stacks.
->>
->
-> I don't see any callstacks?
-> Doesn't matter though.
+When the regulatory settings change, some channels might become invalid.
+Disconnect interfaces acting on these channels, after giving userspace
+code a grace period to leave them.
 
-I think the callstacks were in the attachment.  I could have messed up, though.
+Because of cfg80211 channel tracking limitations, only disconnect
+STA/P2P_CL interfaces if their current center channel became disabled.
 
-Anyway, I don't buy the theory that this is caused by the firmware
-going out to lunch.  The queues files in debugfs show the rx queue
-chugging along and all of the tx queues have read_ptr == write_ptr.
-Wireshark shows incoming broadcast traffic, too.  I'd guess that the
-problem is more likely to be that the card is failing to wake up and
-notice pending data in the TIM.
+Change-Id: I308cc02c06a11cfc30b206efaeabe64d67186228
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/32422
+Tested-by: IWL Jenkins
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 83 insertions(+), 1 deletion(-)
 
---Andy
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index d6b83f9..1d6afe6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -221,6 +221,9 @@ struct reg_beacon {
+ 	struct ieee80211_channel chan;
+ };
+ 
++static void reg_check_chans_work(struct work_struct *work);
++static DECLARE_DELAYED_WORK(reg_check_chans, reg_check_chans_work);
++
+ static void reg_todo(struct work_struct *work);
+ static DECLARE_WORK(reg_work, reg_todo);
+ 
+@@ -1520,6 +1523,80 @@ static void reg_call_notifier(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, request);
+ }
+ 
++static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
++{
++	struct ieee80211_channel *ch;
++	bool ret = true;
++
++	wdev_lock(wdev);
++
++	if (!wdev->netdev || !netif_running(wdev->netdev))
++		goto out;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		if (!wdev->beacon_interval)
++			goto out;
++
++		ret = cfg80211_reg_can_beacon(wiphy,
++					      &wdev->chandef, wdev->iftype);
++		break;
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (!wdev->current_bss ||
++		    !wdev->current_bss->pub.channel)
++			goto out;
++
++		/* TODO: more elaborate tracking for wide channels */
++		ch = wdev->current_bss->pub.channel;
++		ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
++		break;
++	default:
++		/* others not implemented for now */
++		break;
++	}
++
++out:
++	wdev_unlock(wdev);
++	return ret;
++}
++
++static void reg_leave_invalid_chans(struct wiphy *wiphy)
++{
++	struct wireless_dev *wdev;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	ASSERT_RTNL();
++
++	list_for_each_entry(wdev, &rdev->wdev_list, list)
++		if (!reg_wdev_chan_valid(wiphy, wdev))
++			cfg80211_leave(rdev, wdev);
++}
++
++static void reg_check_chans_work(struct work_struct *work)
++{
++	struct cfg80211_registered_device *rdev;
++
++	REG_DBG_PRINT("Verifying active interfaces after reg change\n");
++	rtnl_lock();
++
++	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
++		reg_leave_invalid_chans(&rdev->wiphy);
++
++	rtnl_unlock();
++}
++
++static void reg_check_channels(void)
++{
++	/*
++	 * Give usermode a chance to do something nicer (move to another
++	 * channel, orderly disconnection), before forcing a disconnection.
++	 */
++	mod_delayed_work(system_power_efficient_wq,
++			 &reg_check_chans, msecs_to_jiffies(60000));
++}
++
+ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 				    enum nl80211_reg_initiator initiator)
+ {
+@@ -1559,6 +1636,8 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+ 		wiphy = &rdev->wiphy;
+ 		wiphy_update_regulatory(wiphy, initiator);
+ 	}
++
++	reg_check_channels();
+ }
+ 
+ static void handle_channel_custom(struct wiphy *wiphy,
+@@ -1972,8 +2051,10 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 
+ 	/* This is required so that the orig_* parameters are saved */
+ 	if (treatment == REG_REQ_ALREADY_SET && wiphy &&
+-	    wiphy->regulatory_flags & REGULATORY_STRICT_REG)
++	    wiphy->regulatory_flags & REGULATORY_STRICT_REG) {
+ 		wiphy_update_regulatory(wiphy, reg_request->initiator);
++		reg_check_channels();
++	}
+ 
+ 	return;
+ 
+@@ -2853,6 +2934,7 @@ void regulatory_exit(void)
+ 
+ 	cancel_work_sync(&reg_work);
+ 	cancel_delayed_work_sync(&reg_timeout);
++	cancel_delayed_work_sync(&reg_check_chans);
+ 
+ 	/* Lock to suppress warnings */
+ 	rtnl_lock();
+-- 
+1.9.1
+
