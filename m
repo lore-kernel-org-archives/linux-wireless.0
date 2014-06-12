@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60141 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754061AbaFCTka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 15:40:30 -0400
-Message-ID: <1401824416.4157.32.camel@jlt4.sipsolutions.net> (sfid-20140603_214034_543097_142BADD1)
-Subject: Re: [PATCH v2 1/2] mac80211: move csa counters from sdata to
- beacon/presp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Jun 2014 21:40:16 +0200
-In-Reply-To: <1401345535-22991-2-git-send-email-michal.kazior@tieto.com> (sfid-20140529_084616_544643_50FA8B92)
-References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
-	 <1401345535-22991-2-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140529_084616_544643_50FA8B92)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from filtteri2.pp.htv.fi ([213.243.153.185]:40713 "EHLO
+	filtteri2.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932531AbaFLIYS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 04:24:18 -0400
+Date: Thu, 12 Jun 2014 11:24:08 +0300
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
+Message-ID: <20140612082408.GD913@drone.musicnaut.iki.fi> (sfid-20140612_102424_185094_98AF4D7F)
+References: <20140611230513.GC913@drone.musicnaut.iki.fi>
+ <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-05-29 at 08:38 +0200, Michal Kazior wrote:
+Hi,
 
+On Thu, Jun 12, 2014 at 07:44:42AM +0200, Rafał Miłecki wrote:
+> On 12 June 2014 01:05, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
+> > While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
+> > cannot find anything on my WRT54GL router anymore:
+> 
+> I believe it's BCM5352E SoC wth G-PHY rev 7 and radio 0x2050 rev 2. Is
+> that correct? Provide us a boot log.
 
-> +               memcpy(new->csa_counter_offsets,
-> csa->counter_offsets_beacon,
-> +                      csa->n_counter_offsets_beacon *
-> +                      sizeof(*new->csa_counter_offsets));
+Yes, it's:
 
-Given that it's used like an array, maybe
-sizeof(new->csa_counter_offsets[0]) would be more readable? (this is in
-a few places)
+[    9.460000] b43-phy0: Broadcom 5352 WLAN found (core revision 9)
+[    9.520000] b43-phy0: Found PHY: Analog 2, Type 2 (G), Revision 7
 
-> +++ b/net/mac80211/ibss.c
-> @@ -143,7 +143,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
->  		*pos++ = csa_settings->block_tx ? 1 : 0;
->  		*pos++ = ieee80211_frequency_to_channel(
->  				csa_settings->chandef.chan->center_freq);
-> -		sdata->csa_counter_offset_beacon[0] = (pos - presp->head);
-> +		presp->csa_counter_offsets[0] = (pos - presp->head);
+I confirm your patch fixes the issue, thanks.
 
-This seems slightly odd, but maybe it's a bugfix? Or are presp/beacon
-actually identical?
-
-johannes
-
+A.
