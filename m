@@ -1,48 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2143 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754305AbaFQKUr (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:41660 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674AbaFLOKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 06:20:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <drwho@infidigm.net>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: QCA ar9375 in Ubuntu 14.04 beta 2 not working
-References: <3b045ae380adf4cae45a6e7cd1741ba6.squirrel@www.infidigm.net>
-Date: Tue, 17 Jun 2014 13:20:21 +0300
-In-Reply-To: <3b045ae380adf4cae45a6e7cd1741ba6.squirrel@www.infidigm.net>
-	(drwho@infidigm.net's message of "Wed, 9 Apr 2014 11:27:48 -0400")
-Message-ID: <87bntrdehm.fsf@kamboji.qca.qualcomm.com> (sfid-20140617_122102_556106_A0183A5F)
+	Thu, 12 Jun 2014 10:10:04 -0400
+Date: Thu, 12 Jun 2014 16:09:32 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: LKML <linux-kernel@vger.kernel.org>,
+	John Stultz <john.stultz@linaro.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: net_timedelta() affected by settimeofday() (was: [patch 12/13]
+ net: mac80211: Remove silly timespec dance)
+In-Reply-To: <1402564914.8095.9.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.DEB.2.10.1406121605470.5170@nanos> (sfid-20140612_161010_793019_8B26F57C)
+References: <20140611234024.103571777@linutronix.de>   <20140611234607.683770899@linutronix.de>   <1402555774.4224.1.camel@jlt4.sipsolutions.net>   <alpine.DEB.2.10.1406121017500.5170@nanos>   <1402562114.8095.3.camel@jlt4.sipsolutions.net>  
+ (sfid-20140612_103558_525847_209A5C98) <1402562399.8095.5.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.10.1406121047280.5170@nanos> <1402564914.8095.9.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 12 Jun 2014, Johannes Berg wrote:
 
-replying to a mail from two months back:
+> On Thu, 2014-06-12 at 10:57 +0200, Thomas Gleixner wrote:
+> 
+> > > > Right, but isn't that odd? Suddenly your delay measurement here might be
+> > > > minutes, hours, or years if you settimeofday() between timestamping and
+> > > > calculating the delta. That seems very strange to me, why would that be
+> > > > the right behaviour in any way?
+> > 
+> > Indeed. clock monotonic is the appropriate one for measurements.
+> 
+> And that's what we had here with ktime_get_ts()? I thought so, just
+> making sure.
+>  
+> > > > Now, it seems that there are only two current users of net_timedelta()
+> > > > (in DCCP) so perhaps it's not too late to change some of this?
+> > > > 
+> > > > Maybe in general the skb timestamp should be based on a different clock
+> > > > and only adjusted to real time when used in userspace?
+> > 
+> > You have the same problem then, just at a different place:
+> > 
+> >     ts = ktime_get();
+> > 
+> > 			settimeofday()
+> > 			   offset_mono_to_real = new value;
+> > 
+> >     userts = mono_to_real(ts);
+> 
+> Right. I'm not really sure if that's an issue though.
+> 
+> > But maybe that's not a real issue, as ktime_get_real() can race with
+> > settimeofday() or NTP as well.
+> > 
+> >    ts = ktime_get_real();
+> > 				settimeofday();
+> >    userts = ts;
+> > 
+> > So the user might see a weird timestamp for a packet, which cannot be
+> > correlated with the user space gettimeofday().
+> 
+> Right, once settimeofday() is called the timestamps from before/during
+> it can't really be correlated any more.
+> 
+> This is part of the userspace API already, but might it have been better
+> to expose the monotonic clock, since userspace can also get at it? Not
+> sure.
+> 
+> Either way it's an issue I guess; however I'm thinking your patch is
+> making it worse for the measurement in this particular code (where the
+> userspace issue doesn't come in, it should never be accessible there)
 
-drwho@infidigm.net writes:
+Fair enough. Still the timespec is silly. Here is an updated version.
 
-> I just got a UB134C which has a QCA ar9375.  I tried it in Ubuntu 14.04
-> beta 2 kernel =
-> 3.13.0-22-generic #44-Ubuntu SMP Wed Apr 2 20:04:41 UTC 2014 i686
->
-> I'm told the 9375 is an ath6kl, but it doesn't look like the ath6kl driver
-> supports it.  kernel output.....
->
-> new high-speed USB device number 4 using ehci-pci
-> [175257.129911] usb 1-2: New USB device found, idVendor=0cf3, idProduct=9375
-> [175257.129923] usb 1-2: New USB device strings: Mfr=1, Product=2,
-> SerialNumber=3
-> [175257.129931] usb 1-2: Product: USBWLAN
-> [175257.129939] usb 1-2: Manufacturer: Qualcomm Atheros.
-> [175257.129946] usb 1-2: SerialNumber: 12345678
+Thanks,
 
-I just sent patches to add ar6004 hw3.0 support. If you can, please test
-those and give feedback.
+	tglx
 
-http://lists.infradead.org/pipermail/ath6kl/2014-June/000032.html
+------------------>
 
--- 
-Kalle Valo
+Subject: net: Mac80211: Remove silly timespec dance
+From: Thomas Gleixner <tglx@linutronix.de>
+Date: Wed, 11 Jun 2014 23:59:18 -0000
+
+Converting time from one format to another seems to give coders a warm
+and fuzzy feeling.
+
+Use the proper interfaces.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: John Stultz <john.stultz@linaro.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/status.c |    7 ++-----
+ net/mac80211/tx.c     |    5 +----
+ 2 files changed, 3 insertions(+), 9 deletions(-)
+
+
+Index: tip/net/mac80211/status.c
+===================================================================
+--- tip.orig/net/mac80211/status.c
++++ tip/net/mac80211/status.c
+@@ -473,8 +473,6 @@ static void ieee80211_tx_latency_end_msr
+ 					    struct sta_info *sta,
+ 					    struct ieee80211_hdr *hdr)
+ {
+-	ktime_t skb_dprt;
+-	struct timespec dprt_time;
+ 	u32 msrmnt;
+ 	u16 tid;
+ 	u8 *qc;
+@@ -506,9 +504,8 @@ static void ieee80211_tx_latency_end_msr
+ 
+ 	tx_lat = &sta->tx_lat[tid];
+ 
+-	ktime_get_ts(&dprt_time); /* time stamp completion time */
+-	skb_dprt = ktime_set(dprt_time.tv_sec, dprt_time.tv_nsec);
+-	msrmnt = ktime_to_ms(ktime_sub(skb_dprt, skb_arv));
++	/* Calculate the latency */
++	msrmnt = ktime_to_ms(ktime_sub(ktime_get(), skb_arv);
+ 
+ 	if (tx_lat->max < msrmnt) /* update stats */
+ 		tx_lat->max = msrmnt;
+Index: tip/net/mac80211/tx.c
+===================================================================
+--- tip.orig/net/mac80211/tx.c
++++ tip/net/mac80211/tx.c
+@@ -1767,15 +1767,12 @@ fail:
+ static void ieee80211_tx_latency_start_msrmnt(struct ieee80211_local *local,
+ 					      struct sk_buff *skb)
+ {
+-	struct timespec skb_arv;
+ 	struct ieee80211_tx_latency_bin_ranges *tx_latency;
+ 
+ 	tx_latency = rcu_dereference(local->tx_latency);
+ 	if (!tx_latency)
+ 		return;
+-
+-	ktime_get_ts(&skb_arv);
+-	skb->tstamp = ktime_set(skb_arv.tv_sec, skb_arv.tv_nsec);
++	skb->tstamp = ktime_get();
+ }
+ 
+ /**
