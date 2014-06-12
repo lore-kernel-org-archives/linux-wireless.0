@@ -1,127 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:60201 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752462AbaFMNaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 09:30:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, michal.kazior@tieto.com
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Fri, 13 Jun 2014 16:30:06 +0300
-Message-Id: <1402666207-2257-4-git-send-email-luca@coelho.fi> (sfid-20140613_153049_461218_DB459595)
-In-Reply-To: <1402666207-2257-1-git-send-email-luca@coelho.fi>
-References: <1402666207-2257-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 3/4] mac80211: add functions to stop and wake all queues assigned to a vif
+Received: from www.linutronix.de ([62.245.132.108]:38141 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932740AbaFLIbt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 04:31:49 -0400
+Date: Thu, 12 Jun 2014 10:31:34 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bing Zhao <bzhao@marvell.com>
+cc: LKML <linux-kernel@vger.kernel.org>,
+	John Stultz <john.stultz@linaro.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [patch V2] wireless: mwifiex: Use the proper interfaces
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE1F8B507@SC-VEXCH1.marvell.com>
+Message-ID: <alpine.DEB.2.10.1406121029530.5170@nanos> (sfid-20140612_103227_131521_9EAF500A)
+References: <20140611234024.103571777@linutronix.de> <20140611234607.607201623@linutronix.de> <477F20668A386D41ADCC57781B1F70430FE1F8B507@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Why is converting time formats so desired if there are proper
+interfaces for this?
 
-In some cases we may want to stop the queues of a single vif (for
-instance during a channel-switch).  Add a function that stops all the
-queues that are assigned to a vif.  If a queue is assigned to more
-than one vif, the corresponding netdev subqueue of the other vif(s)
-will also be stopped.  If the HW doesn't set the
-IEEE80211_HW_QUEUE_CONTROL flag, then all queues are stopped.
-
-Also add a corresponding function to wake the queues of a vif back.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
 ---
-In v2:
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 +---
+ drivers/net/wireless/mwifiex/main.c     |    4 +---
+ drivers/net/wireless/mwifiex/tdls.c     |    8 ++------
+ drivers/net/wireless/mwifiex/uap_txrx.c |    4 +---
+ drivers/net/wireless/mwifiex/wmm.c      |    9 +--------
+ 5 files changed, 6 insertions(+), 23 deletions(-)
 
-  * use unsigned int instead of u32 for the queues variables;
-  * pass reason instead of IEEE80211_QUEUE_STOP_REASON_DRIVER in
-    wake_vif_queues();
-  * rebase on top of the new refcounted stop/wake queues;
----
- net/mac80211/ieee80211_i.h |  6 ++++++
- net/mac80211/util.c        | 41 +++++++++++++++++++++++++++++++++++------
- 2 files changed, 41 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f2b59c6..dd3086d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1719,6 +1719,12 @@ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     unsigned long queues,
- 				     enum queue_stop_reason reason,
- 				     bool refcounted);
-+void ieee80211_stop_vif_queues(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata,
-+			       enum queue_stop_reason reason);
-+void ieee80211_wake_vif_queues(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata,
-+			       enum queue_stop_reason reason);
- void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
- 				     unsigned long queues,
- 				     enum queue_stop_reason reason,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8552fe4..4978b62 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -552,13 +552,11 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw)
+Index: linux/drivers/net/wireless/mwifiex/cfg80211.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/cfg80211.c
++++ linux/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -151,7 +151,6 @@ mwifiex_form_mgmt_frame(struct sk_buff *
+ 	u8 addr[ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+ 	u16 pkt_len;
+ 	u32 tx_control = 0, pkt_type = PKT_TYPE_MGMT;
+-	struct timeval tv;
+ 
+ 	pkt_len = len + ETH_ALEN;
+ 
+@@ -173,8 +172,7 @@ mwifiex_form_mgmt_frame(struct sk_buff *
+ 	       len - sizeof(struct ieee80211_hdr_3addr));
+ 
+ 	skb->priority = LOW_PRIO_TID;
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL(ieee80211_wake_queues);
+Index: linux/drivers/net/wireless/mwifiex/main.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/main.c
++++ linux/drivers/net/wireless/mwifiex/main.c
+@@ -611,7 +611,6 @@ mwifiex_hard_start_xmit(struct sk_buff *
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	struct sk_buff *new_skb;
+ 	struct mwifiex_txinfo *tx_info;
+-	struct timeval tv;
  
--void ieee80211_flush_queues(struct ieee80211_local *local,
--			    struct ieee80211_sub_if_data *sdata)
-+static unsigned int
-+ieee80211_get_vif_queues(struct ieee80211_local *local,
-+			 struct ieee80211_sub_if_data *sdata)
+ 	dev_dbg(priv->adapter->dev, "data: %lu BSS(%d-%d): Data <= kernel\n",
+ 		jiffies, priv->bss_type, priv->bss_num);
+@@ -658,8 +657,7 @@ mwifiex_hard_start_xmit(struct sk_buff *
+ 	 * firmware for aggregate delay calculation for stats and
+ 	 * MSDU lifetime expiry.
+ 	 */
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+Index: linux/drivers/net/wireless/mwifiex/tdls.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/tdls.c
++++ linux/drivers/net/wireless/mwifiex/tdls.c
+@@ -474,7 +474,6 @@ int mwifiex_send_tdls_data_frame(struct
  {
--	u32 queues;
--
--	if (!local->ops->flush)
--		return;
-+	unsigned int queues;
+ 	struct sk_buff *skb;
+ 	struct mwifiex_txinfo *tx_info;
+-	struct timeval tv;
+ 	int ret;
+ 	u16 skb_len;
  
- 	if (sdata && local->hw.flags & IEEE80211_HW_QUEUE_CONTROL) {
- 		int ac;
-@@ -574,6 +572,19 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
- 		queues = BIT(local->hw.queues) - 1;
+@@ -552,8 +551,7 @@ int mwifiex_send_tdls_data_frame(struct
+ 	tx_info->bss_num = priv->bss_num;
+ 	tx_info->bss_type = priv->bss_type;
+ 
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+ 	return 0;
+@@ -645,7 +643,6 @@ int mwifiex_send_tdls_action_frame(struc
+ {
+ 	struct sk_buff *skb;
+ 	struct mwifiex_txinfo *tx_info;
+-	struct timeval tv;
+ 	u8 *pos;
+ 	u32 pkt_type, tx_control;
+ 	u16 pkt_len, skb_len;
+@@ -710,8 +707,7 @@ int mwifiex_send_tdls_action_frame(struc
+ 	pkt_len = skb->len - MWIFIEX_MGMT_FRAME_HEADER_SIZE - sizeof(pkt_len);
+ 	memcpy(skb->data + MWIFIEX_MGMT_FRAME_HEADER_SIZE, &pkt_len,
+ 	       sizeof(pkt_len));
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+ 	return 0;
+Index: linux/drivers/net/wireless/mwifiex/uap_txrx.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/uap_txrx.c
++++ linux/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -96,7 +96,6 @@ static void mwifiex_uap_queue_bridged_pk
+ 	struct sk_buff *new_skb;
+ 	struct mwifiex_txinfo *tx_info;
+ 	int hdr_chop;
+-	struct timeval tv;
+ 	struct ethhdr *p_ethhdr;
+ 
+ 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+@@ -192,8 +191,7 @@ static void mwifiex_uap_queue_bridged_pk
+ 		tx_info->pkt_len = skb->len;
  	}
  
-+	return queues;
-+}
-+
-+void ieee80211_flush_queues(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata)
-+{
-+	unsigned int queues;
-+
-+	if (!local->ops->flush)
-+		return;
-+
-+	queues = ieee80211_get_vif_queues(local, sdata);
-+
- 	ieee80211_stop_queues_by_reason(&local->hw, queues,
- 					IEEE80211_QUEUE_STOP_REASON_FLUSH,
- 					false);
-@@ -585,6 +596,24 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
- 					false);
- }
+-	do_gettimeofday(&tv);
+-	skb->tstamp = timeval_to_ktime(tv);
++	__net_timestamp(skb);
+ 	mwifiex_wmm_add_buf_txqueue(priv, skb);
+ 	atomic_inc(&adapter->tx_pending);
+ 	atomic_inc(&adapter->pending_bridged_pkts);
+Index: linux/drivers/net/wireless/mwifiex/wmm.c
+===================================================================
+--- linux.orig/drivers/net/wireless/mwifiex/wmm.c
++++ linux/drivers/net/wireless/mwifiex/wmm.c
+@@ -886,15 +886,8 @@ u8
+ mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
+ 				  const struct sk_buff *skb)
+ {
++	u32 queue_delay = ktime_to_ms(net_timedelta(skb->tstamp));
+ 	u8 ret_val;
+-	struct timeval out_tstamp, in_tstamp;
+-	u32 queue_delay;
+-
+-	do_gettimeofday(&out_tstamp);
+-	in_tstamp = ktime_to_timeval(skb->tstamp);
+-
+-	queue_delay = (out_tstamp.tv_sec - in_tstamp.tv_sec) * 1000;
+-	queue_delay += (out_tstamp.tv_usec - in_tstamp.tv_usec) / 1000;
  
-+void ieee80211_stop_vif_queues(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata,
-+			       enum queue_stop_reason reason)
-+{
-+	ieee80211_stop_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, true);
-+}
-+
-+void ieee80211_wake_vif_queues(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata,
-+			       enum queue_stop_reason reason)
-+{
-+	ieee80211_wake_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, true);
-+}
-+
- static void __iterate_active_interfaces(struct ieee80211_local *local,
- 					u32 iter_flags,
- 					void (*iterator)(void *data, u8 *mac,
--- 
-2.0.0.rc2
-
+ 	/*
+ 	 * Queue delay is passed as a uint8 in units of 2ms (ms shifted
