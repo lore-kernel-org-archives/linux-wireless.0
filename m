@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35902 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752347AbaFBSHb (ORCPT
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:46774 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbaFLFBM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:07:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: remove unnecessary htt rx corruption check
-References: <1401357008-16259-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 2 Jun 2014 21:07:13 +0300
-In-Reply-To: <1401357008-16259-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 29 May 2014 11:50:08 +0200")
-Message-ID: <87sinnxk1a.fsf@kamboji.qca.qualcomm.com> (sfid-20140602_200834_298321_D1E7E8B2)
+	Thu, 12 Jun 2014 01:01:12 -0400
+Received: by mail-qa0-f44.google.com with SMTP id j7so1002513qaq.31
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 22:01:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20140611204207.GD6042@wotan.suse.de>
+References: <20140519185046.GH7650@tuxdriver.com>
+	<CALhHN=pEo5H4AnWpOAhPs8LyK35wyhGJyvHTrh12nauQ-tOpDg@mail.gmail.com>
+	<20140611204207.GD6042@wotan.suse.de>
+Date: Thu, 12 Jun 2014 07:01:10 +0200
+Message-ID: <CALhHN=pTG-06H80bs11NT82wc009xgZ-aghpn_BBryxj9mvXng@mail.gmail.com> (sfid-20140612_070116_953642_0E2DF1A5)
+Subject: Re: [wireless-regdb] [ANN] wireless-regdb: master-2014-05-19
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> While fixing a bug reported by Avery I went ahead
-> and added a warning suspecting there might be
-> something more to the bug. This ended up with
-> people reporting they see warnings during heavy
-> traffic. This bought me some time and helped me
-> understand the problem better - apparently fw/hw
-> can report a chained msdus as follows: 1 msdu, 1
-> chained, 1 msdu (0 length).
+On 11 June 2014 22:42, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Jun 11, 2014 at 09:15:19PM +0200, Janusz Dziedzic wrote:
+>> On 19 May 2014 20:50, John W. Linville <linville@tuxdriver.com> wrote:
+>> > A new release of wireless-regdb (master-2014-05-19) is available at:
+>> >
+>> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2014.05.19.tar.gz
+>> >
+>> > Here is the short log of the changes included since the 2013-11-27
+>> > release:
+>> >
+>> > Bjørn Mork (1):
+>> >       wireless-regdb: update NO's regulatory rules
+>> >
+>> > Janusz Dziedzic (3):
+>> >       wireless-regdb: allow max bandwidth to be AUTO calculated
+>> >       wireless-regdb: set AUTO bandwidth for world regulatory
+>> This two above should not be merged. That was first version of auto
+>> bandwidth calculation, we skip :)
 >
-> The patch removes the extra check but leaves the
-> other change that fixed the original skb_push
-> panic bug (msdu_chaining was overwritten in an
-> unfortunate way which made the above example to
-> be treated as non-chained case).
+> How about on CRDA? Can you check if I merged the wrong stuff as I already
+> pushed as well? This also currently breaks the parses are there is no
+> support for the auto stuff yet.
 >
-> Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-> Reported-by: Tim Harvey <tharvey@gateworks.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+crda: add AUTO-BW rule flag support - this is correct one.
 
-Thanks, applied to ath-current branch.
-
--- 
-Kalle Valo
+BR
+Janusz
