@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:37793 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbaFYUPp (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:35483 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158AbaFLGV4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:15:45 -0400
-Received: by mail-wi0-f173.google.com with SMTP id cc10so8455630wib.6
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:39 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 15/17] staging: vt6656: vnt_mac_set_keyentry remove byLocalID check
-Date: Wed, 25 Jun 2014 21:14:36 +0100
-Message-Id: <1403727278-6666-16-git-send-email-tvboxspy@gmail.com> (sfid-20140625_221619_769963_6977D329)
-In-Reply-To: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
-References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 12 Jun 2014 02:21:56 -0400
+Received: by mail-ob0-f171.google.com with SMTP id nu7so843326obb.30
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 23:21:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
+References: <20140611230513.GC913@drone.musicnaut.iki.fi>
+	<CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
+Date: Thu, 12 Jun 2014 08:21:55 +0200
+Message-ID: <CACna6rwjyiz0c791G4sJRGZoDLPTijfQeCeuD0PVgL0fvLtYBQ@mail.gmail.com> (sfid-20140612_082201_862479_7F59592E)
+Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Aaro Koskinen <aaro.koskinen@iki.fi>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now set in vnt_set_keys.
+On 12 June 2014 07:44, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 12 June 2014 01:05, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
+>> While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
+>> cannot find anything on my WRT54GL router anymore:
+>
+> I believe it's BCM5352E SoC wth G-PHY rev 7 and radio 0x2050 rev 2. Is
+> that correct? Provide us a boot log.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c | 4 ----
- 1 file changed, 4 deletions(-)
+I've reproduced this on my G-PHY rev 8. This is a bug caused by the:
+status.freq = chanid + 2400;
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index b06436f..a60240c 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -125,10 +125,6 @@ void vnt_mac_set_keyentry(struct vnt_private *priv, u16 key_ctl, u32 entry_idx,
- 	struct vnt_mac_set_key set_key;
- 	u16 offset;
- 
--	if (priv->byLocalID <= MAC_REVISION_A1)
--		if (priv->vnt_mgmt.byCSSPK == KEY_CTL_CCMP)
--			return;
--
- 	offset = MISCFIFO_KEYETRY0;
- 	offset += (entry_idx * MISCFIFO_KEYENTRYSIZE);
- 
+It results in the:
+[ 1500.651877] Got chanid:3 set freq:2403
+[ 1500.719688] Got chanid:4 set freq:2404
+[ 1500.788645] Got chanid:5 set freq:2405
+[ 1500.857630] Got chanid:6 set freq:2406
+[ 1500.936061] Got chanid:7 set freq:2407
+[ 1500.973772] Got chanid:8 set freq:2408
+[ 1501.084351] Got chanid:9 set freq:2409
+
+I'll submit a fix.
+
 -- 
-1.9.1
-
+Rafał
