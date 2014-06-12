@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:44337 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbaFWMRt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 08:17:49 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so6951804wes.27
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 05:17:45 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:23123 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752749AbaFLMpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 08:45:52 -0400
+Date: Thu, 12 Jun 2014 14:44:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <stf_xl@wp.pl>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: Driver for Mediatek MT7630E
+Message-ID: <20140612124408.GB7325@redhat.com> (sfid-20140612_144555_635814_71E48CFE)
+References: <53987997.2040101@lwfinger.net>
+ <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1403524278.4418.19.camel@jlt4.sipsolutions.net>
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	<1400769683.4174.25.camel@jlt4.sipsolutions.net>
-	<CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com>
-	<1403524278.4418.19.camel@jlt4.sipsolutions.net>
-Date: Mon, 23 Jun 2014 14:17:43 +0200
-Message-ID: <CA+BoTQ=fpkOZXVgJt-OWdgSFX1_sO1g1E=J-7NnOb+e6a30FVA@mail.gmail.com> (sfid-20140623_141754_068459_9E594827)
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 June 2014 13:51, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
->>  [worker]
->>  complete_all()
->>  device_release_driver()
->>  dev_lock()
->>  {already held, yield}
->>  [syscall]
->>  free(internal structures)
->>  dev_unlock()
->>  return
->>  [worker]
->>  {woken up, but dev->driver == NULL so no callbacks}
->>  dev_unlock()
->>  return
->>
->> The driver code section may not be reachable anymore upon worker
->> returning from the device_release_driver() call, right? Also since
->> ath10k uses an internal worker it also means the work_struct would be
->> already freed by the syscall flow (i.e. worker would run after driver
->> has supposedly been cleaned up..). Even if ath10k was to use
->> request_firmware_nowait(), which allocates a temporary work_struct,
->> the unreachable code section still remains a problem.
->>
->> Or maybe this isn't really a problem and/or I'm missing something?
->
-> Yeah, hmm, this looks like a problem. I guess we didn't really consider
-> module unload in such detail ...
->
-> I guess this would crash upon return from device_release_driver()? I
-> guess if that's the last thing then maybe we'd actually get a tail-call
-> optimisation, but we don't want to rely on that of course!
->
-> Seems like to fix it we just need to get a module reference though? Can
-> a module put() itself though? Hmmm.
+On Thu, Jun 12, 2014 at 09:16:02AM +0200, Helmut Schaa wrote:
+> On Wed, Jun 11, 2014 at 5:45 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > In a recent E-mail interchange
+> > (http://marc.info/?l=linux-wireless&m=140238255916367&w=2), I was made aware
+> > that this device is not currently being handled by any driver in the kernel,
+> > but that there was a GitHub repo at https://github.com/anthonywong/mt7630.
+> > That code modifies rt2800pci to operate the MT7630E, but it is quite
+> > outdated.
+> >
+> > As a followup, I found such a device at a reasonable price on E-bay, and
+> > ordered it. It should arrive next week. I also was able to find the firmware
+> > in an RPM for SUSE SLE11, and a license allowing redistribution. Before I
+> > start modifying rt2800pci for this new device, I want to be assured that
+> > this modification is not currently being done by anyone in the rt2x00
+> > project. There is too much to be done to duplicate effort.
+> 
+> I'm not doing anything in this regard at the moment. So I'm really glad if you
+> are working on that!
+> 
+> CC'ed Stanislaw even though I don't think he's doing anything regarding the
+> device you've mentioned.
 
-It seems some drivers use module_put(THIS_MODULE) and
-__module_get(THIS_MODULE), e.g. tun/tap driver.
+Nope, I'm not working on adding support for new chips to rt2x00 at
+present nor plan to work on that in the near future, though I have that
+on my TODO list :-)
 
-But does this bump up the module refcount in such a way that an
-in-progress rmmod will wait/block until the refcount reaches 0?
+> > For interested readers, I have modified the GitHub code to compile using the
+> > current wireless-testing kernel source. If there is sufficient interest, I
+> > could set up a new GH repo for it as an interim measure with conditional
+> > code allowing it to build on recent kernels (3.5+).
 
+> Awesome news.
++1
 
-Michał
+Stanislaw 
