@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:45597 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbaFYKRx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 06:17:53 -0400
-Received: by mail-pa0-f51.google.com with SMTP id hz1so1534177pad.38
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:17:53 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id oz7sm4523086pbc.41.2014.06.25.03.17.52
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Wed, 25 Jun 2014 03:17:53 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] rsi: Fixed errors and warnings reported by static code analyzers.
-Date: Wed, 25 Jun 2014 15:47:45 +0530
-Message-Id: <1403691465-4968-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140625_121756_615048_05379335)
+Received: from s3.sipsolutions.net ([5.9.151.49]:34104 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754405AbaFLIfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 04:35:54 -0400
+Message-ID: <1402562114.8095.3.camel@jlt4.sipsolutions.net> (sfid-20140612_103558_525847_209A5C98)
+Subject: net_timedelta() affected by settimeofday() (was: [patch 12/13] net:
+ mac80211: Remove silly timespec dance)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	John Stultz <john.stultz@linaro.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	linux-netdev <linux-netdev@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>
+Date: Thu, 12 Jun 2014 10:35:14 +0200
+In-Reply-To: <alpine.DEB.2.10.1406121017500.5170@nanos>
+References: <20140611234024.103571777@linutronix.de>
+	  <20140611234607.683770899@linutronix.de>
+	 <1402555774.4224.1.camel@jlt4.sipsolutions.net>
+	 <alpine.DEB.2.10.1406121017500.5170@nanos>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed a potential buffer overflow in 'rsi_rates' and a sparse warning
-related to difference in endianness in rsi_91x_mgmt.c.
++netdev, Stephen
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On Thu, 2014-06-12 at 10:19 +0200, Thomas Gleixner wrote:
+> On Thu, 12 Jun 2014, Johannes Berg wrote:
+> 
+> > On Wed, 2014-06-11 at 23:59 +0000, Thomas Gleixner wrote:
+> > 
+> > > +	msrmnt = ktime_to_ms(net_timedelta(skb_arv));
+> > 
+> > This is probably more of a question about net_timedelta(), but is
+> > ktime_get_real() really appropriate for duration measurements? Isn't
+> > that non-monotonic?
+> 
+> Well, it's monotonic, but might be affected by settimeofday().
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 83abe58..8d110fd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1055,7 +1055,8 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 		rate_table_offset = 4;
- 	}
- 
--	for (ii = 0, jj = 0; ii < ARRAY_SIZE(rsi_rates); ii++) {
-+	for (ii = 0, jj = 0;
-+	     ii < (ARRAY_SIZE(rsi_rates) - rate_table_offset); ii++) {
- 		if (rate_bitmap & BIT(ii)) {
- 			selected_rates[jj++] =
- 			(rsi_rates[ii + rate_table_offset].bitrate / 5);
-@@ -1103,7 +1104,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	}
- 
- 	for (; ii < RSI_TBL_SZ; ii++)
--		auto_rate->supported_rates[ii] = min_rate;
-+		auto_rate->supported_rates[ii] = cpu_to_le16(min_rate);
- 
- 	auto_rate->num_supported_rates = cpu_to_le16(num_supported_rates * 2);
- 	auto_rate->moderate_rate_inx = cpu_to_le16(num_supported_rates / 2);
--- 
-1.7.1
+Right, but isn't that odd? Suddenly your delay measurement here might be
+minutes, hours, or years if you settimeofday() between timestamping and
+calculating the delta. That seems very strange to me, why would that be
+the right behaviour in any way?
+
+Now, it seems that there are only two current users of net_timedelta()
+(in DCCP) so perhaps it's not too late to change some of this?
+
+Maybe in general the skb timestamp should be based on a different clock
+and only adjusted to real time when used in userspace?
+
+johannes
+
 
