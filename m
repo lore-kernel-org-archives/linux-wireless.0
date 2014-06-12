@@ -1,99 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:37220 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932284AbaFYUVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:21:46 -0400
-Received: by mail-we0-f173.google.com with SMTP id t60so2641569wes.18
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:45 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 25/34] staging: vt6656: dpc remove dead code RXvMngWorkItem
-Date: Wed, 25 Jun 2014 21:20:02 +0100
-Message-Id: <1403727611-6825-26-git-send-email-tvboxspy@gmail.com> (sfid-20140625_223012_961081_4C78A04D)
-In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
-References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+Received: from isis.lip6.fr ([132.227.60.2]:65190 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932673AbaFLJvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 05:51:39 -0400
+Message-ID: <20140612115134.205432hq8ztc6pt2@webmail.lip6.fr> (sfid-20140612_115142_805252_93E29080)
+Date: Thu, 12 Jun 2014 11:51:34 +0200
+From: Julia.Lawall@lip6.fr
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	John Stultz <john.stultz@linaro.org>,
+	Thomas Gleixner <tglx@linutronix.de>, cocci@systeme.lip6.fr,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Cocci] [patch 04/13] net: mac80211: Use ktime_get_ts()
+References: <20140611234024.103571777@linutronix.de>
+ <20140611234607.020125642@linutronix.de>
+ <1402556024.4224.2.camel@jlt4.sipsolutions.net>
+ <CAB=NE6UqxX=K2iZhHQBmMU4wTBmAmj7KbnJBktepB8+JJn0LDQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6UqxX=K2iZhHQBmMU4wTBmAmj7KbnJBktepB8+JJn0LDQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-15;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/dpc.c | 46 --------------------------------------------
- drivers/staging/vt6656/dpc.h |  2 --
- 2 files changed, 48 deletions(-)
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> a écrit :
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 65a3a70..ceeb3ee 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -112,52 +112,6 @@ void RXvFreeRCB(struct vnt_rcb *rcb, int re_alloc_skb)
- 			priv->NumRecvFreeList, priv->NumRecvMngList);
- }
- 
--void RXvMngWorkItem(struct work_struct *work)
--{
--	struct vnt_private *pDevice =
--		container_of(work, struct vnt_private, rx_mng_work_item);
--	struct vnt_rcb *pRCB = NULL;
--	struct vnt_rx_mgmt *pRxPacket;
--	int bReAllocSkb = false;
--	unsigned long flags;
--
--	if (pDevice->Flags & fMP_DISCONNECTED)
--		return;
--
--    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Rx Mng Thread\n");
--
--    while (pDevice->NumRecvMngList!=0)
--    {
--	spin_lock_irqsave(&pDevice->lock, flags);
--
--        pRCB = pDevice->FirstRecvMngList;
--        pDevice->NumRecvMngList--;
--        DequeueRCB(pDevice->FirstRecvMngList, pDevice->LastRecvMngList);
--
--	spin_unlock_irqrestore(&pDevice->lock, flags);
--
--        if(!pRCB){
--            break;
--        }
--        pRxPacket = &(pRCB->sMngPacket);
--        pRCB->Ref--;
--	if (pRCB->Ref == 0) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeMng %d %d\n",
--			pDevice->NumRecvFreeList, pDevice->NumRecvMngList);
--
--		spin_lock_irqsave(&pDevice->lock, flags);
--
--		RXvFreeRCB(pRCB, bReAllocSkb);
--
--		spin_unlock_irqrestore(&pDevice->lock, flags);
--	} else {
--            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Rx Mng Only we have the right to free RCB\n");
--        }
--    }
--
--	pDevice->bIsRxMngWorkItemQueued = false;
--}
--
- int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
- 	unsigned long bytes_received)
- {
-diff --git a/drivers/staging/vt6656/dpc.h b/drivers/staging/vt6656/dpc.h
-index 0afd882..1df2ae8 100644
---- a/drivers/staging/vt6656/dpc.h
-+++ b/drivers/staging/vt6656/dpc.h
-@@ -34,8 +34,6 @@
- 
- void RXvWorkItem(struct work_struct *work);
- 
--void RXvMngWorkItem(struct work_struct *work);
--
- void RXvFreeRCB(struct vnt_rcb *pRCB, int bReAllocSkb);
- 
- int vnt_rx_data(struct vnt_private *, struct vnt_rcb *,
--- 
-1.9.1
+> On Wed, Jun 11, 2014 at 11:53 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2014-06-11 at 23:59 +0000, Thomas Gleixner wrote:
+>>
+>>> do_posix_clock_monotonic_gettime() is a leftover from the initial
+>>> posix timer implementation which maps to ktime_get_ts().
+>>
+>> I didn't even know we *had* such code, heh.
+>
+> If we want want maintainers to police this stuff we can add an SmPL
+> rule for this upstream and have maintainer use 'make coccicheck
+> M=path/'. The way of the future. The way of the future...
+
+If I could have a little more context, I can do something.
+
+julia
+
+>
+>   Luis
+> _______________________________________________
+> Cocci mailing list
+> Cocci@systeme.lip6.fr
+> https://systeme.lip6.fr/mailman/listinfo/cocci
+>
+
+
+
 
