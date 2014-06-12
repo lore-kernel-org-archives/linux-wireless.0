@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:60189 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752444AbaFMNaW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 09:30:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, michal.kazior@tieto.com
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Fri, 13 Jun 2014 16:30:03 +0300
-Message-Id: <1402666207-2257-1-git-send-email-luca@coelho.fi> (sfid-20140613_153031_973468_9BAD1371)
-Subject: [PATCH v2 0/4] mac80211: some queue stop/wake patches
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:53437 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbaFLFon (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 01:44:43 -0400
+Received: by mail-ob0-f170.google.com with SMTP id uz6so811228obc.15
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 22:44:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140611230513.GC913@drone.musicnaut.iki.fi>
+References: <20140611230513.GC913@drone.musicnaut.iki.fi>
+Date: Thu, 12 Jun 2014 07:44:42 +0200
+Message-ID: <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com> (sfid-20140612_074459_845202_AEF2F304)
+Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Aaro Koskinen <aaro.koskinen@iki.fi>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 12 June 2014 01:05, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
+> While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
+> cannot find anything on my WRT54GL router anymore:
 
-This replaces the last 3 patches from me that Emmanuel sent out and
-includes my RFC option 2 v2 patch.
-
-Luciano Coelho (4):
-  mac80211: don't stop all queues when flushing
-  mac80211: introduce refcount for queue_stop_reasons
-  mac80211: add functions to stop and wake all queues assigned to a vif
-  mac80211: stop only the queues assigned to the vif during channel
-    switch
-
- net/mac80211/agg-tx.c      |   8 ++-
- net/mac80211/cfg.c         |  49 +++++-------------
- net/mac80211/ieee80211_i.h |  22 +++++++--
- net/mac80211/iface.c       |   9 ++--
- net/mac80211/main.c        |   3 +-
- net/mac80211/mlme.c        |  35 +++++++------
- net/mac80211/offchannel.c  |   6 ++-
- net/mac80211/pm.c          |   6 ++-
- net/mac80211/tx.c          |   3 +-
- net/mac80211/util.c        | 121 ++++++++++++++++++++++++++++++++-------------
- 10 files changed, 160 insertions(+), 102 deletions(-)
-
--- 
-2.0.0.rc2
-
+I believe it's BCM5352E SoC wth G-PHY rev 7 and radio 0x2050 rev 2. Is
+that correct? Provide us a boot log.
