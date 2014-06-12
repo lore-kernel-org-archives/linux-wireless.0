@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49505 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319AbaFDNmW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:42:22 -0400
-Date: Wed, 4 Jun 2014 16:42:17 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211/mac80211: Add support for Proxy ARP
-Message-ID: <20140604134217.GA21759@jouni.qca.qualcomm.com> (sfid-20140604_154240_549146_2C4016A5)
-References: <1400180784-26008-1-git-send-email-kyeyoonp@qca.qualcomm.com>
- <1400231795.4112.21.camel@jlt4.sipsolutions.net>
- <E3DE377D7E4999489B304A8FF33FC0D103A211A7@nasanexd01g.na.qualcomm.com>
- <1401882426.6079.20.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1401882426.6079.20.camel@jlt4.sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:34736 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752749AbaFLMoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 08:44:06 -0400
+Message-ID: <1402577025.8095.16.camel@jlt4.sipsolutions.net> (sfid-20140612_144411_397066_7AD1F8E2)
+Subject: Re: [RFC: which stable kernels?] b43: fix frequency reported on
+ G-PHY with /new/ firmware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org, Aaro Koskinen <aaro.koskinen@iki.fi>
+Date: Thu, 12 Jun 2014 14:43:45 +0200
+In-Reply-To: <53995A1F.6000405@broadcom.com> (sfid-20140612_094333_618630_0312AC3F)
+References: <1402558118-25777-1-git-send-email-zajec5@gmail.com>
+	 <CANUX_P1RA6PUDiFrT0wta57BNW9oRVAkNstT5ieiBjA9sHWnfw@mail.gmail.com>
+	 <53995A1F.6000405@broadcom.com> (sfid-20140612_094333_618630_0312AC3F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 01:47:06PM +0200, Johannes Berg wrote:
-> It seems to me that ebtables should be able to filter on the ports
-> already, so I'm not really sure what you mean by this.
+On Thu, 2014-06-12 at 09:43 +0200, Arend van Spriel wrote:
+> On 12-06-14 09:35, Emmanuel Grumbach wrote:
+> >> ---
+> >> This bug was there for years, however didn't cause any problems. It was
+> >> exposed recently by the 3.15 release by the:
+> >>
+> >> commit 3afc2167f60a327a2c1e1e2600ef209a3c2b75b7
+> >> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> >> Date:   Tue Mar 4 16:50:13 2014 +0200
+> >>
+> >>      cfg80211/mac80211: ignore signal if the frame was heard on wrong channel
+> >>
+> >> Should we mark it for stable for 3.15 only? Or all olders kernels as well?
+> >
+> > Up to you - my patch is in 3.15 only I think.
 > 
-> The real issue is the internal forwarding. Is that even necessary? Maybe
-> instead the bridge could forward back to the same port in some cases,
-> and you could just disable the internal forwarding in mac80211 entirely?
+> Is there any scenario that would expose the worng info. Maybe when using 
+> monitor mode?
 
-I'd assume that for most Hotspot 2.0 use cases, internal forwarding
-would be disabled completely, but there may very well be cases where one
-would like to use ProxyARP with forwarding between associated stations.
-Doing that through the bridge code above mac80211 should be fine,
-though, i.e., there is no particular reason why the internal forwarding
-really needs to be internal within mac80211 as long as the
-implementation outside is doable (forward back to same port).
+Yeah that'd probably be messed up as well.
 
-> Beyond that, even the "only reply when you have a response" part could
-> be done using the nftables framework, it has quick hash/tree data
-> structures that say the DHCP server could manage (somehow.)
+johannes
 
-Getting DHCP server involved in Proxy ARP management sounds complex and
-quite impractical for many cases. I'd expect Hotspot 2.0 APs to work
-with any deployed DHCP setup and there is not really going to be any
-coordination between the two apart from the AP obviously seeing the DHCP
-messages flowing through it.
-
-Sure, there could be an interface that allows external control, but I
-think there needs to be capability to learn automatically from ARP (and
-IPv6 neighbor messages) and DHCP frames flowing through the AP.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
