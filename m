@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:33332 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753918AbaFPOfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 10:35:32 -0400
-Message-ID: <1402929323.13599.13.camel@dubbel> (sfid-20140616_163544_044904_5F3EE3C3)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Mon, 16 Jun 2014 17:35:23 +0300
-In-Reply-To: <1402577680-17888-2-git-send-email-michal.kazior@tieto.com>
-References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
-	 <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
-	 <1402577680-17888-2-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v9 1/5] mac80211: implement multi-vif in-place
- reservations
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35948 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932161AbaFLH2y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 03:28:54 -0400
+Received: by mail-wg0-f45.google.com with SMTP id l18so781698wgh.28
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 00:28:53 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Cc: Aaro Koskinen <aaro.koskinen@iki.fi>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC: which stable kernels?] b43: fix frequency reported on G-PHY with /new/ firmware
+Date: Thu, 12 Jun 2014 09:28:38 +0200
+Message-Id: <1402558118-25777-1-git-send-email-zajec5@gmail.com> (sfid-20140612_092857_476133_A2EFC394)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-06-12 at 14:54 +0200, Michal Kazior wrote:
-> Multi-vif in-place reservations happen when
-> it is impossible to allocate more channel contexts
-> as indicated by interface combinations.
-> 
-> Such reservations are not finalized until all
-> assigned interfaces are ready.
-> 
-> This still doesn't handle all possible cases
-> (i.e. degradation of number of channels) properly.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-> 
+---
+This bug was there for years, however didn't cause any problems. It was
+exposed recently by the 3.15 release by the:
 
-[...]
+commit 3afc2167f60a327a2c1e1e2600ef209a3c2b75b7
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Tue Mar 4 16:50:13 2014 +0200
 
-> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-> index 3702d64..159f4c3 100644
-> --- a/net/mac80211/chan.c
-> +++ b/net/mac80211/chan.c
-> @@ -63,6 +63,19 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
->  	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
->  }
->  
-> +static struct ieee80211_chanctx *
-> +ieee80211_vif_get_chanctx(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	struct ieee80211_chanctx_conf *conf;
-> +
-> +	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-> +					 lockdep_is_held(&local->chanctx_mtx));
+    cfg80211/mac80211: ignore signal if the frame was heard on wrong channel
 
-This doesn't compile.  local is undefined here. :(
+Should we mark it for stable for 3.15 only? Or all olders kernels as well?
+---
+ drivers/net/wireless/b43/xmit.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-It's a simple fix though.  s/local/sdata->local/
-
---
-Luca.
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 4f38f19..6e6ef3f 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -811,9 +811,13 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 		break;
+ 	case B43_PHYTYPE_G:
+ 		status.band = IEEE80211_BAND_2GHZ;
+-		/* chanid is the radio channel cookie value as used
+-		 * to tune the radio. */
+-		status.freq = chanid + 2400;
++		/* Somewhere between 478.104 and 508.1084 firmware for G-PHY
++		 * has been modified to be compatible with N-PHY and others.
++		 */
++		if (dev->fw.rev >= 508)
++			status.freq = ieee80211_channel_to_frequency(chanid, status.band);
++		else
++			status.freq = chanid + 2400;
+ 		break;
+ 	case B43_PHYTYPE_N:
+ 	case B43_PHYTYPE_LP:
+-- 
+1.8.4.5
 
