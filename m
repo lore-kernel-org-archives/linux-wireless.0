@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52228 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756886AbaFYPz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 11:55:58 -0400
-Message-ID: <1403711732.4140.14.camel@jlt4.sipsolutions.net> (sfid-20140625_175601_619179_50E69997)
-Subject: Re: [RFC 3/3] brcmfmac: update band and regulatory info before
- wiphy_register()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 25 Jun 2014 17:55:32 +0200
-In-Reply-To: <53A9B152.5050503@broadcom.com>
-References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
-		 <1402996581-10764-4-git-send-email-arend@broadcom.com>
-	 <1403516273.4418.11.camel@jlt4.sipsolutions.net>
-	 <53A9B152.5050503@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f180.google.com ([74.125.82.180]:37283 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754234AbaFLNCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2014 09:02:34 -0400
+Received: by mail-we0-f180.google.com with SMTP id x48so1220271wes.25
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 06:02:32 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v9 2/5] mac80211: make check_combinations() aware of chanctx reservation
+Date: Thu, 12 Jun 2014 14:54:37 +0200
+Message-Id: <1402577680-17888-3-git-send-email-michal.kazior@tieto.com> (sfid-20140612_150238_790154_B39FAB4A)
+In-Reply-To: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+ <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-24 at 19:11 +0200, Arend van Spriel wrote:
+The ieee80211_check_combinations() computes
+radar_detect accordingly depending on chanctx
+reservation status.
 
-> >> +	if (wiphy_is_40mhz_24ghz_disabled(wiphy) == false) {
-> >> +		err = brcmf_enable_bw40_2g(ifp);
-> >> +		if (!err)
-> >> +			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
-> >> +						      BRCMF_OBSS_COEX_AUTO);
-> >> +	}
-> >
-> > This seems to have an effect only on the device, so why not do it after
-> > wiphy_register()?
-> 
-> It does affect channels list in brcmf_update_wiphybands().
+This makes it possible to use the function for
+channel_switch validation.
 
-Ah, ok, I guess I missed that.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-> Digging further in this code, I found that the brcmf_update_wiphybands() 
-> queries the device to get the actual list of channels, which 
-> subsequently is determined by the 40MHz setting in the 2G band. Not so 
-> much for the channel itself as for the flags. If that is all done after 
-> wiphy_apply_custom_regulatory() it does not show up when doing 'iw phy 
-> info'. And according to the documentation that call needs to be done 
-> before wiphy_register().
-> 
-> In the current code the wiphy_apply_custom_regulatory() is called twice 
-> (before and after wiphy_register()) which seems to do the trick, but in 
-> that it might be exploiting unintended behaviour. Hence the attempt to 
-> change the order of things.
+Notes:
+    v3:
+     * fix typo in comment [Johannes]
+     * fix comment style [Johannes]
+    
+    v7:
+     * use replaces/replaced_by pointers
+     * replace radar_detect calculation in ieee80211_max_num_channels() too
+    
+    v8:
+     * use replace_state/replace_ctx instead of replaces/replaced_by (rebased)
 
-Ok :)
+ net/mac80211/util.c | 35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8e661ea..16dc720 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2837,6 +2837,35 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
+ 	ps->dtim_count = dtim_count;
+ }
+ 
++static u8 ieee80211_chanctx_radar_detect(struct ieee80211_local *local,
++					 struct ieee80211_chanctx *ctx)
++{
++	struct ieee80211_sub_if_data *sdata;
++	u8 radar_detect = 0;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	if (WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED))
++		return 0;
++
++	list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list)
++		if (sdata->reserved_radar_required)
++			radar_detect |= BIT(sdata->reserved_chandef.width);
++
++	/*
++	 * An in-place reservation context should not have any assigned vifs
++	 * until it replaces the other context.
++	 */
++	WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER &&
++		!list_empty(&ctx->assigned_vifs));
++
++	list_for_each_entry(sdata, &ctx->assigned_vifs, assigned_chanctx_list)
++		if (sdata->radar_required)
++			radar_detect |= BIT(sdata->vif.bss_conf.chandef.width);
++
++	return radar_detect;
++}
++
+ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+@@ -2880,8 +2909,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
+ 			continue;
+-		if (ctx->conf.radar_enabled)
+-			radar_detect |= BIT(ctx->conf.def.width);
++		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
+ 			num_different_channels++;
+ 			continue;
+@@ -2943,8 +2971,7 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
+ 
+ 		num_different_channels++;
+ 
+-		if (ctx->conf.radar_enabled)
+-			radar_detect |= BIT(ctx->conf.def.width);
++		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
+ 	}
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-- 
+1.8.5.3
 
