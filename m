@@ -1,92 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:49057 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbaFGPYU (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:33015 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932120AbaFLHQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 11:24:20 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wm4so4138400obc.32
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:24:20 -0700 (PDT)
+	Thu, 12 Jun 2014 03:16:03 -0400
+Received: by mail-ie0-f170.google.com with SMTP id tr6so786603ieb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 00:16:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1670424.dXK6NPb10R@al>
-References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<1670424.dXK6NPb10R@al>
-Date: Sat, 7 Jun 2014 17:24:19 +0200
-Message-ID: <CAFo99gZ+iu3FA9Nuwdo_AT1xZkno7w=6JidWYcm8g0bOvshwTw@mail.gmail.com> (sfid-20140607_172440_073927_8F927FE3)
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up
- conjunction always evaluates to false
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <53987997.2040101@lwfinger.net>
+References: <53987997.2040101@lwfinger.net>
+Date: Thu, 12 Jun 2014 09:16:02 +0200
+Message-ID: <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com> (sfid-20140612_091608_227412_94C30487)
+Subject: Re: Driver for Mediatek MT7630E
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <stf_xl@wp.pl>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi Larry,
 
-Yes, 0x3 was one of the most likely :)
-But wanted someone who knows the code better would be heard.
-All agreed? Then I do a new patch.
+On Wed, Jun 11, 2014 at 5:45 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In a recent E-mail interchange
+> (http://marc.info/?l=linux-wireless&m=140238255916367&w=2), I was made aware
+> that this device is not currently being handled by any driver in the kernel,
+> but that there was a GitHub repo at https://github.com/anthonywong/mt7630.
+> That code modifies rt2800pci to operate the MT7630E, but it is quite
+> outdated.
+>
+> As a followup, I found such a device at a reasonable price on E-bay, and
+> ordered it. It should arrive next week. I also was able to find the firmware
+> in an RPM for SUSE SLE11, and a license allowing redistribution. Before I
+> start modifying rt2800pci for this new device, I want to be assured that
+> this modification is not currently being done by anyone in the rt2x00
+> project. There is too much to be done to duplicate effort.
 
-Looks like it is the same error in the files below, I'll fix them all them to.
+I'm not doing anything in this regard at the moment. So I'm really glad if you
+are working on that!
 
-rtl8192cu/hw.c:1363:    if ((bt_msr & 0xfc) == MSR_AP)
-rtl8192ce/hw.c:1209:    if ((bt_msr & 0xfc) == MSR_AP)
-rtl8188ee/hw.c:1234:    if ((bt_msr & 0xfc) == MSR_AP)
-rtl8192de/hw.c:1131:    if ((bt_msr & 0xfc) == MSR_AP)
+CC'ed Stanislaw even though I don't think he's doing anything regarding the
+device you've mentioned.
 
+> For interested readers, I have modified the GitHub code to compile using the
+> current wireless-testing kernel source. If there is sufficient interest, I
+> could set up a new GH repo for it as an interim measure with conditional
+> code allowing it to build on recent kernels (3.5+).
 
-Best regards
-Rickard Strandqvist
+Awesome news.
 
-
-2014-06-07 17:02 GMT+02:00 Peter Wu <peter@lekensteyn.nl>:
-> On Saturday 07 June 2014 16:30:19 Rickard Strandqvist wrote:
->> Expression '(X & 0xfc) == 0x3' is always false
->
-> While this is true, I believe that some other mistake is made.
->
->> I chose to remove this code, because it will not make any difference.
->> But obviously it is rather a properly designed if statement that is needed.
->>
->> This was partly found using a static code analysis program called cppcheck.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    5 +----
->>  1 file changed, 1 insertion(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->> index 2b08671..a1520d5 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
->> @@ -1128,10 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
->>       }
->>       rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
->>       rtlpriv->cfg->ops->led_control(hw, ledaction);
->> -     if ((bt_msr & 0xfc) == MSR_AP)
->
-> If you look a few lines up, then you see that bt_msr is OR-ed with MSR_AP
-> for AP interfaces. The 0xfc should be 0x03, see other drivers for example:
->
-> rtl8723ae/hw.c:1112:    if ((bt_msr & 0x03) == MSR_AP)
-> rtl8723be/hw.c:1200:    if ((bt_msr & 0x03) == MSR_AP)
-> rtl8192cu/hw.c:1363:    if ((bt_msr & 0xfc) == MSR_AP)
-> rtl8192ce/hw.c:1209:    if ((bt_msr & 0xfc) == MSR_AP)
-> rtl8188ee/hw.c:1234:    if ((bt_msr & 0xfc) == MSR_AP)
-> rtl8192de/hw.c:1131:    if ((bt_msr & 0xfc) == MSR_AP)
->
->> -             rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->> -     else
->> -             rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
->> +     rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
->>       return 0;
->>  }
->
-> Kind regards,
-> Peter
->
+Thanks,
+Helmut
