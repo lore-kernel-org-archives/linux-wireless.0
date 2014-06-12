@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:44436 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753142AbaFHBl3 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:45771 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671AbaFLHna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 21:41:29 -0400
-Received: by mail-wg0-f44.google.com with SMTP id x13so1617294wgg.15
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:41:28 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, Peter Wu <lekensteyn@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rtlwifi: rtl8723be: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sun,  8 Jun 2014 03:42:23 +0200
-Message-Id: <1402191743-26177-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140608_034149_002723_A4FC5888)
+	Thu, 12 Jun 2014 03:43:30 -0400
+Message-ID: <53995A1F.6000405@broadcom.com> (sfid-20140612_094333_618630_0312AC3F)
+Date: Thu, 12 Jun 2014 09:43:27 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2s=?= =?UTF-8?B?aQ==?=
+	<zajec5@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	<b43-dev@lists.infradead.org>, Aaro Koskinen <aaro.koskinen@iki.fi>
+Subject: Re: [RFC: which stable kernels?] b43: fix frequency reported on G-PHY
+ with /new/ firmware
+References: <1402558118-25777-1-git-send-email-zajec5@gmail.com> <CANUX_P1RA6PUDiFrT0wta57BNW9oRVAkNstT5ieiBjA9sHWnfw@mail.gmail.com>
+In-Reply-To: <CANUX_P1RA6PUDiFrT0wta57BNW9oRVAkNstT5ieiBjA9sHWnfw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
+On 12-06-14 09:35, Emmanuel Grumbach wrote:
+>> ---
+>> This bug was there for years, however didn't cause any problems. It was
+>> exposed recently by the 3.15 release by the:
+>>
+>> commit 3afc2167f60a327a2c1e1e2600ef209a3c2b75b7
+>> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> Date:   Tue Mar 4 16:50:13 2014 +0200
+>>
+>>      cfg80211/mac80211: ignore signal if the frame was heard on wrong channel
+>>
+>> Should we mark it for stable for 3.15 only? Or all olders kernels as well?
+>
+> Up to you - my patch is in 3.15 only I think.
 
-After pointing this out, Larry Finger informed what would be the correct one.
-'(X & 0x3) == 0x3'
+Is there any scenario that would expose the worng info. Maybe when using 
+monitor mode?
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/rtlwifi/rtl8723be/hw.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Gr. AvS
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-index 0fdf090..b61044f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-@@ -1197,7 +1197,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0x03) == MSR_AP)
-+	if ((bt_msr & MSR_AP) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
--- 
-1.7.10.4
+>> ---
+>>   drivers/net/wireless/b43/xmit.c | 10 +++++++---
+>>   1 file changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+>> index 4f38f19..6e6ef3f 100644
+>> --- a/drivers/net/wireless/b43/xmit.c
+>> +++ b/drivers/net/wireless/b43/xmit.c
+>> @@ -811,9 +811,13 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+>>                  break;
+>>          case B43_PHYTYPE_G:
+>>                  status.band = IEEE80211_BAND_2GHZ;
+>> -               /* chanid is the radio channel cookie value as used
+>> -                * to tune the radio. */
+>> -               status.freq = chanid + 2400;
+>> +               /* Somewhere between 478.104 and 508.1084 firmware for G-PHY
+>> +                * has been modified to be compatible with N-PHY and others.
+>> +                */
+>> +               if (dev->fw.rev >= 508)
+>> +                       status.freq = ieee80211_channel_to_frequency(chanid, status.band);
+>> +               else
+>> +                       status.freq = chanid + 2400;
+>>                  break;
+>>          case B43_PHYTYPE_N:
+>>          case B43_PHYTYPE_LP:
+>> --
+>> 1.8.4.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
