@@ -1,51 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay011.isp.belgacom.be ([195.238.6.178]:59695 "EHLO
-	mailrelay011.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754029AbaFRRow (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:62927 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755980AbaFLNCk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 13:44:52 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] SPECTRUM_CS: ioport_map/unmap relies on HAS_IOPORT_MAP
-Date: Wed, 18 Jun 2014 19:43:31 +0200
-Message-Id: <1403113411-7542-1-git-send-email-fabf@skynet.be> (sfid-20140618_194520_282934_ADFAC4A7)
+	Thu, 12 Jun 2014 09:02:40 -0400
+Received: by mail-wg0-f52.google.com with SMTP id b13so1206111wgh.11
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 06:02:39 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v9 5/5] cfg80211: remove channel_switch combination check
+Date: Thu, 12 Jun 2014 14:54:40 +0200
+Message-Id: <1402577680-17888-6-git-send-email-michal.kazior@tieto.com> (sfid-20140612_150244_830054_7F442A0B)
+In-Reply-To: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+ <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing following sh-allmodconfig errors reported on kisskb
+Driver is now responsible for veryfing if the
+switch is possible.
 
-"
-drivers/net/wireless/orinoco/spectrum_cs.c:216:2: error: implicit declaration of function 'ioport_map' [-Werror=implicit-function-declaration]
-drivers/net/wireless/orinoco/spectrum_cs.c:273:3: error: implicit declaration of function 'ioport_unmap' [-Werror=implicit-function-declaration]
-"
+Since this is inherently tricky driver may decide
+to disconnect an interface later with
+cfg80211_stop_iface().
 
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
+This doesn't mean driver can accept everything. It
+should do it's best to verify requests and reject
+them as soon as possible.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-This is untested
 
- drivers/net/wireless/orinoco/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Notes:
+    v7:
+     * emphasize channel switching verification should not be
+       taken lightly [Johannes]
+     * update channel_switch description in cfg80211.h
 
-diff --git a/drivers/net/wireless/orinoco/Kconfig b/drivers/net/wireless/orinoco/Kconfig
-index 60819bc..a8aab9f 100644
---- a/drivers/net/wireless/orinoco/Kconfig
-+++ b/drivers/net/wireless/orinoco/Kconfig
-@@ -122,7 +122,7 @@ config PCMCIA_HERMES
+ include/net/cfg80211.h |  7 ++++++-
+ net/wireless/nl80211.c | 11 -----------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6b02dd6..3d829d4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2301,7 +2301,12 @@ struct cfg80211_qos_map {
+  *	reliability. This operation can not fail.
+  * @set_coalesce: Set coalesce parameters.
+  *
+- * @channel_switch: initiate channel-switch procedure (with CSA)
++ * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
++ *	responsible for veryfing if the switch is possible. Since this is
++ *	inherently tricky driver may decide to disconnect an interface later
++ *	with cfg80211_stop_iface(). This doesn't mean driver can accept
++ *	everything. It should do it's best to verify requests and reject them
++ *	as soon as possible.
+  *
+  * @set_qos_map: Set QoS mapping information to the driver
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba4f172..d70f542 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6012,17 +6012,6 @@ skip_beacons:
+ 		params.radar_required = true;
+ 	}
  
- config PCMCIA_SPECTRUM
- 	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
--	depends on PCMCIA && HERMES
-+	depends on PCMCIA && HERMES && HAS_IOPORT_MAP
- 	---help---
+-	/* TODO: I left this here for now.  With channel switch, the
+-	 * verification is a bit more complicated, because we only do
+-	 * it later when the channel switch really happens.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   params.chandef.chan,
+-					   CHAN_MODE_SHARED,
+-					   radar_detect_width);
+-	if (err)
+-		return err;
+-
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
  
- 	  This is a driver for 802.11b cards using RAM-loadable Symbol
 -- 
-1.8.4.5
+1.8.5.3
 
