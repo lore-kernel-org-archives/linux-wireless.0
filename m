@@ -1,84 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:58008 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbaF1W4Y (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8723 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbaFMKGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:24 -0400
-Received: by mail-wg0-f41.google.com with SMTP id a1so6395800wgh.0
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:22 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/8] staging: vt6656: rxtx replace wFragCtl with frag_ctl.
-Date: Sat, 28 Jun 2014 23:55:40 +0100
-Message-Id: <1403996146-4082-2-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005636_626674_6D21ABD4)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 13 Jun 2014 06:06:31 -0400
+Message-ID: <539ACD24.9070407@broadcom.com> (sfid-20140613_120638_938691_6C26DE25)
+Date: Fri, 13 Jun 2014 12:06:28 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes.berg@intel.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] cfg80211: expose cfg80211_disable_40mhz_24ghz module parameter
+References: <1402064613-19795-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1402064613-19795-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use base type to __le16 and do endian correction.
+On 06-06-14 16:23, Arend van Spriel wrote:
+> Drivers may need to know this variable value for configuring the
+> device they are controlling. It can be determined indirectly by
+> setting IEEE80211_HT_CAP_SUP_WIDTH_20_40 flag in the field
+> ieee80211_sta_htcap::cap of 2G band. During the wiphy_register()
+> call cfg80211 will clear that bit if the module parameter is true.
+> However, brcmfmac for one needs to know the value to determine
+> its custom regulatory domain which must be applied before doing
+> the wiphy_register().
+>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Johannes,
+>
+> In brcmfmac I need to know the value of cfg80211 module parameter
+> as stated in the commit message. Just taking a shot at how to get
+> this exposed. I was reluctant exporting the module parameter itself.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 12 ++++++------
- drivers/staging/vt6656/rxtx.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+Hi Johannes,
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index f4833ff..5513121 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -978,21 +978,21 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)
- 		is_pspoll = true;
- 
--	tx_buffer_head->wFragCtl =
--			cpu_to_le16(ieee80211_get_hdrlen_from_skb(skb)) << 10;
-+	tx_buffer_head->frag_ctl =
-+			cpu_to_le16(ieee80211_get_hdrlen_from_skb(skb) << 10);
- 
- 	if (info->control.hw_key) {
- 		tx_key = info->control.hw_key;
- 		switch (info->control.hw_key->cipher) {
- 		case WLAN_CIPHER_SUITE_WEP40:
- 		case WLAN_CIPHER_SUITE_WEP104:
--			tx_buffer_head->wFragCtl |= FRAGCTL_LEGACY;
-+			tx_buffer_head->frag_ctl |= cpu_to_le16(FRAGCTL_LEGACY);
- 			break;
- 		case WLAN_CIPHER_SUITE_TKIP:
--			tx_buffer_head->wFragCtl |= FRAGCTL_TKIP;
-+			tx_buffer_head->frag_ctl |= cpu_to_le16(FRAGCTL_TKIP);
- 			break;
- 		case WLAN_CIPHER_SUITE_CCMP:
--			tx_buffer_head->wFragCtl |= FRAGCTL_AES;
-+			tx_buffer_head->frag_ctl |= cpu_to_le16(FRAGCTL_AES);
- 			need_mic = true;
- 		default:
- 			break;
-@@ -1033,7 +1033,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 		return -ENOMEM;
- 	}
- 
--	tx_buffer_head->wFragCtl |= (u16)FRAGCTL_NONFRAG;
-+	tx_buffer_head->frag_ctl |= cpu_to_le16(FRAGCTL_NONFRAG);
- 
- 	tx_bytes = tx_header_size + tx_body_size;
- 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 26dc21c..1cfa5ae 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -224,7 +224,7 @@ struct vnt_tx_fifo_head {
- 	u8 tx_key[WLAN_KEY_LEN_CCMP];
- 	u16 wFIFOCtl;
- 	__le16 time_stamp;
--	u16 wFragCtl;
-+	__le16 frag_ctl;
- 	__le16 current_rate;
- } __packed;
- 
--- 
-1.9.1
+Could you give me your feedback on this. Would be appreciated.
+
+Regards,
+Arend
+
+> Regards,
+> Arend
+> ---
+>   include/net/cfg80211.h |    9 +++++++++
+>   net/wireless/core.c    |    6 ++++++
+>   2 files changed, 15 insertions(+)
+>
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index f3539a1..9279197 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3107,6 +3107,15 @@ static inline const char *wiphy_name(const struct wiphy *wiphy)
+>   struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv);
+>
+>   /**
+> + * wiphy_is_40mhz_24ghz_disabled - check whether 40MHz bandwidth in 2.4G
+> + *
+> + * @wiphy: The wiphy to check.
+> + *
+> + * Return: true is 40MHz is disabled in 2.4G band.
+> + */
+> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
+> +
+> +/**
+>    * wiphy_register - register a wiphy with cfg80211
+>    *
+>    * @wiphy: The wiphy to register.
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 086cddd..52750ef 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -355,6 +355,12 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+>   }
+>   EXPORT_SYMBOL(wiphy_new);
+>
+> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy)
+> +{
+> +	return cfg80211_disable_40mhz_24ghz;
+> +}
+> +EXPORT_SYMBOL(wiphy_is_40mhz_24ghz_disabled);
+> +
+>   static int wiphy_verify_combinations(struct wiphy *wiphy)
+>   {
+>   	const struct ieee80211_iface_combination *c;
+>
 
