@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43956 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbaFFQB1 (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:36516 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752344AbaFMNtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 12:01:27 -0400
-Message-ID: <5391E5D7.1030302@candelatech.com> (sfid-20140606_180131_874127_42617108)
-Date: Fri, 06 Jun 2014 09:01:27 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 13 Jun 2014 09:49:41 -0400
+Received: by mail-oa0-f52.google.com with SMTP id j17so2870788oag.39
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2014 06:49:40 -0700 (PDT)
+Message-ID: <539B0173.2070300@lwfinger.net> (sfid-20140613_154944_613366_3F389296)
+Date: Fri, 13 Jun 2014 08:49:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com> <87bnu6msra.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87bnu6msra.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Matt Chen <mattsled@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <stf_xl@wp.pl>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: Driver for Mediatek MT7630E
+References: <53987997.2040101@lwfinger.net> <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com> <20140612124408.GB7325@redhat.com> <CALx5=V8rMz+HKE=1frLJRqCqqGMP3QPX1yJ-T+GA2dXDnohZ0g@mail.gmail.com> <5399FDFA.9000203@lwfinger.net> <20140613132545.GD2211@redhat.com>
+In-Reply-To: <20140613132545.GD2211@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2014 11:55 PM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
-> 
->> From: Ben Greear <greearb@candelatech.com>
+On 06/13/2014 08:25 AM, Stanislaw Gruszka wrote:
+> On Thu, Jun 12, 2014 at 02:22:34PM -0500, Larry Finger wrote:
+>> On 06/12/2014 11:33 AM, Matt Chen wrote:
+>>> If I remember correct for SLE11, that was from MediaTek-Ralink, they
+>>> did it based on SLE11 kernel. The code is ouch but could work. That
+>>> was a nightmare when I tried to port...can't imagine that.... :(
 >>
->> Store the firmware crash registers and last 128 or so
->> firmware debug-log ids and present them to user-space
->> via debugfs.
+>> I have not tested as my hardware has not been delivered, but I have
+>> the driver building with current wireless-testing source. I also
+>> have created a proper Makefile.
 >>
->> Should help with figuring out why the firmware crashed.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> [...]
-> 
->> +	dump_data->kernel_ver_code = LINUX_VERSION_CODE;
->> +	strncpy(dump_data->kernel_ver, VERMAGIC_STRING,
->> +		sizeof(dump_data->kernel_ver) - 1);
-> 
-> Other thing nice to have here is the kernel timestamp in the kernel log
-> "[123456.4321]". How difficult would it be to add that to the dump?
+>> Yes, merging the changes into rt2x00 will be a hassle.
+>
+> We usually we look at vendor driver and write new code to rt2x00 based
+> on that. For example, I did that for RT5592, Gabor for RT3593. In
+> oposite to cleaning up vendor driver in staging, it require lot of more
+> work, but also guarantee that we will have clean and maintaible code.
 
-It's easy to get the time-of-day, if that is what you mean.
+That is what I plan on doing. This driver is already mac80211 based, thus I see 
+no benefit in going to staging. You will have plenty of opportunities to review 
+the code before it is submitted.
 
-I'll add that...
+Larry
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
