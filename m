@@ -1,53 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:50285 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146AbaFKIuS (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:39679 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132AbaFMXPA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 04:50:18 -0400
-Received: by mail-la0-f41.google.com with SMTP id hz20so239453lab.14
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 01:50:16 -0700 (PDT)
+	Fri, 13 Jun 2014 19:15:00 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so3501097wes.14
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2014 16:14:59 -0700 (PDT)
+Message-ID: <539B85F0.3090004@gmail.com> (sfid-20140614_011504_664717_150B64C7)
+Date: Sat, 14 Jun 2014 01:14:56 +0200
+From: Mathy Vanhoef <vanhoefm@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=rzHzSr67W9KoC8u5cARrckOgQA-m26fmhXwX85aEcKoA@mail.gmail.com>
-References: <1402385153-5056-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6VZs7d2bJNW0cp7NhPUMKr=bHn+pKwhvtk2U71rno4VMA@mail.gmail.com> <CALhHN=rzHzSr67W9KoC8u5cARrckOgQA-m26fmhXwX85aEcKoA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 11 Jun 2014 01:49:56 -0700
-Message-ID: <CAB=NE6VwBB-_G6JfLo81PYsjxBbw+C4Y40ZogNh4-eG910rXuw@mail.gmail.com> (sfid-20140611_105024_616605_91FB09DC)
-Subject: Re: [RFC 1/2] crda: simplify text parsing for country/rules
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 2/2] ath5k: capture CCK and OFDM restarts
+References: <539B7019.1050801@gmail.com> <539B7639.30104@openwrt.org>
+In-Reply-To: <539B7639.30104@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 10:03 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> On 11 June 2014 00:09, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
->> On Tue, Jun 10, 2014 at 12:25 AM, Janusz Dziedzic
->> <janusz.dziedzic@tieto.com> wrote:
->>> Remove strange parsers.
->>>
->>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On 14/06/2014 0:07, Felix Fietkau wrote:
+> On 2014-06-13 23:41, Mathy Vanhoef wrote:
+>> Hi all,
 >>
->> Did you test this with the different types of accepted rules?
+>> This patch allows users to see CCK and OFDM restarts when FIF_FCSFAIL is set.
+>> Without this patch only the stronger frame (causing the restart) would be
+>> visible.
 >>
->
-> Tested with current db.txt (+AUTO-BW in some cases).
+>> The patch has been tested using our reactive jammer. The prefix of the weaker
+>> frame is being correctly passed on as a frame with bad CRC!
+>> --
+>> From: "Mathy Vanhoef" <vanhoefm@gmail.com>
+>>
+>> Treat frames that underwent a CCK or OFDM restart as frames with an invalid CRC.
+>>
+>> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath5k/base.c | 14 +++++++++++++-
+>>  1 file changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+>> index 39ba642..1bbc850 100644
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -1462,7 +1462,19 @@ ath5k_receive_frame_ok(struct ath5k_hw *ah, struct ath5k_rx_status *rs)
+>>  			ah->stats.rxerr_phy++;
+>>  			if (rs->rs_phyerr > 0 && rs->rs_phyerr < 32)
+>>  				ah->stats.rxerr_phy_code[rs->rs_phyerr]++;
+>> -			return false;
+>> +
+>> +			/*
+>> +			 * Threat packets that underwent a CCK of OFDM reset as having a bad CRC.
+>> +			 * These restarts happen when the radio resynchronizes to a stronger frame
+>> +			 * while receiving a weaker frame. Here we receive the prefix of the weak
+>> +			 * frame. Since these are incomplete packets, mark their CRC as invalid.
+>> +			 */
+>> +			if (rs->rs_phyerr == AR5K_RX_PHY_ERROR_OFDM_RESTART ||
+>> +			    rs->rs_phyerr == AR5K_RX_PHY_ERROR_CCK_RESTART) {
+>> +				rs->rs_status |= AR5K_RXERR_CRC;
+>> +				rs->rs_status &= (~AR5K_RXERR_PHY);
+> Unnecessary braces
+> 
+>> +			}
+> What about the return statement you removed, shouldn't you add that back
+> for the 'else' case?
+> 
+> - Felix
+> 
 
-I was curious more about the different use cases of the output power,
-sometimes we use dBm, sometimes mW I think. I think I tried your
-approach and ended up getting inconsistent results for the different
-cases, so that's why all the parser junk got added. If you found a way
-to successfully get rid of it though that's awesome, just want to be
-sure we tested all cases. I purposely tried to upkeep the output to
-match the input preference, some folks are picky about mW and others
-like dB, this helps with regulatory rules as they vary depending on
-the country and the country typically uses one or the other for the
-definitions.
+Just saw a spelling mistake in the comment, s/Threat/Treat.
 
-  Luis
+The parenthesis around `(~AR5K_RXERR_PHY)` can indeed be removed. I suppose it's best to keep the return statement (I don't know precisely why it appears so early in the function, but it likely has a good reason). Updated patch is included below.
+--
+From: "Mathy Vanhoef" <vanhoefm@gmail.com>
+
+Treat frames that underwent a CCK or OFDM restart as frames with an invalid CRC.
+
+Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 4b18434..6e7c636 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1457,7 +1457,20 @@ ath5k_receive_frame_ok(struct ath5k_hw *ah, struct ath5k_rx_status *rs)
+ 			ah->stats.rxerr_phy++;
+ 			if (rs->rs_phyerr > 0 && rs->rs_phyerr < 32)
+ 				ah->stats.rxerr_phy_code[rs->rs_phyerr]++;
+-			return false;
++
++			/*
++			 * Treat packets that underwent a CCK of OFDM reset as having a bad CRC.
++			 * These restarts happen when the radio resynchronizes to a stronger frame
++			 * while receiving a weaker frame. Here we receive the prefix of the weak
++			 * frame. Since these are incomplete packets, mark their CRC as invalid.
++			 */
++			if (rs->rs_phyerr == AR5K_RX_PHY_ERROR_OFDM_RESTART ||
++			    rs->rs_phyerr == AR5K_RX_PHY_ERROR_CCK_RESTART) {
++				rs->rs_status |= AR5K_RXERR_CRC;
++				rs->rs_status &= ~AR5K_RXERR_PHY;
++			} else {
++				return false;
++			}
+ 		}
+ 		if (rs->rs_status & AR5K_RXERR_DECRYPT) {
+ 			/*
+-- 
+1.8.1.2
