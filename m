@@ -1,61 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:44641 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbaFWWGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 18:06:13 -0400
-Received: by mail-we0-f178.google.com with SMTP id x48so7671437wes.37
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 15:06:12 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+Received: from mx1.redhat.com ([209.132.183.28]:44567 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750784AbaFMNJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 09:09:55 -0400
+Date: Fri, 13 Jun 2014 15:08:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCHv3 5/6] rtlwifi/rtl8723be: Replace magic number by macro
-Date: Tue, 24 Jun 2014 00:07:13 +0200
-Message-Id: <1403561233-7997-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140624_000630_738698_4F01AFBB)
+Subject: Re: [PATCH v2 0/2] rt2800usb: Fix support for USB 057c:8501
+Message-ID: <20140613130816.GA2211@redhat.com> (sfid-20140613_151059_784097_3130A254)
+References: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For consistency with other drivers, replace a magic number by a macro.
+On Thu, Jun 12, 2014 at 07:33:31PM +0200, Michael Braun wrote:
+> v2: fix endianness and coding style. Using rt2x00usb_register_read does not work for me.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Reviewed-by: Peter Wu <peter@lekensteyn.nl>
----
- drivers/net/wireless/rtlwifi/rtl8723be/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8723be/reg.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+I missed that it use USB_MULTI_READ request and you need
+USB_DEVICE_MODE instead, sorry.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-index 0fdf090..bf883cb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-@@ -1197,7 +1197,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0x03) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/reg.h b/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
-index 4c653fa..3006849 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
-@@ -412,6 +412,7 @@
- #define	MSR_ADHOC				0x01
- #define	MSR_INFRA				0x02
- #define	MSR_AP					0x03
-+#define	MSR_MASK				0x03
- 
- #define	RRSR_RSC_OFFSET				21
- #define	RRSR_SHORT_OFFSET			23
--- 
-1.7.10.4
-
+Stanislaw
