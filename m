@@ -1,26 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46515 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbaFTEdC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 00:33:02 -0400
-Date: Thu, 19 Jun 2014 21:32:59 -0700 (PDT)
-Message-Id: <20140619.213259.2083362461379810096.davem@davemloft.net> (sfid-20140620_063328_433909_E5852D61)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-06-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140618185414.GA14033@tuxdriver.com>
-References: <20140618185414.GA14033@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:6088 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752952AbaFMPyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 11:54:37 -0400
+Message-ID: <1402674875.11828.1.camel@dcbw.local> (sfid-20140613_175441_089493_A841B2B5)
+Subject: Re: [PATCH 0/5] Fixes, changes for 40MHz and adding support for
+ 5GHz and bgscan.
+From: Dan Williams <dcbw@redhat.com>
+To: Jahnavi Meher <jahnavi.meher@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 13 Jun 2014 10:54:35 -0500
+In-Reply-To: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
+References: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 18 Jun 2014 14:54:14 -0400
+On Fri, 2014-06-13 at 20:12 +0530, Jahnavi Meher wrote:
+> This series of patches contains some fixes, adds support for
+> 5GHz and bgscan and contains changes required for 40MHz. Also
+> the logic related to dequeuing of packets from hal has been
+> changed.
 
-> Please pull this batch of fixes intended for the 3.16 stream!
+No comment yet on the patches themselves, but you probably want to
+prefix the mails (and git commits) with "rsi: <rest of message>".
+Probably just forgot this time since the last version of this patchset
+had the right prefix :)
 
-Pulled, thanks a lot John.
+dan
+
+> Jahnavi Meher (5):
+>   Fixes and clean up of code
+>   Change the logic for dequeuing packets in hal.
+>   Adding support for 5GHz.
+>   Adding support for host based bgscan
+>   Changes for 40MHz
+> 
+>  drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
+>  drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+>  drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
+>  drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  237 +++++++++++++++++++--------
+>  drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
+>  drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
+>  drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+>  drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
+>  drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
+>  9 files changed, 416 insertions(+), 129 deletions(-)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
