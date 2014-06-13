@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39377 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752845AbaF0KSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 06:18:18 -0400
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:43203 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbaFMO2e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 10:28:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <1403823085-10464-2-git-send-email-khoroshilov@ispras.ru>
-References: <1403823085-10464-1-git-send-email-khoroshilov@ispras.ru> <1403823085-10464-2-git-send-email-khoroshilov@ispras.ru>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Fri, 27 Jun 2014 12:17:37 +0200
-Message-ID: <CAOiHx=npgf-YczNVeiZ25Nh8yGeOVvvzT4Hvt2ocL705wexUYQ@mail.gmail.com> (sfid-20140627_121834_775942_9DFBCABF)
-Subject: Re: [PATCH 2/2] rsi: fix memory leaks and error handling in rsi_91x_usb
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Fariya Fatima <fariyaf@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ldv-project@linuxtesting.org
+In-Reply-To: <1402642787.4478.5.camel@jlt4.sipsolutions.net>
+References: <20140612.121445.484288603919840829.davem@davemloft.net>
+	<CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
+	<1402642787.4478.5.camel@jlt4.sipsolutions.net>
+Date: Fri, 13 Jun 2014 07:28:33 -0700
+Message-ID: <CA+55aFw-UTwA0+dmCnqwjSEW244s0CLK4V5vuh2TmLku7A0mDQ@mail.gmail.com> (sfid-20140613_162855_209929_6F3773AD)
+Subject: Re: [GIT] Networking
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2014 at 12:51 AM, Alexey Khoroshilov
-<khoroshilov@ispras.ru> wrote:
-> The patch fixes a couple of issues:
-> - absence of deallocation of rsi_dev->rx_usb_urb[0] in the driver;
-> - potential NULL pointer dereference because of lack of checks for memory
->   allocation success in rsi_init_usb_interface().
+On Thu, Jun 12, 2014 at 11:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> By the way, it makes rsi_probe() returning error code instead of 1
-> and fixes comments regarding returning values.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> is to be believed, then I'm not sure why you think iwlwifi is involved
+> though.
 
-I count four different issues being fixed, so maybe split this into
-four patches?
+Mainly just because I don't see the issue on my desktop, and iwlwifi
+is the only network device (apart from looback) on my laptop. And it
+does say "hw checksum", so that made me think it's the driver.
 
+But:
 
-Regards
-Jonas
+> If it's iwlwifi, then maybe that commit broke something with devices
+> that don't support checksumming?
+
+that sounds quite possible.
+
+                Linus
