@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:61407 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754784AbaFNNyb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:54:31 -0400
-Received: by mail-pa0-f42.google.com with SMTP id lj1so3069788pab.29
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:54:31 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id pr8sm9008256pbc.74.2014.06.14.06.54.29
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:54:30 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/16] rsi: Added debug messages.
-Date: Sat, 14 Jun 2014 19:24:22 +0530
-Message-Id: <1402754062-14196-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155434_929701_62013755)
+Received: from mx1.redhat.com ([209.132.183.28]:22824 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751060AbaFMNLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 09:11:46 -0400
+Date: Fri, 13 Jun 2014 15:10:02 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] rt2800usb:fix efuse detection
+Message-ID: <20140613131001.GB2211@redhat.com> (sfid-20140613_151205_237067_57F3D19F)
+References: <20140612173057.15935.14194.stgit@charlie.fem.tu-ilmenau.de>
+ <20140612173336.15935.17359.stgit@charlie.fem.tu-ilmenau.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140612173336.15935.17359.stgit@charlie.fem.tu-ilmenau.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added some debug messages.
-
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 264e8fa..6f6a4d0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -284,6 +284,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 
- 		skb = rsi_core_dequeue_pkt(common, q_num);
- 		if (skb == NULL) {
-+			rsi_dbg(ERR_ZONE, "skb null\n");
- 			mutex_unlock(&common->tx_rxlock);
- 			break;
- 		}
-@@ -357,6 +358,7 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 	if ((q_num != MGMT_SOFT_Q) &&
- 	    ((skb_queue_len(&common->tx_queue[q_num]) + 1) >=
- 	     DATA_QUEUE_WATER_MARK)) {
-+		rsi_dbg(ERR_ZONE, "%s: sw queue full\n", __func__);
- 		if (!ieee80211_queue_stopped(adapter->hw, WME_AC(q_num)))
- 			ieee80211_stop_queue(adapter->hw, WME_AC(q_num));
- 		rsi_set_event(&common->tx_thread.event);
--- 
-1.7.1
-
+On Thu, Jun 12, 2014 at 07:33:36PM +0200, Michael Braun wrote:
+> The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
+> load. One thing observed is that the vendors driver detects EFUSE mode
+> for this device, but rt2800usb does not. This is due to rt2800usb
+> lacking a check for the firmware mode present in the vendors driver,
+> that this patch adopts for rt2800usb.
+> 
+> With this patch applied, the 'RF chipset' detection does no longer fail.
+> 
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
