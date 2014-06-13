@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25866 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753112AbaFDNMc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:12:32 -0400
-Date: Wed, 4 Jun 2014 15:12:23 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-cc: Julia Lawall <julia.lawall@lip6.fr>,
-	David Laight <David.Laight@aculab.com>,
-	linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	"adi-buildroot-devel@lists.sourceforge.net"
-	<adi-buildroot-devel@lists.sourceforge.net>,
-	Arnd Bergmann <arnd@arndb.de>, sebott@linux.vnet.ibm.com
-Subject: Re: [PATCH 0/10] use safer test on the result of
- find_first_zero_bit
-In-Reply-To: <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com>
-Message-ID: <alpine.DEB.2.10.1406041510520.2441@hadrien> (sfid-20140604_151253_581689_1663DCCE)
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com> <alpine.DEB.2.10.1406041137270.2441@hadrien> <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
- <alpine.DEB.2.10.1406041148590.2441@hadrien> <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com> <alpine.DEB.2.10.1406041258200.2441@hadrien> <CAMuHMdV2wP43Lxf-UtCum37HyMPSboRb6RLNTHzm_ZNOBeJR0g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from s3.sipsolutions.net ([5.9.151.49]:39136 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074AbaFMSBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 14:01:14 -0400
+Message-ID: <1402682460.4478.32.camel@jlt4.sipsolutions.net> (sfid-20140613_200116_588519_5E7656AF)
+Subject: Re: [PATCH] mac80211: WEP extra head/tail room in
+ ieee80211_send_auth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Max Stepanov <Max.Stepanov@intel.com>
+Date: Fri, 13 Jun 2014 20:01:00 +0200
+In-Reply-To: <1402419608-11892-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1402419608-11892-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2014-06-10 at 20:00 +0300, Emmanuel Grumbach wrote:
+> From: Max Stepanov <Max.Stepanov@intel.com>
+> 
+> After skb allocation and call to ieee80211_wep_encrypt in ieee80211_send_auth
+> the flow fails with a warning in ieee80211_wep_add_iv on verification of
+> available head/tailroom needed for WEP_IV and WEP_ICV.
 
+Applied. There's still time - should that be Cc stable?
 
-On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
+johannes
 
-> Hi Julia,
->
-> On Wed, Jun 4, 2014 at 1:00 PM, Julia Lawall <julia.lawall@lip6.fr> wrote:
-> > OK, thanks.  I was only looking at the C code.
-> >
-> > But the C code contains a loop that is followed by:
-> >
-> >         if (!size)
-> >                 return result;
-> >         tmp = *p;
-> >
-> > found_first:
-> >         tmp |= ~0UL << size;
-> >         if (tmp == ~0UL)        /* Are any bits zero? */
-> >                 return result + size;   /* Nope. */
-> >
-> > In the first return, it would seem that result == size.  Could the second
-> > one be changed to just return size?  It should not hurt performance.
->
-> "size" may have been changed between function entry and this line.
-> So you have to store it in a temporary.
-
-Sorry, after reflection it seems that indeed size + result is always the
-original size, so it is actually all of the code that uses >= that is
-doing something unnecessary.  == for the failure test is fine.
-
-julia
