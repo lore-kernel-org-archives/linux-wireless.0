@@ -1,140 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:45827 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755426AbaFKLky (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:35833 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbaFMHVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 07:40:54 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h3so626651igd.14
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 04:40:54 -0700 (PDT)
+	Fri, 13 Jun 2014 03:21:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <1401969147-3532-2-git-send-email-sgruszka@redhat.com>
-References: <1401969147-3532-1-git-send-email-sgruszka@redhat.com>
-	<1401969147-3532-2-git-send-email-sgruszka@redhat.com>
-Date: Wed, 11 Jun 2014 13:40:53 +0200
-Message-ID: <CAGXE3d8wQscwEnk04L7LFh6RoasmJ4JumqCUT_44hKepdM_Xvw@mail.gmail.com> (sfid-20140611_134108_105603_6FD59023)
-Subject: Re: [PATCH 2/5] rt2x00: change beaconing setup on RT2800
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
+In-Reply-To: <1402642787.4478.5.camel@jlt4.sipsolutions.net>
+References: <20140612.121445.484288603919840829.davem@davemloft.net>
+	<CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
+	<1402642787.4478.5.camel@jlt4.sipsolutions.net>
+Date: Fri, 13 Jun 2014 09:21:04 +0200
+Message-ID: <CAMuHMdX-42jwGBwjGkCnGj+NT5vsa-b7U5-xgh7RMCc-nm82pg@mail.gmail.com> (sfid-20140613_092129_526113_FF1543F2)
+Subject: Re: [GIT] Networking
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	David Miller <davem@davemloft.net>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 5, 2014 at 1:52 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> As reported by Matthias, on 5572 chip, even if we clear up TXWI
-> of corresponding beacon, hardware still try to send it or do other
-> action that increase power consumption peak up to 1A.
+On Fri, Jun 13, 2014 at 8:59 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2014-06-13 at 06:48 +0000, Linus Torvalds wrote:
+>> On Thu, Jun 12, 2014 at 12:14 PM, David Miller <davem@davemloft.net> wrote:
+>> >
+>> >   git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git master
+>>
+>> Hmm. I get *lots* of the appended messages from iwlwifi now. Things
+>> still seem to work, but ...
+>>
+>> This is a Haswell laptop with bog-standard intel wireless:
+>>
+>>   01:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+>>
+>> Any ideas?
 >
-> To avoid the issue, setup beaconing dynamically by configuring offsets
-> of currently active beacons and MAC_BSSID_DW1_BSS_BCN_NUM variable,
-> which limit number of beacons that hardware will try to send.
+> Looks odd.
+>
+> If the stacktrace/message
+>
+>> [  273.783438] <unknown>: hw csum failure
+>> [  273.783449] CPU: 2 PID: 2199 Comm: Chrome_IOThread Not tainted 3.15.0-11906-g6d87c225f5d8 #8
+>> [  273.783451] Hardware name: Sony Corporation SVP11213CXB/VAIO, BIOS R0270V7 05/17/2013
+>> [  273.783461] Call Trace:
+>> [  273.783477]  [<ffffffff8159d199>] ? dump_stack+0x41/0x51
+>> [  273.783488]  [<ffffffff814a4f1d>] ? skb_copy_and_csum_datagram_iovec+0xfd/0x110
+>> [  273.783494]  [<ffffffff8150e2ea>] ? udp_recvmsg+0x1ca/0x390
+>> [  273.783500]  [<ffffffff81518e95>] ? inet_recvmsg+0x65/0x80
+>> [  273.783506]  [<ffffffff814971f5>] ? sock_recvmsg+0x95/0xd0
+>> [  273.783511]  [<ffffffff81197862>] ? ep_send_events_proc+0xa2/0x1b0
+>> [  273.783513]  [<ffffffff811977c0>] ? ep_read_events_proc+0xb0/0xb0
+>> [  273.783516]  [<ffffffff81497325>] ? SYSC_recvfrom+0xb5/0x110
+>> [  273.783521]  [<ffffffff8108bdc0>] ? wake_up_state+0x10/0x10
+>> [  273.783527]  [<ffffffff815a3d92>] ? system_call_fastpath+0x16/0x1b
+>
+> is to be believed, then I'm not sure why you think iwlwifi is involved
+> though.
+>
+> Either way, iwlwifi doesn't support HW checksumming, so it failing makes
+> no sense, it's not there to start with.
+>
+> The only thing that touched this seems to be Tom's patch:
+>
+> commit 7e3cead5172927732f51fde77fef6f521e22f209
+> Author: Tom Herbert <therbert@google.com>
+> Date:   Tue Jun 10 18:54:19 2014 -0700
+>
+>     net: Save software checksum complete
+>
+> but I'm not familiar enough to say where this leads.
+>
+> If it's iwlwifi, then maybe that commit broke something with devices
+> that don't support checksumming?
 
-I was thinking of doing that for a long time, glad you've picked it up!
-Thanks a lot Stanislaw.
+Tom posted some fixes for this:
+http://marc.info/?l=linux-netdev&m=140261417832399&w=2
 
-> Reported-by: Matthias Fend <Matthias.Fend@wolfvision.net>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+I can confirm the first one fixes the issue I was having (10s delay in
+ssh login), cfr. http://marc.info/?l=linux-netdev&m=140257250715322&w=2
 
+However, the second patch reintroduces the bad behavior again?
 
-No extensive review but still looks good to me:
+Gr{oetje,eeting}s,
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+                        Geert
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c   | 45 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/rt2x00/rt2x00queue.h |  1 +
->  2 files changed, 46 insertions(+)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index c17fcf2..c45b2d3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -947,6 +947,40 @@ static inline u8 rt2800_get_beacon_offset(struct rt2x00_dev *rt2x00dev,
->         return BEACON_BASE_TO_OFFSET(rt2800_hw_beacon_base(rt2x00dev, index));
->  }
->
-> +static void rt2800_update_beacons_setup(struct rt2x00_dev *rt2x00dev)
-> +{
-> +       struct data_queue *queue = rt2x00dev->bcn;
-> +       struct queue_entry *entry;
-> +       int i, bcn_num = 0;
-> +       u64 off, reg = 0;
-> +       u32 bssid_dw1;
-> +
-> +       /*
-> +        * Setup offsets of all active beacons in BCN_OFFSET{0,1} registers.
-> +        */
-> +       for (i = 0; i < queue->limit; i++) {
-> +               entry = &queue->entries[i];
-> +               if (!test_bit(ENTRY_BCN_ENABLED, &entry->flags))
-> +                       continue;
-> +               off = rt2800_get_beacon_offset(rt2x00dev, entry->entry_idx);
-> +               reg |= off << (8 * bcn_num);
-> +               bcn_num++;
-> +       }
-> +
-> +       WARN_ON_ONCE(bcn_num != rt2x00dev->intf_beaconing);
-> +
-> +       rt2800_register_write(rt2x00dev, BCN_OFFSET0, (u32) reg);
-> +       rt2800_register_write(rt2x00dev, BCN_OFFSET1, (u32) (reg >> 32));
-> +
-> +       /*
-> +        * H/W sends up to MAC_BSSID_DW1_BSS_BCN_NUM + 1 consecutive beacons.
-> +        */
-> +       rt2800_register_read(rt2x00dev, MAC_BSSID_DW1, &bssid_dw1);
-> +       rt2x00_set_field32(&bssid_dw1, MAC_BSSID_DW1_BSS_BCN_NUM,
-> +                          bcn_num > 0 ? bcn_num - 1 : 0);
-> +       rt2800_register_write(rt2x00dev, MAC_BSSID_DW1, bssid_dw1);
-> +}
-> +
->  void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
->  {
->         struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-> @@ -1003,6 +1037,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
->
->         rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
->                                    entry->skb->len + padding_len);
-> +       __set_bit(ENTRY_BCN_ENABLED, &entry->flags);
-> +
-> +       /*
-> +        * Change global beacons settings.
-> +        */
-> +       rt2800_update_beacons_setup(rt2x00dev);
->
->         /*
->          * Restore beaconing state.
-> @@ -1053,8 +1093,13 @@ void rt2800_clear_beacon(struct queue_entry *entry)
->          * Clear beacon.
->          */
->         rt2800_clear_beacon_register(rt2x00dev, entry->entry_idx);
-> +       __clear_bit(ENTRY_BCN_ENABLED, &entry->flags);
->
->         /*
-> +        * Change global beacons settings.
-> +        */
-> +       rt2800_update_beacons_setup(rt2x00dev);
-> +       /*
->          * Restore beaconing state.
->          */
->         rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> index c48125b..2233b91 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> @@ -353,6 +353,7 @@ struct txentry_desc {
->   */
->  enum queue_entry_flags {
->         ENTRY_BCN_ASSIGNED,
-> +       ENTRY_BCN_ENABLED,
->         ENTRY_OWNER_DEVICE_DATA,
->         ENTRY_DATA_PENDING,
->         ENTRY_DATA_IO_FAILED,
-> --
-> 1.8.3.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
