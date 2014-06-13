@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gesmail.globaledgesoft.com ([106.51.250.152]:45888 "EHLO
-	gesmail.globaledgesoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751667AbaFEJDY (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50726 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348AbaFMKoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 05:03:24 -0400
-Received: from [172.16.6.109] (unknown [172.16.6.109])
-	by gesmail.globaledgesoft.com (Postfix) with ESMTP id 841E658836C
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Jun 2014 14:20:10 +0530 (IST)
-Message-ID: <539030ED.4020006@globaledgesoft.com> (sfid-20140605_110331_495286_57DDD02B)
-Date: Thu, 05 Jun 2014 14:27:17 +0530
-From: Gaurav Kumar Chauhan <ck.gaurav@globaledgesoft.com>
+	Fri, 13 Jun 2014 06:44:37 -0400
+Date: Fri, 13 Jun 2014 12:44:35 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>
+Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: iwlwifi: very poor performance on 3.16-rc0
+Message-ID: <20140613104435.GA4689@amd.pavel.ucw.cz> (sfid-20140613_124453_494311_FA9E1BEE)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Physical carrier sensing (CCA)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi!
 
-I am working on measuring channel load which requires knowledge of 
-carrier sensing.
+On 6d87c225f5d82d29243dc124f1ffcbb0e14ec358 I get basically unusable
+network.
 
-I am comfortable with virtual carrier sensing but not with physical 
-carrier sensing.
-I tried to google it but didn't get more than basics. I want to know 
-about physical carrier
-sensing in detail and where code for physical sensing is present.
+Network manager connects to wireless network, and ping sometimes
+returns a packet. One in 10 tabs load, dns usually does not work.
 
-Is it in driver or in firmware?
-I am using atheros pci-express card and ath9k driver.
+Thinkpad x60, 
 
-Please help me. Thanks in advance.
+03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+[Golan] Network Connection (rev 02)
 
-Regards,
-Gaurav
+Any ideas?
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
