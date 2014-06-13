@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:48962 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965537AbaFTUTe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 16:19:34 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH for-3.16] brcmfmac: assign chip id and rev in bus interface after brcmf_usb_dlneeded
-Date: Fri, 20 Jun 2014 22:19:25 +0200
-Message-ID: <1403295565-21827-1-git-send-email-arend@broadcom.com> (sfid-20140620_221938_786815_70E59544)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:37391 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750852AbaFMHAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 03:00:04 -0400
+Message-ID: <1402642787.4478.5.camel@jlt4.sipsolutions.net> (sfid-20140613_090035_769921_37717D42)
+Subject: Re: [GIT] Networking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 13 Jun 2014 08:59:47 +0200
+In-Reply-To: <CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
+References: <20140612.121445.484288603919840829.davem@davemloft.net>
+	 <CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_usb_dlneeded() queries the device to obtain the chip
-id and revision. So assigning these in bus interface before the call
-resulted in chip id and revision being zero. This was introduced by:
+On Fri, 2014-06-13 at 06:48 +0000, Linus Torvalds wrote:
+> On Thu, Jun 12, 2014 at 12:14 PM, David Miller <davem@davemloft.net> wrote:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git master
+> 
+> Hmm. I get *lots* of the appended messages from iwlwifi now. Things
+> still seem to work, but ...
+> 
+> This is a Haswell laptop with bog-standard intel wireless:
+> 
+>   01:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+> 
+> Any ideas?
 
-   commit 5b8045d484d0ef77d6aa9444023220c5671fa3fe
-   Author: Arend van Spriel <arend@broadcom.com>
-   Date:   Tue May 27 12:56:23 2014 +0200
+Looks odd.
 
-       brcmfmac: use asynchronous firmware request in USB
+If the stacktrace/message
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
+> [  273.783438] <unknown>: hw csum failure
+> [  273.783449] CPU: 2 PID: 2199 Comm: Chrome_IOThread Not tainted 3.15.0-11906-g6d87c225f5d8 #8
+> [  273.783451] Hardware name: Sony Corporation SVP11213CXB/VAIO, BIOS R0270V7 05/17/2013
+> [  273.783461] Call Trace:
+> [  273.783477]  [<ffffffff8159d199>] ? dump_stack+0x41/0x51
+> [  273.783488]  [<ffffffff814a4f1d>] ? skb_copy_and_csum_datagram_iovec+0xfd/0x110
+> [  273.783494]  [<ffffffff8150e2ea>] ? udp_recvmsg+0x1ca/0x390
+> [  273.783500]  [<ffffffff81518e95>] ? inet_recvmsg+0x65/0x80
+> [  273.783506]  [<ffffffff814971f5>] ? sock_recvmsg+0x95/0xd0
+> [  273.783511]  [<ffffffff81197862>] ? ep_send_events_proc+0xa2/0x1b0
+> [  273.783513]  [<ffffffff811977c0>] ? ep_read_events_proc+0xb0/0xb0
+> [  273.783516]  [<ffffffff81497325>] ? SYSC_recvfrom+0xb5/0x110
+> [  273.783521]  [<ffffffff8108bdc0>] ? wake_up_state+0x10/0x10
+> [  273.783527]  [<ffffffff815a3d92>] ? system_call_fastpath+0x16/0x1b
 
-Found this issue during testing, which was introduced in 3.16-rc1 merge
-window. Hence this patch applies to wireless/master.
+is to be believed, then I'm not sure why you think iwlwifi is involved
+though.
 
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Either way, iwlwifi doesn't support HW checksumming, so it failing makes
+no sense, it's not there to start with.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 6db51a6..d06fcb0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1184,8 +1184,6 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->bus_priv.usb = bus_pub;
- 	dev_set_drvdata(dev, bus);
- 	bus->ops = &brcmf_usb_bus_ops;
--	bus->chip = bus_pub->devid;
--	bus->chiprev = bus_pub->chiprev;
- 	bus->proto_type = BRCMF_PROTO_BCDC;
- 	bus->always_use_fws_queue = true;
- 
-@@ -1194,6 +1192,9 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 		if (ret)
- 			goto fail;
- 	}
-+	bus->chip = bus_pub->devid;
-+	bus->chiprev = bus_pub->chiprev;
-+
- 	/* request firmware here */
- 	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
- 			       brcmf_usb_probe_phase2);
--- 
-1.7.9.5
+The only thing that touched this seems to be Tom's patch:
+
+commit 7e3cead5172927732f51fde77fef6f521e22f209
+Author: Tom Herbert <therbert@google.com>
+Date:   Tue Jun 10 18:54:19 2014 -0700
+
+    net: Save software checksum complete
+
+but I'm not familiar enough to say where this leads.
+
+If it's iwlwifi, then maybe that commit broke something with devices
+that don't support checksumming?
+
+johannes
 
