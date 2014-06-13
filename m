@@ -1,138 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51181 "EHLO mx1.redhat.com"
+Received: from bar.sig21.net ([80.81.252.164]:47152 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752566AbaFDNUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:20:38 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
-Subject: [RFC/RFT 1/5] rt2x00: change beaconing locking
-Date: Wed,  4 Jun 2014 15:19:11 +0200
-Message-Id: <1401887955-11361-1-git-send-email-sgruszka@redhat.com> (sfid-20140604_152042_221634_E4D5BD58)
+	id S1751044AbaFML0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 07:26:22 -0400
+Date: Fri, 13 Jun 2014 12:54:13 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: linux-wireless@vger.kernel.org
+Cc: ilw@linux.intel.com
+Subject: iwlwifi AC 7260 fails to connect
+Message-ID: <20140613105412.GA25048@sig21.net> (sfid-20140613_132654_526062_8389CC29)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is needed for further changes to keep global variables
-consisent when chaning beaconing on diffrent vif's.
+Hi,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c   |  7 +++++--
- drivers/net/wireless/rt2x00/rt2x00mac.c   |  6 ++----
- drivers/net/wireless/rt2x00/rt2x00queue.c | 21 ++-------------------
- 3 files changed, 9 insertions(+), 25 deletions(-)
+a new Thinkpad Yoga 20CD00AMGE with Intel(R) Dual Band Wireless AC 7260
+fails to connect to the AP in the office, while it works
+on my home AP.  WPA2 is used in both cases.  I tried with
+kernel 3.14.7 and 3.15.  There is a high density of APs and
+clients and lots of traffic in the office environment.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 2bde672..72e3e81 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -141,8 +141,11 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
- 
--	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags))
-+	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags)) {
-+		mutex_lock(&intf->beacon_skb_mutex);
- 		rt2x00queue_update_beacon(rt2x00dev, vif);
-+		mutex_unlock(&intf->beacon_skb_mutex);
-+	}
- }
- 
- static void rt2x00lib_intf_scheduled(struct work_struct *work)
-@@ -216,7 +219,7 @@ static void rt2x00lib_beaconupdate_iter(void *data, u8 *mac,
- 	 * never be called for USB devices.
- 	 */
- 	WARN_ON(rt2x00_is_usb(rt2x00dev));
--	rt2x00queue_update_beacon_locked(rt2x00dev, vif);
-+	rt2x00queue_update_beacon(rt2x00dev, vif);
- }
- 
- void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 212ac48..0aad22d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -624,6 +624,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 * Start/stop beaconing.
- 	 */
- 	if (changes & BSS_CHANGED_BEACON_ENABLED) {
-+		mutex_lock(&intf->beacon_skb_mutex);
- 		if (!bss_conf->enable_beacon && intf->enable_beacon) {
- 			rt2x00dev->intf_beaconing--;
- 			intf->enable_beacon = false;
-@@ -639,9 +640,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 				 * Last beaconing interface disabled
- 				 * -> stop beacon queue.
- 				 */
--				mutex_lock(&intf->beacon_skb_mutex);
- 				rt2x00queue_stop_queue(rt2x00dev->bcn);
--				mutex_unlock(&intf->beacon_skb_mutex);
- 			}
- 		} else if (bss_conf->enable_beacon && !intf->enable_beacon) {
- 			rt2x00dev->intf_beaconing++;
-@@ -658,11 +657,10 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 				 * First beaconing interface enabled
- 				 * -> start beacon queue.
- 				 */
--				mutex_lock(&intf->beacon_skb_mutex);
- 				rt2x00queue_start_queue(rt2x00dev->bcn);
--				mutex_unlock(&intf->beacon_skb_mutex);
- 			}
- 		}
-+		mutex_unlock(&intf->beacon_skb_mutex);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 5642ccc..8e68f87 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -754,8 +754,6 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
- 
--	mutex_lock(&intf->beacon_skb_mutex);
--
- 	/*
- 	 * Clean up the beacon skb.
- 	 */
-@@ -768,13 +766,11 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 	if (rt2x00dev->ops->lib->clear_beacon)
- 		rt2x00dev->ops->lib->clear_beacon(intf->beacon);
- 
--	mutex_unlock(&intf->beacon_skb_mutex);
--
- 	return 0;
- }
- 
--int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
--				     struct ieee80211_vif *vif)
-+int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
-+			      struct ieee80211_vif *vif)
- {
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	struct skb_frame_desc *skbdesc;
-@@ -815,19 +811,6 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
- 
- }
- 
--int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
--			      struct ieee80211_vif *vif)
--{
--	struct rt2x00_intf *intf = vif_to_intf(vif);
--	int ret;
--
--	mutex_lock(&intf->beacon_skb_mutex);
--	ret = rt2x00queue_update_beacon_locked(rt2x00dev, vif);
--	mutex_unlock(&intf->beacon_skb_mutex);
--
--	return ret;
--}
--
- bool rt2x00queue_for_each_entry(struct data_queue *queue,
- 				enum queue_index start,
- 				enum queue_index end,
--- 
-1.8.3.1
+The failure is caused by:
+[   32.200142] iwlwifi 0000:04:00.0: No association and the time event is over already...
+and wpa_supplicant retries in an endless loop:
 
+[   28.181020] cfg80211: Calling CRDA to update world regulatory domain
+[   31.890168] wlp4s0: authenticate with f8:d1:11:39:1a:8c
+[   31.892972] wlp4s0: send auth to f8:d1:11:39:1a:8c (try 1/3)
+[   31.903458] wlp4s0: authenticated
+[   31.927239] wlp4s0: associate with f8:d1:11:39:1a:8c (try 1/3)
+[   31.963374] wlp4s0: RX AssocResp from f8:d1:11:39:1a:8c (capab=0x431 status=0 aid=5)
+[   31.968857] wlp4s0: associated
+[   32.200142] iwlwifi 0000:04:00.0: No association and the time event is over already...
+[   32.200154] wlp4s0: Connection to AP f8:d1:11:39:1a:8c lost
+[   32.270241] cfg80211: Calling CRDA to update world regulatory domain
+(repeats)
+
+For testing I used a bare Arch Linux installation and ran
+wpa_supplicant manually:
+  echo 'network={
+	ssid="foo"
+	psk="bar"
+}' >w
+  wpa_supplicant -Dnl80211 -iwlp4s0 -cw -d
+
+...
+wlp4s0: State: ASSOCIATED -> 4WAY_HANDSHAKE
+...
+wlp4s0: WPA: Key negotiation completed with f8:d1:11:39:1a:8c [PTK=CCMP GTK=CCMP]
+...
+wlp4s0: CTRL-EVENT-CONNECTED - Connection to f8:d1:11:39:1a:8c completed [id=0 id_str=]
+...
+nl80211: Drv Event 20 (NL80211_CMD_DEL_STATION) received for wlp4s0
+nl80211: Delete station f8:d1:11:39:1a:8c
+nl80211: Drv Event 39 (NL80211_CMD_DEAUTHENTICATE) received for wlp4s0
+nl80211: Deauthenticate event
+wlp4s0: Event DEAUTH (12) received
+wlp4s0: Deauthentication notification
+wlp4s0:  * reason 4 (locally generated)
+wlp4s0:  * address f8:d1:11:39:1a:8c
+Deauthentication frame IE(s) - hexdump(len=0): [NULL]
+wlp4s0: CTRL-EVENT-DISCONNECTED bssid=f8:d1:11:39:1a:8c reason=4 locally_generated=1
+wlp4s0: Auto connect enabled: try to reconnect (wps=0 wpa_state=9)
+
+
+Not really knowing what I'm doing I simply tried to comment out
+the check causing the disconnect:
+
+drivers/net/wireless/iwlwifi/mvm/time-event.c:iwl_mvm_te_handle_notif()
+
+                iwl_mvm_te_check_disconnect(mvm, te_data->vif,
+                        "No association and the time event is over already...");
+
+And lo and behold, it can connect.
+
+Let me know if you need more information to produce a proper fix.
+
+
+TIA,
+Johannes
