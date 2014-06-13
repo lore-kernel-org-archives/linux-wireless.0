@@ -1,48 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48550 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751206AbaFXLde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 07:33:34 -0400
-Message-ID: <1403609569.10831.0.camel@jlt4.sipsolutions.net> (sfid-20140624_133404_266680_F5AD59BD)
-Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Joe Perches <joe@perches.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-arch@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, iss_storagedev@hp.com,
-	linux-rdma@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	linux-atm-general@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org,
-	linux-eata@i-connect.net, linux-media@vger.kernel.org
-Date: Tue, 24 Jun 2014 13:32:49 +0200
-In-Reply-To: <CAGRGNgVD2f0S-v8YZ-qABEhDJAwk5pp71FU9uLR8aSZ+DhABjg@mail.gmail.com> (sfid-20140624_012812_032630_4B31BBC9)
-References: <cover.1403530604.git.joe@perches.com>
-	 <20140623172512.GA1390@garbanzo.do-not-panic.com>
-	 <1403550809.15811.13.camel@joe-AO725>
-	 <CAGRGNgVD2f0S-v8YZ-qABEhDJAwk5pp71FU9uLR8aSZ+DhABjg@mail.gmail.com>
-	 (sfid-20140624_012812_032630_4B31BBC9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:40818 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbaFMOou (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2014 10:44:50 -0400
+Received: by mail-pb0-f53.google.com with SMTP id uo5so1937505pbc.12
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2014 07:44:50 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id pr4sm4016355pbb.53.2014.06.13.07.44.49
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Fri, 13 Jun 2014 07:44:49 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] Adding support for 5GHz.
+Date: Fri, 13 Jun 2014 20:14:42 +0530
+Message-Id: <1402670682-8914-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140613_164456_226712_8CEC1891)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-24 at 09:27 +1000, Julian Calaby wrote:
+Adding support for 5GHz.
 
-> > - x = (T)pci_alloc_consistent(E1,E2,E3);
-> > + x = pci_zalloc_consistent(E1,E2,E3);
-> >   if ((x==NULL) || ...) S
-> > - memset((T2)x,0,E2);
-> 
-> I don't know much about SmPL, but wouldn't having that if statement
-> there reduce your matches?
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |   17 +++--
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   81 +++++++++++++++++++++++++--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |    1 +
+ 3 files changed, 87 insertions(+), 12 deletions(-)
 
-Code that matched without the if statement would be buggy, since it
-wouldn't be checking the pci_zalloc_consistent return value properly.l
-
-johannes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 45bdb99..4700714 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -723,17 +723,17 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
+ {
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
++	enum ieee80211_band band = hw->conf.chandef.chan->band;
+ 
+ 	mutex_lock(&common->mutex);
++	common->fixedrate_mask[band] = 0;
+ 
+-	common->fixedrate_mask[IEEE80211_BAND_2GHZ] = 0;
+-
+-	if (mask->control[IEEE80211_BAND_2GHZ].legacy == 0xfff) {
+-		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
+-			(mask->control[IEEE80211_BAND_2GHZ].ht_mcs[0] << 12);
++	if (mask->control[band].legacy == 0xfff) {
++		common->fixedrate_mask[band] =
++			(mask->control[band].ht_mcs[0] << 12);
+ 	} else {
+-		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
+-			mask->control[IEEE80211_BAND_2GHZ].legacy;
++		common->fixedrate_mask[band] =
++			mask->control[band].legacy;
+ 	}
+ 	mutex_unlock(&common->mutex);
+ 
+@@ -980,6 +980,7 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 
+ 	hw->max_tx_aggregation_subframes = 6;
+ 	rsi_register_rates_channels(adapter, IEEE80211_BAND_2GHZ);
++	rsi_register_rates_channels(adapter, IEEE80211_BAND_5GHZ);
+ 	hw->rate_control_algorithm = "AARF";
+ 
+ 	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
+@@ -997,6 +998,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 	wiphy->available_antennas_tx = 1;
+ 	wiphy->bands[IEEE80211_BAND_2GHZ] =
+ 		&adapter->sbands[IEEE80211_BAND_2GHZ];
++	wiphy->bands[IEEE80211_BAND_5GHZ] =
++		&adapter->sbands[IEEE80211_BAND_5GHZ];
+ 
+ 	status = ieee80211_register_hw(hw);
+ 	if (status)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 38e7692..8f3fcdb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -620,6 +620,9 @@ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	struct rsi_vap_caps *vap_caps;
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_hw *hw = adapter->hw;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	u16 vap_id = 0;
+ 
+ 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
+@@ -649,13 +652,24 @@ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode)
+ 	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
+ 
+ 	vap_caps->rts_threshold = cpu_to_le16(common->rts_threshold);
+-	vap_caps->default_mgmt_rate = 0;
+-	if (conf_is_ht40(&common->priv->hw->conf)) {
+-		vap_caps->default_ctrl_rate =
+-				cpu_to_le32(RSI_RATE_6 | FULL40M_ENABLE << 16);
+-	} else {
++	vap_caps->default_mgmt_rate = cpu_to_le32(RSI_RATE_6);
++
++	if (common->band == IEEE80211_BAND_5GHZ) {
+ 		vap_caps->default_ctrl_rate = cpu_to_le32(RSI_RATE_6);
++		if (conf_is_ht40(&common->priv->hw->conf)) {
++			vap_caps->default_ctrl_rate |=
++				cpu_to_le32(FULL40M_ENABLE << 16);
++		}
++	} else {
++		vap_caps->default_ctrl_rate = cpu_to_le32(RSI_RATE_1);
++		if (conf_is_ht40_minus(conf))
++			vap_caps->default_ctrl_rate |=
++				cpu_to_le32(UPPER_20_ENABLE << 16);
++		else if (conf_is_ht40_plus(conf))
++			vap_caps->default_ctrl_rate |=
++				cpu_to_le32(LOWER_20_ENABLE << 16);
+ 	}
++
+ 	vap_caps->default_data_rate = 0;
+ 	vap_caps->beacon_interval = cpu_to_le16(200);
+ 	vap_caps->dtim_period = cpu_to_le16(4);
+@@ -832,6 +846,63 @@ static int rsi_send_reset_mac(struct rsi_common *common)
+ }
+ 
+ /**
++ * rsi_band_check() - This function programs the band
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, corresponding error code on failure.
++ */
++int rsi_band_check(struct rsi_common *common)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_hw *hw = adapter->hw;
++	u8 prev_bw = common->channel_width;
++	u8 prev_ep = common->endpoint;
++	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
++	int status = 0;
++
++	if (common->band != curchan->band) {
++		common->rf_reset = 1;
++		common->band = curchan->band;
++	}
++
++	if ((hw->conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) ||
++	    (hw->conf.chandef.width == NL80211_CHAN_WIDTH_20))
++		common->channel_width = BW_20MHZ;
++	else
++		common->channel_width = BW_40MHZ;
++
++	if (common->band == IEEE80211_BAND_2GHZ) {
++		if (common->channel_width)
++			common->endpoint = EP_2GHZ_40MHZ;
++		else
++			common->endpoint = EP_2GHZ_20MHZ;
++	} else {
++		if (common->channel_width)
++			common->endpoint = EP_5GHZ_40MHZ;
++		else
++			common->endpoint = EP_5GHZ_20MHZ;
++	}
++
++	if (common->endpoint != prev_ep) {
++		status = rsi_program_bb_rf(common);
++		if (status)
++			return status;
++	}
++
++	if (common->channel_width != prev_bw) {
++		status = rsi_load_bootup_params(common);
++		if (status)
++			return status;
++
++		status = rsi_load_radio_caps(common);
++		if (status)
++			return status;
++	}
++
++	return status;
++}
++
++/**
+  * rsi_set_channel() - This function programs the channel.
+  * @common: Pointer to the driver private structure.
+  * @channel: Channel value to be set.
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 8bff664..f10d6c6 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -304,4 +304,5 @@ void rsi_core_qos_processor(struct rsi_common *common);
+ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_send_mgmt_pkt(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
++int rsi_band_check(struct rsi_common *common);
+ #endif
+-- 
+1.7.1
 
