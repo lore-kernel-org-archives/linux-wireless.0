@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:32788 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994AbaFIPJn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 11:09:43 -0400
-Message-ID: <5395CE36.30407@candelatech.com> (sfid-20140609_170946_786356_3D0A15EF)
-Date: Mon, 09 Jun 2014 08:09:42 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com>	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>	<538CA904.4000508@candelatech.com>	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>	<538CC949.5020901@candelatech.com>	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>	<538CD507.1050803@candelatech.com>	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>	<53909372.1040707@candelatech.com>	<87fvjimsxj.fsf@kamboji.qca.qualcomm.com>	<5391E620.4090706@candelatech.com>	<87vbscj2ho.fsf@kamboji.qca.qualcomm.com>	<53932F52.2030203@candelatech.com>	<8738ffiysv.fsf@kamboji.qca.qualcomm.com>	<539483B1.5020401@candelatech.com> <87ppiih4zk.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87ppiih4zk.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:43100 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751524AbaFNT7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jun 2014 15:59:10 -0400
+Message-ID: <1402775942.5026.0.camel@jlt4.sipsolutions.net> (sfid-20140614_220117_799428_FFC77A22)
+Subject: Re: [PATCH] mac80211: WEP extra head/tail room in
+ ieee80211_send_auth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Max Stepanov <Max.Stepanov@intel.com>
+Date: Sat, 14 Jun 2014 21:59:02 +0200
+In-Reply-To: <87sin7zzrq.fsf@purkki.adurom.net>
+References: <1402419608-11892-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1402682460.4478.32.camel@jlt4.sipsolutions.net>
+	 <87sin7zzrq.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2014-06-14 at 11:00 +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Tue, 2014-06-10 at 20:00 +0300, Emmanuel Grumbach wrote:
+> >> From: Max Stepanov <Max.Stepanov@intel.com>
+> >> 
+> >> After skb allocation and call to ieee80211_wep_encrypt in ieee80211_send_auth
+> >> the flow fails with a warning in ieee80211_wep_add_iv on verification of
+> >> available head/tailroom needed for WEP_IV and WEP_ICV.
+> >
+> > Applied. There's still time - should that be Cc stable?
+> 
+> Is this a regression?
 
+Good question. I don't think anything changed this code recently, but
+maybe something changed skb allocation or so? Max?
 
-On 06/09/2014 01:17 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->>>> With time-of-day, time-since-boot, and MAC, each dump should be unique.
->>>
->>> But I would like to easily match from kernel log that the crash dump
->>> matches with log. uuid would provide that in a simple way (check that
->>> the uuid in the log matches with the uuid in the dump). What's so bad
->>> from using uuid?
->>
->> Just tell me how you want me to create the uuid and I'll do so.
->
-> As kbuild found some compilation problems, I think it would be easier if
-> I make the final changes to your patches and send that for review. Would
-> that be ok for you?
+johannes
 
-Yes, that would be great.
-
-I think we can continue to tweak the header format for a bit,
-as I haven't updated the decode tool to deal with the new binary blob
-anyway, and the version field gives us an out if we need to make
-more serious changes.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
