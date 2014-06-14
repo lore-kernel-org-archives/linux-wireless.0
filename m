@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:65262 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753976AbaFIKWW (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:52850 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754392AbaFNNtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 06:22:22 -0400
-Received: by mail-qa0-f47.google.com with SMTP id s7so7549193qap.20
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2014 03:22:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53956986.8070603@openwrt.org>
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-	<20140520142453.GB13981@tuxdriver.com>
-	<CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
-	<20140520180832.GD13981@tuxdriver.com>
-	<1400610273.4474.6.camel@jlt4.sipsolutions.net>
-	<CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
-	<1400688233.4136.8.camel@jlt4.sipsolutions.net>
-	<53956986.8070603@openwrt.org>
-Date: Mon, 9 Jun 2014 12:22:21 +0200
-Message-ID: <CALhHN=pRskkXn_Li2n+hOM24t1QHwHi_E_ozc726Gh0jnuc5=w@mail.gmail.com> (sfid-20140609_122232_111047_1C3D9064)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 Jun 2014 09:49:24 -0400
+Received: by mail-pd0-f170.google.com with SMTP id z10so1537979pdj.29
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:49:24 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id x5sm9007808pbw.26.2014.06.14.06.49.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:49:23 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/16] rsi: Fixed the kernel doc
+Date: Sat, 14 Jun 2014 19:19:14 +0530
+Message-Id: <1402753754-13887-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_154927_847077_FC58BD42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 June 2014 10:00, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2014-05-21 18:03, Johannes Berg wrote:
->> On Tue, 2014-05-20 at 11:48 -0700, Luis R. Rodriguez wrote:
->>
->>> > I think we should, but if we can't then at least can we cut to an
->>> > extensible format?
->>
->> I don't see any way to extend the format right now.
->>
->> There's a wrinkle with making it more extensible too though - if we do
->> that then we must be extremely careful that future older crda versions
->> (i.e. the next version that we're about to write) will not parse a newer
->> extended file more permissively, so our extensions are limited anyway.
->>
->> Looks like the format update really is needed, which probably means we
->> should change the scripts to generate two databases and change the
->> filename, or so?
-> How about making the format properly extensible by reusing what we're
-> already doing to keep the kernel ABI stable? For example, we could store
-> the database in a netlink-like attribute format, with some changes to
-> make it fixed endian.
-> I'm already doing just that for a few things in OpenWrt, so I have
-> working C code for writing and parsing such a format.
->
-> Another nice feature would be to indicate in the attributes if crda is
-> required to understand them, or if it can just continue with a warning.
->
-> If done right, I think we can probably make this the last time we change
-> the format version.
->
-What kind of benefit we have having binary format between crda <->
-wireless-regd (nl-based or current regulatory.bin)?
-This is additional code/work to do - why we need that?
+Changed the function header to match the function name.
 
-BR
-Janusz
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 54aaeb0..a1bdea1 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -185,7 +185,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ }
+ 
+ /**
+- * rsi_mac80211_attach() - This function is used to de-initialize the
++ * rsi_mac80211_detach() - This function is used to de-initialize the
+  *			   Mac80211 stack.
+  * @adapter: Pointer to the adapter structure.
+  *
+-- 
+1.7.1
+
