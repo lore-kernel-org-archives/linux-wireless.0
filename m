@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from filtteri2.pp.htv.fi ([213.243.153.185]:40713 "EHLO
-	filtteri2.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932531AbaFLIYS (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:50541 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754750AbaFNN0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 04:24:18 -0400
-Date: Thu, 12 Jun 2014 11:24:08 +0300
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
-Message-ID: <20140612082408.GD913@drone.musicnaut.iki.fi> (sfid-20140612_102424_185094_98AF4D7F)
-References: <20140611230513.GC913@drone.musicnaut.iki.fi>
- <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwaxzyY+vqQa+vJETA_g+8zLmwWQb9uYhFOvTy57A15rw@mail.gmail.com>
+	Sat, 14 Jun 2014 09:26:41 -0400
+Received: by mail-lb0-f172.google.com with SMTP id c11so2138531lbj.31
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:26:40 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net: wireless: rtlwifi: rtl8188ee: reg.h:  Cleaning up if statement that always evaluates to false 
+Date: Sat, 14 Jun 2014 15:27:37 +0200
+Message-Id: <1402752458-13836-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140614_152719_574098_90D6B2EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I found a logical error in an if statement that always evaluates to false.
 
-On Thu, Jun 12, 2014 at 07:44:42AM +0200, Rafał Miłecki wrote:
-> On 12 June 2014 01:05, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
-> > While testing the final 3.15, I noticed that "iwlist wlan0 scanning"
-> > cannot find anything on my WRT54GL router anymore:
-> 
-> I believe it's BCM5352E SoC wth G-PHY rev 7 and radio 0x2050 rev 2. Is
-> that correct? Provide us a boot log.
+This has after same discussion resulted in that we add a macro to handle this.
 
-Yes, it's:
+This was partly found using a static code analysis program called cppcheck.
 
-[    9.460000] b43-phy0: Broadcom 5352 WLAN found (core revision 9)
-[    9.520000] b43-phy0: Found PHY: Analog 2, Type 2 (G), Revision 7
+Rickard Strandqvist (1):
+  net: wireless: rtlwifi: rtl8188ee: reg.h:  Cleaning up if statement that always evaluates to false
 
-I confirm your patch fixes the issue, thanks.
+ drivers/net/wireless/rtlwifi/rtl8188ee/reg.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-A.
+-- 
+1.7.10.4
+
