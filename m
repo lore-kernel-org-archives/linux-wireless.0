@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:59735 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802AbaFFGaL convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:45827 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbaFNUms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 02:30:11 -0400
-Received: by mail-wg0-f48.google.com with SMTP id n12so2012152wgh.31
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 23:30:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
-	<87egz3nxdn.fsf@kamboji.qca.qualcomm.com>
-	<5390B632.7030305@candelatech.com>
-	<87wqcumuuw.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 6 Jun 2014 08:30:09 +0200
-Message-ID: <CA+BoTQkzVLQJcsNfSr=r8d0F_opsHEim0fgxMGhPHGyhz0KBzw@mail.gmail.com> (sfid-20140606_083015_669916_D4963E5D)
-Subject: Re: [PATCH 1/4] ath10k: provide firmware crash info via debugfs.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 Jun 2014 16:42:48 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so3198364pab.22
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 13:42:48 -0700 (PDT)
+From: mihirsht@gmail.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	mcgrof@do-not-panic.com
+Cc: Mihir Shete <mihirsht@gmail.com>
+Subject: [PATCH] cfg80211: unblock user hint when cfg80211_regdom is intersected
+Date: Sun, 15 Jun 2014 02:12:16 +0530
+Message-Id: <1402778536-31305-1-git-send-email-mihirsht@gmail.com> (sfid-20140614_224401_614498_2D0D7D8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 June 2014 08:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Ben Greear <greearb@candelatech.com> writes:
-[...]
->> I'm a bit leery of adding spin-locks in the dump routine just for
->> this, but I can add and use a new spin-lock if you prefer.
->
-> Why a new spinlock? I didn't review the locking requirements, but I
-> would first check ar->data_lock can be used.
->
->> If so, any idea if we can do the reads of the target's memory while
->> holding a spin-lock, or would I need some temporary buffers and only
->> lock while copying that in to the storage in the 'ar'?
->
-> I don't see why you would need special locks for reading target's
-> memory. If there is something needed, pci.c should handle that. Michal?
+From: Mihir Shete <mihirsht@gmail.com>
 
-By definition the diagnostic window access must be serialized. We
-don't do this with locks now but rely ON driver states/sequences. We
-might have some problems lurking there already but I'd need to analyze
-it to tell for sure.
+User hints are always ignored if cfg80211_regdom is intersected.
+Add checks to make sure that user hints are processed if the
+previous hints are done processing.
 
-Calling pci_diag_* functions while holding a spinlock should otherwise
-be fine because these functions use mdelay() and poll the diagnostic
-window copy engine pipe.
+Signed-off-by: Mihir Shete <mihirsht@gmail.com>
+---
+ net/wireless/reg.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-Using ar->data_lock for a pci transport specific requirement (the
-diagnostic window) seems wrong though.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b4973bc..2c4e2ba 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -396,6 +396,14 @@ static bool regdom_changes(const char *alpha2)
+ 	return !alpha2_equal(r->alpha2, alpha2);
+ }
+ 
++static bool is_cfg80211_regdom_intersected(void)
++{
++	const struct ieee80211_regdomain *r = get_cfg80211_regdom();
++
++	if (!r)
++		return false;
++	return is_intersected_alpha2(r->alpha2);
++}
+ /*
+  * The NL80211_REGDOM_SET_BY_USER regdom alpha2 is cached, this lets
+  * you know if a valid regulatory hint with NL80211_REGDOM_SET_BY_USER
+@@ -1650,9 +1658,14 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ 	 */
+ 	if ((lr->initiator == NL80211_REGDOM_SET_BY_CORE ||
+ 	     lr->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
+-	     lr->initiator == NL80211_REGDOM_SET_BY_USER) &&
+-	    regdom_changes(lr->alpha2))
+-		return REG_REQ_IGNORE;
++	     lr->initiator == NL80211_REGDOM_SET_BY_USER)) {
++		if (lr->intersect) {
++			if (!is_cfg80211_regdom_intersected())
++				return REG_REQ_IGNORE;
++		} else if (regdom_changes(lr->alpha2)) {
++			return REG_REQ_IGNORE;
++		}
++	}
+ 
+ 	if (!regdom_changes(user_request->alpha2))
+ 		return REG_REQ_ALREADY_SET;
+-- 
+1.8.2.1
 
-
-Michał
