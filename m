@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40603 "EHLO sipsolutions.net"
+Received: from lekensteyn.nl ([178.21.112.251]:42427 "EHLO lekensteyn.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730AbaFFGKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 02:10:33 -0400
-Message-ID: <1402035030.4158.2.camel@jlt4.sipsolutions.net> (sfid-20140606_081043_149213_38543E7A)
-Subject: Re: [PATCH] cfg80211: make ethtool the driver's responsibility
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Fri, 06 Jun 2014 08:10:30 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE1BF2FB7@SC-VEXCH1.marvell.com>
-References: <1401896290-12942-1-git-send-email-johannes@sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F70430FE1BF2FB7@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754678AbaFNN2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jun 2014 09:28:52 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] net: wireless: rtlwifi: rtl8188ee: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sat, 14 Jun 2014 15:28:37 +0200
+Message-ID: <2259587.sBdtJmoxcK@al> (sfid-20140614_152914_289868_DB989E90)
+In-Reply-To: <1402752272-13696-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1402752272-13696-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1402752272-13696-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-06-05 at 16:16 -0700, Bing Zhao wrote:
-> Hi Johannes,
-
-> Amitkumar found that set_ringparam and get_ringparam are forgotten to be removed from cfg80211_ops.
+On Saturday 14 June 2014 15:24:32 Rickard Strandqvist wrote:
+> I found a logical error in an if statement that always evaluates to false.
 > 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index dc93c6b..29cb4b2 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2266,10 +2266,6 @@ struct cfg80211_qos_map {
->   *
->   * @get_antenna: Get current antenna configuration from device (tx_ant, rx_ant).
->   *
-> - * @set_ringparam: Set tx and rx ring sizes.
+> This has after same discussion resulted in that we add a macro to handle this.
 
-Oops, good catch, thanks!
+This commit message is useless. If you really need to refer to a mailing
+list thread, use something like:
 
-johannes
+Link: http://lkml.kernel.org/r/MESSAGE_ID_HERE
+
+... but it would even be better if you *explain* why the previous behavior
+is wrong, and what this patch does in an attempt to fix that.
+
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/net/wireless/rtlwifi/rtl8188ee/hw.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> index 94cd9df..9bdac68 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> @@ -1231,7 +1231,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+>  
+>  	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+>  	rtlpriv->cfg->ops->led_control(hw, ledaction);
+> -	if ((bt_msr & 0xfc) == MSR_AP)
+> +	if ((bt_msr & MSR_MASK) == MSR_AP)
+
+There is no such constant as MSR_MASK. Please compile test before sending.
+
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+>  	else
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+> 
+
+Kind regards,
+Peter
 
