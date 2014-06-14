@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mdfmta010.mxout.tch.inty.net ([91.221.169.51]:45116 "EHLO
-	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751920AbaF2TTF (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:63189 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754515AbaFNNwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 15:19:05 -0400
-Message-ID: <53B066A5.4070003@dpets.co.uk> (sfid-20140629_211910_106093_C0F6ABC3)
-Date: Sun, 29 Jun 2014 20:19:01 +0100
-From: John Talbut <jt@dpets.co.uk>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Firmware loading with static kernel and initramfs
-References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net>
-In-Reply-To: <53B05B72.1010502@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 14 Jun 2014 09:52:50 -0400
+Received: by mail-pa0-f46.google.com with SMTP id eu11so3013064pac.5
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:52:50 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id iz2sm8991708pbb.95.2014.06.14.06.52.48
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:52:49 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/16] rsi: Lower level debug messages and changed handling of confirm received for rsi_program_bb_rf().
+Date: Sat, 14 Jun 2014 19:22:40 +0530
+Message-Id: <1402753960-14074-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155253_225795_16B44D13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Lower level debug messages for some frames and changed confirm
+received for rsi_program_bb_rf() to a valid case.
 
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-On 29/06/14 19:31, Larry Finger wrote:
-> On 06/29/2014 12:15 PM, John Talbut wrote:
->> There seems to be a general problem when using a static kernel and
->> initramfs in
->> that the wireless drivers try to load firmware before the disks are
->> mounted and
->> the /lib/firmware folder is available.  Various people seem to have
->> come across
->> problems with firmware not loading, some of which seem to relate to this
->> problem, which they have approached as if it is a problem with their
->> particular
->> driver.  However it seems to be a general problem and I have had it
->> with three
->> different drivers.
->>
->> There seems to be a number of possible approaches to this: loading the
->> firmware
->> in an initramfs; changing the sequence in which wireless drivers start
->> so that
->> they wait until the disks are mounted; compiling the firmware into the
->> kernel
->> and loading the firmware as part of ifup. I see that the latter has
->> been done
->> for one driver
->> (http://thread.gmane.org/gmane.linux.kernel.wireless.general/3390).
->>
->> What is the current situation with this problem and what needs doing?
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> What kernel version, and what wireless drivers have this problem?
->
-> At one point, there was a timeout of 30 seconds for request_firmware()
-> calls, and that led to problems even when the drivers were built as
-> modules. That situation was handled in a number of wireless drivers by
-> using request_firmware_nowait(); however, my understanding was that user
-> space was fixed to avoid the timeout. I think udev was the component
-> that changed. What version of that are you using?
->
-> Larry
->
-I originally had the problem with a Broadcom BCM43225 wireless.  This 
-was with a 3.8 kernel.  This was solved by a patch to the kernel 
-brcmsmac driver and this is still working with a 3.14 kernel.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f5182cd..92f584e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1153,7 +1153,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 				common->fsm_state = FSM_EEPROM_READ_MAC_ADDR;
+ 			}
+ 		} else {
+-			rsi_dbg(ERR_ZONE,
++			rsi_dbg(INFO_ZONE,
+ 				"%s: Received bootup params cfm in %d state\n",
+ 				 __func__, common->fsm_state);
+ 			return 0;
+@@ -1216,7 +1216,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 					__func__);
+ 			}
+ 		} else {
+-			rsi_dbg(ERR_ZONE,
++			rsi_dbg(INFO_ZONE,
+ 				"%s: Received radio caps cfm in %d state\n",
+ 				 __func__, common->fsm_state);
+ 			return 0;
+@@ -1234,7 +1234,10 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 				return rsi_mac80211_attach(common);
+ 			}
+ 		} else {
+-			goto out;
++			rsi_dbg(INFO_ZONE,
++				"%s: Received bbb_rf cfm in %d state\n",
++				 __func__, common->fsm_state);
++			return 0;
+ 		}
+ 		break;
+ 
+-- 
+1.7.1
 
-Currently I have the problem with an Intel Centrino Wireless-N 130.  The 
-problem was present with a 3.11 kernel and currently with a 3.14 kernel. 
-  udev version 204-5linuxmint.
-
-A friend seems to have the problem with a Realtek 8129se wireless but we 
-are still checking out that this is the problem.
-
-John
