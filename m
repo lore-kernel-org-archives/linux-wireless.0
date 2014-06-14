@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:59357 "EHLO
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:44468 "EHLO
 	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbaFRVuw (ORCPT
+	with ESMTP id S1754392AbaFNNuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 17:50:52 -0400
-Received: by mail-pd0-f171.google.com with SMTP id fp1so1097806pdb.16
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:50:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXffnZnaiTmW-CWNEjHxrUOhyHBJU8pyoBY21OQTQ=o1QgQ@mail.gmail.com>
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com>
- <1399798250-20987-3-git-send-email-emmanuel.grumbach@intel.com>
- <CAB=NE6XOm1EK5CMc8N1xfdKeXcfxRuyCZQtUXQGC3wyGXudAEQ@mail.gmail.com>
- <CA+XVXfeEWB5NasJnEGXrm0aXsdhz7AZR2Az_Azv3rBbnrvatcg@mail.gmail.com>
- <CAB=NE6U=YaomArGA4VKCOv974AREw3eiTKM9U-fnjvidCDJ90g@mail.gmail.com>
- <CA+XVXfcJ4H32D6ZABZ9tSC2JO0Dv3c3uuHkEC-m0P4q0JJcdgQ@mail.gmail.com>
- <CAB=NE6UtCkxvQ=4ZnwnsEQY6kMdx-x+-YUgu636z0OTbOiNPcw@mail.gmail.com>
- <CA+XVXfcvXEi0o-UGNu1T95+rEfpQoVZPf9oVGL3AiqgGiu-LEw@mail.gmail.com>
- <CAB=NE6Vs5y0DANeRbhU7J1z45uxENhcKDG+6b84XPxOh_f_KPw@mail.gmail.com> <CA+XVXffnZnaiTmW-CWNEjHxrUOhyHBJU8pyoBY21OQTQ=o1QgQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 18 Jun 2014 14:50:31 -0700
-Message-ID: <CAB=NE6Wtwxby7M8uyng_t4Hnvw7K2cU8DF4VrZ_ZV52sKnY9Fg@mail.gmail.com> (sfid-20140618_235055_631032_C86B3500)
-Subject: Re: [PATCH 2/7] cfg80211: introduce regulatory flags controlling bw
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 Jun 2014 09:50:44 -0400
+Received: by mail-pd0-f171.google.com with SMTP id ft15so2983223pdb.16
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:50:44 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id fd5sm37773893pad.12.2014.06.14.06.50.42
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:50:43 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/16] rsi: Add macros for endpoints and set default value of endpoint.
+Date: Sat, 14 Jun 2014 19:20:33 +0530
+Message-Id: <1402753833-13950-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155047_336229_3AA5404D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 10:24 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> Can you propose a scenario where the new flags harm something older?
+Added macros for the endpoints and set the default value of endpoint
+to 2.4GHz and 20MHz.
 
-Using old userspace that does not have these flags set, the old
-mechanisms are supposed to still work.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    1 +
+ drivers/net/wireless/rsi/rsi_mgmt.h     |    5 +++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 2eefbf1..2cdb36a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -217,6 +217,7 @@ static void rsi_set_default_parameters(struct rsi_common *common)
+ 	common->min_rate = 0xffff;
+ 	common->fsm_state = FSM_CARD_NOT_READY;
+ 	common->iface_down = true;
++	common->endpoint = EP_2GHZ_20MHZ;
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 225215a..0641068 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -123,6 +123,11 @@
+ #define BW_20MHZ                        0
+ #define BW_40MHZ                        1
+ 
++#define EP_2GHZ_20MHZ			0
++#define EP_2GHZ_40MHZ			1
++#define EP_5GHZ_20MHZ			2
++#define EP_5GHZ_40MHZ			3
++
+ #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
+ 				 FIF_BCN_PRBRESP_PROMISC)
+ enum opmode {
+-- 
+1.7.1
+
