@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22984 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbaFFGv5 (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:60465 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754392AbaFNNvA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 02:51:57 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com>
-	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>
-	<538CA904.4000508@candelatech.com>
-	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
-	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
-	<538CC949.5020901@candelatech.com>
-	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
-	<538CD507.1050803@candelatech.com>
-	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>
-	<53909372.1040707@candelatech.com>
-Date: Fri, 6 Jun 2014 09:51:52 +0300
-In-Reply-To: <53909372.1040707@candelatech.com> (Ben Greear's message of "Thu,
-	5 Jun 2014 08:57:38 -0700")
-Message-ID: <87fvjimsxj.fsf@kamboji.qca.qualcomm.com> (sfid-20140606_085201_491391_65B8A2EC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 14 Jun 2014 09:51:00 -0400
+Received: by mail-pb0-f52.google.com with SMTP id rq2so934148pbb.25
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:50:59 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id xz7sm37803113pac.3.2014.06.14.06.50.58
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:50:59 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/16] rsi: Changed the radio caps frame.
+Date: Sat, 14 Jun 2014 19:20:50 +0530
+Message-Id: <1402753850-13979-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155102_641810_977A40B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Changed the radio caps frame and added the required fields.
 
->> Why do you want to put the crash dump in kernel log, can you describe
->> your "use case" here? For me it would be enough to have a UUID for each
->> crash dump and then have the driver print that to kernel log:
->> 
->> ath10k: firmware crashed (uuid 1234567890-4321)
->> 
->> And then you just need to find the correct dump from the file system and
->> start debugging. Would that be enough for you?
->
-> Not all systems will have fancy user-space able to deal with this.
->
-> At the very least, please leave in the current firmware crash
-> dump text.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    7 +++++++
+ drivers/net/wireless/rsi/rsi_mgmt.h     |   15 +++++++++++++++
+ 2 files changed, 22 insertions(+), 0 deletions(-)
 
-I'm not removing anything. That was just an example how we can identify
-crashes.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 2cdb36a..c3d8da9 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -331,6 +331,13 @@ static int rsi_load_radio_caps(struct rsi_common *common)
+ 		}
+ 	}
+ 
++	radio_caps->sifs_tx_11n = cpu_to_le16(SIFS_TX_11N_VALUE);
++	radio_caps->sifs_tx_11b = cpu_to_le16(SIFS_TX_11B_VALUE);
++	radio_caps->slot_rx_11n = cpu_to_le16(SHORT_SLOT_VALUE);
++	radio_caps->ofdm_ack_tout = cpu_to_le16(OFDM_ACK_TOUT_VALUE);
++	radio_caps->cck_ack_tout = cpu_to_le16(CCK_ACK_TOUT_VALUE);
++	radio_caps->preamble_type = cpu_to_le16(LONG_PREAMBLE);
++
+ 	radio_caps->desc_word[7] |= cpu_to_le16(radio_id << 8);
+ 
+ 	for (ii = 0; ii < MAX_HW_QUEUES; ii++) {
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 0641068..6ccf9d9 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -128,6 +128,15 @@
+ #define EP_5GHZ_20MHZ			2
+ #define EP_5GHZ_40MHZ			3
+ 
++#define SIFS_TX_11N_VALUE		580
++#define SIFS_TX_11B_VALUE		346
++#define SHORT_SLOT_VALUE		360
++#define LONG_SLOT_VALUE			640
++#define OFDM_ACK_TOUT_VALUE		2720
++#define CCK_ACK_TOUT_VALUE		9440
++#define LONG_PREAMBLE			0x0000
++#define SHORT_PREAMBLE			0x0001
++
+ #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
+ 				 FIF_BCN_PRBRESP_PROMISC)
+ enum opmode {
+@@ -243,6 +252,12 @@ struct rsi_radio_caps {
+ 	u8 num_11n_rates;
+ 	u8 num_11ac_rates;
+ 	__le16 gcpd_per_rate[20];
++	__le16 sifs_tx_11n;
++	__le16 sifs_tx_11b;
++	__le16 slot_rx_11n;
++	__le16 ofdm_ack_tout;
++	__le16 cck_ack_tout;
++	__le16 preamble_type;
+ } __packed;
+ 
+ static inline u32 rsi_get_queueno(u8 *addr, u16 offset)
 -- 
-Kalle Valo
+1.7.1
+
