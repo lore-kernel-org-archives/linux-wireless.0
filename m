@@ -1,122 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50084 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753659AbaFPFta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 01:49:30 -0400
-Message-ID: <539E8559.3010601@linux.intel.com> (sfid-20140616_074936_095313_3FA081CE)
-Date: Mon, 16 Jun 2014 13:49:13 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, linville@tuxdriver.com,
-	pieterpg@broadcom.com, dekim@broadcom.com, mcgrof@do-not-panic.com,
-	antonio@open-mesh.com, johannes.berg@intel.com
-CC: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
- and connecting
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:52437 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754781AbaFNNxY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jun 2014 09:53:24 -0400
+Received: by mail-pb0-f44.google.com with SMTP id md12so2171916pbc.31
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:53:24 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id is5sm9029986pbb.8.2014.06.14.06.53.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:53:23 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/16] rsi: Changed the SDIO interrupt variables and some clean up.
+Date: Sat, 14 Jun 2014 19:23:15 +0530
+Message-Id: <1402753995-14133-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155329_169154_016868F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 14485894add32aedacb3e486ebb2cc2b73861abf Mon Sep 17 00:00:00 2001
-From: Fu zhonghui <zhonghui.fu@linux.intel.com>
-Date: Wed, 11 Jun 2014 11:06:55 +0800
-Subject: [PATCH] brcmfmac: prevent watchdog from interfering with scanning and connecting
+Changed the SDIO interrupt variables and some clean ups.
 
-Watchdog in brcmfmac driver may make WiFi chip enter sleep mode
-before completion of scanning or connecting.
-
-This will lead to scanning or connecting failure.
-
-Increasing temporarily idle-time threshold during scanning or
-connecting can ensure scanning or connecting success without
-watchdog interference.
-
-Signed-off-by: Fu zhonghui <zhonghui.fu@linux.intel.com>
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 ++++++++++++++++--
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
- 2 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +++++---
+ drivers/net/wireless/rsi/rsi_sdio.h         |    8 ++++----
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 13c89a0..729deab 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -34,6 +34,7 @@
- #include <linux/vmalloc.h>
- #include <linux/platform_data/brcmfmac-sdio.h>
- #include <linux/moduleparam.h>
-+#include <net/cfg80211.h>
- #include <asm/unaligned.h>
- #include <defs.h>
- #include <brcmu_wifi.h>
-@@ -43,6 +44,10 @@
- #include "sdio_host.h"
- #include "chip.h"
- #include "nvram.h"
-+#include "dhd.h"
-+#include "fwil_types.h"
-+#include "p2p.h"
-+#include "wl_cfg80211.h"
- 
- #define DCMD_RESP_TIMEOUT  2000	/* In milli second */
- 
-@@ -307,6 +312,7 @@ struct rte_console {
- 					 * when idle
- 					 */
- #define BRCMF_IDLE_INTERVAL	1
-+#define BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING	100
- 
- #define KSO_WAIT_US 50
- #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
-@@ -3613,9 +3619,9 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
- 
- static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- {
--#ifdef DEBUG
- 	struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
--#endif	/* DEBUG */
-+	struct brcmf_cfg80211_info *cfg = bus_if->drvr->config;
-+	struct brcmf_if *ifp = cfg->pub->iflist[0];
- 
- 	brcmf_dbg(TIMER, "Enter\n");
- 
-@@ -3678,6 +3684,14 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- 
- 	/* On idle timeout clear activity flag and/or turn off clock */
- 	if ((bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 20d11cc..4834a9a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -401,14 +401,16 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 			case BUFFER_AVAILABLE:
+ 				dev->rx_info.watch_bufferfull_count = 0;
+ 				dev->rx_info.buffer_full = false;
++				dev->rx_info.semi_buffer_full = false;
+ 				dev->rx_info.mgmt_buffer_full = false;
+ 				rsi_sdio_ack_intr(common->priv,
+ 						  (1 << PKT_BUFF_AVAILABLE));
+-				rsi_set_event((&common->tx_thread.event));
++				rsi_set_event(&common->tx_thread.event);
 +
-+		if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status) ||
-+		    test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
-+			bus->idletime = BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING;
-+		} else {
-+			bus->idletime = BRCMF_IDLE_INTERVAL;
-+		}
-+
- 		if (++bus->idlecount >= bus->idletime) {
- 			bus->idlecount = 0;
- 			if (bus->activity) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index be19852..e76517e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -913,6 +913,8 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
- 		return -EAGAIN;
- 	}
+ 				rsi_dbg(ISR_ZONE,
+-					"%s: ==> BUFFER_AVILABLE <==\n",
++					"%s: ==> BUFFER_AVAILABLE <==\n",
+ 					__func__);
+-				dev->rx_info.buf_avilable_counter++;
++				dev->rx_info.buf_available_counter++;
+ 				break;
  
-+	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+
- 	/* If scan req comes for p2p0, send it over primary I/F */
- 	if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
- 		vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
-@@ -933,7 +935,6 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
- 	}
+ 			case FIRMWARE_ASSERT_IND:
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index df4b5e2..c7e8f2b 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -30,7 +30,7 @@
  
- 	cfg->scan_request = request;
--	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
- 	if (escan_req) {
- 		cfg->escan_info.run = brcmf_run_escan;
- 		err = brcmf_p2p_scan_prep(wiphy, request, vif);
--- 1.7.1
+ enum sdio_interrupt_type {
+ 	BUFFER_FULL         = 0x0,
+-	BUFFER_AVAILABLE    = 0x1,
++	BUFFER_AVAILABLE    = 0x2,
+ 	FIRMWARE_ASSERT_IND = 0x3,
+ 	MSDU_PACKET_PENDING = 0x4,
+ 	UNKNOWN_INT         = 0XE
+@@ -42,7 +42,7 @@ enum sdio_interrupt_type {
+ #define PKT_MGMT_BUFF_FULL                      2
+ #define MSDU_PKT_PENDING                        3
+ /* Interrupt Bit Related Macros */
+-#define PKT_BUFF_AVAILABLE                      0
++#define PKT_BUFF_AVAILABLE                      1
+ #define FW_ASSERT_IND                           2
+ 
+ #define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
+@@ -84,7 +84,7 @@ enum sdio_interrupt_type {
+ #define TA_HOLD_THREAD_VALUE         cpu_to_le32(0xF)
+ #define TA_RELEASE_THREAD_VALUE      cpu_to_le32(0xF)
+ #define TA_BASE_ADDR                 0x2200
+-#define MISC_CFG_BASE_ADDR           0x4150
++#define MISC_CFG_BASE_ADDR           0x4105
+ 
+ struct receive_info {
+ 	bool buffer_full;
+@@ -98,7 +98,7 @@ struct receive_info {
+ 	u32 total_sdio_msdu_pending_intr;
+ 	u32 total_sdio_unknown_intr;
+ 	u32 buf_full_counter;
+-	u32 buf_avilable_counter;
++	u32 buf_available_counter;
+ };
+ 
+ struct rsi_91x_sdiodev {
+-- 
+1.7.1
 
