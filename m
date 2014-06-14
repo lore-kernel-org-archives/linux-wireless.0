@@ -1,64 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54882 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753192AbaFHPkm (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:55827 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754515AbaFNNv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 11:40:42 -0400
-Message-ID: <539483F9.9050401@candelatech.com> (sfid-20140608_174351_877101_8153F428)
-Date: Sun, 08 Jun 2014 08:40:41 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com> <87egz3nxdn.fsf@kamboji.qca.qualcomm.com> <5390B632.7030305@candelatech.com> <87wqcumuuw.fsf@kamboji.qca.qualcomm.com> <5391E842.4010401@candelatech.com> <874mzwkher.fsf@kamboji.qca.qualcomm.com> <539330A1.9050307@candelatech.com> <877g4riz3w.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877g4riz3w.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 14 Jun 2014 09:51:59 -0400
+Received: by mail-pb0-f41.google.com with SMTP id ma3so3031055pbc.0
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:51:59 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id ln2sm37726387pab.35.2014.06.14.06.51.57
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:51:58 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/16] rsi: Changed rate handling.
+Date: Sat, 14 Jun 2014 19:21:49 +0530
+Message-Id: <1402753909-14040-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155201_822963_3E01E241)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Changed rate handling.
 
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |   35 ++++++++++++++----------------
+ 1 files changed, 16 insertions(+), 19 deletions(-)
 
-On 06/08/2014 01:28 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 06/07/2014 05:55 AM, Kalle Valo wrote:
->>> Ben Greear <greearb@candelatech.com> writes:
->>>
->>>>>> I'm a bit leery of adding spin-locks in the dump routine just for
->>>>>> this, but I can add and use a new spin-lock if you prefer.
->>>>>
->>>>> Why a new spinlock? I didn't review the locking requirements, but I
->>>>> would first check ar->data_lock can be used.
->>>>
->>>> I think it has to be a spin-lock because the crash dump is gathered
->>>> in the irq handler, so I can't use a mutex as far as I know...
->>>>
->>>> I'll work on adding such a lock today.
->>>
->>> I asked why add a _new_ spinlock as ar->data_lock is already a spinlock.
->>
->> Surely we do not want to impede traffic flow just to dump debug info?
->
-> I don't see data_lock being used anywhere in hotpath, but of course I
-> might have missed something. Anyway, if for optimisation reasons we need
-> to introduce a new lock that should happen for a specific case in hot
-> path. Handling firmware debug log events is not in that category.
->
->> And, it is easier to review a specific spinlock rather than use one big
->> global-ish lock and have to review every use of that lock for issues.
->
-> Sure, it's easier for you to just add a new lock and then forget :) But
-> not for me who would have to maintain 20 different locks for years to
-> come. My view is that a new lock should be added on very exceptional
-> cases and with good justifications.
-
-I have the opposite opinion on what makes it easy to maintain
-locks, but I'll switch to the data-spinlock as you suggest.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 5c122e8..f5182cd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -942,7 +942,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	struct ieee80211_hw *hw = common->priv->hw;
+ 	u8 band = hw->conf.chandef.chan->band;
+ 	u8 num_supported_rates = 0;
+-	u8 rate_offset = 0;
++	u8 rate_table_offset, rate_offset = 0;
+ 	u32 rate_bitmap = common->bitrate_mask[band];
+ 
+ 	u16 *selected_rates, min_rate;
+@@ -978,14 +978,18 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	if (common->channel_width == BW_40MHZ)
+ 		auto_rate->desc_word[7] |= cpu_to_le16(1);
+ 
+-	if (band == IEEE80211_BAND_2GHZ)
+-		min_rate = STD_RATE_01;
+-	else
+-		min_rate = STD_RATE_06;
++	if (band == IEEE80211_BAND_2GHZ) {
++		min_rate = RSI_RATE_1;
++		rate_table_offset = 0;
++	} else {
++		min_rate = RSI_RATE_6;
++		rate_table_offset = 4;
++	}
+ 
+ 	for (ii = 0, jj = 0; ii < ARRAY_SIZE(rsi_rates); ii++) {
+ 		if (rate_bitmap & BIT(ii)) {
+-			selected_rates[jj++] = (rsi_rates[ii].bitrate / 5);
++			selected_rates[jj++] =
++			(rsi_rates[ii + rate_table_offset].bitrate / 5);
+ 			rate_offset++;
+ 		}
+ 	}
+@@ -998,13 +1002,6 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 		rate_offset += ARRAY_SIZE(mcs);
+ 	}
+ 
+-	if (rate_offset < (RSI_TBL_SZ / 2) - 1) {
+-		for (ii = jj; ii < (RSI_TBL_SZ / 2); ii++) {
+-			selected_rates[jj++] = min_rate;
+-			rate_offset++;
+-		}
+-	}
+-
+ 	sort(selected_rates, jj, sizeof(u16), &rsi_compare, NULL);
+ 
+ 	/* mapping the rates to RSI rates */
+@@ -1020,25 +1017,25 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 
+ 	/* loading HT rates in the bottom half of the auto rate table */
+ 	if (common->vif_info[0].is_ht) {
+-		if (common->vif_info[0].sgi)
+-			auto_rate->supported_rates[rate_offset++] =
+-				cpu_to_le16(RSI_RATE_MCS7_SG);
+-
+ 		for (ii = rate_offset, kk = ARRAY_SIZE(rsi_mcsrates) - 1;
+ 		     ii < rate_offset + 2 * ARRAY_SIZE(rsi_mcsrates); ii++) {
+-			if (common->vif_info[0].sgi)
++			if (common->vif_info[0].sgi ||
++			    conf_is_ht40(&common->priv->hw->conf))
+ 				auto_rate->supported_rates[ii++] =
+ 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
+ 			auto_rate->supported_rates[ii] =
+ 				cpu_to_le16(rsi_mcsrates[kk--]);
+ 		}
+ 
+-		for (; ii < RSI_TBL_SZ; ii++) {
++		for (; ii < (RSI_TBL_SZ - 1); ii++) {
+ 			auto_rate->supported_rates[ii] =
+ 				cpu_to_le16(rsi_mcsrates[0]);
+ 		}
+ 	}
+ 
++	for (; ii < RSI_TBL_SZ; ii++)
++		auto_rate->supported_rates[ii] = min_rate;
++
+ 	auto_rate->num_supported_rates = cpu_to_le16(num_supported_rates * 2);
+ 	auto_rate->moderate_rate_inx = cpu_to_le16(num_supported_rates / 2);
+ 	auto_rate->desc_word[7] |= cpu_to_le16(0 << 8);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
+
