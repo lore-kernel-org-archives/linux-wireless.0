@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57331 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbaFHIMi (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:58178 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784AbaFNNyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 04:12:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
-	<87y4xal6vb.fsf@kamboji.qca.qualcomm.com>
-	<5391F51B.4020103@candelatech.com>
-	<87zjhoj2rt.fsf@kamboji.qca.qualcomm.com>
-	<53932FE1.6090506@candelatech.com>
-Date: Sun, 8 Jun 2014 11:12:28 +0300
-In-Reply-To: <53932FE1.6090506@candelatech.com> (Ben Greear's message of "Sat,
-	7 Jun 2014 08:29:37 -0700")
-Message-ID: <87bnu3izv7.fsf@kamboji.qca.qualcomm.com> (sfid-20140608_101249_079392_FA6F1EB1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 14 Jun 2014 09:54:47 -0400
+Received: by mail-pb0-f52.google.com with SMTP id rq2so943452pbb.39
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:54:47 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id nw13sm37746610pab.37.2014.06.14.06.54.45
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sat, 14 Jun 2014 06:54:46 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/16] rsi: Sending QoS null packet via the mgmt queue.
+Date: Sat, 14 Jun 2014 19:24:37 +0530
+Message-Id: <1402754077-14225-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155450_220764_34CBFCC8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Send the QoS null packet via mgmt queue.
 
->>>> Instead of doing atomic allocations multiple times in a loop, would it
->>>> be better to allocate just one buffer before the loop and free it
->>>> afterwards?
->>>
->>> There is no hard guarantee that the buffer lengths are the same,
->>> so I think it needs to remain as is.  Would rather not crap out
->>> because firmware suddenly got more clever...
->>
->> This is related to my earlier comment about having a max len for the
->> buffers. So why not come up with a sane max length, allocate once a
->> temporary buffer of that length and use the same buffer in the loop?
->
-> I can fix it at a 4k chunk if you want.  Current firmware uses around 2k chunk
-> I believe, and only two buffers, so either way it's not a lot of work for CPU.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-I think we should have a max chunk size in ath10k anyway and using one
-buffer makes sense in that case.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 6f6a4d0..1cd0914 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -339,7 +339,8 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 	}
+ 
+ 	if ((ieee80211_is_mgmt(tmp_hdr->frame_control)) ||
+-	    (ieee80211_is_ctl(tmp_hdr->frame_control))) {
++	    (ieee80211_is_ctl(tmp_hdr->frame_control)) ||
++	    (ieee80211_is_qos_nullfunc(tmp_hdr->frame_control))) {
+ 		q_num = MGMT_SOFT_Q;
+ 		skb->priority = q_num;
+ 	} else {
 -- 
-Kalle Valo
+1.7.1
+
