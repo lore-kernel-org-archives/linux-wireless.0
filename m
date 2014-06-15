@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:50541 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754750AbaFNN0l (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:56453 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbaFOISZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:26:41 -0400
-Received: by mail-lb0-f172.google.com with SMTP id c11so2138531lbj.31
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:26:40 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] net: wireless: rtlwifi: rtl8188ee: reg.h:  Cleaning up if statement that always evaluates to false 
-Date: Sat, 14 Jun 2014 15:27:37 +0200
-Message-Id: <1402752458-13836-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140614_152719_574098_90D6B2EA)
+	Sun, 15 Jun 2014 04:18:25 -0400
+Message-ID: <539D56CE.9090209@broadcom.com> (sfid-20140615_101843_558912_5A224FCA)
+Date: Sun, 15 Jun 2014 10:18:22 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jahnavi Meher <jahnavi.meher@gmail.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/16] Fixes, adding support for 5GHz, bgscan and 40MHz.
+References: <1402753689-13819-1-git-send-email-jahnavi.meher@gmail.com>
+In-Reply-To: <1402753689-13819-1-git-send-email-jahnavi.meher@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a logical error in an if statement that always evaluates to false.
+On 14-06-14 15:48, Jahnavi Meher wrote:
+> This series of patches contains fixes, adds support for
+> 5GHz and bgscan and 40MHz.
 
-This has after same discussion resulted in that we add a macro to handle this.
+Thanks for splitting up this series. It would be good to version the 
+series, ie. [PATCH v2 xx/16] and indicate this replaces the previous 
+patch series referring to the Message-ID. In this case
 
-This was partly found using a static code analysis program called cppcheck.
+Message-ID: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
 
-Rickard Strandqvist (1):
-  net: wireless: rtlwifi: rtl8188ee: reg.h:  Cleaning up if statement that always evaluates to false
+Regards,
+Arend
 
- drivers/net/wireless/rtlwifi/rtl8188ee/reg.h |    1 +
- 1 file changed, 1 insertion(+)
-
--- 
-1.7.10.4
+> Jahnavi Meher (16):
+>    rsi: Mapping the debugfs stats to the correct s/w queues.
+>    rsi: Fixed the kernel doc
+>    rsi: Using band from rsi_common to fill in ieee80211_rx_status
+>    rsi: Add macros for endpoints and set default value of endpoint.
+>    rsi: Changed the radio caps frame.
+>    rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
+>    rsi: Changed rate handling.
+>    rsi: Lower level debug messages and changed handling of confirm
+>      received for rsi_program_bb_rf().
+>    rsi: Use SGI if configured for fixed rate transmission.
+>    rsi: Changed the SDIO interrupt variables and some clean up.
+>    rsi: Changed the logic of dequeuing packets from hal queues.
+>    rsi: Added debug messages.
+>    rsi: Sending QoS null packet via the mgmt queue.
+>    rsi: Adding support for 5GHz
+>    rsi: Adding support for host based bgscan.
+>    rsi: Changes for 40MHz
+>
+>   drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
+>   drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+>   drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
+>   drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  236 +++++++++++++++++++--------
+>   drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
+>   drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
+>   drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+>   drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
+>   drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
+>   9 files changed, 416 insertions(+), 128 deletions(-)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
