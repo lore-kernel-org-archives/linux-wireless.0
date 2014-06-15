@@ -1,99 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:47104 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbaFXTiI (ORCPT
+Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:53999 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751176AbaFOUiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:38:08 -0400
-Received: by mail-we0-f178.google.com with SMTP id x48so878850wes.37
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:38:06 -0700 (PDT)
-Message-ID: <53A9D396.1020306@gmail.com> (sfid-20140624_213812_348507_3482AB78)
-Date: Tue, 24 Jun 2014 22:37:58 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Subject: pull request: iwlwifi 2014-06-24
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="51fRANmkQTXxPl3K4Ih4H9M69K22lMIOk"
+	Sun, 15 Jun 2014 16:38:13 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org,
+	netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, users@rt2x00.serialmonkey.com,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [PATCH -next 00/26] treewide: Use dma_zalloc_coherent
+Date: Sun, 15 Jun 2014 13:37:29 -0700
+Message-Id: <cover.1402863904.git.joe@perches.com> (sfid-20140615_224631_397774_9D995007)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---51fRANmkQTXxPl3K4Ih4H9M69K22lMIOk
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
 
-Hi John,
+Joe Perches (26):
+  powerpc: Use dma_zalloc_coherent
+  sh: Use dma_zalloc_coherent
+  ata: Use dma_zalloc_coherent
+  block: Use dma_zalloc_coherent
+  crypto: Use dma_zalloc_coherent
+  dma: Use dma_zalloc_coherent
+  gpu: Use dma_zalloc_coherent
+  infiniband: Use dma_zalloc_coherent
+  mmc: Use dma_zalloc_coherent
+  broadcom: Use dma_zalloc_coherent
+  hisilicon: Use dma_zalloc_coherent
+  intel: Use dma_zalloc_coherent
+  ath: Use dma_zalloc_coherent
+  rt2x00: Use dma_zalloc_coherent
+  bfa: Use dma_zalloc_coherent
+  bnx2fc: Use dma_zalloc_coherent
+  bnx2i: Use dma_zalloc_coherent
+  dpt_i2o: Use dma_zalloc_coherent
+  lpfc: Use dma_zalloc_coherent
+  megaraid: Use dma_zalloc_coherent
+  mvsas: Use dma_zalloc_coherent
+  qla2xxx: Use dma_zalloc_coherent
+  qla4xxx: Use dma_zalloc_coherent
+  usb: Use dma_zalloc_coherent
+  fbdev: Use dma_zalloc_coherent
+  sound: Use dma_zalloc_coherent
 
-I have been travelling so this comes a bit late. Nevertheless, it is rela=
-tively small.
+ arch/powerpc/platforms/pasemi/dma_lib.c       |  8 ++--
+ arch/powerpc/sysdev/fsl_rmu.c                 |  9 ++--
+ arch/sh/mm/consistent.c                       |  4 +-
+ drivers/ata/sata_fsl.c                        |  5 +--
+ drivers/block/nvme-core.c                     |  5 +--
+ drivers/crypto/amcc/crypto4xx_core.c          |  8 ++--
+ drivers/crypto/ixp4xx_crypto.c                |  8 ++--
+ drivers/dma/imx-sdma.c                        |  5 +--
+ drivers/dma/mxs-dma.c                         |  8 ++--
+ drivers/gpu/drm/drm_pci.c                     |  6 +--
+ drivers/infiniband/hw/cxgb3/cxio_hal.c        |  7 ++--
+ drivers/infiniband/hw/mthca/mthca_memfree.c   |  5 +--
+ drivers/infiniband/hw/ocrdma/ocrdma_hw.c      | 20 ++++-----
+ drivers/infiniband/hw/ocrdma/ocrdma_stats.c   |  6 +--
+ drivers/infiniband/hw/ocrdma/ocrdma_verbs.c   |  8 ++--
+ drivers/mmc/host/msm_sdcc.c                   |  8 ++--
+ drivers/net/ethernet/broadcom/bcm63xx_enet.c  |  6 +--
+ drivers/net/ethernet/hisilicon/hix5hd2_gmac.c |  5 +--
+ drivers/net/ethernet/intel/ixgb/ixgb_main.c   |  6 +--
+ drivers/net/wireless/ath/ath10k/pci.c         |  8 +---
+ drivers/net/wireless/ath/ath10k/wmi.c         |  8 +---
+ drivers/net/wireless/ath/wcn36xx/dxe.c        |  6 +--
+ drivers/net/wireless/rt2x00/rt2x00mmio.c      |  8 ++--
+ drivers/scsi/bfa/bfad_bsg.c                   |  6 +--
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c              | 59 ++++++++++++---------------
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c              | 51 ++++++++++-------------
+ drivers/scsi/bnx2i/bnx2i_hwi.c                | 14 +++----
+ drivers/scsi/dpt_i2o.c                        | 19 ++++-----
+ drivers/scsi/lpfc/lpfc_bsg.c                  |  5 +--
+ drivers/scsi/lpfc/lpfc_init.c                 | 22 ++++------
+ drivers/scsi/lpfc/lpfc_mbox.c                 |  6 +--
+ drivers/scsi/lpfc/lpfc_sli.c                  | 14 +++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c   |  9 ++--
+ drivers/scsi/mvsas/mv_init.c                  | 26 +++++-------
+ drivers/scsi/qla2xxx/qla_init.c               | 10 ++---
+ drivers/scsi/qla4xxx/ql4_init.c               |  5 +--
+ drivers/scsi/qla4xxx/ql4_mbx.c                | 21 ++++------
+ drivers/scsi/qla4xxx/ql4_nx.c                 |  5 +--
+ drivers/scsi/qla4xxx/ql4_os.c                 | 12 +++---
+ drivers/usb/dwc2/hcd_ddma.c                   | 20 ++++-----
+ drivers/usb/host/uhci-hcd.c                   |  7 ++--
+ drivers/video/fbdev/da8xx-fb.c                |  9 ++--
+ sound/aoa/soundbus/i2sbus/core.c              | 12 ++----
+ sound/sparc/dbri.c                            |  6 +--
+ 44 files changed, 197 insertions(+), 308 deletions(-)
 
-I have here a fix from Eliad for scheduled scan: it fixes a firmware asse=
-rtion. Arik reverts a patch I made that didn't take into account that 316=
-0 doesn't have UAPSD and hence, we can't assume that all newer firmwares =
-support the feature. Here too, the visible effect is a firmware assertion=
-=2E Along with that, we have a few fixes and additions to the device list=
-=2E
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
-Please tell me if you have problems. Thanks!
-
-The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626b3=
-8f:
-
-  Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- for-john
-
-for you to fetch changes up to a42c9fcc4a88cdd246fab3bcf06c4487afee3d88:
-
-  Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag" (2014-0=
-6-24 22:01:46 +0300)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag"
-
-Eliad Peller (1):
-      iwlwifi: mvm: rework sched scan channel configuration
-
-Oren Givon (1):
-      iwlwifi: update the 7265 series HW IDs
-
- drivers/net/wireless/iwlwifi/iwl-fw.h       |  1 +
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 +++++++
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 65 +++++++++++++++++++----=
-------------------------------------------
- drivers/net/wireless/iwlwifi/pcie/drv.c     |  3 ++-
- 4 files changed, 29 insertions(+), 47 deletions(-)
-
-
---51fRANmkQTXxPl3K4Ih4H9M69K22lMIOk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTqdObAAoJEC0Llv5uNjIB2aUQAIvw7/fRwPJF8qwjlw3yuj7P
-XrVk8cZVWl0ClCqzJ1K5XLp2Dl2A402s5F5KO2dsMSUoBCXTl4l7E/a8x5YIS3/V
-ud9n1258zMOU018FIpeE+IYSzEH3Oh6gW3qKLUmID+9Fi7qqXaW+u2dPF4Qnf5VK
-Z4ihoyxdUG/nN1yGYlufHaHaO1uXyVmH47FPW+6xNDcYAYYtt+zHaDRPNIft+6z4
-iEliyIsyy2LTIEzdS/T3SktCsrLESE+jDEeaeEPp8VqbdKcA+ycIM04tCkZ2gozP
-IcBuHxOvrRpBU9rHTZMgQNfGtUlqs/2saCH0bxg4Hqau91ZvN99L7pZYfH+gmraK
-9cSRwZEqek0o1ghxsYxQpIdiBX1r3sn59sEoBG/5OPqVAWDSV4rZUoQQ6rvDakEz
-cyWl9rt+bphG4DrCwAeA1rdBPzRSgEXtoTXE4SIR5xms/4f5qc4KektjSVVZisiQ
-uM2YM3h5b2+F3t/Tq96UEXJDS7RCuorLKLZm+4WpDfAP2nKmxhmcHGUfZWaDjxUp
-jHcjl7CpglMLsW1Qz5V71IxFLBN6VGxYmTfweFBlhHuSgUrRbg/kucDgZoug45yD
-GZcu4kZZjf6Pdpbl5M+gfzhayfZuBlbPsDUELOi1iiiQdgE/WwSZpwCwN1eSnsiN
-ep/VZgmYFWn0BcdTMdKs
-=reF4
------END PGP SIGNATURE-----
-
---51fRANmkQTXxPl3K4Ih4H9M69K22lMIOk--
