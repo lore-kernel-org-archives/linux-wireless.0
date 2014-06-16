@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25277 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755484AbaFWTX1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 15:23:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Date: Mon, 23 Jun 2014 12:23:11 -0700
-Subject: RE: [PATCH] Revert "mwifiex: Use the proper interfaces"
-Message-ID: <477F20668A386D41ADCC57781B1F70430FE56129EB@SC-VEXCH1.marvell.com> (sfid-20140623_212330_430664_82C9A699)
-References: <1403309262-5737-1-git-send-email-bzhao@marvell.com>
- <alpine.DEB.2.10.1406220013470.5170@nanos>
-In-Reply-To: <alpine.DEB.2.10.1406220013470.5170@nanos>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:33651 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbaFPOKN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 10:10:13 -0400
+Received: by mail-pb0-f44.google.com with SMTP id md12so3707041pbc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:10:13 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id gu1sm19042462pbd.0.2014.06.16.07.10.11
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:10:12 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 02/16] rsi: Fixed the kernel doc
+Date: Mon, 16 Jun 2014 19:40:02 +0530
+Message-Id: <1402927802-3793-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161035_781678_53D6E966)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Thomas,
+Changed the function header to match the function name.
 
-> > This reverts commit a82fc3b4a2bceb7c6587249cb690342eb5065979.
-> >
-> > Thomas corrected me on that I misunderstood Johannes' comment
-> > for net_timedelta() and the ktime_get_real() usage inside
-> > __net_timestamp().
-> 
-> And still my V2 patch is functionally equivivalent to the current
-> implementation but uses the proper interfaces for that.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Yes, your v2 patch is equivalent to the current code using the proper interfaces.
-It also makes the code simpler and cleaner. Thanks!
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 54aaeb0..a1bdea1 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -185,7 +185,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ }
+ 
+ /**
+- * rsi_mac80211_attach() - This function is used to de-initialize the
++ * rsi_mac80211_detach() - This function is used to de-initialize the
+  *			   Mac80211 stack.
+  * @adapter: Pointer to the adapter structure.
+  *
+-- 
+1.7.1
 
-Hi John,
-
-Could you please apply the v2 patch titled "[patch V2] wireless: mwifiex: Use the proper interfaces" after applying this "revert" patch?
-
-Thanks,
-Bing
-
-> 
-> If the network core folks come up with a clock monotonic based
-> solution, then you do not have to change anything at all. It just
-> works ...
-> 
-> That's what interfaces are made for....
-> 
-> Thanks,
-> 
-> 	tglx
