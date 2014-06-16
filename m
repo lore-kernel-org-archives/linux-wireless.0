@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:64997 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbaFPOMJ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4183 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755595AbaFPQiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 10:12:09 -0400
-Received: by mail-pa0-f53.google.com with SMTP id ey11so1087941pad.12
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:12:08 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id f2sm69549390pat.11.2014.06.16.07.12.07
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Mon, 16 Jun 2014 07:12:08 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 06/16] rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
-Date: Mon, 16 Jun 2014 19:41:58 +0530
-Message-Id: <1402927918-3919-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161213_961353_4DFE3DBA)
+	Mon, 16 Jun 2014 12:38:21 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 06/25] wil6210: more debug info for vring
+Date: Mon, 16 Jun 2014 19:37:04 +0300
+Message-ID: <1402936643-31819-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190456_986676_87E7C27D)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Made required changes to rsi_set_channel() and rsi_program_bb_rf()
-functions.
+print used/available counters on debugfs;
+print to dmesg when Tx vring becomes empty
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+This aids with performance investigation
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 9 +++++++--
+ drivers/net/wireless/ath/wil6210/txrx.c    | 4 ++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index c3d8da9..5c122e8 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -596,7 +596,7 @@ static int rsi_program_bb_rf(struct rsi_common *common)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4fb3375..d90aa28 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -72,11 +72,16 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
+ 		if (vring->va) {
+ 			int cid = wil->vring2cid_tid[i][0];
+ 			int tid = wil->vring2cid_tid[i][1];
++			u32 swhead = vring->swhead;
++			u32 swtail = vring->swtail;
++			int used = (vring->size + swhead - swtail)
++				   % vring->size;
++			int avail = vring->size - used - 1;
+ 			char name[10];
+ 			snprintf(name, sizeof(name), "tx_%2d", i);
  
- 	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
- 	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
--	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
-+	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
+-			seq_printf(s, "\n%pM CID %d TID %d\n",
+-				   wil->sta[cid].addr, cid, tid);
++			seq_printf(s, "\n%pM CID %d TID %d [%3d|%3d]\n",
++				   wil->sta[cid].addr, cid, tid, used, avail);
+ 			wil_print_vring(s, wil, name, vring, '_', 'H');
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 0784ef3..c08d041 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1132,6 +1132,10 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 			done++;
+ 		}
+ 	}
++
++	if (wil_vring_is_empty(vring))
++		wil_dbg_txrx(wil, "Ring[%2d] empty\n", ringid);
++
+ 	if (wil_vring_avail_tx(vring) > wil_vring_wmark_high(vring))
+ 		netif_tx_wake_all_queues(wil_to_ndev(wil));
  
- 	if (common->rf_reset) {
- 		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
-@@ -849,23 +849,6 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
- 	rsi_dbg(MGMT_TX_ZONE,
- 		"%s: Sending scan req frame\n", __func__);
- 
--	if (common->band == IEEE80211_BAND_5GHZ) {
--		if ((channel >= 36) && (channel <= 64))
--			channel = ((channel - 32) / 4);
--		else if ((channel > 64) && (channel <= 140))
--			channel = ((channel - 102) / 4) + 8;
--		else if (channel >= 149)
--			channel = ((channel - 151) / 4) + 18;
--		else
--			return -EINVAL;
--	} else {
--		if (channel > 14) {
--			rsi_dbg(ERR_ZONE, "%s: Invalid chno %d, band = %d\n",
--				__func__, channel, common->band);
--			return -EINVAL;
--		}
--	}
--
- 	skb = dev_alloc_skb(FRAME_DESC_SZ);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
-@@ -885,6 +868,7 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
- 					       (RSI_RF_TYPE << 4));
- 
- 	mgmt_frame->desc_word[5] = cpu_to_le16(0x01);
-+	mgmt_frame->desc_word[6] = cpu_to_le16(0x12);
- 
- 	if (common->channel_width == BW_40MHZ)
- 		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
 -- 
-1.7.1
+1.9.1
 
