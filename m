@@ -1,51 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:65134 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770AbaF2RIG (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:37567 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755104AbaFPKid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 13:08:06 -0400
-Received: by mail-oa0-f41.google.com with SMTP id l6so7735179oag.14
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 10:08:04 -0700 (PDT)
-Message-ID: <53B047F7.2000204@lwfinger.net> (sfid-20140629_190813_347958_5DE218A4)
-Date: Sun, 29 Jun 2014 12:08:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 16 Jun 2014 06:38:33 -0400
+Received: by mail-vc0-f180.google.com with SMTP id im17so4642421vcb.39
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 03:38:32 -0700 (PDT)
 MIME-Version: 1.0
-To: lolilolicon <lolilolicon@gmail.com>, ath9k-devel@qca.qualcomm.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
- DHCP lease
-References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>	<53AF5FB8.3060505@lwfinger.net> <CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com>
-In-Reply-To: <CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <539D56CE.9090209@broadcom.com>
+References: <1402753689-13819-1-git-send-email-jahnavi.meher@gmail.com>
+	<539D56CE.9090209@broadcom.com>
+Date: Mon, 16 Jun 2014 16:08:32 +0530
+Message-ID: <CAPD+p4LAu-_NPG0Ly6zahWRmi4hsEHGDKyS2GznSTtUSgxnYOg@mail.gmail.com> (sfid-20140616_123836_393129_4E346BD6)
+Subject: Re: [PATCH 00/16] Fixes, adding support for 5GHz, bgscan and 40MHz.
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/29/2014 04:32 AM, lolilolicon wrote:
-> On Sun, Jun 29, 2014 at 8:37 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Sun, Jun 15, 2014 at 1:48 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>
+> On 14-06-14 15:48, Jahnavi Meher wrote:
 >>
->> Something went wrong in your bisection. Commit 88daf80 is a merge commit and
->> is unlikely to be the bad one. You might try a checkout of b080e04 and try
->> it to see if it is bad or good. That is the first non-merge commit before
->> 88daf80.
+>> This series of patches contains fixes, adds support for
+>> 5GHz and bgscan and 40MHz.
+>
+>
+> Thanks for splitting up this series. It would be good to version the series, ie. [PATCH v2 xx/16] and indicate this replaces the previous patch series referring to the Message-ID. In this case
+>
+> Message-ID: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
+>
+> Regards,
+> Arend
+
+How can I indicate that this patch series is referring to a particular
+Message-ID? Should I specify it
+in the "Message-ID to be used as In-Reply-To for the first email?"
+field that appears while sending out
+a mail via git? I have just started using git and am not sure if this
+was what you meant.
+>
+>
+>> Jahnavi Meher (16):
+>>    rsi: Mapping the debugfs stats to the correct s/w queues.
+>>    rsi: Fixed the kernel doc
+>>    rsi: Using band from rsi_common to fill in ieee80211_rx_status
+>>    rsi: Add macros for endpoints and set default value of endpoint.
+>>    rsi: Changed the radio caps frame.
+>>    rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
+>>    rsi: Changed rate handling.
+>>    rsi: Lower level debug messages and changed handling of confirm
+>>      received for rsi_program_bb_rf().
+>>    rsi: Use SGI if configured for fixed rate transmission.
+>>    rsi: Changed the SDIO interrupt variables and some clean up.
+>>    rsi: Changed the logic of dequeuing packets from hal queues.
+>>    rsi: Added debug messages.
+>>    rsi: Sending QoS null packet via the mgmt queue.
+>>    rsi: Adding support for 5GHz
+>>    rsi: Adding support for host based bgscan.
+>>    rsi: Changes for 40MHz
 >>
->> Larry
+>>   drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
+>>   drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+>>   drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
+>>   drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  236 +++++++++++++++++++--------
+>>   drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
+>>   drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
+>>   drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+>>   drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
+>>   drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
+>>   9 files changed, 416 insertions(+), 128 deletions(-)
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
 >
-> I have no clue how you identified b080e04, but I tested it and it is good.
-> I'm not good at git so please bear with me. What I know is 88daf80 is
-> bad, and both its two parents 010d3c3 and 35582ad are good: does that
-> not mean 88daf80 is the first bad commit?
->
-> % git bisect start 88daf80 010d3c3 35582ad
-> 88daf80dcca19ff995cc263592426f734a9702f3 is the first bad commit
->
-> What am I getting wrong?
 
-I am not an expert in git, but I think you are being too restrictive with that 
-command. If you do "git bisect start 88daf80 010d3c3", there are ath9k patches 
-in the code left to test. With the other option "git bisect start 88daf80 
-35582ad", git visualize does not show any ath9k changes.
 
-Larry
 
+-- 
+Regards,
+Jahnavi Meher
