@@ -1,134 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49795 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933038AbaFCWSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 18:18:41 -0400
-Date: Wed, 4 Jun 2014 00:18:37 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Liraz Perelmooter <liraz.perelmooter@intel.com>
-Cc: Rostislav Lisovy <lisovy@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>,
-	wireless-regdb@lists.infradead.org, green@qti.qualcomm.com
-Subject: Re: [RFC 1/4] cfg80211: Add channel flags limiting availability to
-	OCB mode only
-Message-ID: <20140603221837.GU26450@wotan.suse.de> (sfid-20140604_001858_486850_BFE1412D)
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz> <1401468984-24575-2-git-send-email-rostislav.lisovy@fel.cvut.cz> <1401825693.4157.44.camel@jlt4.sipsolutions.net>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49913 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753256AbaFPQiL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 12:38:11 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 00/25] wil6210 patches
+Date: Mon, 16 Jun 2014 19:36:58 +0300
+Message-ID: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183816_152299_E42DF92B)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ALfTUftag+2gvp1h"
-In-Reply-To: <1401825693.4157.44.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Most of the patches are various debug, tracing and performance
+monitoring features. 60G technology overall is not mature yet,
+as well as wil6210's firmware, so many debug hooks are needed
+for the future work.
 
---ALfTUftag+2gvp1h
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes include "fix disconnect handling for AP" and
+"fix for unreachable code in wmi_recv_cmd"
 
-On Tue, Jun 03, 2014 at 10:01:33PM +0200, Johannes Berg wrote:
-> On Fri, 2014-05-30 at 18:56 +0200, Rostislav Lisovy wrote:
-> > IEEE 802.11p operates in its own 5.9GHz band. When there will
-> > be a record for the 5.9GHz band in the regulatory daemon,
-> > it must be limited to the OCB mode only -- using the newly
-> > added flags.
->=20
-> Is this really a *regulatory* limitation? Rather than a limitation
-> elsewhere, e.g. the spec?
+Another commit to mention is
+"work around for platforms with broken INTx"
+where platform with broken BIOS is addressed.
 
-Our engaged and capable *real* regulatory folks in the community are:
+Vladimir Kondratiev (25):
+  wil6210: Tx mgmt frame from debugfs
+  wil6210: indicate mgmt_tx status
+  wil6210: print debug info when starting AP
+  wil6210: trace wil->status on debugfs
+  wil6210: print more info about BSS found
+  wil6210: more debug info for vring
+  wil6210: Tx performance monitoring
+  wil6210: Allow driver load if FW not ready
+  wil6210: BACK: track last dropped SSN
+  wil6210: debugfs interface to send raw WMI command
+  wil6210: writeable ITR registers
+  wil6210: print error when notifying about FW error
+  wil6210: debug print when scan request state changes
+  wil6210: Use "name = value" format in the debugfs
+  wil6210: add 'freq' and 'link' debugfs entries
+  wil6210: Debug print GRO Rx result
+  wil6210: avoid dmesg pollution by Tx errors
+  wil6210: fix disconnect handling for AP
+  wil6210: remove unused #include
+  wil6210: map additional registers on target
+  wil6210: fix for unreachable code in wmi_recv_cmd
+  wil6210: work around for platforms with broken INTx
+  wil6210: add 'info' debugfs entry
+  wil6210: interrupt statistics
+  wil6210: track Tx queue state
 
-  * Liraz Perelmooter <liraz.perelmooter@intel.com>
-  * Michael Green <green@qti.qualcomm.com>
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |  68 +++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 304 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/interrupt.c  |   3 +
+ drivers/net/wireless/ath/wil6210/main.c       |  22 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |  31 ++-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |   1 +
+ drivers/net/wireless/ath/wil6210/txrx.c       |  33 ++-
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  10 +-
+ drivers/net/wireless/ath/wil6210/wmi.c        |  40 ++--
+ 9 files changed, 465 insertions(+), 47 deletions(-)
 
-Additionally we have the wireless-regdb mailing list [0] which we should
-Cc for inquiries and verification on things like this. We hope for their
-participation as they are our real experts who grind away at the specs.
+-- 
+1.9.1
 
-Rostislav, can you provide documentation references which would clarify
-the stance on 802.11p and restrictions for only allowing  OCB mode?
-Also your patches seem to refer to the 802.11p ammendment work to 802.11,
-but it is now merged as of IEEE 802.11-2012 as per Jouni's last update to us
-on the standards work [1]. As per Jouni's slides 802.11p-2010 made it as an
-ammendment into 802.11-2012 and this work is rerrred to as "Wireless  Access
-for the Vehicular Environent". It would be *useful* if you'd refer to the I=
-EEE
-802.11-2012 standard then and document as part of your patches the exact
-sections and references that about Wireless Access for the Vehicular
-Environment.
-
-For reference to others this comes in as a full patch series by Rostislav
-to add some form of "802.11p" support using OCB (Outside the Context of BSS)
-mode. This mode of operation allows devices to send frames not connected
-to a BSS. The patch in question above is for the regulatory flag that is
-being proposed to be added, the full series of the other patches can be
-seen on the mailing list archive [2]. Rostislav clarifies that when OCB
-mode is used all the STAs communicate with each other without the need
-for a coordinator. The 5.9 GHz band is being clarified to be used for 802.1=
-1p,
-the patch series also is specifying that when 5.9 GHz is enabled only
-OCB mode of operation is allowed on that band. No references are made to
-the specific 802.11 ammendment / IEEE 802.11 sections or more importantly i=
-t is
-not being made clear if the OCB mode is something that differs depending
-on regulatory bodies at this point.
-
-Since 802.11p was designed for cars in mind I suspect regulatory bodies
-likely do want proper rules followed, but its unclear what countries
-that follow either IEEE 802.11 or the ISO equivalent want OCB mode of
-operation and if they also have the same restrictions of only allowing
-5.9 GHz operation only for OCB. I can also imagine for example of regulatory
-bodies that may want to allow 5.9 GHz for non OCB mode, specially if they
-need the spectrum. One particular use case which provides a compromise
-could be for example to have APs/P2P GOs look for OCB communication and
-if its detected to disallow it. Not like I would recommend this given
-that it would then introduce crazy regulatory compliance silliness
-such as seen with DFS and that pushed crazy implementation and designs,
-but -- its certainly possible.
-
-So is this an IEEE compliance thing or regulatory thing? If its a generally
-accepted IEEE compliance thing for 802.11-2012 then I don't see why we
-don't just hard code this restriction on cfg80211 for the band. That
-after all would be the much more saner thing to do than all the silly
-mess of discrepencies betwen regulatory bodies. After all cfg80211 is for
-802.11, and if we follow the specs and if its mentioned clearly there I
-see no resason why not to hard code this. If folks want to override this
-(I envision university environments doing research on this) the patch can
-add a Kconfig option that depends on CONFIG_CFG80211_CERTIFICATION_ONUS
-which will make the check permissive on 5.9 GHz instead of fully enforced.
-
-[0] http://lists.infradead.org/mailman/listinfo/wireless-regdb
-[1] http://wireless.kernel.org/en/developers/Summits/Barcelona-2012?action=
-=3DAttachFile&do=3Dview&target=3Dieee80211-barcelona-2012.pdf
-[2] http://comments.gmane.org/gmane.linux.kernel.wireless.general/121022
-
-  Luis
-
---ALfTUftag+2gvp1h
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTjkm9AAoJEPep4JnvMe6zlAgQAK9cqZAghwqYaOMzrKgHKGDV
-3LNyzwoYpOq17xJQ9/75y2ePrjhIo0eYtBu9wjdoYtUXdP6IoTZkRhi6fMLOIrQW
-45jeO8gL0rlkarsb5Ydp2q8VVvlsdbgkcn4Vk8Cz6a4HqZPITJLBDCmDUrCZUkKQ
-AEcBh1rhejtengnAKkUUww1Q89AdjJld1cLD7mHPSm3P4u/lAVRdTjm1qhEbQU8p
-6JFZGNWnjxrD+oQQW+s3ow+KKxJO2xG9/yJiBab4XTN7jRxB7NUlBmKruQ82lmy2
-fXUt37p0gsqkkQ/TpbGHBQn0t89lKIwdxMfE5VKyB2SIeEBfr5xaweElF+YYLyqN
-XpaowWl09hhl6bZQNWfSK1jfB2k0y49Soxga41QjUMPDat7kl34wOjmHJ/Xpu7hC
-y4vcd4dkaZQqsOJv3dTdUpdqHMcFPie1pAVGe8ZS/PGOCpAmCZGFKT3MqhDUw1GA
-Tzo0fJi4kINsH7/4PI+0qgJhGUr16/kScxe+MG+zamIq6t9V3iK8j1jbe4egaO/h
-2LqzVJSfkhk5Mtze5LkzVWzigy+MkdohaQDpdfDcrreHD+Rmh3Y6o0Ten0wH14b+
-1tLdB58z/R0t5GLVJORHX5eYaf74Z4ClBuqc01LyQ4GaSKSg0fMVlPo07E9S9pJT
-R+JhVaXOl1d7bCZJQkEh
-=Alqy
------END PGP SIGNATURE-----
-
---ALfTUftag+2gvp1h--
