@@ -1,116 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:54041 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaFDR0Y (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53200 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932250AbaFPQiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 13:26:24 -0400
-Received: by mail-we0-f175.google.com with SMTP id p10so8981698wes.34
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:23 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/15] staging: vt6656: PSvEnablePowerSaving remove camel case
-Date: Wed,  4 Jun 2014 18:25:21 +0100
-Message-Id: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192629_049437_6D990272)
+	Mon, 16 Jun 2014 12:38:52 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 22/25] wil6210: work around for platforms with broken INTx
+Date: Mon, 16 Jun 2014 19:37:20 +0300
+Message-ID: <1402936643-31819-23-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190457_881936_D33A1319)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-wListenInterval -> listen_interval
-pMgmt -> mgmt
-wAID -> aid
+There are platforms where INTx can't be routed by ACPI,
+this leads to pci_enable_device failure. Re-try pretending we have
+MSI already configured; in this case pci_enable_device do not try
+to configure INTx. However, MSI could still work.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/power.c | 38 +++++++++++++++++++-------------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
-index 8cc2596..718443f 100644
---- a/drivers/staging/vt6656/power.c
-+++ b/drivers/staging/vt6656/power.c
-@@ -58,60 +58,60 @@ static int msglevel = MSG_LEVEL_INFO;
-  *
-  */
- 
--void PSvEnablePowerSaving(struct vnt_private *pDevice, u16 wListenInterval)
-+void PSvEnablePowerSaving(struct vnt_private *priv, u16 listen_interval)
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 05c1c9d..77b6272 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -35,6 +35,13 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
  {
--	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
--	u16 wAID = pMgmt->wCurrAID | BIT14 | BIT15;
-+	struct vnt_manager *mgmt = &priv->vnt_mgmt;
-+	u16 aid = mgmt->wCurrAID | BIT14 | BIT15;
+ 	struct pci_dev *pdev = wil->pdev;
+ 	int rc;
++	/* on platforms with buggy ACPI, pdev->msi_enabled may be set to
++	 * allow pci_enable_device to work. This indicates INTx was not routed
++	 * and only MSI should be used
++	 */
++	int msi_only = pdev->msi_enabled;
++
++	pdev->msi_enabled = 0;
  
- 	/* set period of power up before TBTT */
--	vnt_mac_write_word(pDevice, MAC_REG_PWBT, C_PWBT);
-+	vnt_mac_write_word(priv, MAC_REG_PWBT, C_PWBT);
+ 	pci_set_master(pdev);
  
--	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
-+	if (priv->op_mode != NL80211_IFTYPE_ADHOC) {
- 		/* set AID */
--		vnt_mac_write_word(pDevice, MAC_REG_AIDATIM, wAID);
-+		vnt_mac_write_word(priv, MAC_REG_AIDATIM, aid);
+@@ -66,6 +73,12 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
+ 
+ 	wil->n_msi = use_msi;
+ 
++	if ((wil->n_msi == 0) && msi_only) {
++		wil_err(wil, "Interrupt pin not routed, unable to use INTx\n");
++		rc = -ENODEV;
++		goto stop_master;
++	}
++
+ 	rc = wil6210_init_irq(wil, pdev->irq);
+ 	if (rc)
+ 		goto stop_master;
+@@ -124,9 +137,16 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	rc = pci_enable_device(pdev);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "pci_enable_device failed\n");
+-		return -ENODEV;
++		dev_err(&pdev->dev,
++			"pci_enable_device failed, retry with MSI only\n");
++		/* Work around for platforms that can't allocate IRQ:
++		 * retry with MSI only
++		 */
++		pdev->msi_enabled = 1;
++		rc = pci_enable_device(pdev);
  	}
++	if (rc)
++		return -ENODEV;
+ 	/* rollback to err_disable_pdev */
  
- 	/* Warren:06-18-2004,the sequence must follow
- 	 * PSEN->AUTOSLEEP->GO2DOZE
- 	 */
- 	/* enable power saving hw function */
--	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_PSEN);
-+	vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_PSEN);
- 
- 	/* Set AutoSleep */
--	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
-+	vnt_mac_reg_bits_on(priv, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
- 
- 	/* Warren:MUST turn on this once before turn on AUTOSLEEP ,or the
- 	 * AUTOSLEEP doesn't work
- 	 */
--	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_GO2DOZE);
-+	vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_GO2DOZE);
- 
--	if (wListenInterval >= 2) {
-+	if (listen_interval >= 2) {
- 
- 		/* clear always listen beacon */
--		vnt_mac_reg_bits_off(pDevice, MAC_REG_PSCTL, PSCTL_ALBCN);
-+		vnt_mac_reg_bits_off(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
- 
- 		/* first time set listen next beacon */
--		vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_LNBCN);
-+		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_LNBCN);
- 
--		pMgmt->wCountToWakeUp = wListenInterval;
-+		mgmt->wCountToWakeUp = listen_interval;
- 
- 	} else {
- 
- 		/* always listen beacon */
--		vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_ALBCN);
-+		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
- 
--		pMgmt->wCountToWakeUp = 0;
-+		mgmt->wCountToWakeUp = 0;
- 	}
- 
--	pDevice->bEnablePSMode = true;
-+	priv->bEnablePSMode = true;
- 
- 	/* We don't send null pkt in ad hoc mode
- 	 * since beacon will handle this.
- 	 */
--	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
--		PSbSendNullPacket(pDevice);
-+	if (priv->op_mode == NL80211_IFTYPE_STATION)
-+		PSbSendNullPacket(priv);
- 
--	pDevice->bPWBitOn = true;
-+	priv->bPWBitOn = true;
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "PS:Power Saving Mode Enable...\n");
- }
- 
+ 	rc = pci_request_region(pdev, 0, WIL_NAME);
 -- 
 1.9.1
 
