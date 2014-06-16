@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40524 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755410AbaFZP0y (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:64997 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbaFPOMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2014 11:26:54 -0400
-Message-ID: <53AC3BBD.3050003@candelatech.com> (sfid-20140626_172705_339857_97E8EF99)
-Date: Thu, 26 Jun 2014 08:26:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com> <538CD507.1050803@candelatech.com> <87bnu7pqe2.fsf@kamboji.qca.qualcomm.com> <53909372.1040707@candelatech.com> <87fvjimsxj.fsf@kamboji.qca.qualcomm.com> <5391E620.4090706@candelatech.com> <87vbscj2ho.fsf@kamboji.qca.qualcomm.com> <53932F52.2030203@candelatech.com> <8738ffiysv.fsf@kamboji.qca.qualcomm.com> <539483B1.5020401@candelatech.com> <87ppiih4zk.fsf@kamboji.qca.qualcomm.com> <5395CE36.30407@candelatech.com> <5395D718.4090704@candelatech.com> <5395E089.1000601@candelatech.com> <87fvjde1u0.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fvjde1u0.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 16 Jun 2014 10:12:09 -0400
+Received: by mail-pa0-f53.google.com with SMTP id ey11so1087941pad.12
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:12:08 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id f2sm69549390pat.11.2014.06.16.07.12.07
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:12:08 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 06/16] rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
+Date: Mon, 16 Jun 2014 19:41:58 +0530
+Message-Id: <1402927918-3919-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161213_961353_4DFE3DBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/09/2014 11:05 PM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
-> 
->>>>> As kbuild found some compilation problems, I think it would be easier if
->>>>> I make the final changes to your patches and send that for review. Would
->>>>> that be ok for you?
->>>>
->>>> Yes, that would be great.
->>>
->>> In case it helps, let me post my latest patches...will get those up
->>> in an hour or two.
->>
->> Actually, I seem to have just forgotten everything over the weekend...the
->> v2 patches I posted last Friday are current with my own tree.  So,
->> if you can tweak them to your satisfaction, that should work fine for
->> me.
-> 
-> Great, thanks. I'll try to send a new version today. If you could then
-> review them carefully and test as well, that would be really good.
+Made required changes to rsi_set_channel() and rsi_program_bb_rf()
+functions.
 
-Any chance we could get at least some version of this in soon?
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |   20 ++------------------
+ 1 files changed, 2 insertions(+), 18 deletions(-)
 
-It would be nice to have a good way for users to report more than
-just the basic crash dump registers...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index c3d8da9..5c122e8 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -596,7 +596,7 @@ static int rsi_program_bb_rf(struct rsi_common *common)
+ 
+ 	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
+ 	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
+-	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
++	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
+ 
+ 	if (common->rf_reset) {
+ 		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
+@@ -849,23 +849,6 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
+ 	rsi_dbg(MGMT_TX_ZONE,
+ 		"%s: Sending scan req frame\n", __func__);
+ 
+-	if (common->band == IEEE80211_BAND_5GHZ) {
+-		if ((channel >= 36) && (channel <= 64))
+-			channel = ((channel - 32) / 4);
+-		else if ((channel > 64) && (channel <= 140))
+-			channel = ((channel - 102) / 4) + 8;
+-		else if (channel >= 149)
+-			channel = ((channel - 151) / 4) + 18;
+-		else
+-			return -EINVAL;
+-	} else {
+-		if (channel > 14) {
+-			rsi_dbg(ERR_ZONE, "%s: Invalid chno %d, band = %d\n",
+-				__func__, channel, common->band);
+-			return -EINVAL;
+-		}
+-	}
+-
+ 	skb = dev_alloc_skb(FRAME_DESC_SZ);
+ 	if (!skb) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
+@@ -885,6 +868,7 @@ int rsi_set_channel(struct rsi_common *common, u16 channel)
+ 					       (RSI_RF_TYPE << 4));
+ 
+ 	mgmt_frame->desc_word[5] = cpu_to_le16(0x01);
++	mgmt_frame->desc_word[6] = cpu_to_le16(0x12);
+ 
+ 	if (common->channel_width == BW_40MHZ)
+ 		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
