@@ -1,108 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:47740 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbaFJVQe convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14421 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755575AbaFPQiO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 17:16:34 -0400
+	Mon, 16 Jun 2014 12:38:14 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 02/25] wil6210: indicate mgmt_tx status
+Date: Mon, 16 Jun 2014 19:37:00 +0300
+Message-ID: <1402936643-31819-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183822_460790_E24F7871)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1402323702.11505.18.camel@umadbro>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
- <1401468984-24575-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
- <1401825693.4157.44.camel@jlt4.sipsolutions.net> <20140603221837.GU26450@wotan.suse.de>
- <1402323702.11505.18.camel@umadbro>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Tue, 10 Jun 2014 14:16:11 -0700
-Message-ID: <CAB=NE6Wi+SLPSuGiGeFpJO4FVHfHpSpsDfsccAi9cPyhmL6NwQ@mail.gmail.com> (sfid-20140610_231650_917648_284535DC)
-Subject: Re: [RFC 1/4] cfg80211: Add channel flags limiting availability to
- OCB mode only
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Liraz Perelmooter <liraz.perelmooter@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	Michael Green <green@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 9, 2014 at 7:21 AM, Rostislav Lisovy <lisovy@gmail.com> wrote:
-> Dear Luis;
-> Thank you for the introduction in the wireless-regdb mailing-list.
->
-> On Wed, 2014-06-04 at 00:18 +0200, Luis R. Rodriguez wrote:
->> Rostislav, can you provide documentation references which would
->> clarify
->> the stance on 802.11p and restrictions for only allowing  OCB mode?
->
-> If I may cite the 802.11-2012 standard:
-> -- 1st Quote
-> 4.3.11 STA transmission of data frames outside the context of a BSS
->
-> Communication of data frames when dot11OCBActivated is true might take
-> place in a frequency band that is dedicated for its use, and such a band
-> might require licensing depending on the regulatory domain. A STA for
-> which dot11OCBActivated is true initially transmits and receives on a
-> channel known in advance, either through regulatory designation or some
-> other out-of-band communication.
-> -- End of quote
+Inform cfg80211 about Tx result
 
-OK the spec does not rule out communication on that special band for
-regular operation as such that special band is mentioned in the
-context of OCB communication, but it does say that the frequency range
-may be licensed. As it stands the public wireless-regdb only covers
-unlicensed frequency ranges, but it obviously can support licensed
-frequency ranges, just that the distribution mechanism and integration
-of the wireless-regdb files then would have to be done separately
-through separate distributors -- ie, not upstream. If the OCB bands
-are unlicensed then we can surely add them to wireless-regdb, however
-it remains unclear if those bands are unlicensed if we can use them
-for regular non OCB communication.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Follow this logic to move forward then:
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 1725dfc..cfdf1a2 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -451,6 +451,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	size_t len = params->len;
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 	int rc;
++	bool tx_status = false;
+ 	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
+ 	struct wmi_sw_tx_req_cmd *cmd;
+ 	struct {
+@@ -459,8 +460,10 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	} __packed evt;
+ 
+ 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
+-	if (!cmd)
+-		return -ENOMEM;
++	if (!cmd) {
++		rc = -ENOMEM;
++		goto out;
++	}
+ 
+ 	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
+ 	cmd->len = cpu_to_le16(len);
+@@ -469,10 +472,12 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, cmd, sizeof(*cmd) + len,
+ 		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
+ 	if (rc == 0)
+-		rc = evt.evt.status;
++		tx_status = !evt.evt.status;
+ 
+ 	kfree(cmd);
+-
++ out:
++	cfg80211_mgmt_tx_status(wdev, cookie ? *cookie : 0, buf, len,
++				tx_status, GFP_KERNEL);
+ 	return rc;
+ }
+ 
+-- 
+1.9.1
 
-  * Poke folks to see if the US band for OCB is licensed or unlicensed
-  * Poke folks to see if the EU band for OCB is licensed or unlicensed
-
-  * If the bands are licensed then the wireless-regdb changes that
-would be needed imply that a wireless-regdb needs to be provided to
-whatever customer by whomever is licensing that entity for usage of
-that band, that is, we upstream can be removed from the equation of
-the distribution. The upstream kernel however would require a flag for
-frequency ranges for OCB frequency ranges. Although the regulatory
-classes specify a few for the US and EU, this can likely change. I
-forget if the regulatory class can be interpreted through IEs, if so
-and if the specification is going to remain static I can envision the
-ability to hard code the OCB frequency ranges upstream but you'd then
-need to parse these things.
-
-  * If the bands are *not licensed* there is one corner case that I
-still think should be reviewed by regulatory folks: having an OCB
-frequency range unlicensed under the current reading of the
-specification of 802.11-2012 means that 802.11 devices *can* use them
-for OCB, however if OCB is not enabled on the device it seems to be
-that OCB bands can be used for non OCB communication. Furthermore
-4.3.11 seems to be saying that it is only optional to use a dedicated
-frequency for OCB, OCB can happen on other frequency ranges.
-
-> -- 2nd Quote
-> Annex E (normative) Country elements and operating classes
-> E.2.3 5.9 GHz band in the United States (5.850–5.925 GHz)
-> ...
-> STAs shall have dot11OCBActivated set to true.
-
-So all STAs in the US wil have OCB activated? I fail to understand how
-Annex E should be read in the context of operating classes.
-
-> E.2.4 5.9 GHz band in Europe (5.855–5.925 GHz)
-> STAs shall have dot11OCBActivated set to true.
-
-Ditto.
-
-
-  Luis
