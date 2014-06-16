@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:59188 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965039AbaFRKZW (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:53168 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbaFPONp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 06:25:22 -0400
-Message-ID: <1403087119.1984.93.camel@x220> (sfid-20140618_122544_675806_7A08502F)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
-	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 18 Jun 2014 12:25:19 +0200
-In-Reply-To: <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	 <1391971686-9517-10-git-send-email-richard@nod.at>
-	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
-	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
-	 <52F8C373.9060108@rempel-privat.de>
-	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
-	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
-	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-	 <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
-	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Jun 2014 10:13:45 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y13so4456600pdi.41
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:13:45 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id pq3sm19035017pbb.57.2014.06.16.07.13.43
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:13:44 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 08/16] rsi: Lower level debug messages and changed handling of confirm received for rsi_program_bb_rf().
+Date: Mon, 16 Jun 2014 19:43:35 +0530
+Message-Id: <1402928015-3989-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161352_156332_A4C28521)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri, Nick, Luis, John,
+Lower level debug messages for some frames and changed confirm
+received for rsi_program_bb_rf() to a valid case.
 
-On Wed, 2014-04-16 at 13:20 +0400, Sergey Ryazanov wrote:
-> 2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> > On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
-> >> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
-> >> > John, can you delay the merging of this patch for a few months, I will
-> >> > try to prepare the necessary patches to add AR231x architecture to the
-> >> > kernel and send them to linux-mips.
-> >>
-> >> OK -- looking forward to your patches.
-> >
-> > So am I. Is there any news on this front?
-> >
-> 
-> Work still in progress :(
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-ATHEROS_AR231X and the things depending on it, like AHB bus support,
-have been discussed for three years now. When will you (re)consider a
-patch to remove all currently dead code?
-
-And to state the obvious: AHB bus support, and the other code depending
-on ATHEROS_AR231X, can always be re-added once ATHEROS_AR231X gets added
-to the tree.
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f5182cd..92f584e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1153,7 +1153,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 				common->fsm_state = FSM_EEPROM_READ_MAC_ADDR;
+ 			}
+ 		} else {
+-			rsi_dbg(ERR_ZONE,
++			rsi_dbg(INFO_ZONE,
+ 				"%s: Received bootup params cfm in %d state\n",
+ 				 __func__, common->fsm_state);
+ 			return 0;
+@@ -1216,7 +1216,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 					__func__);
+ 			}
+ 		} else {
+-			rsi_dbg(ERR_ZONE,
++			rsi_dbg(INFO_ZONE,
+ 				"%s: Received radio caps cfm in %d state\n",
+ 				 __func__, common->fsm_state);
+ 			return 0;
+@@ -1234,7 +1234,10 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 				return rsi_mac80211_attach(common);
+ 			}
+ 		} else {
+-			goto out;
++			rsi_dbg(INFO_ZONE,
++				"%s: Received bbb_rf cfm in %d state\n",
++				 __func__, common->fsm_state);
++			return 0;
+ 		}
+ 		break;
+ 
+-- 
+1.7.1
 
