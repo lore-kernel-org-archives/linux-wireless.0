@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:58025 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbaFEH4T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 03:56:19 -0400
-Received: by mail-wg0-f49.google.com with SMTP id m15so620738wgh.8
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 00:56:17 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/2] ath10k: pci fixes 2014-06-05
-Date: Thu,  5 Jun 2014 09:48:38 +0200
-Message-Id: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com> (sfid-20140605_095622_258688_E992C9A2)
+Received: from mx1.redhat.com ([209.132.183.28]:60789 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932400AbaFPR5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 13:57:38 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 3/4] brcmfmac: Fix some wrong register defines
+Date: Mon, 16 Jun 2014 19:56:46 +0200
+Message-Id: <1402941407-8210-4-git-send-email-hdegoede@redhat.com> (sfid-20140616_195744_986092_E27D8CF2)
+In-Reply-To: <1402941407-8210-1-git-send-email-hdegoede@redhat.com>
+References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-I've found a few issues while I was testing ath10k
-in QEMU/KVM with PCI passthrough. The second patch
-is something that I've found while analysing the
-bmi race and I don't think anyone experienced
-problems associated with it.
-
-There's still a weird synchronization issue with
-(what I think is) iomap write propagation. The
-initial fw bootup interrupt doesn't come in and
-it seems CE interrupts are unmasked with a lag
-because explicit polling after ctl_resp timeout
-seems to be sufficient to work around it. I
-suspect this might be a virtualization problem
-rather than ath10k. Ideas, anyone?
-
-
-Michal Kazior (2):
-  ath10k: fix bmi exchange tx/rx race
-  ath10k: sanitize tx ring index access properly
-
- drivers/net/wireless/ath/ath10k/ce.c  | 11 +++++++----
- drivers/net/wireless/ath/ath10k/pci.c | 11 +++--------
- drivers/net/wireless/ath/ath10k/pci.h |  3 ++-
- 3 files changed, 12 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index 3deab79..6e6a366 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -72,12 +72,12 @@
+ #define SBSDIO_SPROM_DATA_HIGH		0x10003
+ /* sprom indirect access addr byte 0 */
+ #define SBSDIO_SPROM_ADDR_LOW		0x10004
+-/* sprom indirect access addr byte 0 */
+-#define SBSDIO_SPROM_ADDR_HIGH		0x10005
+-/* xtal_pu (gpio) output */
+-#define SBSDIO_CHIP_CTRL_DATA		0x10006
+-/* xtal_pu (gpio) enable */
+-#define SBSDIO_CHIP_CTRL_EN		0x10007
++/* gpio select */
++#define SBSDIO_GPIO_SELECT		0x10005
++/* gpio output */
++#define SBSDIO_GPIO_OUT			0x10006
++/* gpio enable */
++#define SBSDIO_GPIO_EN			0x10007
+ /* rev < 7, watermark for sdio device */
+ #define SBSDIO_WATERMARK		0x10008
+ /* control busy signal generation */
 -- 
-1.8.5.3
+2.0.0
 
