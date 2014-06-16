@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9863 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933986AbaFRIf2 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63181 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755633AbaFPQiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 04:35:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <drwho@infidigm.net>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: QCA ar9375 in Ubuntu 14.04 beta 2 not working
-References: <63ed0fb1a4c098dd260f249546408de5.squirrel@www.infidigm.net>
-Date: Wed, 18 Jun 2014 11:35:22 +0300
-In-Reply-To: <63ed0fb1a4c098dd260f249546408de5.squirrel@www.infidigm.net>
-	(drwho@infidigm.net's message of "Tue, 17 Jun 2014 17:19:30 -0400")
-Message-ID: <87k38eehth.fsf@kamboji.qca.qualcomm.com> (sfid-20140618_103535_175841_7B79E935)
+	Mon, 16 Jun 2014 12:38:46 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 19/25] wil6210: remove unused #include
+Date: Mon, 16 Jun 2014 19:37:17 +0300
+Message-ID: <1402936643-31819-20-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190457_330001_6B456175)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<drwho@infidigm.net> writes:
+In the pcie_bus.c, knowledge about debugfs is not necessary
 
->> I just sent patches to add ar6004 hw3.0 support. If you can, please
->> test those and give feedback.
->
-> Ok, I rebuilt the Ubuntu kernel with your 6 patches,
->
-> sudo modprobe ath6kl_usb
-> insert ar9375
->
-> At first I was getting an error about not being able find the firmware
-> file, so I renamed your fw-5.bin to fw.ram.bin.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-You should not rename the firmware file, it will break everything if you
-do that. This is what you should see:
-
-[  364.432845] usb 2-1.4: new high-speed USB device number 4 using ehci-pci
-[  364.510168] usb 2-1.4: New USB device found, idVendor=0cf3, idProduct=9375
-[  364.510232] usb 2-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  364.510289] usb 2-1.4: Product: USBWLAN
-[  364.510346] usb 2-1.4: Manufacturer: Qualcomm Atheros.
-[  364.510430] usb 2-1.4: SerialNumber: 12345678
-[  364.835598] ath6kl: ar6004 hw 3.0 usb fw 3.5.0.349-1 api 5
-[  364.835710] ath6kl: firmware supports: 64bit-rates,map-lp-endpoint,ratetable-mcs15,no-ip-checksum
-
-My first guess is that something went wrong in the kernel compilation
-and the new patches are not actually applied. Double check that you
-really have the new hw3.0 support in place, for example by adding few
-printks and making sure that you see them in dmesg.
-
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index e5d7ffe..05c1c9d 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -15,7 +15,6 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/debugfs.h>
+ #include <linux/pci.h>
+ #include <linux/moduleparam.h>
+ 
 -- 
-Kalle Valo
+1.9.1
+
