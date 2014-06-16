@@ -1,47 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45993 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753883AbaFWOLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 10:11:16 -0400
-Message-ID: <1403532659.4418.30.camel@jlt4.sipsolutions.net> (sfid-20140623_161119_529008_D0B6C488)
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 23 Jun 2014 16:10:59 +0200
-In-Reply-To: <CA+BoTQnvRgfObtvJcVj3np6LSRSHr_2uEfqRpOw59fuy88xnYQ@mail.gmail.com> (sfid-20140623_145946_117384_07F493F0)
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	 <1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	 <1400769683.4174.25.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com>
-	 <1403524278.4418.19.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=fpkOZXVgJt-OWdgSFX1_sO1g1E=J-7NnOb+e6a30FVA@mail.gmail.com>
-	 <1403526767.4418.24.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnvRgfObtvJcVj3np6LSRSHr_2uEfqRpOw59fuy88xnYQ@mail.gmail.com>
-	 (sfid-20140623_145946_117384_07F493F0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:36424 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbaFPNGU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 09:06:20 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: "Mark A. Greer" <mgreer@animalcreek.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] NFC: trf7970a: Move trf7970a_init inside #ifdef CONFIG_PM_RUNTIME
+Date: Mon, 16 Jun 2014 15:06:13 +0200
+Message-Id: <1402923973-24316-1-git-send-email-geert@linux-m68k.org> (sfid-20140616_150637_398041_1BA7EE6C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-23 at 14:59 +0200, Michal Kazior wrote:
-> >> But does this bump up the module refcount in such a way that an
-> >> in-progress rmmod will wait/block until the refcount reaches 0?
-> >
-> > It should, yes, but you race once you do module_put(), no?
-> 
-> It's still racy, I agree.
-> 
-> I don't see how device_release_driver() can be made work synchronously
-> at all. It should, however, be perfectly fine if this was an async
-> request to release a device/driver, right?
+If CONFIG_PM_RUNTIME=n:
 
-Yeah, but the work struct would have to live somewhere that can't be
-unloaded, or can more safely wait for it...
+drivers/nfc/trf7970a.c:755: warning: ‘trf7970a_init’ defined but not used
 
-I guess we could also have a list of these in the modules and
-synchronize on them in module_exit()?
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/nfc/trf7970a.c | 80 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 40 insertions(+), 40 deletions(-)
 
-johannes
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 3b78b031e617..41a153ecc6ed 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -751,45 +751,6 @@ static void trf7970a_timeout_work_handler(struct work_struct *work)
+ 	mutex_unlock(&trf->lock);
+ }
+ 
+-static int trf7970a_init(struct trf7970a *trf)
+-{
+-	int ret;
+-
+-	dev_dbg(trf->dev, "Initializing device - state: %d\n", trf->state);
+-
+-	ret = trf7970a_cmd(trf, TRF7970A_CMD_SOFT_INIT);
+-	if (ret)
+-		goto err_out;
+-
+-	ret = trf7970a_cmd(trf, TRF7970A_CMD_IDLE);
+-	if (ret)
+-		goto err_out;
+-
+-	/* Must clear NFC Target Detection Level reg due to erratum */
+-	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
+-	if (ret)
+-		goto err_out;
+-
+-	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+-			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+-			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+-	if (ret)
+-		goto err_out;
+-
+-	ret = trf7970a_write(trf, TRF7970A_SPECIAL_FCN_REG1, 0);
+-	if (ret)
+-		goto err_out;
+-
+-	trf->special_fcn_reg1 = 0;
+-
+-	trf->iso_ctrl = 0xff;
+-	return 0;
+-
+-err_out:
+-	dev_dbg(trf->dev, "Couldn't init device: %d\n", ret);
+-	return ret;
+-}
+-
+ static void trf7970a_switch_rf_off(struct trf7970a *trf)
+ {
+ 	dev_dbg(trf->dev, "Switching rf off\n");
+@@ -1430,6 +1391,45 @@ static int trf7970a_pm_runtime_suspend(struct device *dev)
+ 	return ret;
+ }
+ 
++static int trf7970a_init(struct trf7970a *trf)
++{
++	int ret;
++
++	dev_dbg(trf->dev, "Initializing device - state: %d\n", trf->state);
++
++	ret = trf7970a_cmd(trf, TRF7970A_CMD_SOFT_INIT);
++	if (ret)
++		goto err_out;
++
++	ret = trf7970a_cmd(trf, TRF7970A_CMD_IDLE);
++	if (ret)
++		goto err_out;
++
++	/* Must clear NFC Target Detection Level reg due to erratum */
++	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
++	if (ret)
++		goto err_out;
++
++	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
++			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
++			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
++	if (ret)
++		goto err_out;
++
++	ret = trf7970a_write(trf, TRF7970A_SPECIAL_FCN_REG1, 0);
++	if (ret)
++		goto err_out;
++
++	trf->special_fcn_reg1 = 0;
++
++	trf->iso_ctrl = 0xff;
++	return 0;
++
++err_out:
++	dev_dbg(trf->dev, "Couldn't init device: %d\n", ret);
++	return ret;
++}
++
+ static int trf7970a_pm_runtime_resume(struct device *dev)
+ {
+ 	struct spi_device *spi = container_of(dev, struct spi_device, dev);
+@@ -1462,7 +1462,7 @@ static int trf7970a_pm_runtime_resume(struct device *dev)
+ 
+ 	return 0;
+ }
+-#endif
++#endif /* CONFIG_PM_RUNTIME */
+ 
+ static const struct dev_pm_ops trf7970a_pm_ops = {
+ 	SET_RUNTIME_PM_OPS(trf7970a_pm_runtime_suspend,
+-- 
+1.9.1
 
