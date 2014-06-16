@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:59218 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbaFDTZd (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36665 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641AbaFPNID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 15:25:33 -0400
-Received: by mail-oa0-f50.google.com with SMTP id i7so8394949oag.23
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 12:25:32 -0700 (PDT)
+	Mon, 16 Jun 2014 09:08:03 -0400
+Message-ID: <539EEC30.2040703@broadcom.com> (sfid-20140616_150825_948606_C8B4C0BD)
+Date: Mon, 16 Jun 2014 15:08:00 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <loom.20140603T000209-622@post.gmane.org>
-References: <536F6620.9030001@gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com>
-	<loom.20140530T020912-598@post.gmane.org>
-	<53882EAD.4010609@gmail.com>
-	<53882EF4.4070105@gmail.com>
-	<loom.20140530T111920-677@post.gmane.org>
-	<CANUX_P0JenW+GDT3N0Qj5BPGqMXqUWiBnj=TQ+nMEsjS4HFm1w@mail.gmail.com>
-	<loom.20140603T000209-622@post.gmane.org>
-Date: Wed, 4 Jun 2014 22:25:32 +0300
-Message-ID: <CANUX_P22M85RN_+-GnZ0fEtz7Ch-ei_KbXhjcZ5H7i0Sn30Vhg@mail.gmail.com> (sfid-20140604_212536_434261_1C17C3B2)
-Subject: Re: [Ilw] Wireless Centrino 2230-N issues
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: piotr <pitkotko@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Jahnavi Meher <jahnavi.meher@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/16] Fixes, adding support for 5GHz, bgscan and 40MHz.
+References: <1402753689-13819-1-git-send-email-jahnavi.meher@gmail.com>	<539D56CE.9090209@broadcom.com> <CAPD+p4LAu-_NPG0Ly6zahWRmi4hsEHGDKyS2GznSTtUSgxnYOg@mail.gmail.com>
+In-Reply-To: <CAPD+p4LAu-_NPG0Ly6zahWRmi4hsEHGDKyS2GznSTtUSgxnYOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
+On 16-06-14 12:38, Jahnavi Meher wrote:
+> On Sun, Jun 15, 2014 at 1:48 PM, Arend van Spriel <arend@broadcom.com> wrote:
 >>
->> Can you please send the whole dmesg output?
+>> On 14-06-14 15:48, Jahnavi Meher wrote:
+>>>
+>>> This series of patches contains fixes, adds support for
+>>> 5GHz and bgscan and 40MHz.
+>>
+>>
+>> Thanks for splitting up this series. It would be good to version the series, ie. [PATCH v2 xx/16] and indicate this replaces the previous patch series referring to the Message-ID. In this case
+>>
+>> Message-ID: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
+>>
+>> Regards,
+>> Arend
 >
-> [115535.469083] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
-> [115535.469370] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-> [115535.469412] iwlwifi 0000:01:00.0: Unable to initialize device.
-> [115535.471365] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-> [115535.478424] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-> [115535.525086] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD
-> failed: FW Error
+> How can I indicate that this patch series is referring to a particular
+> Message-ID? Should I specify it
+> in the "Message-ID to be used as In-Reply-To for the first email?"
+> field that appears while sending out
+> a mail via git? I have just started using git and am not sure if this
+> was what you meant.
+
+I meant to add a paragraph to the cover-letter stating "This series 
+replaces the previous series with Message-ID: 
+<123456789-5679-some-message-id@somemailer.com>" so John can clean his 
+patch queue. Using the git In-Reply-To can also be useful as it will 
+group the patch series together in online archives.
+
+Regards,
+Arend
+
+>>
+>>
+>>> Jahnavi Meher (16):
+>>>     rsi: Mapping the debugfs stats to the correct s/w queues.
+>>>     rsi: Fixed the kernel doc
+>>>     rsi: Using band from rsi_common to fill in ieee80211_rx_status
+>>>     rsi: Add macros for endpoints and set default value of endpoint.
+>>>     rsi: Changed the radio caps frame.
+>>>     rsi: Changed the rsi_set_channel() and rsi_program_bb_rf().
+>>>     rsi: Changed rate handling.
+>>>     rsi: Lower level debug messages and changed handling of confirm
+>>>       received for rsi_program_bb_rf().
+>>>     rsi: Use SGI if configured for fixed rate transmission.
+>>>     rsi: Changed the SDIO interrupt variables and some clean up.
+>>>     rsi: Changed the logic of dequeuing packets from hal queues.
+>>>     rsi: Added debug messages.
+>>>     rsi: Sending QoS null packet via the mgmt queue.
+>>>     rsi: Adding support for 5GHz
+>>>     rsi: Adding support for host based bgscan.
+>>>     rsi: Changes for 40MHz
+>>>
+>>>    drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
+>>>    drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
+>>>    drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
+>>>    drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  236 +++++++++++++++++++--------
+>>>    drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
+>>>    drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
+>>>    drivers/net/wireless/rsi/rsi_main.h         |   12 ++
+>>>    drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
+>>>    drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
+>>>    9 files changed, 416 insertions(+), 128 deletions(-)
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
+>
 >
 
-Ok, please do the following:
-
-modprobe -r iwldvm
-modprobe iwlwifi fw_restart=0 debug=0xffffffff
-
-then, please send the whole dmesg output.
