@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:56306 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933398AbaFIJV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 05:21:29 -0400
-Message-ID: <1402305679.2004.37.camel@dubbel> (sfid-20140609_112152_961562_E37B420D)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 09 Jun 2014 12:21:19 +0300
-In-Reply-To: <1402305420.17674.0.camel@jlt4.sipsolutions.net>
-References: <1402068423-23359-1-git-send-email-luca@coelho.fi>
-	 <1402080365-15462-1-git-send-email-luca@coelho.fi>
-	 <CA+BoTQkX=ZpDc=R+nWxsrj026XyaaEiwrosaB2buRVif2aOnxQ@mail.gmail.com>
-	 <1402298460.2004.34.camel@dubbel>
-	 <1402305420.17674.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [RFC option 2] mac80211: introduce refcount for
- queue_stop_reasons
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:56741 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbaFPOOE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 10:14:04 -0400
+Received: by mail-pa0-f53.google.com with SMTP id ey11so1089651pad.12
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:14:04 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id wn7sm69551192pab.18.2014.06.16.07.14.02
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:14:03 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 09/16] rsi: Use SGI if configured for fixed rate transmission.
+Date: Mon, 16 Jun 2014 19:43:54 +0530
+Message-Id: <1402928034-4018-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161409_949447_AB5DFFA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-09 at 11:17 +0200, Johannes Berg wrote:
-> On Mon, 2014-06-09 at 10:21 +0300, Luca Coelho wrote:
-> 
-> > > I think you need to make sure all stop/wake calls are balanced
-> > > everywhere (including device drivers). Otherwise you risk breaking
-> > > things silently in some cases.
-> 
-> > Checking this might be tricky, actually, since I think there are some
-> > assumptions that stopping a queue that is already stopped is a NOP, but
-> > now we add to the refcount...
-> 
-> I don't think we can force drivers to keep track of this, we'll have to
-> keep the API without refcounting for drivers, I'd say.
+Use SGI if configured while sending data packets at a fixed rate.
 
-Yeah, I was thinking in the same terms... Even for mac80211 might be a
-bit tricky to do it.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_pkt.c |    6 ++++++
+ drivers/net/wireless/rsi/rsi_mgmt.h    |    1 +
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-Maybe I could keep the old APIs as is (ie. they wake the queues no
-matter what the refcount is) and make the new
-ieee80211_stop/wake_vif_queues() refcounted?
-
---
-Luca.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+index 8e48e72..229ef3a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+@@ -81,6 +81,12 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 		/* Send fixed rate */
+ 		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
+ 		frame_desc[4] = cpu_to_le16(common->min_rate);
++		if (common->vif_info[0].sgi) {
++			if (common->min_rate & 0x100) /* Only MCS rates */
++				frame_desc[4] |=
++					cpu_to_le16(ENABLE_SHORTGI_RATE);
++		}
++
+ 	}
+ 
+ 	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 6ccf9d9..8bff664 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -69,6 +69,7 @@
+ 
+ #define RSI_LMAC_CLOCK_80MHZ            0x1
+ #define RSI_ENABLE_40MHZ                (0x1 << 3)
++#define ENABLE_SHORTGI_RATE		BIT(9)
+ 
+ #define RX_BA_INDICATION                1
+ #define RSI_TBL_SZ                      40
+-- 
+1.7.1
 
