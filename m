@@ -1,132 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51831 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbaFQHtS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 03:49:18 -0400
-Message-ID: <539FF2FA.8050304@broadcom.com> (sfid-20140617_094922_100879_73BBA50B)
-Date: Tue, 17 Jun 2014 09:49:14 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hans de Goede <hdegoede@redhat.com>,
-	Florian Fainelli <f.fainelli@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	devicetree <devicetree@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 1/4] dt: bindings: add bindings for Broadcom bcm43xx
- sdio devices
-References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com> <1402941407-8210-2-git-send-email-hdegoede@redhat.com> <CAGVrzcZBzDTfnd6o0ib1FBvBK2VPNitS=rpb4jDkjF=T7Fy=DQ@mail.gmail.com> <539FE0EC.5090003@redhat.com>
-In-Reply-To: <539FE0EC.5090003@redhat.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mx4.wp.pl ([212.77.101.12]:32224 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751295AbaFPQrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 12:47:06 -0400
+Received: from ip-94-112-189-223.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.189.223])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 16 Jun 2014 18:40:23 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH] rt2x00: fix rfkill regression on rt2500pci
+Date: Mon, 16 Jun 2014 18:45:15 +0200
+Message-Id: <1402937115-5399-1-git-send-email-stf_xl@wp.pl> (sfid-20140616_184711_412136_A03671DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-06-14 08:32, Hans de Goede wrote:
-> Hi,
->
-> On 06/16/2014 10:53 PM, Florian Fainelli wrote:
->> 2014-06-16 10:56 GMT-07:00 Hans de Goede <hdegoede@redhat.com>:
->>> From: Arend van Spriel <arend@broadcom.com>
->>>
->>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
->>> integrated in ARM platforms. Currently, the brcmfmac driver for
->>> these devices support use of platform data. This patch specifies
->>> the bindings that allow this platform data to be expressed in the
->>> devicetree.
->>>
->>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
->>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
->>>   on how to handle this yet]
->>> [hdegoede@redhat.com: move from bindings/staging to bindings]
->>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>> ---
->>>   .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 29 ++++++++++++++++++++++
->>>   1 file changed, 29 insertions(+)
->>>   create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>
->>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>> new file mode 100644
->>> index 0000000..6a0aaf2
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>> @@ -0,0 +1,29 @@
->>> +Broadcom BCM43xx Fullmac wireless SDIO devices
->>> +
->>> +This node provides properties for controlling the Broadcom wireless device. The
->>> +node is expected to be specified as a child node to the SDIO controller that
->>> +connects the device to the system.
->>> +
->>> +Required properties:
->>> +
->>> + - compatible : Should be "brcm,bcm43xx-fmac".
->>
->> In general, the use of a wildcard compatible string is discouraged
->> over the use of a more descriptive compatible string. So you should
->> find out what is the first chip that is compatible, and use that
->> compatible string as long as that compatibility remains.
->
-> Right, Arend, what should we use then ?
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-In earlier discussions, we ended up with this compatible string. The 
-properties are generic enough to be covered by this 'wildcard' string. 
-However, I am not religious about it so if you feel strongly for an 
-explicit string it could be brcm,bcm4329-fmac, but it does not have my 
-preference.
+As reported by Niels, starting rfkill polling during device probe
+(commit e2bc7c5, generally sane change) broke rfkill on rt2500pci
+device. I considered that bug as some initalization issue, which
+should be fixed on rt2500pci specific code. But after several
+attempts (see bug report for details) we fail to find working solution.
+Hence I decided to revert to old behaviour on rt2500pci to fix
+regression.
 
->>> +
->>> +Optional properties:
->>> + - brcm,drive-strength : drive strength used for SDIO pins on device.
->>> +       (default = 6mA).
->>
->> It would not hurt if you did specify the unit of the
->> "brcm,drive-strength" property here. Also, if the default is 6, maybe
->> the example below should be fixed to reflect that so people do not
->> think that writing 4 to a register = 6 mA.
->
-> Ok will fix in the next version.
->
+Additionally patch also unregister rfkill on device remove instead
+of ifconfig down, what was another issue introduced by bad commit.
 
-I agree that explicitly specifying the unit of the property is a good 
-addition. If that is done I don't think it is necessary to change the 
-value used in the example.
+Bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=73821
 
-Regards,
-Arend
+Fixes: e2bc7c5f3cb8 ("rt2x00: Fix rfkill_polling register function.")
+Cc: stable@vger.kernel.org
+Bisected-by: Niels <nille0386@googlemail.com>
+Reported-and-tested-by: Niels <nille0386@googlemail.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2500pci.c |    7 ++++++-
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   24 +++++++++++++++++++++---
+ 3 files changed, 28 insertions(+), 4 deletions(-)
 
->>
->>> + - interrupt-parent : the phandle for the interrupt controller to which the
->>> +       device interrupts are connected.
->>> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
->>> +       When not specified the device will use in-band SDIO interrupts.
->>> + - interrupt-names : name of the out-of-band interrupt, which must be set
->>> +       to "host-wake".
->>> +
->>> +Example:
->>> +
->>> +bcm4335 {
->>> +       compatible = "brcm,bcm43xx-fmac";
->>> +       brcm,drive-strength = <4>;
->>> +       interrupt-parent = <&gpx2>;
->>> +       interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
->>> +       interrupt-names = "host-wake";
->>> +};
->>> --
->>> 2.0.0
->>>
->>>
->>> _______________________________________________
->>> linux-arm-kernel mailing list
->>> linux-arm-kernel@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->>
->>
->>
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 2f1cd92..a511ccc 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1681,8 +1681,13 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Detect if this device has an hardware controlled radio.
+ 	 */
+-	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO))
++	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO)) {
+ 		__set_bit(CAPABILITY_HW_BUTTON, &rt2x00dev->cap_flags);
++		/*
++		 * On this device RFKILL initialized during probe does not work.
++		 */
++		__set_bit(REQUIRE_DELAYED_RFKILL, &rt2x00dev->cap_flags);
++	}
+ 
+ 	/*
+ 	 * Check if the BBP tuning should be enabled.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 010b765..d13f25c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -693,6 +693,7 @@ enum rt2x00_capability_flags {
+ 	REQUIRE_SW_SEQNO,
+ 	REQUIRE_HT_TX_DESC,
+ 	REQUIRE_PS_AUTOWAKE,
++	REQUIRE_DELAYED_RFKILL,
+ 
+ 	/*
+ 	 * Capabilities
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 2bde672..4fa43a2e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1126,9 +1126,10 @@ static void rt2x00lib_uninitialize(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 
+ 	/*
+-	 * Unregister extra components.
++	 * Stop rfkill polling.
+ 	 */
+-	rt2x00rfkill_unregister(rt2x00dev);
++	if (test_bit(REQUIRE_DELAYED_RFKILL, &rt2x00dev->cap_flags))
++		rt2x00rfkill_unregister(rt2x00dev);
+ 
+ 	/*
+ 	 * Allow the HW to uninitialize.
+@@ -1166,6 +1167,12 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+ 
+ 	set_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags);
+ 
++	/*
++	 * Start rfkill polling.
++	 */
++	if (test_bit(REQUIRE_DELAYED_RFKILL, &rt2x00dev->cap_flags))
++		rt2x00rfkill_register(rt2x00dev);
++
+ 	return 0;
+ }
+ 
+@@ -1375,7 +1382,12 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00link_register(rt2x00dev);
+ 	rt2x00leds_register(rt2x00dev);
+ 	rt2x00debug_register(rt2x00dev);
+-	rt2x00rfkill_register(rt2x00dev);
++
++	/*
++	 * Start rfkill polling.
++	 */
++	if (!test_bit(REQUIRE_DELAYED_RFKILL, &rt2x00dev->cap_flags))
++		rt2x00rfkill_register(rt2x00dev);
+ 
+ 	return 0;
+ 
+@@ -1391,6 +1403,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 
+ 	/*
++	 * Stop rfkill polling.
++	 */
++	if (!test_bit(REQUIRE_DELAYED_RFKILL, &rt2x00dev->cap_flags))
++		rt2x00rfkill_unregister(rt2x00dev);
++
++	/*
+ 	 * Disable radio.
+ 	 */
+ 	rt2x00lib_disable_radio(rt2x00dev);
+-- 
+1.7.4.4
 
