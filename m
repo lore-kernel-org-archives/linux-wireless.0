@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:59426 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927AbaFBRLc (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:64841 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbaFPOLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 13:11:32 -0400
-Received: by mail-we0-f172.google.com with SMTP id k48so5572194wev.31
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2014 10:11:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ppirz2ic.fsf@kamboji.qca.qualcomm.com>
-References: <1401370567-13543-1-git-send-email-bartosz.markowski@tieto.com>
-	<87ppirz2ic.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 2 Jun 2014 19:11:30 +0200
-Message-ID: <CACKGw+HRLuaRX3JW86PtMzRG86024m8YOmZj14eyE9vQTffMeg@mail.gmail.com> (sfid-20140602_191135_637902_33642514)
-Subject: Re: [PATCH] ath10k: fix vdev map size for 10.x firmware
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Jun 2014 10:11:32 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y13so4478229pdi.13
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:11:32 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id su8sm19019825pbc.72.2014.06.16.07.11.31
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:11:32 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 04/16] rsi: Add macros for endpoints and set default value of endpoint.
+Date: Mon, 16 Jun 2014 19:41:22 +0530
+Message-Id: <1402927882-3860-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161135_467405_48C45B27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 June 2014 18:42, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->
->> Firmware 10.x supports up to 8 virtual AP interfaces
->> (comparing to 7 for main firmware). Previous vdev map
->> initialization was missing enough space for 8 + 1 vdevs
->> (we may spent one for mac monitor), due to wrong define used.
->>
->> Use correct one - TARGET_10X_NUM_VDEVS - for 10.x firmware.
->>
->> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->
-> So what is the actual bug you are fixing? Previously with 10.x it was
-> possible to get only 7 VIFs, even though we advertised 8 to user space,
-> and with your fix we get the full 8 VIFs?
+Added macros for the endpoints and set the default value of endpoint
+to 2.4GHz and 20MHz.
 
-For CAC, we use one VDEV to start monitor interface. In case of 10.X
-firmware we advertise support up to 8 VAPs, but if we spent one for
-monitor interface, only 7 left. I've noticed we fail on .add_interface
-when trying to add 8th AP, here:
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    1 +
+ drivers/net/wireless/rsi/rsi_mgmt.h     |    5 +++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-    bit = ffs(ar->free_vdev_map);
-    if (bit == 0) {
-        ret = -EBUSY;
-        goto err;
-    }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 2eefbf1..2cdb36a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -217,6 +217,7 @@ static void rsi_set_default_parameters(struct rsi_common *common)
+ 	common->min_rate = 0xffff;
+ 	common->fsm_state = FSM_CARD_NOT_READY;
+ 	common->iface_down = true;
++	common->endpoint = EP_2GHZ_20MHZ;
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 225215a..0641068 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -123,6 +123,11 @@
+ #define BW_20MHZ                        0
+ #define BW_40MHZ                        1
+ 
++#define EP_2GHZ_20MHZ			0
++#define EP_2GHZ_40MHZ			1
++#define EP_5GHZ_20MHZ			2
++#define EP_5GHZ_40MHZ			3
++
+ #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
+ 				 FIF_BCN_PRBRESP_PROMISC)
+ enum opmode {
+-- 
+1.7.1
 
-and this lead me to initialization code for vdev_map
-
-    ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-
-We have an API split for main and 10.x firmware (incl. number of
-vdevs, target fw is able to handle), but here we missed this split.
-
-Ben has a valid point, the TARGET_10X_NUM_VDEVS claims to be 16, so
-there's an inconsistency between what we adverts to mac in max
-interfaces, but I'm not sure if this is such a big deal.
-
-> It would be good to clear have that in the commit log so that anyone can
-> understand what bug is fixed.
-
-Do you want me to send a v2 with just an updated commit (better user
-impact description)? (No patch content changes)
-
--Bartosz
