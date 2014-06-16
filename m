@@ -1,67 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38747 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755648AbaFWOrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 10:47:25 -0400
-Message-ID: <53A83DE1.4050106@openwrt.org> (sfid-20140623_164744_336077_C160E089)
-Date: Mon, 23 Jun 2014 16:46:57 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rostislav Lisovy <lisovy@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: Re: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when checking
- usable channels
-References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <53A6C0FF.9090104@openwrt.org>	 <1403514536.4418.6.camel@jlt4.sipsolutions.net>	 <53A7FBB2.2050703@openwrt.org>	 <1403517938.4418.16.camel@jlt4.sipsolutions.net> <1403534300.7341.6.camel@lolumad>
-In-Reply-To: <1403534300.7341.6.camel@lolumad>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:65445 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbaFPOPP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 10:15:15 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so3003625pdj.36
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:15:14 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id y2sm69473026pas.45.2014.06.16.07.15.12
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 16 Jun 2014 07:15:13 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 11/16] rsi: Changed the logic of dequeuing packets from hal queues.
+Date: Mon, 16 Jun 2014 19:45:03 +0530
+Message-Id: <1402928103-4081-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161519_289947_819BBF26)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-06-23 16:38, Rostislav Lisovy wrote:
-> On Mon, 2014-06-23 at 12:05 +0200, Johannes Berg wrote:
->> On Mon, 2014-06-23 at 12:04 +0200, Felix Fietkau wrote:
->> > On 2014-06-23 11:08, Johannes Berg wrote:
->> > > On Sun, 2014-06-22 at 13:41 +0200, Felix Fietkau wrote:
->> > >> On 2014-04-15 14:37, Rostislav Lisovy wrote:
->> > >> > Current code checks if the 20MHz bandwidth is allowed for
->> > >> > particular channel -- if it is not, the channel is disabled.
->> > >> > Since we need to use 5/10 MHz channels, this code is modified in
->> > >> > the way that the default bandwidth to check is 5MHz. If the
->> > >> > maximum bandwidth allowed by the channel is smaller than 5MHz,
->> > >> > the channel is disabled. Otherwise the channel is used and the
->> > >> > flags are set according to the bandwidth allowed by the channel.
->> > >> > 
->> > >> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
->> > > 
->> > >> This change causes a regression and needs to be reverted or fixed.
->> > > 
->> > > Noted, I've reverted it in mac80211.git.
->> > > 
->> > >> It leaves Channel 12 enabled for US regdomain and does not prevent
->> > >> bringing up AP mode on it (IEEE80211_CHAN_NO_20MHZ does not get set).
->> > > 
->> > > I'm not sure this makes sense - CHAN_NO_20MHZ shouldn't get set on that
->> > > channel? It should be disabled for other reasons for AP mode - e.g.
->> > > NO_IR.
->> > I was thinking it could be valid in AP mode for 5 MHz operation.
->> 
->> Huh, ok, maybe. I guess Rostislav can look into the details :)
->> 
-> 
-> I am a bit confused right now. The regression is that the channel used
-> to be completely disabled and now it is not? The regulatory restrictions
-> prohibit the 20MHz BW for this channel but 5MHz BW is alright?
-Correct. The matching rule is this:
-        (2402 - 2472 @ 40), (N/A, 30), (N/A)
+The number of packets being dequeued from s/w queues was fixed -
+changed it to a dynamic calculation based on txop. There are also
+some fixes to the dequeuing algorithm.
 
-Channel 11 (2462 MHz) is allowed, because 2472 MHz is below the limit.
-Channel 12 (2467 MHz) is not allowed, because 2477 MHz is too high.
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c |   80 +++++++++++++++++++++---------
+ drivers/net/wireless/rsi/rsi_main.h     |    3 +
+ 2 files changed, 59 insertions(+), 24 deletions(-)
 
-With your change, Channel 12 was enabled and usable for AP mode.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index cf61d6e..264e8fa 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -77,6 +77,50 @@ static bool rsi_recalculate_weights(struct rsi_common *common)
+ }
+ 
+ /**
++ * rsi_get_num_pkts_dequeue() - This function determines the number of
++ *		                packets to be dequeued based on the number
++ *			        of bytes calculated using txop.
++ *
++ * @common: Pointer to the driver private structure.
++ * @q_num: the queue from which pkts have to be dequeued
++ *
++ * Return: pkt_num: Number of pkts to be dequeued.
++ */
++static u32 rsi_get_num_pkts_dequeue(struct rsi_common *common, u8 q_num)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct sk_buff *skb;
++	u32 pkt_cnt = 0;
++	s16 txop = common->tx_qinfo[q_num].txop * 32;
++	struct ieee80211_rate rate;
++
++	rate.bitrate = RSI_RATE_MCS0 * 5 * 10; /* Convert to Kbps */
++	if (q_num == VI_Q)
++		txop = ((txop << 5) / 80);
++
++	if (skb_queue_len(&common->tx_queue[q_num]))
++		skb = skb_peek(&common->tx_queue[q_num]);
++	else
++		return 0;
++
++	do {
++		txop -= ieee80211_generic_frame_duration(adapter->hw,
++							 adapter->vifs[0],
++							 common->band,
++							 skb->len, &rate);
++		pkt_cnt += 1;
++		/*checking if pkts are still there*/
++		if (skb_queue_len(&common->tx_queue[q_num]) - pkt_cnt)
++			skb = skb->next;
++		else
++			break;
++
++	} while (txop > 0);
++
++	return pkt_cnt;
++}
++
++/**
+  * rsi_core_determine_hal_queue() - This function determines the queue from
+  *				    which packet has to be dequeued.
+  * @common: Pointer to the driver private structure.
+@@ -88,7 +132,7 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
+ 	bool recontend_queue = false;
+ 	u32 q_len = 0;
+ 	u8 q_num = INVALID_QUEUE;
+-	u8 ii = 0, min = 0;
++	u8 ii = 0;
+ 
+ 	if (skb_queue_len(&common->tx_queue[MGMT_SOFT_Q])) {
+ 		if (!common->mgmt_q_block)
+@@ -96,6 +140,9 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
+ 		return q_num;
+ 	}
+ 
++	if (common->hw_data_qs_blocked)
++		return q_num;
++
+ 	if (common->pkt_cnt != 0) {
+ 		--common->pkt_cnt;
+ 		return common->selected_qnum;
+@@ -106,14 +153,15 @@ get_queue_num:
+ 
+ 	q_num = rsi_determine_min_weight_queue(common);
+ 
+-	q_len = skb_queue_len(&common->tx_queue[ii]);
+ 	ii = q_num;
+ 
+ 	/* Selecting the queue with least back off */
+ 	for (; ii < NUM_EDCA_QUEUES; ii++) {
++		q_len = skb_queue_len(&common->tx_queue[ii]);
+ 		if (((common->tx_qinfo[ii].pkt_contended) &&
+-		     (common->tx_qinfo[ii].weight < min)) && q_len) {
+-			min = common->tx_qinfo[ii].weight;
++		     (common->tx_qinfo[ii].weight < common->min_weight)) &&
++		      q_len) {
++			common->min_weight = common->tx_qinfo[ii].weight;
+ 			q_num = ii;
+ 		}
+ 	}
+@@ -140,26 +188,10 @@ get_queue_num:
+ 	common->selected_qnum = q_num;
+ 	q_len = skb_queue_len(&common->tx_queue[q_num]);
+ 
+-	switch (common->selected_qnum) {
+-	case VO_Q:
+-		if (q_len > MAX_CONTINUOUS_VO_PKTS)
+-			common->pkt_cnt = (MAX_CONTINUOUS_VO_PKTS - 1);
+-		else
+-			common->pkt_cnt = --q_len;
+-		break;
+-
+-	case VI_Q:
+-		if (q_len > MAX_CONTINUOUS_VI_PKTS)
+-			common->pkt_cnt = (MAX_CONTINUOUS_VI_PKTS - 1);
+-		else
+-			common->pkt_cnt = --q_len;
+-
+-		break;
+-
+-	default:
+-		common->pkt_cnt = 0;
+-		break;
+-	}
++	if (q_num == VO_Q || q_num == VI_Q) {
++		common->pkt_cnt = rsi_get_num_pkts_dequeue(common, q_num);
++		common->pkt_cnt -= 1;
++	};
+ 
+ 	return q_num;
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 2cb73e7..8629131 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -115,6 +115,7 @@ struct wmm_qinfo {
+ 	s32 weight;
+ 	s32 wme_params;
+ 	s32 pkt_contended;
++	s32 txop;
+ };
+ 
+ struct transmit_q_stats {
+@@ -192,6 +193,8 @@ struct rsi_common {
+ 	u8 selected_qnum;
+ 	u32 pkt_cnt;
+ 	u8 min_weight;
++
++	bool hw_data_qs_blocked;
+ };
+ 
+ struct rsi_hw {
+-- 
+1.7.1
 
-- Felix
