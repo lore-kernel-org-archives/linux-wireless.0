@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19016 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751273AbaFJGjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 02:39:52 -0400
-Date: Tue, 10 Jun 2014 08:38:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Powerful Notageek <powerfulnotageek@yahoo.in>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: MT7630e availability in kernel by default
-Message-ID: <20140610063824.GD1720@redhat.com> (sfid-20140610_083956_134700_9C9BCF9B)
-References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com>
- <53935133.5020303@lwfinger.net>
- <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
- <539356EA.1070004@lwfinger.net>
- <1402165531.45127.YahooMailNeo@web193003.mail.sg3.yahoo.com>
- <53935FFE.10708@lwfinger.net>
- <1402168424.40608.YahooMailNeo@web193005.mail.sg3.yahoo.com>
- <53936C6E.8070800@lwfinger.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14554 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581AbaFPQif (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 12:38:35 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 12/25] wil6210: print error when notifying about FW error
+Date: Mon, 16 Jun 2014 19:37:10 +0300
+Message-ID: <1402936643-31819-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190456_684471_2ACB40BD)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53936C6E.8070800@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 07, 2014 at 02:47:58PM -0500, Larry Finger wrote:
-> On 06/07/2014 02:13 PM, Powerful Notageek wrote:
-> >dmesg says nothing and there's probably no firmware for the device (although linux-firmware is installed)
-> >
-> >These are the firmwares available to me:
-> >
-> >[root@localhost ~]# ll /usr/lib/firmware/rt2*
-> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561.bin
-> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2561s.bin
-> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2661.bin
-> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2860.bin
-> >-rw-r--r--. 1 root root 8192 Mar 18 00:08 /usr/lib/firmware/rt2870.bin
-> 
-> I looked more closely at the code in
-> https://github.com/anthonywong/mt7630. There are a number of places
-> where there are branches specific to the MT7630.
-This driver is quite nice mix of rt2800pci and Mediatek/Ralink driver,
-where MT7xx code was copied into rt2x00 from venodr driver. It can be
-good start for adding support for mt7xx devices to rt2x00.
+Print to dmesg when FW error notification is about to be sent
 
-> It also needs a
-> firmware file named mt7630.bin. Unfortunately, that file is not
-> found in the repo, and a quick Google search failed to find it. The
-> linux-firmware git repo has a file named mt7650.bin, but I think
-> that is Bluetooth firmware.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Indeed, it is hard to find it.
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 73593aa..e4aba53 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -257,6 +257,7 @@ static void wil_notify_fw_error(struct wil6210_priv *wil)
+ 		[1] = "EVENT=FW_ERROR",
+ 		[2] = NULL,
+ 	};
++	wil_err(wil, "Notify about firmware error\n");
+ 	kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+ }
+ 
+-- 
+1.9.1
 
-> Unfortunately, there does not seem to be an easy fix, and only
-> someone with the hardware could modify rt2800pci to support this
-> device.
-
-Yep, some substantial amount of work is needed to add support to new
-MT7xxx chips properly to rt2x00.
-
-Stanislaw
