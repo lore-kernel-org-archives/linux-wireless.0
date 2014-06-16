@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:37259 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753278AbaFHJ1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 05:27:07 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: hw.c: Cleaning up conjunction always evaluates to false
-Date: Sun, 08 Jun 2014 11:26:50 +0200
-Message-ID: <1436639.AmJiDmeQZF@al> (sfid-20140608_112731_858227_7081D7F0)
-In-Reply-To: <5393A7D0.2080700@lwfinger.net>
-References: <1402151419-18296-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <CAFo99gZ+iu3FA9Nuwdo_AT1xZkno7w=6JidWYcm8g0bOvshwTw@mail.gmail.com> <5393A7D0.2080700@lwfinger.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14421 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584AbaFPQiR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 12:38:17 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 04/25] wil6210: trace wil->status on debugfs
+Date: Mon, 16 Jun 2014 19:37:02 +0300
+Message-ID: <1402936643-31819-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183827_583324_2C0D2BEC)
+In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 07 June 2014 19:01:20 Larry Finger wrote:
-> As you have learned here, automatically making changes suggested by some tool 
-> may convert a visible bug into one that is invisible, and only found by a 
-> detailed line-by-line examination of the code, and that is unlikely to happen. 
-> Please be careful.
-> 
->  From everything I see, the test in all drivers should be
-> 
->         if ((bt_msr & MSR_AP) == MSR_AP)
+For debug purposes
 
-That only happens to be case because MSR_INFRA | MSR_ADHOC == MSR_AP. This
-seems to be the intent:
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-    #define MSR_MASK 0x03
-    if ((bt_msr & MSR_MASK) == MSR_AP)
-
-In rtl8192se, there are also MSR_LINK_... constants covering MSR_...
-and in addition, there is a MSR_LINK_MASK. These macros are quite
-redundant though given the other definitions, but the mask is still
-nice to have I guess.
-
-Also, personally I would submit just one patch touching all drivers, but
-I see that Rickard has submitted a bunch of patches (without cover letter
-either, making it more difficult to group them). What would you prefer,
-a single patch touching multiple drivers (as the changes are mostly the
-same) or split patches?
-
-Kind regards,
-Peter
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 9d5db04..4fb3375 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -231,6 +231,26 @@ static struct dentry *wil_debugfs_create_iomem_x32(const char *name,
+ 				   &fops_iomem_x32);
+ }
+ 
++static int wil_debugfs_ulong_set(void *data, u64 val)
++{
++	*(ulong *)data = val;
++	return 0;
++}
++static int wil_debugfs_ulong_get(void *data, u64 *val)
++{
++	*val = *(ulong *)data;
++	return 0;
++}
++DEFINE_SIMPLE_ATTRIBUTE(wil_fops_ulong, wil_debugfs_ulong_get,
++			wil_debugfs_ulong_set, "%llu\n");
++
++static struct dentry *wil_debugfs_create_ulong(const char *name, umode_t mode,
++					       struct dentry *parent,
++					       ulong *value)
++{
++	return debugfs_create_file(name, mode, parent, value, &wil_fops_ulong);
++}
++
+ static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
+ 				      const char *name,
+ 				      struct dentry *parent, u32 off)
+@@ -781,6 +801,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 	debugfs_create_file("ssid", S_IRUGO | S_IWUSR, dbg, wil, &fops_ssid);
+ 	debugfs_create_u32("secure_pcp", S_IRUGO | S_IWUSR, dbg,
+ 			   &wil->secure_pcp);
++	wil_debugfs_create_ulong("status", S_IRUGO | S_IWUSR, dbg,
++				 &wil->status);
+ 
+ 	wil6210_debugfs_create_ISR(wil, "USER_ICR", dbg,
+ 				   HOSTADDR(RGF_USER_USER_ICR));
+-- 
+1.9.1
 
