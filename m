@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:61466 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991AbaFAUNq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 16:13:46 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so4144084wgg.13
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 13:13:44 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rtlwifi: rtl8192de: phy.c:  Cleaning up uninitialized variable
-Date: Sun,  1 Jun 2014 22:14:38 +0200
-Message-Id: <1401653678-11522-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_221409_618429_49777E9F)
+Received: from mx1.redhat.com ([209.132.183.28]:23319 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932367AbaFPR5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2014 13:57:36 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 4/4] brcmfmac: Fix OOB interrupt not working for BCM43362
+Date: Mon, 16 Jun 2014 19:56:47 +0200
+Message-Id: <1402941407-8210-5-git-send-email-hdegoede@redhat.com> (sfid-20140616_195740_897315_41CE2B1F)
+In-Reply-To: <1402941407-8210-1-git-send-email-hdegoede@redhat.com>
+References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a risk that the variables will be used without being initialized.
-Have also moved variable to the part of the code where it is used.
+It has taken me a long long time to get the OOB interrupt working on the
+AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
+end I found these magic register pokes in the cubietruck kernel tree:
+https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
 
-This was largely found by using a static code analysis program called cppcheck.
+I'm not entirely sure if this specific to the AP6210 module, or if this
+should be done for all BCM43362 sdio devices.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 3d1f0dd..592125a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -203,11 +203,12 @@ u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitmask)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	u32 returnvalue, originalvalue, bitshift;
--	u8 dbi_direct;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 0fc707c..58e86a5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -39,7 +39,9 @@
+ #include <brcm_hw_ids.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
++#include <chipcommon.h>
+ #include <soc.h>
++#include "chip.h"
+ #include "dhd_bus.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+@@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret = 0;
+ 	u8 data;
++	u32 addr, gpiocontrol;
+ 	unsigned long flags;
  
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "regaddr(%#x), bitmask(%#x)\n",
- 		 regaddr, bitmask);
- 	if (rtlhal->during_mac1init_radioa || rtlhal->during_mac0init_radiob) {
-+		u8 dbi_direct = 0;
+ 	if ((sdiodev->pdata) && (sdiodev->pdata->oob_irq_supported)) {
+@@ -148,6 +151,19 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 
+ 		sdio_claim_host(sdiodev->func[1]);
+ 
++		if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
++			/* assign GPIO to SDIO core */
++			addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
++			gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr, &ret);
++			gpiocontrol |= 0x2;
++			brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol, &ret);
 +
- 		/* mac1 use phy0 read radio_b. */
- 		/* mac0 use phy1 read radio_b. */
- 		if (rtlhal->during_mac1init_radioa)
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_SELECT, 0xf,
++					  &ret);
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_OUT, 0, &ret);
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_EN, 0x2, &ret);
++		}
++
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+ 		data = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_IENx, &ret);
+ 		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
 -- 
-1.7.10.4
+2.0.0
 
