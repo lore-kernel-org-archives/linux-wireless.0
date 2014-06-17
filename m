@@ -1,285 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11826 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753521AbaFKKun (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51831 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbaFQHtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:50:43 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 27/28] ath9k: use separate HW queue for each channel context
-Date: Wed, 11 Jun 2014 16:18:15 +0530
-Message-ID: <1402483696-2498-28-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_130501_916983_7E348C0C)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Tue, 17 Jun 2014 03:49:18 -0400
+Message-ID: <539FF2FA.8050304@broadcom.com> (sfid-20140617_094922_100879_73BBA50B)
+Date: Tue, 17 Jun 2014 09:49:14 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Hans de Goede <hdegoede@redhat.com>,
+	Florian Fainelli <f.fainelli@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] dt: bindings: add bindings for Broadcom bcm43xx
+ sdio devices
+References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com> <1402941407-8210-2-git-send-email-hdegoede@redhat.com> <CAGVrzcZBzDTfnd6o0ib1FBvBK2VPNitS=rpb4jDkjF=T7Fy=DQ@mail.gmail.com> <539FE0EC.5090003@redhat.com>
+In-Reply-To: <539FE0EC.5090003@redhat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use seperate tx queue for each AC in each channel context and expose
-these information to mac80211 to avoid stopping one channel context
-leads to stopping the entire traffic for that AC even on other contexts.
+On 17-06-14 08:32, Hans de Goede wrote:
+> Hi,
+>
+> On 06/16/2014 10:53 PM, Florian Fainelli wrote:
+>> 2014-06-16 10:56 GMT-07:00 Hans de Goede <hdegoede@redhat.com>:
+>>> From: Arend van Spriel <arend@broadcom.com>
+>>>
+>>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+>>> integrated in ARM platforms. Currently, the brcmfmac driver for
+>>> these devices support use of platform data. This patch specifies
+>>> the bindings that allow this platform data to be expressed in the
+>>> devicetree.
+>>>
+>>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>>>   on how to handle this yet]
+>>> [hdegoede@redhat.com: move from bindings/staging to bindings]
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>> ---
+>>>   .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 29 ++++++++++++++++++++++
+>>>   1 file changed, 29 insertions(+)
+>>>   create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>> new file mode 100644
+>>> index 0000000..6a0aaf2
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>> @@ -0,0 +1,29 @@
+>>> +Broadcom BCM43xx Fullmac wireless SDIO devices
+>>> +
+>>> +This node provides properties for controlling the Broadcom wireless device. The
+>>> +node is expected to be specified as a child node to the SDIO controller that
+>>> +connects the device to the system.
+>>> +
+>>> +Required properties:
+>>> +
+>>> + - compatible : Should be "brcm,bcm43xx-fmac".
+>>
+>> In general, the use of a wildcard compatible string is discouraged
+>> over the use of a more descriptive compatible string. So you should
+>> find out what is the first chip that is compatible, and use that
+>> compatible string as long as that compatibility remains.
+>
+> Right, Arend, what should we use then ?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  | 10 ++++++-
- drivers/net/wireless/ath/ath9k/main.c  | 48 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/xmit.c  | 11 +++++---
- 4 files changed, 63 insertions(+), 7 deletions(-)
+In earlier discussions, we ended up with this compatible string. The 
+properties are generic enough to be covered by this 'wildcard' string. 
+However, I am not religious about it so if you feel strongly for an 
+explicit string it could be brcm,bcm4329-fmac, but it does not have my 
+preference.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 757dd60..11b5e4d 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -327,6 +327,7 @@ struct ath_chanctx {
- 	struct cfg80211_chan_def chandef;
- 	struct list_head vifs;
- 	struct list_head acq[IEEE80211_NUM_ACS];
-+	int hw_queue_base;
- 
- 	/* do not dereference, use for comparison only */
- 	struct ieee80211_vif *primary_sta;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a4afcb1..7afb405 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -511,6 +511,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	sc->tx99_power = MAX_RATE_POWER + 1;
- 	init_waitqueue_head(&sc->tx_wait);
- 	sc->cur_chan = &sc->chanctx[0];
-+	if (!ath9k_use_chanctx)
-+		sc->cur_chan->hw_queue_base = 0;
- 
- 	if (!pdata || pdata->use_eeprom) {
- 		ah->ah_flags |= AH_USE_EEPROM;
-@@ -718,6 +720,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SUPPORTS_RC_TABLE |
-+		IEEE80211_HW_QUEUE_CONTROL |
- 		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
- 
- 	if (ath9k_ps_enable)
-@@ -769,7 +772,12 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
- 
--	hw->queues = 4;
-+	/* allow 4 queues per channel context +
-+	 * 1 cab queue + 1 offchannel tx queue
-+	 */
-+	hw->queues = 10;
-+	/* last queue for offchannel */
-+	hw->offchannel_tx_hw_queue = hw->queues - 1;
- 	hw->max_rates = 4;
- 	hw->max_listen_interval = 1;
- 	hw->max_rate_tries = 10;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b307e6e..cf21652 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -223,6 +223,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	unsigned long flags;
-+	int i;
- 
- 	if (ath_startrecv(sc) != 0) {
- 		ath_err(common, "Unable to restart recv logic\n");
-@@ -267,7 +268,20 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
--	ieee80211_wake_queues(sc->hw);
-+	if (!ath9k_use_chanctx)
-+		ieee80211_wake_queues(sc->hw);
-+	else {
-+		if (sc->cur_chan == &sc->offchannel.chan)
-+			ieee80211_wake_queue(sc->hw,
-+					sc->hw->offchannel_tx_hw_queue);
-+		else {
-+			for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+				ieee80211_wake_queue(sc->hw,
-+					sc->cur_chan->hw_queue_base + i);
-+		}
-+		if (ah->opmode == NL80211_IFTYPE_AP)
-+			ieee80211_wake_queue(sc->hw, sc->hw->queues - 2);
-+	}
- 
- 	ath9k_p2p_ps_timer(sc);
- 
-@@ -1108,6 +1122,7 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_node *an = &avp->mcast_node;
-+	int i;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1130,6 +1145,12 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		avp->chanctx = sc->cur_chan;
- 		list_add_tail(&avp->list, &avp->chanctx->vifs);
- 	}
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+		vif->hw_queue[i] = i;
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		vif->cab_queue = hw->queues - 2;
-+	else
-+		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
- 
- 	an->sc = sc;
- 	an->sta = NULL;
-@@ -1149,6 +1170,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-+	int i;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1168,6 +1190,14 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+		vif->hw_queue[i] = i;
-+
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		vif->cab_queue = hw->queues - 2;
-+	else
-+		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
-+
- 	ath9k_calculate_summary_state(sc, avp->chanctx);
- 
- 	mutex_unlock(&sc->mutex);
-@@ -1984,6 +2014,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int timeout = HZ / 5; /* 200 ms */
- 	bool drain_txq;
-+	int i;
- 
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 
-@@ -2011,7 +2042,10 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 			ath_reset(sc);
- 
- 		ath9k_ps_restore(sc);
--		ieee80211_wake_queues(hw);
-+		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+			ieee80211_wake_queue(sc->hw,
-+					     sc->cur_chan->hw_queue_base + i);
-+		}
- 	}
- 
- 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
-@@ -2468,6 +2502,7 @@ static int ath9k_add_chanctx(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_chanctx *ctx, **ptr;
-+	int pos;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -2478,6 +2513,8 @@ static int ath9k_add_chanctx(struct ieee80211_hw *hw,
- 		ptr = (void *) conf->drv_priv;
- 		*ptr = ctx;
- 		ctx->assigned = true;
-+		pos = ctx - &sc->chanctx[0];
-+		ctx->hw_queue_base = pos * IEEE80211_NUM_ACS;
- 		ath_chanctx_set_channel(sc, ctx, &conf->def);
- 		mutex_unlock(&sc->mutex);
- 		return 0;
-@@ -2495,6 +2532,7 @@ static void ath9k_remove_chanctx(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&sc->mutex);
- 	ctx->assigned = false;
-+	ctx->hw_queue_base = -1;
- 	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_UNASSIGN);
- 	mutex_unlock(&sc->mutex);
- }
-@@ -2518,11 +2556,14 @@ static int ath9k_assign_vif_chanctx(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+	int i;
- 
- 	mutex_lock(&sc->mutex);
- 	avp->chanctx = ctx;
- 	list_add_tail(&avp->list, &ctx->vifs);
- 	ath9k_calculate_summary_state(sc, ctx);
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+		vif->hw_queue[i] = ctx->hw_queue_base + i;
- 	mutex_unlock(&sc->mutex);
- 
- 	return 0;
-@@ -2535,11 +2576,14 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+	int ac;
- 
- 	mutex_lock(&sc->mutex);
- 	avp->chanctx = NULL;
- 	list_del(&avp->list);
- 	ath9k_calculate_summary_state(sc, ctx);
-+	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
-+		vif->hw_queue[ac] = IEEE80211_INVAL_HW_QUEUE;
- 	mutex_unlock(&sc->mutex);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a422c20..d4927c9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -156,7 +156,8 @@ static void ath_set_rates(struct ieee80211_vif *vif, struct ieee80211_sta *sta,
- static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 			     struct sk_buff *skb)
- {
--	int q;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	int q, hw_queue;
- 
- 	q = skb_get_queue_mapping(skb);
- 	if (txq == sc->tx.uapsdq)
-@@ -168,9 +169,10 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 	if (WARN_ON(--txq->pending_frames < 0))
- 		txq->pending_frames = 0;
- 
-+	hw_queue = (info->hw_queue >= sc->hw->queues - 2) ? q : info->hw_queue;
- 	if (txq->stopped &&
- 	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
--		ieee80211_wake_queue(sc->hw, q);
-+		ieee80211_wake_queue(sc->hw, hw_queue);
- 		txq->stopped = false;
- 	}
- }
-@@ -2191,7 +2193,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_atx_tid *tid = NULL;
- 	struct ath_buf *bf;
- 	bool queue;
--	int q;
-+	int q, hw_queue;
- 	int ret;
- 
- 	if (vif)
-@@ -2211,12 +2213,13 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 */
- 
- 	q = skb_get_queue_mapping(skb);
-+	hw_queue = (info->hw_queue >= sc->hw->queues - 2) ? q : info->hw_queue;
- 
- 	ath_txq_lock(sc, txq);
- 	if (txq == sc->tx.txq_map[q] &&
- 	    ++txq->pending_frames > sc->tx.txq_max_pending[q] &&
- 	    !txq->stopped) {
--		ieee80211_stop_queue(sc->hw, q);
-+		ieee80211_stop_queue(sc->hw, hw_queue);
- 		txq->stopped = true;
- 	}
- 
--- 
-2.0.0
+>>> +
+>>> +Optional properties:
+>>> + - brcm,drive-strength : drive strength used for SDIO pins on device.
+>>> +       (default = 6mA).
+>>
+>> It would not hurt if you did specify the unit of the
+>> "brcm,drive-strength" property here. Also, if the default is 6, maybe
+>> the example below should be fixed to reflect that so people do not
+>> think that writing 4 to a register = 6 mA.
+>
+> Ok will fix in the next version.
+>
+
+I agree that explicitly specifying the unit of the property is a good 
+addition. If that is done I don't think it is necessary to change the 
+value used in the example.
+
+Regards,
+Arend
+
+>>
+>>> + - interrupt-parent : the phandle for the interrupt controller to which the
+>>> +       device interrupts are connected.
+>>> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+>>> +       When not specified the device will use in-band SDIO interrupts.
+>>> + - interrupt-names : name of the out-of-band interrupt, which must be set
+>>> +       to "host-wake".
+>>> +
+>>> +Example:
+>>> +
+>>> +bcm4335 {
+>>> +       compatible = "brcm,bcm43xx-fmac";
+>>> +       brcm,drive-strength = <4>;
+>>> +       interrupt-parent = <&gpx2>;
+>>> +       interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
+>>> +       interrupt-names = "host-wake";
+>>> +};
+>>> --
+>>> 2.0.0
+>>>
+>>>
+>>> _______________________________________________
+>>> linux-arm-kernel mailing list
+>>> linux-arm-kernel@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>>
+>>
+>>
 
