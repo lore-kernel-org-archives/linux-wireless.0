@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:33678 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755179AbaF3KyG (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:56679 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbaFQFw5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 06:54:06 -0400
-Message-ID: <53B141CB.7010000@broadcom.com> (sfid-20140630_125410_374277_2B6ECC07)
-Date: Mon, 30 Jun 2014 12:54:03 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 17 Jun 2014 01:52:57 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n3so5134001wiv.2
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 22:52:56 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: treat LCNXN-PHY as extra N-PHY devices
-References: <1404071205-12568-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1404071205-12568-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1402929323.13599.13.camel@dubbel>
+References: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+	<1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+	<1402577680-17888-2-git-send-email-michal.kazior@tieto.com>
+	<1402929323.13599.13.camel@dubbel>
+Date: Tue, 17 Jun 2014 07:52:55 +0200
+Message-ID: <CA+BoTQmWCAaMFjmoq4j7oFf3nPHtNxtBOpbGp6UE061-oXdnxA@mail.gmail.com> (sfid-20140617_075300_717344_4841EF26)
+Subject: Re: [PATCH v9 1/5] mac80211: implement multi-vif in-place reservations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29-06-14 21:46, Rafał Miłecki wrote:
-> LCNXN is simply a continuation of N, e.g. code handling LCNXN revs 0 and
-> 1 is mostly the same as for N-PHY revs 7+.
+On 16 June 2014 16:35, Luca Coelho <luca@coelho.fi> wrote:
+> On Thu, 2014-06-12 at 14:54 +0200, Michal Kazior wrote:
+>> Multi-vif in-place reservations happen when
+>> it is impossible to allocate more channel contexts
+>> as indicated by interface combinations.
+>>
+>> Such reservations are not finalized until all
+>> assigned interfaces are ready.
+>>
+>> This still doesn't handle all possible cases
+>> (i.e. degradation of number of channels) properly.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>>
+>
+> [...]
+>
+>> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+>> index 3702d64..159f4c3 100644
+>> --- a/net/mac80211/chan.c
+>> +++ b/net/mac80211/chan.c
+>> @@ -63,6 +63,19 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
+>>       return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
+>>  }
+>>
+>> +static struct ieee80211_chanctx *
+>> +ieee80211_vif_get_chanctx(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +     struct ieee80211_chanctx_conf *conf;
+>> +
+>> +     conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+>> +                                      lockdep_is_held(&local->chanctx_mtx));
+>
+> This doesn't compile.  local is undefined here. :(
+>
+> It's a simple fix though.  s/local/sdata->local/
 
-Hi Rafał,
+Oh.. thanks! How did I not catch this -_-?
 
-LCNXN is actually a LCN phy with 2 streams (mimo).
 
-Regards,
-Arend
-
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  drivers/net/wireless/b43/main.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 3e4333c..0b1aac4 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4331,6 +4331,13 @@ static int b43_phy_versioning(struct b43_wldev *dev)
->  	analog_type = (tmp & B43_PHYVER_ANALOG) >> B43_PHYVER_ANALOG_SHIFT;
->  	phy_type = (tmp & B43_PHYVER_TYPE) >> B43_PHYVER_TYPE_SHIFT;
->  	phy_rev = (tmp & B43_PHYVER_VERSION);
-> +
-> +	/* LCNXN is continuation of N which run out of revisions */
-> +	if (phy_type == B43_PHYTYPE_LCNXN) {
-> +		phy_type = B43_PHYTYPE_N;
-> +		phy_rev += 16;
-> +	}
-> +
->  	switch (phy_type) {
->  #ifdef CONFIG_B43_PHY_G
->  	case B43_PHYTYPE_G:
-> 
-
+Michał
