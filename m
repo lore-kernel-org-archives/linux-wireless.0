@@ -1,81 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31262 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932890AbaFTDXc (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:60133 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479AbaFQJlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2014 23:23:32 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: [PATCH] NFC: Read frag at a time when sending packets
-Date: Thu, 19 Jun 2014 23:23:16 -0400
-Message-Id: <1403234596-19149-1-git-send-email-sasha.levin@oracle.com> (sfid-20140620_052353_996019_F6FC77B3)
+	Tue, 17 Jun 2014 05:41:13 -0400
+Subject: [PATCH 4/6] ath6kl: add support wmi rate tables with mcs15
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Jun 2014 12:41:10 +0300
+Message-ID: <20140617094110.22040.14845.stgit@potku.adurom.net> (sfid-20140617_114116_602706_B80206BD)
+In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Right now userspace can pass a large chunk of data and the kernel
-will attempt to allocate all of it to copy it in from userspace.
+From: Jessica Wu <wjessica@qca.qualcomm.com>
 
-The problem is that there is no upper limit on the size userspace
-can pass. Right now userspace can even force a machine to run out
-of memory by forcing the kernel to allocate large chunks of memory.
+Some of the firmware versions support rate tables up to mcs15, add support for
+that.
 
-To avoid imposing a limit, instead of allocating the entire block,
-we can allocate just the size of the biggest frag possible and read
-it from userspace one frag at a time.
-
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+Signed-off-by: Jessica Wu <wjessica@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath6kl/core.h |    3 +
+ drivers/net/wireless/ath/ath6kl/init.c |    1 
+ drivers/net/wireless/ath/ath6kl/main.c |   11 +++--
+ drivers/net/wireless/ath/ath6kl/wmi.c  |   69 ++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    2 -
+ 5 files changed, 77 insertions(+), 9 deletions(-)
 
- ** WARNING: COMPLETELY UNTESTED ** (I don't have the hardware).
-
- net/nfc/llcp_commands.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-index a3ad69a..da68924 100644
---- a/net/nfc/llcp_commands.c
-+++ b/net/nfc/llcp_commands.c
-@@ -727,27 +727,27 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
- 	if (local == NULL)
- 		return -ENODEV;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index bd91c4465580..23a776391e44 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -145,6 +145,9 @@ enum ath6kl_fw_capability {
+ 	/* use low priority endpoint for all data */
+ 	ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
  
--	msg_data = kzalloc(len, GFP_KERNEL);
-+	remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
-+			local->remote_miu : sock->remote_miu;
++	/* ratetable is the 2 stream version (max MCS15) */
++	ATH6KL_FW_CAPABILITY_RATETABLE_MCS15,
 +
-+	msg_data = kzalloc(remote_miu, GFP_KERNEL);
- 	if (msg_data == NULL)
- 		return -ENOMEM;
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 3eb4508331e3..82d266c1dda9 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1568,6 +1568,7 @@ static const struct fw_capa_str_map {
+ 	{ ATH6KL_FW_CAPABILITY_64BIT_RATES, "64bit-rates" },
+ 	{ ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS, "ap-inactivity-mins" },
+ 	{ ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT, "map-lp-endpoint" },
++	{ ATH6KL_FW_CAPABILITY_RATETABLE_MCS15, "ratetable-mcs15" },
+ };
  
--	if (memcpy_fromiovec(msg_data, msg->msg_iov, len)) {
--		kfree(msg_data);
--		return -EFAULT;
--	}
--
- 	remaining_len = len;
- 	msg_ptr = msg_data;
+ static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d56554674da4..baa447f50fda 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -702,6 +702,7 @@ static void ath6kl_update_target_stats(struct ath6kl_vif *vif, u8 *ptr, u32 len)
+ 	struct ath6kl *ar = vif->ar;
+ 	struct target_stats *stats = &vif->target_stats;
+ 	struct tkip_ccmp_stats *ccmp_stats;
++	s32 rate;
+ 	u8 ac;
  
- 	do {
--		remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
--				local->remote_miu : sock->remote_miu;
--
- 		frag_len = min_t(size_t, remote_miu, remaining_len);
- 
- 		pr_debug("Fragment %zd bytes remaining %zd",
- 			 frag_len, remaining_len);
- 
-+		if (memcpy_fromiovec(msg_data, msg->msg_iov, frag_len)) {
-+			kfree(msg_data);
-+			return -EFAULT;
-+		}
+ 	if (len < sizeof(*tgt_stats))
+@@ -731,8 +732,9 @@ static void ath6kl_update_target_stats(struct ath6kl_vif *vif, u8 *ptr, u32 len)
+ 		le32_to_cpu(tgt_stats->stats.tx.mult_retry_cnt);
+ 	stats->tx_rts_fail_cnt +=
+ 		le32_to_cpu(tgt_stats->stats.tx.rts_fail_cnt);
+-	stats->tx_ucast_rate =
+-	    ath6kl_wmi_get_rate(a_sle32_to_cpu(tgt_stats->stats.tx.ucast_rate));
 +
- 		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
- 					 frag_len + LLCP_HEADER_SIZE, &err);
- 		if (pdu == NULL) {
--- 
-1.7.10.4
++	rate = a_sle32_to_cpu(tgt_stats->stats.tx.ucast_rate);
++	stats->tx_ucast_rate = ath6kl_wmi_get_rate(ar->wmi, rate);
+ 
+ 	stats->rx_pkt += le32_to_cpu(tgt_stats->stats.rx.pkt);
+ 	stats->rx_byte += le32_to_cpu(tgt_stats->stats.rx.byte);
+@@ -749,8 +751,9 @@ static void ath6kl_update_target_stats(struct ath6kl_vif *vif, u8 *ptr, u32 len)
+ 		le32_to_cpu(tgt_stats->stats.rx.key_cache_miss);
+ 	stats->rx_decrypt_err += le32_to_cpu(tgt_stats->stats.rx.decrypt_err);
+ 	stats->rx_dupl_frame += le32_to_cpu(tgt_stats->stats.rx.dupl_frame);
+-	stats->rx_ucast_rate =
+-	    ath6kl_wmi_get_rate(a_sle32_to_cpu(tgt_stats->stats.rx.ucast_rate));
++
++	rate = a_sle32_to_cpu(tgt_stats->stats.rx.ucast_rate);
++	stats->rx_ucast_rate = ath6kl_wmi_get_rate(ar->wmi, rate);
+ 
+ 	ccmp_stats = &tgt_stats->stats.tkip_ccmp_stats;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 6ecc0a419c1a..94df345d08c2 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -59,6 +59,55 @@ static const s32 wmi_rate_tbl[][2] = {
+ 	{0, 0}
+ };
+ 
++static const s32 wmi_rate_tbl_mcs15[][2] = {
++	/* {W/O SGI, with SGI} */
++	{1000, 1000},
++	{2000, 2000},
++	{5500, 5500},
++	{11000, 11000},
++	{6000, 6000},
++	{9000, 9000},
++	{12000, 12000},
++	{18000, 18000},
++	{24000, 24000},
++	{36000, 36000},
++	{48000, 48000},
++	{54000, 54000},
++	{6500, 7200},     /* HT 20, MCS 0 */
++	{13000, 14400},
++	{19500, 21700},
++	{26000, 28900},
++	{39000, 43300},
++	{52000, 57800},
++	{58500, 65000},
++	{65000, 72200},
++	{13000, 14400},   /* HT 20, MCS 8 */
++	{26000, 28900},
++	{39000, 43300},
++	{52000, 57800},
++	{78000, 86700},
++	{104000, 115600},
++	{117000, 130000},
++	{130000, 144400}, /* HT 20, MCS 15 */
++	{13500, 15000},   /*HT 40, MCS 0 */
++	{27000, 30000},
++	{40500, 45000},
++	{54000, 60000},
++	{81000, 90000},
++	{108000, 120000},
++	{121500, 135000},
++	{135000, 150000},
++	{27000, 30000},   /*HT 40, MCS 8 */
++	{54000, 60000},
++	{81000, 90000},
++	{108000, 120000},
++	{162000, 180000},
++	{216000, 240000},
++	{243000, 270000},
++	{270000, 300000}, /*HT 40, MCS 15 */
++	{0, 0}
++};
++
+ /* 802.1d to AC mapping. Refer pg 57 of WMM-test-plan-v1.2 */
+ static const u8 up_to_ac[] = {
+ 	WMM_AC_BE,
+@@ -3280,9 +3329,11 @@ int ath6kl_wmi_set_regdomain_cmd(struct wmi *wmi, const char *alpha2)
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
+-s32 ath6kl_wmi_get_rate(s8 rate_index)
++s32 ath6kl_wmi_get_rate(struct wmi *wmi, s8 rate_index)
+ {
++	struct ath6kl *ar = wmi->parent_dev;
+ 	u8 sgi = 0;
++	s32 ret;
+ 
+ 	if (rate_index == RATE_AUTO)
+ 		return 0;
+@@ -3293,10 +3344,20 @@ s32 ath6kl_wmi_get_rate(s8 rate_index)
+ 		sgi = 1;
+ 	}
+ 
+-	if (WARN_ON(rate_index > RATE_MCS_7_40))
+-		rate_index = RATE_MCS_7_40;
++	if (test_bit(ATH6KL_FW_CAPABILITY_RATETABLE_MCS15,
++		     ar->fw_capabilities)) {
++		if (WARN_ON(rate_index >= ARRAY_SIZE(wmi_rate_tbl_mcs15)))
++			return 0;
++
++		ret = wmi_rate_tbl_mcs15[(u32) rate_index][sgi];
++	} else {
++		if (WARN_ON(rate_index >= ARRAY_SIZE(wmi_rate_tbl)))
++			return 0;
+ 
+-	return wmi_rate_tbl[(u32) rate_index][sgi];
++		ret = wmi_rate_tbl[(u32) rate_index][sgi];
++	}
++
++	return ret;
+ }
+ 
+ static int ath6kl_wmi_get_pmkid_list_event_rx(struct wmi *wmi, u8 *datap,
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 7809afbb3e93..8d4d88531404 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2632,7 +2632,7 @@ int ath6kl_wmi_set_htcap_cmd(struct wmi *wmi, u8 if_idx,
+ 			     struct ath6kl_htcap *htcap);
+ int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len);
+ 
+-s32 ath6kl_wmi_get_rate(s8 rate_index);
++s32 ath6kl_wmi_get_rate(struct wmi *wmi, s8 rate_index);
+ 
+ int ath6kl_wmi_set_ip_cmd(struct wmi *wmi, u8 if_idx,
+ 			  __be32 ips0, __be32 ips1);
 
