@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:57386 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265AbaFKJAb (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:57155 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932066AbaFQNGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 05:00:31 -0400
-Received: by mail-ob0-f180.google.com with SMTP id vb8so4902423obc.11
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 02:00:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1401090486-4414-5-git-send-email-hdegoede@redhat.com>
-References: <1401090486-4414-1-git-send-email-hdegoede@redhat.com>
-	<1401090486-4414-5-git-send-email-hdegoede@redhat.com>
-Date: Wed, 11 Jun 2014 11:00:30 +0200
-Message-ID: <CACRpkdZ5_21aFBSJBXDzgorcEKeR9Pv5fVgmeVrBw1zDawVptA@mail.gmail.com> (sfid-20140611_110040_444391_C0E7405A)
-Subject: Re: [PATCH 04/11] pinctrl: sunxi: Properly handle level triggered
- gpio interrupts
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Chris Ball <chris@printf.net>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Jun 2014 09:06:48 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so7087871wes.41
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2014 06:06:47 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v10 0/5] cfg/mac80211: implement multi-vif csa
+Date: Tue, 17 Jun 2014 14:58:53 +0200
+Message-Id: <1403009938-1084-1-git-send-email-michal.kazior@tieto.com> (sfid-20140617_150657_394384_175BE88E)
+In-Reply-To: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+References: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2014 at 9:47 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+Hi,
 
-> For level triggered gpio interrupts we need to use handle_fasteoi_irq,
-> like we do with the irq-sunxi-nmi driver. This is necessary to give threaded
-> interrupt handlers a chance to actuall clear the source of the interrupt
-> (which may involve sleeping waitnig for i2c / spi / mmc transfers), before
-> acknowledging the interrupt.
->
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+The patchset implements multi-interface
+reservations and multi-interface channel
+switching.
 
-I haven't seen any feedback on the pin controller patches in this
-series from Maxime, I might have missed it due to being tied to
-some other patch in the series.
+There are still some cases that aren't handled
+well (at least degradation of number of channels
+due to interface combinations that I'm aware of).
 
-Anyway, this needs to be rebased and reposted anyway, I
-just merged some base patches from Maxime for external
-interrupts that will go in after the merge window, I need some
-help to figure out what and how to merge here.
 
-Yours,
-Linus Walleij
+v10:
+ * rebase to latest mac80211-next/master
+   (90c18a8b34add196da9b07fd37d0f3b4b451c6b3)
+ * fix compilation [Luca]
+
+Michal Kazior (5):
+  mac80211: implement multi-vif in-place reservations
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  cfg80211: remove channel_switch combination check
+
+ include/net/cfg80211.h     |   7 +-
+ include/net/mac80211.h     |   7 -
+ net/mac80211/cfg.c         |  82 +++--
+ net/mac80211/chan.c        | 729 ++++++++++++++++++++++++++++++++++++---------
+ net/mac80211/ieee80211_i.h |  30 +-
+ net/mac80211/mlme.c        |  99 +++---
+ net/mac80211/util.c        |  44 ++-
+ net/wireless/nl80211.c     |  11 -
+ 8 files changed, 773 insertions(+), 236 deletions(-)
+
+-- 
+1.8.5.3
+
