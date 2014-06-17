@@ -1,333 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:37356 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbaFXIuv (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60967 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932263AbaFQJkz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 04:50:51 -0400
-Received: by mail-wg0-f46.google.com with SMTP id y10so7561367wgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 01:50:50 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: update list and code making a selection of firmware files
-Date: Tue, 24 Jun 2014 10:50:41 +0200
-Message-Id: <1403599841-12868-1-git-send-email-zajec5@gmail.com> (sfid-20140624_105057_452882_DDF136F7)
+	Tue, 17 Jun 2014 05:40:55 -0400
+Subject: [PATCH 1/6] ath6kl: convert ar6004 hardware flags to firmware feature
+ flags
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Jun 2014 12:40:52 +0300
+Message-ID: <20140617094052.22040.84064.stgit@potku.adurom.net> (sfid-20140617_114058_195969_CE1757BF)
+In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean ucode selection, fix choice of firmware for LCN, drop some goto-s,
-add new devices.
-Tested on 14e4:4312, 14e4:4315, 14e4:4328, 14e4:432b, 14e4:4353.
+The functionality defined through these flags were actually firmware features
+which can change between firmware versions. To make it possible to support
+different firmware versions with the same driver, convert the flags to firmware
+feature flags.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+For backwards compatibility support for old ar6004 firmware FW
+API 3 or smaller images we forcefully set the feature bits in the driver.
+Starting from FW API 5 the firmware image needs to set them.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/main.c | 224 ++++++++++++++++++++++------------------
- 1 file changed, 125 insertions(+), 99 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
+ drivers/net/wireless/ath/ath6kl/core.c     |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |   12 +++++++++---
+ drivers/net/wireless/ath/ath6kl/init.c     |   16 +++++++---------
+ drivers/net/wireless/ath/ath6kl/usb.c      |    6 ++++--
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    3 ++-
+ 6 files changed, 42 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index beb4deb..3e4333c 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2201,52 +2201,78 @@ err_format:
- 	return -EPROTO;
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 0e26f4a34fda..d139f2a7160a 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2899,7 +2899,8 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	if (info->inactivity_timeout) {
+ 		inactivity_timeout = info->inactivity_timeout;
  
-+/* http://bcm-v4.sipsolutions.net/802.11/Init/Firmware */
- static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+-		if (ar->hw.flags & ATH6KL_HW_AP_INACTIVITY_MINS)
++		if (test_bit(ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
++			     ar->fw_capabilities))
+ 			inactivity_timeout = DIV_ROUND_UP(inactivity_timeout,
+ 							  60);
+ 
+@@ -3782,7 +3783,8 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 		ath6kl_band_5ghz.ht_cap.ht_supported = false;
+ 	}
+ 
+-	if (ar->hw.flags & ATH6KL_HW_64BIT_RATES) {
++	if (test_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
++		     ar->fw_capabilities)) {
+ 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[0] = 0xff;
+ 		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
+ 		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[1] = 0xff;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index b0b652042760..0df74b245af4 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -123,6 +123,22 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
+ 
+ 	/* FIXME: we should free all firmwares in the error cases below */
+ 
++	/*
++	 * Backwards compatibility support for older ar6004 firmware images
++	 * which do not set these feature flags.
++	 */
++	if (ar->target_type == TARGET_TYPE_AR6004 &&
++	    ar->fw_api <= 4) {
++		__set_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
++			  ar->fw_capabilities);
++		__set_bit(ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
++			  ar->fw_capabilities);
++
++		if (ar->hw.id == AR6004_HW_1_3_VERSION)
++			__set_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
++				  ar->fw_capabilities);
++	}
++
+ 	/* Indicate that WMI is enabled (although not ready yet) */
+ 	set_bit(WMI_ENABLED, &ar->flag);
+ 	ar->wmi = ath6kl_wmi_init(ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 26b0f92424e1..bd91c4465580 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -136,6 +136,15 @@ enum ath6kl_fw_capability {
+ 	 */
+ 	ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL,
+ 
++	/* WMI_SET_TX_SELECT_RATES_CMDID uses 64 bit size rate table */
++	ATH6KL_FW_CAPABILITY_64BIT_RATES,
++
++	/* WMI_AP_CONN_INACT_CMDID uses minutes as units */
++	ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS,
++
++	/* use low priority endpoint for all data */
++	ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+@@ -149,9 +158,6 @@ struct ath6kl_fw_ie {
+ };
+ 
+ enum ath6kl_hw_flags {
+-	ATH6KL_HW_64BIT_RATES		= BIT(0),
+-	ATH6KL_HW_AP_INACTIVITY_MINS	= BIT(1),
+-	ATH6KL_HW_MAP_LP_ENDPOINT	= BIT(2),
+ 	ATH6KL_HW_SDIO_CRC_ERROR_WAR	= BIT(3),
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index d5ef211f261c..c2ec36ab8121 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -93,8 +93,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.board_addr			= 0x433900,
+ 		.refclk_hz			= 26000000,
+ 		.uarttx_pin			= 11,
+-		.flags				= ATH6KL_HW_64BIT_RATES |
+-						  ATH6KL_HW_AP_INACTIVITY_MINS,
++		.flags				= 0,
+ 
+ 		.fw = {
+ 			.dir		= AR6004_HW_1_0_FW_DIR,
+@@ -114,8 +113,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.board_addr			= 0x43d400,
+ 		.refclk_hz			= 40000000,
+ 		.uarttx_pin			= 11,
+-		.flags				= ATH6KL_HW_64BIT_RATES |
+-						  ATH6KL_HW_AP_INACTIVITY_MINS,
++		.flags				= 0,
+ 		.fw = {
+ 			.dir		= AR6004_HW_1_1_FW_DIR,
+ 			.fw		= AR6004_HW_1_1_FIRMWARE_FILE,
+@@ -134,8 +132,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.board_addr			= 0x435c00,
+ 		.refclk_hz			= 40000000,
+ 		.uarttx_pin			= 11,
+-		.flags				= ATH6KL_HW_64BIT_RATES |
+-						  ATH6KL_HW_AP_INACTIVITY_MINS,
++		.flags				= 0,
+ 
+ 		.fw = {
+ 			.dir		= AR6004_HW_1_2_FW_DIR,
+@@ -154,9 +151,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.board_addr			= 0x436400,
+ 		.refclk_hz                      = 40000000,
+ 		.uarttx_pin                     = 11,
+-		.flags				= ATH6KL_HW_64BIT_RATES |
+-						  ATH6KL_HW_AP_INACTIVITY_MINS |
+-						  ATH6KL_HW_MAP_LP_ENDPOINT,
++		.flags				= 0,
+ 
+ 		.fw = {
+ 			.dir            = AR6004_HW_1_3_FW_DIR,
+@@ -1567,6 +1562,9 @@ static const struct fw_capa_str_map {
+ 	{ ATH6KL_FW_CAPABILITY_REGDOMAIN, "regdomain" },
+ 	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_V2, "sched-scan-v2" },
+ 	{ ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL, "hb-poll" },
++	{ ATH6KL_FW_CAPABILITY_64BIT_RATES, "64bit-rates" },
++	{ ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS, "ap-inactivity-mins" },
++	{ ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT, "map-lp-endpoint" },
+ };
+ 
+ static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 3afc5a463d06..e5a9e7fe2cea 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -802,7 +802,8 @@ static int ath6kl_usb_map_service_pipe(struct ath6kl *ar, u16 svc_id,
+ 		break;
+ 	case WMI_DATA_VI_SVC:
+ 
+-		if (ar->hw.flags & ATH6KL_HW_MAP_LP_ENDPOINT)
++		if (test_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
++			     ar->fw_capabilities))
+ 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_LP;
+ 		else
+ 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_MP;
+@@ -814,7 +815,8 @@ static int ath6kl_usb_map_service_pipe(struct ath6kl *ar, u16 svc_id,
+ 		break;
+ 	case WMI_DATA_VO_SVC:
+ 
+-		if (ar->hw.flags & ATH6KL_HW_MAP_LP_ENDPOINT)
++		if (test_bit(ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT,
++			     ar->fw_capabilities))
+ 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_LP;
+ 		else
+ 			*ul_pipe = ATH6KL_USB_PIPE_TX_DATA_MP;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 4d7f9e4712e9..6ecc0a419c1a 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2838,7 +2838,8 @@ int ath6kl_wmi_set_bitrate_mask(struct wmi *wmi, u8 if_idx,
  {
- 	struct b43_wldev *dev = ctx->dev;
- 	struct b43_firmware *fw = &ctx->dev->fw;
-+	struct b43_phy *phy = &dev->phy;
- 	const u8 rev = ctx->dev->dev->core_rev;
- 	const char *filename;
--	u32 tmshigh;
- 	int err;
+ 	struct ath6kl *ar = wmi->parent_dev;
  
--	/* Files for HT and LCN were found by trying one by one */
--
- 	/* Get microcode */
--	if ((rev >= 5) && (rev <= 10)) {
--		filename = "ucode5";
--	} else if ((rev >= 11) && (rev <= 12)) {
--		filename = "ucode11";
--	} else if (rev == 13) {
--		filename = "ucode13";
--	} else if (rev == 14) {
--		filename = "ucode14";
--	} else if (rev == 15) {
-+	filename = NULL;
-+	switch (rev) {
-+	case 42:
-+		if (phy->type == B43_PHYTYPE_AC)
-+			filename = "ucode42";
-+		break;
-+	case 33:
-+		if (phy->type == B43_PHYTYPE_LCN40)
-+			filename = "ucode33_lcn40";
-+		break;
-+	case 30:
-+		if (phy->type == B43_PHYTYPE_N)
-+			filename = "ucode30_mimo";
-+		break;
-+	case 29:
-+		if (phy->type == B43_PHYTYPE_HT)
-+			filename = "ucode29_mimo";
-+		break;
-+	case 26:
-+		if (phy->type == B43_PHYTYPE_HT)
-+			filename = "ucode26_mimo";
-+		break;
-+	case 28:
-+	case 25:
-+		if (phy->type == B43_PHYTYPE_N)
-+			filename = "ucode25_mimo";
-+		else if (phy->type == B43_PHYTYPE_LCN)
-+			filename = "ucode25_lcn";
-+		break;
-+	case 24:
-+		if (phy->type == B43_PHYTYPE_LCN)
-+			filename = "ucode24_lcn";
-+		break;
-+	case 23:
-+		if (phy->type == B43_PHYTYPE_N)
-+			filename = "ucode16_mimo";
-+		break;
-+	case 16 ... 19:
-+		if (phy->type == B43_PHYTYPE_N)
-+			filename = "ucode16_mimo";
-+		else if (phy->type == B43_PHYTYPE_LP)
-+			filename = "ucode16_lp";
-+		break;
-+	case 15:
- 		filename = "ucode15";
--	} else {
--		switch (dev->phy.type) {
--		case B43_PHYTYPE_N:
--			if (rev >= 16)
--				filename = "ucode16_mimo";
--			else
--				goto err_no_ucode;
--			break;
--		case B43_PHYTYPE_HT:
--			if (rev == 29)
--				filename = "ucode29_mimo";
--			else
--				goto err_no_ucode;
--			break;
--		case B43_PHYTYPE_LCN:
--			if (rev == 24)
--				filename = "ucode24_mimo";
--			else
--				goto err_no_ucode;
--			break;
--		default:
--			goto err_no_ucode;
--		}
-+		break;
-+	case 14:
-+		filename = "ucode14";
-+		break;
-+	case 13:
-+		filename = "ucode13";
-+		break;
-+	case 11 ... 12:
-+		filename = "ucode11";
-+		break;
-+	case 5 ... 10:
-+		filename = "ucode5";
-+		break;
- 	}
-+	if (!filename)
-+		goto err_no_ucode;
- 	err = b43_do_request_fw(ctx, filename, &fw->ucode, true);
- 	if (err)
- 		goto err_load;
-@@ -2268,117 +2294,117 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 		goto err_load;
- 
- 	/* Get initvals */
-+	filename = NULL;
- 	switch (dev->phy.type) {
--	case B43_PHYTYPE_A:
--		if ((rev >= 5) && (rev <= 10)) {
--			tmshigh = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
--			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
--				filename = "a0g1initvals5";
--			else
--				filename = "a0g0initvals5";
--		} else
--			goto err_no_initvals;
--		break;
- 	case B43_PHYTYPE_G:
--		if ((rev >= 5) && (rev <= 10))
--			filename = "b0g0initvals5";
--		else if (rev >= 13)
-+		if (rev == 13)
- 			filename = "b0g0initvals13";
--		else
--			goto err_no_initvals;
-+		else if (rev >= 5 && rev <= 10)
-+			filename = "b0g0initvals5";
- 		break;
- 	case B43_PHYTYPE_N:
--		if (rev >= 16)
-+		if (rev == 30)
-+			filename = "n16initvals30";
-+		else if (rev == 28 || rev == 25)
-+			filename = "n0initvals25";
-+		else if (rev == 24)
-+			filename = "n0initvals24";
-+		else if (rev == 23)
-+			filename = "n0initvals16"; /* What about n0initvals22? */
-+		else if (rev >= 16 && rev <= 18)
- 			filename = "n0initvals16";
--		else if ((rev >= 11) && (rev <= 12))
-+		else if (rev >= 11 && rev <= 12)
- 			filename = "n0initvals11";
--		else
--			goto err_no_initvals;
- 		break;
- 	case B43_PHYTYPE_LP:
--		if (rev == 13)
--			filename = "lp0initvals13";
-+		if (rev >= 16 && rev <= 18)
-+			filename = "lp0initvals16";
-+		else if (rev == 15)
-+			filename = "lp0initvals15";
- 		else if (rev == 14)
- 			filename = "lp0initvals14";
--		else if (rev >= 15)
--			filename = "lp0initvals15";
--		else
--			goto err_no_initvals;
-+		else if (rev == 13)
-+			filename = "lp0initvals13";
- 		break;
- 	case B43_PHYTYPE_HT:
- 		if (rev == 29)
- 			filename = "ht0initvals29";
--		else
--			goto err_no_initvals;
-+		else if (rev == 26)
-+			filename = "ht0initvals26";
- 		break;
- 	case B43_PHYTYPE_LCN:
- 		if (rev == 24)
- 			filename = "lcn0initvals24";
--		else
--			goto err_no_initvals;
- 		break;
--	default:
--		goto err_no_initvals;
-+	case B43_PHYTYPE_LCN40:
-+		if (rev == 33)
-+			filename = "lcn400initvals33";
-+		break;
-+	case B43_PHYTYPE_AC:
-+		if (rev == 42)
-+			filename = "ac1initvals42";
-+		break;
- 	}
-+	if (!filename)
-+		goto err_no_initvals;
- 	err = b43_do_request_fw(ctx, filename, &fw->initvals, false);
- 	if (err)
- 		goto err_load;
- 
- 	/* Get bandswitch initvals */
-+	filename = NULL;
- 	switch (dev->phy.type) {
--	case B43_PHYTYPE_A:
--		if ((rev >= 5) && (rev <= 10)) {
--			tmshigh = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
--			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
--				filename = "a0g1bsinitvals5";
--			else
--				filename = "a0g0bsinitvals5";
--		} else if (rev >= 11)
--			filename = NULL;
--		else
--			goto err_no_initvals;
--		break;
- 	case B43_PHYTYPE_G:
--		if ((rev >= 5) && (rev <= 10))
-+		if (rev == 13)
-+			filename = "b0g0bsinitvals13";
-+		else if (rev >= 5 && rev <= 10)
- 			filename = "b0g0bsinitvals5";
--		else if (rev >= 11)
--			filename = NULL;
--		else
--			goto err_no_initvals;
- 		break;
- 	case B43_PHYTYPE_N:
--		if (rev >= 16)
-+		if (rev == 30)
-+			filename = "n16bsinitvals30";
-+		else if (rev == 28 || rev == 25)
-+			filename = "n0bsinitvals25";
-+		else if (rev == 24)
-+			filename = "n0bsinitvals24";
-+		else if (rev == 23)
-+			filename = "n0bsinitvals16"; /* What about n0bsinitvals22? */
-+		else if (rev >= 16 && rev <= 18)
- 			filename = "n0bsinitvals16";
--		else if ((rev >= 11) && (rev <= 12))
-+		else if (rev >= 11 && rev <= 12)
- 			filename = "n0bsinitvals11";
--		else
--			goto err_no_initvals;
- 		break;
- 	case B43_PHYTYPE_LP:
--		if (rev == 13)
--			filename = "lp0bsinitvals13";
-+		if (rev >= 16 && rev <= 18)
-+			filename = "lp0bsinitvals16";
-+		else if (rev == 15)
-+			filename = "lp0bsinitvals15";
- 		else if (rev == 14)
- 			filename = "lp0bsinitvals14";
--		else if (rev >= 15)
--			filename = "lp0bsinitvals15";
--		else
--			goto err_no_initvals;
-+		else if (rev == 13)
-+			filename = "lp0bsinitvals13";
- 		break;
- 	case B43_PHYTYPE_HT:
- 		if (rev == 29)
- 			filename = "ht0bsinitvals29";
--		else
--			goto err_no_initvals;
-+		else if (rev == 26)
-+			filename = "ht0bsinitvals26";
- 		break;
- 	case B43_PHYTYPE_LCN:
- 		if (rev == 24)
- 			filename = "lcn0bsinitvals24";
--		else
--			goto err_no_initvals;
- 		break;
--	default:
--		goto err_no_initvals;
-+	case B43_PHYTYPE_LCN40:
-+		if (rev == 33)
-+			filename = "lcn400bsinitvals33";
-+		break;
-+	case B43_PHYTYPE_AC:
-+		if (rev == 42)
-+			filename = "ac1bsinitvals42";
-+		break;
- 	}
-+	if (!filename)
-+		goto err_no_initvals;
- 	err = b43_do_request_fw(ctx, filename, &fw->initvals_band, false);
- 	if (err)
- 		goto err_load;
--- 
-1.8.4.5
+-	if (ar->hw.flags & ATH6KL_HW_64BIT_RATES)
++	if (test_bit(ATH6KL_FW_CAPABILITY_64BIT_RATES,
++		     ar->fw_capabilities))
+ 		return ath6kl_set_bitrate_mask64(wmi, if_idx, mask);
+ 	else
+ 		return ath6kl_set_bitrate_mask32(wmi, if_idx, mask);
 
