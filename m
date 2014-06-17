@@ -1,140 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17990 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbaFDNr1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:47:27 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 02/13] ath9k: Move txpower limit to channel context
-Date: Wed, 4 Jun 2014 19:16:28 +0530
-Message-ID: <1401889599-412-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154732_504615_3D46B280)
-In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751668AbaFQGcv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2014 02:32:51 -0400
+Message-ID: <539FE0EC.5090003@redhat.com> (sfid-20140617_083255_438820_97A51A36)
+Date: Tue, 17 Jun 2014 08:32:12 +0200
+From: Hans de Goede <hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Florian Fainelli <f.fainelli@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] dt: bindings: add bindings for Broadcom bcm43xx
+ sdio devices
+References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com> <1402941407-8210-2-git-send-email-hdegoede@redhat.com> <CAGVrzcZBzDTfnd6o0ib1FBvBK2VPNitS=rpb4jDkjF=T7Fy=DQ@mail.gmail.com>
+In-Reply-To: <CAGVrzcZBzDTfnd6o0ib1FBvBK2VPNitS=rpb4jDkjF=T7Fy=DQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Hi,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   | 6 +-----
- drivers/net/wireless/ath/ath9k/channel.c | 1 +
- drivers/net/wireless/ath/ath9k/init.c    | 5 ++---
- drivers/net/wireless/ath/ath9k/main.c    | 6 +++---
- drivers/net/wireless/ath/ath9k/mci.c     | 2 +-
- 5 files changed, 8 insertions(+), 12 deletions(-)
+On 06/16/2014 10:53 PM, Florian Fainelli wrote:
+> 2014-06-16 10:56 GMT-07:00 Hans de Goede <hdegoede@redhat.com>:
+>> From: Arend van Spriel <arend@broadcom.com>
+>>
+>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+>> integrated in ARM platforms. Currently, the brcmfmac driver for
+>> these devices support use of platform data. This patch specifies
+>> the bindings that allow this platform data to be expressed in the
+>> devicetree.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>>  on how to handle this yet]
+>> [hdegoede@redhat.com: move from bindings/staging to bindings]
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 29 ++++++++++++++++++++++
+>>  1 file changed, 29 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> new file mode 100644
+>> index 0000000..6a0aaf2
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -0,0 +1,29 @@
+>> +Broadcom BCM43xx Fullmac wireless SDIO devices
+>> +
+>> +This node provides properties for controlling the Broadcom wireless device. The
+>> +node is expected to be specified as a child node to the SDIO controller that
+>> +connects the device to the system.
+>> +
+>> +Required properties:
+>> +
+>> + - compatible : Should be "brcm,bcm43xx-fmac".
+> 
+> In general, the use of a wildcard compatible string is discouraged
+> over the use of a more descriptive compatible string. So you should
+> find out what is the first chip that is compatible, and use that
+> compatible string as long as that compatibility remains.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index cc75b9d..840cdf9 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -36,10 +36,6 @@ extern int ath9k_modparam_nohwcrypt;
- extern int led_blink;
- extern bool is_ath9k_unloaded;
- 
--struct ath_config {
--	u16 txpowlimit;
--};
--
- /*************************/
- /* Descriptor Management */
- /*************************/
-@@ -328,6 +324,7 @@ struct ath_rx {
- struct ath_chanctx {
- 	struct cfg80211_chan_def chandef;
- 	struct list_head vifs;
-+	u16 txpower;
- 	bool offchannel;
- };
- 
-@@ -753,7 +750,6 @@ struct ath_softc {
- 	short nvifs;
- 	unsigned long ps_usecount;
- 
--	struct ath_config config;
- 	struct ath_rx rx;
- 	struct ath_tx tx;
- 	struct ath_beacon beacon;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index aee6cdb..1b40cf5 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -118,6 +118,7 @@ void ath_chanctx_init(struct ath_softc *sc)
- 		ctx = &sc->chanctx[i];
- 		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
- 		INIT_LIST_HEAD(&ctx->vifs);
-+		ctx->txpower = ATH_TXPOWER_MAX;
- 	}
- 	sc->cur_chan = &sc->chanctx[0];
- }
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 32d9542..ffd42bf 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -169,9 +169,9 @@ static void ath9k_reg_notifier(struct wiphy *wiphy,
- 
- 	/* Set tx power */
- 	if (ah->curchan) {
--		sc->config.txpowlimit = 2 * ah->curchan->chan->max_power;
-+		sc->cur_chan->txpower = 2 * ah->curchan->chan->max_power;
- 		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
- 		sc->curtxpow = ath9k_hw_regulatory(ah)->power_limit;
- 		/* synchronize DFS detector if regulatory domain changed */
- 		if (sc->dfs_detector != NULL)
-@@ -335,7 +335,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
- 
- 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
--	sc->config.txpowlimit = ATH_TXPOWER_MAX;
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2e7cce7..5a9cee4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -227,7 +227,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	}
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
-+			       sc->cur_chan->txpower, &sc->curtxpow);
- 
- 	clear_bit(ATH_OP_HW_RESET, &common->op_flags);
- 	ath9k_hw_set_interrupts(ah);
-@@ -1315,9 +1315,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
- 		ath_dbg(common, CONFIG, "Set power: %d\n", conf->power_level);
--		sc->config.txpowlimit = 2 * conf->power_level;
-+		sc->cur_chan->txpower = 2 * conf->power_level;
- 		ath9k_cmn_update_txpow(ah, sc->curtxpow,
--				       sc->config.txpowlimit, &sc->curtxpow);
-+				       sc->cur_chan->txpower, &sc->curtxpow);
- 	}
- 
- 	mutex_unlock(&sc->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index a0dbcc4..313ed99 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -720,7 +720,7 @@ void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
- 		mci_hw->concur_tx = concur_tx;
- 
- 	if (old_concur_tx != mci_hw->concur_tx)
--		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
- }
- 
- static void ath9k_mci_stomp_audio(struct ath_softc *sc)
--- 
-2.0.0
+Right, Arend, what should we use then ?
 
+>> +
+>> +Optional properties:
+>> + - brcm,drive-strength : drive strength used for SDIO pins on device.
+>> +       (default = 6mA).
+> 
+> It would not hurt if you did specify the unit of the
+> "brcm,drive-strength" property here. Also, if the default is 6, maybe
+> the example below should be fixed to reflect that so people do not
+> think that writing 4 to a register = 6 mA.
+
+Ok will fix in the next version.
+
+> 
+>> + - interrupt-parent : the phandle for the interrupt controller to which the
+>> +       device interrupts are connected.
+>> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+>> +       When not specified the device will use in-band SDIO interrupts.
+>> + - interrupt-names : name of the out-of-band interrupt, which must be set
+>> +       to "host-wake".
+>> +
+>> +Example:
+>> +
+>> +bcm4335 {
+>> +       compatible = "brcm,bcm43xx-fmac";
+>> +       brcm,drive-strength = <4>;
+>> +       interrupt-parent = <&gpx2>;
+>> +       interrupts = <5 IRQ_TYPE_LEVEL_HIGH>;
+>> +       interrupt-names = "host-wake";
+>> +};
+>> --
+>> 2.0.0
+>>
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> 
+> 
