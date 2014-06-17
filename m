@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:60889 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383AbaF2Jcp (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60984 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932753AbaFQJlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 05:32:45 -0400
-Received: by mail-oa0-f52.google.com with SMTP id j17so7524858oag.11
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 02:32:45 -0700 (PDT)
+	Tue, 17 Jun 2014 05:41:06 -0400
+Subject: [PATCH 3/6] ath6kl: don't set hi_refclk_hz if hardware version
+ doesn't need it
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Jun 2014 12:41:04 +0300
+Message-ID: <20140617094104.22040.98561.stgit@potku.adurom.net> (sfid-20140617_114109_981283_9855B7A0)
+In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <53AF5FB8.3060505@lwfinger.net>
-References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
-	<53AF5FB8.3060505@lwfinger.net>
-Date: Sun, 29 Jun 2014 17:32:44 +0800
-Message-ID: <CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com> (sfid-20140629_113249_140005_4930E212)
-Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
- DHCP lease
-From: lolilolicon <lolilolicon@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 29, 2014 at 8:37 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
-> Something went wrong in your bisection. Commit 88daf80 is a merge commit and
-> is unlikely to be the bad one. You might try a checkout of b080e04 and try
-> it to see if it is bad or good. That is the first non-merge commit before
-> 88daf80.
->
-> Larry
->
+Needed for ar6004 hw3.0 support.
 
-I have no clue how you identified b080e04, but I tested it and it is good.
-I'm not good at git so please bear with me. What I know is 88daf80 is
-bad, and both its two parents 010d3c3 and 35582ad are good: does that
-not mean 88daf80 is the first bad commit?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-% git bisect start 88daf80 010d3c3 35582ad
-88daf80dcca19ff995cc263592426f734a9702f3 is the first bad commit
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index c2ec36ab8121..3eb4508331e3 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -624,9 +624,12 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 		return status;
+ 
+ 	/* Configure target refclk_hz */
+-	status = ath6kl_bmi_write_hi32(ar, hi_refclk_hz, ar->hw.refclk_hz);
+-	if (status)
+-		return status;
++	if (ar->hw.refclk_hz != 0) {
++		status = ath6kl_bmi_write_hi32(ar, hi_refclk_hz,
++					       ar->hw.refclk_hz);
++		if (status)
++			return status;
++	}
+ 
+ 	return 0;
+ }
 
-What am I getting wrong?
