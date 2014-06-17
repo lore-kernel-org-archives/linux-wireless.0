@@ -1,225 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60999 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479AbaFQJlS (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36040 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932652AbaFQJQs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:41:18 -0400
-Subject: [PATCH 5/6] ath6kl: add support for ar6004 hw3.0
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Jun 2014 12:41:16 +0300
-Message-ID: <20140617094115.22040.63149.stgit@potku.adurom.net> (sfid-20140617_114121_267437_A102DB44)
-In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+	Tue, 17 Jun 2014 05:16:48 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFC 1/3] brcmfmac: move attach and detach functions in wl_cfg80211.c
+Date: Tue, 17 Jun 2014 11:16:19 +0200
+Message-ID: <1402996581-10764-2-git-send-email-arend@broadcom.com> (sfid-20140617_111700_359060_3F5A34E3)
+In-Reply-To: <1402996581-10764-1-git-send-email-arend@broadcom.com>
+References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jessica Wu <wjessica@qca.qualcomm.com>
+Simply moving the functions so subsequent patches are more clear.
 
-This change enables ath6kl driver to support ar6004 hw3.0. At the same time do
-some fixes in firmware initialisation which applies to ar6004 hw1.3 as well.
-
-Signed-off-by: Jessica Wu <wjessica@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |   21 ++++++++++++-
- drivers/net/wireless/ath/ath6kl/init.c |   52 ++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath6kl/main.c |    6 +++-
- drivers/net/wireless/ath/ath6kl/usb.c  |    1 +
- 4 files changed, 73 insertions(+), 7 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 213 +++++++++++----------
+ 1 file changed, 108 insertions(+), 105 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 23a776391e44..2b78c863d030 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -148,6 +148,9 @@ enum ath6kl_fw_capability {
- 	/* ratetable is the 2 stream version (max MCS15) */
- 	ATH6KL_FW_CAPABILITY_RATETABLE_MCS15,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index d8fa276..2464e7e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4990,111 +4990,6 @@ static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
+ 	return err;
+ }
  
-+	/* firmare doesn't support IP checksumming */
-+	ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM,
+-struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+-						  struct device *busdev)
+-{
+-	struct net_device *ndev = drvr->iflist[0]->ndev;
+-	struct brcmf_cfg80211_info *cfg;
+-	struct wiphy *wiphy;
+-	struct brcmf_cfg80211_vif *vif;
+-	struct brcmf_if *ifp;
+-	s32 err = 0;
+-	s32 io_type;
+-
+-	if (!ndev) {
+-		brcmf_err("ndev is invalid\n");
+-		return NULL;
+-	}
+-
+-	ifp = netdev_priv(ndev);
+-	wiphy = brcmf_setup_wiphy(busdev);
+-	if (IS_ERR(wiphy))
+-		return NULL;
+-
+-	cfg = wiphy_priv(wiphy);
+-	cfg->wiphy = wiphy;
+-	cfg->pub = drvr;
+-	init_vif_event(&cfg->vif_event);
+-	INIT_LIST_HEAD(&cfg->vif_list);
+-
+-	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
+-	if (IS_ERR(vif)) {
+-		wiphy_free(wiphy);
+-		return NULL;
+-	}
+-
+-	vif->ifp = ifp;
+-	vif->wdev.netdev = ndev;
+-	ndev->ieee80211_ptr = &vif->wdev;
+-	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
+-
+-	err = wl_init_priv(cfg);
+-	if (err) {
+-		brcmf_err("Failed to init iwm_priv (%d)\n", err);
+-		goto cfg80211_attach_out;
+-	}
+-	ifp->vif = vif;
+-
+-	err = brcmf_p2p_attach(cfg);
+-	if (err) {
+-		brcmf_err("P2P initilisation failed (%d)\n", err);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-	err = brcmf_btcoex_attach(cfg);
+-	if (err) {
+-		brcmf_err("BT-coex initialisation failed (%d)\n", err);
+-		brcmf_p2p_detach(&cfg->p2p);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-
+-	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
+-	 * setup 40MHz in 2GHz band and enable OBSS scanning.
+-	 */
+-	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
+-	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
+-		err = brcmf_enable_bw40_2g(ifp);
+-		if (!err)
+-			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
+-						      BRCMF_OBSS_COEX_AUTO);
+-	}
+-
+-	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
+-	if (err) {
+-		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
+-		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
+-	}
+-
+-	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
+-				    &io_type);
+-	if (err) {
+-		brcmf_err("Failed to get D11 version (%d)\n", err);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-	cfg->d11inf.io_type = (u8)io_type;
+-	brcmu_d11_attach(&cfg->d11inf);
+-
+-	return cfg;
+-
+-cfg80211_p2p_attach_out:
+-	wl_deinit_priv(cfg);
+-
+-cfg80211_attach_out:
+-	brcmf_free_vif(vif);
+-	return NULL;
+-}
+-
+-void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+-{
+-	if (!cfg)
+-		return;
+-
+-	WARN_ON(!list_empty(&cfg->vif_list));
+-	wiphy_unregister(cfg->wiphy);
+-	brcmf_btcoex_detach(cfg);
+-	wl_deinit_priv(cfg);
+-	wiphy_free(cfg->wiphy);
+-}
+-
+ static s32
+ brcmf_dongle_roam(struct brcmf_if *ifp, u32 bcn_timeout)
+ {
+@@ -5679,3 +5574,111 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
+ 				  vif_event_equals(event, action), timeout);
+ }
+ 
++struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
++						  struct device *busdev)
++{
++	struct net_device *ndev = drvr->iflist[0]->ndev;
++	struct brcmf_cfg80211_info *cfg;
++	struct wiphy *wiphy;
++	struct brcmf_cfg80211_vif *vif;
++	struct brcmf_if *ifp;
++	s32 err = 0;
++	s32 io_type;
 +
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-@@ -167,6 +170,7 @@ enum ath6kl_hw_flags {
- #define ATH6KL_FW_API2_FILE "fw-2.bin"
- #define ATH6KL_FW_API3_FILE "fw-3.bin"
- #define ATH6KL_FW_API4_FILE "fw-4.bin"
-+#define ATH6KL_FW_API5_FILE "fw-5.bin"
- 
- /* AR6003 1.0 definitions */
- #define AR6003_HW_1_0_VERSION                 0x300002ba
-@@ -224,8 +228,21 @@ enum ath6kl_hw_flags {
- #define AR6004_HW_1_3_VERSION			0x31c8088a
- #define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
- #define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
--#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
--#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
-+#define AR6004_HW_1_3_TCMD_FIRMWARE_FILE	"utf.bin"
-+#define AR6004_HW_1_3_UTF_FIRMWARE_FILE		"utf.bin"
-+#define AR6004_HW_1_3_TESTSCRIPT_FILE		"nullTestFlow.bin"
-+#define AR6004_HW_1_3_BOARD_DATA_FILE	      AR6004_HW_1_3_FW_DIR "/bdata.bin"
-+#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE AR6004_HW_1_3_FW_DIR "/bdata.bin"
-+
-+/* AR6004 3.0 definitions */
-+#define AR6004_HW_3_0_VERSION			0x31C809F8
-+#define AR6004_HW_3_0_FW_DIR			"ath6k/AR6004/hw3.0"
-+#define AR6004_HW_3_0_FIRMWARE_FILE		"fw.ram.bin"
-+#define AR6004_HW_3_0_TCMD_FIRMWARE_FILE	"utf.bin"
-+#define AR6004_HW_3_0_UTF_FIRMWARE_FILE		"utf.bin"
-+#define AR6004_HW_3_0_TESTSCRIPT_FILE		"nullTestFlow.bin"
-+#define AR6004_HW_3_0_BOARD_DATA_FILE	      AR6004_HW_3_0_FW_DIR "/bdata.bin"
-+#define AR6004_HW_3_0_DEFAULT_BOARD_DATA_FILE AR6004_HW_3_0_FW_DIR "/bdata.bin"
- 
- /* Per STA data, used in AP mode */
- #define STA_PS_AWAKE		BIT(0)
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 82d266c1dda9..3dea97aa9b74 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -149,18 +149,43 @@ static const struct ath6kl_hw hw_list[] = {
- 		.board_ext_data_addr		= 0x437000,
- 		.reserved_ram_size		= 7168,
- 		.board_addr			= 0x436400,
--		.refclk_hz                      = 40000000,
-+		.refclk_hz                      = 0,
- 		.uarttx_pin                     = 11,
- 		.flags				= 0,
- 
- 		.fw = {
- 			.dir            = AR6004_HW_1_3_FW_DIR,
- 			.fw             = AR6004_HW_1_3_FIRMWARE_FILE,
-+			.tcmd	        = AR6004_HW_1_3_TCMD_FIRMWARE_FILE,
-+			.utf		= AR6004_HW_1_3_UTF_FIRMWARE_FILE,
-+			.testscript	= AR6004_HW_1_3_TESTSCRIPT_FILE,
- 		},
- 
- 		.fw_board               = AR6004_HW_1_3_BOARD_DATA_FILE,
- 		.fw_default_board       = AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE,
- 	},
-+	{
-+		.id				= AR6004_HW_3_0_VERSION,
-+		.name				= "ar6004 hw 3.0",
-+		.dataset_patch_addr		= 0,
-+		.app_load_addr			= 0x1234,
-+		.board_ext_data_addr		= 0,
-+		.reserved_ram_size		= 7168,
-+		.board_addr			= 0x436400,
-+		.testscript_addr		= 0,
-+		.flags				= 0,
-+
-+		.fw = {
-+			.dir		= AR6004_HW_3_0_FW_DIR,
-+			.fw		= AR6004_HW_3_0_FIRMWARE_FILE,
-+			.tcmd	        = AR6004_HW_3_0_TCMD_FIRMWARE_FILE,
-+			.utf		= AR6004_HW_3_0_UTF_FIRMWARE_FILE,
-+			.testscript	= AR6004_HW_3_0_TESTSCRIPT_FILE,
-+		},
-+
-+		.fw_board		= AR6004_HW_3_0_BOARD_DATA_FILE,
-+		.fw_default_board	= AR6004_HW_3_0_DEFAULT_BOARD_DATA_FILE,
-+	},
- };
- 
- /*
-@@ -596,7 +621,9 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	 * but possible in theory.
- 	 */
- 
--	if (ar->target_type == TARGET_TYPE_AR6003) {
-+	if ((ar->target_type == TARGET_TYPE_AR6003) ||
-+	    (ar->version.target_ver == AR6004_HW_1_3_VERSION) ||
-+	    (ar->version.target_ver == AR6004_HW_3_0_VERSION)) {
- 		param = ar->hw.board_ext_data_addr;
- 		ram_reserved_size = ar->hw.reserved_ram_size;
- 
-@@ -1110,6 +1137,12 @@ int ath6kl_init_fetch_firmwares(struct ath6kl *ar)
- 	if (ret)
- 		return ret;
- 
-+	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API5_FILE);
-+	if (ret == 0) {
-+		ar->fw_api = 5;
-+		goto out;
++	if (!ndev) {
++		brcmf_err("ndev is invalid\n");
++		return NULL;
 +	}
 +
- 	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API4_FILE);
- 	if (ret == 0) {
- 		ar->fw_api = 4;
-@@ -1228,7 +1261,13 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 	}
- 
- 	/* record the fact that Board Data IS initialized */
--	ath6kl_bmi_write_hi32(ar, hi_board_data_initialized, 1);
-+	if ((ar->version.target_ver == AR6004_HW_1_3_VERSION) ||
-+	    (ar->version.target_ver == AR6004_HW_3_0_VERSION))
-+		param = board_data_size;
-+	else
-+		param = 1;
++	ifp = netdev_priv(ndev);
++	wiphy = brcmf_setup_wiphy(busdev);
++	if (IS_ERR(wiphy))
++		return NULL;
 +
-+	ath6kl_bmi_write_hi32(ar, hi_board_data_initialized, param);
- 
- 	return ret;
- }
-@@ -1359,7 +1398,11 @@ static int ath6kl_upload_testscript(struct ath6kl *ar)
- 	}
- 
- 	ath6kl_bmi_write_hi32(ar, hi_ota_testscript, address);
--	ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz, 4096);
++	cfg = wiphy_priv(wiphy);
++	cfg->wiphy = wiphy;
++	cfg->pub = drvr;
++	init_vif_event(&cfg->vif_event);
++	INIT_LIST_HEAD(&cfg->vif_list);
 +
-+	if ((ar->version.target_ver != AR6004_HW_1_3_VERSION) &&
-+	    (ar->version.target_ver != AR6004_HW_3_0_VERSION))
-+		ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz, 4096);
++	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
++	if (IS_ERR(vif)) {
++		wiphy_free(wiphy);
++		return NULL;
++	}
 +
- 	ath6kl_bmi_write_hi32(ar, hi_test_apps_related, 1);
- 
- 	return 0;
-@@ -1569,6 +1612,7 @@ static const struct fw_capa_str_map {
- 	{ ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS, "ap-inactivity-mins" },
- 	{ ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT, "map-lp-endpoint" },
- 	{ ATH6KL_FW_CAPABILITY_RATETABLE_MCS15, "ratetable-mcs15" },
-+	{ ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM, "no-ip-checksum" },
- };
- 
- static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index baa447f50fda..21516bc65785 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1293,6 +1293,8 @@ static const struct net_device_ops ath6kl_netdev_ops = {
- 
- void init_netdev(struct net_device *dev)
- {
-+	struct ath6kl *ar = ath6kl_priv(dev);
++	vif->ifp = ifp;
++	vif->wdev.netdev = ndev;
++	ndev->ieee80211_ptr = &vif->wdev;
++	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
 +
- 	dev->netdev_ops = &ath6kl_netdev_ops;
- 	dev->destructor = free_netdev;
- 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
-@@ -1304,7 +1306,9 @@ void init_netdev(struct net_device *dev)
- 					WMI_MAX_TX_META_SZ +
- 					ATH6KL_HTC_ALIGN_BYTES, 4);
- 
--	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
-+	if (!test_bit(ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM,
-+		      ar->fw_capabilities))
-+		dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
- 
- 	return;
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index e5a9e7fe2cea..c44325856b81 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1210,6 +1210,7 @@ static int ath6kl_usb_pm_reset_resume(struct usb_interface *intf)
- 
- /* table of devices that work with this driver */
- static struct usb_device_id ath6kl_usb_ids[] = {
-+	{USB_DEVICE(0x0cf3, 0x9375)},
- 	{USB_DEVICE(0x0cf3, 0x9374)},
- 	{ /* Terminating entry */ },
- };
++	err = wl_init_priv(cfg);
++	if (err) {
++		brcmf_err("Failed to init iwm_priv (%d)\n", err);
++		goto cfg80211_attach_out;
++	}
++	ifp->vif = vif;
++
++	err = brcmf_p2p_attach(cfg);
++	if (err) {
++		brcmf_err("P2P initilisation failed (%d)\n", err);
++		goto cfg80211_p2p_attach_out;
++	}
++	err = brcmf_btcoex_attach(cfg);
++	if (err) {
++		brcmf_err("BT-coex initialisation failed (%d)\n", err);
++		brcmf_p2p_detach(&cfg->p2p);
++		goto cfg80211_p2p_attach_out;
++	}
++
++	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
++	 * setup 40MHz in 2GHz band and enable OBSS scanning.
++	 */
++	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
++	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++		err = brcmf_enable_bw40_2g(ifp);
++		if (!err)
++			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
++						      BRCMF_OBSS_COEX_AUTO);
++	}
++	/* clear for now and rely on update later */
++	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
++	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
++
++	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
++	if (err) {
++		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
++		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
++	}
++
++	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
++				    &io_type);
++	if (err) {
++		brcmf_err("Failed to get D11 version (%d)\n", err);
++		goto cfg80211_p2p_attach_out;
++	}
++	cfg->d11inf.io_type = (u8)io_type;
++	brcmu_d11_attach(&cfg->d11inf);
++
++	return cfg;
++
++cfg80211_p2p_attach_out:
++	wl_deinit_priv(cfg);
++
++cfg80211_attach_out:
++	brcmf_free_vif(vif);
++	return NULL;
++}
++
++void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
++{
++	if (!cfg)
++		return;
++
++	WARN_ON(!list_empty(&cfg->vif_list));
++	wiphy_unregister(cfg->wiphy);
++	brcmf_btcoex_detach(cfg);
++	wl_deinit_priv(cfg);
++	wiphy_free(cfg->wiphy);
++}
++
+-- 
+1.9.1
 
