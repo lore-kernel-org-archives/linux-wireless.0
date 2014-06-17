@@ -1,76 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:49404 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbaFLPPr (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60999 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479AbaFQJlS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2014 11:15:47 -0400
-Received: by mail-yk0-f176.google.com with SMTP id 131so1070930ykp.7
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2014 08:15:46 -0700 (PDT)
+	Tue, 17 Jun 2014 05:41:18 -0400
+Subject: [PATCH 5/6] ath6kl: add support for ar6004 hw3.0
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Jun 2014 12:41:16 +0300
+Message-ID: <20140617094115.22040.63149.stgit@potku.adurom.net> (sfid-20140617_114121_267437_A102DB44)
+In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <5399929D.5010304@globaledgesoft.com>
-References: <539030ED.4020006@globaledgesoft.com> <CAHNKnsTUKMxmDK7H=5ndf2zyCX3BChx+Kr70TRVdXxZzj1YFtQ@mail.gmail.com>
- <5399929D.5010304@globaledgesoft.com>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Thu, 12 Jun 2014 19:15:26 +0400
-Message-ID: <CAHNKnsQTexCNWi-2n8JMJNMk7+vNfogaf9wTA_w5EXw0+0zRCw@mail.gmail.com> (sfid-20140612_171555_059834_6B9677FC)
-Subject: Re: Physical carrier sensing (CCA)
-To: Gaurav Kumar Chauhan <ck.gaurav@globaledgesoft.com>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-06-12 15:44 GMT+04:00 Gaurav Kumar Chauhan <ck.gaurav@globaledgesoft.com>:
->> On Tuesday 10 June 2014 02:18 PM, Sergey Ryazanov wrote:
->>> 2014-06-05 12:57 GMT+04:00 Gaurav Kumar Chauhan
->>> <ck.gaurav@globaledgesoft.com>:
->>>
->>> I am working on measuring channel load which requires knowledge of carrier
->>> sensing.
->>>
->>> I am comfortable with virtual carrier sensing but not with physical carrier
->>> sensing.
->>> I tried to google it but didn't get more than basics. I want to know about
->>> physical carrier
->>> sensing in detail and where code for physical sensing is present.
->>>
->>> Is it in driver or in firmware?
->>> I am using atheros pci-express card and ath9k driver.
->>
->> Physical and virtual carrier sensing are both realized in hardware at
->> least in AR9xxx chips. Chip provides some knobs to control both of
->> them (on/off, setup levels, etc.) and allows retrieve some statistics
->> (see channel survey code of ath9k driver for example).
->>
->
-> Hi Sergey,
->
-> Thanks for replying. Your information really helped me a lot.
->
-> In ath9k/main.c there is one function called ath9k_get_survey() which inter
-> calls ath_update_survey_stats() function.
-> In ath_update_survey_stats() , struct survey_info members a getting
-> initialized.
->
-> One of the member is channel_time_busy: amount of time the primary channel
-> was sensed busy.
-> I want to confirm if this member holds the channel busy time value returned
-> by physical carrier sensing mechanism.
->
+From: Jessica Wu <wjessica@qca.qualcomm.com>
 
-AR9xxx measure four values and export them via appropriate registers:
-- Tx time
-- Rx time
-- Channel busy time
-- Total measurement period time
+This change enables ath6kl driver to support ar6004 hw3.0. At the same time do
+some fixes in firmware initialisation which applies to ar6004 hw1.3 as well.
 
-And I don't know is Tx/Rx time accounted by the busy time counter or
-not. Seems that busy time counter considers whole busy time, but you
-need to investigate this by yourself or ask somebody who know.
+Signed-off-by: Jessica Wu <wjessica@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |   21 ++++++++++++-
+ drivers/net/wireless/ath/ath6kl/init.c |   52 ++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath6kl/main.c |    6 +++-
+ drivers/net/wireless/ath/ath6kl/usb.c  |    1 +
+ 4 files changed, 73 insertions(+), 7 deletions(-)
 
-And please don't mail me privately.
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 23a776391e44..2b78c863d030 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -148,6 +148,9 @@ enum ath6kl_fw_capability {
+ 	/* ratetable is the 2 stream version (max MCS15) */
+ 	ATH6KL_FW_CAPABILITY_RATETABLE_MCS15,
+ 
++	/* firmare doesn't support IP checksumming */
++	ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+@@ -167,6 +170,7 @@ enum ath6kl_hw_flags {
+ #define ATH6KL_FW_API2_FILE "fw-2.bin"
+ #define ATH6KL_FW_API3_FILE "fw-3.bin"
+ #define ATH6KL_FW_API4_FILE "fw-4.bin"
++#define ATH6KL_FW_API5_FILE "fw-5.bin"
+ 
+ /* AR6003 1.0 definitions */
+ #define AR6003_HW_1_0_VERSION                 0x300002ba
+@@ -224,8 +228,21 @@ enum ath6kl_hw_flags {
+ #define AR6004_HW_1_3_VERSION			0x31c8088a
+ #define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
+ #define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
+-#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
+-#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
++#define AR6004_HW_1_3_TCMD_FIRMWARE_FILE	"utf.bin"
++#define AR6004_HW_1_3_UTF_FIRMWARE_FILE		"utf.bin"
++#define AR6004_HW_1_3_TESTSCRIPT_FILE		"nullTestFlow.bin"
++#define AR6004_HW_1_3_BOARD_DATA_FILE	      AR6004_HW_1_3_FW_DIR "/bdata.bin"
++#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE AR6004_HW_1_3_FW_DIR "/bdata.bin"
++
++/* AR6004 3.0 definitions */
++#define AR6004_HW_3_0_VERSION			0x31C809F8
++#define AR6004_HW_3_0_FW_DIR			"ath6k/AR6004/hw3.0"
++#define AR6004_HW_3_0_FIRMWARE_FILE		"fw.ram.bin"
++#define AR6004_HW_3_0_TCMD_FIRMWARE_FILE	"utf.bin"
++#define AR6004_HW_3_0_UTF_FIRMWARE_FILE		"utf.bin"
++#define AR6004_HW_3_0_TESTSCRIPT_FILE		"nullTestFlow.bin"
++#define AR6004_HW_3_0_BOARD_DATA_FILE	      AR6004_HW_3_0_FW_DIR "/bdata.bin"
++#define AR6004_HW_3_0_DEFAULT_BOARD_DATA_FILE AR6004_HW_3_0_FW_DIR "/bdata.bin"
+ 
+ /* Per STA data, used in AP mode */
+ #define STA_PS_AWAKE		BIT(0)
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 82d266c1dda9..3dea97aa9b74 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -149,18 +149,43 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.board_ext_data_addr		= 0x437000,
+ 		.reserved_ram_size		= 7168,
+ 		.board_addr			= 0x436400,
+-		.refclk_hz                      = 40000000,
++		.refclk_hz                      = 0,
+ 		.uarttx_pin                     = 11,
+ 		.flags				= 0,
+ 
+ 		.fw = {
+ 			.dir            = AR6004_HW_1_3_FW_DIR,
+ 			.fw             = AR6004_HW_1_3_FIRMWARE_FILE,
++			.tcmd	        = AR6004_HW_1_3_TCMD_FIRMWARE_FILE,
++			.utf		= AR6004_HW_1_3_UTF_FIRMWARE_FILE,
++			.testscript	= AR6004_HW_1_3_TESTSCRIPT_FILE,
+ 		},
+ 
+ 		.fw_board               = AR6004_HW_1_3_BOARD_DATA_FILE,
+ 		.fw_default_board       = AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE,
+ 	},
++	{
++		.id				= AR6004_HW_3_0_VERSION,
++		.name				= "ar6004 hw 3.0",
++		.dataset_patch_addr		= 0,
++		.app_load_addr			= 0x1234,
++		.board_ext_data_addr		= 0,
++		.reserved_ram_size		= 7168,
++		.board_addr			= 0x436400,
++		.testscript_addr		= 0,
++		.flags				= 0,
++
++		.fw = {
++			.dir		= AR6004_HW_3_0_FW_DIR,
++			.fw		= AR6004_HW_3_0_FIRMWARE_FILE,
++			.tcmd	        = AR6004_HW_3_0_TCMD_FIRMWARE_FILE,
++			.utf		= AR6004_HW_3_0_UTF_FIRMWARE_FILE,
++			.testscript	= AR6004_HW_3_0_TESTSCRIPT_FILE,
++		},
++
++		.fw_board		= AR6004_HW_3_0_BOARD_DATA_FILE,
++		.fw_default_board	= AR6004_HW_3_0_DEFAULT_BOARD_DATA_FILE,
++	},
+ };
+ 
+ /*
+@@ -596,7 +621,9 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	 * but possible in theory.
+ 	 */
+ 
+-	if (ar->target_type == TARGET_TYPE_AR6003) {
++	if ((ar->target_type == TARGET_TYPE_AR6003) ||
++	    (ar->version.target_ver == AR6004_HW_1_3_VERSION) ||
++	    (ar->version.target_ver == AR6004_HW_3_0_VERSION)) {
+ 		param = ar->hw.board_ext_data_addr;
+ 		ram_reserved_size = ar->hw.reserved_ram_size;
+ 
+@@ -1110,6 +1137,12 @@ int ath6kl_init_fetch_firmwares(struct ath6kl *ar)
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API5_FILE);
++	if (ret == 0) {
++		ar->fw_api = 5;
++		goto out;
++	}
++
+ 	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API4_FILE);
+ 	if (ret == 0) {
+ 		ar->fw_api = 4;
+@@ -1228,7 +1261,13 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ 	}
+ 
+ 	/* record the fact that Board Data IS initialized */
+-	ath6kl_bmi_write_hi32(ar, hi_board_data_initialized, 1);
++	if ((ar->version.target_ver == AR6004_HW_1_3_VERSION) ||
++	    (ar->version.target_ver == AR6004_HW_3_0_VERSION))
++		param = board_data_size;
++	else
++		param = 1;
++
++	ath6kl_bmi_write_hi32(ar, hi_board_data_initialized, param);
+ 
+ 	return ret;
+ }
+@@ -1359,7 +1398,11 @@ static int ath6kl_upload_testscript(struct ath6kl *ar)
+ 	}
+ 
+ 	ath6kl_bmi_write_hi32(ar, hi_ota_testscript, address);
+-	ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz, 4096);
++
++	if ((ar->version.target_ver != AR6004_HW_1_3_VERSION) &&
++	    (ar->version.target_ver != AR6004_HW_3_0_VERSION))
++		ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz, 4096);
++
+ 	ath6kl_bmi_write_hi32(ar, hi_test_apps_related, 1);
+ 
+ 	return 0;
+@@ -1569,6 +1612,7 @@ static const struct fw_capa_str_map {
+ 	{ ATH6KL_FW_CAPABILITY_AP_INACTIVITY_MINS, "ap-inactivity-mins" },
+ 	{ ATH6KL_FW_CAPABILITY_MAP_LP_ENDPOINT, "map-lp-endpoint" },
+ 	{ ATH6KL_FW_CAPABILITY_RATETABLE_MCS15, "ratetable-mcs15" },
++	{ ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM, "no-ip-checksum" },
+ };
+ 
+ static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index baa447f50fda..21516bc65785 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1293,6 +1293,8 @@ static const struct net_device_ops ath6kl_netdev_ops = {
+ 
+ void init_netdev(struct net_device *dev)
+ {
++	struct ath6kl *ar = ath6kl_priv(dev);
++
+ 	dev->netdev_ops = &ath6kl_netdev_ops;
+ 	dev->destructor = free_netdev;
+ 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
+@@ -1304,7 +1306,9 @@ void init_netdev(struct net_device *dev)
+ 					WMI_MAX_TX_META_SZ +
+ 					ATH6KL_HTC_ALIGN_BYTES, 4);
+ 
+-	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
++	if (!test_bit(ATH6KL_FW_CAPABILITY_NO_IP_CHECKSUM,
++		      ar->fw_capabilities))
++		dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
+ 
+ 	return;
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index e5a9e7fe2cea..c44325856b81 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1210,6 +1210,7 @@ static int ath6kl_usb_pm_reset_resume(struct usb_interface *intf)
+ 
+ /* table of devices that work with this driver */
+ static struct usb_device_id ath6kl_usb_ids[] = {
++	{USB_DEVICE(0x0cf3, 0x9375)},
+ 	{USB_DEVICE(0x0cf3, 0x9374)},
+ 	{ /* Terminating entry */ },
+ };
 
--- 
-BR,
-Sergey
