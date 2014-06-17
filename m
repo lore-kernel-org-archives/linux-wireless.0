@@ -1,109 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:62241 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802AbaFXTp2 (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:33410 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932755AbaFQNGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:45:28 -0400
-Received: by mail-wi0-f177.google.com with SMTP id r20so1237579wiv.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:45:25 -0700 (PDT)
-Message-ID: <53A9D551.6020007@gmail.com> (sfid-20140624_214531_432433_94C2AF5D)
-Date: Tue, 24 Jun 2014 22:45:21 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Subject: Re: pull request: iwlwifi 2014-06-24
-References: <53A9D396.1020306@gmail.com>
-In-Reply-To: <53A9D396.1020306@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="d0FXiOXFjA1XirLPKUXKp2VO3L3Us3WcX"
+	Tue, 17 Jun 2014 09:06:53 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so6950453wgh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2014 06:06:51 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v10 2/5] mac80211: make check_combinations() aware of chanctx reservation
+Date: Tue, 17 Jun 2014 14:58:55 +0200
+Message-Id: <1403009938-1084-3-git-send-email-michal.kazior@tieto.com> (sfid-20140617_150659_853210_F75B38EB)
+In-Reply-To: <1403009938-1084-1-git-send-email-michal.kazior@tieto.com>
+References: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+ <1403009938-1084-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---d0FXiOXFjA1XirLPKUXKp2VO3L3Us3WcX
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+The ieee80211_check_combinations() computes
+radar_detect accordingly depending on chanctx
+reservation status.
 
+This makes it possible to use the function for
+channel_switch validation.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-On 06/24/2014 10:37 PM, Emmanuel Grumbach wrote:
-> Hi John,
->=20
-> I have been travelling so this comes a bit late. Nevertheless, it is re=
-latively small.
->=20
-> I have here a fix from Eliad for scheduled scan: it fixes a firmware as=
-sertion. Arik reverts a patch I made that didn't take into account that 3=
-160 doesn't have UAPSD and hence, we can't assume that all newer firmware=
-s support the feature. Here too, the visible effect is a firmware asserti=
-on. Along with that, we have a few fixes and additions to the device list=
-=2E
->=20
-> Please tell me if you have problems. Thanks!
->=20
+Notes:
+    v3:
+     * fix typo in comment [Johannes]
+     * fix comment style [Johannes]
+    
+    v7:
+     * use replaces/replaced_by pointers
+     * replace radar_detect calculation in ieee80211_max_num_channels() too
+    
+    v8:
+     * use replace_state/replace_ctx instead of replaces/replaced_by (rebased)
 
-I forgot to say that this is intended for 3.16.
+ net/mac80211/util.c | 35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-> The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626=
-b38f:
->=20
->   Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
->=20
-> are available in the git repository at:
->=20
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.g=
-it for-john
->=20
-> for you to fetch changes up to a42c9fcc4a88cdd246fab3bcf06c4487afee3d88=
-:
->=20
->   Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag" (2014=
--06-24 22:01:46 +0300)
->=20
-> ----------------------------------------------------------------
-> Arik Nemtsov (1):
->       Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag"
->=20
-> Eliad Peller (1):
->       iwlwifi: mvm: rework sched scan channel configuration
->=20
-> Oren Givon (1):
->       iwlwifi: update the 7265 series HW IDs
->=20
->  drivers/net/wireless/iwlwifi/iwl-fw.h       |  1 +
->  drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 +++++++
->  drivers/net/wireless/iwlwifi/mvm/scan.c     | 65 +++++++++++++++++++--=
---------------------------------------------
->  drivers/net/wireless/iwlwifi/pcie/drv.c     |  3 ++-
->  4 files changed, 29 insertions(+), 47 deletions(-)
->=20
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8e661ea..16dc720 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2837,6 +2837,35 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
+ 	ps->dtim_count = dtim_count;
+ }
+ 
++static u8 ieee80211_chanctx_radar_detect(struct ieee80211_local *local,
++					 struct ieee80211_chanctx *ctx)
++{
++	struct ieee80211_sub_if_data *sdata;
++	u8 radar_detect = 0;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	if (WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED))
++		return 0;
++
++	list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list)
++		if (sdata->reserved_radar_required)
++			radar_detect |= BIT(sdata->reserved_chandef.width);
++
++	/*
++	 * An in-place reservation context should not have any assigned vifs
++	 * until it replaces the other context.
++	 */
++	WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER &&
++		!list_empty(&ctx->assigned_vifs));
++
++	list_for_each_entry(sdata, &ctx->assigned_vifs, assigned_chanctx_list)
++		if (sdata->radar_required)
++			radar_detect |= BIT(sdata->vif.bss_conf.chandef.width);
++
++	return radar_detect;
++}
++
+ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+@@ -2880,8 +2909,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
+ 			continue;
+-		if (ctx->conf.radar_enabled)
+-			radar_detect |= BIT(ctx->conf.def.width);
++		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
+ 			num_different_channels++;
+ 			continue;
+@@ -2943,8 +2971,7 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
+ 
+ 		num_different_channels++;
+ 
+-		if (ctx->conf.radar_enabled)
+-			radar_detect |= BIT(ctx->conf.def.width);
++		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
+ 	}
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-- 
+1.8.5.3
 
-
---d0FXiOXFjA1XirLPKUXKp2VO3L3Us3WcX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTqdVRAAoJEC0Llv5uNjIBzq0P/RVhU/vf0l331BvtMpIT5AHA
-0O9wkKwOtBgwqk+hgS0MQ31CMU7U4d5ggIyN23TGAffx1ytKZJayYO9uQS0gB1Mz
-WE789sDiJ70IfawNq5G+XE1QNB+cShu1M+0O1BabPGsYXR7qXRQIv++zMfeyvatb
-mgxpe2nEaicliUZa5ezxyjEKXTuPua3HWHIWX8kxvS7Bl6+C0gHfnG2nvVA73UiV
-txOmg8hKmfSw/+cMtPdAbsJ7TGlqILFGY+RoPwJCegMzQLI+hinAzgfaKHD4fKx5
-VdVreT2BZoxykkWMiKaGe4mUxxN5IP350MdqukIkekkXAqACQcuvhUoj2DuUrolK
-4HffNf1ERRPE1Yel3Y3H+AHrTG0lXEdhVo6Edlwkdi/z8jChrXzHNVvd38RHzqhC
-ACi7GHg+Seci9iIdFRRqFZd1qTgAuPdNlWmEu3iehRRegh+L4QXr+d6NRCfGKWSo
-bpUkbUSIQaKT8AARapesq1EfLglidNN1vbdyTc9wCTGNzblmUat5wXlj7dEz6WsV
-KamaJHk6NC/JO83TfQP1Riji1X4r8eVMOpz42d6YkYLAx6Lt1hxiUqEH9vaCwD87
-BeCeHOXbDqIf8Gpy5IyfGMYgQ9vjuNg0xZxNBjk3j+3YlI+oIrf01r46KuhBgyal
-RC6yOZ1QwwPUgSqpz3qO
-=GXQP
------END PGP SIGNATURE-----
-
---d0FXiOXFjA1XirLPKUXKp2VO3L3Us3WcX--
