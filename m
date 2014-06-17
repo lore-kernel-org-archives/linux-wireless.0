@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:62001 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbaFWVw4 (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:49176 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479AbaFQJlY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 17:52:56 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so4952588wiv.14
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 14:52:55 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCHv3 2/6] rtlwifi/rtl8192c[eu]: Fix media status register mask
-Date: Mon, 23 Jun 2014 23:53:55 +0200
-Message-Id: <1403560436-7662-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140623_235319_872477_D2E985BE)
+	Tue, 17 Jun 2014 05:41:24 -0400
+Subject: [PATCH 6/6] ath6kl: properly null terminate the firmware string
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Jun 2014 12:41:21 +0300
+Message-ID: <20140617094121.22040.35356.stgit@potku.adurom.net> (sfid-20140617_114127_043904_9C307033)
+In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bt_msr & 0xfc will never match 0x3. Fix this by using a mask that actually matches the available types.
+The firmware version read from the firmware image is not null terminated and
+because of that there were few bytes of garbage after the firmware string:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Reviewed-by: Peter Wu <peter@lekensteyn.nl>
+[10420.164632] ath6kl: ar6004 hw 3.0 usb fw 3.5.0.300-1^A api 4
+
+Add proper null termination to ath6kl_fetch_fw_apin() clean the firmware
+version string.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 +
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  |    2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 55adf04..5050938 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1206,7 +1206,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 3dea97aa9b74..63c0cffd5634 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -942,7 +942,7 @@ static int ath6kl_fetch_fw_api1(struct ath6kl *ar)
  
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-index ed703a1..dc8460c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -375,6 +375,7 @@
- #define	MSR_ADHOC				0x01
- #define	MSR_INFRA				0x02
- #define	MSR_AP					0x03
-+#define	MSR_MASK				0x03
+ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ {
+-	size_t magic_len, len, ie_len;
++	size_t magic_len, len, ie_len, ver_len;
+ 	const struct firmware *fw;
+ 	struct ath6kl_fw_ie *hdr;
+ 	char filename[100];
+@@ -993,8 +993,10 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
  
- #define	RRSR_RSC_OFFSET				21
- #define	RRSR_SHORT_OFFSET			23
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 07cb06d..87c0a27 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
--- 
-1.7.10.4
+ 		switch (ie_id) {
+ 		case ATH6KL_FW_IE_FW_VERSION:
+-			strlcpy(ar->wiphy->fw_version, data,
+-				sizeof(ar->wiphy->fw_version));
++			/* the string is not null terminated */
++			ver_len = min(ie_len, sizeof(ar->wiphy->fw_version));
++			memcpy(ar->wiphy->fw_version, data, ver_len);
++			ar->wiphy->fw_version[ver_len] = '\0';
+ 
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT,
+ 				   "found fw version %s\n",
 
