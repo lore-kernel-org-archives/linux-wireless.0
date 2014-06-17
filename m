@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:62235 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbaFJV6j (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2143 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754305AbaFQKUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 17:58:39 -0400
-Received: by mail-la0-f51.google.com with SMTP id gf5so4388859lab.10
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 14:58:38 -0700 (PDT)
+	Tue, 17 Jun 2014 06:20:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <drwho@infidigm.net>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
+Subject: Re: QCA ar9375 in Ubuntu 14.04 beta 2 not working
+References: <3b045ae380adf4cae45a6e7cd1741ba6.squirrel@www.infidigm.net>
+Date: Tue, 17 Jun 2014 13:20:21 +0300
+In-Reply-To: <3b045ae380adf4cae45a6e7cd1741ba6.squirrel@www.infidigm.net>
+	(drwho@infidigm.net's message of "Wed, 9 Apr 2014 11:27:48 -0400")
+Message-ID: <87bntrdehm.fsf@kamboji.qca.qualcomm.com> (sfid-20140617_122102_556106_A0183A5F)
 MIME-Version: 1.0
-In-Reply-To: <CANy8jx+RY-_wbX5JqdF_xwyP+2XQ-V9Ae95Y5MOzd=fyir8KTw@mail.gmail.com>
-References: <CANy8jx+RY-_wbX5JqdF_xwyP+2XQ-V9Ae95Y5MOzd=fyir8KTw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 10 Jun 2014 14:58:18 -0700
-Message-ID: <CAB=NE6Uq6NCne+nH6gMWWgbZT6H+Ka5Mz8aqGiq2UKzMmogU2g@mail.gmail.com> (sfid-20140610_235844_686220_00E317FF)
-Subject: Re: max_erip/tx_power not being set correctly
-To: John Walker <john@x109.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 24, 2014 at 5:34 AM, John Walker <john@x109.net> wrote:
-> I hope you can help.A bug seems to have been introduced in 3.10.34ish
-> (3.10.32 is ok) linux kernel where a statically compiled regulator
-> db.txt file does not set max_erip /tx_power correctly.
+Hi,
 
-If using stock vanilla kernel and you noticed an issue between a
-stable release, ie between 3.10.32 and 3.10.34 you should be able to
-bisect. Furthermore the description of the issue you are running into
-is vague. You will need to provide a bit more details with regards to
-what exactly was seen before and what is new you see after. The iw
-list output from both would be useful as well as the kernel logs.
+replying to a mail from two months back:
 
-  Luis
+drwho@infidigm.net writes:
+
+> I just got a UB134C which has a QCA ar9375.  I tried it in Ubuntu 14.04
+> beta 2 kernel =
+> 3.13.0-22-generic #44-Ubuntu SMP Wed Apr 2 20:04:41 UTC 2014 i686
+>
+> I'm told the 9375 is an ath6kl, but it doesn't look like the ath6kl driver
+> supports it.  kernel output.....
+>
+> new high-speed USB device number 4 using ehci-pci
+> [175257.129911] usb 1-2: New USB device found, idVendor=0cf3, idProduct=9375
+> [175257.129923] usb 1-2: New USB device strings: Mfr=1, Product=2,
+> SerialNumber=3
+> [175257.129931] usb 1-2: Product: USBWLAN
+> [175257.129939] usb 1-2: Manufacturer: Qualcomm Atheros.
+> [175257.129946] usb 1-2: SerialNumber: 12345678
+
+I just sent patches to add ar6004 hw3.0 support. If you can, please test
+those and give feedback.
+
+http://lists.infradead.org/pipermail/ath6kl/2014-June/000032.html
+
+-- 
+Kalle Valo
