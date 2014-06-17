@@ -1,95 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:6678 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751899AbaFDLAQ (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36040 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932664AbaFQJQr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 07:00:16 -0400
-Date: Wed, 4 Jun 2014 13:00:07 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-cc: Julia Lawall <julia.lawall@lip6.fr>,
-	David Laight <David.Laight@aculab.com>,
-	linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	"adi-buildroot-devel@lists.sourceforge.net"
-	<adi-buildroot-devel@lists.sourceforge.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 0/10] use safer test on the result of
- find_first_zero_bit
-In-Reply-To: <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com>
-Message-ID: <alpine.DEB.2.10.1406041258200.2441@hadrien> (sfid-20140604_130029_535450_828B6C24)
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr> <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com> <alpine.DEB.2.10.1406041137270.2441@hadrien> <063D6719AE5E284EB5DD2968C1650D6D1725705F@AcuExch.aculab.com>
- <alpine.DEB.2.10.1406041148590.2441@hadrien> <CAMuHMdXPBQTYA0c=1hkC7943-_J59TVSFaEKsfY1F2ogV=Ld+A@mail.gmail.com>
+	Tue, 17 Jun 2014 05:16:47 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module parameter
+Date: Tue, 17 Jun 2014 11:16:20 +0200
+Message-ID: <1402996581-10764-3-git-send-email-arend@broadcom.com> (sfid-20140617_111655_041250_FB4BE1FC)
+In-Reply-To: <1402996581-10764-1-git-send-email-arend@broadcom.com>
+References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Drivers may need to know this variable value for configuring the
+device they are controlling. It can be determined indirectly by
+setting IEEE80211_HT_CAP_SUP_WIDTH_20_40 flag in the field
+ieee80211_sta_htcap::cap of 2G band. During the wiphy_register()
+call cfg80211 will clear that bit if the module parameter is true.
+However, brcmfmac for one needs to know the value to determine
+its custom regulatory domain which must be applied before doing
+the wiphy_register().
 
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ include/net/cfg80211.h | 9 +++++++++
+ net/wireless/core.c    | 6 ++++++
+ 2 files changed, 15 insertions(+)
 
-On Wed, 4 Jun 2014, Geert Uytterhoeven wrote:
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e46c437..47a0310 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3172,6 +3172,15 @@ static inline const char *wiphy_name(const struct wiphy *wiphy)
+ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv);
+ 
+ /**
++ * wiphy_is_40mhz_24ghz_disabled - check whether 40MHz bandwidth in 2.4G
++ *
++ * @wiphy: The wiphy to check.
++ *
++ * Return: true is 40MHz is disabled in 2.4G band.
++ */
++bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
++
++/**
+  * wiphy_register - register a wiphy with cfg80211
+  *
+  * @wiphy: The wiphy to register.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a1c4065..428f370 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -408,6 +408,12 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ }
+ EXPORT_SYMBOL(wiphy_new);
+ 
++bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy)
++{
++	return cfg80211_disable_40mhz_24ghz;
++}
++EXPORT_SYMBOL(wiphy_is_40mhz_24ghz_disabled);
++
+ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ {
+ 	const struct ieee80211_iface_combination *c;
+-- 
+1.9.1
 
-> Hi Julia,
->
-> On Wed, Jun 4, 2014 at 11:52 AM, Julia Lawall <julia.lawall@lip6.fr> wrote:
-> >> Maybe the documented return code should be changed to allow for the
-> >> existing behaviour.
-> >
-> > Sorry, I'm not sure to understand what you suggest here.
->
-> include/asm-generic/bitops/find.h:
->
-> | /**
-> |  * find_first_zero_bit - find the first cleared bit in a memory region
-> |  * @addr: The address to start the search at
-> |  * @size: The maximum number of bits to search
-> |  *
-> |  * Returns the bit number of the first cleared bit.
-> |  * If no bits are zero, returns @size.
->
-> "If no bits are zero, returns @size or a number larger than @size."
-
-OK, thanks.  I was only looking at the C code.
-
-But the C code contains a loop that is followed by:
-
-        if (!size)
-                return result;
-        tmp = *p;
-
-found_first:
-        tmp |= ~0UL << size;
-        if (tmp == ~0UL)        /* Are any bits zero? */
-                return result + size;   /* Nope. */
-
-In the first return, it would seem that result == size.  Could the second
-one be changed to just return size?  It should not hurt performance.
-
-julia
-
->
-> |  */
-> | extern unsigned long find_first_zero_bit(const unsigned long *addr,
-> |                                          unsigned long size);
->
-> Gr{oetje,eeting}s,
->
->                         Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
->
