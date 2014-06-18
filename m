@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:42505 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805AbaFJVov (ORCPT
+Received: from mail-yk0-f177.google.com ([209.85.160.177]:52772 "EHLO
+	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966109AbaFRLKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 17:44:51 -0400
-Received: by mail-lb0-f175.google.com with SMTP id z11so18161lbi.6
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 14:44:49 -0700 (PDT)
+	Wed, 18 Jun 2014 07:10:22 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6W+BjyH3Ywb2Goigu6-=omtTQuLsmnXx+Mwz5Dc6bk_Uw@mail.gmail.com>
-References: <1399798250-20987-1-git-send-email-emmanuel.grumbach@intel.com> <CAB=NE6W+BjyH3Ywb2Goigu6-=omtTQuLsmnXx+Mwz5Dc6bk_Uw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 10 Jun 2014 14:44:29 -0700
-Message-ID: <CAB=NE6UMDM3rSq1FLjO5yammhjX=6NgvntQvt9NGijOHBxq+wg@mail.gmail.com> (sfid-20140610_234454_243547_91B780CB)
-Subject: Re: [PATCH 0/7] regulatory enhancements
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1403087119.1984.93.camel@x220>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+ <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
+ <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+ <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+ <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+ <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+ <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+ <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
+ <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com> <1403087119.1984.93.camel@x220>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Wed, 18 Jun 2014 15:10:02 +0400
+Message-ID: <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com> (sfid-20140618_131040_136735_07525327)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2014 at 1:48 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Sun, May 11, 2014 at 1:50 AM, Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com> wrote:
->> Hi Johannes,
->>
->> Newer Intel cards store regulatory settings in firmware.
->> This patch series adds support for a wiphy callback, allowing
->> the regulatory core to fetch driver/firmware defined redgomain
->> data whenever a country code change is requested.
->>
->> Along with that, there is also a small fix from Eliad.
->>
->> Arik Nemtsov (6):
->>   cfg80211: don't set reg timeout for user-handled hint
->>   cfg80211: introduce regulatory flags controlling bw
->>   cfg80211: allow drivers to provide regulatory settings
->>   cfg80211: treat the special "unknown" alpha2 as valid
->>   cfg80211: accept world/same regdom from driver/user hints
->>   cfg80211: leave invalid channels on regdomain change
+Hi Paul,
+
+2014-06-18 14:25 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> Jiri, Nick, Luis, John,
 >
-> Please Cc me on regulatory patches. I've noted issues with the wiphy
-> callback addition, but other than place if you can please resend
-> patches that do not depend on that, that'd be appreciated, I'll take a
-> look at those in the morning.
+> On Wed, 2014-04-16 at 13:20 +0400, Sergey Ryazanov wrote:
+>> 2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+>> > On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
+>> >> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
+>> >> > John, can you delay the merging of this patch for a few months, I will
+>> >> > try to prepare the necessary patches to add AR231x architecture to the
+>> >> > kernel and send them to linux-mips.
+>> >>
+>> >> OK -- looking forward to your patches.
+>> >
+>> > So am I. Is there any news on this front?
+>> >
+>>
+>> Work still in progress :(
+>
+> ATHEROS_AR231X and the things depending on it, like AHB bus support,
+> have been discussed for three years now. When will you (re)consider a
+> patch to remove all currently dead code?
+>
+> And to state the obvious: AHB bus support, and the other code depending
+> on ATHEROS_AR231X, can always be re-added once ATHEROS_AR231X gets added
+> to the tree.
+>
 
-I haven't seen these patches, please split them up, I think a few
-already were accepted, but separating them between the new
-functionality being added is key to speedy review. I'll take a second
-stab at review of the fw API now as I'm going comfortalbe with the
-idea of letting folks shoot themselves on the foot.
+Work in progress, I don't stop it. Just work is progressing slower
+than I had planned. I am already cleanup the code (mostly checkpatch
+errors and warnings) and send patches to OpenWRT tree. Further I plan
+to simplify initialization and I will be ready to send patches
+upstream.
 
-  Luis
+I need a couple of weeks for this. Is its reasonable time to not make
+a mess of remove/add commits?
+
+-- 
+BR,
+Sergey
