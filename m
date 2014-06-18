@@ -1,162 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:48343 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbaFGPw4 (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:51583 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbaFRVo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 11:52:56 -0400
-Received: by mail-pb0-f45.google.com with SMTP id um1so3713056pbc.4
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:52:55 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Jahnavi Meher <jahnavi.meher@redpinesignals.com>,
-	Jahnavi Meher <jahnavi.meher@gmail.com>
-Subject: [PATCH 2/4] rsi: Adding support for 5GHz
-Date: Sun,  8 Jun 2014 02:52:17 +0530
-Message-Id: <1402176137-8485-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175301_725458_66EADD36)
+	Wed, 18 Jun 2014 17:44:29 -0400
+Received: by mail-pd0-f178.google.com with SMTP id r10so1097758pdi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:44:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1402778536-31305-1-git-send-email-mihirsht@gmail.com>
+References: <1402778536-31305-1-git-send-email-mihirsht@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 14:44:07 -0700
+Message-ID: <CAB=NE6U=i7oeK7Ue=NH2YFhLrZOc359MzRYcj4Cv2dYUC0QwmQ@mail.gmail.com> (sfid-20140618_234432_697004_8D991DF3)
+Subject: Re: [PATCH] cfg80211: unblock user hint when cfg80211_regdom is intersected
+To: Mihir Shete <mihirsht@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+On Sat, Jun 14, 2014 at 1:42 PM,  <mihirsht@gmail.com> wrote:
+> From: Mihir Shete <mihirsht@gmail.com>
+>
+> User hints are always ignored if cfg80211_regdom is intersected.
+> Add checks to make sure that user hints are processed if the
+> previous hints are done processing.
+>
+> Signed-off-by: Mihir Shete <mihirsht@gmail.com>
+> ---
+>  net/wireless/reg.c | 19 ++++++++++++++++---
+>  1 file changed, 16 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index b4973bc..2c4e2ba 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -396,6 +396,14 @@ static bool regdom_changes(const char *alpha2)
+>         return !alpha2_equal(r->alpha2, alpha2);
+>  }
+>
+> +static bool is_cfg80211_regdom_intersected(void)
+> +{
+> +       const struct ieee80211_regdomain *r = get_cfg80211_regdom();
+> +
+> +       if (!r)
+> +               return false;
+> +       return is_intersected_alpha2(r->alpha2);
+> +}
 
-Adding support for 5GHz.
+Shouldn't this just be the last request->intersect too ?
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |   17 +++++---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   56 ++++++++++++++++++++++++++-
- drivers/net/wireless/rsi/rsi_mgmt.h         |    1 +
- 3 files changed, 66 insertions(+), 8 deletions(-)
+>  /*
+>   * The NL80211_REGDOM_SET_BY_USER regdom alpha2 is cached, this lets
+>   * you know if a valid regulatory hint with NL80211_REGDOM_SET_BY_USER
+> @@ -1650,9 +1658,14 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+>          */
+>         if ((lr->initiator == NL80211_REGDOM_SET_BY_CORE ||
+>              lr->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
+> -            lr->initiator == NL80211_REGDOM_SET_BY_USER) &&
+> -           regdom_changes(lr->alpha2))
+> -               return REG_REQ_IGNORE;
+> +            lr->initiator == NL80211_REGDOM_SET_BY_USER)) {
+> +               if (lr->intersect) {
+> +                       if (!is_cfg80211_regdom_intersected())
+> +                               return REG_REQ_IGNORE;
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 45bdb99..4700714 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -723,17 +723,17 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	enum ieee80211_band band = hw->conf.chandef.chan->band;
- 
- 	mutex_lock(&common->mutex);
-+	common->fixedrate_mask[band] = 0;
- 
--	common->fixedrate_mask[IEEE80211_BAND_2GHZ] = 0;
--
--	if (mask->control[IEEE80211_BAND_2GHZ].legacy == 0xfff) {
--		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
--			(mask->control[IEEE80211_BAND_2GHZ].ht_mcs[0] << 12);
-+	if (mask->control[band].legacy == 0xfff) {
-+		common->fixedrate_mask[band] =
-+			(mask->control[band].ht_mcs[0] << 12);
- 	} else {
--		common->fixedrate_mask[IEEE80211_BAND_2GHZ] =
--			mask->control[IEEE80211_BAND_2GHZ].legacy;
-+		common->fixedrate_mask[band] =
-+			mask->control[band].legacy;
- 	}
- 	mutex_unlock(&common->mutex);
- 
-@@ -980,6 +980,7 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 
- 	hw->max_tx_aggregation_subframes = 6;
- 	rsi_register_rates_channels(adapter, IEEE80211_BAND_2GHZ);
-+	rsi_register_rates_channels(adapter, IEEE80211_BAND_5GHZ);
- 	hw->rate_control_algorithm = "AARF";
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
-@@ -997,6 +998,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 	wiphy->available_antennas_tx = 1;
- 	wiphy->bands[IEEE80211_BAND_2GHZ] =
- 		&adapter->sbands[IEEE80211_BAND_2GHZ];
-+	wiphy->bands[IEEE80211_BAND_5GHZ] =
-+		&adapter->sbands[IEEE80211_BAND_5GHZ];
- 
- 	status = ieee80211_register_hw(hw);
- 	if (status)
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index be9f5ca..ab14151 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -588,7 +588,13 @@ static int rsi_program_bb_rf(struct rsi_common *common)
- 
- 	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
- 	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
--	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
-+
-+	if (common->band == IEEE80211_BAND_2GHZ)
-+		common->endpoint = 0;
-+	else
-+		common->endpoint = 2;
-+
-+	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
- 
- 	if (common->rf_reset) {
- 		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
-@@ -827,6 +833,54 @@ static int rsi_send_reset_mac(struct rsi_common *common)
- }
- 
- /**
-+ * rsi_band_check() - This function programs the band
-+ * @common: Pointer to the driver private structure.
-+ *
-+ * Return: 0 on success, corresponding error code on failure.
-+ */
-+int rsi_band_check(struct rsi_common *common)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct ieee80211_hw *hw = adapter->hw;
-+	u8 current_bw = common->channel_width;
-+	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
-+	int status = 0;
-+
-+	if (common->band != curchan->band) {
-+		common->rf_reset = 1;
-+		common->band = curchan->band;
-+
-+		if (common->band == IEEE80211_BAND_2GHZ)
-+			common->endpoint = 0;
-+		else
-+			common->endpoint = 1;
-+
-+		status = rsi_program_bb_rf(common);
-+		if (status)
-+			return status;
-+	}
-+
-+	if ((hw->conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) ||
-+	    (hw->conf.chandef.width == NL80211_CHAN_WIDTH_20))
-+		common->channel_width = BW_20MHZ;
-+	else
-+		common->channel_width = BW_40MHZ;
-+
-+	if (current_bw != common->channel_width) {
-+		common->rf_reset = 1;
-+		status = rsi_load_bootup_params(common);
-+		if (status)
-+			return status;
-+
-+		status = rsi_load_radio_caps(common);
-+		if (status)
-+			return status;
-+	}
-+
-+	return status;
-+}
-+
-+/**
-  * rsi_set_channel() - This function programs the channel.
-  * @common: Pointer to the driver private structure.
-  * @channel: Channel value to be set.
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 225215a..5470d01 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -283,4 +283,5 @@ void rsi_core_qos_processor(struct rsi_common *common);
- void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_mgmt_pkt(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
-+int rsi_band_check(struct rsi_common *common);
- #endif
--- 
-1.7.1
+Let's keep this in mind:
 
+When processing requests on the queue get_last_request() will return
+the last requests which was accepted and already processed. When
+reg_update_last_request() is issued last_request becomes the newly
+accepted request that we are about to process. If this seems rather
+confusing we should split this up into two, but so far its not clear
+to me this is needed given we serialize processing requests and have a
+last_request->pending too.
+
+__reg_process_hint_user() is evaluating whether or not we should apply
+the passed hint. Given all this, when would lr->intersect be true but
+the set regdomain not be intersected? That would seem like an issue to
+me.
+
+Also note that your commit log seems to claim to want to make a change
+only for user type hints but the above folds all your desired changes
+to all the checks it was checking for.
+
+Lastly, we should be allowing through user changes if and only if a
+core or driver hint was not issued, otherwise the intersection makes
+sense to upkeep, however I do see it making sense to allow a user
+regulatory if an intersection was done but *iff* we want to clear the
+old userspace setting, but note that to do that cleanly we'd have to
+assume an original state. We can do this without much overhead by
+resetting the regulatory core to the original state given that core
+and driver hints will be cached and be set once the reset is called.
+You have to consider when a reset makes sense though and be very very
+careful about this though otherwise you might end up in inconsistent
+states that make no sense at run time. Consider being allowed to do
+certain things, being associated, and then all of a sudden driving the
+regulatory core which would prohibit that current state.
+
+If you really want to enable this regardless of the state you may have
+to trigger disassoc, etc. Please think of all this.
+
+NACK for now.
+
+  Luis
