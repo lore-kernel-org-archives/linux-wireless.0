@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:59527 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751349AbaFZVS0 (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:64604 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966364AbaFRNnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2014 17:18:26 -0400
-Message-ID: <4ac8f03450ae2022eef8615c04ce6221.squirrel@www.infidigm.net> (sfid-20140626_231829_144915_6D634A03)
-In-Reply-To: <53AC8517.5040806@hauke-m.de>
-References: <335443813713531dd3a660617ee65022.squirrel@www.infidigm.net>
-    <53AC8517.5040806@hauke-m.de>
-Date: Thu, 26 Jun 2014 16:57:22 -0400
-Subject: Re: mac80211 menu option missing in backports using kernel with
- imx_v6_v7_defconfig
-From: drwho@infidigm.net
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-Cc: backports@vger.kernel.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 18 Jun 2014 09:43:00 -0400
+Message-ID: <1403098977.1984.111.camel@x220> (sfid-20140618_154344_833747_6434F13F)
+Subject: Re: [ath5k-devel] [PATCH 09/28] Remove ATHEROS_AR231X
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	List <openwrt-devel@lists.openwrt.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>, Richard@venema.h4ckr.net,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, open@hauke-m.de,
+	Weinberger <richard@nod.at>, ath5k-devel@venema.h4ckr.net,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Hauke@venema.h4ckr.net, Mehrtens <hauke@hauke-m.de>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	Jonathan Bither <jonbither@gmail.com>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	OpenWrt@venema.h4ckr.net,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>
+Date: Wed, 18 Jun 2014 15:42:57 +0200
+In-Reply-To: <CAOpc7mE+829tBdy5atjtoJnGWDAnAHT_U0swXCuS3n_DMave1Q@mail.gmail.com>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+	 <1391971686-9517-10-git-send-email-richard@nod.at>
+	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
+	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+	 <52F8C373.9060108@rempel-privat.de>
+	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+	 <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
+	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+	 <1403087119.1984.93.camel@x220>
+	 <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
+	 <1403091974.1984.102.camel@x220>
+	 <CAOpc7mE+829tBdy5atjtoJnGWDAnAHT_U0swXCuS3n_DMave1Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> when I run the backports menuconfig mac80211 is hidden....
->> make menuconfig
->> CROSS_COMPILE=/home/xxx/gcc-linaro-arm-linux-gnueabi-2012.04-20120426_linux/bin/arm-linux-gnueabi-
->> ARCH=arm KLIB_BUILD=/home/xxx/imx_linux-3.10/ KLIB=~/home/xxx/rootfs/
->>
->> Searching for mac80211 in backport's menuconfig shows its dependences
->> are met
->> Symbol: MAC80211 [=n]
->> Type  : tristate
->> Prompt: Generic IEEE 802.11 Networking Stack (mac80211)
->>    Defined at net/mac80211/Kconfig:1
->>    Depends on: m && <choice> && CFG80211 [=m] && CRYPTO [=y] &&
->> CRYPTO_ARC4 && CRYPTO_AES [=y] && CRYPTO_CCM && CRC32 [=y]
->>    Selects: BACKPORT_AVERAGE [=n]
->>
->> If I point backports to an x86 kernel mac80211 magically appears
->> make menuconfig KLIB_BUILD=/home/xxx/x86_linux-3.10/
->> KLIB=/home/xxx/rootfs/
->>
->> Something in the imx_v6_v7_defconfig making backports unhappy?
->> backports
->> broken? Am I missing something for the cross compile?
->>
->> using backports-3.13.2-1
->>
->> Jon
->
-> Have you set CONFIG_CRYPTO_CCM in your kernel config? This is needed for
-> mac80211 in backports.
->
-> Hauke
+On Wed, 2014-06-18 at 15:15 +0200, Holger Schurig wrote:
+> Hmm, wouldn't the obvious thing than to add the driver in it's current
+> form into staging?  Is it well-separated from the rest of  Atheros
+> WLAN drivers ?
 
-Enabling crypto_ccm and crypto_arc4 in the kernel fixed it. Thanks.  I
-guess I was looking for [=n] and didn't even see they were disabled.
+A quick glance at the code shows an include of ar231x_platform.h (which
+doesn't exist) and uses of struct ar231x_board_config (ditto). So it
+won't build as is and therefor needs work to qualify for staging.
 
-Jon
 
+Paul Bolle
 
