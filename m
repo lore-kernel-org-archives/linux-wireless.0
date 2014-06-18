@@ -1,30 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:60388 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbaFWMbz (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:59188 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965039AbaFRKZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 08:31:55 -0400
-Received: by mail-pa0-f51.google.com with SMTP id hz1so5854546pad.10
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 05:31:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1403526593.4418.22.camel@jlt4.sipsolutions.net>
-References: <1402496307-32522-1-git-send-email-arik@wizery.com> <1403526593.4418.22.camel@jlt4.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 23 Jun 2014 15:31:40 +0300
-Message-ID: <CA+XVXfeDiovuk8Ng+aYASN-w-LO4KQ2tDCKh8yZRwT=n_afjQA@mail.gmail.com> (sfid-20140623_143158_693358_1E798F17)
-Subject: Re: [PATCH 01/10] mac80211: clarify TDLS Tx handling
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Jun 2014 06:25:22 -0400
+Message-ID: <1403087119.1984.93.camel@x220> (sfid-20140618_122544_675806_7A08502F)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
+	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 18 Jun 2014 12:25:19 +0200
+In-Reply-To: <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+	 <1391971686-9517-10-git-send-email-richard@nod.at>
+	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
+	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+	 <52F8C373.9060108@rempel-privat.de>
+	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+	 <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
+	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 3:29 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> Applied all - had to make some adjustments in patch 7 and while at it
-> made it use the per-vif functionality Luca added.
+Jiri, Nick, Luis, John,
 
-Thanks!
+On Wed, 2014-04-16 at 13:20 +0400, Sergey Ryazanov wrote:
+> 2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> > On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
+> >> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
+> >> > John, can you delay the merging of this patch for a few months, I will
+> >> > try to prepare the necessary patches to add AR231x architecture to the
+> >> > kernel and send them to linux-mips.
+> >>
+> >> OK -- looking forward to your patches.
+> >
+> > So am I. Is there any news on this front?
+> >
+> 
+> Work still in progress :(
 
-Arik
+ATHEROS_AR231X and the things depending on it, like AHB bus support,
+have been discussed for three years now. When will you (re)consider a
+patch to remove all currently dead code?
+
+And to state the obvious: AHB bus support, and the other code depending
+on ATHEROS_AR231X, can always be re-added once ATHEROS_AR231X gets added
+to the tree.
+
+
+Paul Bolle
+
