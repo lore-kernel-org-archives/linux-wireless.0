@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35231 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaFAF1R (ORCPT
+Received: from mailrelay008.isp.belgacom.be ([195.238.6.174]:54885 "EHLO
+	mailrelay008.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751398AbaFRRtZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 01:27:17 -0400
-Date: Sun, 1 Jun 2014 08:26:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Andrea Merello <andrea.merello@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-Subject: Re: [PATCH 1/3] rtl818x_pci: make RSSI code more readable
-Message-ID: <20140601052643.GM17724@mwanda> (sfid-20140601_072721_809054_22118F04)
-References: <1401553786-7603-1-git-send-email-andrea.merello@gmail.com>
- <20140531200556.GL17724@mwanda>
- <CAN8YU5OFqTa0Ywwhgt_MzTA5+5v9YON_YkQyD3L+syCyjO+OKw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAN8YU5OFqTa0Ywwhgt_MzTA5+5v9YON_YkQyD3L+syCyjO+OKw@mail.gmail.com>
+	Wed, 18 Jun 2014 13:49:25 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/1] LIBERTAS_CS: ioport_map/unmap relies on HAS_IOPORT_MAP
+Date: Wed, 18 Jun 2014 19:48:02 +0200
+Message-Id: <1403113682-7787-1-git-send-email-fabf@skynet.be> (sfid-20140618_194941_973449_9B5810BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 01, 2014 at 02:37:51AM +0200, Andrea Merello wrote:
-> IHMO it does not matter.
-> 
-> The 10 is a stub value for rtl8187se (because of not-implemented-yet
-> RSSI calculation), and indeed it is still here, in the rtl8187se case.
-> This has the functional role of providing a valid >0 value for reported RSSI.
-> This should hopefully go away soon :)
-> So, for rtl8187se case, it always reported 10, and it does continue to do this.
-> 
-> The initialization to 1 has no any functional role, it is just to shut
-> up gcc complaints about not initialized variable, but it should be
-> always overwritten by one of the three cases, and we should never see
-> this value really reported on RSSI measure.
-> 
-> Indeed they are two random values (chosen >0, just in case it does matter..)..
-> 
+Fixing following sh-allmodconfig errors reported on kisskb
 
-Ah.  Ok.  Thanks.
+"
+drivers/net/wireless/libertas/if_cs.c:826:3: error: implicit declaration of function 'ioport_unmap' [-Werror=implicit-function-declaration]
+drivers/net/wireless/libertas/if_cs.c:878:2: error: implicit declaration of function 'ioport_map' [-Werror=implicit-function-declaration]
+"
 
-regards,
-dan carpenter
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+This is untested.
+
+ drivers/net/wireless/libertas/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/libertas/Kconfig b/drivers/net/wireless/libertas/Kconfig
+index 0485c99..e6268ce 100644
+--- a/drivers/net/wireless/libertas/Kconfig
++++ b/drivers/net/wireless/libertas/Kconfig
+@@ -16,7 +16,7 @@ config LIBERTAS_USB
+ 
+ config LIBERTAS_CS
+ 	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
+-	depends on LIBERTAS && PCMCIA
++	depends on LIBERTAS && PCMCIA && HAS_IOPORT_MAP
+ 	---help---
+ 	  A driver for Marvell Libertas 8385 CompactFlash devices.
+ 
+-- 
+1.8.4.5
 
