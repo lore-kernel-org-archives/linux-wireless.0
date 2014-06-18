@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43100 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751524AbaFNT7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 15:59:10 -0400
-Message-ID: <1402775942.5026.0.camel@jlt4.sipsolutions.net> (sfid-20140614_220117_799428_FFC77A22)
-Subject: Re: [PATCH] mac80211: WEP extra head/tail room in
- ieee80211_send_auth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Max Stepanov <Max.Stepanov@intel.com>
-Date: Sat, 14 Jun 2014 21:59:02 +0200
-In-Reply-To: <87sin7zzrq.fsf@purkki.adurom.net>
-References: <1402419608-11892-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1402682460.4478.32.camel@jlt4.sipsolutions.net>
-	 <87sin7zzrq.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f41.google.com ([209.85.215.41]:63850 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbaFRWIt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2014 18:08:49 -0400
+Received: by mail-la0-f41.google.com with SMTP id hz20so943238lab.14
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 15:08:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1402469724-22358-3-git-send-email-arik@wizery.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com> <1402469724-22358-3-git-send-email-arik@wizery.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 15:08:27 -0700
+Message-ID: <CAB=NE6UZPcgAAJ6GAnjy2nSdYhLRqxo4h1ZZoZ7vYsAbYBiw+Q@mail.gmail.com> (sfid-20140619_000852_167075_2961B11F)
+Subject: Re: [PATCH 3/5] cfg80211: treat the special "unknown" alpha2 as valid
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-06-14 at 11:00 +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Tue, 2014-06-10 at 20:00 +0300, Emmanuel Grumbach wrote:
-> >> From: Max Stepanov <Max.Stepanov@intel.com>
-> >> 
-> >> After skb allocation and call to ieee80211_wep_encrypt in ieee80211_send_auth
-> >> the flow fails with a warning in ieee80211_wep_add_iv on verification of
-> >> available head/tailroom needed for WEP_IV and WEP_ICV.
-> >
-> > Applied. There's still time - should that be Cc stable?
-> 
-> Is this a regression?
+On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> If the regulatory request contains the special "99" unknown-country code,
+> allow a different alpha2 as response.
+>
+> This special alpha2 is used when the real alpha2 is unknown and should
+> be provided by the driver via its get_regd() wiphy callback, as part of
+> the regdomain info.
+>
+> Change-Id: I286e3aed828cabf22292b6fe320fdcfa61f0b951
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Reviewed-on: https://gerrit.rds.intel.com/32266
+> Tested-by: IWL Jenkins
+> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/reg.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index e2f33d7..c429ec5 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -418,7 +418,8 @@ static bool is_user_regdom_saved(void)
+>                 return false;
+>
+>         /* This would indicate a mistake on the design */
+> -       if (WARN(!is_world_regdom(user_alpha2) && !is_an_alpha2(user_alpha2),
+> +       if (WARN(!is_world_regdom(user_alpha2) && !is_an_alpha2(user_alpha2) &&
+> +                !is_unknown_alpha2(user_alpha2),
+>                  "Unexpected user alpha2: %c%c\n",
+>                  user_alpha2[0], user_alpha2[1]))
+>                 return false;
 
-Good question. I don't think anything changed this code recently, but
-maybe something changed skb allocation or so? Max?
+When would the user alpha2 be a custom value? This is *very* different
+than allowing an API to set the regulatory domain to a specific alpha2
+value, which is what I though this was all about.
 
-johannes
+> @@ -595,7 +596,8 @@ bool reg_is_valid_request(const char *alpha2)
+>         if (!lr || lr->processed)
+>                 return false;
+>
+> -       return alpha2_equal(lr->alpha2, alpha2);
+> +       return alpha2_equal(lr->alpha2, alpha2) ||
+> +              is_unknown_alpha2(lr->alpha2);
+>  }
 
+This patch seems to be allowing custom user alpha2s to be passed,
+while the commit log is indicating we want to allow a change from a
+custom value that is set to a regular alpha2.
+
+  Luis
