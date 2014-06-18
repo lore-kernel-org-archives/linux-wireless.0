@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62982 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751964AbaFMOo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 10:44:29 -0400
-Date: Fri, 13 Jun 2014 10:44:05 -0400
-From: Dave Jones <davej@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] Networking
-Message-ID: <20140613144405.GA7122@redhat.com> (sfid-20140613_164449_697024_346B9484)
-References: <20140612.121445.484288603919840829.davem@davemloft.net>
- <CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
- <1402642787.4478.5.camel@jlt4.sipsolutions.net>
- <CA+55aFw-UTwA0+dmCnqwjSEW244s0CLK4V5vuh2TmLku7A0mDQ@mail.gmail.com>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:63635 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbaFRV6y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2014 17:58:54 -0400
+Received: by mail-lb0-f171.google.com with SMTP id s7so929291lbd.16
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:58:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFw-UTwA0+dmCnqwjSEW244s0CLK4V5vuh2TmLku7A0mDQ@mail.gmail.com>
+In-Reply-To: <CA+XVXfcU0rG7Qtchsjgp2yOYPng6oxDjPLQ3tpjKHurZTJCXOw@mail.gmail.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-2-git-send-email-arik@wizery.com> <53980647.2070600@broadcom.com>
+ <CA+XVXfcU0rG7Qtchsjgp2yOYPng6oxDjPLQ3tpjKHurZTJCXOw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 14:58:32 -0700
+Message-ID: <CAB=NE6UvGSxqxwa+wJ83t8uogdBSnXn2SLY-mP-Xmgxw_fm+Lw@mail.gmail.com> (sfid-20140618_235858_231076_1CBDDDD8)
+Subject: Re: [PATCH 2/5] cfg80211: allow drivers to provide regulatory settings
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2014 at 07:28:33AM -0700, Linus Torvalds wrote:
- > On Thu, Jun 12, 2014 at 11:59 PM, Johannes Berg
- > <johannes@sipsolutions.net> wrote:
- > >
- > > is to be believed, then I'm not sure why you think iwlwifi is involved
- > > though.
- > 
- > Mainly just because I don't see the issue on my desktop, and iwlwifi
- > is the only network device (apart from looback) on my laptop. And it
- > does say "hw checksum", so that made me think it's the driver.
- > 
- > But:
- > 
- > > If it's iwlwifi, then maybe that commit broke something with devices
- > > that don't support checksumming?
- > 
- > that sounds quite possible.
+On Wed, Jun 11, 2014 at 1:45 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Wed, Jun 11, 2014 at 10:33 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 11-06-14 08:55, Arik Nemtsov wrote:
+>>>
+>>> Define a new wiphy callback allowing drivers to provide regulatory
+>>> settings.
+>>>
+>>> Only The first wiphy registered with this callback will be able to provide
+>>> regulatory domain info. If such a wiphy exists, it takes precedence over
+>>> other data sources.
+>>
+>>
+>> I should probably dig through linux-wireless archive for background info,
+>> but how is this different from the wiphy_apply_custom_regulatory() call. Is
+>> this for devices that have a regulatory database of sorts in the device
+>> firmware?
+>>
+> Yea that's basically it. And we want the get the info dynamically from
+> FW upon country changes.
 
-I see it on my router with two r8169 cards too.
-That does seem to support hw csum, though only on jumbo frames maybe?
+Currently a few drivers exist that have regulatory data in firmware
+and what we end up doing is allowing that through the usage of the
+custom flag and then having the reg_notififer() poke firmware and and
+ensure its OK with all the changes. It however has no way to then
+splat data from firmware onto the wiphy dynamically, and although this
+could be done through the custom firmware thing that is only for
+initialization and before registration. Having the API explicit should
+also allow us to extract vendor's regulatory data and then do our own
+serialized analysis of regulatory data to populate the public regdb.
+Using the firmware regulatory data is an architecture that is plain
+stupid and non-scalable so if people want to shoot themsevles on the
+foot with that stupidity I think its fine to let it through so long as
+we can extract their regulatory data, which this helps accomplish.
 
+Let the best firmware design win.
 
-	Dave
-
+  Luis
