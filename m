@@ -1,88 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21172 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbaFPMde convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:54016 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbaFRVyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 08:33:34 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Stezenbach <js@sig21.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: iwlwifi AC 7260 fails to connect
-Date: Mon, 16 Jun 2014 12:33:25 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303E22CCC@HASMSX103.ger.corp.intel.com> (sfid-20140616_143338_108607_61DA6D9B)
-References: <20140613105412.GA25048@sig21.net>
- <20140616094001.GB15116@sig21.net>
-In-Reply-To: <20140616094001.GB15116@sig21.net>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 18 Jun 2014 17:54:37 -0400
+Received: by mail-pa0-f45.google.com with SMTP id rd3so1168383pab.4
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:54:36 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1402469724-22358-1-git-send-email-arik@wizery.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 14:54:16 -0700
+Message-ID: <CAB=NE6WT60mZ4-c8y5hmqGXxfT6P6ojwJakF_ySkAau7urh6fw@mail.gmail.com> (sfid-20140618_235440_829311_BB58DFEF)
+Subject: Re: [PATCH 1/5] cfg80211: introduce regulatory flags controlling bw
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Hi,
-> 
-> On Fri, Jun 13, 2014 at 12:54:13PM +0200, Johannes Stezenbach wrote:
-> > a new Thinkpad Yoga 20CD00AMGE with Intel(R) Dual Band Wireless AC
-> > 7260 fails to connect to the AP in the office, while it works on my
-> > home AP.  WPA2 is used in both cases.  I tried with kernel 3.14.7 and
-> > 3.15.  There is a high density of APs and clients and lots of traffic
-> > in the office environment.
-> 
-> I have confirmation someone on the other side of the globe with a similar
-> machine sees the same issue.
-> 
-> > [   31.890168] wlp4s0: authenticate with f8:d1:11:39:1a:8c
-> > [   31.892972] wlp4s0: send auth to f8:d1:11:39:1a:8c (try 1/3)
-> > [   31.903458] wlp4s0: authenticated
-> > [   31.927239] wlp4s0: associate with f8:d1:11:39:1a:8c (try 1/3)
-> > [   31.963374] wlp4s0: RX AssocResp from f8:d1:11:39:1a:8c (capab=0x431
-> status=0 aid=5)
-> > [   31.968857] wlp4s0: associated
-> > [   32.200142] iwlwifi 0000:04:00.0: No association and the time event is over
-> already...
-> > [   32.200154] wlp4s0: Connection to AP f8:d1:11:39:1a:8c lost
-> 
+On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> Allow setting bandwidth related regulatory flags. These flags are mapped
+> to the corresponding channel flags in the specified range.
+> Make sure the new flags are consulted when calculating the maximum
+> bandwidth allowed by a regulatory-rule.
+>
+> Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
+> channel.
+>
+> Change-Id: Ic120a291ef7a56f2efa800e77e9689c6c421affa
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Reviewed-on: https://gerrit.rds.intel.com/32263
+> Tested-by: IWL Jenkins
+> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 
-What is the beacon interval on these access point?
-Please open a bugzilla on kernel.org and CC ilw@linux.intel.com
-This issue is not something I can fix on the spot through mailing list, and I'd like to be able to track it.
-Thanks.
+Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
 
-> Some more detail from dmesg:
-> 
-> [    1.161462] iwlwifi 0000:04:00.0: irq 61 for MSI/MSI-X
-> [    1.164277] iwlwifi 0000:04:00.0: loaded firmware version 22.24.8.0
-> op_mode iwlmvm
-> [    1.180348] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC
-> 7260, REV=0x144
-> [    1.180651] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-> [    1.180885] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-> 
-> lspci -vn:
-> 
-> 04:00.0 0280: 8086:08b2 (rev 83)
-> 	Subsystem: 8086:4270
-> 
-> Full lspci -vvv output attached.
-> 
-> 
-> I also tried "iw dev wlp4s0 set power_save off", it did not help.
-> 
-> 
-> > drivers/net/wireless/iwlwifi/mvm/time-
-> event.c:iwl_mvm_te_handle_notif(
-> > )
-> >
-> >                 iwl_mvm_te_check_disconnect(mvm, te_data->vif,
-> >                         "No association and the time event is over
-> > already...");
-> >
-> > And lo and behold, it can connect.
-> >
-> > Let me know if you need more information to produce a proper fix.
-> 
-> 
-> TIA,
-> Johannes
+  Luis
