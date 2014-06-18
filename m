@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mdfmta005.mxout.tbr.inty.net ([91.221.168.46]:39955 "EHLO
-	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751802AbaF3FQH (ORCPT
+Received: from mailrelay003.isp.belgacom.be ([195.238.6.53]:12351 "EHLO
+	mailrelay003.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751352AbaFRR51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 01:16:07 -0400
-Message-ID: <53B0F10D.7030801@dpets.co.uk> (sfid-20140630_071611_798372_F9F56EBB)
-Date: Mon, 30 Jun 2014 06:09:33 +0100
-From: John Talbut <jt@dpets.co.uk>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Wed, 18 Jun 2014 13:57:27 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Firmware loading with static kernel and initramfs
-References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net>
-In-Reply-To: <53B08F07.3000308@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: [PATCH 1/1] PCMCIA_HERMES: ioport_map/unmap relies on HAS_IOPORT_MAP
+Date: Wed, 18 Jun 2014 19:55:38 +0200
+Message-Id: <1403114138-7989-1-git-send-email-fabf@skynet.be> (sfid-20140618_195743_667057_B9DBC251)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/06/14 23:11, Larry Finger wrote:
-> On 06/29/2014 02:19 PM, John Talbut wrote:
->> I originally had the problem with a Broadcom BCM43225 wireless.  This
->> was with a
->> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
->> and this
->> is still working with a 3.14 kernel.
->
-> What sort of patch was that? Driver brcmsmac is still using
-> request_firmware().
+Fixing following sh-allmodconfig errors reported on kisskb
 
-I believe it was this patch:
-https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
->
->> Currently I have the problem with an Intel Centrino Wireless-N 130.
->> The problem
->> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
->> version
->> 204-5linuxmint.
->
-> The current Intel drivers all use request_firmware_nowait(), but I'm not
-> sure when they were changed.
->
->> A friend seems to have the problem with a Realtek 8129se wireless but
->> we are
->> still checking out that this is the problem.
->
-> To my knowledge, there is no Realtek 8129se driver. Do you mean
-> rtl8192se? If so, that one has used request_firmware_nowait() for some
-> time.
+"
+drivers/net/wireless/orinoco/orinoco_cs.c:153:2: error: implicit declaration of function 'ioport_map' [-Werror=implicit-function-declaration]
+drivers/net/wireless/orinoco/orinoco_cs.c:205:3: error: implicit declaration of function 'ioport_unmap' [-Werror=implicit-function-declaration]
+"
 
-Yes, the rtl8192se driver.
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/net/wireless/orinoco/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-John
+diff --git a/drivers/net/wireless/orinoco/Kconfig b/drivers/net/wireless/orinoco/Kconfig
+index 60819bc..d5ca942 100644
+--- a/drivers/net/wireless/orinoco/Kconfig
++++ b/drivers/net/wireless/orinoco/Kconfig
+@@ -107,7 +107,7 @@ config PCI_HERMES
+ 
+ config PCMCIA_HERMES
+ 	tristate "Hermes PCMCIA card support"
+-	depends on PCMCIA && HERMES
++	depends on PCMCIA && HERMES && HAS_IOPORT_MAP
+ 	---help---
+ 	  A driver for "Hermes" chipset based PCMCIA wireless adaptors, such
+ 	  as the Lucent WavelanIEEE/Orinoco cards and their OEM (Cabletron/
+-- 
+1.8.4.5
+
