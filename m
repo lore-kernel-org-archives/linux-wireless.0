@@ -1,77 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:36076 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755154AbaFKX7l (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:54404 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140AbaFRVDH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 19:59:41 -0400
-Message-Id: <20140611234607.020125642@linutronix.de> (sfid-20140612_020037_992972_1BF89BC7)
-Date: Wed, 11 Jun 2014 23:59:14 -0000
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [patch 04/13] net: mac80211: Use ktime_get_ts()
-References: <20140611234024.103571777@linutronix.de>
+	Wed, 18 Jun 2014 17:03:07 -0400
+Received: by mail-la0-f44.google.com with SMTP id ty20so912083lab.31
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 14:03:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1402554938-4495-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1402554938-4495-1-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 14:02:45 -0700
+Message-ID: <CAB=NE6UeSD29K9FuzAtvH08WqM7HEeobEw9TbLpGMpf+caGQvQ@mail.gmail.com> (sfid-20140618_230312_479338_3C3D00C6)
+Subject: Re: [PATCH v2] crda: simplify text parsing for country/rules
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-do_posix_clock_monotonic_gettime() is a leftover from the initial
-posix timer implementation which maps to ktime_get_ts().
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- net/mac80211/cfg.c         |    2 +-
- net/mac80211/debugfs_sta.c |    2 +-
- net/mac80211/sta_info.c    |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-Index: linux/net/mac80211/cfg.c
-===================================================================
---- linux.orig/net/mac80211/cfg.c
-+++ linux/net/mac80211/cfg.c
-@@ -484,7 +484,7 @@ static void sta_set_sinfo(struct sta_inf
- 			STATION_INFO_STA_FLAGS |
- 			STATION_INFO_BEACON_LOSS_COUNT;
- 
--	do_posix_clock_monotonic_gettime(&uptime);
-+	ktime_get_ts(&uptime);
- 	sinfo->connected_time = uptime.tv_sec - sta->last_connected;
- 
- 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-Index: linux/net/mac80211/debugfs_sta.c
-===================================================================
---- linux.orig/net/mac80211/debugfs_sta.c
-+++ linux/net/mac80211/debugfs_sta.c
-@@ -124,7 +124,7 @@ static ssize_t sta_connected_time_read(s
- 	long connected_time_secs;
- 	char buf[100];
- 	int res;
--	do_posix_clock_monotonic_gettime(&uptime);
-+	ktime_get_ts(&uptime);
- 	connected_time_secs = uptime.tv_sec - sta->last_connected;
- 	time_to_tm(connected_time_secs, 0, &result);
- 	result.tm_year -= 70;
-Index: linux/net/mac80211/sta_info.c
-===================================================================
---- linux.orig/net/mac80211/sta_info.c
-+++ linux/net/mac80211/sta_info.c
-@@ -357,7 +357,7 @@ struct sta_info *sta_info_alloc(struct i
- 
- 	sta->sta_state = IEEE80211_STA_NONE;
- 
--	do_posix_clock_monotonic_gettime(&uptime);
-+	ktime_get_ts(&uptime);
- 	sta->last_connected = uptime.tv_sec;
- 	ewma_init(&sta->avg_signal, 1024, 8);
- 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
+On Wed, Jun 11, 2014 at 11:35 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Remove strange parsers.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
 
+Applied and pushed, thanks!
+
+  Luis
