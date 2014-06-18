@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:54811 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbaFBELs (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:42269 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbaFRXet (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 00:11:48 -0400
-Received: by mail-wi0-f175.google.com with SMTP id f8so3784678wiw.8
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 21:11:47 -0700 (PDT)
+	Wed, 18 Jun 2014 19:34:49 -0400
+Received: by mail-la0-f51.google.com with SMTP id mc6so964346lab.24
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2014 16:34:47 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 2 Jun 2014 09:41:46 +0530
-Message-ID: <CADNhdGERV9fJz5azyBsqr6cUHTk_4Rq_5mF0=7W+SQy12jCCPg@mail.gmail.com> (sfid-20140602_061236_728808_8C19A16B)
-Subject: [mac80211] WMM / 802.11e support in transmission
-From: shankar swaminathan <shankswa@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1402469724-22358-4-git-send-email-arik@wizery.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com> <1402469724-22358-4-git-send-email-arik@wizery.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 18 Jun 2014 16:34:27 -0700
+Message-ID: <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com> (sfid-20140619_013452_437916_D22F49AB)
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> Allow driver and user hints to set the "world" regulatory domain,
 
-Assume i have configured the WMM parameters per Access Category, such
-as CWmin, CWmax etc.
-I believe a frame that needs to be transmitted over a WiFi interface
-using mac80211 needs to be given only the 802.3 equivalent frame.
-In this case, how does the driver get the priority information to
-classify the packet into one of the 4 Access Categories?
-Should i transmit a Priority tagged 802.3 packet instead of an
-untagged 802.3 packet?
+NACK - as expressed in the other patch, letting the drivers to use the
+new API to set the world regulatory domain doesn't make sense as we
+have custom apply stuff, and the world regulatory domain is not
+something dynamic.
 
-Please clarify.
-
-Would appreaciate if someone could throw some light immediately.
-
-thanks,
--shankar
+  Luis
