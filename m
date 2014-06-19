@@ -1,127 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34883 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301AbaFDPIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 11:08:06 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove weak WEP IV accounting
-Date: Wed,  4 Jun 2014 17:07:56 +0200
-Message-Id: <1401894476-28461-1-git-send-email-johannes@sipsolutions.net> (sfid-20140604_170814_412269_38D8BACC)
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52649 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757558AbaFSQiG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2014 12:38:06 -0400
+Message-ID: <53A311E4.301@broadcom.com> (sfid-20140619_183833_587838_F1FBA5D7)
+Date: Thu, 19 Jun 2014 18:37:56 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
+	<pieterpg@broadcom.com>, <dekim@broadcom.com>,
+	<mcgrof@do-not-panic.com>, <antonio@open-mesh.com>,
+	<johannes.berg@intel.com>
+CC: <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
+ and connecting
+References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com>
+In-Reply-To: <53A30F96.3010206@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 19-06-14 18:28, Fu, Zhonghui wrote:
+>
+> On 2014/6/16 16:15, Arend van Spriel wrote:
+>> On 16-06-14 07:49, Fu, Zhonghui wrote:
+>>>   From 14485894add32aedacb3e486ebb2cc2b73861abf Mon Sep 17 00:00:00 2001
+>>> From: Fu zhonghui <zhonghui.fu@linux.intel.com>
+>>> Date: Wed, 11 Jun 2014 11:06:55 +0800
+>>> Subject: [PATCH] brcmfmac: prevent watchdog from interfering with scanning and connecting
+>>>
+>>> Watchdog in brcmfmac driver may make WiFi chip enter sleep mode
+>>> before completion of scanning or connecting.
+>>>
+>>> This will lead to scanning or connecting failure.
+>>>
+>>> Increasing temporarily idle-time threshold during scanning or
+>>> connecting can ensure scanning or connecting success without
+>>> watchdog interference.
+>>
+>> Are you sure you are not having runtime PM enabled. That could be your problem as the host controller code disables sdio irqs. Please see this thread [1]. For our device runtime pm should not be enabled, but I am not sure if that is taken into account in mmc_attach_sdio() (see code below).
+> I have tried brcmfmac driver with "CONFIG_PM_RUNTIME is not set", and scanning and connecting  always succeeded. This means that CONFIG_PM_RUNTIME should not be set if we use SDIO WiFi device driven by brcmfmac driver, right?
 
-Since WEP is practically dead, there seems very little
-point in keeping WEP weak IV accounting.
+Depends which kernel you are using. In 3.16-rc1 the sdio interrupt issue 
+has been fixed so you should be fine to use CONFIG_PM_RUNTIME. Here is 
+the commit
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         |  3 +--
- net/mac80211/debugfs_sta.c |  1 -
- net/mac80211/sta_info.h    |  2 --
- net/mac80211/wep.c         | 20 --------------------
- 4 files changed, 1 insertion(+), 25 deletions(-)
+commit be138554a7923658ded799b0e8794d9c1d08a6e5
+Author: Russell King <rmk+kernel@arm.linux.org.uk>
+Date:   Fri Apr 25 12:55:56 2014 +0100
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d7513a503be1..f8d065480ba9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -603,7 +603,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- }
- 
- static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
--	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_packets", "rx_bytes",
- 	"rx_duplicates", "rx_fragments", "rx_dropped",
- 	"tx_packets", "tx_bytes", "tx_fragments",
- 	"tx_filtered", "tx_retry_failed", "tx_retries",
-@@ -651,7 +651,6 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 	do {						\
- 		data[i++] += sta->rx_packets;		\
- 		data[i++] += sta->rx_bytes;		\
--		data[i++] += sta->wep_weak_iv_count;	\
- 		data[i++] += sta->num_duplicates;	\
- 		data[i++] += sta->rx_fragments;		\
- 		data[i++] += sta->rx_dropped;		\
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 2ecb4deddb5d..ee82e1f0a9e7 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -587,7 +587,6 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
- 	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
- 	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
--	DEBUGFS_ADD_COUNTER(wep_weak_iv_count, wep_weak_iv_count);
- 
- 	if (sizeof(sta->driver_buffered_tids) == sizeof(u32))
- 		debugfs_create_x32("driver_buffered_tids", 0400,
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 159cac903ce8..fa7ce6f8593b 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -281,7 +281,6 @@ struct ieee80211_tx_latency_stat {
-  * @driver_buffered_tids: bitmap of TIDs the driver has data buffered on
-  * @rx_packets: Number of MSDUs received from this STA
-  * @rx_bytes: Number of bytes received from this STA
-- * @wep_weak_iv_count: number of weak WEP IVs received from this station
-  * @last_rx: time (in jiffies) when last frame was received from this STA
-  * @last_connected: time (in seconds) when a station got connected
-  * @num_duplicates: number of duplicate frames received from this STA
-@@ -369,7 +368,6 @@ struct sta_info {
- 	/* Updated from RX path only, no locking requirements */
- 	unsigned long rx_packets;
- 	u64 rx_bytes;
--	unsigned long wep_weak_iv_count;
- 	unsigned long last_rx;
- 	long last_connected;
- 	unsigned long num_duplicates;
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 6ee2b5863572..9181fb6d6437 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -271,22 +271,6 @@ static int ieee80211_wep_decrypt(struct ieee80211_local *local,
- 	return ret;
- }
- 
--
--static bool ieee80211_wep_is_weak_iv(struct sk_buff *skb,
--				     struct ieee80211_key *key)
--{
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	unsigned int hdrlen;
--	u8 *ivpos;
--	u32 iv;
--
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--	ivpos = skb->data + hdrlen;
--	iv = (ivpos[0] << 16) | (ivpos[1] << 8) | ivpos[2];
--
--	return ieee80211_wep_weak_iv(iv, key->conf.keylen);
--}
--
- ieee80211_rx_result
- ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
- {
-@@ -301,16 +285,12 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
- 	if (!(status->flag & RX_FLAG_DECRYPTED)) {
- 		if (skb_linearize(rx->skb))
- 			return RX_DROP_UNUSABLE;
--		if (rx->sta && ieee80211_wep_is_weak_iv(rx->skb, rx->key))
--			rx->sta->wep_weak_iv_count++;
- 		if (ieee80211_wep_decrypt(rx->local, rx->skb, rx->key))
- 			return RX_DROP_UNUSABLE;
- 	} else if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
- 		if (!pskb_may_pull(rx->skb, ieee80211_hdrlen(fc) +
- 					    IEEE80211_WEP_IV_LEN))
- 			return RX_DROP_UNUSABLE;
--		if (rx->sta && ieee80211_wep_is_weak_iv(rx->skb, rx->key))
--			rx->sta->wep_weak_iv_count++;
- 		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
- 		/* remove ICV */
- 		if (pskb_trim(rx->skb, rx->skb->len - IEEE80211_WEP_ICV_LEN))
--- 
-2.0.0.rc0
+     mmc: sdhci: allow sdio interrupts while sdhci runtime suspended
+
+Regards,
+Arend
+
+> Thanks,
+> Zhonghui
+>>
+>> Gr. AvS
+>>
+>> [1] http://www.spinics.net/lists/linux-mmc/msg25978.html
+>>
+>> --8<----------------------------------------------------------------
+>>
+>>      /*
+>>       * Enable runtime PM only if supported by host+card+board
+>>       */
+>>      if (host->caps & MMC_CAP_POWER_OFF_CARD) {
+>>          /*
+>>           * Let runtime PM core know our card is active
+>>           */
+>>          err = pm_runtime_set_active(&card->dev);
+>>          if (err)
+>>              goto remove;
+>>
+>>          /*
+>>           * Enable runtime PM for this card
+>>           */
+>>          pm_runtime_enable(&card->dev);
+>>      }
+>>
+>>> Signed-off-by: Fu zhonghui <zhonghui.fu@linux.intel.com>
+>>> ---
+>>>    drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 ++++++++++++++++--
+>>>    .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
+>>>    2 files changed, 18 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> index 13c89a0..729deab 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> @@ -34,6 +34,7 @@
+>>>    #include <linux/vmalloc.h>
+>>>    #include <linux/platform_data/brcmfmac-sdio.h>
+>>>    #include <linux/moduleparam.h>
+>>> +#include <net/cfg80211.h>
+>>>    #include <asm/unaligned.h>
+>>>    #include <defs.h>
+>>>    #include <brcmu_wifi.h>
+>>> @@ -43,6 +44,10 @@
+>>>    #include "sdio_host.h"
+>>>    #include "chip.h"
+>>>    #include "nvram.h"
+>>> +#include "dhd.h"
+>>> +#include "fwil_types.h"
+>>> +#include "p2p.h"
+>>> +#include "wl_cfg80211.h"
+>>>
+>>>    #define DCMD_RESP_TIMEOUT  2000    /* In milli second */
+>>>
+>>> @@ -307,6 +312,7 @@ struct rte_console {
+>>>                         * when idle
+>>>                         */
+>>>    #define BRCMF_IDLE_INTERVAL    1
+>>> +#define BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING    100
+>>>
+>>>    #define KSO_WAIT_US 50
+>>>    #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
+>>> @@ -3613,9 +3619,9 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+>>>
+>>>    static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+>>>    {
+>>> -#ifdef DEBUG
+>>>        struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
+>>> -#endif    /* DEBUG */
+>>> +    struct brcmf_cfg80211_info *cfg = bus_if->drvr->config;
+>>> +    struct brcmf_if *ifp = cfg->pub->iflist[0];
+>>>
+>>>        brcmf_dbg(TIMER, "Enter\n");
+>>>
+>>> @@ -3678,6 +3684,14 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+>>>
+>>>        /* On idle timeout clear activity flag and/or turn off clock */
+>>>        if ((bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
+>>> +
+>>> +        if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status) ||
+>>> +            test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
+>>> +            bus->idletime = BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING;
+>>> +        } else {
+>>> +            bus->idletime = BRCMF_IDLE_INTERVAL;
+>>> +        }
+>>> +
+>>>            if (++bus->idlecount >= bus->idletime) {
+>>>                bus->idlecount = 0;
+>>>                if (bus->activity) {
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> index be19852..e76517e 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> @@ -913,6 +913,8 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+>>>            return -EAGAIN;
+>>>        }
+>>>
+>>> +    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
+>>> +
+>>>        /* If scan req comes for p2p0, send it over primary I/F */
+>>>        if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
+>>>            vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
+>>> @@ -933,7 +935,6 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+>>>        }
+>>>
+>>>        cfg->scan_request = request;
+>>> -    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
+>>>        if (escan_req) {
+>>>            cfg->escan_info.run = brcmf_run_escan;
+>>>            err = brcmf_p2p_scan_prep(wiphy, request, vif);
+>>> -- 1.7.1
+>>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
