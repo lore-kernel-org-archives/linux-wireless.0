@@ -1,141 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:47541 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932397AbaFKOSn (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51385 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757270AbaFSJvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 10:18:43 -0400
-Received: by mail-wi0-f179.google.com with SMTP id cc10so1222666wib.6
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 07:18:42 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/10] mac80211: split tdls_mgmt function
-Date: Wed, 11 Jun 2014 17:18:23 +0300
-Message-Id: <1402496307-32522-6-git-send-email-arik@wizery.com> (sfid-20140611_161857_261876_7A2B513E)
-In-Reply-To: <1402496307-32522-1-git-send-email-arik@wizery.com>
-References: <1402496307-32522-1-git-send-email-arik@wizery.com>
+	Thu, 19 Jun 2014 05:51:49 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so9025278wib.17
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2014 02:51:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6U=i7oeK7Ue=NH2YFhLrZOc359MzRYcj4Cv2dYUC0QwmQ@mail.gmail.com>
+References: <1402778536-31305-1-git-send-email-mihirsht@gmail.com> <CAB=NE6U=i7oeK7Ue=NH2YFhLrZOc359MzRYcj4Cv2dYUC0QwmQ@mail.gmail.com>
+From: Mihir Shete <mihirsht@gmail.com>
+Date: Thu, 19 Jun 2014 15:21:27 +0530
+Message-ID: <CAOHe==H=6zZ-CyZL0k1oyLAAD35gFwP-MBc7VDX=Xy=N8fmTEA@mail.gmail.com> (sfid-20140619_115153_225673_CF54284A)
+Subject: Re: [PATCH] cfg80211: unblock user hint when cfg80211_regdom is intersected
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are setup/teardown specific actions to be done that accompany
-the sending of a TDLS management packet. Split the main function to
-simplify future additions.
+> Let's keep this in mind:
+>
+> When processing requests on the queue get_last_request() will return
+> the last requests which was accepted and already processed. When
+> reg_update_last_request() is issued last_request becomes the newly
+> accepted request that we are about to process. If this seems rather
+> confusing we should split this up into two, but so far its not clear
+> to me this is needed given we serialize processing requests and have a
+> last_request->pending too.
+>
+> __reg_process_hint_user() is evaluating whether or not we should apply
+> the passed hint. Given all this, when would lr->intersect be true but
+> the set regdomain not be intersected? That would seem like an issue to
+> me.
+>
+hmm, yea but there can be cases when last_request is not processed
+and we have already called reg_update_last_request(). This happens because
+reg_update_last_request() is called before reg_call_crda() and so I thought we
+could ignore the user hints till we hear back from crda.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tdls.c | 78 +++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 55 insertions(+), 23 deletions(-)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index c4a9af3..92d203a 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -312,31 +312,21 @@ fail:
- 	return ret;
- }
- 
--int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
--			const u8 *peer, u8 action_code, u8 dialog_token,
--			u16 status_code, u32 peer_capability,
--			bool initiator, const u8 *extra_ies,
--			size_t extra_ies_len)
-+static int
-+ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
-+			  const u8 *peer, u8 action_code, u8 dialog_token,
-+			  u16 status_code, u32 peer_capability, bool initiator,
-+			  const u8 *extra_ies, size_t extra_ies_len)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
- 	int ret;
- 
--	if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS))
--		return -ENOTSUPP;
--
--	/* make sure we are in managed mode, and associated */
--	if (sdata->vif.type != NL80211_IFTYPE_STATION ||
--	    !sdata->u.mgd.associated)
--		return -EINVAL;
--
- 	mutex_lock(&local->mtx);
- 
- 	/* we don't support concurrent TDLS peer setups */
- 	if (!is_zero_ether_addr(sdata->tdls_peer) &&
--	    !ether_addr_equal(sdata->tdls_peer, peer) &&
--	    (action_code == WLAN_TDLS_SETUP_REQUEST ||
--	     action_code == WLAN_TDLS_SETUP_RESPONSE)) {
-+	    !ether_addr_equal(sdata->tdls_peer, peer)) {
- 		ret = -EBUSY;
- 		goto exit;
- 	}
-@@ -348,16 +338,58 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	if (ret < 0)
- 		goto exit;
- 
--	if (action_code == WLAN_TDLS_SETUP_REQUEST ||
--	    action_code == WLAN_TDLS_SETUP_RESPONSE) {
--		memcpy(sdata->tdls_peer, peer, ETH_ALEN);
--		ieee80211_queue_delayed_work(&sdata->local->hw,
--					     &sdata->tdls_peer_del_work,
--					     TDLS_PEER_SETUP_TIMEOUT);
--	}
-+	memcpy(sdata->tdls_peer, peer, ETH_ALEN);
-+	ieee80211_queue_delayed_work(&sdata->local->hw,
-+				     &sdata->tdls_peer_del_work,
-+				     TDLS_PEER_SETUP_TIMEOUT);
- 
- exit:
- 	mutex_unlock(&local->mtx);
-+	return ret;
-+}
-+
-+int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
-+			const u8 *peer, u8 action_code, u8 dialog_token,
-+			u16 status_code, u32 peer_capability,
-+			bool initiator, const u8 *extra_ies,
-+			size_t extra_ies_len)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	int ret;
-+
-+	if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS))
-+		return -ENOTSUPP;
-+
-+	/* make sure we are in managed mode, and associated */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION ||
-+	    !sdata->u.mgd.associated)
-+		return -EINVAL;
-+
-+	switch (action_code) {
-+	case WLAN_TDLS_SETUP_REQUEST:
-+	case WLAN_TDLS_SETUP_RESPONSE:
-+		ret = ieee80211_tdls_mgmt_setup(wiphy, dev, peer, action_code,
-+						dialog_token, status_code,
-+						peer_capability, initiator,
-+						extra_ies, extra_ies_len);
-+		break;
-+	case WLAN_TDLS_TEARDOWN:
-+	case WLAN_TDLS_SETUP_CONFIRM:
-+	case WLAN_TDLS_DISCOVERY_REQUEST:
-+	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
-+		/* no special handling */
-+		ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer,
-+						      action_code,
-+						      dialog_token,
-+						      status_code,
-+						      peer_capability,
-+						      initiator, extra_ies,
-+						      extra_ies_len);
-+		break;
-+	default:
-+		ret = -EOPNOTSUPP;
-+		break;
-+	}
- 
- 	tdls_dbg(sdata, "TDLS mgmt action %d peer %pM status %d\n",
- 		 action_code, peer, ret);
+> Also note that your commit log seems to claim to want to make a change
+> only for user type hints but the above folds all your desired changes
+> to all the checks it was checking for.
+>
+> Lastly, we should be allowing through user changes if and only if a
+> core or driver hint was not issued,
+User hints are for enhancing the compliance and they should be allowed
+even after the driver hints.
+Say, a device is configured to be sold in the US, and a User travels with it
+to some country where 5GHz operation is not allowed then the user
+hint will help ensuring that we comply with the new regulatory rules.
+
+
+>otherwise the intersection makes
+> sense to upkeep, however I do see it making sense to allow a user
+> regulatory if an intersection was done but *iff* we want to clear the
+> old userspace setting,
+Yes, agreed. and we have a check in  __reg_process_hint_user()
+to override the intersection *iff* we have a *different* userspace setting.
+
+
+> but note that to do that cleanly we'd have to
+> assume an original state. We can do this without much overhead by
+> resetting the regulatory core to the original state given that core
+> and driver hints will be cached and be set once the reset is called.
+> You have to consider when a reset makes sense though and be very very
+> careful about this though otherwise you might end up in inconsistent
+> states that make no sense at run time. Consider being allowed to do
+> certain things, being associated, and then all of a sudden driving the
+> regulatory core which would prohibit that current state.
+>
+> If you really want to enable this regardless of the state you may have
+> to trigger disassoc, etc. Please think of all this.
+User hints can come at any time and they are always processed irrespective
+of the sme state, but I can see Arik is already working on taking care of this
+stuff.
+
+
+
 -- 
-1.9.1
-
+~Mihir~
