@@ -1,108 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:49064 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756440AbaFYKoB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 06:44:01 -0400
-Received: by mail-wg0-f47.google.com with SMTP id k14so1794650wgh.18
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:44:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v11 2/5] mac80211: make check_combinations() aware of chanctx reservation
-Date: Wed, 25 Jun 2014 12:35:07 +0200
-Message-Id: <1403692510-27873-3-git-send-email-michal.kazior@tieto.com> (sfid-20140625_124428_508677_AEC2920D)
-In-Reply-To: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
-References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga14.intel.com ([192.55.52.115]:12748 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754211AbaFTQlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2014 12:41:03 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] mac80211: fix dtim period propagation to the driver
+Date: Fri, 20 Jun 2014 09:40:19 -0700
+Message-Id: <1403282419-8468-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140620_184107_443859_E1C21770)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_check_combinations() computes
-radar_detect accordingly depending on chanctx
-reservation status.
+Drivers that set IEEE80211_HW_TIMING_BEACON_ONLY need to
+know when the DTIM will be sent. For that purpose, mac80211
+sends to the low level driver all the data needed by the
+low level driver to determine the TBTT of the DTIM:
+The TSF, the DTIM count and the device clock of one beacon.
+If the low level driver knows the dtim period, it will be
+able to know the TBTT of the next DTIM.
 
-This makes it possible to use the function for
-channel_switch validation.
+When we associate to an access point, we usually scan first
+and get probe responses. Based on the probe responses, we
+start to associate. If the device needs to configure the
+TBTT of the next DTIM (IEEE80211_HW_TIMING_BEACON_ONLY is
+set), then, mac80211 will wait until it hears a beacon and
+then give the aforementioned data to the low level driver.
+This case works fine.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+A less common case is a case in which we hear a beacon
+before we even start to associate. In this case, mac80211
+already has all the data needed by the low level driveramd
+all the data is sent straight away in the first
+bss_info_changed call. In that specific flow, the setting
+of the dtim_period was missing.
+
+iwlmvm needs this data and will fail the connection unless
+it is given the dtim_period within 300ms after the
+association. The following print would appear:
+
+iwlwifi: No association and the time event is over already...
+
+This led to disconnections. This patch fixes:
+https://bugzilla.kernel.org/show_bug.cgi?id=78101
+
+Cc: <stable@vger.kernel.org> [3.10+]
+Fixes: ef429dadf33f ("mac80211: introduce beacon-only timing data")
+Reported-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ net/mac80211/mlme.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Notes:
-    v3:
-     * fix typo in comment [Johannes]
-     * fix comment style [Johannes]
-    
-    v7:
-     * use replaces/replaced_by pointers
-     * replace radar_detect calculation in ieee80211_max_num_channels() too
-    
-    v8:
-     * use replace_state/replace_ctx instead of replaces/replaced_by (rebased)
-
- net/mac80211/util.c | 35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1b42aa1..ea79668 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2933,6 +2933,35 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
- 	ps->dtim_count = dtim_count;
- }
- 
-+static u8 ieee80211_chanctx_radar_detect(struct ieee80211_local *local,
-+					 struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	u8 radar_detect = 0;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	if (WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED))
-+		return 0;
-+
-+	list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list)
-+		if (sdata->reserved_radar_required)
-+			radar_detect |= BIT(sdata->reserved_chandef.width);
-+
-+	/*
-+	 * An in-place reservation context should not have any assigned vifs
-+	 * until it replaces the other context.
-+	 */
-+	WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER &&
-+		!list_empty(&ctx->assigned_vifs));
-+
-+	list_for_each_entry(sdata, &ctx->assigned_vifs, assigned_chanctx_list)
-+		if (sdata->radar_required)
-+			radar_detect |= BIT(sdata->vif.bss_conf.chandef.width);
-+
-+	return radar_detect;
-+}
-+
- int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 				 const struct cfg80211_chan_def *chandef,
- 				 enum ieee80211_chanctx_mode chanmode,
-@@ -2976,8 +3005,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
- 			continue;
--		if (ctx->conf.radar_enabled)
--			radar_detect |= BIT(ctx->conf.def.width);
-+		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
- 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
- 			num_different_channels++;
- 			continue;
-@@ -3039,8 +3067,7 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
- 
- 		num_different_channels++;
- 
--		if (ctx->conf.radar_enabled)
--			radar_detect |= BIT(ctx->conf.def.width);
-+		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
- 	}
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e37b97d..661dc8b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4438,6 +4438,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			sdata->vif.bss_conf.sync_device_ts =
+ 				bss->device_ts_beacon;
+ 			sdata->vif.bss_conf.sync_dtim_count = dtim_count;
++			sdata->vif.bss_conf.dtim_period =
++				ifmgd->dtim_period ? : 1;
+ 		}
+ 	} else {
+ 		assoc_data->timeout = jiffies;
 -- 
-1.8.5.3
+1.8.1.msysgit.1
 
