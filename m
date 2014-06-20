@@ -1,49 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:40082 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbaFDJfi (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46515 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbaFTEdC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 05:35:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1401872880-23685-1-git-send-email-Julia.Lawall@lip6.fr>
-Date: Wed, 4 Jun 2014 11:35:37 +0200
-Message-ID: <CAMuHMdXsoFUXj4jLMWN6NY7Um19KwWO9Rhx=9=gqWu_K5Ev2kQ@mail.gmail.com> (sfid-20140604_113603_747274_52046864)
-Subject: Re: [PATCH 0/10] use safer test on the result of find_first_zero_bit
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: linux-rdma <linux-rdma@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>, iss_storagedev@hp.com,
-	scsi <linux-scsi@vger.kernel.org>,
-	linux-s390 <linux-s390@vger.kernel.org>,
-	adi-buildroot-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Jun 2014 00:33:02 -0400
+Date: Thu, 19 Jun 2014 21:32:59 -0700 (PDT)
+Message-Id: <20140619.213259.2083362461379810096.davem@davemloft.net> (sfid-20140620_063328_433909_E5852D61)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-06-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140618185414.GA14033@tuxdriver.com>
+References: <20140618185414.GA14033@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 18 Jun 2014 14:54:14 -0400
 
-On Wed, Jun 4, 2014 at 11:07 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> Find_first_zero_bit considers BITS_PER_LONG bits at a time, and thus may
-> return a larger number than the maximum position argument if that position
-> is not a multiple of BITS_PER_LONG.
+> Please pull this batch of fixes intended for the 3.16 stream!
 
-Shouldn't this be fixed in find_first_zero_bit() instead?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Pulled, thanks a lot John.
