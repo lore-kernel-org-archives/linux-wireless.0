@@ -1,234 +1,675 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:45170 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbaFXGhq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17361 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934352AbaFTEjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 02:37:46 -0400
-Received: by mail-pd0-f171.google.com with SMTP id fp1so6607803pdb.30
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 23:37:46 -0700 (PDT)
+	Fri, 20 Jun 2014 00:39:24 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 6/7] mwifiex: update Copyright to 2014
+Date: Thu, 19 Jun 2014 21:38:57 -0700
+Message-ID: <1403239138-3113-6-git-send-email-bzhao@marvell.com> (sfid-20140620_063931_196487_70B89DFE)
+In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
+References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Wburfgomm81BL-MPsqZSSCSMNyim29OWw3Twj8q2AOUQ@mail.gmail.com>
-References: <1402469724-22358-1-git-send-email-arik@wizery.com>
- <1402469724-22358-2-git-send-email-arik@wizery.com> <CAB=NE6Wburfgomm81BL-MPsqZSSCSMNyim29OWw3Twj8q2AOUQ@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 24 Jun 2014 09:37:29 +0300
-Message-ID: <CA+XVXff1SLHvP3PABdV1U2xw8CQW660xJR1QMUkW0QaaEpThYQ@mail.gmail.com> (sfid-20140624_083750_423168_BB7610B5)
-Subject: Re: [PATCH 2/5] cfg80211: allow drivers to provide regulatory settings
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 2:32 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> Define a new wiphy callback allowing drivers to provide regulatory
->> settings.
->>
->> Only The first wiphy registered with this callback will be able to provide
->> regulatory domain info. If such a wiphy exists, it takes precedence over
->> other data sources.
->>
->> Change-Id: If8f8faf1d127120ae464b45098c5edbc5aee3dc0
->> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->> Reviewed-on: https://gerrit.rds.intel.com/32858
->> Tested-by: IWL Jenkins
->> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
->> ---
->>  include/net/cfg80211.h | 16 +++++++++++++
->>  net/wireless/reg.c     | 65 +++++++++++++++++++++++++++++++++++++++++++++-----
->>  2 files changed, 75 insertions(+), 6 deletions(-)
->>
->> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->> index 5c17b1f..b8f0269 100644
->> --- a/include/net/cfg80211.h
->> +++ b/include/net/cfg80211.h
->> @@ -2950,6 +2950,19 @@ struct wiphy_vendor_command {
->>   *     low rssi when a frame is heard on different channel, then it should set
->>   *     this variable to the maximal offset for which it can compensate.
->>   *     This value should be set in MHz.
->> + * @get_regd: a driver callback to for publishing regulatory information.
->> + *     By implementing this callback, a wiphy indicates it will provide
->> + *     regulatory information. The callback must be set before the wiphy is
->> + *     is registered. Only the first wiphy with this callback will be called
->> + *     to provide a regdomain on country-code changes.
->
-> The way this is implemented is a bit more exclusive than this kdoc
-> explains -- the way its implemented below allows only a single wiphy
-> *ever* to be registered with this capability. This means that external
-> attachments such as USB 802.11 devices that have this API requirement
-> cannot ensure that they will get this callback issued. What do we want
-> to do about that?
+From: Xinming Hu <huxm@marvell.com>
 
-Well Intel regulatory constraints require us to be the "dictator".
-This feature is also primarily designed for systems which are not
-extensible, so you can't really add another device.
-I guess we'll have to solve this when the need arises.
+This patch updates mwifiex Copyright to 2014.
 
->
-> Why are we not just considering multiple cards with these capabilities
-> as equal and simply deal with the intersections as with the other
-> cases? The restriction seems to limit our capabilities and likely will
-> require bug reporting / issues to be fleshed out later. I rather
-> address this now.
->
->> + *     Returns A driver allocated regdomain structure.
->
-> "a" instead of capital A.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11ac.c          | 2 +-
+ drivers/net/wireless/mwifiex/11ac.h          | 2 +-
+ drivers/net/wireless/mwifiex/11h.c           | 2 +-
+ drivers/net/wireless/mwifiex/11n.c           | 2 +-
+ drivers/net/wireless/mwifiex/11n.h           | 2 +-
+ drivers/net/wireless/mwifiex/11n_aggr.c      | 2 +-
+ drivers/net/wireless/mwifiex/11n_aggr.h      | 2 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c | 2 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.h | 2 +-
+ drivers/net/wireless/mwifiex/Makefile        | 2 +-
+ drivers/net/wireless/mwifiex/README          | 2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      | 2 +-
+ drivers/net/wireless/mwifiex/cfg80211.h      | 2 +-
+ drivers/net/wireless/mwifiex/cfp.c           | 2 +-
+ drivers/net/wireless/mwifiex/cmdevt.c        | 2 +-
+ drivers/net/wireless/mwifiex/debugfs.c       | 2 +-
+ drivers/net/wireless/mwifiex/decl.h          | 2 +-
+ drivers/net/wireless/mwifiex/ethtool.c       | 2 +-
+ drivers/net/wireless/mwifiex/fw.h            | 2 +-
+ drivers/net/wireless/mwifiex/ie.c            | 2 +-
+ drivers/net/wireless/mwifiex/init.c          | 2 +-
+ drivers/net/wireless/mwifiex/ioctl.h         | 2 +-
+ drivers/net/wireless/mwifiex/join.c          | 2 +-
+ drivers/net/wireless/mwifiex/main.c          | 2 +-
+ drivers/net/wireless/mwifiex/main.h          | 2 +-
+ drivers/net/wireless/mwifiex/pcie.c          | 2 +-
+ drivers/net/wireless/mwifiex/pcie.h          | 2 +-
+ drivers/net/wireless/mwifiex/scan.c          | 2 +-
+ drivers/net/wireless/mwifiex/sdio.c          | 2 +-
+ drivers/net/wireless/mwifiex/sdio.h          | 2 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c       | 2 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   | 2 +-
+ drivers/net/wireless/mwifiex/sta_event.c     | 2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c     | 2 +-
+ drivers/net/wireless/mwifiex/sta_rx.c        | 2 +-
+ drivers/net/wireless/mwifiex/sta_tx.c        | 2 +-
+ drivers/net/wireless/mwifiex/txrx.c          | 2 +-
+ drivers/net/wireless/mwifiex/uap_cmd.c       | 2 +-
+ drivers/net/wireless/mwifiex/uap_event.c     | 2 +-
+ drivers/net/wireless/mwifiex/uap_txrx.c      | 2 +-
+ drivers/net/wireless/mwifiex/usb.c           | 2 +-
+ drivers/net/wireless/mwifiex/usb.h           | 2 +-
+ drivers/net/wireless/mwifiex/util.c          | 2 +-
+ drivers/net/wireless/mwifiex/util.h          | 2 +-
+ drivers/net/wireless/mwifiex/wmm.c           | 2 +-
+ drivers/net/wireless/mwifiex/wmm.h           | 2 +-
+ 46 files changed, 46 insertions(+), 46 deletions(-)
 
-Thanks.
+diff --git a/drivers/net/wireless/mwifiex/11ac.c b/drivers/net/wireless/mwifiex/11ac.c
+index 706831d..59d23fb 100644
+--- a/drivers/net/wireless/mwifiex/11ac.c
++++ b/drivers/net/wireless/mwifiex/11ac.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11ac
+  *
+- * Copyright (C) 2013, Marvell International Ltd.
++ * Copyright (C) 2013-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11ac.h b/drivers/net/wireless/mwifiex/11ac.h
+index 0b02cb6..1ca92c7 100644
+--- a/drivers/net/wireless/mwifiex/11ac.h
++++ b/drivers/net/wireless/mwifiex/11ac.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11ac
+  *
+- * Copyright (C) 2013, Marvell International Ltd.
++ * Copyright (C) 2013-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index e76b0db..2668e83 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11h
+  *
+- * Copyright (C) 2013, Marvell International Ltd.
++ * Copyright (C) 2013-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index e1c2f67..9d6d8d9 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 0b73fa0..2ee268b 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 5b32106..b4c14b0 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n Aggregation
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.h b/drivers/net/wireless/mwifiex/11n_aggr.h
+index 892098d..0cd2a3e 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.h
++++ b/drivers/net/wireless/mwifiex/11n_aggr.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n Aggregation
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 0c3571f..b22bae3 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n RX Re-ordering
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index 0fc76e4..3a87bb0 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: 802.11n RX Re-ordering
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
+index 2aa208f..9487d72 100644
+--- a/drivers/net/wireless/mwifiex/Makefile
++++ b/drivers/net/wireless/mwifiex/Makefile
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2011, Marvell International Ltd.
++# Copyright (C) 2011-2014, Marvell International Ltd.
+ #
+ # This software file (the "File") is distributed by Marvell International
+ # Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/README b/drivers/net/wireless/mwifiex/README
+index 831a98f..31928ca 100644
+--- a/drivers/net/wireless/mwifiex/README
++++ b/drivers/net/wireless/mwifiex/README
+@@ -1,4 +1,4 @@
+-# Copyright (C) 2011, Marvell International Ltd.
++# Copyright (C) 2011-2014, Marvell International Ltd.
+ #
+ # This software file (the "File") is distributed by Marvell International
+ # Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e8981af..6ec2ee3 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: CFG80211
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.h b/drivers/net/wireless/mwifiex/cfg80211.h
+index c584893..9083678 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.h
++++ b/drivers/net/wireless/mwifiex/cfg80211.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: CFG80211
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
+index 0ddec3d..b8242eb 100644
+--- a/drivers/net/wireless/mwifiex/cfp.c
++++ b/drivers/net/wireless/mwifiex/cfp.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: Channel, Frequence and Power
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 421322f..606877b 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: commands and events
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 6a194a9..2713f7ac 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: debugfs
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 38da6ff..0e03fe3 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: generic data structures and APIs
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
+index 528bdfa..04e56b5 100644
+--- a/drivers/net/wireless/mwifiex/ethtool.c
++++ b/drivers/net/wireless/mwifiex/ethtool.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: ethtool
+  *
+- * Copyright (C) 2013, Marvell International Ltd.
++ * Copyright (C) 2013-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 3175dd0..5561573 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: Firmware specific macros & structures
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index 3bf3d58..b933794 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -2,7 +2,7 @@
+  * Marvell Wireless LAN device driver: management IE handling- setting and
+  * deleting IE.
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 2b68cf3..269a277 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: HW/FW Initialization
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 1b57672..0847f3e 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: ioctl data structures & APIs
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 89dc62a..fc13564 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: association and ad-hoc start/join
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 6bc645a..1261d9a 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: major functions
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5e734f9..a2733b1 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: major data structures and prototypes
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index bf948fb..5f7afff 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: PCIE specific handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index ee073f5..a1a8fd3 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -3,7 +3,7 @@
+  * @brief This file contains definitions for PCI-E interface.
+  * driver.
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 45c5b34..dee717a 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: scan ioctl and command handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 95a1d1f..1da04a0 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: SDIO specific handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index e563309..6b8835e 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: SDIO specific definitions
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 88202ce..0f077aa 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: station command handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 577f297..822357b 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: station command response handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index f6395ef..f1c240e 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: station event handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 6b9395f..1a03d4d 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: functions for station ioctl
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
+index 8b639d7..9ceb1db 100644
+--- a/drivers/net/wireless/mwifiex/sta_rx.c
++++ b/drivers/net/wireless/mwifiex/sta_rx.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: station RX data handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index 5fce7e7..cf330ba 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: station TX data handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 37f26af..0820568 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: generic TX/RX data handling
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 3264355..300bab4 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: AP specific command handling
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 92e77a3..7c2b9766 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: AP event handling
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 9a56bc6..57fa47d 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: AP TX and RX data handling
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index a8ce813..7118a18 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: USB specific handling
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
+index 15b73d1..4c41c2a 100644
+--- a/drivers/net/wireless/mwifiex/usb.h
++++ b/drivers/net/wireless/mwifiex/usb.h
+@@ -1,7 +1,7 @@
+ /*
+  * This file contains definitions for mwifiex USB interface driver.
+  *
+- * Copyright (C) 2012, Marvell International Ltd.
++ * Copyright (C) 2012-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 6da5abf..cee0283 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: utility functions
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/util.h b/drivers/net/wireless/mwifiex/util.h
+index caadb37..40296cb 100644
+--- a/drivers/net/wireless/mwifiex/util.h
++++ b/drivers/net/wireless/mwifiex/util.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: utility functions
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index d3671d0..8cd123e 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: WMM
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index eca56e3..569bd73 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -1,7 +1,7 @@
+ /*
+  * Marvell Wireless LAN device driver: WMM
+  *
+- * Copyright (C) 2011, Marvell International Ltd.
++ * Copyright (C) 2011-2014, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+-- 
+1.8.2.3
 
->
->> +                                                                           The alpha2 in the
->> + *     returned regdomain can be different from the one given via the alpha2
->> + *     argument, if the argument contains "99", meaning unknown.
->
-> Lets be upfront -- how many regulatory domains will you guys return
-> right now in which the same alpha2 will be kept? I don't like this for
-> one bit at all, if you are going to return a 99 for a specific alpha2
-> it must mean firmware / driver has the ability to search for an alpha2
-> for a set of custom regulatory domains, which should also mean you
-> should be able to return a set of alpha2s that can be used for the
-> custom regulatory domain, so I'd like to see that added as a possible
-> return set. This should set expectations for users, build a better
-> understanding of how all this works, and most importantly enable easy
-> and shorter scraping of the firmware for our own research and
-> development and advancement of wireless-regdb as otherwise we'd have
-> to loop over every alpha2 and then deduce grouping. This is the only
-> way I see this being reasonable to accept upstream.
-
-I think you're misunderstanding things here. We only give back real
-regulatory domains. The "99" is only used as a means the get the
-currently NVRAM flashed regdomain from FW.
-We discussed this on the other patch.. Perhaps I should tweak the
-explanation a bit here.
-
->
-> We also should be clear now in the documentation about the differences
-> and purpose behind this API and the custom regulatory which tons of
-> folks already use. In this case the requirement was dynamic changes
-> and to ensure these changes get back to userspace permissively as
-> otherwise they could not. The way I see it the custom stuff should be
-> used for custom world regulatory domains -- this new API is for
-> specific alpha2s. This should also mean then that this API should
-> *not* be used to query the firmware for the world regulatory domain.
-
-Why not? What's problematic here?
-I would much prefer to keep a single API for everything.
-
-> It also means that the custom flag has to be looked at carefully as
-> well now since the custom flag may need to be lifted dynamically. You
-> may want to look at the Atheros ath module for the different use cases
-> as they ship tons of different types of devices: world roaming, and
-> also cards with a specific alpha2 set. There's a bit of boiler place
-> code there that I saw tons of drivers share / copy so perhaps some
-> boiler plate code might be in order to help here.
-
-It is already lifted dynamically if a driver regulatory hint arrives.
-
->
-> This new API makes only sense for dynamic changes and as such I do
-> expect this to be used for direct alpha2 mappings, not some region
-> stuff. Grouping regulatory domains to groups makes sense to save size
-> -- we've seen this before by other vendors but we should be easily
-> able to get the group alpha2 mapping as well. If Intel is *not* going
-> to contribute to wireless-regdb this at the very least should help us
-> move forward with the public regdb by providing back mapping of all
-> the alpha2s that a regulatory domain passed also applies to.
-
-The API currently doesn't work this way. I'll ask the regulatory folks
-for a table, but I can't promise anything.
-
->
->> + *     If an ERR_PTR is returned the regulatory core will consult other
->> + *     sources for the regdomain info (internal regdb and CRDA).
->
-> That's nice.
->
->> +                                                                                           Returning
->> + *     NULL will cause the regdomain to remain the same.
->
->
-> What do you mean by this? Can you please elaborate exactly what this means?
-
-It means we will ignore the request. Not sure what's to elaborate.
-
->>  static struct regulatory_request core_request_world = {
->> @@ -129,6 +132,15 @@ static int reg_num_devs_support_basehint;
->>   */
->>  static bool reg_is_indoor;
->>
->> +/*
->> + * Wiphy with a get_regd() callback that can provide regulatory information
->> + * when the country code changes. Only the first wiphy registered with the
->> + * get_regd callback will be called to provide a regdomain on country-code
->> + * changes.
->> + * (protected by RTNL)
->> + */
->> +static struct wiphy *regd_info_wiphy;
->
-> Note all my feedback on the kdoc comment about this. This obviously
-> doesn't scale well but more importantly given that devices bus
-> configuration can change (regardless of what systemd folks think) it
-> means that we can get different results on a system with 2 internal
-> cards. Systems with multiple built in 802.11 cards were something of a
-> theoretical myth back in the day when we started with 802.11 but not
-> anymore. For example I'm very aware of some Freebox 802.11 APs with
-> multiple built in 802.11 cards and from different vendors!  No only
-> can this lead to issues with cards on different buses and races
-> therein, but it could also produce different results on different
-> architectures.
-
-Agree it's a hairy issue, but I think we should get to this in a later
-patch. It's not a simple issue or "fix".
-Might need different policies, intersections, etc.
-
->
->> +
->>  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
->>  {
->>         return rtnl_dereference(cfg80211_regdomain);
->> @@ -538,9 +550,39 @@ static int call_crda(const char *alpha2)
->>         return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
->>  }
->>
->> +static int call_wiphy_regd_info(const char *alpha2)
->> +{
->> +       struct ieee80211_regdomain *regd;
->> +
->> +       if (!regd_info_wiphy)
->> +               return -ENOENT;
->> +
->> +       /* can happen if the driver removes the callback at runtime */
->> +       if (WARN_ON(!regd_info_wiphy->get_regd))
->> +               return -EINVAL;
->
-> I'd rather see a capability flag for this, that way we can also tell
-> userspace of this ridiculous incarnation of crap on firmware, and when
-> set we'd expect this to be set. If we want to address the dynamic
-> removal / addition of the callback that can be dealt with when the
-> time comes, but that doesn't seem to be required givenou'refe that you
-> added API to let the firmware let cfg80211 pass through and use the
-> wireless-regdb data.
-
-Sure I'll add a capability flag.
-
->
->> +
->> +       regd = regd_info_wiphy->get_regd(regd_info_wiphy, alpha2);
->> +       if (IS_ERR(regd))
->> +               return -EIO;
->> +
->
-> You're not feeding the firmware information on availability of the
-> userspace regulatory domain, in the case of it was allowed, it seems
-> to me that firmware might make a better decision in the case that
-> userspace lacks information. Userspace can also be upgraded at runtime
-> dynamically so whether or not userspace has a regulatory domain can
-> change at run time. Please consider this.
-
-The Intel use case doesn't use userspace regulatory information at
-all. This can be extended later I guess.
-
-Arik
