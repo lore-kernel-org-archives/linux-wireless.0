@@ -1,32 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:39814 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751114AbaFUPzp (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:31262 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932890AbaFTDXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 11:55:45 -0400
-Received: by mail-ob0-f178.google.com with SMTP id wn1so2386985obc.23
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 08:55:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1403345479-13467-3-git-send-email-arend@broadcom.com>
-References: <1403345479-13467-1-git-send-email-arend@broadcom.com>
-	<1403345479-13467-3-git-send-email-arend@broadcom.com>
-Date: Sat, 21 Jun 2014 17:55:44 +0200
-Message-ID: <CACna6rz81wbFET4GJH8xQ8aTqGfGccPGmD5vwfmmw9KWsZRPWg@mail.gmail.com> (sfid-20140621_175549_798208_DE54AE16)
-Subject: Re: [PATCH 2/8] brcmfmac: Add USB device 43566 to supported devices.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 19 Jun 2014 23:23:32 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sasha Levin <sasha.levin@oracle.com>
+Subject: [PATCH] NFC: Read frag at a time when sending packets
+Date: Thu, 19 Jun 2014 23:23:16 -0400
+Message-Id: <1403234596-19149-1-git-send-email-sasha.levin@oracle.com> (sfid-20140620_052353_996019_F6FC77B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 June 2014 12:11, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
->
-> Add the USB 43566 device to the supported devices list. The 43566
-> is a WiFi-only variant of the 43569. It uses the same FW as 43569.
+Right now userspace can pass a large chunk of data and the kernel
+will attempt to allocate all of it to copy it in from userspace.
 
-What about USB ID of this device? You didn't add any. Is it shared
-with some different one? A 0a5c:bd27 maybe?
+The problem is that there is no upper limit on the size userspace
+can pass. Right now userspace can even force a machine to run out
+of memory by forcing the kernel to allocate large chunks of memory.
+
+To avoid imposing a limit, instead of allocating the entire block,
+we can allocate just the size of the biggest frag possible and read
+it from userspace one frag at a time.
+
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+
+ ** WARNING: COMPLETELY UNTESTED ** (I don't have the hardware).
+
+ net/nfc/llcp_commands.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+index a3ad69a..da68924 100644
+--- a/net/nfc/llcp_commands.c
++++ b/net/nfc/llcp_commands.c
+@@ -727,27 +727,27 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+ 	if (local == NULL)
+ 		return -ENODEV;
+ 
+-	msg_data = kzalloc(len, GFP_KERNEL);
++	remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
++			local->remote_miu : sock->remote_miu;
++
++	msg_data = kzalloc(remote_miu, GFP_KERNEL);
+ 	if (msg_data == NULL)
+ 		return -ENOMEM;
+ 
+-	if (memcpy_fromiovec(msg_data, msg->msg_iov, len)) {
+-		kfree(msg_data);
+-		return -EFAULT;
+-	}
+-
+ 	remaining_len = len;
+ 	msg_ptr = msg_data;
+ 
+ 	do {
+-		remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
+-				local->remote_miu : sock->remote_miu;
+-
+ 		frag_len = min_t(size_t, remote_miu, remaining_len);
+ 
+ 		pr_debug("Fragment %zd bytes remaining %zd",
+ 			 frag_len, remaining_len);
+ 
++		if (memcpy_fromiovec(msg_data, msg->msg_iov, frag_len)) {
++			kfree(msg_data);
++			return -EFAULT;
++		}
++
+ 		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+ 					 frag_len + LLCP_HEADER_SIZE, &err);
+ 		if (pdu == NULL) {
+-- 
+1.7.10.4
+
