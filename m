@@ -1,258 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24923 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664AbaFKKsx (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15058 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751441AbaFTEjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:48:53 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 09/28] ath9k: Implement channel context ops
-Date: Wed, 11 Jun 2014 16:17:57 +0530
-Message-ID: <1402483696-2498-10-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124856_303840_9F95C6E6)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 20 Jun 2014 00:39:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/7] mwifiex: use generic 'iface_work' workqueue for SDIO interface
+Date: Thu, 19 Jun 2014 21:38:53 -0700
+Message-ID: <1403239138-3113-2-git-send-email-bzhao@marvell.com> (sfid-20140620_063913_976786_7B608B8A)
+In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
+References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Add channel context operations (add, remove, change, assign and
-unassign) to enable support for multiple channels.
+Existing dedicated card_reset work queue is replaced with the
+interface specific workqueue pointer provided by mwifiex module.
+Also new work flag is added for card reset task.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |   7 +++
- drivers/net/wireless/ath/ath9k/init.c  |   1 +
- drivers/net/wireless/ath/ath9k/main.c  | 104 +++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/tx99.c  |   2 +-
- 4 files changed, 102 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ drivers/net/wireless/mwifiex/sdio.c | 24 ++++++++++++++++++++----
+ 2 files changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a8ae3e9..eae1830 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -331,6 +331,7 @@ struct ath_chanctx {
- 	bool offchannel;
- 	bool stopped;
- 	bool active;
-+	bool assigned;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 24791e2..582a9f9 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -431,6 +431,7 @@ enum rdwr_status {
+ 
+ enum mwifiex_iface_work_flags {
+ 	MWIFIEX_IFACE_WORK_FW_DUMP,
++	MWIFIEX_IFACE_WORK_CARD_RESET,
  };
  
- enum ath_offchannel_state {
-@@ -356,6 +357,12 @@ struct ath_offchannel {
- };
+ struct mwifiex_adapter;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 4ce3d7b..2ae4dd7 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -179,6 +179,8 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
  
- void ath9k_fill_chanctx_ops(void);
-+static inline struct ath_chanctx *
-+ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath_chanctx **ptr = (void *) ctx->drv_priv;
-+	return *ptr;
-+}
- void ath_chanctx_init(struct ath_softc *sc);
- void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
- 			     struct cfg80211_chan_def *chandef);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 001b7d0..45f198f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -752,6 +752,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			hw->wiphy->max_scan_ssids = 255;
- 			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 			hw->wiphy->max_remain_on_channel_duration = 10000;
-+			hw->chanctx_data_size = sizeof(void *);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9e10434d..e0cb2af 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -624,7 +624,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_channel *curchan = hw->conf.chandef.chan;
-+	struct ieee80211_channel *curchan = sc->cur_chan->chandef.chan;
- 	struct ath_chanctx *ctx = sc->cur_chan;
- 	struct ath9k_channel *init_channel;
- 	int r;
-@@ -1039,11 +1039,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		ath9k_beacon_assign_slot(sc, vif);
- 
- 	avp->vif = vif;
--
--	/* XXX - will be removed once chanctx ops are added */
--	avp->chanctx = sc->cur_chan;
--	list_add_tail(&avp->list, &sc->cur_chan->vifs);
--	ath_chanctx_check_active(sc, avp->chanctx);
-+	if (!ath9k_use_chanctx)
-+		avp->chanctx = sc->cur_chan;
- 
- 	an->sc = sc;
- 	an->sta = NULL;
-@@ -1132,7 +1129,6 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	}
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
--	list_del(&avp->list);
- 	sc->nvifs--;
- 	sc->tx99_vif = NULL;
- 
-@@ -1144,7 +1140,6 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_ps_restore(sc);
- 
- 	ath_tx_node_cleanup(sc, &avp->mcast_node);
--	ath_chanctx_check_active(sc, avp->chanctx);
- 
- 	mutex_unlock(&sc->mutex);
- }
-@@ -1271,7 +1266,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &hw->conf;
- 	struct ath_chanctx *ctx = sc->cur_chan;
--	bool reset_channel = false;
- 
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
-@@ -1287,7 +1281,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 			 * The chip needs a reset to properly wake up from
- 			 * full sleep
- 			 */
--			reset_channel = ah->chip_fullsleep;
-+			ath_chanctx_set_channel(sc, ctx, &ctx->chandef);
- 		}
- 	}
- 
-@@ -1317,7 +1311,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
--	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
-+	if (!ath9k_use_chanctx && (changed & IEEE80211_CONF_CHANGE_CHANNEL)) {
- 		ctx->offchannel = !!(conf->flags & IEEE80211_CONF_OFFCHANNEL);
- 		ath_chanctx_set_channel(sc, ctx, &hw->conf.chandef);
- 	}
-@@ -2433,6 +2427,89 @@ static int ath9k_cancel_remain_on_channel(struct ieee80211_hw *hw)
- 	return 0;
++	cancel_work_sync(&adapter->iface_work);
++
+ 	if (user_rmmod) {
+ 		if (adapter->is_suspended)
+ 			mwifiex_sdio_resume(adapter->dev);
+@@ -1915,7 +1917,7 @@ mwifiex_update_mp_end_port(struct mwifiex_adapter *adapter, u16 port)
  }
  
-+static int ath9k_add_chanctx(struct ieee80211_hw *hw,
-+			     struct ieee80211_chanctx_conf *conf)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_chanctx *ctx, **ptr;
-+	int i;
-+
-+	mutex_lock(&sc->mutex);
-+	for (i = 0; i < ATH9K_NUM_CHANCTX; i++) {
-+		if (!sc->chanctx[i].assigned)
-+			break;
-+	}
-+	if (i == ATH9K_NUM_CHANCTX) {
-+		mutex_unlock(&sc->mutex);
-+		return -ENOSPC;
-+	}
-+
-+	ctx = &sc->chanctx[i];
-+	ptr = (void *) conf->drv_priv;
-+	*ptr = ctx;
-+	ctx->assigned = true;
-+	ath_chanctx_set_channel(sc, ctx, &conf->def);
-+	mutex_unlock(&sc->mutex);
-+
-+	return 0;
-+}
-+
-+
-+static void ath9k_remove_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_chanctx_conf *conf)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+
-+	mutex_lock(&sc->mutex);
-+	ctx->assigned = false;
-+	mutex_unlock(&sc->mutex);
-+}
-+
-+static void ath9k_change_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_chanctx_conf *conf,
-+				 u32 changed)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+
-+	mutex_lock(&sc->mutex);
-+	ath_chanctx_set_channel(sc, ctx, &conf->def);
-+	mutex_unlock(&sc->mutex);
-+}
-+
-+static int ath9k_assign_vif_chanctx(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_chanctx_conf *conf)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+
-+	mutex_lock(&sc->mutex);
-+	avp->chanctx = ctx;
-+	list_add_tail(&avp->list, &ctx->vifs);
-+	ath_chanctx_check_active(sc, ctx);
-+	mutex_unlock(&sc->mutex);
-+
-+	return 0;
-+}
-+
-+static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       struct ieee80211_chanctx_conf *conf)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+	struct ath_chanctx *ctx = ath_chanctx_get(conf);
-+
-+	mutex_lock(&sc->mutex);
-+	avp->chanctx = NULL;
-+	list_del(&avp->list);
-+	ath_chanctx_check_active(sc, ctx);
-+	mutex_unlock(&sc->mutex);
-+}
-+
- void ath9k_fill_chanctx_ops(void)
+ static struct mmc_host *reset_host;
+-static void sdio_card_reset_worker(struct work_struct *work)
++static void mwifiex_sdio_card_reset_work(struct work_struct *work)
  {
- 	if (!ath9k_use_chanctx)
-@@ -2442,6 +2519,11 @@ void ath9k_fill_chanctx_ops(void)
- 	ath9k_ops.cancel_hw_scan = ath9k_cancel_hw_scan;
- 	ath9k_ops.remain_on_channel  = ath9k_remain_on_channel;
- 	ath9k_ops.cancel_remain_on_channel = ath9k_cancel_remain_on_channel;
-+	ath9k_ops.add_chanctx        = ath9k_add_chanctx;
-+	ath9k_ops.remove_chanctx     = ath9k_remove_chanctx;
-+	ath9k_ops.change_chanctx     = ath9k_change_chanctx;
-+	ath9k_ops.assign_vif_chanctx = ath9k_assign_vif_chanctx;
-+	ath9k_ops.unassign_vif_chanctx = ath9k_unassign_vif_chanctx;
+ 	struct mmc_host *target = reset_host;
+ 
+@@ -1933,15 +1935,29 @@ static void sdio_card_reset_worker(struct work_struct *work)
+ 	mdelay(20);
+ 	mmc_add_host(target);
+ }
+-static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
++
++static void mwifiex_sdio_work(struct work_struct *work)
++{
++	struct mwifiex_adapter *adapter =
++			container_of(work, struct mwifiex_adapter, iface_work);
++
++	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
++			       &adapter->iface_work_flags))
++		mwifiex_sdio_card_reset_work(work);
++}
+ 
+ /* This function resets the card */
+ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
++	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags))
++		return;
++
++	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags);
++
+ 	reset_host = card->func->card->host;
+-	schedule_work(&card_reset_work);
++	schedule_work(&adapter->iface_work);
  }
  
- struct ieee80211_ops ath9k_ops = {
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index a65cfb9..2397292 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -76,7 +76,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
- 	rate = &tx_info->control.rates[0];
--	tx_info->band = hw->conf.chandef.chan->band;
-+	tx_info->band = sc->cur_chan->chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
- 	tx_info->control.vif = sc->tx99_vif;
- 	rate->count = 1;
+ static struct mwifiex_if_ops sdio_ops = {
+@@ -1964,6 +1980,7 @@ static struct mwifiex_if_ops sdio_ops = {
+ 	.cmdrsp_complete = mwifiex_sdio_cmdrsp_complete,
+ 	.event_complete = mwifiex_sdio_event_complete,
+ 	.card_reset = mwifiex_sdio_card_reset,
++	.iface_work = mwifiex_sdio_work,
+ };
+ 
+ /*
+@@ -2001,7 +2018,6 @@ mwifiex_sdio_cleanup_module(void)
+ 	/* Set the flag as user is removing this module. */
+ 	user_rmmod = 1;
+ 
+-	cancel_work_sync(&card_reset_work);
+ 	sdio_unregister_driver(&mwifiex_sdio);
+ }
+ 
 -- 
-2.0.0
+1.8.2.3
 
