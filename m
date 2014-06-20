@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:33719 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755240AbaFXTwv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:52:51 -0400
-Received: by mail-we0-f176.google.com with SMTP id u56so946066wes.7
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:50 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/27] iwlwifi: update trans->hw_rev 8000 hw family format
-Date: Tue, 24 Jun 2014 22:52:09 +0300
-Message-Id: <1403639541-4621-15-git-send-email-egrumbach@gmail.com> (sfid-20140624_220200_537878_B0529D29)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52707 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752069AbaFTO2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2014 10:28:04 -0400
+Message-ID: <53A444CC.2080203@redhat.com> (sfid-20140620_162809_480379_D2EB0442)
+Date: Fri, 20 Jun 2014 16:27:24 +0200
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>,
+	Florian Fainelli <f.fainelli@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] dt: bindings: add bindings for Broadcom bcm43xx
+ sdio devices
+References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com> <1402941407-8210-2-git-send-email-hdegoede@redhat.com> <CAGVrzcZBzDTfnd6o0ib1FBvBK2VPNitS=rpb4jDkjF=T7Fy=DQ@mail.gmail.com> <539FE0EC.5090003@redhat.com> <539FF2FA.8050304@broadcom.com>
+In-Reply-To: <539FF2FA.8050304@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Hi,
 
-The format of the CSR_HW_REV register has changed in 8000
-HW family. To keep backwards compatibility, we store the
-value of this register as usual in trans->hw_rev, only we
-store it in the old format in this variable.
+On 06/17/2014 09:49 AM, Arend van Spriel wrote:
+> On 17-06-14 08:32, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 06/16/2014 10:53 PM, Florian Fainelli wrote:
+>>> 2014-06-16 10:56 GMT-07:00 Hans de Goede <hdegoede@redhat.com>:
+>>>> From: Arend van Spriel <arend@broadcom.com>
+>>>>
+>>>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+>>>> integrated in ARM platforms. Currently, the brcmfmac driver for
+>>>> these devices support use of platform data. This patch specifies
+>>>> the bindings that allow this platform data to be expressed in the
+>>>> devicetree.
+>>>>
+>>>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+>>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>>>>   on how to handle this yet]
+>>>> [hdegoede@redhat.com: move from bindings/staging to bindings]
+>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>> ---
+>>>>   .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 29 ++++++++++++++++++++++
+>>>>   1 file changed, 29 insertions(+)
+>>>>   create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> new file mode 100644
+>>>> index 0000000..6a0aaf2
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> @@ -0,0 +1,29 @@
+>>>> +Broadcom BCM43xx Fullmac wireless SDIO devices
+>>>> +
+>>>> +This node provides properties for controlling the Broadcom wireless device. The
+>>>> +node is expected to be specified as a child node to the SDIO controller that
+>>>> +connects the device to the system.
+>>>> +
+>>>> +Required properties:
+>>>> +
+>>>> + - compatible : Should be "brcm,bcm43xx-fmac".
+>>>
+>>> In general, the use of a wildcard compatible string is discouraged
+>>> over the use of a more descriptive compatible string. So you should
+>>> find out what is the first chip that is compatible, and use that
+>>> compatible string as long as that compatibility remains.
+>>
+>> Right, Arend, what should we use then ?
+> 
+> In earlier discussions, we ended up with this compatible string. The properties are generic enough to be covered by this 'wildcard' string. However, I am not religious about it so if you feel strongly for an explicit string it could be brcm,bcm4329-fmac, but it does not have my preference.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+It is not something I really feel strong about, but as Florian
+rightfully points out using wildcard strings is something which
+is more or less not done in devicetree land, the idea being that
+just using the lowest model, makes it easier to later add different
+bindings for later models if that turns out to be necessary.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 0480857..5703a3d 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1993,6 +1993,16 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	}
- 
- 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
-+	/*
-+	 * In the 8000 HW family the format of the 4 bytes of CSR_HW_REV have
-+	 * changed, and now the revision step also includes bit 0-1 (no more
-+	 * "dash" value). To keep hw_rev backwards compatible - we'll store it
-+	 * in the old format.
-+	 */
-+	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
-+		trans->hw_rev = (trans->hw_rev & 0xfff0) |
-+				((trans->hw_rev << 2) & 0xc);
-+
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
- 	snprintf(trans->hw_id_str, sizeof(trans->hw_id_str),
- 		 "PCI ID: 0x%04X:0x%04X", pdev->device, pdev->subsystem_device);
--- 
-1.8.3.2
+So I've changed the compatibility string to brcm,bcm4329-fmac for v3
+of this patch-set.
 
+Regards,
+
+Hans
