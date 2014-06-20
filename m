@@ -1,90 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:32802 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbaFBRm2 (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:34537 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831AbaFTXP4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 13:42:28 -0400
-Message-ID: <538CB782.1000509@candelatech.com> (sfid-20140602_194231_565578_A5A4F1DB)
-Date: Mon, 02 Jun 2014 10:42:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 20 Jun 2014 19:15:56 -0400
+Date: Sat, 21 Jun 2014 01:15:47 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bing Zhao <bzhao@marvell.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v3] mwifiex: Use the proper interfaces
+In-Reply-To: <1403239692-3352-1-git-send-email-bzhao@marvell.com>
+Message-ID: <alpine.DEB.2.10.1406210051340.5170@nanos> (sfid-20140621_011559_323296_DBA59A75)
+References: <1403239692-3352-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 19 Jun 2014, Bing Zhao wrote:
 
-[Good stuff snipped, adding linux-wireless as this is a more
-general issue if we are going to consider general framework]
+> @@ -143,8 +142,7 @@ mwifiex_form_mgmt_frame(struct sk_buff *skb, const u8 *buf, size_t len)
+>  	       len - sizeof(struct ieee80211_hdr_3addr));
+>  
+>  	skb->priority = LOW_PRIO_TID;
+> -	do_gettimeofday(&tv);
+> -	skb->tstamp = timeval_to_ktime(tv);
+> +	__net_timestamp(skb);
 
+and __net_timestamp(skb) does
 
-Maybe we should start with goals before getting to implementation
-details.  Here's my wish list that is ath10k specific, but probably
-similar to other firmware users:
+    skb->tstamp = ktime_get_real();
 
-1)  We need the firmware crash text currently printed to
-/var/log/messages.
+...
 
-2)  It would be nice to get the firmware RAM and stack dumps at time of
-crash to debug more interesting crashes.
+>  mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
+>  				  const struct sk_buff *skb)
+>  {
+> +	u32 queue_delay = ktime_to_ms(ktime_sub(ktime_get(), skb->tstamp));
 
-3)  It would be nice to know about firmware debug messages for
-the period of time directly before the crash (maybe 2-5 minutes?)
+So now you do:
 
-4)  It would be nice to have this interleaved with kernel, supplicant,
-and related logs.
+    delay = now(CLOCK_MONOTONIC) - tstamp(CLOCK_REALTIME);
 
+Brilliant brainfart!
 
-We need a solution for different types of users.  I suspect the number
-of crashes seen in the wild will be more for users nearer the top
-of this list.
+My original patch merily converted open coded crap to a consistent
+one. And all of this was using the same time base: CLOCK_REALTIME.
 
-a) Normal Fedora/Ubuntu/etc default-installed distribution user
-with ath10k NIC has wifi issues, firmware crashes, they don't
-really know what firmware means or that it crashed, but some automated crash-log
-tool notices and gathers debug info for automated bug reporting.
+Johannes rightfully started a discussion about CLOCK_REALTIME
+vs. CLOCk_MONOTONIC suitability for certain use cases and then you
+send a patch which subtracts different time bases and assign the
+responsibility for that to Johannes:
 
-b) Slightly more advanced user actually notices the problem at coffee shop
-earlier today, posts about it when they get home, and we ask for
-debug info.
+> v3: don't use net_timedelta() (Johannes Berg)
 
-c) Experienced and determined user has similar issues, but is able to
-reproduce the problem and/or turn on more advanced debugging efforts.
+Did you ever test that patch? Clearly not. Simply because on every
+machine where now(CLOCK_MONOTONIC) != now(CLOCK_REALTIME) this falls
+apart in bits and pieces. And that's the sane case, not the stupid
+eval board without a RTC driver which defaults to 1970:00:00:00:00 and
+happens to have CLOCK_MONOTONIC and CLOCK_REALTIME in sync.
 
-d)  Even more determined user that can and will recompile kernels and/or
-try patches.
+So aside of not testing it proper, you clearly have no clue what you
+are doing and then you have the chuzpe to claim that Johannes asked
+you to do so.
 
-
-Anything that has to be enabled before-hand will not help a) and b) above.
-
-If support is not compiled into default kernels, c) will not help you either.
-
-If it is difficult or requires acquiring cutting edge tools not in their
-distribution by default, many of c) and some of d) will just ignore the problem or use
-different hardware.
-
-If we are storing crashes for something like ethtool to report, we need
-RAM and/or disk storage so the firmware RAM dumps and such can be stored until
-the user and/or automated tools ask for them.  We need some way to automatically
-clean up old crashes so disk/ram is not overly utilized.  For APs,
-they are low on both RAM and 'disk', so storing crash logs for any
-length of time may be problematic.
-
-
-I am indeed biased towards using printk, but lets agree on some goals and
-see if we can find a set of tools and methods that meets them.
-
+Nice try.
 
 Thanks,
-Ben
+
+	tglx
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
