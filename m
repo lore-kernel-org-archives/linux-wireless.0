@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:53435 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbaFGSQM (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4689 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757130AbaFTSqQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 14:16:12 -0400
-Received: by mail-ob0-f181.google.com with SMTP id wm4so4213332obc.40
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 11:16:11 -0700 (PDT)
-Message-ID: <539356EA.1070004@lwfinger.net> (sfid-20140607_201616_573975_A980FFEB)
-Date: Sat, 07 Jun 2014 13:16:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 20 Jun 2014 14:46:16 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andrew Wiley <wiley.andrew.j@gmail.com>,
+	Linus Gasser <list@markas-al-nour.org>,
+	Michael Hirsch <hirsch@teufel.de>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.16] mwifiex: fix Tx timeout issue
+Date: Fri, 20 Jun 2014 11:45:25 -0700
+Message-ID: <1403289925-4912-1-git-send-email-bzhao@marvell.com> (sfid-20140620_204620_222289_1FB1397F)
 MIME-Version: 1.0
-To: Powerful Notageek <powerfulnotageek@yahoo.in>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: MT7630e availability in kernel by default
-References: <1402159087.63238.YahooMailNeo@web193001.mail.sg3.yahoo.com> <53935133.5020303@lwfinger.net> <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
-In-Reply-To: <1402163980.67578.YahooMailNeo@web193003.mail.sg3.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2014 12:59 PM, Powerful Notageek wrote:
-> Here's lspci -nn
->
-> 03:00.0 Network controller [0280]: MEDIATEK Corp. MT7630e 802.11bgn Wireless Network Adapter [14c3:7630]
->
-> I have tried using the drivers available on RALink/Mediatek on a pretty recent kernel of Fedora20, didn't seem to work.
->
-> Thanks
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-That PCI ID is not in the latest Ralink driver, which is essentially what will 
-be in kernel 3.16.
+https://bugzilla.kernel.org/show_bug.cgi?id=70191
+https://bugzilla.kernel.org/show_bug.cgi?id=77581
 
-Please try the following:
+It is observed that sometimes Tx packet is downloaded without
+adding driver's txpd header. This results in firmware parsing
+garbage data as packet length. Sometimes firmware is unable
+to read the packet if length comes out as invalid. This stops
+further traffic and timeout occurs.
 
-su -
-modprobe -v rt2800pci
-echo "14c3 7630" > /sys/bus/pci/drivers/rt2800pci/new_id
+The root cause is uninitialized fields in tx_info(skb->cb) of
+packet used to get garbage values. In this case if
+MWIFIEX_BUF_FLAG_REQUEUED_PKT flag is mistakenly set, txpd
+header was skipped. This patch makes sure that tx_info is
+correctly initialized to fix the problem.
 
-Does that yield a wireless lan device?
+Cc: <stable@vger.kernel.org>
+Reported-by: Andrew Wiley <wiley.andrew.j@gmail.com>
+Reported-by: Linus Gasser <list@markas-al-nour.org>
+Reported-by: Michael Hirsch <hirsch@teufel.de>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Maithili Hinge <maithili@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Larry
-
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 657504c..3e5194f 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -644,6 +644,7 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	}
+ 
+ 	tx_info = MWIFIEX_SKB_TXCB(skb);
++	memset(tx_info, 0, sizeof(*tx_info));
+ 	tx_info->bss_num = priv->bss_num;
+ 	tx_info->bss_type = priv->bss_type;
+ 	tx_info->pkt_len = skb->len;
+-- 
+1.8.2.3
 
