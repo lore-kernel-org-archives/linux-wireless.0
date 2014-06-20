@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38985 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673AbaFXMKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 08:10:51 -0400
-Message-ID: <53A968C4.1020302@openwrt.org> (sfid-20140624_141101_534761_FE3CC2F8)
-Date: Tue, 24 Jun 2014 14:02:12 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:61942 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754967AbaFTPWR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2014 11:22:17 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so999392wib.11
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2014 08:22:14 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: remove leftover code from old devices support
+Date: Fri, 20 Jun 2014 17:22:00 +0200
+Message-Id: <1403277721-25302-1-git-send-email-zajec5@gmail.com> (sfid-20140620_172220_613726_256CD6F8)
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/5] ath9k_hw: fix tx gain table index for AR953x
-References: <1403609869-12901-1-git-send-email-rmanohar@qti.qualcomm.com> <1403609869-12901-4-git-send-email-rmanohar@qti.qualcomm.com>
-In-Reply-To: <1403609869-12901-4-git-send-email-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-06-24 13:37, Rajkumar Manoharan wrote:
-> Fix tx gain table index on fast channel change for AR953x.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index 8927fc3..1ef17e1 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -1552,12 +1552,15 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
->  				      u8 *ini_reloaded)
->  {
->  	unsigned int regWrites = 0;
-> -	u32 modesIndex;
-> +	u32 modesIndex, txgain_index = 0;
->  
-> -	if (IS_CHAN_5GHZ(chan))
-> +	if (IS_CHAN_5GHZ(chan)) {
->  		modesIndex = IS_CHAN_HT40(chan) ? 2 : 1;
-> -	else
-> +	} else {
-> +		if (AR_SREV_9531(ah))
-> +			txgain_index = 1;
->  		modesIndex = IS_CHAN_HT40(chan) ? 3 : 4;
-> +	}
+Old devices (A-PHY or B-PHY) are supposed to be supported by b43legacy.
+We keep phy_a.c as it's needed for G-PHY which shares some design.
 
-How about putting this here:
-	if (AR_SREV_9531(ah))
-		txgain_index = 1;
-	else
-		txgain_index = modesIndex;
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c       | 9 ---------
+ drivers/net/wireless/b43/phy_a.h      | 4 ----
+ drivers/net/wireless/b43/phy_common.c | 3 ---
+ 3 files changed, 16 deletions(-)
 
->  
->  	if (modesIndex == ah->modes_index) {
->  		*ini_reloaded = false;
-> @@ -1573,7 +1576,10 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
->  		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
->  				   modesIndex);
->  
-> -	REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
-> +	if (AR_SREV_9531(ah))
-> +		REG_WRITE_ARRAY(&ah->iniModesTxGain, txgain_index, regWrites);
-> +	else
-> +		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
-And then we can change this part to always use txgain_index instead of
-modesIndex, without the extra SREV check.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 4b662d0..4164afa 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4306,15 +4306,6 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 	phy_type = (tmp & B43_PHYVER_TYPE) >> B43_PHYVER_TYPE_SHIFT;
+ 	phy_rev = (tmp & B43_PHYVER_VERSION);
+ 	switch (phy_type) {
+-	case B43_PHYTYPE_A:
+-		if (phy_rev >= 4)
+-			unsupported = 1;
+-		break;
+-	case B43_PHYTYPE_B:
+-		if (phy_rev != 2 && phy_rev != 4 && phy_rev != 6
+-		    && phy_rev != 7)
+-			unsupported = 1;
+-		break;
+ 	case B43_PHYTYPE_G:
+ 		if (phy_rev > 9)
+ 			unsupported = 1;
+diff --git a/drivers/net/wireless/b43/phy_a.h b/drivers/net/wireless/b43/phy_a.h
+index 5cfaab7..f7d0d92 100644
+--- a/drivers/net/wireless/b43/phy_a.h
++++ b/drivers/net/wireless/b43/phy_a.h
+@@ -123,8 +123,4 @@ struct b43_phy_a {
+  */
+ void b43_phy_inita(struct b43_wldev *dev);
+ 
+-
+-struct b43_phy_operations;
+-extern const struct b43_phy_operations b43_phyops_a;
+-
+ #endif /* LINUX_B43_PHY_A_H_ */
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 2d05b59..ce486ee 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -45,9 +45,6 @@ int b43_phy_allocate(struct b43_wldev *dev)
+ 	phy->ops = NULL;
+ 
+ 	switch (phy->type) {
+-	case B43_PHYTYPE_A:
+-		phy->ops = &b43_phyops_a;
+-		break;
+ 	case B43_PHYTYPE_G:
+ 		phy->ops = &b43_phyops_g;
+ 		break;
+-- 
+1.8.4.5
 
-- Felix
