@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:59835 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272AbaFXTw6 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2407 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751441AbaFTEjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:52:58 -0400
-Received: by mail-we0-f170.google.com with SMTP id w61so892859wes.15
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:56 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/27] iwlwifi: mvm: BT Coex - don't limit rate control if TTC is on
-Date: Tue, 24 Jun 2014 22:52:14 +0300
-Message-Id: <1403639541-4621-20-git-send-email-egrumbach@gmail.com> (sfid-20140624_215952_477116_27979EEF)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+	Fri, 20 Jun 2014 00:39:07 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/7] mwifiex: get rid of global pointer reset_host
+Date: Thu, 19 Jun 2014 21:38:54 -0700
+Message-ID: <1403239138-3113-3-git-send-email-bzhao@marvell.com> (sfid-20140620_063911_803218_36662AB3)
+In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
+References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-When the firmware enables TxTxCorunning, we can lift the
-constaints on the rate control.
+As we can derive host pointer from adapter, maintaining
+a global variable doesn't make sense.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c        | 6 ++++++
- drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h | 4 +++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/sdio.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index aab92a6..8d7146e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -1212,6 +1212,9 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
- 	    BT_HIGH_TRAFFIC)
- 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 2ae4dd7..b34270d 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1916,10 +1916,10 @@ mwifiex_update_mp_end_port(struct mwifiex_adapter *adapter, u16 port)
+ 		port, card->mp_data_port_mask);
+ }
  
-+	if (mvm->last_bt_notif.ttc_enabled)
-+		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
-+
- 	lut_type = iwl_get_coex_type(mvm, mvmsta->vif);
+-static struct mmc_host *reset_host;
+-static void mwifiex_sdio_card_reset_work(struct work_struct *work)
++static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
+ {
+-	struct mmc_host *target = reset_host;
++	struct sdio_mmc_card *card = adapter->card;
++	struct mmc_host *target = card->func->card->host;
  
- 	if (lut_type == BT_COEX_LOOSE_LUT || lut_type == BT_COEX_INVALID_LUT)
-@@ -1227,6 +1230,9 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	enum iwl_bt_coex_lut_type lut_type;
+ 	/* The actual reset operation must be run outside of driver thread.
+ 	 * This is because mmc_remove_host() will cause the device to be
+@@ -1943,20 +1943,17 @@ static void mwifiex_sdio_work(struct work_struct *work)
  
-+	if (mvm->last_bt_notif.ttc_enabled)
-+		return true;
-+
- 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
- 	    BT_HIGH_TRAFFIC)
- 		return true;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-index 98175ca..39cb33a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-@@ -305,6 +305,7 @@ enum iwl_bt_activity_grading {
-  * @bt_traffic_load: load of BT traffic
-  * @bt_agg_traffic_load: aggregated load of BT traffic
-  * @bt_ci_compliance: 0 - no CI compliance, 1 - CI compliant
-+ * @ttc_enabled: true if ttc has been enabled by the firmware
-  * @primary_ch_lut: LUT used for primary channel
-  * @secondary_ch_lut: LUT used for secondary channel
-  * @bt_activity_grading: the activity of BT enum %iwl_bt_activity_grading
-@@ -317,7 +318,8 @@ struct iwl_bt_coex_profile_notif {
- 	u8 bt_traffic_load;
- 	u8 bt_agg_traffic_load;
- 	u8 bt_ci_compliance;
--	u8 reserved[3];
-+	u8 ttc_enabled;
-+	__le16 reserved;
+ 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
+ 			       &adapter->iface_work_flags))
+-		mwifiex_sdio_card_reset_work(work);
++		mwifiex_sdio_card_reset_work(adapter);
+ }
  
- 	__le32 primary_ch_lut;
- 	__le32 secondary_ch_lut;
+ /* This function resets the card */
+ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+ {
+-	struct sdio_mmc_card *card = adapter->card;
+-
+ 	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags))
+ 		return;
+ 
+ 	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &adapter->iface_work_flags);
+ 
+-	reset_host = card->func->card->host;
+ 	schedule_work(&adapter->iface_work);
+ }
+ 
 -- 
-1.8.3.2
+1.8.2.3
 
