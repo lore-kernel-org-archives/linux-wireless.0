@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14421 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755575AbaFPQiO (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:34960 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754789AbaFUU7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:14 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 02/25] wil6210: indicate mgmt_tx status
-Date: Mon, 16 Jun 2014 19:37:00 +0300
-Message-ID: <1402936643-31819-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183822_460790_E24F7871)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 21 Jun 2014 16:59:40 -0400
+Received: by mail-wi0-f176.google.com with SMTP id n3so2299356wiv.9
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 13:59:39 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <lekensteyn@gmail.com>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192cu: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sat, 21 Jun 2014 23:00:37 +0200
+Message-Id: <1403384437-9615-2-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230034_812434_8C8CD8FB)
+In-Reply-To: <1403384437-9615-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1403384437-9615-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inform cfg80211 about Tx result
+I found a logical error in an if statement that always evaluates to false.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+This has after same discussion resulted in that we add a macro to handle this.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  |    2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 1725dfc..cfdf1a2 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -451,6 +451,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	size_t len = params->len;
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	int rc;
-+	bool tx_status = false;
- 	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
- 	struct wmi_sw_tx_req_cmd *cmd;
- 	struct {
-@@ -459,8 +460,10 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	} __packed evt;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 55adf04..5050938 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1206,7 +1206,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
  
- 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
--	if (!cmd)
--		return -ENOMEM;
-+	if (!cmd) {
-+		rc = -ENOMEM;
-+		goto out;
-+	}
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+index ed703a1..dc8460c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+@@ -375,6 +375,7 @@
+ #define	MSR_ADHOC				0x01
+ #define	MSR_INFRA				0x02
+ #define	MSR_AP					0x03
++#define	MSR_MASK				0x03
  
- 	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
- 	cmd->len = cpu_to_le16(len);
-@@ -469,10 +472,12 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, cmd, sizeof(*cmd) + len,
- 		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
- 	if (rc == 0)
--		rc = evt.evt.status;
-+		tx_status = !evt.evt.status;
- 
- 	kfree(cmd);
--
-+ out:
-+	cfg80211_mgmt_tx_status(wdev, cookie ? *cookie : 0, buf, len,
-+				tx_status, GFP_KERNEL);
- 	return rc;
- }
- 
+ #define	RRSR_RSC_OFFSET				21
+ #define	RRSR_SHORT_OFFSET			23
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 07cb06d..87c0a27 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
 -- 
-1.9.1
+1.7.10.4
 
