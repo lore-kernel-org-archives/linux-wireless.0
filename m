@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32599 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754317AbaFTRQ5 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:23240 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbaFUQ5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 13:16:57 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] ath9k: Fix build error in ath_reset_internal
-Date: Fri, 20 Jun 2014 22:47:49 +0530
-Message-ID: <1403284669-5254-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140620_191701_908561_28176A11)
+	Sat, 21 Jun 2014 12:57:01 -0400
+Message-ID: <53A5B95B.2040705@broadcom.com> (sfid-20140621_185717_308400_5C805B5F)
+Date: Sat, 21 Jun 2014 18:56:59 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 2/8] brcmfmac: Add USB device 43566 to supported devices.
+References: <1403345479-13467-1-git-send-email-arend@broadcom.com>	<1403345479-13467-3-git-send-email-arend@broadcom.com> <CACna6rz81wbFET4GJH8xQ8aTqGfGccPGmD5vwfmmw9KWsZRPWg@mail.gmail.com>
+In-Reply-To: <CACna6rz81wbFET4GJH8xQ8aTqGfGccPGmD5vwfmmw9KWsZRPWg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/ath/ath9k/main.c:299 ath_reset_internal()
-error: we previously assumed 'hchan' could be null (see line 293)
+On 06/21/14 17:55, Rafał Miłecki wrote:
+> On 21 June 2014 12:11, Arend van Spriel<arend@broadcom.com>  wrote:
+>> From: Hante Meuleman<meuleman@broadcom.com>
+>>
+>> Add the USB 43566 device to the supported devices list. The 43566
+>> is a WiFi-only variant of the 43569. It uses the same FW as 43569.
+>
+> What about USB ID of this device? You didn't add any. Is it shared
+> with some different one? A 0a5c:bd27 maybe?
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+The 43566 has exactly the same USB ID as the 43569. The bootloader in 
+the device will tell brcmfmac what it is during probe. These devices are 
+exactly the same for the WiFi part, but 43569 additionally has BT logic 
+inside being a composite USB device. Patch 4 probably is needed to make 
+that work. That probably would have been clear when mentioned in the 
+43569 patch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cf21652..83cb39e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -314,11 +314,9 @@ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	if (!ath_prepare_reset(sc))
- 		fastcc = false;
- 
--	if (hchan) {
--		spin_lock_bh(&sc->chan_lock);
--		sc->cur_chandef = sc->cur_chan->chandef;
--		spin_unlock_bh(&sc->chan_lock);
--	}
-+	spin_lock_bh(&sc->chan_lock);
-+	sc->cur_chandef = sc->cur_chan->chandef;
-+	spin_unlock_bh(&sc->chan_lock);
- 
- 	ath_dbg(common, CONFIG, "Reset to %u MHz, HT40: %d fastcc: %d\n",
- 		hchan->channel, IS_CHAN_HT40(hchan), fastcc);
--- 
-2.0.0
-
+Regards,
+Arend
