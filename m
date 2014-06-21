@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37391 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbaFMHAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 03:00:04 -0400
-Message-ID: <1402642787.4478.5.camel@jlt4.sipsolutions.net> (sfid-20140613_090035_769921_37717D42)
-Subject: Re: [GIT] Networking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+Received: from mail-we0-f182.google.com ([74.125.82.182]:57568 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754357AbaFUVCp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2014 17:02:45 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so5116044wes.41
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 14:02:44 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 13 Jun 2014 08:59:47 +0200
-In-Reply-To: <CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
-References: <20140612.121445.484288603919840829.davem@davemloft.net>
-	 <CA+55aFy=CThoSKAJ6J3Jt-SJDkiGzwg=5tdF7_g+vyTEoPFzMQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Peter Wu <lekensteyn@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sat, 21 Jun 2014 23:03:42 +0200
+Message-Id: <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230302_496820_3A3BD53A)
+In-Reply-To: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-06-13 at 06:48 +0000, Linus Torvalds wrote:
-> On Thu, Jun 12, 2014 at 12:14 PM, David Miller <davem@davemloft.net> wrote:
-> >
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git master
-> 
-> Hmm. I get *lots* of the appended messages from iwlwifi now. Things
-> still seem to work, but ...
-> 
-> This is a Haswell laptop with bog-standard intel wireless:
-> 
->   01:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
-> 
-> Any ideas?
+I found a logical error in an if statement that always evaluates to false.
 
-Looks odd.
+This has after same discussion resulted in that we add a macro to handle this.
 
-If the stacktrace/message
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-> [  273.783438] <unknown>: hw csum failure
-> [  273.783449] CPU: 2 PID: 2199 Comm: Chrome_IOThread Not tainted 3.15.0-11906-g6d87c225f5d8 #8
-> [  273.783451] Hardware name: Sony Corporation SVP11213CXB/VAIO, BIOS R0270V7 05/17/2013
-> [  273.783461] Call Trace:
-> [  273.783477]  [<ffffffff8159d199>] ? dump_stack+0x41/0x51
-> [  273.783488]  [<ffffffff814a4f1d>] ? skb_copy_and_csum_datagram_iovec+0xfd/0x110
-> [  273.783494]  [<ffffffff8150e2ea>] ? udp_recvmsg+0x1ca/0x390
-> [  273.783500]  [<ffffffff81518e95>] ? inet_recvmsg+0x65/0x80
-> [  273.783506]  [<ffffffff814971f5>] ? sock_recvmsg+0x95/0xd0
-> [  273.783511]  [<ffffffff81197862>] ? ep_send_events_proc+0xa2/0x1b0
-> [  273.783513]  [<ffffffff811977c0>] ? ep_read_events_proc+0xb0/0xb0
-> [  273.783516]  [<ffffffff81497325>] ? SYSC_recvfrom+0xb5/0x110
-> [  273.783521]  [<ffffffff8108bdc0>] ? wake_up_state+0x10/0x10
-> [  273.783527]  [<ffffffff815a3d92>] ? system_call_fastpath+0x16/0x1b
-
-is to be believed, then I'm not sure why you think iwlwifi is involved
-though.
-
-Either way, iwlwifi doesn't support HW checksumming, so it failing makes
-no sense, it's not there to start with.
-
-The only thing that touched this seems to be Tom's patch:
-
-commit 7e3cead5172927732f51fde77fef6f521e22f209
-Author: Tom Herbert <therbert@google.com>
-Date:   Tue Jun 10 18:54:19 2014 -0700
-
-    net: Save software checksum complete
-
-but I'm not familiar enough to say where this leads.
-
-If it's iwlwifi, then maybe that commit broke something with devices
-that don't support checksumming?
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 2b08671..280c3da 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1128,7 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+index 7f29b8d..315a298 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+@@ -369,6 +369,7 @@
+ #define	MSR_ADHOC			0x01
+ #define	MSR_INFRA			0x02
+ #define	MSR_AP				0x03
++#define	MSR_MASK			0x03
+ 
+ /* 6. Adaptive Control Registers  (Offset: 0x0160 - 0x01CF) */
+ /* ----------------------------------------------------- */
+-- 
+1.7.10.4
 
