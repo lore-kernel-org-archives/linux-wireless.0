@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsrv0.aau.at ([143.205.180.48]:58194 "EHLO
-	mailsrv.uni-klu.ac.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752190AbaFDOsF (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34722 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253AbaFUKLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 10:48:05 -0400
-Message-ID: <538F3165.5090707@aau.at> (sfid-20140604_164812_396530_C3FCC36A)
-Date: Wed, 04 Jun 2014 16:47:01 +0200
-From: Severin Kacianka <severin.kacianka@aau.at>
+	Sat, 21 Jun 2014 06:11:23 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/8] brcmfmac: new USB devices, vendor command, and cleanup
+Date: Sat, 21 Jun 2014 12:11:11 +0200
+Message-ID: <1403345479-13467-1-git-send-email-arend@broadcom.com> (sfid-20140621_121137_573081_BF680AF9)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: A question about monitor mode
-References: <538EBB1C.3060106@aau.at> <87ha40263v.fsf@purkki.adurom.net>
-In-Reply-To: <87ha40263v.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/04/2014 02:48 PM, Kalle Valo wrote:
-> The question doesn't really make sense, at least not to me. But I'll try
-> to answer anyway :)
+The patch series add driver support for new USB device. These are 11ac fullmac
+devices with USB3.0 interface. Also opting for the vendor-specific netlink
+command instead of cfg80211 testmode. The remaining patches are small cleanup
+patches.
 
-Thank you - I will try to better state my question. Let's say we have
-two nodes A and B and A sends a packet to B while monitoring all
-wireless traffic on mon0. We now have two scenarios when A sees its
-packet in its monitor interface.
-The first scenario is, that the packet shows up right after it is send
-(i.e. after calling socket.send). The other is, that the packet is held
-in some layer (probably the firmware) until the ACK is received and the
-packet was really "send" before being passed to the monitoring interface.
+This series is intended for 3.17 and applies to the master branch of the
+wireless-next repository.
 
-In my concrete case, I have a program that sends RTP packets to an other
-host. It logs the time of the socket.send call and then also logs the
-time the packet is read from mon0 (RTP packets have sequence numbers, so
-it is easy to match the packets).
-I then noticed that this delay is usually extremely small (around 0.001
-sec), but will quickly rise when the receiver is moved away from the
-sender (up to 10 seconds and more). Along with this rise in the delay
-the video quality will degrade to unwatchable when the delay rises
-quickly (and quickly improves when the delay gets smaller).
+Arend van Spriel (3):
+  brcmfmac: clear ht info during attach phase
+  brcmfmac: correct logging levels in btcoex source
+  brcmfmac: reduce log level in fwil if firmware returns error
 
-My assumption is that the packet first has to be acknowledged, before it
-shows up in the monitoring interface. Due to the movement the connection
-quality is probably reduced and thus may require retransmissions (and so
-increase this delay).
+Daniel Kim (1):
+  brcmfmac: Don't control mpc setting during scan operation
 
-I am however not sure if this is how it really works :)
+Franky Lin (1):
+  brcmfmac: replace cfg80211 testmode with vendor command
 
-Thank you,
-Severin
+Hante Meuleman (3):
+  brcmfmac: Add 43569 USB support.
+  brcmfmac: Add USB device 43566 to supported devices.
+  brcmfmac: Change USB probe routine to support Composite USB
 
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |   38 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   10 -
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    7 +
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  214 +++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c   |  115 +++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.h   |   64 ++++++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   56 ++---
+ 9 files changed, 326 insertions(+), 183 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/vendor.h
 
+-- 
+1.7.9.5
 
