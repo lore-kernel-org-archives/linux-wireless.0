@@ -1,94 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8723 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbaFMKGb (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10495 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932155AbaFUKUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 06:06:31 -0400
-Message-ID: <539ACD24.9070407@broadcom.com> (sfid-20140613_120638_938691_6C26DE25)
-Date: Fri, 13 Jun 2014 12:06:28 +0200
+	Sat, 21 Jun 2014 06:20:43 -0400
+Message-ID: <53A55C78.1030706@broadcom.com> (sfid-20140621_122104_659738_5B866968)
+Date: Sat, 21 Jun 2014 12:20:40 +0200
 From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes.berg@intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211: expose cfg80211_disable_40mhz_24ghz module parameter
-References: <1402064613-19795-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1402064613-19795-1-git-send-email-arend@broadcom.com>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+CC: Brett Rudley <brudley@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net/wireless/brcm80211/brcmfmac: Make return type reflect
+ actual semantics
+References: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06-06-14 16:23, Arend van Spriel wrote:
-> Drivers may need to know this variable value for configuring the
-> device they are controlling. It can be determined indirectly by
-> setting IEEE80211_HT_CAP_SUP_WIDTH_20_40 flag in the field
-> ieee80211_sta_htcap::cap of 2G band. During the wiphy_register()
-> call cfg80211 will clear that bit if the module parameter is true.
-> However, brcmfmac for one needs to know the value to determine
-> its custom regulatory domain which must be applied before doing
-> the wiphy_register().
->
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Hi Johannes,
->
-> In brcmfmac I need to know the value of cfg80211 module parameter
-> as stated in the commit message. Just taking a shot at how to get
-> this exposed. I was reluctant exporting the module parameter itself.
+On 06/20/14 23:32, Rasmus Villemoes wrote:
+> Applying ++ to a bool is equivalent to setting it true, regardless of
+> its initial value (bools are not uint1_t). Hence the function
+> wl_get_vif_state_all can only ever return true/false. The only
+> in-tree caller uses its return value as a boolean. So update its
+> return type, and since the list traversal and bit testing have no side
+> effects, just return true immediately.
 
-Hi Johannes,
+Hi Rasmus,
 
-Could you give me your feedback on this. Would be appreciated.
+At the moment the function is indeed only used to determine whether any 
+vif is in connected state. I am ok with your patch if you would also 
+rename the function to brcmf_get_vif_state_any(). You may add 
+'Reviewed-by: Arend van Spriel <arend@broadcom.com>' to the patch.
 
 Regards,
 Arend
 
-> Regards,
-> Arend
+> Signed-off-by: Rasmus Villemoes<linux@rasmusvillemoes.dk>
 > ---
->   include/net/cfg80211.h |    9 +++++++++
->   net/wireless/core.c    |    6 ++++++
->   2 files changed, 15 insertions(+)
 >
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index f3539a1..9279197 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3107,6 +3107,15 @@ static inline const char *wiphy_name(const struct wiphy *wiphy)
->   struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv);
+> Notes:
+>      Alternatively, if the function is supposed to return a count, the
+>      one-line fix would be
 >
->   /**
-> + * wiphy_is_40mhz_24ghz_disabled - check whether 40MHz bandwidth in 2.4G
-> + *
-> + * @wiphy: The wiphy to check.
-> + *
-> + * Return: true is 40MHz is disabled in 2.4G band.
-> + */
-> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
-> +
-> +/**
->    * wiphy_register - register a wiphy with cfg80211
->    *
->    * @wiphy: The wiphy to register.
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 086cddd..52750ef 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -355,6 +355,12 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+>      -	bool result = 0;
+>      +	u32 result = 0;
+>
+>   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 7 +++----
+>   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h | 2 +-
+>   2 files changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> index d8fa276..ec5f8c5 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -5625,16 +5625,15 @@ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
+>   	return wdev->iftype;
 >   }
->   EXPORT_SYMBOL(wiphy_new);
 >
-> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy)
-> +{
-> +	return cfg80211_disable_40mhz_24ghz;
-> +}
-> +EXPORT_SYMBOL(wiphy_is_40mhz_24ghz_disabled);
-> +
->   static int wiphy_verify_combinations(struct wiphy *wiphy)
+> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
+> +bool wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
 >   {
->   	const struct ieee80211_iface_combination *c;
+>   	struct brcmf_cfg80211_vif *vif;
+> -	bool result = 0;
 >
+>   	list_for_each_entry(vif,&cfg->vif_list, list) {
+>   		if (test_bit(state,&vif->sme_state))
+> -			result++;
+> +			return true;
+>   	}
+> -	return result;
+> +	return false;
+>   }
+>
+>   static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event *event,
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+> index 283c525..c702e4e 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+> @@ -477,7 +477,7 @@ const struct brcmf_tlv *
+>   brcmf_parse_tlvs(const void *buf, int buflen, uint key);
+>   u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+>   			struct ieee80211_channel *ch);
+> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
+> +bool wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
+>   void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
+>   				  struct brcmf_cfg80211_vif *vif);
+>   bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
 
