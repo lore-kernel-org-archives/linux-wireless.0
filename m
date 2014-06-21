@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63952 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbaFGNDj (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16019 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755238AbaFUKLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 09:03:39 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com>
-	<87wqczz3h9.fsf@kamboji.qca.qualcomm.com>
-	<538CA904.4000508@candelatech.com>
-	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
-	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
-	<538CC949.5020901@candelatech.com>
-	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
-	<538CD507.1050803@candelatech.com>
-	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>
-	<53909372.1040707@candelatech.com>
-	<87fvjimsxj.fsf@kamboji.qca.qualcomm.com>
-	<5391E620.4090706@candelatech.com>
-Date: Sat, 7 Jun 2014 16:03:31 +0300
-In-Reply-To: <5391E620.4090706@candelatech.com> (Ben Greear's message of "Fri,
-	6 Jun 2014 09:02:40 -0700")
-Message-ID: <87vbscj2ho.fsf@kamboji.qca.qualcomm.com> (sfid-20140607_150449_821368_FDB40B6A)
+	Sat, 21 Jun 2014 06:11:23 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/8] brcmfmac: Add USB device 43566 to supported devices.
+Date: Sat, 21 Jun 2014 12:11:13 +0200
+Message-ID: <1403345479-13467-3-git-send-email-arend@broadcom.com> (sfid-20140621_121130_211212_ADC68E45)
+In-Reply-To: <1403345479-13467-1-git-send-email-arend@broadcom.com>
+References: <1403345479-13467-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> On 06/05/2014 11:51 PM, Kalle Valo wrote:
->> Ben Greear <greearb@candelatech.com> writes:
->> 
->>>> Why do you want to put the crash dump in kernel log, can you describe
->>>> your "use case" here? For me it would be enough to have a UUID for each
->>>> crash dump and then have the driver print that to kernel log:
->>>>
->>>> ath10k: firmware crashed (uuid 1234567890-4321)
->>>>
->>>> And then you just need to find the correct dump from the file system and
->>>> start debugging. Would that be enough for you?
->>>
->>> Not all systems will have fancy user-space able to deal with this.
->>>
->>> At the very least, please leave in the current firmware crash
->>> dump text.
->> 
->> I'm not removing anything. That was just an example how we can identify
->> crashes.
->
-> Perhaps the time-stamp is good enough?  I don't see a need for
-> a uuid, but perhaps I am missing something?
+Add the USB 43566 device to the supported devices list. The 43566
+is a WiFi-only variant of the 43569. It uses the same FW as 43569.
 
-UUID is supposed to be unique. If we use walltime there's no guarantee
-that the clock is correct and if we use local_clock() (my preference) it
-will be reset after every boot.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-I just think using something like UUID is more robust. Especially if one
-implements an automatic crash dump collector from thousands of deployed
-APs, having an UUID makes it a lot easier to manage.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index aa23559..d2927ac 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -929,6 +929,7 @@ static bool brcmf_usb_chip_support(int chipid, int chiprev)
+ 		return (chiprev == 3);
+ 	case 43242:
+ 		return true;
++	case 43566:
+ 	case 43569:
+ 		return true;
+ 	default:
+@@ -1031,6 +1032,7 @@ static const char *brcmf_usb_get_fwname(struct brcmf_usbdev_info *devinfo)
+ 		return BRCMF_USB_43236_FW_NAME;
+ 	case 43242:
+ 		return BRCMF_USB_43242_FW_NAME;
++	case 43566:
+ 	case 43569:
+ 		return BRCMF_USB_43569_FW_NAME;
+ 	default:
 -- 
-Kalle Valo
+1.7.9.5
+
