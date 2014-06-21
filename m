@@ -1,81 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:61942 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967AbaFTPWR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 11:22:17 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so999392wib.11
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2014 08:22:14 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: remove leftover code from old devices support
-Date: Fri, 20 Jun 2014 17:22:00 +0200
-Message-Id: <1403277721-25302-1-git-send-email-zajec5@gmail.com> (sfid-20140620_172220_613726_256CD6F8)
+Received: from lekensteyn.nl ([178.21.112.251]:51222 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754416AbaFUVgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2014 17:36:10 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
+Date: Sat, 21 Jun 2014 23:35:58 +0200
+Message-ID: <1721891.8jxoA0ODQg@al> (sfid-20140621_233630_269678_3EA38F93)
+In-Reply-To: <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Old devices (A-PHY or B-PHY) are supposed to be supported by b43legacy.
-We keep phy_a.c as it's needed for G-PHY which shares some design.
+On Saturday 21 June 2014 23:03:42 Rickard Strandqvist wrote:
+> I found a logical error in an if statement that always evaluates to false.
+> 
+> This has after same discussion resulted in that we add a macro to handle this.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c       | 9 ---------
- drivers/net/wireless/b43/phy_a.h      | 4 ----
- drivers/net/wireless/b43/phy_common.c | 3 ---
- 3 files changed, 16 deletions(-)
+See other mail, this subject and commit message still suck. The change itself
+is fine.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 4b662d0..4164afa 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4306,15 +4306,6 @@ static int b43_phy_versioning(struct b43_wldev *dev)
- 	phy_type = (tmp & B43_PHYVER_TYPE) >> B43_PHYVER_TYPE_SHIFT;
- 	phy_rev = (tmp & B43_PHYVER_VERSION);
- 	switch (phy_type) {
--	case B43_PHYTYPE_A:
--		if (phy_rev >= 4)
--			unsupported = 1;
--		break;
--	case B43_PHYTYPE_B:
--		if (phy_rev != 2 && phy_rev != 4 && phy_rev != 6
--		    && phy_rev != 7)
--			unsupported = 1;
--		break;
- 	case B43_PHYTYPE_G:
- 		if (phy_rev > 9)
- 			unsupported = 1;
-diff --git a/drivers/net/wireless/b43/phy_a.h b/drivers/net/wireless/b43/phy_a.h
-index 5cfaab7..f7d0d92 100644
---- a/drivers/net/wireless/b43/phy_a.h
-+++ b/drivers/net/wireless/b43/phy_a.h
-@@ -123,8 +123,4 @@ struct b43_phy_a {
-  */
- void b43_phy_inita(struct b43_wldev *dev);
- 
--
--struct b43_phy_operations;
--extern const struct b43_phy_operations b43_phyops_a;
--
- #endif /* LINUX_B43_PHY_A_H_ */
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 2d05b59..ce486ee 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -45,9 +45,6 @@ int b43_phy_allocate(struct b43_wldev *dev)
- 	phy->ops = NULL;
- 
- 	switch (phy->type) {
--	case B43_PHYTYPE_A:
--		phy->ops = &b43_phyops_a;
--		break;
- 	case B43_PHYTYPE_G:
- 		phy->ops = &b43_phyops_g;
- 		break;
--- 
-1.8.4.5
+Don't forget those other drivers. You are aware that the *e drivers are for PCI(e)
+devices, and *u for USB right?
+
+Kind regards,
+Peter
+
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
+>  drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index 2b08671..280c3da 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -1128,7 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+>  	}
+>  	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
+>  	rtlpriv->cfg->ops->led_control(hw, ledaction);
+> -	if ((bt_msr & 0xfc) == MSR_AP)
+> +	if ((bt_msr & MSR_MASK) == MSR_AP)
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+>  	else
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+> index 7f29b8d..315a298 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+> @@ -369,6 +369,7 @@
+>  #define	MSR_ADHOC			0x01
+>  #define	MSR_INFRA			0x02
+>  #define	MSR_AP				0x03
+> +#define	MSR_MASK			0x03
+>  
+>  /* 6. Adaptive Control Registers  (Offset: 0x0160 - 0x01CF) */
+>  /* ----------------------------------------------------- */
+> 
 
