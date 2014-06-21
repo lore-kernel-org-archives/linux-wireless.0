@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0141.hostedemail.com ([216.40.44.141]:51722 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751951AbaFBQ2h (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:60991 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754357AbaFUVCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 12:28:37 -0400
-Message-ID: <1401726505.5770.2.camel@joe-AO725> (sfid-20140602_182840_474961_B93B661A)
-Subject: Re: [PATCH 1/1] rsi: Adding support for bgscan, 5GHz support and
- clean up of code
-From: Joe Perches <joe@perches.com>
-To: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 02 Jun 2014 09:28:25 -0700
-In-Reply-To: <538C910E.6090703@redpinesignals.com>
-References: <538C910E.6090703@redpinesignals.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sat, 21 Jun 2014 17:02:43 -0400
+Received: by mail-wi0-f176.google.com with SMTP id n3so2327519wiv.15
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 14:02:42 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Peter Wu <lekensteyn@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false 
+Date: Sat, 21 Jun 2014 23:03:41 +0200
+Message-Id: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230246_389690_12E01AFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-02 at 20:28 +0530, Jahnavi Meher wrote:
-> This patch adds code for support of bgscan and 5GHz.
-[]
-> There are also a number of small clean ups.
+I found a logical error in an if statement that always evaluates to false.
 
-[]
+This has after same discussion resulted in that we add a macro to handle this.
 
-> diff -uprN b/drivers/net/wireless/rsi/rsi_91x_mac80211.c a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-[]
-> @@ -243,8 +243,8 @@ static void rsi_mac80211_tx(struct ieee8
->  {
->  	struct rsi_hw *adapter = hw->priv;
->  	struct rsi_common *common = adapter->priv;
-> -
->  	rsi_core_xmit(common, skb);
-> +	return;
->  }
+This was partly found using a static code analysis program called cppcheck.
 
-Adding unnecessary returns at the end of a void function
-is not an improvement.
+Rickard Strandqvist (1):
+  net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
 
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+1.7.10.4
 
