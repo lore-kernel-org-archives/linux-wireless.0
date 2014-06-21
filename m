@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:34526 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbaFESVC (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:61520 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752772AbaFUP6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 14:21:02 -0400
-Received: by mail-wi0-f174.google.com with SMTP id r20so11090708wiv.13
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 11:21:00 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: gpio: register all 32 GPIOs on BCM53572
-Date: Thu,  5 Jun 2014 20:20:44 +0200
-Message-Id: <1401992444-4121-1-git-send-email-zajec5@gmail.com> (sfid-20140605_202108_193863_8862A829)
+	Sat, 21 Jun 2014 11:58:17 -0400
+Received: by mail-oa0-f41.google.com with SMTP id l6so8630740oag.14
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 08:58:16 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1403345479-13467-1-git-send-email-arend@broadcom.com>
+References: <1403345479-13467-1-git-send-email-arend@broadcom.com>
+Date: Sat, 21 Jun 2014 17:58:16 +0200
+Message-ID: <CACna6ryu6b=d9hpi71czo1q6uiWDZ4u+hXO-omAg6g23Y68xug@mail.gmail.com> (sfid-20140621_175828_573657_5BB3B146)
+Subject: Re: [PATCH 0/8] brcmfmac: new USB devices, vendor command, and cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've here a device detected as:
-bcma: bus0: Found chip with id 0xD144, rev 0x01 and package 0x08
-I couldn't find GPIO handling hw button until trying GPIO 20. It seems
-BCM53572 also has 32 GPIOs.
+On 21 June 2014 12:11, Arend van Spriel <arend@broadcom.com> wrote:
+> The patch series add driver support for new USB device. These are 11ac fullmac
+> devices with USB3.0 interface. Also opting for the vendor-specific netlink
+> command instead of cfg80211 testmode. The remaining patches are small cleanup
+> patches.
+>
+> This series is intended for 3.17 and applies to the master branch of the
+> wireless-next repository.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/driver_gpio.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index d7f81ad..aec9f85 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -220,6 +220,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- #endif
- 	switch (cc->core->bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM5357:
-+	case BCMA_CHIP_ID_BCM53572:
- 		chip->ngpio	= 32;
- 		break;
- 	default:
--- 
-1.8.4.5
-
+I've slightly updated
+http://wireless.kernel.org/en/users/Drivers/brcm80211
+, feel free to correct me if I did anything wrong.
