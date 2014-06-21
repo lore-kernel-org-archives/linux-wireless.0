@@ -1,38 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36912 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750809AbaFEMoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 08:44:22 -0400
-From: Jes.Sorensen@redhat.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/1] ieee80211.h: Add definitions for 20/40 BSS Coexist Mgmt action frame
-Date: Thu,  5 Jun 2014 14:44:14 +0200
-Message-Id: <1401972255-18815-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20140605_144425_879891_75684557)
+Received: from mail-la0-f45.google.com ([209.85.215.45]:44383 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbaFUW41 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2014 18:56:27 -0400
+Received: by mail-la0-f45.google.com with SMTP id hr17so3221419lab.4
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 15:56:22 -0700 (PDT)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH v2] net/wireless/brcm80211/brcmfmac: Make return type and name reflect actual semantics
+Date: Sun, 22 Jun 2014 00:55:26 +0200
+Message-Id: <1403391326-28086-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20140622_005656_043213_FA58C4DE)
+In-Reply-To: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
+References: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Applying ++ to a bool is equivalent to setting it true, regardless of
+its initial value (bools are not uint1_t). Hence the function
+wl_get_vif_state_all can only ever return true/false. The only in-tree
+caller uses its return value as a boolean. So update its return type,
+and since the list traversal and bit testing have no side effects,
+just return true immediately. Its return value tells if any vif is up,
+so also rename it to brcmf_get_vif_state_any.
 
-Hi,
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
 
-The 8723au driver issues BSS Coexistence Mgmt Action Frames, so rather
-keeping defines for this in a private driver header, I added it to the
-shared ieee80211.h header.
+Notes:
+    v2: Rename wl_get_vif_state_all => brcmf_get_vif_state_any as
+        requested by Arend.
 
-This is from section 8.5.8.2 in the 802.11-2012 spec.
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c         | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 7 +++----
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h | 2 +-
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-Cheers,
-Jes
-
-
-Jes Sorensen (1):
-  ieee80211.h: Add definitions for 20/40 BSS Coexistence Management
-    action frame
-
- include/linux/ieee80211.h | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index f3445ac..588fdbd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -708,7 +708,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+ 		active = P2PAPI_SCAN_SOCIAL_DWELL_TIME_MS;
+ 	else if (num_chans == AF_PEER_SEARCH_CNT)
+ 		active = P2PAPI_SCAN_AF_SEARCH_DWELL_TIME_MS;
+-	else if (wl_get_vif_state_all(p2p->cfg, BRCMF_VIF_STATUS_CONNECTED))
++	else if (brcmf_get_vif_state_any(p2p->cfg, BRCMF_VIF_STATUS_CONNECTED))
+ 		active = -1;
+ 	else
+ 		active = P2PAPI_SCAN_DWELL_TIME_MS;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index d8fa276..93b1809 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -5625,16 +5625,15 @@ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
+ 	return wdev->iftype;
+ }
+ 
+-u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
++bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg, unsigned long state)
+ {
+ 	struct brcmf_cfg80211_vif *vif;
+-	bool result = 0;
+ 
+ 	list_for_each_entry(vif, &cfg->vif_list, list) {
+ 		if (test_bit(state, &vif->sme_state))
+-			result++;
++			return true;
+ 	}
+-	return result;
++	return false;
+ }
+ 
+ static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event *event,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 283c525..f9fb109 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -477,7 +477,7 @@ const struct brcmf_tlv *
+ brcmf_parse_tlvs(const void *buf, int buflen, uint key);
+ u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+ 			struct ieee80211_channel *ch);
+-u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
++bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg, unsigned long state);
+ void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
+ 				  struct brcmf_cfg80211_vif *vif);
+ bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
 -- 
-1.9.3
+1.9.2
 
