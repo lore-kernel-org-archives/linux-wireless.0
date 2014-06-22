@@ -1,83 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:49137 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932753AbaFQJlB (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:53263 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbaFVVSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 05:41:01 -0400
-Subject: [PATCH 2/6] ath6kl: implement rx flush for htc pipe
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Jun 2014 12:40:58 +0300
-Message-ID: <20140617094058.22040.10223.stgit@potku.adurom.net> (sfid-20140617_114104_852516_FF3D70D1)
-In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net>
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+	Sun, 22 Jun 2014 17:18:41 -0400
+Received: by mail-we0-f173.google.com with SMTP id t60so6021874wes.32
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2014 14:18:40 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: N-PHY: update low-pass filter setup
+Date: Sun, 22 Jun 2014 23:18:22 +0200
+Message-Id: <1403471902-12731-2-git-send-email-zajec5@gmail.com> (sfid-20140622_231857_011067_633A1319)
+In-Reply-To: <1403471902-12731-1-git-send-email-zajec5@gmail.com>
+References: <1403471902-12731-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jessica Wu <kvalo@qca.qualcomm.com>
+Add support for external PA and clean code a bit.
 
-rx flush was not implemented for htc pipe, add that now. Doesn't fix any known
-issues.
-
-Also free the skb if htc control messages get canceled.
-
-Signed-off-by: Jessica Wu <wjessica@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |   32 +++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+ drivers/net/wireless/b43/phy_n.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index 756fe52a12c8..ca1a18c86c0d 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -1170,8 +1170,12 @@ static int htc_wait_recv_ctrl_message(struct htc_target *target)
- static void htc_rxctrl_complete(struct htc_target *context,
- 				struct htc_packet *packet)
- {
--	/* TODO, can't really receive HTC control messages yet.... */
--	ath6kl_dbg(ATH6KL_DBG_HTC, "%s: invalid call function\n", __func__);
-+	struct sk_buff *skb = packet->skb;
-+
-+	if (packet->endpoint == ENDPOINT_0 &&
-+	    packet->status == -ECANCELED &&
-+	    skb != NULL)
-+		dev_kfree_skb(skb);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index d9409b4..0fb5e14 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3706,21 +3706,28 @@ static void b43_nphy_pa_override(struct b43_wldev *dev, bool enable)
+ 	}
  }
  
- /* htc pipe initialization */
-@@ -1678,7 +1682,29 @@ static void ath6kl_htc_pipe_activity_changed(struct htc_target *target,
- 
- static void ath6kl_htc_pipe_flush_rx_buf(struct htc_target *target)
+-/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxLpFbw */
+-static void b43_nphy_tx_lp_fbw(struct b43_wldev *dev)
++/*
++ * TX low-pass filter bandwidth setup
++ * http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxLpFbw
++ */
++static void b43_nphy_tx_lpf_bw(struct b43_wldev *dev)
  {
--	/* TODO */
-+	struct htc_endpoint *endpoint;
-+	struct htc_packet *packet, *tmp_pkt;
-+	int i;
+ 	u16 tmp;
+ 
+-	if (dev->phy.rev >= 3) {
+-		if (b43_nphy_ipa(dev)) {
+-			tmp = 4;
+-			b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S2,
+-			      (((((tmp << 3) | tmp) << 3) | tmp) << 3) | tmp);
+-		}
++	if (dev->phy.rev < 3 || dev->phy.rev >= 7)
++		return;
+ 
+-		tmp = 1;
++	if (b43_nphy_ipa(dev))
++		tmp = b43_is_40mhz(dev) ? 5 : 4;
++	else
++		tmp = b43_is_40mhz(dev) ? 3 : 1;
++	b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S2,
++		      (tmp << 9) | (tmp << 6) | (tmp << 3) | tmp);
 +
-+	for (i = ENDPOINT_0; i < ENDPOINT_MAX; i++) {
-+		endpoint = &target->endpoint[i];
-+
-+		spin_lock_bh(&target->rx_lock);
-+
-+		list_for_each_entry_safe(packet, tmp_pkt,
-+					 &endpoint->rx_bufq, list) {
-+			list_del(&packet->list);
-+			spin_unlock_bh(&target->rx_lock);
-+			ath6kl_dbg(ATH6KL_DBG_HTC,
-+				   "htc rx flush pkt 0x%p len %d ep %d\n",
-+				   packet, packet->buf_len,
-+				   packet->endpoint);
-+			dev_kfree_skb(packet->pkt_cntxt);
-+			spin_lock_bh(&target->rx_lock);
-+		}
-+
-+		spin_unlock_bh(&target->rx_lock);
-+	}
++	if (b43_nphy_ipa(dev)) {
++		tmp = b43_is_40mhz(dev) ? 4 : 1;
+ 		b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S2,
+-			      (((((tmp << 3) | tmp) << 3) | tmp) << 3) | tmp);
++			      (tmp << 9) | (tmp << 6) | (tmp << 3) | tmp);
+ 	}
  }
  
- static int ath6kl_htc_pipe_credit_setup(struct htc_target *target,
+@@ -5347,7 +5354,7 @@ static int b43_phy_initn(struct b43_wldev *dev)
+ 	b43_phy_write(dev, B43_NPHY_TXMACDELAY, 0x0320);
+ 	if (phy->rev >= 3 && phy->rev <= 6)
+ 		b43_phy_write(dev, B43_NPHY_PLOAD_CSENSE_EXTLEN, 0x0032);
+-	b43_nphy_tx_lp_fbw(dev);
++	b43_nphy_tx_lpf_bw(dev);
+ 	if (phy->rev >= 3)
+ 		b43_nphy_spur_workaround(dev);
+ 
+@@ -5433,7 +5440,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 	if (dev->phy.rev < 3)
+ 		b43_nphy_adjust_lna_gain_table(dev);
+ 
+-	b43_nphy_tx_lp_fbw(dev);
++	b43_nphy_tx_lpf_bw(dev);
+ 
+ 	if (dev->phy.rev >= 3 &&
+ 	    dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
+-- 
+1.8.4.5
 
