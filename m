@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:59133 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756261AbaFAMnU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 08:43:20 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so3209109wib.17
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 05:43:19 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rt2x00: rt2x00mac.c:  Cleaning up uninitialized variables
-Date: Sun,  1 Jun 2014 14:44:13 +0200
-Message-Id: <1401626653-15842-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140601_144339_463058_6FB6B8C2)
+Received: from nbd.name ([46.4.11.11]:45425 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751516AbaFVMOj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jun 2014 08:14:39 -0400
+Message-ID: <53A6C8A2.4000202@openwrt.org> (sfid-20140622_141447_483832_98375D0A)
+Date: Sun, 22 Jun 2014 14:14:26 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/2] b43: remove leftover code from old devices support
+References: <1403277721-25302-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1403277721-25302-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a risk that the variable will be used without being initialized.
+On 2014-06-20 17:22, Rafał Miłecki wrote:
+> Old devices (A-PHY or B-PHY) are supposed to be supported by b43legacy.
+> We keep phy_a.c as it's needed for G-PHY which shares some design.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Wouldn't it make sense to move the relevant pieces of phy_a.c to phy_g.c
+and then remove phy_a.c entirely?
 
-This was largely found by using a static code analysis program called cppcheck.
+There are pieces in phy_a.c which can be removed entirely, e.g.
+b43_phyops_a and things only used by this struct.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index a87ee9b..98f440a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -798,6 +798,8 @@ int rt2x00mac_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
- 
- 	setup.tx = tx_ant;
- 	setup.rx = rx_ant;
-+	setup.rx_chain_num = 0;
-+	setup.tx_chain_num = 0;
- 
- 	rt2x00lib_config_antenna(rt2x00dev, setup);
- 
--- 
-1.7.10.4
-
+- Felix
