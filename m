@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23145 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:53749 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851AbaFJRDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 13:03:47 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Max Stepanov <Max.Stepanov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: WEP extra head/tail room in ieee80211_send_auth
-Date: Tue, 10 Jun 2014 20:00:08 +0300
-Message-Id: <1402419608-11892-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140610_190350_996213_E94CE0E4)
+	id S1750781AbaFVOKy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jun 2014 10:10:54 -0400
+Message-ID: <53A6E3E1.3090501@openwrt.org> (sfid-20140622_161058_137976_CBAEF64B)
+Date: Sun, 22 Jun 2014 16:10:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH 1/2] b43: remove leftover code from old devices support
+References: <1403277721-25302-1-git-send-email-zajec5@gmail.com>	<53A6C8A2.4000202@openwrt.org> <CACna6ryCRraViALRp5fMfmJzYDTQ+6OUuJnRGRj5i5v36Ntw4A@mail.gmail.com>
+In-Reply-To: <CACna6ryCRraViALRp5fMfmJzYDTQ+6OUuJnRGRj5i5v36Ntw4A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Max Stepanov <Max.Stepanov@intel.com>
+On 2014-06-22 16:07, Rafał Miłecki wrote:
+> On 22 June 2014 14:14, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2014-06-20 17:22, Rafał Miłecki wrote:
+>>> Old devices (A-PHY or B-PHY) are supposed to be supported by b43legacy.
+>>> We keep phy_a.c as it's needed for G-PHY which shares some design.
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> Wouldn't it make sense to move the relevant pieces of phy_a.c to phy_g.c
+>> and then remove phy_a.c entirely?
+>>
+>> There are pieces in phy_a.c which can be removed entirely, e.g.
+>> b43_phyops_a and things only used by this struct.
+> 
+> Absolutely, however it needs some effort and time. I'm currently quite
+> busy with other things in b43.
+> 
+> One could remove b43_phyops_a, then remove newly-unused functions.
+> Then see what code is not used by G-PHY. However you should keep in
+> mind, that 5 GHz support for G-PHY may need some functions that are
+> not called at this moment. So I'd suggest looking at 5 GHz support in
+> G-PHY first to avoid removing sth that may be needed in the future.
+Makes sense.
 
-After skb allocation and call to ieee80211_wep_encrypt in ieee80211_send_auth
-the flow fails with a warning in ieee80211_wep_add_iv on verification of
-available head/tailroom needed for WEP_IV and WEP_ICV.
-
-Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/util.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 4a0f3ae..1cc4d82 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1125,11 +1125,12 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 	int err;
- 
- 	/* 24 + 6 = header + auth_algo + auth_transaction + status_code */
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 24 + 6 + extra_len);
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + IEEE80211_WEP_IV_LEN +
-+			    24 + 6 + extra_len + IEEE80211_WEP_ICV_LEN);
- 	if (!skb)
- 		return;
- 
--	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	skb_reserve(skb, local->hw.extra_tx_headroom + IEEE80211_WEP_IV_LEN);
- 
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24 + 6);
- 	memset(mgmt, 0, 24 + 6);
--- 
-1.9.1
+- Felix
 
