@@ -1,80 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:60449 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933986AbaFRLqR (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48121 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbaFWKTJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2014 07:46:17 -0400
-Message-ID: <1403091974.1984.102.camel@x220> (sfid-20140618_134636_333776_3F5BD4E6)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Wed, 18 Jun 2014 13:46:14 +0200
-In-Reply-To: <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	 <1391971686-9517-10-git-send-email-richard@nod.at>
-	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
-	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
-	 <52F8C373.9060108@rempel-privat.de>
-	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
-	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
-	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-	 <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
-	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-	 <1403087119.1984.93.camel@x220>
-	 <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 23 Jun 2014 06:19:09 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so3857540wib.13
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 03:19:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1400769683.4174.25.camel@jlt4.sipsolutions.net>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
+	<1400769683.4174.25.camel@jlt4.sipsolutions.net>
+Date: Mon, 23 Jun 2014 12:19:03 +0200
+Message-ID: <CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com> (sfid-20140623_121914_682994_6AF4A993)
+Subject: Re: [PATCH 2/2] ath10k: make core registering async
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sergey,
-
-On Wed, 2014-06-18 at 15:10 +0400, Sergey Ryazanov wrote:
-> 2014-06-18 14:25 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> > ATHEROS_AR231X and the things depending on it, like AHB bus support,
-> > have been discussed for three years now. When will you (re)consider a
-> > patch to remove all currently dead code?
-> >
-> > And to state the obvious: AHB bus support, and the other code depending
-> > on ATHEROS_AR231X, can always be re-added once ATHEROS_AR231X gets added
-> > to the tree.
-> 
-> Work in progress, I don't stop it. Just work is progressing slower
-> than I had planned. I am already cleanup the code (mostly checkpatch
-> errors and warnings) and send patches to OpenWRT tree. Further I plan
-> to simplify initialization and I will be ready to send patches
-> upstream.
-
-That's good to hear.
-
-> I need a couple of weeks for this. Is its reasonable time to not make
-> a mess of remove/add commits?
-
-Removing the code just to re-add it shortly after would indeed be
-awkward.
-
-Having this conversation every rc1 is getting a bit silly. Could Jiri
-e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
-submitted?
-
-Thanks,
+Hi Johannes,
 
 
-Paul Bolle
+On 22 May 2014 16:41, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-05-22 at 16:12 +0200, Michal Kazior wrote:
+>
+>> As a side effect there's no way to propagate
+>> registering errors to the pci subsystem but this
+>> probably isn't really necessary.
+>
+> You should probably unbind if it fails - iwlwifi does that.
 
+Hmm..
+
+As it stands ath10k now deadlocks when firmware probing worker fails
+and calls device_release_driver(). This indirectly hits pci remove()
+callback which waits for the worker. Oops.
+
+So I've taken a look how other driver do it so I can come up with a
+solution - most of them seem use completions. After taking a closer
+look I came to a conclusion this is inherently racy too. Consider the
+following scenario:
+
+ [syscall]
+ insmod
+ pci->probe()
+ queue_work()
+ return
+ [worker]
+ probe_fw()
+ [syscall]
+ rmmod
+ dev_lock()
+ pci->remove()
+ wait_for_completion()
+ [worker]
+ complete_all()
+ device_release_driver()
+ dev_lock()
+ {already held, yield}
+ [syscall]
+ free(internal structures)
+ dev_unlock()
+ return
+ [worker]
+ {woken up, but dev->driver == NULL so no callbacks}
+ dev_unlock()
+ return
+
+The driver code section may not be reachable anymore upon worker
+returning from the device_release_driver() call, right? Also since
+ath10k uses an internal worker it also means the work_struct would be
+already freed by the syscall flow (i.e. worker would run after driver
+has supposedly been cleaned up..). Even if ath10k was to use
+request_firmware_nowait(), which allocates a temporary work_struct,
+the unreachable code section still remains a problem.
+
+Or maybe this isn't really a problem and/or I'm missing something?
+
+
+Michał
