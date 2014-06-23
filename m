@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:56112 "EHLO dedo.coelho.fi"
+Received: from dedo.coelho.fi ([88.198.205.34]:38607 "EHLO dedo.coelho.fi"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751088AbaFIHVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 03:21:13 -0400
-Message-ID: <1402298460.2004.34.camel@dubbel> (sfid-20140609_092116_729170_4DEF48EA)
+	id S1752535AbaFWKq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 06:46:58 -0400
+Message-ID: <1403520409.2885.9.camel@dubbel> (sfid-20140623_124701_747406_C30FAB9C)
 From: Luca Coelho <luca@coelho.fi>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 09 Jun 2014 10:21:00 +0300
-In-Reply-To: <CA+BoTQkX=ZpDc=R+nWxsrj026XyaaEiwrosaB2buRVif2aOnxQ@mail.gmail.com>
-References: <1402068423-23359-1-git-send-email-luca@coelho.fi>
-	 <1402080365-15462-1-git-send-email-luca@coelho.fi>
-	 <CA+BoTQkX=ZpDc=R+nWxsrj026XyaaEiwrosaB2buRVif2aOnxQ@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Mon, 23 Jun 2014 13:46:49 +0300
+In-Reply-To: <1403009938-1084-1-git-send-email-michal.kazior@tieto.com>
+References: <1402577680-17888-1-git-send-email-michal.kazior@tieto.com>
+	 <1403009938-1084-1-git-send-email-michal.kazior@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [RFC option 2] mac80211: introduce refcount for
- queue_stop_reasons
+Subject: Re: [PATCH v10 0/5] cfg/mac80211: implement multi-vif csa
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-09 at 07:34 +0200, Michal Kazior wrote:
-> On 6 June 2014 20:46, Luca Coelho <luca@coelho.fi> wrote:
-> > From: Luciano Coelho <luciano.coelho@intel.com>
-> >
-> > Sometimes different vifs may be stopping the queues for the same
-> > reason (e.g. when several interfaces are performing a channel switch).
-> > Instead of using a bitmask for the reasons, use an integer that holds
-> > a refcount instead.
-> >
-> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> > ---
-> >
-> > This looks much simpler now.  The only thing is that we need to make
-> > sure the bitmask never gets out of sync with the refcounts, which
-> > shouldn't be too difficult, as long as we keep the refcounts usage
-> > restricted to the queues start/stopping functions.
+Hi,
+
+On Tue, 2014-06-17 at 14:58 +0200, Michal Kazior wrote:
+> Hi,
 > 
-> I think you need to make sure all stop/wake calls are balanced
-> everywhere (including device drivers). Otherwise you risk breaking
-> things silently in some cases.
+> The patchset implements multi-interface
+> reservations and multi-interface channel
+> switching.
 > 
-> It might also be worth to update exported stop/wake symbol documentation too.
+> There are still some cases that aren't handled
+> well (at least degradation of number of channels
+> due to interface combinations that I'm aware of).
+> 
+> 
+> v10:
+>  * rebase to latest mac80211-next/master
+>    (90c18a8b34add196da9b07fd37d0f3b4b451c6b3)
+>  * fix compilation [Luca]
+> 
+> Michal Kazior (5):
+>   mac80211: implement multi-vif in-place reservations
+>   mac80211: make check_combinations() aware of chanctx reservation
+>   mac80211: use chanctx reservation for AP CSA
+>   mac80211: use chanctx reservation for STA CSA
+>   cfg80211: remove channel_switch combination check
 
-Good point, I'll look into that.
+This series looks good to me.  I couldn't spot anything wrong (though I
+admit I have not reviewed the latest series as deeply as some of the
+previous series), so I think we could apply this now and test, test,
+test.  Let's make sure things are working before we officially re-enable
+channel switch in general in mac80211.
 
-My original idea was to mark the queues as stopped in the sdata so we
-would at least clean things up when the vif is stopped, but that would
-be a bit slow if we had to traverse them all the time.
+I have tried to apply these patches in our internal tree and got some
+crashed, but there were so many conflicts that I'm almost sure the
+troubles were because of a bad merge and not with the original patches
+themselves.  I'll do a merge again once this gets applied to mac80211
+and, if I still see problems, let's fix them.
 
-Checking this might be tricky, actually, since I think there are some
-assumptions that stopping a queue that is already stopped is a NOP, but
-now we add to the refcount...
+In short, I think it's time to merge this to get it tested in real life
+instead of just hammering it ad-infinitum with reviews.  The risk is low
+anyway, because CSA is still disabled by force in mac80211.
+
+What do others think?
 
 --
+Cheers,
 Luca.
 
