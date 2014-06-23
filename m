@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:49585 "EHLO
-	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbaFAR7m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 13:59:42 -0400
-Subject: [PATCH 1/2] rt2800usb:fix efuse detection
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-From: Michael Braun <michael-dev@fami-braun.de>
-Cc: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Date: Sun, 01 Jun 2014 19:52:47 +0200
-Message-ID: <20140601175247.7980.2461.stgit@charlie.fem.tu-ilmenau.de> (sfid-20140601_200029_569806_7E84949D)
-In-Reply-To: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
-References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de>
+Received: from nbd.name ([46.4.11.11]:38699 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751122AbaFWKFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 06:05:00 -0400
+Message-ID: <53A7FBB2.2050703@openwrt.org> (sfid-20140623_120527_967592_EF6862D1)
+Date: Mon, 23 Jun 2014 12:04:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rostislav Lisovy <lisovy@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: Re: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when checking
+ usable channels
+References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <53A6C0FF.9090104@openwrt.org> <1403514536.4418.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1403514536.4418.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) currently does not
-load. One thing observed is that the vendors driver detects EFUSE mode
-for this device, but rt2800usb does not. This is due to rt2800usb
-lacking a check for the firmware mode present in the vendors driver,
-that this patch adopts for rt2800usb.
+On 2014-06-23 11:08, Johannes Berg wrote:
+> On Sun, 2014-06-22 at 13:41 +0200, Felix Fietkau wrote:
+>> On 2014-04-15 14:37, Rostislav Lisovy wrote:
+>> > Current code checks if the 20MHz bandwidth is allowed for
+>> > particular channel -- if it is not, the channel is disabled.
+>> > Since we need to use 5/10 MHz channels, this code is modified in
+>> > the way that the default bandwidth to check is 5MHz. If the
+>> > maximum bandwidth allowed by the channel is smaller than 5MHz,
+>> > the channel is disabled. Otherwise the channel is used and the
+>> > flags are set according to the bandwidth allowed by the channel.
+>> > 
+>> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+> 
+>> This change causes a regression and needs to be reverted or fixed.
+> 
+> Noted, I've reverted it in mac80211.git.
+> 
+>> It leaves Channel 12 enabled for US regdomain and does not prevent
+>> bringing up AP mode on it (IEEE80211_CHAN_NO_20MHZ does not get set).
+> 
+> I'm not sure this makes sense - CHAN_NO_20MHZ shouldn't get set on that
+> channel? It should be disabled for other reasons for AP mode - e.g.
+> NO_IR.
+I was thinking it could be valid in AP mode for 5 MHz operation.
 
-With this patch applied, the 'RF chipset' detection does no longer fail.
-
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a49c3d7..b601422 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -735,11 +735,25 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- /*
-  * Device probe functions.
-  */
-+static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
-+{
-+	__le32 fwMode;
-+
-+	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-+				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
-+				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
-+
-+	if ((fwMode & 0x00000003) == 2)
-+		return 1;
-+
-+	return rt2800_efuse_detect(rt2x00dev);
-+}
-+
- static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
- 
--	if (rt2800_efuse_detect(rt2x00dev))
-+	if (rt2800usb_efuse_detect(rt2x00dev))
- 		retval = rt2800_read_eeprom_efuse(rt2x00dev);
- 	else
- 		retval = rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
-
+- Felix
