@@ -1,63 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:38453 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048AbaFKNrm (ORCPT
+Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:54265 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756103AbaFWNm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 09:47:42 -0400
-Received: by mail-wg0-f41.google.com with SMTP id a1so5554378wgh.12
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 06:47:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6U-CaXEh7Mtd+BCNwY8QUGz2Ahc=-+_Zet9aoWDdNpevQ@mail.gmail.com>
-References: <CANy8jx+RY-_wbX5JqdF_xwyP+2XQ-V9Ae95Y5MOzd=fyir8KTw@mail.gmail.com>
- <CABPxzYK2xZwwQ4h+ifB6KP9wyr39RF2Z6zrsyZ=0CtC+YceRWQ@mail.gmail.com>
- <CAB=NE6XuAj8jEwLesbSDoyawWh0pWTD-w=L3Jrxx+630QSkm5w@mail.gmail.com>
- <CABPxzYJud-nmSp3gOxA+cPrZpv2Xgo_B9WeVcAnfkY1DSO_q_Q@mail.gmail.com> <CAB=NE6U-CaXEh7Mtd+BCNwY8QUGz2Ahc=-+_Zet9aoWDdNpevQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 11 Jun 2014 19:17:21 +0530
-Message-ID: <CABPxzYLnfcG6m3x_QV-EUQQXhpM96n=GDvTJu9DV7Zxp=O_OxA@mail.gmail.com> (sfid-20140611_154746_423096_C8B8F0A9)
-Subject: Re: max_erip/tx_power not being set correctly
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	John Walker <john@x109.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Jun 2014 09:42:56 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 15/22] ipw2100: Use pci_zalloc_consistent
+Date: Mon, 23 Jun 2014 06:41:43 -0700
+Message-Id: <300ca978edde7122af48aae0f6de0d06730c5fbc.1403530604.git.joe@perches.com> (sfid-20140623_154618_604328_0C4B3732)
+In-Reply-To: <cover.1403530604.git.joe@perches.com>
+References: <cover.1403530604.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 2:24 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, Jun 10, 2014 at 10:05 PM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
->> On Wed, Jun 11, 2014 at 3:28 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->>> On Sun, May 25, 2014 at 10:55 AM, Krishna Chaitanya
->>> <chaitanya.mgit@gmail.com> wrote:
->>>> https://dev.openwrt.org/browser/trunk/package/kernel/mac80211/patches/005-make-genregdb.awk-skip-antenna-gain.patch?rev=40296
->>>
->>> This just ignores antenna gain as it was useless.
->> That actually fixes the issue of setting tx power :-). In the new
->> db.txt format there
->> is tx power is not present, so the awk script parses the tx power as
->> antenna gain.
->
-> Is this patch not upstream? Or do you mean that the db.txt format
-> causes an issue for 3.10 kernels which do not have this patch when the
-> internal regdb is used? If so that's a good corner case that I had not
-> considered -- the removal of the antenna gain for future releases of
-> db.txt obviously would have had an impact on older kernels with an awk
-> script expecting something different.
->
-Right, this patch is not upstream. Current kernels do not work with
-new db.txt format when itnernal regdb is enabled.
+Remove the now unnecessary memset too.
 
-> We need a solution for this and thanks for reporting this. Since we
-> have to support both for older kernels I think we will need to modify
-> the awk script to pick up on the differences... that's the only thing
-> I can think of. That or break the db.txt to not work with older
-> kernels, but we don't want that... Can you hack up a solution now that
-> I've identified the issue? Otherwise I can look at it soon.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-I plan to submit a patch for awk script which can handle both db.txt formats
-but could not execute it.
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index dfc6dfc..1ab8e50 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -3449,8 +3449,9 @@ static int ipw2100_msg_allocate(struct ipw2100_priv *priv)
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < IPW_COMMAND_POOL_SIZE; i++) {
+-		v = pci_alloc_consistent(priv->pci_dev,
+-					 sizeof(struct ipw2100_cmd_header), &p);
++		v = pci_zalloc_consistent(priv->pci_dev,
++					  sizeof(struct ipw2100_cmd_header),
++					  &p);
+ 		if (!v) {
+ 			printk(KERN_ERR DRV_NAME ": "
+ 			       "%s: PCI alloc failed for msg "
+@@ -3459,8 +3460,6 @@ static int ipw2100_msg_allocate(struct ipw2100_priv *priv)
+ 			break;
+ 		}
+ 
+-		memset(v, 0, sizeof(struct ipw2100_cmd_header));
+-
+ 		priv->msg_buffers[i].type = COMMAND;
+ 		priv->msg_buffers[i].info.c_struct.cmd =
+ 		    (struct ipw2100_cmd_header *)v;
+@@ -4336,16 +4335,12 @@ static int status_queue_allocate(struct ipw2100_priv *priv, int entries)
+ 	IPW_DEBUG_INFO("enter\n");
+ 
+ 	q->size = entries * sizeof(struct ipw2100_status);
+-	q->drv =
+-	    (struct ipw2100_status *)pci_alloc_consistent(priv->pci_dev,
+-							  q->size, &q->nic);
++	q->drv = pci_zalloc_consistent(priv->pci_dev, q->size, &q->nic);
+ 	if (!q->drv) {
+ 		IPW_DEBUG_WARNING("Can not allocate status queue.\n");
+ 		return -ENOMEM;
+ 	}
+ 
+-	memset(q->drv, 0, q->size);
+-
+ 	IPW_DEBUG_INFO("exit\n");
+ 
+ 	return 0;
+@@ -4374,13 +4369,12 @@ static int bd_queue_allocate(struct ipw2100_priv *priv,
+ 
+ 	q->entries = entries;
+ 	q->size = entries * sizeof(struct ipw2100_bd);
+-	q->drv = pci_alloc_consistent(priv->pci_dev, q->size, &q->nic);
++	q->drv = pci_zalloc_consistent(priv->pci_dev, q->size, &q->nic);
+ 	if (!q->drv) {
+ 		IPW_DEBUG_INFO
+ 		    ("can't allocate shared memory for buffer descriptors\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(q->drv, 0, q->size);
+ 
+ 	IPW_DEBUG_INFO("exit\n");
+ 
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
-Will try to submit a hack soon.
