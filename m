@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:52257 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbaFKHXo (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:62001 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbaFWVw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 03:23:44 -0400
-Received: by mail-we0-f178.google.com with SMTP id p10so6321313wes.23
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2014 00:23:42 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] regulatory: add NULL to alpha2
-Date: Wed, 11 Jun 2014 10:23:35 +0300
-Message-Id: <1402471415-22723-1-git-send-email-arik@wizery.com> (sfid-20140611_092347_345196_25D980A6)
+	Mon, 23 Jun 2014 17:52:56 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n3so4952588wiv.14
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 14:52:55 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCHv3 2/6] rtlwifi/rtl8192c[eu]: Fix media status register mask
+Date: Mon, 23 Jun 2014 23:53:55 +0200
+Message-Id: <1403560436-7662-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140623_235319_872477_D2E985BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+bt_msr & 0xfc will never match 0x3. Fix this by using a mask that actually matches the available types.
 
-alpha2 is defined as 2-chars array, but is used in multiple
-places as string (e.g. with nla_put_string calls), which
-might leak kernel data.
-
-Solve it by simply adding an extra char for the NULL
-terminator, making such operations safe.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Reviewed-by: Peter Wu <peter@lekensteyn.nl>
 ---
- include/net/regulatory.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  |    2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 2599924..dad7ab2 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -167,7 +167,7 @@ struct ieee80211_reg_rule {
- struct ieee80211_regdomain {
- 	struct rcu_head rcu_head;
- 	u32 n_reg_rules;
--	char alpha2[2];
-+	char alpha2[3];
- 	enum nl80211_dfs_regions dfs_region;
- 	struct ieee80211_reg_rule reg_rules[];
- };
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 55adf04..5050938 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1206,7 +1206,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
+ 
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+index ed703a1..dc8460c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+@@ -375,6 +375,7 @@
+ #define	MSR_ADHOC				0x01
+ #define	MSR_INFRA				0x02
+ #define	MSR_AP					0x03
++#define	MSR_MASK				0x03
+ 
+ #define	RRSR_RSC_OFFSET				21
+ #define	RRSR_SHORT_OFFSET			23
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 07cb06d..87c0a27 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
 -- 
-1.9.1
+1.7.10.4
 
