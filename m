@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33586 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752977AbaFDNUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:20:41 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
-Subject: [RFC/RFT 3/5] rt2x00: change default MAC_BSSID_DW1_BSS_BCN_NUM
-Date: Wed,  4 Jun 2014 15:19:13 +0200
-Message-Id: <1401887955-11361-3-git-send-email-sgruszka@redhat.com> (sfid-20140604_152047_896692_663BA422)
-In-Reply-To: <1401887955-11361-1-git-send-email-sgruszka@redhat.com>
-References: <1401887955-11361-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:34164 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327AbaFWS03 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 14:26:29 -0400
+Received: by mail-pd0-f173.google.com with SMTP id r10so5963476pdi.32
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 11:26:29 -0700 (PDT)
+Date: Mon, 23 Jun 2014 11:26:23 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user
+ hints
+Message-ID: <20140623182623.GC1390@garbanzo.do-not-panic.com> (sfid-20140623_202633_004076_E4A220A8)
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-4-git-send-email-arik@wizery.com>
+ <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com>
+ <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We setup MAC_BSSID_DW1_BSS_BCN_NUM dynamically when numbers of active
-beacons increase. Change default to 0 to tell hardware that we want to
-send only one beacon as default.
+On Mon, Jun 23, 2014 at 08:14:43PM +0300, Arik Nemtsov wrote:
+> On Thu, Jun 19, 2014 at 2:34 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> >> Allow driver and user hints to set the "world" regulatory domain,
+> >
+> > NACK - as expressed in the other patch, letting the drivers to use the
+> > new API to set the world regulatory domain doesn't make sense as we
+> > have custom apply stuff, and the world regulatory domain is not
+> > something dynamic.
+> 
+> Well we want to set the world regdomain from FW. This obviously
+> happens after wiphy registration, so I don't think the custom apply
+> can be used here? (since we generally want cfg80211 to own the
+> regdomain settings).
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Can the driver not obtain the world regulatory domain from firmware
+prior to wiphy registration? Why not?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c45b2d3..a9cdddd 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1601,7 +1601,7 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
- 		if (!is_zero_ether_addr((const u8 *)conf->bssid)) {
- 			reg = le32_to_cpu(conf->bssid[1]);
- 			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_ID_MASK, 3);
--			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 7);
-+			rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 0);
- 			conf->bssid[1] = cpu_to_le32(reg);
- 		}
- 
--- 
-1.8.3.1
+One thing to be careful on all this new API design is to ensure that
+upon disconnect we want the driver to go back to the original state,
+whatever that is.
 
+  Luis
