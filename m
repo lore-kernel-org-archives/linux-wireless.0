@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:60191 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752447AbaFMNaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 09:30:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, michal.kazior@tieto.com
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Fri, 13 Jun 2014 16:30:04 +0300
-Message-Id: <1402666207-2257-2-git-send-email-luca@coelho.fi> (sfid-20140613_153050_157764_281EBD7B)
-In-Reply-To: <1402666207-2257-1-git-send-email-luca@coelho.fi>
-References: <1402666207-2257-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 1/4] mac80211: don't stop all queues when flushing
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25277 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755484AbaFWTX1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 15:23:27 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Date: Mon, 23 Jun 2014 12:23:11 -0700
+Subject: RE: [PATCH] Revert "mwifiex: Use the proper interfaces"
+Message-ID: <477F20668A386D41ADCC57781B1F70430FE56129EB@SC-VEXCH1.marvell.com> (sfid-20140623_212330_430664_82C9A699)
+References: <1403309262-5737-1-git-send-email-bzhao@marvell.com>
+ <alpine.DEB.2.10.1406220013470.5170@nanos>
+In-Reply-To: <alpine.DEB.2.10.1406220013470.5170@nanos>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi Thomas,
 
-There is no need to stop all queues when we want to flush specific
-queues, so stop only the queues that will be flushed.
+> > This reverts commit a82fc3b4a2bceb7c6587249cb690342eb5065979.
+> >
+> > Thomas corrected me on that I misunderstood Johannes' comment
+> > for net_timedelta() and the ktime_get_real() usage inside
+> > __net_timestamp().
+> 
+> And still my V2 patch is functionally equivivalent to the current
+> implementation but uses the proper interfaces for that.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Yes, your v2 patch is equivalent to the current code using the proper interfaces.
+It also makes the code simpler and cleaner. Thanks!
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7e0dd4b..04e5f5c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -551,12 +551,12 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
- 		queues = BIT(local->hw.queues) - 1;
- 	}
- 
--	ieee80211_stop_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
-+	ieee80211_stop_queues_by_reason(&local->hw, queues,
- 					IEEE80211_QUEUE_STOP_REASON_FLUSH);
- 
- 	drv_flush(local, sdata, queues, false);
- 
--	ieee80211_wake_queues_by_reason(&local->hw, IEEE80211_MAX_QUEUE_MAP,
-+	ieee80211_wake_queues_by_reason(&local->hw, queues,
- 					IEEE80211_QUEUE_STOP_REASON_FLUSH);
- }
- 
--- 
-2.0.0.rc2
+Hi John,
 
+Could you please apply the v2 patch titled "[patch V2] wireless: mwifiex: Use the proper interfaces" after applying this "revert" patch?
+
+Thanks,
+Bing
+
+> 
+> If the network core folks come up with a clock monotonic based
+> solution, then you do not have to change anything at all. It just
+> works ...
+> 
+> That's what interfaces are made for....
+> 
+> Thanks,
+> 
+> 	tglx
