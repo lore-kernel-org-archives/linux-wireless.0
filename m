@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52763 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934155AbaFCWKD (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:63494 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328AbaFWO6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 18:10:03 -0400
-Message-ID: <1401833651.2412.35.camel@deadeye.wl.decadent.org.uk> (sfid-20140604_001021_066239_56A22A46)
-Subject: Re: [PATCH] rtlwifi: Add firmware for r8723au
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Tue, 03 Jun 2014 23:14:11 +0100
-In-Reply-To: <1390174519.3651.3.camel@deadeye.wl.decadent.org.uk>
-References: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1390174519.3651.3.camel@deadeye.wl.decadent.org.uk>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-uFxdRWA2LqEvmmNjulyK"
+	Mon, 23 Jun 2014 10:58:52 -0400
+Message-ID: <1403535525.10968.7.camel@lolumad> (sfid-20140623_165916_679557_1C150DAC)
+Subject: Re: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when
+ checking usable channels
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Mon, 23 Jun 2014 16:58:45 +0200
+In-Reply-To: <53A83DE1.4050106@openwrt.org>
+References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+		 <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz>
+		 <53A6C0FF.9090104@openwrt.org>
+		 <1403514536.4418.6.camel@jlt4.sipsolutions.net>
+		 <53A7FBB2.2050703@openwrt.org>
+		 <1403517938.4418.16.camel@jlt4.sipsolutions.net>
+	 <1403534300.7341.6.camel@lolumad> <53A83DE1.4050106@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2014-06-23 at 16:46 +0200, Felix Fietkau wrote:
+> On 2014-06-23 16:38, Rostislav Lisovy wrote:
+> > On Mon, 2014-06-23 at 12:05 +0200, Johannes Berg wrote:
+> >> On Mon, 2014-06-23 at 12:04 +0200, Felix Fietkau wrote:
+> >> > On 2014-06-23 11:08, Johannes Berg wrote:
+> >> > > On Sun, 2014-06-22 at 13:41 +0200, Felix Fietkau wrote:
+> >> > >> On 2014-04-15 14:37, Rostislav Lisovy wrote:
+> >> > >> > Current code checks if the 20MHz bandwidth is allowed for
+> >> > >> > particular channel -- if it is not, the channel is disabled.
+> >> > >> > Since we need to use 5/10 MHz channels, this code is modified in
+> >> > >> > the way that the default bandwidth to check is 5MHz. If the
+> >> > >> > maximum bandwidth allowed by the channel is smaller than 5MHz,
+> >> > >> > the channel is disabled. Otherwise the channel is used and the
+> >> > >> > flags are set according to the bandwidth allowed by the channel.
+> >> > >> > 
+> >> > >> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+> >> > > 
+> >> > >> This change causes a regression and needs to be reverted or fixed.
+> >> > > 
+> >> > > Noted, I've reverted it in mac80211.git.
+> >> > > 
+> >> > >> It leaves Channel 12 enabled for US regdomain and does not prevent
+> >> > >> bringing up AP mode on it (IEEE80211_CHAN_NO_20MHZ does not get set).
+> >> > > 
+> >> > > I'm not sure this makes sense - CHAN_NO_20MHZ shouldn't get set on that
+> >> > > channel? It should be disabled for other reasons for AP mode - e.g.
+> >> > > NO_IR.
+> >> > I was thinking it could be valid in AP mode for 5 MHz operation.
+> >> 
+> >> Huh, ok, maybe. I guess Rostislav can look into the details :)
+> >> 
+> > 
+> > I am a bit confused right now. The regression is that the channel used
+> > to be completely disabled and now it is not? The regulatory restrictions
+> > prohibit the 20MHz BW for this channel but 5MHz BW is alright?
+> Correct. The matching rule is this:
+>         (2402 - 2472 @ 40), (N/A, 30), (N/A)
+> 
+> Channel 11 (2462 MHz) is allowed, because 2472 MHz is below the limit.
+> Channel 12 (2467 MHz) is not allowed, because 2477 MHz is too high.
+> 
+> With your change, Channel 12 was enabled and usable for AP mode.
 
---=-uFxdRWA2LqEvmmNjulyK
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thank you Felix, this makes sense.
 
-On Sun, 2014-01-19 at 23:35 +0000, Ben Hutchings wrote:
-> On Thu, 2014-01-02 at 18:42 -0600, Larry Finger wrote:
-> > This firmware is for a driver that will soon be submitted to the kernel=
-.
-> > It occurs as data statements in Realtek driver rtl8723A_WiFi_linux_v4.1=
-.3_6044.20121224.
-> >=20
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > ---
-> >  WHENCE                         |  13 +++++++++++++
-> >  rtlwifi/rtl8723aufw_A.bin      | Bin 0 -> 22172 bytes
-> >  rtlwifi/rtl8723aufw_B.bin      | Bin 0 -> 24118 bytes
-> >  rtlwifi/rtl8723aufw_B_NoBT.bin | Bin 0 -> 19200 bytes
-> >  4 files changed, 13 insertions(+)
-> >  create mode 100644 rtlwifi/rtl8723aufw_A.bin
-> >  create mode 100644 rtlwifi/rtl8723aufw_B.bin
-> >  create mode 100644 rtlwifi/rtl8723aufw_B_NoBT.bin
-> [...]
->=20
-> Applied, thanks.
+I think the issue is the call
+  bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(5));
+which checks if "2467 + 5" is equal or less than 2472 (which indeed is),
+when the result is true, the maximum allowed BW (max_bandwidth_khz) is
+wrongly used on that particular channel.
 
-I just noticed that the driver in Linux 3.15 seems to ask for
-rtlwifi/rtl8723aufw.bin and not rtlwifi/rtl8723aufw_A.bin.  You'll need
-to change the filename on one side or the other.
+I hope I will send a fix on Friday.
 
-Ben.
+Rostislav;
 
---=20
-Ben Hutchings
-If more than one person is responsible for a bug, no one is at fault.
 
---=-uFxdRWA2LqEvmmNjulyK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUAU45IuOe/yOyVhhEJAQpOtQ//fCTrLy3weegSvvE3U5JgojNe8rTHotee
-8+8KRWcTsAAYSf54qQmRK6yK02XaCXC2e0Yu1B5uGodX+g2JMzoyyP+2QrhGtEkX
-rUvQM4oc8NP6GFvUTz39cpYScNfoIQaxNFxFTlqqq1TsoPEx4NPfWfW86knyVcU+
-WM6dO4x1nXcmkAiPSm4DaaE6+7w/RCyiUepGzvA8a6/KGTo763GLIk/oec3MGB6k
-3XxhFiNw0RSOjWOEWTyOd5ShjDv50oDw874bkkQSqSpy5malPIjiwd4wk4nQxBdS
-Id/C7a4qbOZ417q77j4YohQCoN5cgbG8+0tN0CNZK88MviqRVa54u9vdaF2LNA75
-vWwphpImepHv43lNvK36q27iVvrTRXtuXOJZwZdHCikTGhlCP0pn1m+eZuWzwRrg
-g5ApCUsXOfFpP3WVvCgEPPvk4Lr9vuwL3qQAvCh4Yi392v+nVt31DqP8LFl6VmSx
-aKpT3PU/Lt3wPtNn93SndzgG+R89veyC8myGcdr/Scqmphvm6iR9eB8aP6iW+YTf
-L/c71eaiZCfPdTaSD9v5S+RM0k0fssjYDUFDLjCJxyjw36YComoVCAKIZas6CH7P
-5md7NbrUBAdjmO08e0/t72urJwN5M28FKhqF9rKgOvULMWzan1Hxa/ScXOYOZD3M
-Imm5H2YFxjM=
-=2rRW
------END PGP SIGNATURE-----
-
---=-uFxdRWA2LqEvmmNjulyK--
