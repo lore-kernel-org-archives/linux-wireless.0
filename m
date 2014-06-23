@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8708 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751172AbaFMN12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 09:27:28 -0400
-Date: Fri, 13 Jun 2014 15:25:45 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Matt Chen <mattsled@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <stf_xl@wp.pl>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: Driver for Mediatek MT7630E
-Message-ID: <20140613132545.GD2211@redhat.com> (sfid-20140613_152738_565264_8F52A338)
-References: <53987997.2040101@lwfinger.net>
- <CAGXE3d81xMB3Y4WdTBPHKCC91QaieAQd5xzAqWSgGeonbD7_vw@mail.gmail.com>
- <20140612124408.GB7325@redhat.com>
- <CALx5=V8rMz+HKE=1frLJRqCqqGMP3QPX1yJ-T+GA2dXDnohZ0g@mail.gmail.com>
- <5399FDFA.9000203@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5399FDFA.9000203@lwfinger.net>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:48717 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754618AbaFWV7X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 17:59:23 -0400
+Received: by mail-wi0-f182.google.com with SMTP id bs8so4883239wib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 14:59:21 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCHv3 3/6] rtlwifi/rtl8188ee: Fix media status register mask
+Date: Tue, 24 Jun 2014 00:00:22 +0200
+Message-Id: <1403560822-7778-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140623_235940_436540_C9380CA0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2014 at 02:22:34PM -0500, Larry Finger wrote:
-> On 06/12/2014 11:33 AM, Matt Chen wrote:
-> >If I remember correct for SLE11, that was from MediaTek-Ralink, they
-> >did it based on SLE11 kernel. The code is ouch but could work. That
-> >was a nightmare when I tried to port...can't imagine that.... :(
-> 
-> I have not tested as my hardware has not been delivered, but I have
-> the driver building with current wireless-testing source. I also
-> have created a proper Makefile.
-> 
-> Yes, merging the changes into rt2x00 will be a hassle.
+bt_msr & 0xfc will never match 0x3. Fix this by using a mask that actually matches the available types.
 
-We usually we look at vendor driver and write new code to rt2x00 based
-on that. For example, I did that for RT5592, Gabor for RT3593. In
-oposite to cleaning up vendor driver in staging, it require lot of more
-work, but also guarantee that we will have clean and maintaible code.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Reviewed-by: Peter Wu <peter@lekensteyn.nl>
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/reg.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Stanislaw 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index 94cd9df..9bdac68 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -1231,7 +1231,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+ 
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/reg.h b/drivers/net/wireless/rtlwifi/rtl8188ee/reg.h
+index 7af85cf..cd7e7a5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/reg.h
+@@ -411,6 +411,7 @@
+ #define	MSR_ADHOC				0x01
+ #define	MSR_INFRA				0x02
+ #define	MSR_AP					0x03
++#define	MSR_MASK				0x03
+ 
+ #define	RRSR_RSC_OFFSET				21
+ #define	RRSR_SHORT_OFFSET			23
+-- 
+1.7.10.4
+
