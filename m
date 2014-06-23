@@ -1,113 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:55444 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752100AbaFFSqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 14:46:24 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, michal.kazior@tieto.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri,  6 Jun 2014 21:46:05 +0300
-Message-Id: <1402080365-15462-1-git-send-email-luca@coelho.fi> (sfid-20140606_204630_343651_DEAA55BF)
-In-Reply-To: <1402068423-23359-1-git-send-email-luca@coelho.fi>
-References: <1402068423-23359-1-git-send-email-luca@coelho.fi>
-Subject: [RFC option 2] mac80211: introduce refcount for queue_stop_reasons
+Received: from smtprelay0030.hostedemail.com ([216.40.44.30]:33797 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756129AbaFWNnB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 09:43:01 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 17/22] rtl818x: Use pci_zalloc_consistent
+Date: Mon, 23 Jun 2014 06:41:45 -0700
+Message-Id: <b4cf2aa62c7bec157a3e7079cdebe0670cdcba7c.1403530604.git.joe@perches.com> (sfid-20140623_154513_559436_50D2676B)
+In-Reply-To: <cover.1403530604.git.joe@perches.com>
+References: <cover.1403530604.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Remove the now unnecessary memset too.
 
-Sometimes different vifs may be stopping the queues for the same
-reason (e.g. when several interfaces are performing a channel switch).
-Instead of using a bitmask for the reasons, use an integer that holds
-a refcount instead.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-This looks much simpler now.  The only thing is that we need to make
-sure the bitmask never gets out of sync with the refcounts, which
-shouldn't be too difficult, as long as we keep the refcounts usage
-restricted to the queues start/stopping functions.
-
- net/mac80211/debugfs.c     | 13 ++++++++-----
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/util.c        |  7 ++++---
- 3 files changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 0e963bc1..3ca4d78 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -332,13 +332,16 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
- 	struct ieee80211_local *local = file->private_data;
- 	unsigned long flags;
- 	char buf[IEEE80211_MAX_QUEUES * 20];
--	int q, res = 0;
-+	int q, r, res = 0;
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 1e25929..7577e01 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -964,16 +964,13 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ 	else
+ 		priv->rx_ring_sz = sizeof(struct rtl8180_rx_desc);
  
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--	for (q = 0; q < local->hw.queues; q++)
--		res += sprintf(buf + res, "%02d: %#.8lx/%d\n", q,
--				local->queue_stop_reasons[q],
--				skb_queue_len(&local->pending[q]));
-+	for (q = 0; q < local->hw.queues; q++) {
-+		for (r = 0; r < IEEE80211_QUEUE_STOP_REASONS; r++)
-+			res += sprintf(buf + res,
-+				       "%02d: reason[%02d] = %d/%d\n", q, r,
-+				       local->q_stop_reasons[q][r],
-+				       skb_queue_len(&local->pending[q]));
-+	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-	priv->rx_ring = pci_alloc_consistent(priv->pdev,
+-					     priv->rx_ring_sz * 32,
+-					     &priv->rx_ring_dma);
+-
++	priv->rx_ring = pci_zalloc_consistent(priv->pdev, priv->rx_ring_sz * 32,
++					      &priv->rx_ring_dma);
+ 	if (!priv->rx_ring || (unsigned long)priv->rx_ring & 0xFF) {
+ 		wiphy_err(dev->wiphy, "Cannot allocate RX ring\n");
+ 		return -ENOMEM;
+ 	}
  
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 677e9c8..fd17a5b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -921,6 +921,8 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
- 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
- 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
-+
-+	IEEE80211_QUEUE_STOP_REASONS,
- };
+-	memset(priv->rx_ring, 0, priv->rx_ring_sz * 32);
+ 	priv->rx_idx = 0;
  
- #ifdef CONFIG_MAC80211_LEDS
-@@ -1017,6 +1019,7 @@ struct ieee80211_local {
- 	struct workqueue_struct *workqueue;
+ 	for (i = 0; i < 32; i++) {
+@@ -1032,14 +1029,14 @@ static int rtl8180_init_tx_ring(struct ieee80211_hw *dev,
+ 	dma_addr_t dma;
+ 	int i;
  
- 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
-+	int q_stop_reasons[IEEE80211_MAX_QUEUES][IEEE80211_QUEUE_STOP_REASONS];
- 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
- 	spinlock_t queue_stop_reason_lock;
+-	ring = pci_alloc_consistent(priv->pdev, sizeof(*ring) * entries, &dma);
++	ring = pci_zalloc_consistent(priv->pdev, sizeof(*ring) * entries,
++				     &dma);
+ 	if (!ring || (unsigned long)ring & 0xFF) {
+ 		wiphy_err(dev->wiphy, "Cannot allocate TX ring (prio = %d)\n",
+ 			  prio);
+ 		return -ENOMEM;
+ 	}
  
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 04e5f5c..4db4f35 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -326,10 +326,11 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
- 	if (WARN_ON(queue >= hw->queues))
- 		return;
- 
--	if (!test_bit(reason, &local->queue_stop_reasons[queue]))
-+	if (local->q_stop_reasons[queue][reason] == 0)
- 		return;
- 
--	__clear_bit(reason, &local->queue_stop_reasons[queue]);
-+	if (--local->q_stop_reasons[queue][reason] == 0)
-+		__clear_bit(reason, &local->queue_stop_reasons[queue]);
- 
- 	if (local->queue_stop_reasons[queue] != 0)
- 		/* someone still has this queue stopped */
-@@ -373,7 +374,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
- 	if (WARN_ON(queue >= hw->queues))
- 		return;
- 
--	if (test_bit(reason, &local->queue_stop_reasons[queue]))
-+	if (local->q_stop_reasons[queue][reason]++)
- 		return;
- 
- 	__set_bit(reason, &local->queue_stop_reasons[queue]);
+-	memset(ring, 0, sizeof(*ring)*entries);
+ 	priv->tx_ring[prio].desc = ring;
+ 	priv->tx_ring[prio].dma = dma;
+ 	priv->tx_ring[prio].idx = 0;
 -- 
-2.0.0.rc2
+1.8.1.2.459.gbcd45b4.dirty
 
