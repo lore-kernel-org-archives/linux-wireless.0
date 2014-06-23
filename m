@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.marcant.net ([217.14.160.186]:46240 "EHLO
-	mail2.marcant.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbaF0LBv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 07:01:51 -0400
-Received: from localhost (mcontrol3.marcant.net [217.14.168.56])
-	by localhost (Postfix) with ESMTP id 18F304ACCB8
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 13:01:50 +0200 (CEST)
-Received: from mail2.marcant.net ([127.0.0.1])
- by localhost (mail2.marcant.net [127.0.0.1]) (amavisd-maia, port 10030)
- with ESMTP id 18108-07 for <linux-wireless@vger.kernel.org>;
- Fri, 27 Jun 2014 13:01:45 +0200 (CEST)
-Received: from admins.marcant.net (eth2.rossini.bi.marcant.net [217.14.160.189])
-	by mail2.marcant.net (Postfix) with ESMTP id A3D154ACB8B
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 13:01:45 +0200 (CEST)
-Received: from [192.168.191.144] (varus [192.168.191.144])
-	by admins.marcant.net (Postfix) with ESMTP id 8C6AC96E
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 13:01:45 +0200 (CEST)
-Message-ID: <53AD4F17.6070604@marcant.net> (sfid-20140627_130154_353833_9FC26E28)
-Date: Fri, 27 Jun 2014 13:01:43 +0200
-From: =?ISO-8859-1?Q?Andr=E9_Valentin?= <avalentin@marcant.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath10k OTP loading issues
-References: <53AD2EEE.4040704@marcant.net>
-In-Reply-To: <53AD2EEE.4040704@marcant.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([5.9.151.49]:45702 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752965AbaFWLva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 07:51:30 -0400
+Message-ID: <1403524278.4418.19.camel@jlt4.sipsolutions.net> (sfid-20140623_135133_765801_F26B0E6D)
+Subject: Re: [PATCH 2/2] ath10k: make core registering async
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 23 Jun 2014 13:51:18 +0200
+In-Reply-To: <CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com> (sfid-20140623_121907_420359_3A843E5E)
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+	 <1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
+	 <1400769683.4174.25.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com>
+	 (sfid-20140623_121907_420359_3A843E5E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Again!
+Hi,
 
-I just saw the old thread about the same point. So I'm trying to look in the flash of my router if the OTP is stored there.
-Does this OTP have some kind of magic so I can identify it?
+>  [worker]
+>  complete_all()
+>  device_release_driver()
+>  dev_lock()
+>  {already held, yield}
+>  [syscall]
+>  free(internal structures)
+>  dev_unlock()
+>  return
+>  [worker]
+>  {woken up, but dev->driver == NULL so no callbacks}
+>  dev_unlock()
+>  return
+> 
+> The driver code section may not be reachable anymore upon worker
+> returning from the device_release_driver() call, right? Also since
+> ath10k uses an internal worker it also means the work_struct would be
+> already freed by the syscall flow (i.e. worker would run after driver
+> has supposedly been cleaned up..). Even if ath10k was to use
+> request_firmware_nowait(), which allocates a temporary work_struct,
+> the unreachable code section still remains a problem.
+> 
+> Or maybe this isn't really a problem and/or I'm missing something?
 
-André
+Yeah, hmm, this looks like a problem. I guess we didn't really consider
+module unload in such detail ...
 
-On 27.06.2014 10:44, André Valentin wrote:
-> Hi!
-> 
-> I got problems initializing my ath10k PCI card in my Zyxel NBG 6716. It worked until some weeks, now, the driver does not load. I debugged a bit and this is what I got:
-> Fri Jun 27 08:03:42 2014 kern.info kernel: [62908.290000] ath10k_pci 0000:01:00.0: BAR 0: assigned [mem 0x12000000-0x121fffff 64bit]
-> Fri Jun 27 08:03:43 2014 kern.info kernel: [62908.610000] ath10k: pci irq legacy irq_mode 0 reset_mode 0
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.620000] ath10k: boot upload otp to 0x1234 len 6917
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.780000] ath10k: otp calibration failed: 2
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: failed to run otp: -22
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: could not init core (-22)
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: could not probe fw (-22)
-> Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: failed to register driver core: -22
-> Fri Jun 27 08:03:43 2014 kern.warn kernel: [62909.060000] ath10k_pci: probe of 0000:01:00.0 failed with error -22
-> 
-> 
-> If I remove OTP loading the card initializes fine, but I think I will not have a good performance. So bad idea.
-> Currently I use compat-wireless-2014-05-22, with some patches form openwrt.
-> The firmware-2.bin has been checked, it is the same as offered here:
-> https://github.com/kvalo/ath10k-firmware
-> 
-> Perhaps somebody has a hint for me?
-> 
-> Kind regards,
-> 
-> André
-> 
+I guess this would crash upon return from device_release_driver()? I
+guess if that's the last thing then maybe we'd actually get a tail-call
+optimisation, but we don't want to rely on that of course!
+
+Seems like to fix it we just need to get a module reference though? Can
+a module put() itself though? Hmmm.
+
+johannes
+
