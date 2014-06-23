@@ -1,97 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:53360 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755240AbaFXTwt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:52:49 -0400
-Received: by mail-wi0-f170.google.com with SMTP id cc10so6520536wib.5
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:48 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/27] iwlwifi: mvm: fix bug in set_hw_address function
-Date: Tue, 24 Jun 2014 22:52:08 +0300
-Message-Id: <1403639541-4621-14-git-send-email-egrumbach@gmail.com> (sfid-20140624_215253_300938_B06252CB)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45246 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636AbaFWJ3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 05:29:48 -0400
+Message-ID: <1403515774.4418.8.camel@jlt4.sipsolutions.net> (sfid-20140623_113003_798742_3C1E645B)
+Subject: Re: [PATCH] cfg80211: fix elapsed_jiffies calculation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 23 Jun 2014 11:29:34 +0200
+In-Reply-To: <1402999622-27880-1-git-send-email-eliad@wizery.com> (sfid-20140617_120711_840792_91AD4ABC)
+References: <1402999622-27880-1-git-send-email-eliad@wizery.com>
+	 (sfid-20140617_120711_840792_91AD4ABC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Tue, 2014-06-17 at 13:07 +0300, Eliad Peller wrote:
+> MAX_JIFFY_OFFSET has no meaning when calculating the
+> elapsed jiffies, as jiffies run out until ULONG_MAX.
+> 
+> This miscalculation results in erroneous values
+> in case of a wrap-around.
 
-Don't use nvm_hw pointer if it is NULL. Print an error
-message if the MAC address isn't valid.
+Applied, thanks.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 34 ++++++++++++++++++----------
- 1 file changed, 22 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 0e3322a..f0ae038 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -476,7 +476,8 @@ static void iwl_set_hw_address(const struct iwl_cfg *cfg,
- 	data->hw_addr[5] = hw_addr[4];
- }
- 
--static void iwl_set_hw_address_family_8000(const struct iwl_cfg *cfg,
-+static void iwl_set_hw_address_family_8000(struct device *dev,
-+					   const struct iwl_cfg *cfg,
- 					   struct iwl_nvm_data *data,
- 					   const __le16 *mac_override,
- 					   const __le16 *nvm_hw)
-@@ -495,20 +496,28 @@ static void iwl_set_hw_address_family_8000(const struct iwl_cfg *cfg,
- 		data->hw_addr[4] = hw_addr[5];
- 		data->hw_addr[5] = hw_addr[4];
- 
--		if (is_valid_ether_addr(hw_addr))
-+		if (is_valid_ether_addr(data->hw_addr))
- 			return;
-+
-+		IWL_ERR_DEV(dev,
-+			    "mac address from nvm override section is not valid\n");
- 	}
- 
--	/* take the MAC address from the OTP */
--	hw_addr = (const u8 *)(nvm_hw + HW_ADDR0_FAMILY_8000);
--	data->hw_addr[0] = hw_addr[3];
--	data->hw_addr[1] = hw_addr[2];
--	data->hw_addr[2] = hw_addr[1];
--	data->hw_addr[3] = hw_addr[0];
-+	if (nvm_hw) {
-+		/* take the MAC address from the OTP */
-+		hw_addr = (const u8 *)(nvm_hw + HW_ADDR0_FAMILY_8000);
-+		data->hw_addr[0] = hw_addr[3];
-+		data->hw_addr[1] = hw_addr[2];
-+		data->hw_addr[2] = hw_addr[1];
-+		data->hw_addr[3] = hw_addr[0];
-+
-+		hw_addr = (const u8 *)(nvm_hw + HW_ADDR1_FAMILY_8000);
-+		data->hw_addr[4] = hw_addr[1];
-+		data->hw_addr[5] = hw_addr[0];
-+		return;
-+	}
- 
--	hw_addr = (const u8 *)(nvm_hw + HW_ADDR1_FAMILY_8000);
--	data->hw_addr[4] = hw_addr[1];
--	data->hw_addr[5] = hw_addr[0];
-+	IWL_ERR_DEV(dev, "mac address is not found\n");
- }
- 
- struct iwl_nvm_data *
-@@ -570,7 +579,8 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 				rx_chains);
- 	} else {
- 		/* MAC address in family 8000 */
--		iwl_set_hw_address_family_8000(cfg, data, mac_override, nvm_hw);
-+		iwl_set_hw_address_family_8000(dev, cfg, data, mac_override,
-+					       nvm_hw);
- 
- 		iwl_init_sbands(dev, cfg, data, regulatory,
- 				sku & NVM_SKU_CAP_11AC_ENABLE, tx_chains,
--- 
-1.8.3.2
+johannes
 
