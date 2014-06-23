@@ -1,162 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17990 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753417AbaFDNra (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:44337 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476AbaFWMRt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:47:30 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 13/13] ath9k: save tsf in channel context
-Date: Wed, 4 Jun 2014 19:16:39 +0530
-Message-ID: <1401889599-412-14-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154754_316149_BD340BDA)
-In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Mon, 23 Jun 2014 08:17:49 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so6951804wes.27
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 05:17:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1403524278.4418.19.camel@jlt4.sipsolutions.net>
+References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
+	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
+	<1400769683.4174.25.camel@jlt4.sipsolutions.net>
+	<CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com>
+	<1403524278.4418.19.camel@jlt4.sipsolutions.net>
+Date: Mon, 23 Jun 2014 14:17:43 +0200
+Message-ID: <CA+BoTQ=fpkOZXVgJt-OWdgSFX1_sO1g1E=J-7NnOb+e6a30FVA@mail.gmail.com> (sfid-20140623_141754_068459_9E594827)
+Subject: Re: [PATCH 2/2] ath10k: make core registering async
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On 23 June 2014 13:51, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>>  [worker]
+>>  complete_all()
+>>  device_release_driver()
+>>  dev_lock()
+>>  {already held, yield}
+>>  [syscall]
+>>  free(internal structures)
+>>  dev_unlock()
+>>  return
+>>  [worker]
+>>  {woken up, but dev->driver == NULL so no callbacks}
+>>  dev_unlock()
+>>  return
+>>
+>> The driver code section may not be reachable anymore upon worker
+>> returning from the device_release_driver() call, right? Also since
+>> ath10k uses an internal worker it also means the work_struct would be
+>> already freed by the syscall flow (i.e. worker would run after driver
+>> has supposedly been cleaned up..). Even if ath10k was to use
+>> request_firmware_nowait(), which allocates a temporary work_struct,
+>> the unreachable code section still remains a problem.
+>>
+>> Or maybe this isn't really a problem and/or I'm missing something?
+>
+> Yeah, hmm, this looks like a problem. I guess we didn't really consider
+> module unload in such detail ...
+>
+> I guess this would crash upon return from device_release_driver()? I
+> guess if that's the last thing then maybe we'd actually get a tail-call
+> optimisation, but we don't want to rely on that of course!
+>
+> Seems like to fix it we just need to get a module reference though? Can
+> a module put() itself though? Hmmm.
 
-Save TSF in channel context for multiple operating channels.
+It seems some drivers use module_put(THIS_MODULE) and
+__module_get(THIS_MODULE), e.g. tun/tap driver.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  3 +++
- drivers/net/wireless/ath/ath9k/channel.c |  5 +++++
- drivers/net/wireless/ath/ath9k/hw.c      | 23 ++++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/hw.h      |  1 +
- drivers/net/wireless/ath/ath9k/main.c    | 10 ++++++++++
- 5 files changed, 37 insertions(+), 5 deletions(-)
+But does this bump up the module refcount in such a way that an
+in-progress rmmod will wait/block until the refcount reaches 0?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7776094..a5ff4ab 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -22,6 +22,7 @@
- #include <linux/interrupt.h>
- #include <linux/leds.h>
- #include <linux/completion.h>
-+#include <linux/time.h>
- 
- #include "common.h"
- #include "debug.h"
-@@ -328,6 +329,8 @@ struct ath_chanctx {
- 	struct list_head acq[IEEE80211_NUM_ACS];
- 
- 	struct ath9k_hw_cal_data caldata;
-+	struct timespec tsf_ts;
-+	u64 tsf_val;
- 
- 	u16 txpower;
- 	bool offchannel;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 3cb86f4..716967c 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -263,6 +263,11 @@ void ath_chanctx_work(struct work_struct *work)
- 
- 		send_ps = true;
- 		spin_lock_bh(&sc->chan_lock);
-+
-+		if (!sc->cur_chan->offchannel) {
-+			getrawmonotonic(&sc->cur_chan->tsf_ts);
-+			sc->cur_chan->tsf_val = ath9k_hw_gettsf64(sc->sc_ah);
-+		}
- 	}
- 	sc->cur_chan = &sc->chanctx[sc->next_chanctx_idx];
- 	sc->cur_chan->stopped = false;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2a8ed83..ace4fe2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1730,6 +1730,23 @@ fail:
- 	return -EINVAL;
- }
- 
-+u32 ath9k_hw_get_tsf_offset(struct timespec *last, struct timespec *cur)
-+{
-+	struct timespec ts;
-+	s64 usec;
-+
-+	if (!cur) {
-+		getrawmonotonic(&ts);
-+		cur = &ts;
-+	}
-+
-+	usec = cur->tv_sec * 1000000ULL + cur->tv_nsec / 1000;
-+	usec -= last->tv_sec * 1000000ULL + last->tv_nsec / 1000;
-+
-+	return (u32) usec;
-+}
-+EXPORT_SYMBOL(ath9k_hw_get_tsf_offset);
-+
- int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		   struct ath9k_hw_cal_data *caldata, bool fastcc)
- {
-@@ -1739,7 +1756,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u32 saveDefAntenna;
- 	u32 macStaId1;
- 	u64 tsf = 0;
--	s64 usec = 0;
- 	int r;
- 	bool start_mci_reset = false;
- 	bool save_fullsleep = ah->chip_fullsleep;
-@@ -1785,7 +1801,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	/* Save TSF before chip reset, a cold reset clears it */
- 	tsf = ath9k_hw_gettsf64(ah);
- 	getrawmonotonic(&ts);
--	usec = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
- 
- 	saveLedState = REG_READ(ah, AR_CFG_LED) &
- 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
-@@ -1818,9 +1833,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	}
- 
- 	/* Restore TSF */
--	getrawmonotonic(&ts);
--	usec = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000 - usec;
--	ath9k_hw_settsf64(ah, tsf + usec);
-+	ath9k_hw_settsf64(ah, tsf + ath9k_hw_get_tsf_offset(&ts, NULL));
- 
- 	if (AR_SREV_9280_20_OR_LATER(ah))
- 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0acd4b5..51b4ebe 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1000,6 +1000,7 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- u64 ath9k_hw_gettsf64(struct ath_hw *ah);
- void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
- void ath9k_hw_reset_tsf(struct ath_hw *ah);
-+u32 ath9k_hw_get_tsf_offset(struct timespec *last, struct timespec *cur);
- void ath9k_hw_set_tsfadjust(struct ath_hw *ah, bool set);
- void ath9k_hw_init_global_settings(struct ath_hw *ah);
- u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fa9d915..3b6b030 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -241,6 +241,16 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_enable_interrupts(ah);
- 
- 	if (!sc->cur_chan->offchannel && start) {
-+		/* restore per chanctx TSF timer */
-+		if (sc->cur_chan->tsf_val) {
-+			u32 offset;
-+
-+			offset = ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts,
-+							 NULL);
-+			ath9k_hw_settsf64(ah, sc->cur_chan->tsf_val + offset);
-+		}
-+
-+
- 		if (!test_bit(ATH_OP_BEACONS, &common->op_flags))
- 			goto work;
- 
--- 
-2.0.0
 
+Michał
