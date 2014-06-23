@@ -1,152 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10594 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbaFGChe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 22:37:34 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Chin-Ran Lo <crlo@marvell.com>,
-	Aaron Durbin <adurbin@chromium.org>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] mwifiex: fix tx_info/rx_info overlap with PCIe dma_mapping
-Date: Fri, 6 Jun 2014 19:37:10 -0700
-Message-ID: <1402108630-6833-1-git-send-email-bzhao@marvell.com> (sfid-20140607_043737_738445_D4E8AAA9)
+Received: from lekensteyn.nl ([178.21.112.251]:60294 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751870AbaFWWaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 18:30:06 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCHv3 6/6] drivers/staging/rtl8821ae: replace magic number by macro
+Date: Tue, 24 Jun 2014 00:29:54 +0200
+Message-ID: <1455413.BevQxGKhmu@al> (sfid-20140624_003011_465147_6979B31C)
+In-Reply-To: <1403561511-8117-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1403561511-8117-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chin-Ran Lo <crlo@marvell.com>
+(staging drivers are handled by Greg KH, cc'ing him)
 
-On PCIe Tx data path, network interface specific tx_info
-parameters such as bss_num and bss_type are saved at
-"skb->cb + sizeof(dma_addr_t)" (returned by MWIFIEX_SKB_TXCB).
-Later mwifiex_map_pci_memory() called from
-mwifiex_pcie_send_data() will memcpy
-sizeof(struct mwifiex_dma_mapping) bytes to save PCIe DMA
-address and length information at beginning of skb->cb.
-This accidently overwrites bss_num and bss_type saved in skb->cb
-previously because bss_num/bss_type and mwifiex_dma_mapping data
-overlap.
-Similarly, on PCIe Rx data path, rx_info parameters overlaps
-with PCIe DMA address and length information too.
-
-Fix it by defining mwifiex_cb structure and having
-MWIFIEX_SKB_TXCB and MWIFIEX_SKB_RXCB return the correct address
-of tx_info/rx_info using the structure members.
-
-Also add a BUILD_BUG_ON to maks sure that mwifiex_cb structure
-doesn't exceed the size of skb->cb.
-
-Reviewed-by: Aaron Durbin <adurbin@chromium.org>
-Signed-off-by: Chin-Ran Lo <crlo@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v2: rename patch subject (was: mwifiex: fix PCIe tx_info overlap)
-    fix buffer overlap for rx_info as well; (Aaron Durbin)
-    add symmetrical 'store' inline function; (Aaron Durbin)
-
- drivers/net/wireless/mwifiex/pcie.c |  4 ++--
- drivers/net/wireless/mwifiex/util.h | 43 ++++++++++++++++++++++++++++---------
- 2 files changed, 35 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 574d4b5..2cc9b6f 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -50,7 +50,7 @@ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		return -1;
- 	}
- 	mapping.len = size;
--	memcpy(skb->cb, &mapping, sizeof(mapping));
-+	mwifiex_store_mapping(skb, &mapping);
- 	return 0;
- }
- 
-@@ -60,7 +60,7 @@ static void mwifiex_unmap_pci_memory(struct mwifiex_adapter *adapter,
- 	struct pcie_service_card *card = adapter->card;
- 	struct mwifiex_dma_mapping mapping;
- 
--	MWIFIEX_SKB_PACB(skb, &mapping);
-+	mwifiex_get_mapping(skb, &mapping);
- 	pci_unmap_single(card->dev, mapping.addr, mapping.len, flags);
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/util.h b/drivers/net/wireless/mwifiex/util.h
-index ddae570..caadb37 100644
---- a/drivers/net/wireless/mwifiex/util.h
-+++ b/drivers/net/wireless/mwifiex/util.h
-@@ -20,32 +20,55 @@
- #ifndef _MWIFIEX_UTIL_H_
- #define _MWIFIEX_UTIL_H_
- 
-+struct mwifiex_dma_mapping {
-+	dma_addr_t addr;
-+	size_t len;
-+};
-+
-+struct mwifiex_cb {
-+	struct mwifiex_dma_mapping dma_mapping;
-+	union {
-+		struct mwifiex_rxinfo rx_info;
-+		struct mwifiex_txinfo tx_info;
-+	};
-+};
-+
- static inline struct mwifiex_rxinfo *MWIFIEX_SKB_RXCB(struct sk_buff *skb)
- {
--	return (struct mwifiex_rxinfo *)(skb->cb + sizeof(dma_addr_t));
-+	struct mwifiex_cb *cb = (struct mwifiex_cb *)skb->cb;
-+
-+	BUILD_BUG_ON(sizeof(struct mwifiex_cb) > sizeof(skb->cb));
-+	return &cb->rx_info;
- }
- 
- static inline struct mwifiex_txinfo *MWIFIEX_SKB_TXCB(struct sk_buff *skb)
- {
--	return (struct mwifiex_txinfo *)(skb->cb + sizeof(dma_addr_t));
-+	struct mwifiex_cb *cb = (struct mwifiex_cb *)skb->cb;
-+
-+	return &cb->tx_info;
- }
- 
--struct mwifiex_dma_mapping {
--	dma_addr_t addr;
--	size_t len;
--};
-+static inline void mwifiex_store_mapping(struct sk_buff *skb,
-+					 struct mwifiex_dma_mapping *mapping)
-+{
-+	struct mwifiex_cb *cb = (struct mwifiex_cb *)skb->cb;
-+
-+	memcpy(&cb->dma_mapping, mapping, sizeof(*mapping));
-+}
- 
--static inline void MWIFIEX_SKB_PACB(struct sk_buff *skb,
--					struct mwifiex_dma_mapping *mapping)
-+static inline void mwifiex_get_mapping(struct sk_buff *skb,
-+				       struct mwifiex_dma_mapping *mapping)
- {
--	memcpy(mapping, skb->cb, sizeof(*mapping));
-+	struct mwifiex_cb *cb = (struct mwifiex_cb *)skb->cb;
-+
-+	memcpy(mapping, &cb->dma_mapping, sizeof(*mapping));
- }
- 
- static inline dma_addr_t MWIFIEX_SKB_DMA_ADDR(struct sk_buff *skb)
- {
- 	struct mwifiex_dma_mapping mapping;
- 
--	MWIFIEX_SKB_PACB(skb, &mapping);
-+	mwifiex_get_mapping(skb, &mapping);
- 
- 	return mapping.addr;
- }
--- 
-1.8.2.3
+On Tuesday 24 June 2014 00:11:51 Rickard Strandqvist wrote:
+> For consistency with other drivers, replace a magic number by a macro.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> Reviewed-by: Peter Wu <peter@lekensteyn.nl>
+> ---
+>  drivers/staging/rtl8821ae/rtl8821ae/hw.c  |    2 +-
+>  drivers/staging/rtl8821ae/rtl8821ae/reg.h |    1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/rtl8821ae/rtl8821ae/hw.c b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
+> index 1b8583b..1aa1661 100644
+> --- a/drivers/staging/rtl8821ae/rtl8821ae/hw.c
+> +++ b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
+> @@ -1623,7 +1623,7 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
+>  
+>  	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+>  	rtlpriv->cfg->ops->led_control(hw, ledaction);
+> -	if ((bt_msr & ~0xfc) == MSR_AP)
+> +	if ((bt_msr & MSR_MASK) == MSR_AP)
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+>  	else
+>  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+> diff --git a/drivers/staging/rtl8821ae/rtl8821ae/reg.h b/drivers/staging/rtl8821ae/rtl8821ae/reg.h
+> index beffb42..4cb3ca9 100644
+> --- a/drivers/staging/rtl8821ae/rtl8821ae/reg.h
+> +++ b/drivers/staging/rtl8821ae/rtl8821ae/reg.h
+> @@ -431,6 +431,7 @@
+>  #define	MSR_ADHOC					0x01
+>  #define	MSR_INFRA					0x02
+>  #define	MSR_AP						0x03
+> +#define	MSR_MASK					0x03
+>  
+>  #define	RRSR_RSC_OFFSET				21
+>  #define	RRSR_SHORT_OFFSET			23
+> 
 
