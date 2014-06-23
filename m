@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52757 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750737AbaFYSsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 14:48:00 -0400
-Message-ID: <1403722063.4140.19.camel@jlt4.sipsolutions.net> (sfid-20140625_204804_429344_345F2863)
-Subject: Re: [PATCH v11 0/5] cfg/mac80211: implement multi-vif csa
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
-Date: Wed, 25 Jun 2014 20:47:43 +0200
-In-Reply-To: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com> (sfid-20140625_125156_450669_F30606F7)
-References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140625_125156_450669_F30606F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f178.google.com ([74.125.82.178]:44641 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaFWWGN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 18:06:13 -0400
+Received: by mail-we0-f178.google.com with SMTP id x48so7671437wes.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 15:06:12 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCHv3 5/6] rtlwifi/rtl8723be: Replace magic number by macro
+Date: Tue, 24 Jun 2014 00:07:13 +0200
+Message-Id: <1403561233-7997-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140624_000630_738698_4F01AFBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-06-25 at 12:35 +0200, Michal Kazior wrote:
-> Hi,
-> 
-> The patchset implements multi-interface
-> reservations and multi-interface channel
-> switching.
-> 
-> There are still some cases that aren't handled
-> well (at least degradation of number of channels
-> due to interface combinations that I'm aware of).
-> 
-> 
-> v11:
->  * rebase to latest mac80211-next/master
->    (eb6a61549f530f1cc435512df3799f656094ba83)
->  * lots of fixes (see notes in [1/5])
+For consistency with other drivers, replace a magic number by a macro.
 
-Applied all.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Reviewed-by: Peter Wu <peter@lekensteyn.nl>
+---
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/reg.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+index 0fdf090..bf883cb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+@@ -1197,7 +1197,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
+ 	}
+ 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0x03) == MSR_AP)
++	if ((bt_msr & MSR_MASK) == MSR_AP)
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+ 	else
+ 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/reg.h b/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
+index 4c653fa..3006849 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/reg.h
+@@ -412,6 +412,7 @@
+ #define	MSR_ADHOC				0x01
+ #define	MSR_INFRA				0x02
+ #define	MSR_AP					0x03
++#define	MSR_MASK				0x03
+ 
+ #define	RRSR_RSC_OFFSET				21
+ #define	RRSR_SHORT_OFFSET			23
+-- 
+1.7.10.4
 
