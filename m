@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:54793 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbaFDLzh convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:62542 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754170AbaFWTPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 07:55:37 -0400
-Received: by mail-we0-f180.google.com with SMTP id q58so8268562wes.25
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 04:55:36 -0700 (PDT)
+	Mon, 23 Jun 2014 15:15:10 -0400
+Received: by mail-pd0-f174.google.com with SMTP id y10so5990075pdj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 12:15:09 -0700 (PDT)
+Date: Mon, 23 Jun 2014 12:15:04 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+	wireless-regdb@lists.infradead.org
+Subject: Re: [RFC] wireless:  improve dfs-region intersection.
+Message-ID: <20140623191504.GD1390@garbanzo.do-not-panic.com> (sfid-20140623_211517_601454_D6850E48)
+References: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1401824416.4157.32.camel@jlt4.sipsolutions.net>
-References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
-	<1401345535-22991-2-git-send-email-michal.kazior@tieto.com>
-	<1401824416.4157.32.camel@jlt4.sipsolutions.net>
-Date: Wed, 4 Jun 2014 13:55:36 +0200
-Message-ID: <CA+BoTQ=gRHgiRG7NpUzEdeKXPzBbob=snYMMG-agMQeoiXwDTw@mail.gmail.com> (sfid-20140604_135541_190331_3BF2EC40)
-Subject: Re: [PATCH v2 1/2] mac80211: move csa counters from sdata to beacon/presp
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 June 2014 21:40, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-05-29 at 08:38 +0200, Michal Kazior wrote:
->
->
->> +               memcpy(new->csa_counter_offsets,
->> csa->counter_offsets_beacon,
->> +                      csa->n_counter_offsets_beacon *
->> +                      sizeof(*new->csa_counter_offsets));
->
-> Given that it's used like an array, maybe
-> sizeof(new->csa_counter_offsets[0]) would be more readable? (this is in
-> a few places)
 
-I can update that.
+Adding wireless-regdb.
 
+Regulatory folks:
 
->> +++ b/net/mac80211/ibss.c
->> @@ -143,7 +143,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
->>               *pos++ = csa_settings->block_tx ? 1 : 0;
->>               *pos++ = ieee80211_frequency_to_channel(
->>                               csa_settings->chandef.chan->center_freq);
->> -             sdata->csa_counter_offset_beacon[0] = (pos - presp->head);
->> +             presp->csa_counter_offsets[0] = (pos - presp->head);
->
-> This seems slightly odd, but maybe it's a bugfix? Or are presp/beacon
-> actually identical?
+if two cards are present on a system, in the worst case consider
+two different cards for AP mode, and one has a DFS region set for the
+country its on but the other does not, do we want to use the DFS region
+for both? DFS would not be allowed on system unless the DFS region is
+set. DFS operation requires a card to explicitly support DFS though so
+even though it can be set as an intersection each card would still
+require DFS suport for that region.
 
-It seems presp is used when building beacon for ibss. See
-__ieee80211_beacon_get().
+As I see it this will depend on what we want cards to do if the DFS
+region is unknown for a region. If the DFS region is not known can
+we use any DFS algorithm? If we cannot then I think a DFS intersection
+would require agreement on the DFS region. That would also mean though
+that when shipping products if a system is built with one card that has
+DFS for ETSI for example, and then a secondary card is present and its
+regulatory domain does not have DFS then the first card would not be
+able to operate on the DFS. I think this is reasonable given that 
+the two cards must at least agree on the regulatory domain, otherwise
+the folks doing system integration probably did a bad job at thinking
+of things ahead of time. Even though this can be technically true I
+foresee folks this misconfiguration happening in the future and folks
+beingp puzzled by this as an issue. This means this should be documented
+for folks selling devices in a combined wifi system.
 
+As such NACK for now.
 
-Michał
+  Luis
+
+On Wed, Jun 11, 2014 at 01:08:34PM -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> If one is UN-SET, use the other.  Seems this would
+> be more correct that what we have now.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> 
+> Someone that understands this code better than I
+> do should review this well before it is considered
+> for upstream.  I'm not sure it is actually needed.
+> 
+>  net/wireless/reg.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 785e516..b87035f 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -727,8 +727,15 @@ static enum nl80211_dfs_regions
+>  reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
+>  			 const enum nl80211_dfs_regions dfs_region2)
+>  {
+> -	if (dfs_region1 != dfs_region2)
+> +	if (dfs_region1 != dfs_region2) {
+> +		pr_info("intersect-dfs-region, region1: %d  region2: %d\n",
+> +			dfs_region1, dfs_region2);
+> +		if (dfs_region1 == NL80211_DFS_UNSET)
+> +			return dfs_region2;
+> +		if (dfs_region2 == NL80211_DFS_UNSET)
+> +			return dfs_region1;
+>  		return NL80211_DFS_UNSET;
+> +	}
+>  	return dfs_region1;
+>  }
+>  
