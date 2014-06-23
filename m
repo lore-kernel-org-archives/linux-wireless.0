@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57341 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbaFEPPL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 11:15:11 -0400
-Date: Thu, 5 Jun 2014 11:14:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] cfg80211: make ethtool the driver's responsibility
-Message-ID: <20140605151440.GB3621@tuxdriver.com> (sfid-20140605_171515_882388_FD9181FC)
-References: <1401896290-12942-1-git-send-email-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:38747 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755648AbaFWOrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2014 10:47:25 -0400
+Message-ID: <53A83DE1.4050106@openwrt.org> (sfid-20140623_164744_336077_C160E089)
+Date: Mon, 23 Jun 2014 16:46:57 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401896290-12942-1-git-send-email-johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: Re: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when checking
+ usable channels
+References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz>	 <53A6C0FF.9090104@openwrt.org>	 <1403514536.4418.6.camel@jlt4.sipsolutions.net>	 <53A7FBB2.2050703@openwrt.org>	 <1403517938.4418.16.camel@jlt4.sipsolutions.net> <1403534300.7341.6.camel@lolumad>
+In-Reply-To: <1403534300.7341.6.camel@lolumad>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 05:38:10PM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 2014-06-23 16:38, Rostislav Lisovy wrote:
+> On Mon, 2014-06-23 at 12:05 +0200, Johannes Berg wrote:
+>> On Mon, 2014-06-23 at 12:04 +0200, Felix Fietkau wrote:
+>> > On 2014-06-23 11:08, Johannes Berg wrote:
+>> > > On Sun, 2014-06-22 at 13:41 +0200, Felix Fietkau wrote:
+>> > >> On 2014-04-15 14:37, Rostislav Lisovy wrote:
+>> > >> > Current code checks if the 20MHz bandwidth is allowed for
+>> > >> > particular channel -- if it is not, the channel is disabled.
+>> > >> > Since we need to use 5/10 MHz channels, this code is modified in
+>> > >> > the way that the default bandwidth to check is 5MHz. If the
+>> > >> > maximum bandwidth allowed by the channel is smaller than 5MHz,
+>> > >> > the channel is disabled. Otherwise the channel is used and the
+>> > >> > flags are set according to the bandwidth allowed by the channel.
+>> > >> > 
+>> > >> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+>> > > 
+>> > >> This change causes a regression and needs to be reverted or fixed.
+>> > > 
+>> > > Noted, I've reverted it in mac80211.git.
+>> > > 
+>> > >> It leaves Channel 12 enabled for US regdomain and does not prevent
+>> > >> bringing up AP mode on it (IEEE80211_CHAN_NO_20MHZ does not get set).
+>> > > 
+>> > > I'm not sure this makes sense - CHAN_NO_20MHZ shouldn't get set on that
+>> > > channel? It should be disabled for other reasons for AP mode - e.g.
+>> > > NO_IR.
+>> > I was thinking it could be valid in AP mode for 5 MHz operation.
+>> 
+>> Huh, ok, maybe. I guess Rostislav can look into the details :)
+>> 
 > 
-> Currently, cfg80211 tries to implement ethtool, but that doesn't
-> really scale well, with all the different operations. Make the
-> lower-level driver responsible for it, which currently only has
-> an effect on mac80211. It will similarly not scale well at that
-> level though, since mac80211 also has many drivers.
-> 
-> To cleanly implement this in mac80211, introduce a new file and
-> move some code to appropriate places.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> I am a bit confused right now. The regression is that the channel used
+> to be completely disabled and now it is not? The regulatory restrictions
+> prohibit the 20MHz BW for this channel but 5MHz BW is alright?
+Correct. The matching rule is this:
+        (2402 - 2472 @ 40), (N/A, 30), (N/A)
 
-Fine by me...
+Channel 11 (2462 MHz) is allowed, because 2472 MHz is below the limit.
+Channel 12 (2467 MHz) is not allowed, because 2477 MHz is too high.
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+With your change, Channel 12 was enabled and usable for AP mode.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- Felix
