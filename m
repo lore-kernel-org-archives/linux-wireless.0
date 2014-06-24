@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34722 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225AbaFUKLX (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:58796 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755233AbaFXTwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 06:11:23 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/8] brcmfmac: clear ht info during attach phase
-Date: Sat, 21 Jun 2014 12:11:14 +0200
-Message-ID: <1403345479-13467-4-git-send-email-arend@broadcom.com> (sfid-20140621_121128_757528_92AA85E0)
-In-Reply-To: <1403345479-13467-1-git-send-email-arend@broadcom.com>
-References: <1403345479-13467-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 24 Jun 2014 15:52:47 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so929219wes.14
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:46 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andy Lutomirski <luto@amacapital.net>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/27] iwlwifi: dvm: add a force_cam module parameter to fully disable power saving
+Date: Tue, 24 Jun 2014 22:52:07 +0300
+Message-Id: <1403639541-4621-13-git-send-email-egrumbach@gmail.com> (sfid-20140624_215257_580582_C8EA0ECF)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After updating 2G bandwidth capability clear ht info. This will be properly
-set upon calling brcmf_update_wiphy_bands().
+From: Andy Lutomirski <luto@amacapital.net>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+iwldvm stalls are often blamed on power management.  Add an option
+to force it all the way off.
+
+Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/iwlwifi/dvm/power.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index db3d848..6bbd708 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -5051,6 +5051,9 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
- 						      BRCMF_OBSS_COEX_AUTO);
- 	}
-+	/* clear for now and rely on update later */
-+	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
-+	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c b/drivers/net/wireless/iwlwifi/dvm/power.c
+index f2c1439..760c45c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/power.c
++++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+@@ -40,6 +40,10 @@
+ #include "commands.h"
+ #include "power.h"
  
- 	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
- 	if (err) {
++static bool force_cam;
++module_param(force_cam, bool, 0644);
++MODULE_PARM_DESC(force_cam, "force continuously aware mode (no power saving at all)");
++
+ /*
+  * Setting power level allows the card to go to sleep when not busy.
+  *
+@@ -288,6 +292,11 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 	bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
+ 	int dtimper;
+ 
++	if (force_cam) {
++		iwl_power_sleep_cam_cmd(priv, cmd);
++		return;
++	}
++
+ 	dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+ 
+ 	if (priv->wowlan)
 -- 
-1.7.9.5
+1.8.3.2
 
