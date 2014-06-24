@@ -1,99 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45198 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755245AbaFUKLX (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:54667 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297AbaFXTxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 06:11:23 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/8] brcmfmac: Add 43569 USB support.
-Date: Sat, 21 Jun 2014 12:11:12 +0200
-Message-ID: <1403345479-13467-2-git-send-email-arend@broadcom.com> (sfid-20140621_121129_396787_66EE5133)
-In-Reply-To: <1403345479-13467-1-git-send-email-arend@broadcom.com>
-References: <1403345479-13467-1-git-send-email-arend@broadcom.com>
+	Tue, 24 Jun 2014 15:53:09 -0400
+Received: by mail-wg0-f52.google.com with SMTP id b13so914163wgh.23
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:53:07 -0700 (PDT)
+Message-ID: <53A9D720.3050409@gmail.com> (sfid-20140624_220201_509154_8D443ADA)
+Date: Tue, 24 Jun 2014 22:53:04 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi-next 2014-06-24
+References: <53A9D6CF.9040100@gmail.com>
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="JwTgK5GgXAR425bBvLqJj7PkqRvdFRU0q"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--JwTgK5GgXAR425bBvLqJj7PkqRvdFRU0q
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Added usb device id for the new device 43569 to the list of
-supported devices.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 6db51a6..aa23559 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -55,6 +55,7 @@
- #define BRCMF_USB_43143_FW_NAME	"brcm/brcmfmac43143.bin"
- #define BRCMF_USB_43236_FW_NAME	"brcm/brcmfmac43236b.bin"
- #define BRCMF_USB_43242_FW_NAME	"brcm/brcmfmac43242a.bin"
-+#define BRCMF_USB_43569_FW_NAME	"brcm/brcmfmac43569.bin"
- 
- struct brcmf_usb_image {
- 	struct list_head list;
-@@ -928,6 +929,8 @@ static bool brcmf_usb_chip_support(int chipid, int chiprev)
- 		return (chiprev == 3);
- 	case 43242:
- 		return true;
-+	case 43569:
-+		return true;
- 	default:
- 		break;
- 	}
-@@ -1028,6 +1031,8 @@ static const char *brcmf_usb_get_fwname(struct brcmf_usbdev_info *devinfo)
- 		return BRCMF_USB_43236_FW_NAME;
- 	case 43242:
- 		return BRCMF_USB_43242_FW_NAME;
-+	case 43569:
-+		return BRCMF_USB_43569_FW_NAME;
- 	default:
- 		return NULL;
- 	}
-@@ -1229,7 +1234,7 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	u8 endpoint_num;
- 	struct brcmf_usbdev_info *devinfo;
- 
--	brcmf_dbg(USB, "Enter\n");
-+	brcmf_dbg(USB, "Enter 0x%04x:0x%04x\n", id->idVendor, id->idProduct);
- 
- 	devinfo = kzalloc(sizeof(*devinfo), GFP_ATOMIC);
- 	if (devinfo == NULL)
-@@ -1392,12 +1397,14 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- #define BRCMF_USB_DEVICE_ID_43143	0xbd1e
- #define BRCMF_USB_DEVICE_ID_43236	0xbd17
- #define BRCMF_USB_DEVICE_ID_43242	0xbd1f
-+#define BRCMF_USB_DEVICE_ID_43569	0xbd27
- #define BRCMF_USB_DEVICE_ID_BCMFW	0x0bdc
- 
- static struct usb_device_id brcmf_usb_devid_table[] = {
- 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43143) },
- 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43236) },
- 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43242) },
-+	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43569) },
- 	/* special entry for device with firmware loaded and running */
- 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_BCMFW) },
- 	{ }
-@@ -1407,6 +1414,7 @@ MODULE_DEVICE_TABLE(usb, brcmf_usb_devid_table);
- MODULE_FIRMWARE(BRCMF_USB_43143_FW_NAME);
- MODULE_FIRMWARE(BRCMF_USB_43236_FW_NAME);
- MODULE_FIRMWARE(BRCMF_USB_43242_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_USB_43569_FW_NAME);
- 
- static struct usb_driver brcmf_usbdrvr = {
- 	.name = KBUILD_MODNAME,
--- 
-1.7.9.5
+On 06/24/2014 10:51 PM, Emmanuel Grumbach wrote:
+> Hi John,
+>=20
+> This is a pull request for 3.17.
+>=20
+> I have here a whole bunch of various things. Andy contributes better de=
+bug prints for dvm specific flows and a module parameter to completely di=
+sable power save for dvm. Andrei is sharing the premises of his work on C=
+SA - more to come. Eran and Liad keep on working on the new devices. I ha=
+ve the regular amount of BT Coex stuff and I continue to work on the firm=
+ware error report system adding more debug capabilities. More to come on =
+that subject too.
+>=20
+> I merged iwlwifi-fixes in order to be able to apply patches that relied=
+ on patches there.
+>=20
+> Let me know if you have problems - please pull.
+>=20
+> The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626=
+b38f:
+>=20
+>   Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.gi=
+t master
 
+Of course - I meant:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+Sorry for that.
+
+>=20
+> for you to fetch changes up to c47af22ad630e03053f3eeefd19bd8274989ffbb=
+:
+>=20
+>   iwlwifi: mvm: handle device start failures during restart (2014-06-24=
+ 21:55:41 +0300)
+>=20
+
+
+--JwTgK5GgXAR425bBvLqJj7PkqRvdFRU0q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTqdcgAAoJEC0Llv5uNjIBXPQP/jUMhYxLuyJ6oYJh2P0WQuk5
+NQFYCRrCiUNNoaHGrqXewjdbPgtMhgzIHsXkDGmoQiZXpfE5jsXjPQCTWiObvNxP
+f7LuYeWMff7F86Hqd+LKG5TG01vVPTE+sv/EXyzT31+Yaa+2XrpvC3LNnsDBobwB
+yGFV4iHz1dm+AdOOkIGjyARuONgurzuTABGrVUO4A50CX6c2juWNNv8OIrPFGvfE
+uCaLFRqiBgMxxTnHSc+padN5n6/vgAj8JMV+njO+79JLVuFyZ0LEfdGje49jG8l9
+2CYe6qp0e1/K+crljyFBdvAQLsRDNN8ZAYBv7pgUDiXbLjnRr/Ykh5tGMxdUzMmJ
+1RbZaK6A/l/THpd9dYSus0AXxWUCGls3PpLk3PJElt97FSgJnwmWqZXtBqfFvHKC
+kZcyOOyMmntCDcDDZJTu8VgzFGQZsz+iRBkLU0Ji86E5FbQ2GmCmRjVtP6HsoiIr
+4eCmda8LrJWvNFrwCrfFJRGVqesJtdZiUZfBCsYrtK1H0zDq50RzizsEtvRIaOzV
+OKJRiKQ5wVowar4nW0Bmt9tZO1HpYvzNVWFZYPsi2n8wVbQqS+8HeteLxb9+sdRT
+DjieeeKB4v31mwxlrsYmAVzTLpQNose+m/jpL0BEhWk92IA3XOf6OQMsWzY/IA7+
+Q6MAiPNHlub/B+BHBfGk
+=48yy
+-----END PGP SIGNATURE-----
+
+--JwTgK5GgXAR425bBvLqJj7PkqRvdFRU0q--
