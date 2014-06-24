@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41453 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753206AbaFDNUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:20:44 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	Matthias Fend <Matthias.Fend@wolfvision.net>
-Subject: [RFC/RFT 5/5] rt2x00: do not initialize BCN_OFFSET registers
-Date: Wed,  4 Jun 2014 15:19:15 +0200
-Message-Id: <1401887955-11361-5-git-send-email-sgruszka@redhat.com> (sfid-20140604_152049_606805_6E09D94B)
-In-Reply-To: <1401887955-11361-1-git-send-email-sgruszka@redhat.com>
-References: <1401887955-11361-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:2958 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650AbaFXIlh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 04:41:37 -0400
+Message-ID: <53A939BA.3030700@broadcom.com> (sfid-20140624_104148_067222_FDA52EA8)
+Date: Tue, 24 Jun 2014 10:41:30 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Victor <silentworks@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux
+ 3.15.1 (was: No channels available (no IR) in 5Ghz band for intel 7260-ac)
+References: <CAAnNoB_8MSR3S+VmFJUKKU4bO5zfeu1N_4-vQULqBf1_UbAqkg@mail.gmail.com> <20140624005030.GI1390@garbanzo.do-not-panic.com>
+In-Reply-To: <20140624005030.GI1390@garbanzo.do-not-panic.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We setup BCN_OFFSET{0,1} registers dinamicly, don't have to
-initialize them.
+updated subject
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 22 ----------------------
- 1 file changed, 22 deletions(-)
+On 24-06-14 02:50, Luis R. Rodriguez wrote:
+> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
+>> Hello, first of all i'm not sure if this is the proper place to ask
+>> since it seems mostly dev-related, but i have been looking everywhere
+>> trying to find a solution without luck, so i'm not sure if i
+>> encountered some kind of bug.
+>>
+>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
+>>
+>> Problem found: the system shows all channels for Ghz band as (no IR),
+>> so they can't be used
+>
+> NO-IR means you can't initiate radiation, it doesn't mean they are
+> disabled. The NO-IR flag then means you cannot use modes of operation
+> that require you to initiate radiation first, there are two ways that
+> can happen:
+>
+>    * beconing -- AP, IBSS, Mesh, P2P master mode
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index a9cdddd..893c9d5 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4562,28 +4562,6 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	if (ret)
- 		return ret;
- 
--	rt2800_register_read(rt2x00dev, BCN_OFFSET0, &reg);
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN0,
--			   rt2800_get_beacon_offset(rt2x00dev, 0));
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN1,
--			   rt2800_get_beacon_offset(rt2x00dev, 1));
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN2,
--			   rt2800_get_beacon_offset(rt2x00dev, 2));
--	rt2x00_set_field32(&reg, BCN_OFFSET0_BCN3,
--			   rt2800_get_beacon_offset(rt2x00dev, 3));
--	rt2800_register_write(rt2x00dev, BCN_OFFSET0, reg);
--
--	rt2800_register_read(rt2x00dev, BCN_OFFSET1, &reg);
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN4,
--			   rt2800_get_beacon_offset(rt2x00dev, 4));
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN5,
--			   rt2800_get_beacon_offset(rt2x00dev, 5));
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN6,
--			   rt2800_get_beacon_offset(rt2x00dev, 6));
--	rt2x00_set_field32(&reg, BCN_OFFSET1_BCN7,
--			   rt2800_get_beacon_offset(rt2x00dev, 7));
--	rt2800_register_write(rt2x00dev, BCN_OFFSET1, reg);
--
- 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
- 	rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
- 
--- 
-1.8.3.1
+That is just the point, right? The context is "Setup of wireless AP".
+
+Regards,
+Arend
+
+>    * active scanning
+>
+> You are still able to do passive scanning. The NO-IR flag can be
+> lifted from channels if the driver does like the idea of trusting
+> beacon hints:
+>
+> http://wireless.kernel.org/en/developers/Regulatory/processing_rules#Beacon_hints
+>
+> If the driver does not like those then you won't get the NO-IR flag
+> lifted when a beacon is found. There device follows the desire by
+> the silicon manufacturer and whoever deploys the device and integrates
+> it into your system so anything beyond this should be checked with
+> Intel folks.
+>
+>    Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
