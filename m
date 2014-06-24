@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:57568 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754357AbaFUVCp (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:50152 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbaFXTwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 17:02:45 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so5116044wes.41
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 14:02:44 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Peter Wu <lekensteyn@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sat, 21 Jun 2014 23:03:42 +0200
-Message-Id: <1403384623-9737-2-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230302_496820_3A3BD53A)
-In-Reply-To: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	Tue, 24 Jun 2014 15:52:30 -0400
+Received: by mail-we0-f179.google.com with SMTP id w62so932332wes.38
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:29 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/27] iwlwifi: bump API version for 8000 devices
+Date: Tue, 24 Jun 2014 22:51:55 +0300
+Message-Id: <1403639541-4621-1-git-send-email-egrumbach@gmail.com> (sfid-20140624_215234_563175_0A8B83C0)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a logical error in an if statement that always evaluates to false.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This has after same discussion resulted in that we add a macro to handle this.
-
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-index 2b08671..280c3da 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1128,7 +1128,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_MASK) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-index 7f29b8d..315a298 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-@@ -369,6 +369,7 @@
- #define	MSR_ADHOC			0x01
- #define	MSR_INFRA			0x02
- #define	MSR_AP				0x03
-+#define	MSR_MASK			0x03
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 51c4153..0a1bb5f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -67,7 +67,7 @@
+ #include "iwl-agn-hw.h"
  
- /* 6. Adaptive Control Registers  (Offset: 0x0160 - 0x01CF) */
- /* ----------------------------------------------------- */
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	8
++#define IWL8000_UCODE_API_MAX	9
+ 
+ /* Oldest version we won't warn about */
+ #define IWL8000_UCODE_API_OK	8
 -- 
-1.7.10.4
+1.8.3.2
 
