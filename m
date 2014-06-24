@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:39497 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbaFJV7I (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:33719 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755240AbaFXTwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 17:59:08 -0400
-Received: by mail-la0-f45.google.com with SMTP id s18so4413469lam.32
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2014 14:59:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYK2xZwwQ4h+ifB6KP9wyr39RF2Z6zrsyZ=0CtC+YceRWQ@mail.gmail.com>
-References: <CANy8jx+RY-_wbX5JqdF_xwyP+2XQ-V9Ae95Y5MOzd=fyir8KTw@mail.gmail.com>
- <CABPxzYK2xZwwQ4h+ifB6KP9wyr39RF2Z6zrsyZ=0CtC+YceRWQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 10 Jun 2014 14:58:47 -0700
-Message-ID: <CAB=NE6XuAj8jEwLesbSDoyawWh0pWTD-w=L3Jrxx+630QSkm5w@mail.gmail.com> (sfid-20140610_235912_527321_6D7C0B73)
-Subject: Re: max_erip/tx_power not being set correctly
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: John Walker <john@x109.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 24 Jun 2014 15:52:51 -0400
+Received: by mail-we0-f176.google.com with SMTP id u56so946066wes.7
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:50 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/27] iwlwifi: update trans->hw_rev 8000 hw family format
+Date: Tue, 24 Jun 2014 22:52:09 +0300
+Message-Id: <1403639541-4621-15-git-send-email-egrumbach@gmail.com> (sfid-20140624_220200_537878_B0529D29)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 25, 2014 at 10:55 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> https://dev.openwrt.org/browser/trunk/package/kernel/mac80211/patches/005-make-genregdb.awk-skip-antenna-gain.patch?rev=40296
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-This just ignores antenna gain as it was useless.
+The format of the CSR_HW_REV register has changed in 8000
+HW family. To keep backwards compatibility, we store the
+value of this register as usual in trans->hw_rev, only we
+store it in the old format in this variable.
 
-  Luis
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 0480857..5703a3d 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1993,6 +1993,16 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	}
+ 
+ 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
++	/*
++	 * In the 8000 HW family the format of the 4 bytes of CSR_HW_REV have
++	 * changed, and now the revision step also includes bit 0-1 (no more
++	 * "dash" value). To keep hw_rev backwards compatible - we'll store it
++	 * in the old format.
++	 */
++	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
++		trans->hw_rev = (trans->hw_rev & 0xfff0) |
++				((trans->hw_rev << 2) & 0xc);
++
+ 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
+ 	snprintf(trans->hw_id_str, sizeof(trans->hw_id_str),
+ 		 "PCI ID: 0x%04X:0x%04X", pdev->device, pdev->subsystem_device);
+-- 
+1.8.3.2
+
