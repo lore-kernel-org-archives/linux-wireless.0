@@ -1,171 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49913 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbaFPQiM (ORCPT
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:50873 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382AbaFXAuf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:12 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 01/25] wil6210: Tx mgmt frame from debugfs
-Date: Mon, 16 Jun 2014 19:36:59 +0300
-Message-ID: <1402936643-31819-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183817_567278_D793E546)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 23 Jun 2014 20:50:35 -0400
+Received: by mail-pb0-f50.google.com with SMTP id rp16so6511864pbb.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 17:50:35 -0700 (PDT)
+Date: Mon, 23 Jun 2014 17:50:30 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Victor <silentworks@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: No channels available (no IR) in 5Ghz band for intel 7260-ac
+Message-ID: <20140624005030.GI1390@garbanzo.do-not-panic.com> (sfid-20140624_025041_663530_150DAFC1)
+References: <CAAnNoB_8MSR3S+VmFJUKKU4bO5zfeu1N_4-vQULqBf1_UbAqkg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAnNoB_8MSR3S+VmFJUKKU4bO5zfeu1N_4-vQULqBf1_UbAqkg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide 2 files on the debugfs:
-- "rxon": write channel (1..4) to open Rx on it, 0 to rxoff
-- "tx_mgmt": write binary frame, starting from MAC header
+On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
+> Hello, first of all i'm not sure if this is the proper place to ask
+> since it seems mostly dev-related, but i have been looking everywhere
+> trying to find a solution without luck, so i'm not sure if i
+> encountered some kind of bug.
+> 
+> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
+> 
+> Problem found: the system shows all channels for Ghz band as (no IR),
+> so they can't be used
 
-one need to care about turning receiver on/off before/after tx_mgmt
+NO-IR means you can't initiate radiation, it doesn't mean they are
+disabled. The NO-IR flag then means you cannot use modes of operation
+that require you to initiate radiation first, there are two ways that
+can happen:
 
-Correct sequence is:
- echo $channel > rxon
- cat mfmt_frame > tx_mgmt
- echo 0 > rxon
+  * beconing -- AP, IBSS, Mesh, P2P master mode
+  * active scanning
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  7 ++-
- drivers/net/wireless/ath/wil6210/debugfs.c  | 80 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  3 ++
- 3 files changed, 86 insertions(+), 4 deletions(-)
+You are still able to do passive scanning. The NO-IR flag can be
+lifted from channels if the driver does like the idea of trusting
+beacon hints:
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 820d4eb..1725dfc 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -443,10 +443,9 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
- 	return rc;
- }
- 
--static int wil_cfg80211_mgmt_tx(struct wiphy *wiphy,
--				struct wireless_dev *wdev,
--				struct cfg80211_mgmt_tx_params *params,
--				u64 *cookie)
-+int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-+			 struct cfg80211_mgmt_tx_params *params,
-+			 u64 *cookie)
- {
- 	const u8 *buf = params->buf;
- 	size_t len = params->len;
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 8d4bc4b..9d5db04 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -397,6 +397,84 @@ static const struct file_operations fops_reset = {
- 	.write = wil_write_file_reset,
- 	.open  = simple_open,
- };
-+/*---write channel 1..4 to rxon for it, 0 to rxoff---*/
-+static ssize_t wil_write_file_rxon(struct file *file, const char __user *buf,
-+				   size_t len, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	int rc;
-+	long channel;
-+	bool on;
-+
-+	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
-+	if (!kbuf)
-+		return -ENOMEM;
-+	if (copy_from_user(kbuf, buf, len))
-+		return -EIO;
-+
-+	kbuf[len] = '\0';
-+	rc = kstrtol(kbuf, 0, &channel);
-+	kfree(kbuf);
-+	if (rc)
-+		return rc;
-+
-+	if ((channel < 0) || (channel > 4)) {
-+		wil_err(wil, "Invalid channel %ld\n", channel);
-+		return -EINVAL;
-+	}
-+	on = !!channel;
-+
-+	if (on) {
-+		rc = wmi_set_channel(wil, (int)channel);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	rc = wmi_rxon(wil, on);
-+	if (rc)
-+		return rc;
-+
-+	return len;
-+}
-+
-+static const struct file_operations fops_rxon = {
-+	.write = wil_write_file_rxon,
-+	.open  = simple_open,
-+};
-+/*---tx_mgmt---*/
-+/* Write mgmt frame to this file to send it */
-+static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
-+				     size_t len, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	struct wireless_dev *wdev = wil_to_wdev(wil);
-+	struct cfg80211_mgmt_tx_params params;
-+	int rc;
-+
-+	void *frame = kmalloc(len, GFP_KERNEL);
-+	if (!frame)
-+		return -ENOMEM;
-+
-+	if (copy_from_user(frame, buf, len))
-+		return -EIO;
-+
-+	params.buf = frame;
-+	params.len = len;
-+	params.chan = wdev->preset_chandef.chan;
-+
-+	rc = wil_cfg80211_mgmt_tx(wiphy, wdev, &params, NULL);
-+
-+	kfree(frame);
-+	wil_info(wil, "%s() -> %d\n", __func__, rc);
-+
-+	return len;
-+}
-+
-+static const struct file_operations fops_txmgmt = {
-+	.write = wil_write_file_txmgmt,
-+	.open  = simple_open,
-+};
- 
- static void wil_seq_hexdump(struct seq_file *s, void *p, int len,
- 			    const char *prefix)
-@@ -719,6 +797,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 	debugfs_create_file("mem_val", S_IRUGO, dbg, wil, &fops_memread);
- 
- 	debugfs_create_file("reset", S_IWUSR, dbg, wil, &fops_reset);
-+	debugfs_create_file("rxon", S_IWUSR, dbg, wil, &fops_rxon);
-+	debugfs_create_file("tx_mgmt", S_IWUSR, dbg, wil, &fops_txmgmt);
- 	debugfs_create_file("temp", S_IRUGO, dbg, wil, &fops_temp);
- 
- 	wil->rgf_blob.data = (void * __force)wil->csr + 0;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e25edc5..793675e 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -504,6 +504,9 @@ int wil6210_init_irq(struct wil6210_priv *wil, int irq);
- void wil6210_fini_irq(struct wil6210_priv *wil, int irq);
- void wil6210_disable_irq(struct wil6210_priv *wil);
- void wil6210_enable_irq(struct wil6210_priv *wil);
-+int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-+			 struct cfg80211_mgmt_tx_params *params,
-+			 u64 *cookie);
- 
- int wil6210_debugfs_init(struct wil6210_priv *wil);
- void wil6210_debugfs_remove(struct wil6210_priv *wil);
--- 
-1.9.1
+http://wireless.kernel.org/en/developers/Regulatory/processing_rules#Beacon_hints
 
+If the driver does not like those then you won't get the NO-IR flag
+lifted when a beacon is found. There device follows the desire by
+the silicon manufacturer and whoever deploys the device and integrates
+it into your system so anything beyond this should be checked with
+Intel folks.
+
+  Luis
