@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52235 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757066AbaFYP5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 11:57:43 -0400
-Message-ID: <1403711846.4140.16.camel@jlt4.sipsolutions.net> (sfid-20140625_175747_034098_419DDEC0)
-Subject: Re: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module
- parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 25 Jun 2014 17:57:26 +0200
-In-Reply-To: <53A9B391.4050602@broadcom.com>
-References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
-		 <1402996581-10764-3-git-send-email-arend@broadcom.com>
-	 <1403516075.4418.9.camel@jlt4.sipsolutions.net>
-	 <53A9B391.4050602@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:48838 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbaFXTwm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 15:52:42 -0400
+Received: by mail-wi0-f178.google.com with SMTP id n15so1252372wiw.5
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:40 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/27] iwlwifi: mvm: fixes for 8000 NVM flow
+Date: Tue, 24 Jun 2014 22:52:03 +0300
+Message-Id: <1403639541-4621-9-git-send-email-egrumbach@gmail.com> (sfid-20140624_220200_863376_838E1FC1)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-24 at 19:21 +0200, Arend van Spriel wrote:
+From: Eran Harary <eran.harary@intel.com>
 
-> >> + * @wiphy: The wiphy to check.
-> >> + *
-> >> + * Return: true is 40MHz is disabled in 2.4G band.
-> >> + */
-> >> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
-> >
-> > Why should that have a wiphy argument?
-> 
-> It is up to cfg80211 to determine the logic behind the function. It is 
-> just context supplied by the caller. The fact that it is determined by a 
-> module parameter is internal cfg80211 stuff.
+The nvm_file should be loaded by default for SDIO
+procucts only. Change the configuration accordingly.
+While at it, fix a typo in the device name.
 
-I just don't really see any way it would ever be per wiphy?
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c   | 3 +--
+ drivers/net/wireless/iwlwifi/iwl-config.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-> > Might also be simpler to just export the variable?
-> 
-> Either way is pretty simple I guess.
-
-Yeah, dunno. I guess exporting the function at least makes sure nobody
-will try to set the variable, so that's somewhat useful...
-
-I'd prefer to remove the wiphy argument though (and fix the kernel-doc)
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 0a1bb5f..51486cc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -119,10 +119,9 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
+ 	.ht_params = &iwl8000_ht_params,
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+-	.default_nvm_file = DEFAULT_NVM_FILE_FAMILY_8000,
+ };
+ 
+-const struct iwl_cfg iwl8260_n_cfg = {
++const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless-AC 8260",
+ 	.fw_name_pre = IWL8000_FW_PRE,
+ 	IWL_DEVICE_8000,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index b7047905..034c2fc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -337,7 +337,7 @@ extern const struct iwl_cfg iwl7265_2ac_cfg;
+ extern const struct iwl_cfg iwl7265_2n_cfg;
+ extern const struct iwl_cfg iwl7265_n_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_cfg;
+-extern const struct iwl_cfg iwl8260_n_cfg;
++extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+-- 
+1.8.3.2
 
