@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:56085 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbaFKXeR (ORCPT
+Received: from mx1.redhat.com ([209.132.183.28]:27838 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751966AbaFXWIC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 19:34:17 -0400
-Date: Thu, 12 Jun 2014 09:34:07 +1000
-From: James Cameron <quozl@laptop.org>
-To: Aaro Koskinen <aaro.koskinen@iki.fi>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: Linux 3.15: WLAN regression on WRL54GL/B43?
-Message-ID: <20140611233407.GA13823@us.netrek.org> (sfid-20140612_013423_695157_72AF0A79)
-References: <20140611230513.GC913@drone.musicnaut.iki.fi>
+	Tue, 24 Jun 2014 18:08:02 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Clement Calmels <clement.calmels@free.fr>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: fix sparse warning
+References: <1403643474-7991-1-git-send-email-clement.calmels@free.fr>
+Date: Wed, 25 Jun 2014 00:07:51 +0200
+In-Reply-To: <1403643474-7991-1-git-send-email-clement.calmels@free.fr>
+	(Clement Calmels's message of "Tue, 24 Jun 2014 22:57:54 +0200")
+Message-ID: <wrfjmwd2x8p4.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140625_000823_005873_777579EA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140611230513.GC913@drone.musicnaut.iki.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check that the driver reports the channel the probe was heard on?
+Clement Calmels <clement.calmels@free.fr> writes:
+> From: Clément Calmels <clement.calmels@free.fr>
+>
+> Found running sparse on the rtl8723au driver.
+>
+>   CHECK   drivers/staging/rtl8723au/core/rtw_cmd.c
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1479:54: warning: incorrect type in argument 2 (different base types)
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1479:54:    expected int [signed] gfp
+> drivers/staging/rtl8723au/core/rtw_cmd.c:1479:54:    got restricted gfp_t
+>
+> Signed-off-by: Clement Calmels <clement.calmels@free.fr>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme.c    | 2 +-
+>  drivers/staging/rtl8723au/include/rtw_mlme.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 
-Another driver hit this and was fixed:
+Thanks, I'll add it to my tree!
 
-	at76c50x: fix scan does not work with latest mac80211
-
--- 
-James Cameron
-http://quozl.linux.org.au/
+Cheers,
+Jes
