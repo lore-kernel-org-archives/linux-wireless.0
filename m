@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63181 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932234AbaFPQik (ORCPT
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:51312 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259AbaFXIIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:40 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 16/25] wil6210: Debug print GRO Rx result
-Date: Mon, 16 Jun 2014 19:37:14 +0300
-Message-ID: <1402936643-31819-17-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190458_253066_E4B17C5E)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 24 Jun 2014 04:08:00 -0400
+Received: by mail-yk0-f176.google.com with SMTP id 131so5374322ykp.21
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 01:07:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <53A92ACB.8080005@gmail.com>
+References: <CAAnNoB_8MSR3S+VmFJUKKU4bO5zfeu1N_4-vQULqBf1_UbAqkg@mail.gmail.com>
+	<20140624005030.GI1390@garbanzo.do-not-panic.com>
+	<53A92ACB.8080005@gmail.com>
+Date: Tue, 24 Jun 2014 10:07:59 +0200
+Message-ID: <CAAnNoB80cfdKhnotpQq4Kiu3+=b7K_MEWs-69qh8Pm5Us_YL2A@mail.gmail.com> (sfid-20140624_100806_871921_08683F9D)
+Subject: Re: No channels available (no IR) in 5Ghz band for intel 7260-ac
+From: Victor <silentworks@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+2014-06-24 9:37 GMT+02:00 Emmanuel Grumbach <egrumbach@gmail.com>:
+>
+>
+> On 06/24/2014 03:50 AM, Luis R. Rodriguez wrote:
+>> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
+>>> Hello, first of all i'm not sure if this is the proper place to ask
+>>> since it seems mostly dev-related, but i have been looking everywhere
+>>> trying to find a solution without luck, so i'm not sure if i
+>>> encountered some kind of bug.
+>>>
+>>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
+>
+> This configuration is not supported.
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 0318cd2..a89a5c6 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -525,6 +525,17 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 		ndev->stats.rx_bytes += len;
- 		stats->rx_bytes += len;
- 	}
-+	{
-+		static const char * const gro_res_str[] = {
-+			[GRO_MERGED]		= "GRO_MERGED",
-+			[GRO_MERGED_FREE]	= "GRO_MERGED_FREE",
-+			[GRO_HELD]		= "GRO_HELD",
-+			[GRO_NORMAL]		= "GRO_NORMAL",
-+			[GRO_DROP]		= "GRO_DROP",
-+		};
-+		wil_dbg_txrx(wil, "Rx complete %d bytes => %s,\n",
-+			     len, gro_res_str[rc]);
-+	}
- }
- 
- /**
--- 
-1.9.1
+Do you know why? it is supported in other kernel version?, i got the
+device mainly for to be used as 802.11ac AP  :/, on the product brief
+they state it is designed for AP mode
+http://www.intel.es/content/dam/www/public/us/en/documents/product-briefs/dual-band-wireless-ac-7260-bluetooth-brief.pdf,
+and in iw it appears as supported too
 
+Thanks.
