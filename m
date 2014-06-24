@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14554 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754581AbaFPQif (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:57680 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821AbaFXMup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:35 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 12/25] wil6210: print error when notifying about FW error
-Date: Mon, 16 Jun 2014 19:37:10 +0300
-Message-ID: <1402936643-31819-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190456_684471_2ACB40BD)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 24 Jun 2014 08:50:45 -0400
+Received: by mail-lb0-f174.google.com with SMTP id u10so358545lbd.33
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 05:50:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Tue, 24 Jun 2014 15:50:43 +0300
+Message-ID: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com> (sfid-20140624_145103_426326_95562883)
+Subject: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux
+ 3.15.1 (was: No channels available (no IR) in 5Ghz band for intel 7260-ac
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Victor <silentworks@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print to dmesg when FW error notification is about to be sent
+>>
+>>
+>> On 06/24/2014 03:50 AM, Luis R. Rodriguez wrote:
+>>> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
+>>>> Hello, first of all i'm not sure if this is the proper place to ask
+>>>> since it seems mostly dev-related, but i have been looking everywhere
+>>>> trying to find a solution without luck, so i'm not sure if i
+>>>> encountered some kind of bug.
+>>>>
+>>>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
+>>
+>> This configuration is not supported.
+>
+> Do you know why? it is supported in other kernel version?, i got the
+> device mainly for to be used as 802.11ac AP  :/, on the product brief
+> they state it is designed for AP mode
+> http://www.intel.es/content/dam/www/public/us/en/documents/product-briefs/dual-band-wireless-ac-7260-bluetooth-brief.pdf,
+> and in iw it appears as supported too
+>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 73593aa..e4aba53 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -257,6 +257,7 @@ static void wil_notify_fw_error(struct wil6210_priv *wil)
- 		[1] = "EVENT=FW_ERROR",
- 		[2] = NULL,
- 	};
-+	wil_err(wil, "Notify about firmware error\n");
- 	kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
- }
- 
--- 
-1.9.1
-
+AP mode is supported - not on 5.2 GHz band.
