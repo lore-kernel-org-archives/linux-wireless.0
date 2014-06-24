@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:40397 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbaFDOyZ (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:44710 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755172AbaFXTwd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 10:54:25 -0400
-Received: by mail-ig0-f182.google.com with SMTP id a13so1124945igq.9
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 07:54:24 -0700 (PDT)
-Date: Wed, 4 Jun 2014 10:53:53 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: remove ignore_plink_timer flag
-Message-ID: <20140604145353.GA19299@localhost> (sfid-20140604_165428_548061_7AB0E8F9)
-References: <1401888451-9612-1-git-send-email-me@bobcopeland.com>
- <1401890908.6079.32.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401890908.6079.32.camel@jlt4.sipsolutions.net>
+	Tue, 24 Jun 2014 15:52:33 -0400
+Received: by mail-wg0-f45.google.com with SMTP id l18so888296wgh.28
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:31 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/27] iwlwifi: mvm: add back support for low-priority scan
+Date: Tue, 24 Jun 2014 22:51:57 +0300
+Message-Id: <1403639541-4621-3-git-send-email-egrumbach@gmail.com> (sfid-20140624_215243_010493_E4CE2F1E)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 04:08:28PM +0200, Johannes Berg wrote:
-> On Wed, 2014-06-04 at 09:27 -0400, Bob Copeland wrote:
-> > However, using the mod_timer()/del_timer() return values to
-> > detect these cases is broken.  As a result, timers get ignored
-> > unnecessarily, and stations can get stuck in the peering state
-> > machine.
-> > 
-> > Instead, we can detect the case by looking at the timer expiration.
-> > In the case of del_timer, just ignore the timers in the following
-> > (LISTEN/ESTAB) states since they won't have timers anyway.
-> 
-> I'm not entirely sure about the expiration thing - doesn't seem
-> different from the outside flag? But anyway - applied.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Happy to be enlightened -- for what it's worth this is my reasoning:
+The low-priority scan feature can be useful, e.g. for OBSS
+scans (if those are required by the AP); add back support
+for it, restoring the maximum out time to the value it was
+for low-priority scan before that was removed.
 
-My understanding of mod_timer() return value is that it just means
-the timer was scheduled, not actually running, and the original code
-assumed the latter.  So let's say the timer is already scheduled to
-happen 5 seconds from now, the old code would do:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 9 ++++++---
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-lock
-/* changing state, timer now reflects a different state timeout */
-rv = mod_timer(10 secs from now);
-if (rv) /* timer was already scheduled */
-   ignore_plink_timer = 1;
-unlock
-
-So when the timer runs in 10 seconds it would skip execution even though
-the first handler hadn't executed yet.  It got the race case right, but
-not the race-free case.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7215f59..41c0aac 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -374,6 +374,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	hw->wiphy->max_sched_scan_ie_len = SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
+ 
+ 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
++			       NL80211_FEATURE_LOW_PRIORITY_SCAN |
+ 			       NL80211_FEATURE_P2P_GO_OPPPS;
+ 
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index df8f3eb..896c21d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -267,7 +267,7 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
+ 
+ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 				     struct ieee80211_vif *vif,
+-				     int n_ssids,
++				     int n_ssids, u32 flags,
+ 				     struct iwl_mvm_scan_params *params)
+ {
+ 	bool global_bound = false;
+@@ -289,6 +289,9 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 		params->max_out_time = 250;
+ 	}
+ 
++	if (flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
++		params->max_out_time = 200;
++
+ not_bound:
+ 
+ 	for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
+@@ -332,7 +335,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 	cmd->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
+ 	cmd->rxchain_sel_flags = iwl_mvm_scan_rx_chain(mvm);
+ 
+-	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
++	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, req->flags, &params);
+ 	cmd->max_out_time = cpu_to_le32(params.max_out_time);
+ 	cmd->suspend_time = cpu_to_le32(params.suspend_time);
+ 	if (params.passive_fragmented)
+@@ -758,7 +761,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
+ 	if (!scan_cfg)
+ 		return -ENOMEM;
+ 
+-	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
++	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, 0, &params);
+ 	iwl_build_scan_cmd(mvm, vif, req, &scan_cfg->scan_cmd, &params);
+ 	scan_cfg->scan_cmd.len = cpu_to_le16(cmd_len);
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.8.3.2
+
