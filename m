@@ -1,117 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:11900 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299AbaFVJhY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2014 05:37:24 -0400
-Message-ID: <53A6A3D1.60505@broadcom.com> (sfid-20140622_113752_228219_6B4AD017)
-Date: Sun, 22 Jun 2014 11:37:21 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-CC: Brett Rudley <brudley@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] net/wireless/brcm80211/brcmfmac: Make return type
- and name reflect actual semantics
-References: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk> <1403391326-28086-1-git-send-email-linux@rasmusvillemoes.dk> <53A6A189.1020401@broadcom.com>
-In-Reply-To: <53A6A189.1020401@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:49332 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756192AbaFXQW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 12:22:59 -0400
+Message-ID: <1403626964.10831.12.camel@jlt4.sipsolutions.net> (sfid-20140624_182313_006352_507DF583)
+Subject: pull-request: mac80211-next 2014-06-24
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Jun 2014 18:22:44 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-XLFqT13A1B+EG3jCwZl0"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/22/14 11:27, Arend van Spriel wrote:
-> On 06/22/14 00:55, Rasmus Villemoes wrote:
->> Applying ++ to a bool is equivalent to setting it true, regardless of
->> its initial value (bools are not uint1_t). Hence the function
->> wl_get_vif_state_all can only ever return true/false. The only in-tree
->> caller uses its return value as a boolean. So update its return type,
->> and since the list traversal and bit testing have no side effects,
->> just return true immediately. Its return value tells if any vif is up,
->
-- Now I may be really nit-picking, but the return value if any vif is *in
-- the specified state*.
-+ Now I may be really nit-picking, but the return value tells if any
-+ vif is *in the specified state*.
->
-> Regards,
-> Arend
->
->> so also rename it to brcmf_get_vif_state_any.
->>
->> Reviewed-by: Arend van Spriel<arend@broadcom.com>
->> Signed-off-by: Rasmus Villemoes<linux@rasmusvillemoes.dk>
->> ---
->>
->> Notes:
->> v2: Rename wl_get_vif_state_all => brcmf_get_vif_state_any as
->> requested by Arend.
->>
->> drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 2 +-
->> drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 7 +++----
->> drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h | 2 +-
->> 3 files changed, 5 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
->> b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
->> index f3445ac..588fdbd 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
->> @@ -708,7 +708,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info
->> *p2p, u32 num_chans,
->> active = P2PAPI_SCAN_SOCIAL_DWELL_TIME_MS;
->> else if (num_chans == AF_PEER_SEARCH_CNT)
->> active = P2PAPI_SCAN_AF_SEARCH_DWELL_TIME_MS;
->> - else if (wl_get_vif_state_all(p2p->cfg, BRCMF_VIF_STATUS_CONNECTED))
->> + else if (brcmf_get_vif_state_any(p2p->cfg, BRCMF_VIF_STATUS_CONNECTED))
->> active = -1;
->> else
->> active = P2PAPI_SCAN_DWELL_TIME_MS;
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->> b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->> index d8fa276..93b1809 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->> @@ -5625,16 +5625,15 @@ enum nl80211_iftype
->> brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
->> return wdev->iftype;
->> }
->>
->> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned
->> long state)
->> +bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
->> unsigned long state)
->> {
->> struct brcmf_cfg80211_vif *vif;
->> - bool result = 0;
->>
->> list_for_each_entry(vif,&cfg->vif_list, list) {
->> if (test_bit(state,&vif->sme_state))
->> - result++;
->> + return true;
->> }
->> - return result;
->> + return false;
->> }
->>
->> static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event
->> *event,
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
->> b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
->> index 283c525..f9fb109 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
->> @@ -477,7 +477,7 @@ const struct brcmf_tlv *
->> brcmf_parse_tlvs(const void *buf, int buflen, uint key);
->> u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
->> struct ieee80211_channel *ch);
->> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned
->> long state);
->> +bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
->> unsigned long state);
->> void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
->> struct brcmf_cfg80211_vif *vif);
->> bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
->
+
+--=-XLFqT13A1B+EG3jCwZl0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+John,
+
+Not so much (yet?), but here it goes ... I'm planning to pull in the CSA
+work, of course.
+
+The biggest thing here is probably Arik's TDLS rework, beyond that we
+have smaller improvements and features like David's scanning IE thing,
+Luca's queue work, some CSA work, etc. Also your PID rate control
+removal, of course.
+
+Let me know if any issues show up.
+
+johannes
+
+The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626b38f=
+:
+
+  Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git HEA=
+D
+
+for you to fetch changes up to 79c3cc0d22358a383b1196aea869e620ec2faf37:
+
+  mac80211: split sched scan IEs (2014-06-24 15:47:52 +0200)
+
+----------------------------------------------------------------
+Antonio Ospite (1):
+      trivial: net/mac80211/mesh.c: fix typo s/Substract/Subtract/
+
+Arik Nemtsov (10):
+      mac80211: clarify TDLS Tx handling
+      mac80211: set auth flags after other station info
+      mac80211: cleanup TDLS state during failed setup
+      cfg80211: pass TDLS initiator in tdls_mgmt operations
+      mac80211: use TDLS initiator in tdls_mgmt operations
+      mac80211: split tdls_mgmt function
+      mac80211: implement proper Tx path flushing for TDLS
+      mac80211: add API to request TDLS operation from userspace
+      mac80211: make sure TDLS peer STA exists during setup
+      mac80211: protect TDLS discovery session
+
+Bob Copeland (1):
+      mac80211: remove ignore_plink_timer flag
+
+David Spinadel (2):
+      mac80211: support more than one band in scan request
+      mac80211: split sched scan IEs
+
+Janusz Dziedzic (1):
+      mac80211: allow tx via monitor iface when DFS
+
+Johannes Berg (4):
+      mac80211: fix station/driver powersave race
+      mac80211: remove weak WEP IV accounting
+      cfg80211: make ethtool the driver's responsibility
+      mac80211_hwsim: clean up own address matching
+
+John W. Linville (1):
+      mac80211: remove PID rate control
+
+Luciano Coelho (4):
+      mac80211: don't stop all queues when flushing
+      mac80211: introduce refcount for queue_stop_reasons
+      mac80211: add functions to stop and wake all queues assigned to a vif
+      mac80211: stop only the queues assigned to the vif during channel swi=
+tch
+
+Michal Kazior (2):
+      mac80211: move csa counters from sdata to beacon/presp
+      mac80211: use csa counter offsets instead of csa_active
+
+Thomas Gleixner (2):
+      mac80211: Use ktime_get_ts()
+      net: Mac80211: Remove silly timespec dance
+
+ MAINTAINERS                                 |  10 -
+ drivers/net/wireless/at76c50x-usb.c         |   3 +-
+ drivers/net/wireless/ath/ath10k/mac.c       |   3 +-
+ drivers/net/wireless/cw1200/scan.c          |   3 +-
+ drivers/net/wireless/cw1200/scan.h          |   2 +-
+ drivers/net/wireless/iwlegacy/common.c      |   3 +-
+ drivers/net/wireless/iwlegacy/common.h      |   2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |   3 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   5 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     |  27 +-
+ drivers/net/wireless/mac80211_hwsim.c       |  69 ++--
+ drivers/net/wireless/mwifiex/cfg80211.c     |   3 +-
+ drivers/net/wireless/ti/wl1251/main.c       |   3 +-
+ drivers/net/wireless/ti/wl12xx/scan.c       |  20 +-
+ drivers/net/wireless/ti/wl12xx/scan.h       |   2 +-
+ drivers/net/wireless/ti/wl18xx/scan.c       |  16 +-
+ drivers/net/wireless/ti/wl18xx/scan.h       |   2 +-
+ drivers/net/wireless/ti/wlcore/cmd.c        |  11 +-
+ drivers/net/wireless/ti/wlcore/cmd.h        |   3 +-
+ drivers/net/wireless/ti/wlcore/main.c       |   5 +-
+ drivers/net/wireless/ti/wlcore/scan.h       |   2 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h     |   2 +-
+ include/linux/ieee80211.h                   |   3 +
+ include/net/cfg80211.h                      |  31 +-
+ include/net/mac80211.h                      |  65 +++-
+ include/uapi/linux/nl80211.h                |   5 +
+ net/mac80211/Kconfig                        |  17 -
+ net/mac80211/Makefile                       |   6 +-
+ net/mac80211/agg-tx.c                       |   8 +-
+ net/mac80211/cfg.c                          | 473 ++++--------------------=
+---
+ net/mac80211/debugfs_sta.c                  |   3 +-
+ net/mac80211/driver-ops.h                   |  20 +-
+ net/mac80211/ethtool.c                      | 244 ++++++++++++++
+ net/mac80211/ibss.c                         |   2 +-
+ net/mac80211/ieee80211_i.h                  |  57 +++-
+ net/mac80211/iface.c                        |  13 +-
+ net/mac80211/main.c                         |  10 +-
+ net/mac80211/mesh.c                         |   4 +-
+ net/mac80211/mesh_plink.c                   |  30 +-
+ net/mac80211/mlme.c                         |  35 +-
+ net/mac80211/offchannel.c                   |   6 +-
+ net/mac80211/pm.c                           |   6 +-
+ net/mac80211/rate.h                         |  13 -
+ net/mac80211/rc80211_pid.h                  | 278 ----------------
+ net/mac80211/rc80211_pid_algo.c             | 478 ------------------------=
+----
+ net/mac80211/rc80211_pid_debugfs.c          | 228 -------------
+ net/mac80211/rx.c                           |   2 +
+ net/mac80211/scan.c                         | 118 ++++---
+ net/mac80211/sta_info.c                     | 201 ++++++++++--
+ net/mac80211/sta_info.h                     |  13 +-
+ net/mac80211/status.c                       |   7 +-
+ net/mac80211/tdls.c                         | 293 +++++++++++++++--
+ net/mac80211/trace.h                        |   7 +
+ net/mac80211/tx.c                           | 170 +++++-----
+ net/mac80211/util.c                         | 226 +++++++++----
+ net/mac80211/wep.c                          |  20 --
+ net/wireless/core.c                         |   3 -
+ net/wireless/ethtool.c                      |  86 +----
+ net/wireless/ethtool.h                      |   6 -
+ net/wireless/nl80211.c                      |   4 +
+ net/wireless/rdev-ops.h                     |  54 +---
+ net/wireless/trace.h                        |  59 +---
+ 63 files changed, 1430 insertions(+), 2075 deletions(-)
+ create mode 100644 net/mac80211/ethtool.c
+ delete mode 100644 net/mac80211/rc80211_pid.h
+ delete mode 100644 net/mac80211/rc80211_pid_algo.c
+ delete mode 100644 net/mac80211/rc80211_pid_debugfs.c
+ delete mode 100644 net/wireless/ethtool.h
+
+
+--=-XLFqT13A1B+EG3jCwZl0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJTqaXUAAoJEDBSmw7B7bqr4rEP/3XKweVn6f9LHynuR+zNQaGQ
+YaOfezyqsRtsYCmHGB24bTfhREVTlIebkg64Npjghutr93qBOpX1g/+Qagr1drkT
+dpKznRdpX74xAFCBGTk0/ZR3T23y+ejE53UuIHic7bd8vwerxde841NRDNQ+MByE
+e6yX/TFxrsrdjHMptspwCVCDX65JWwE4l0Ufar/Y+zmEN3pSTpQTqtUgEoWlpGXq
+XBgI3Zn3T1sxt9ATGwIPk4jgEl3LJwtrdjB90axyGzs9/LG8qSZ8WD03usOXYAXO
+kv1eHxuhZb0X1fk3bpwlGVPL/hWPmP5f3B1ayLyVXOBhNup6/xo0tfsJL0kYvyq8
+qs/ymUrBZTpfAJiEBOMZb8vj/b8YyskQG6FO2N4qF35D1vvC85FHGW1VY/vhYIdK
+SLRquITGjYah532ouhWLWgya4URRHFus+nzocZJmGfMz3RexNzkzvV4Kg/KU0lyK
+hidqnsqGCgoTdWMTKIhIEy3H0+QKOfuUHqJLh8IzskFW3z6/1bsTSba5+9qD4Yf1
+PCmOy7Nts7j2mOIBS6hwMlbT3Fe8zalDy6G1v0xCKzbDg/zGNCY9GXdtfuPf0mAk
+p86T7q/8Ypj1GOfJxwm/XRhd8JDKPXEVZfy9GtTTnRL0NDpPKE4PRHdtEoxScLDD
+ZNR9ZauyXrdZxokgtd70
+=C3es
+-----END PGP SIGNATURE-----
+
+--=-XLFqT13A1B+EG3jCwZl0--
 
