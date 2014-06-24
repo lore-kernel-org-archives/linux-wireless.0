@@ -1,252 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58535 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752355AbaFCJS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2014 05:18:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:55566 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755280AbaFXTxF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 15:53:05 -0400
+Received: by mail-wg0-f49.google.com with SMTP id y10so950368wgg.32
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:53:03 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix station/driver powersave race
-Date: Tue,  3 Jun 2014 11:18:47 +0200
-Message-Id: <1401787127-8566-1-git-send-email-johannes@sipsolutions.net> (sfid-20140603_111911_926294_F48B6E13)
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/27] iwlwifi: mvm: support extended beacon notification
+Date: Tue, 24 Jun 2014 22:52:19 +0300
+Message-Id: <1403639541-4621-25-git-send-email-egrumbach@gmail.com> (sfid-20140624_220200_706284_EEA03ACF)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: David Spinadel <david.spinadel@intel.com>
 
-It is currently possible to have a race due to the station PS
-unblock work like this:
- * station goes to sleep with frames buffered in the driver
- * driver blocks wakeup
- * station wakes up again
- * driver flushes/returns frames, and unblocks, which schedules
-   the unblock work
- * unblock work starts to run, and checks that the station is
-   awake (i.e. that the WLAN_STA_PS_STA flag isn't set)
- * we process a received frame with PM=1, setting the flag again
- * ieee80211_sta_ps_deliver_wakeup() runs, delivering all frames
-   to the driver, and then clearing the WLAN_STA_PS_DRIVER and
-   WLAN_STA_PS_STA flags
+Use extended beacon notification when supported by FW.
+Set last beacon system time to AP or GO interface.
+System time of last beacon can be used to avoid TBTT overlapping
+between two interfaces, CSA and other uses.
 
-In this scenario, mac80211 will think that the station is awake,
-while it really is asleep, and any TX'ed frames should be filtered
-by the device (it will know that the station is sleeping) but then
-passed to mac80211 again, which will not buffer it either as it
-thinks the station is awake, and eventually the packets will be
-dropped.
-
-Fix this by moving the clearing of the flags to exactly where we
-learn about the situation. This creates a problem of reordering,
-so introduce another flag indicating that delivery is being done,
-this new flag also queues frames and is cleared only while the
-spinlock is held (which the queuing code also holds) so that any
-concurrent delivery/TX is handled correctly.
-
-Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/rx.c       |  2 ++
- net/mac80211/sta_info.c | 65 ++++++++++++++++++++++++++++++-------------------
- net/mac80211/sta_info.h |  5 ++--
- net/mac80211/tx.c       |  6 +++--
- 4 files changed, 49 insertions(+), 29 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw.h        |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h | 14 ++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  | 32 +++++++++++++++++++---------
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  |  1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h       |  3 +++
+ 5 files changed, 42 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0e5b67015650..fb44f48340c2 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1107,6 +1107,8 @@ static void sta_ps_end(struct sta_info *sta)
- 		return;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index c713310..13e5d69 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -119,11 +119,13 @@ enum iwl_ucode_tlv_flag {
+ /**
+  * enum iwl_ucode_tlv_api - ucode api
+  * @IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID: wowlan config includes tid field.
++ * @IWL_UCODE_TLV_CAPA_EXTENDED_BEACON: Support Extended beacon notification
+  * @IWL_UCODE_TLV_API_CSA_FLOW: ucode can do unbind-bind flow for CSA.
+  * @IWL_UCODE_TLV_API_DISABLE_STA_TX: ucode supports tx_disable bit.
+  */
+ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID	= BIT(0),
++	IWL_UCODE_TLV_CAPA_EXTENDED_BEACON	= BIT(1),
+ 	IWL_UCODE_TLV_API_CSA_FLOW		= BIT(4),
+ 	IWL_UCODE_TLV_API_DISABLE_STA_TX	= BIT(5),
+ };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+index 6cc5f52..bdd6ff6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+@@ -549,6 +549,20 @@ struct iwl_beacon_notif {
+ } __packed;
  
-+	set_sta_flag(sta, WLAN_STA_PS_DELIVER);
-+	clear_sta_flag(sta, WLAN_STA_PS_STA);
- 	ieee80211_sta_ps_deliver_wakeup(sta);
- }
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index be9120fb8448..c682e3c95f94 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -100,7 +100,8 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 	struct ps_data *ps;
- 
- 	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
--	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
-+	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
-+	    test_sta_flag(sta, WLAN_STA_PS_DELIVER)) {
- 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
- 		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			ps = &sdata->bss->ps;
-@@ -111,6 +112,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 
- 		clear_sta_flag(sta, WLAN_STA_PS_STA);
- 		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
-+		clear_sta_flag(sta, WLAN_STA_PS_DELIVER);
- 
- 		atomic_dec(&ps->num_sta_ps);
- 		sta_info_recalc_tim(sta);
-@@ -125,7 +127,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_sta_cleanup(sta);
- 
--	cancel_work_sync(&sta->drv_unblock_wk);
-+	cancel_work_sync(&sta->drv_deliver_wk);
- 
- 	/*
- 	 * Destroy aggregation state here. It would be nice to wait for the
-@@ -253,33 +255,23 @@ static void sta_info_hash_add(struct ieee80211_local *local,
- 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
- }
- 
--static void sta_unblock(struct work_struct *wk)
-+static void sta_deliver_ps_frames(struct work_struct *wk)
+ /**
++ * struct iwl_extended_beacon_notif - notifies about beacon transmission
++ * @beacon_notify_hdr: tx response command associated with the beacon
++ * @tsf: last beacon tsf
++ * @ibss_mgr_status: whether IBSS is manager
++ * @gp2: last beacon time in gp2
++ */
++struct iwl_extended_beacon_notif {
++	struct iwl_mvm_tx_resp beacon_notify_hdr;
++	__le64 tsf;
++	__le32 ibss_mgr_status;
++	__le32 gp2;
++} __packed; /* BEACON_NTFY_API_S_VER_5 */
++
++/**
+  * enum iwl_dump_control - dump (flush) control flags
+  * @DUMP_TX_FIFO_FLUSH: Dump MSDUs until the the FIFO is empty
+  *	and the TFD queues are empty.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 8b53027..3b0390b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1205,19 +1205,31 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 			    struct iwl_device_cmd *cmd)
  {
- 	struct sta_info *sta;
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_beacon_notif *beacon = (void *)pkt->data;
+-	u16 status __maybe_unused =
+-		le16_to_cpu(beacon->beacon_notify_hdr.status.status);
+-	u32 rate __maybe_unused =
+-		le32_to_cpu(beacon->beacon_notify_hdr.initial_rate);
++	struct iwl_mvm_tx_resp *beacon_notify_hdr;
++	u64 tsf;
  
--	sta = container_of(wk, struct sta_info, drv_unblock_wk);
-+	sta = container_of(wk, struct sta_info, drv_deliver_wk);
+ 	lockdep_assert_held(&mvm->mutex);
  
- 	if (sta->dead)
- 		return;
- 
--	if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
--		local_bh_disable();
-+	local_bh_disable();
-+	if (!test_sta_flag(sta, WLAN_STA_PS_STA))
- 		ieee80211_sta_ps_deliver_wakeup(sta);
--		local_bh_enable();
--	} else if (test_and_clear_sta_flag(sta, WLAN_STA_PSPOLL)) {
--		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
--
--		local_bh_disable();
-+	else if (test_and_clear_sta_flag(sta, WLAN_STA_PSPOLL))
- 		ieee80211_sta_ps_deliver_poll_response(sta);
--		local_bh_enable();
--	} else if (test_and_clear_sta_flag(sta, WLAN_STA_UAPSD)) {
--		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
--
--		local_bh_disable();
-+	else if (test_and_clear_sta_flag(sta, WLAN_STA_UAPSD))
- 		ieee80211_sta_ps_deliver_uapsd(sta);
--		local_bh_enable();
--	} else
--		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
-+	local_bh_enable();
- }
- 
- static int sta_prepare_rate_control(struct ieee80211_local *local,
-@@ -341,7 +333,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 
- 	spin_lock_init(&sta->lock);
- 	spin_lock_init(&sta->ps_lock);
--	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
-+	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
- 	mutex_init(&sta->ampdu_mlme.mtx);
- #ifdef CONFIG_MAC80211_MESH
-@@ -1141,8 +1133,15 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 	}
- 
- 	ieee80211_add_pending_skbs(local, &pending);
--	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
--	clear_sta_flag(sta, WLAN_STA_PS_STA);
+-	IWL_DEBUG_RX(mvm, "beacon status %#x retries:%d tsf:0x%16llX rate:%d\n",
+-		     status & TX_STATUS_MSK,
+-		     beacon->beacon_notify_hdr.failure_frame,
+-		     le64_to_cpu(beacon->tsf),
+-		     rate);
++	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_CAPA_EXTENDED_BEACON) {
++		struct iwl_extended_beacon_notif *beacon = (void *)pkt->data;
 +
-+	/* now we're no longer in the deliver code */
-+	clear_sta_flag(sta, WLAN_STA_PS_DELIVER);
-+
-+	/* The station might have polled and then woken up before we responded,
-+	 * so clear these flags now to avoid them sticking around.
-+	 */
-+	clear_sta_flag(sta, WLAN_STA_PSPOLL);
-+	clear_sta_flag(sta, WLAN_STA_UAPSD);
- 	spin_unlock(&sta->ps_lock);
- 
- 	atomic_dec(&ps->num_sta_ps);
-@@ -1542,10 +1541,26 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
- 
- 	trace_api_sta_block_awake(sta->local, pubsta, block);
- 
--	if (block)
-+	if (block) {
- 		set_sta_flag(sta, WLAN_STA_PS_DRIVER);
--	else if (test_sta_flag(sta, WLAN_STA_PS_DRIVER))
--		ieee80211_queue_work(hw, &sta->drv_unblock_wk);
-+		return;
-+	}
-+
-+	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
-+		return;
-+
-+	if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
-+		set_sta_flag(sta, WLAN_STA_PS_DELIVER);
-+		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
-+		ieee80211_queue_work(hw, &sta->drv_deliver_wk);
-+	} else if (test_sta_flag(sta, WLAN_STA_PSPOLL) ||
-+		   test_sta_flag(sta, WLAN_STA_UAPSD)) {
-+		/* must be asleep in this case */
-+		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
-+		ieee80211_queue_work(hw, &sta->drv_deliver_wk);
++		beacon_notify_hdr = &beacon->beacon_notify_hdr;
++		tsf = le64_to_cpu(beacon->tsf);
++		mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
 +	} else {
-+		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++		struct iwl_beacon_notif *beacon = (void *)pkt->data;
++
++		beacon_notify_hdr = &beacon->beacon_notify_hdr;
++		tsf = le64_to_cpu(beacon->tsf);
 +	}
- }
- EXPORT_SYMBOL(ieee80211_sta_block_awake);
++
++	IWL_DEBUG_RX(mvm,
++		     "beacon status %#x retries:%d tsf:0x%16llX gp2:0x%X rate:%d\n",
++		     le16_to_cpu(beacon_notify_hdr->status.status) &
++								TX_STATUS_MSK,
++		     beacon_notify_hdr->failure_frame, tsf,
++		     mvm->ap_last_beacon_gp2,
++		     le32_to_cpu(beacon_notify_hdr->initial_rate));
  
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 4acc5fc402fa..97152c946a7c 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -82,6 +82,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_TOFFSET_KNOWN,
- 	WLAN_STA_MPSP_OWNER,
- 	WLAN_STA_MPSP_RECIPIENT,
-+	WLAN_STA_PS_DELIVER,
+ 	if (unlikely(mvm->csa_vif && mvm->csa_vif->csa_active)) {
+ 		if (!ieee80211_csa_is_complete(mvm->csa_vif)) {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index f22be88..f2fde36 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1465,6 +1465,7 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	mvmvif->ap_ibss_active = false;
++	mvm->ap_last_beacon_gp2 = 0;
+ 
+ 	iwl_mvm_bt_coex_vif_change(mvm);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 8419840..da69258 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -658,6 +658,9 @@ struct iwl_mvm {
+ 	bool ps_disabled;
+ 
+ 	struct ieee80211_vif *csa_vif;
++
++	/* system time of last beacon (for AP/GO interface) */
++	u32 ap_last_beacon_gp2;
  };
  
- #define ADDBA_RESP_INTERVAL HZ
-@@ -265,7 +266,7 @@ struct ieee80211_tx_latency_stat {
-  * @last_rx_rate_vht_nss: rx status nss of last data packet
-  * @lock: used for locking all fields that require locking, see comments
-  *	in the header file.
-- * @drv_unblock_wk: used for driver PS unblocking
-+ * @drv_deliver_wk: used for delivering frames after driver PS unblocking
-  * @listen_interval: listen interval of this station, when we're acting as AP
-  * @_flags: STA flags, see &enum ieee80211_sta_info_flags, do not use directly
-  * @ps_lock: used for powersave (when mac80211 is the AP) related locking
-@@ -345,7 +346,7 @@ struct sta_info {
- 	void *rate_ctrl_priv;
- 	spinlock_t lock;
- 
--	struct work_struct drv_unblock_wk;
-+	struct work_struct drv_deliver_wk;
- 
- 	u16 listen_interval;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5214686d9fd1..8170d9945d6d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -469,7 +469,8 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		return TX_CONTINUE;
- 
- 	if (unlikely((test_sta_flag(sta, WLAN_STA_PS_STA) ||
--		      test_sta_flag(sta, WLAN_STA_PS_DRIVER)) &&
-+		      test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
-+		      test_sta_flag(sta, WLAN_STA_PS_DELIVER)) &&
- 		     !(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER))) {
- 		int ac = skb_get_queue_mapping(tx->skb);
- 
-@@ -486,7 +487,8 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		 * ahead and Tx the packet.
- 		 */
- 		if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
--		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
-+		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER) &&
-+		    !test_sta_flag(sta, WLAN_STA_PS_DELIVER)) {
- 			spin_unlock(&sta->ps_lock);
- 			return TX_CONTINUE;
- 		}
+ /* Extract MVM priv from op_mode and _hw */
 -- 
-2.0.0.rc0
+1.8.3.2
 
