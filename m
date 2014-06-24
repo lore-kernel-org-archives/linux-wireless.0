@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:58515 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbaFGP6q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 11:58:46 -0400
-Received: by mail-pb0-f52.google.com with SMTP id rr13so3727776pbb.11
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 08:58:46 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Jahnavi Meher <jahnavi.meher@gmail.com>
-Subject: [PATCH 0/4] rsi: Code fixes and adding support for 5GHz and bgscan.
-Date: Sun,  8 Jun 2014 02:58:02 +0530
-Message-Id: <1402176482-8682-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140607_175851_654315_C792A2E8)
+Received: from arrakis.dune.hu ([78.24.191.176]:38985 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752673AbaFXMKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 08:10:51 -0400
+Message-ID: <53A968C4.1020302@openwrt.org> (sfid-20140624_141101_534761_FE3CC2F8)
+Date: Tue, 24 Jun 2014 14:02:12 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/5] ath9k_hw: fix tx gain table index for AR953x
+References: <1403609869-12901-1-git-send-email-rmanohar@qti.qualcomm.com> <1403609869-12901-4-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1403609869-12901-4-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches contains some fixes and adds support for 5GHz
-and bgscan.
+On 2014-06-24 13:37, Rajkumar Manoharan wrote:
+> Fix tx gain table index on fast channel change for AR953x.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index 8927fc3..1ef17e1 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -1552,12 +1552,15 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+>  				      u8 *ini_reloaded)
+>  {
+>  	unsigned int regWrites = 0;
+> -	u32 modesIndex;
+> +	u32 modesIndex, txgain_index = 0;
+>  
+> -	if (IS_CHAN_5GHZ(chan))
+> +	if (IS_CHAN_5GHZ(chan)) {
+>  		modesIndex = IS_CHAN_HT40(chan) ? 2 : 1;
+> -	else
+> +	} else {
+> +		if (AR_SREV_9531(ah))
+> +			txgain_index = 1;
+>  		modesIndex = IS_CHAN_HT40(chan) ? 3 : 4;
+> +	}
 
-Jahnavi Meher (4):
-  rsi: Fixes and clean up of code.
-  rsi: Adding support for 5GHz
-  rsi: Change the logic for dequeuing packets in hal.
-  rsi: Adding support for host based bgscan
+How about putting this here:
+	if (AR_SREV_9531(ah))
+		txgain_index = 1;
+	else
+		txgain_index = modesIndex;
 
- drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  141 +++++++++++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  149 ++++++++++++++++++++-------
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    4 +-
- drivers/net/wireless/rsi/rsi_main.h         |   12 ++
- drivers/net/wireless/rsi/rsi_mgmt.h         |    4 +-
- drivers/net/wireless/rsi/rsi_sdio.h         |    4 +-
- 8 files changed, 315 insertions(+), 94 deletions(-)
+>  
+>  	if (modesIndex == ah->modes_index) {
+>  		*ini_reloaded = false;
+> @@ -1573,7 +1576,10 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+>  		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
+>  				   modesIndex);
+>  
+> -	REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
+> +	if (AR_SREV_9531(ah))
+> +		REG_WRITE_ARRAY(&ah->iniModesTxGain, txgain_index, regWrites);
+> +	else
+> +		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
+And then we can change this part to always use txgain_index instead of
+modesIndex, without the extra SREV check.
 
+- Felix
