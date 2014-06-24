@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48255 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754774AbaF3Rxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 13:53:54 -0400
-Date: Mon, 30 Jun 2014 19:53:51 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-firmware@kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] README: clarify redistribution requirements covering
-	patents
-Message-ID: <20140630175351.GL27687@wotan.suse.de> (sfid-20140630_195732_906614_F5A46FB1)
-References: <1403897967-5894-1-git-send-email-mcgrof@do-not-panic.com> <20140628163108.0b8b81ce@alan.etchedpixels.co.uk>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63062 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531AbaFXLhQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 07:37:16 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 4/5] ath9k_hw: fix tx gain table index for AR953x
+Date: Tue, 24 Jun 2014 17:07:48 +0530
+Message-ID: <1403609869-12901-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140624_133720_321701_AF947918)
+In-Reply-To: <1403609869-12901-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1403609869-12901-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140628163108.0b8b81ce@alan.etchedpixels.co.uk>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 28, 2014 at 04:31:08PM +0100, One Thousand Gnomes wrote:
-> > +the firmware license provided includes an implicit or explicit
-> > +patent grant to end users to ensure full functionality of device
-> > +operation with the firmware. If the licence is long and involved, it's
-> >  permitted to include it in a separate file and refer to it from the
-> >  WHENCE file.
-> >  And if it were possible, a changelog of the firmware itself.
-> 
-> "end users of the device" or just "end users"
-> 
-> I'm assuming the worry for most vendors is licensing it to be used on
-> some third party product ?
+Fix tx gain table index on fast channel change for AR953x.
 
-The proposed language includes both whereas the "end users of the device"
-would exclude some subset use including the implicit license use case.
-Thoughts?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 8927fc3..1ef17e1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1552,12 +1552,15 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 				      u8 *ini_reloaded)
+ {
+ 	unsigned int regWrites = 0;
+-	u32 modesIndex;
++	u32 modesIndex, txgain_index = 0;
+ 
+-	if (IS_CHAN_5GHZ(chan))
++	if (IS_CHAN_5GHZ(chan)) {
+ 		modesIndex = IS_CHAN_HT40(chan) ? 2 : 1;
+-	else
++	} else {
++		if (AR_SREV_9531(ah))
++			txgain_index = 1;
+ 		modesIndex = IS_CHAN_HT40(chan) ? 3 : 4;
++	}
+ 
+ 	if (modesIndex == ah->modes_index) {
+ 		*ini_reloaded = false;
+@@ -1573,7 +1576,10 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
+ 				   modesIndex);
+ 
+-	REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
++	if (AR_SREV_9531(ah))
++		REG_WRITE_ARRAY(&ah->iniModesTxGain, txgain_index, regWrites);
++	else
++		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
+ 
+ 	if (AR_SREV_9462_20_OR_LATER(ah)) {
+ 		/*
+-- 
+2.0.0
+
