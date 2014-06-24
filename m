@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:44468 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754392AbaFNNuo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:50:44 -0400
-Received: by mail-pd0-f171.google.com with SMTP id ft15so2983223pdb.16
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:50:44 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id fd5sm37773893pad.12.2014.06.14.06.50.42
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:50:43 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/16] rsi: Add macros for endpoints and set default value of endpoint.
-Date: Sat, 14 Jun 2014 19:20:33 +0530
-Message-Id: <1402753833-13950-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155047_336229_3AA5404D)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49072 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752199AbaFXOUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2014 10:20:15 -0400
+Message-ID: <1403619592.10831.9.camel@jlt4.sipsolutions.net> (sfid-20140624_162019_776218_0A308EFD)
+Subject: pull-request: mac80211 2014-06-24
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Jun 2014 16:19:52 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-39ZX1aPuXgw9Z6MhP3gS"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added macros for the endpoints and set the default value of endpoint
-to 2.4GHz and 20MHz.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |    1 +
- drivers/net/wireless/rsi/rsi_mgmt.h     |    5 +++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+--=-39ZX1aPuXgw9Z6MhP3gS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 2eefbf1..2cdb36a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -217,6 +217,7 @@ static void rsi_set_default_parameters(struct rsi_common *common)
- 	common->min_rate = 0xffff;
- 	common->fsm_state = FSM_CARD_NOT_READY;
- 	common->iface_down = true;
-+	common->endpoint = EP_2GHZ_20MHZ;
- }
- 
- /**
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 225215a..0641068 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -123,6 +123,11 @@
- #define BW_20MHZ                        0
- #define BW_40MHZ                        1
- 
-+#define EP_2GHZ_20MHZ			0
-+#define EP_2GHZ_40MHZ			1
-+#define EP_5GHZ_20MHZ			2
-+#define EP_5GHZ_40MHZ			3
-+
- #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
- 				 FIF_BCN_PRBRESP_PROMISC)
- enum opmode {
--- 
-1.7.1
+Hi John,
+
+Due to travel etc. I've been a little slow this cycle, but we do have a
+few fixes that should go into the current rc series ...
+
+We have a fix from Eliad for a time calculation, a fix from Max for
+head/tailroom when sending authentication packets, a revert that Felix
+requested since the patch in question broke regulatory and a fix from
+myself for an issue with a new command that we advertised in the wrong
+place.
+
+Let me know if there are any issues.
+
+johannes
+
+--=-39ZX1aPuXgw9Z6MhP3gS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJTqYkLAAoJEDBSmw7B7bqr8iEP/A+mfPtVZj76mpc874TUM7Ks
+QzdNc4hsjSvj5YRg+sI4vlzfyHGcac+AUmnIHaWzJ0zAkQHMi3adqQz1D1JFJfSv
+dZYje4sHu+Xu/Kelfxs3aiDfGCOrhBWI2owfxjbV5RQVnLdK4TQ/o2l4BpMKzy7H
+d4VU+W8WyZMH3AorHnKEbHmI8Cw5UKYhhfqjhpFzjuQQZdcSSqW57ZQJVHEMt1ME
+4kxDTnBZqt2wtMTh0tRsO5NdvL6mLlIVuJ4gpzlPe2ANnQNjwCeABdny/EhY5gKn
+Op5CekuvRPx126m85WQZv3ZA2kZLYtHERfB9scnCJxqW2R6neEEdTUY4Sk1atQGr
+/M/G/y1ZAEseqqCq8Raw/k7G6Fs+XsDH13nPwhmQUo0Ao1dV2CmXmkONagQlWdMG
+H5PisOaoz1gJNNM5ZieklaFHna7c7xjj+p3L+JK2VWoi6rm+ojc+vQyaAzIA36eG
+0sxup290oMSMe9tkHoIyJwtRyJG+yqEC+5LHxzf+/xIL9N6+KislKdkZa4F5AZkC
+DkcWrBOoUta7azKYVcbsWl/jGAAU1rbfki3CDnlQibJ/gyiDEGUezZcJMGWE2tdO
+i+hkYSty59PJ1QuY+kM09kmdn6qFXbXJ4GwJtXc1Q00q9o01566PApLTmoZfY/Eu
+iNp0MkOVSBw5j8WRrtcM
+=eOj4
+-----END PGP SIGNATURE-----
+
+--=-39ZX1aPuXgw9Z6MhP3gS--
 
