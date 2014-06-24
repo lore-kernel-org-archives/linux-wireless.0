@@ -1,53 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0241.hostedemail.com ([216.40.44.241]:49854 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752632AbaFOUiu (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:51452 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbaFXTwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2014 16:38:50 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org
-Subject: [PATCH -next 14/26] rt2x00: Use dma_zalloc_coherent
-Date: Sun, 15 Jun 2014 13:37:43 -0700
-Message-Id: <cbc917d6b5c2682ad90ca712eae7da9c041ab1af.1402863905.git.joe@perches.com> (sfid-20140615_224255_535322_37D26482)
-In-Reply-To: <cover.1402863904.git.joe@perches.com>
-References: <cover.1402863904.git.joe@perches.com>
+	Tue, 24 Jun 2014 15:52:40 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so1303840wib.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:39 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/27] iwlwifi: pcie: add firmware monitor capabilities
+Date: Tue, 24 Jun 2014 22:52:02 +0300
+Message-Id: <1403639541-4621-8-git-send-email-egrumbach@gmail.com> (sfid-20140624_215247_305260_15EFF598)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+This allows to use the firmware monitor. This capability
+uses a lot of contiguous memory (up to 64MB), so make its
+usage module parameter dependent.
+
+The driver will try to allocate as much contiguous memory
+as possible downgrading its requirements until the
+allocation succeeds.
+
+Dump this data into the fw-error dump file when an error
+happens.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00mmio.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c           |   4 +
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  18 ++++
+ drivers/net/wireless/iwlwifi/iwl-modparams.h     |   2 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h          |   6 ++
+ drivers/net/wireless/iwlwifi/pcie/internal.h     |   7 ++
+ drivers/net/wireless/iwlwifi/pcie/trans.c        | 125 ++++++++++++++++++++++-
+ 6 files changed, 158 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.c b/drivers/net/wireless/rt2x00/rt2x00mmio.c
-index 6f236ea..f0178fd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mmio.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mmio.c
-@@ -119,14 +119,12 @@ static int rt2x00mmio_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Allocate DMA memory for descriptor and buffer.
- 	 */
--	addr = dma_alloc_coherent(rt2x00dev->dev,
--				  queue->limit * queue->desc_size,
--				  &dma, GFP_KERNEL);
-+	addr = dma_zalloc_coherent(rt2x00dev->dev,
-+				   queue->limit * queue->desc_size, &dma,
-+				   GFP_KERNEL);
- 	if (!addr)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 01a4268..bb842f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1405,3 +1405,7 @@ module_param_named(power_level, iwlwifi_mod_params.power_level,
+ 		int, S_IRUGO);
+ MODULE_PARM_DESC(power_level,
+ 		 "default power save level (range from 1 - 5, default: 1)");
++
++module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, S_IRUGO);
++MODULE_PARM_DESC(dbgm,
++		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 3584a75..ced5ba9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -76,6 +76,7 @@
+  *	&struct iwl_fw_error_dump_txcmd packets
+  * @IWL_FW_ERROR_DUMP_DEV_FW_INFO:  struct %iwl_fw_error_dump_info
+  *	info on the device / firmware.
++ * @IWL_FW_ERROR_DUMP_FW_MONITOR: firmware monitor
+  */
+ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_SRAM = 0,
+@@ -83,6 +84,7 @@ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_RXF = 2,
+ 	IWL_FW_ERROR_DUMP_TXCMD = 3,
+ 	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
++	IWL_FW_ERROR_DUMP_FW_MONITOR = 5,
  
--	memset(addr, 0, queue->limit * queue->desc_size);
--
- 	/*
- 	 * Initialize all queue entries to contain valid addresses.
- 	 */
+ 	IWL_FW_ERROR_DUMP_MAX,
+ };
+@@ -145,6 +147,22 @@ struct iwl_fw_error_dump_info {
+ } __packed;
+ 
+ /**
++ * struct iwl_fw_error_fw_mon - FW monitor data
++ * @fw_mon_wr_ptr: the position of the write pointer in the cyclic buffer
++ * @fw_mon_base_ptr: base pointer of the data
++ * @fw_mon_cycle_cnt: number of wrap arounds
++ * @reserved: for future use
++ * @data: captured data
++ */
++struct iwl_fw_error_fw_mon {
++	__le32 fw_mon_wr_ptr;
++	__le32 fw_mon_base_ptr;
++	__le32 fw_mon_cycle_cnt;
++	__le32 reserved[3];
++	u8 data[];
++} __packed;
++
++/**
+  * iwl_fw_error_next_data - advance fw error dump data pointer
+  * @data: previous data block
+  * Returns: next data block
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index d051857..f2d39cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -103,6 +103,7 @@ enum iwl_disable_11n {
+  * @power_level: power level, default = 1
+  * @debug_level: levels are IWL_DL_*
+  * @ant_coupling: antenna coupling in dB, default = 0
++ * @fw_monitor: allow to use firmware monitor
+  */
+ struct iwl_mod_params {
+ 	int sw_crypto;
+@@ -120,6 +121,7 @@ struct iwl_mod_params {
+ 	int ant_coupling;
+ 	char *nvm_file;
+ 	bool uapsd_disable;
++	bool fw_monitor;
+ };
+ 
+ #endif /* #__iwl_modparams_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 4997e27..47033a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -359,4 +359,10 @@ enum secure_load_status_reg {
+ #define RXF_LD_FENCE_OFFSET_ADDR	(0xa00c10)
+ #define RXF_FIFO_RD_FENCE_ADDR		(0xa00c0c)
+ 
++/* FW monitor */
++#define MON_BUFF_BASE_ADDR		(0xa03c3c)
++#define MON_BUFF_END_ADDR		(0xa03c40)
++#define MON_BUFF_WRPTR			(0xa03c44)
++#define MON_BUFF_CYCLE_CNT		(0xa03c48)
++
+ #endif				/* __iwl_prph_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 6c22b23..78f72c3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -260,6 +260,9 @@ iwl_pcie_get_scratchbuf_dma(struct iwl_txq *txq, int idx)
+  * @wd_timeout: queue watchdog timeout (jiffies)
+  * @reg_lock: protect hw register access
+  * @cmd_in_flight: true when we have a host command in flight
++ * @fw_mon_phys: physical address of the buffer for the firmware monitor
++ * @fw_mon_page: points to the first page of the buffer for the firmware monitor
++ * @fw_mon_size: size of the buffer for the firmware monitor
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq rxq;
+@@ -312,6 +315,10 @@ struct iwl_trans_pcie {
+ 	/*protect hw register */
+ 	spinlock_t reg_lock;
+ 	bool cmd_in_flight;
++
++	dma_addr_t fw_mon_phys;
++	struct page *fw_mon_page;
++	u32 fw_mon_size;
+ };
+ 
+ #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 788085b..3ffac48 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -76,6 +76,68 @@
+ #include "iwl-fw-error-dump.h"
+ #include "internal.h"
+ 
++static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	if (!trans_pcie->fw_mon_page)
++		return;
++
++	dma_unmap_page(trans->dev, trans_pcie->fw_mon_phys,
++		       trans_pcie->fw_mon_size, DMA_FROM_DEVICE);
++	__free_pages(trans_pcie->fw_mon_page,
++		     get_order(trans_pcie->fw_mon_size));
++	trans_pcie->fw_mon_page = NULL;
++	trans_pcie->fw_mon_phys = 0;
++	trans_pcie->fw_mon_size = 0;
++}
++
++static void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct page *page;
++	dma_addr_t phys;
++	u32 size;
++	u8 power;
++
++	if (trans_pcie->fw_mon_page) {
++		dma_sync_single_for_device(trans->dev, trans_pcie->fw_mon_phys,
++					   trans_pcie->fw_mon_size,
++					   DMA_FROM_DEVICE);
++		return;
++	}
++
++	phys = 0;
++	for (power = 26; power >= 11; power--) {
++		int order;
++
++		size = BIT(power);
++		order = get_order(size);
++		page = alloc_pages(__GFP_COMP | __GFP_NOWARN | __GFP_ZERO,
++				   order);
++		if (!page)
++			continue;
++
++		phys = dma_map_page(trans->dev, page, 0, PAGE_SIZE << order,
++				    DMA_FROM_DEVICE);
++		if (dma_mapping_error(trans->dev, phys)) {
++			__free_pages(page, order);
++			continue;
++		}
++		IWL_INFO(trans,
++			 "Allocated 0x%08x bytes (order %d) for firmware monitor.\n",
++			 size, order);
++		break;
++	}
++
++	if (!page)
++		return;
++
++	trans_pcie->fw_mon_page = page;
++	trans_pcie->fw_mon_phys = phys;
++	trans_pcie->fw_mon_size = size;
++}
++
+ static u32 iwl_trans_pcie_read_shr(struct iwl_trans *trans, u32 reg)
+ {
+ 	iwl_write32(trans, HEEP_CTRL_WRD_PCIEX_CTRL_REG,
+@@ -675,6 +737,7 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
+ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
+ 				const struct fw_img *image)
+ {
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int ret = 0;
+ 	int first_ucode_section;
+ 
+@@ -733,6 +796,20 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
+ 			return ret;
+ 	}
+ 
++	/* supported for 7000 only for the moment */
++	if (iwlwifi_mod_params.fw_monitor &&
++	    trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_pcie_alloc_fw_monitor(trans);
++
++		if (trans_pcie->fw_mon_size) {
++			iwl_write_prph(trans, MON_BUFF_BASE_ADDR,
++				       trans_pcie->fw_mon_phys >> 4);
++			iwl_write_prph(trans, MON_BUFF_END_ADDR,
++				       (trans_pcie->fw_mon_phys +
++					trans_pcie->fw_mon_size) >> 4);
++		}
++	}
++
+ 	/* release CPU reset */
+ 	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
+ 		iwl_write_prph(trans, RELEASE_CPU_RESET, RELEASE_CPU_RESET_BIT);
+@@ -1126,6 +1203,8 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	if (trans_pcie->napi.poll)
+ 		netif_napi_del(&trans_pcie->napi);
+ 
++	iwl_pcie_free_fw_monitor(trans);
++
+ 	kfree(trans);
+ }
+ 
+@@ -1698,10 +1777,15 @@ static u32 iwl_trans_pcie_dump_data(struct iwl_trans *trans,
+ 	u32 len;
+ 	int i, ptr;
+ 
++	len = sizeof(*data) +
++		cmdq->q.n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
++
++	if (trans_pcie->fw_mon_page)
++		len += sizeof(*data) + sizeof(struct iwl_fw_error_fw_mon) +
++			trans_pcie->fw_mon_size;
++
+ 	if (!buf)
+-		return sizeof(*data) +
+-		       cmdq->q.n_window * (sizeof(*txcmd) +
+-					   TFD_MAX_PAYLOAD_SIZE);
++		return len;
+ 
+ 	len = 0;
+ 	data = buf;
+@@ -1729,7 +1813,40 @@ static u32 iwl_trans_pcie_dump_data(struct iwl_trans *trans,
+ 	spin_unlock_bh(&cmdq->lock);
+ 
+ 	data->len = cpu_to_le32(len);
+-	return sizeof(*data) + len;
++	len += sizeof(*data);
++
++	if (trans_pcie->fw_mon_page) {
++		struct iwl_fw_error_fw_mon *fw_mon_data;
++
++		data = iwl_fw_error_next_data(data);
++		data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FW_MONITOR);
++		data->len = cpu_to_le32(trans_pcie->fw_mon_size +
++					sizeof(*fw_mon_data));
++		fw_mon_data = (void *)data->data;
++		fw_mon_data->fw_mon_wr_ptr =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_WRPTR));
++		fw_mon_data->fw_mon_cycle_cnt =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_CYCLE_CNT));
++		fw_mon_data->fw_mon_base_ptr =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_BASE_ADDR));
++
++		/*
++		 * The firmware is now asserted, it won't write anything to
++		 * the buffer. CPU can take ownership to fetch the data.
++		 * The buffer will be handed back to the device before the
++		 * firmware will be restarted.
++		 */
++		dma_sync_single_for_cpu(trans->dev, trans_pcie->fw_mon_phys,
++					trans_pcie->fw_mon_size,
++					DMA_FROM_DEVICE);
++		memcpy(fw_mon_data->data, page_address(trans_pcie->fw_mon_page),
++		       trans_pcie->fw_mon_size);
++
++		len += sizeof(*data) + sizeof(*fw_mon_data) +
++			trans_pcie->fw_mon_size;
++	}
++
++	return len;
+ }
+ #else
+ static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
 -- 
-1.8.1.2.459.gbcd45b4.dirty
+1.8.3.2
 
