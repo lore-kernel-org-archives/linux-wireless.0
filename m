@@ -1,181 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:33123 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbaF1W43 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39444 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbaFXTjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:29 -0400
-Received: by mail-we0-f169.google.com with SMTP id t60so6715231wes.0
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/8] staging: vt6656: dead code remove RXvWorkItem and RXvFreeRCB
-Date: Sat, 28 Jun 2014 23:55:43 +0100
-Message-Id: <1403996146-4082-5-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005638_936227_F87AC554)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 24 Jun 2014 15:39:02 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so6571120wib.11
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:39:01 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/3] Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag"
+Date: Tue, 24 Jun 2014 22:38:51 +0300
+Message-Id: <1403638731-2381-3-git-send-email-egrumbach@gmail.com> (sfid-20140624_213909_282617_EDD53496)
+In-Reply-To: <53A9D396.1020306@gmail.com>
+References: <53A9D396.1020306@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove work_struct and queue variables
+From: Arik Nemtsov <arik@wizery.com>
 
-Remove EnqueueRCB and DequeueRCB macros
+This reverts commit dc9a19296a872644f19a06d8eeb5db222d327b41.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+3610 cards don't support UAPSD.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/device.h   | 29 -----------------
- drivers/staging/vt6656/dpc.c      | 68 ---------------------------------------
- drivers/staging/vt6656/main_usb.c |  1 -
- 3 files changed, 98 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw.h       | 1 +
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 0bba96f..f1ed43e 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -289,8 +289,6 @@ struct vnt_private {
- 	struct usb_device *usb;
- 	struct net_device_stats stats;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 0aa7c00..b1a3332 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -88,6 +88,7 @@
+  *	P2P client interfaces simultaneously if they are in different bindings.
+  * @IWL_UCODE_TLV_FLAGS_P2P_BSS_PS_SCM: support power save on BSS station and
+  *	P2P client interfaces simultaneously if they are in same bindings.
++ * @IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT: General support for uAPSD
+  * @IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD: P2P client supports uAPSD power save
+  * @IWL_UCODE_TLV_FLAGS_BCAST_FILTERING: uCode supports broadcast filtering.
+  * @IWL_UCODE_TLV_FLAGS_GO_UAPSD: AP/GO interfaces support uAPSD clients
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7215f59..1cef708 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -303,6 +303,13 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
+ 	}
  
--	struct work_struct read_work_item;
--
- 	u64 tsf_time;
- 	u8 rx_rate;
- 
-@@ -308,14 +306,8 @@ struct vnt_private {
- 	u32 int_interval;
- 
- 	/* Variables to track resources for the BULK In Pipe */
--	struct vnt_rcb *pRCBMem;
- 	struct vnt_rcb *apRCB[CB_MAX_RX_DESC];
- 	u32 cbRD;
--	struct vnt_rcb *FirstRecvFreeList;
--	struct vnt_rcb *LastRecvFreeList;
--	u32 NumRecvFreeList;
--
--	int bIsRxWorkItemQueued;
- 
- 	/* Variables to track resources for the BULK Out Pipe */
- 	struct vnt_usb_send_context *apTD[CB_MAX_TX_DESC];
-@@ -448,27 +440,6 @@ struct vnt_private {
- 	struct iw_statistics wstats; /* wireless stats */
- };
- 
--#define EnqueueRCB(_Head, _Tail, _RCB)                  \
--{                                                       \
--    if (!_Head) {                                       \
--        _Head = _RCB;                                   \
--    }                                                   \
--    else {                                              \
--        _Tail->Next = _RCB;                             \
--    }                                                   \
--    _RCB->Next = NULL;                                  \
--    _Tail = _RCB;                                       \
--}
--
--#define DequeueRCB(Head, Tail)                          \
--{                                                       \
--    struct vnt_rcb *RCB = Head;                         \
--    if (!RCB->Next) {                                   \
--        Tail = NULL;                                    \
--    }                                                   \
--    Head = RCB->Next;                                   \
--}
--
- #define ADD_ONE_WITH_WRAP_AROUND(uVar, uModulo) {   \
-     if ((uVar) >= ((uModulo) - 1))                  \
-         (uVar) = 0;                                 \
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 5ac5bcd..ca55554 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -44,74 +44,6 @@
- #include "rf.h"
- #include "usbpipe.h"
- 
--//static int          msglevel                =MSG_LEVEL_DEBUG;
--static int          msglevel                =MSG_LEVEL_INFO;
--
--void RXvWorkItem(struct work_struct *work)
--{
--	struct vnt_private *priv =
--		container_of(work, struct vnt_private, read_work_item);
--	int status;
--	struct vnt_rcb *rcb = NULL;
--	unsigned long flags;
--
--	if (priv->Flags & fMP_DISCONNECTED)
--		return;
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Rx Polling Thread\n");
--
--	spin_lock_irqsave(&priv->lock, flags);
--
--	while ((priv->Flags & fMP_POST_READS) && MP_IS_READY(priv) &&
--			(priv->NumRecvFreeList != 0)) {
--		rcb = priv->FirstRecvFreeList;
--
--		priv->NumRecvFreeList--;
--
--		DequeueRCB(priv->FirstRecvFreeList, priv->LastRecvFreeList);
--
--		status = PIPEnsBulkInUsbRead(priv, rcb);
--	}
--
--	priv->bIsRxWorkItemQueued = false;
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--}
--
--void RXvFreeRCB(struct vnt_rcb *rcb, int re_alloc_skb)
--{
--	struct vnt_private *priv = rcb->pDevice;
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->RXvFreeRCB\n");
--
--	if (re_alloc_skb == false) {
--		kfree_skb(rcb->skb);
--		re_alloc_skb = true;
--	}
--
--	if (re_alloc_skb == true) {
--		rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
--		/* TODO error handling */
--		if (!rcb->skb) {
--			DBG_PRT(MSG_LEVEL_ERR, KERN_ERR
--				" Failed to re-alloc rx skb\n");
--		}
--	}
--
--	/* Insert the RCB back in the Recv free list */
--	EnqueueRCB(priv->FirstRecvFreeList, priv->LastRecvFreeList, rcb);
--	priv->NumRecvFreeList++;
--
--	if ((priv->Flags & fMP_POST_READS) && MP_IS_READY(priv) &&
--			(priv->bIsRxWorkItemQueued == false)) {
--		priv->bIsRxWorkItemQueued = true;
--		schedule_work(&priv->read_work_item);
--	}
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----RXFreeRCB %d\n",
--			priv->NumRecvFreeList);
--}
--
- int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
- 	unsigned long bytes_received)
- {
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 19d42ce..a1d0c98 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1104,7 +1104,6 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	mutex_init(&priv->usb_lock);
- 
- 	INIT_DELAYED_WORK(&priv->run_command_work, vRunCommand);
--	INIT_WORK(&priv->read_work_item, RXvWorkItem);
- 
- 	usb_set_intfdata(intf, priv);
- 
++	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT &&
++	    !iwlwifi_mod_params.uapsd_disable) {
++		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
++		hw->uapsd_queues = IWL_UAPSD_AC_INFO;
++		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
++	}
++
+ 	hw->sta_data_size = sizeof(struct iwl_mvm_sta);
+ 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
+ 	hw->chanctx_data_size = sizeof(u16);
 -- 
-1.9.1
+1.8.3.2
 
