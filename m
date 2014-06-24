@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:39410 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756369AbaFWRZS (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:59835 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755272AbaFXTw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 13:25:18 -0400
-Date: Mon, 23 Jun 2014 10:25:12 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org,
-	iss_storagedev@hp.com, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-crypto@vger.kernel.org, linux-eata@i-connect.net,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
-Message-ID: <20140623172512.GA1390@garbanzo.do-not-panic.com> (sfid-20140623_192537_714831_7814F77A)
-References: <cover.1403530604.git.joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1403530604.git.joe@perches.com>
+	Tue, 24 Jun 2014 15:52:58 -0400
+Received: by mail-we0-f170.google.com with SMTP id w61so892859wes.15
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:56 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/27] iwlwifi: mvm: BT Coex - don't limit rate control if TTC is on
+Date: Tue, 24 Jun 2014 22:52:14 +0300
+Message-Id: <1403639541-4621-20-git-send-email-egrumbach@gmail.com> (sfid-20140624_215952_477116_27979EEF)
+In-Reply-To: <53A9D6CF.9040100@gmail.com>
+References: <53A9D6CF.9040100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
-> Adding the helper reduces object code size as well as overall
-> source size line count.
-> 
-> It's also consistent with all the various zalloc mechanisms
-> in the kernel.
-> 
-> Done with a simple cocci script and some typing.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Awesome, any chance you can paste in the SmPL? Also any chance
-we can get this added to a make coccicheck so that maintainers
-moving forward can use that to ensure that no new code is
-added that uses the old school API?
+When the firmware enables TxTxCorunning, we can lift the
+constaints on the rate control.
 
-  Luis
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c        | 6 ++++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h | 4 +++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index aab92a6..8d7146e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -1212,6 +1212,9 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
+ 	    BT_HIGH_TRAFFIC)
+ 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
+ 
++	if (mvm->last_bt_notif.ttc_enabled)
++		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
++
+ 	lut_type = iwl_get_coex_type(mvm, mvmsta->vif);
+ 
+ 	if (lut_type == BT_COEX_LOOSE_LUT || lut_type == BT_COEX_INVALID_LUT)
+@@ -1227,6 +1230,9 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	enum iwl_bt_coex_lut_type lut_type;
+ 
++	if (mvm->last_bt_notif.ttc_enabled)
++		return true;
++
+ 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
+ 	    BT_HIGH_TRAFFIC)
+ 		return true;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
+index 98175ca..39cb33a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
+@@ -305,6 +305,7 @@ enum iwl_bt_activity_grading {
+  * @bt_traffic_load: load of BT traffic
+  * @bt_agg_traffic_load: aggregated load of BT traffic
+  * @bt_ci_compliance: 0 - no CI compliance, 1 - CI compliant
++ * @ttc_enabled: true if ttc has been enabled by the firmware
+  * @primary_ch_lut: LUT used for primary channel
+  * @secondary_ch_lut: LUT used for secondary channel
+  * @bt_activity_grading: the activity of BT enum %iwl_bt_activity_grading
+@@ -317,7 +318,8 @@ struct iwl_bt_coex_profile_notif {
+ 	u8 bt_traffic_load;
+ 	u8 bt_agg_traffic_load;
+ 	u8 bt_ci_compliance;
+-	u8 reserved[3];
++	u8 ttc_enabled;
++	__le16 reserved;
+ 
+ 	__le32 primary_ch_lut;
+ 	__le32 secondary_ch_lut;
+-- 
+1.8.3.2
+
