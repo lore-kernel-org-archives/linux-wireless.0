@@ -1,54 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34913 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757871AbaFYQvT (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:58282 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbaFXCyN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 12:51:19 -0400
-Message-ID: <53AAFDF3.9030707@broadcom.com> (sfid-20140625_185138_509373_0336400C)
-Date: Wed, 25 Jun 2014 18:50:59 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 23 Jun 2014 22:54:13 -0400
+Received: by mail-lb0-f181.google.com with SMTP id p9so5579830lbv.40
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 19:54:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module
- parameter
-References: <1402996581-10764-1-git-send-email-arend@broadcom.com>		 <1402996581-10764-3-git-send-email-arend@broadcom.com>	 <1403516075.4418.9.camel@jlt4.sipsolutions.net>	 <53A9B391.4050602@broadcom.com> <1403711846.4140.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1403711846.4140.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <53A8E3F9.7000001@candelatech.com>
+References: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
+ <20140623191504.GD1390@garbanzo.do-not-panic.com> <53A89011.1010806@candelatech.com>
+ <20140623205451.GG1390@garbanzo.do-not-panic.com> <53A89A0F.9090509@candelatech.com>
+ <20140624004442.GH1390@garbanzo.do-not-panic.com> <53A8E3F9.7000001@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 23 Jun 2014 19:53:51 -0700
+Message-ID: <CAB=NE6XJaHNAL17mN7Ghw9GnatOwaOacikv5XupK7xKjUe=m_Q@mail.gmail.com> (sfid-20140624_045417_392675_BF06A32F)
+Subject: Re: [RFC] wireless: improve dfs-region intersection.
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-06-14 17:57, Johannes Berg wrote:
-> On Tue, 2014-06-24 at 19:21 +0200, Arend van Spriel wrote:
+On Mon, Jun 23, 2014 at 7:35 PM, Ben Greear <greearb@candelatech.com> wrote:
 >
->>>> + * @wiphy: The wiphy to check.
->>>> + *
->>>> + * Return: true is 40MHz is disabled in 2.4G band.
->>>> + */
->>>> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
->>>
->>> Why should that have a wiphy argument?
+>>> Maybe just use time-zone or user hints in this case since NICs cannot
+>>> be fully trusted.
 >>
->> It is up to cfg80211 to determine the logic behind the function. It is
->> just context supplied by the caller. The fact that it is determined by a
->> module parameter is internal cfg80211 stuff.
->
-> I just don't really see any way it would ever be per wiphy?
-
-Maybe you are right. By the way, is OBSS support a requirement to do 
-40MHz in 2.4G?
-
->>> Might also be simpler to just export the variable?
 >>
->> Either way is pretty simple I guess.
+>> WTF no, the regulatory hint stuff should all be automated and user input
+>> should really only come from trusted sources, see the cell base station
+>> hint as a good example use case. The NICs are trusted as that's what
+>> regulatory bodies like folks to do. Hell even the country IEs are only
+>> trusted for the alpha2, the actual contents are disregarded. Regular
+>> user input should only help compliance further, that's it.
 >
-> Yeah, dunno. I guess exporting the function at least makes sure nobody
-> will try to set the variable, so that's somewhat useful...
 >
-> I'd prefer to remove the wiphy argument though (and fix the kernel-doc)
+> NICs just aren't that reliable, seems you can buy NICs with any number
+> of regulatory domains on the interweb, and then you can hop on a plane
+> and go other interesting places.
 
-No problem. Will do.
+You can also reverse engineer firmware, also design RW support on OTPs
+and EEPROMs, so there's tons of ways one can circumvent regulatory,
+its not meant to be perfect, specially since tons of software is
+required for hugely complex regulatory compliance rules such as in
+DFS. We however do the best to enable all types of devices to be
+compliant, we do the very best, and its also why we get vendor support
+upstream even with open firmware designs. Location information is also
+important for a device that get calibrated for a specific region --
+the architecture on some devices mandates that you can only fit
+certain things into hardware / OTP / EEPOM and some folks optimize
+functionality of a card so that that very specific tuning applies only
+to a specific region it got certified for, so the ideal operation of a
+device is for what area it was designed for. If folks repuropose them
+it may not work as well.What ends up in the market will vary and what
+folks do in their basement or lab is up to them -- enable onus kernel
+flag stuff and go to town.
 
-Gr. AvS
+There's tons of good resources an operating system can rely on to
+guarantee the region other than a stupid EEPROM / OTP / Country IE,
+the ideal solution folks should strive for would be a series of
+heuristics that can guarantee this and only use the OTP / whatever for
+when the location cannot be known for sure.
 
+An easy start up idea would be to find a really cheap way to ensure
+this for hardware other than GPS. The resolution would suffice to be
+ISO3166 specific to the most popular countries.
+
+> If you ever have a system with NICs with two different regulatory domains,
+
+Folks should not be selling these and if they end up with them the
+intersection is taken, and additionally user input is welcomed.
+
+> I assume it is very likely that it was not certified in that configuration.
+
+A device *sold* under that configuration would need to be certified.
+
+> Maybe the user's input (and AP's beacons and such) are more reliable in this
+> case.
+
+Location information should use a series of heuristics, and a degree
+of trust should be used to quality them. Userespace input for hints
+coming from cell base stations are of a good source, as an example and
+some folks ship products using it. Users should only be allowed to
+help compliance further, that's it. The default stuff should be done
+without any user input.
+
+> But, not worth arguing about at this point.  As long as the basic regulatory
+> bugs are fixed (as per the other thread), then my problems should be
+> solveable.
+
+Yes, lets use our time effectively please.
+
+ Luis
