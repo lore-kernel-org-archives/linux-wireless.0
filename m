@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5366 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752456AbaFGM5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 08:57:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ath10k:  provide firmware crash info via debugfs.
-References: <1401904902-5842-1-git-send-email-greearb@candelatech.com>
-	<87y4xal6vb.fsf@kamboji.qca.qualcomm.com>
-	<5391F51B.4020103@candelatech.com>
-Date: Sat, 7 Jun 2014 15:57:26 +0300
-In-Reply-To: <5391F51B.4020103@candelatech.com> (Ben Greear's message of "Fri,
-	6 Jun 2014 10:06:35 -0700")
-Message-ID: <87zjhoj2rt.fsf@kamboji.qca.qualcomm.com> (sfid-20140607_145741_495840_015D9D2D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52228 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756886AbaFYPz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 11:55:58 -0400
+Message-ID: <1403711732.4140.14.camel@jlt4.sipsolutions.net> (sfid-20140625_175601_619179_50E69997)
+Subject: Re: [RFC 3/3] brcmfmac: update band and regulatory info before
+ wiphy_register()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 25 Jun 2014 17:55:32 +0200
+In-Reply-To: <53A9B152.5050503@broadcom.com>
+References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
+		 <1402996581-10764-4-git-send-email-arend@broadcom.com>
+	 <1403516273.4418.11.camel@jlt4.sipsolutions.net>
+	 <53A9B152.5050503@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+On Tue, 2014-06-24 at 19:11 +0200, Arend van Spriel wrote:
 
-> On 06/06/2014 02:33 AM, Kalle Valo wrote:
->
->>> +					kfree(buffer);
->>> +					goto save_regs_and_restart;
->>> +				}
->>> +
->>> +				ath10k_dbg_save_fw_dbg_buffer(ar, buffer,
->>> +							      dbuf.length);
->>> +				kfree(buffer);
->> 
->> Instead of doing atomic allocations multiple times in a loop, would it
->> be better to allocate just one buffer before the loop and free it
->> afterwards?
->
-> There is no hard guarantee that the buffer lengths are the same,
-> so I think it needs to remain as is.  Would rather not crap out
-> because firmware suddenly got more clever...
+> >> +	if (wiphy_is_40mhz_24ghz_disabled(wiphy) == false) {
+> >> +		err = brcmf_enable_bw40_2g(ifp);
+> >> +		if (!err)
+> >> +			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
+> >> +						      BRCMF_OBSS_COEX_AUTO);
+> >> +	}
+> >
+> > This seems to have an effect only on the device, so why not do it after
+> > wiphy_register()?
+> 
+> It does affect channels list in brcmf_update_wiphybands().
 
-This is related to my earlier comment about having a max len for the
-buffers. So why not come up with a sane max length, allocate once a
-temporary buffer of that length and use the same buffer in the loop?
+Ah, ok, I guess I missed that.
 
--- 
-Kalle Valo
+> Digging further in this code, I found that the brcmf_update_wiphybands() 
+> queries the device to get the actual list of channels, which 
+> subsequently is determined by the 40MHz setting in the 2G band. Not so 
+> much for the channel itself as for the flags. If that is all done after 
+> wiphy_apply_custom_regulatory() it does not show up when doing 'iw phy 
+> info'. And according to the documentation that call needs to be done 
+> before wiphy_register().
+> 
+> In the current code the wiphy_apply_custom_regulatory() is called twice 
+> (before and after wiphy_register()) which seems to do the trick, but in 
+> that it might be exploiting unintended behaviour. Hence the attempt to 
+> change the order of things.
+
+Ok :)
+
+johannes
+
