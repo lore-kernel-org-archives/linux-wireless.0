@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:58018 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932317AbaFYUV7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54336 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaFYSaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 16:21:59 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so2551362wgh.28
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 32/34] staging: vt6656: dead code remove variables device_set_options
-Date: Wed, 25 Jun 2014 21:20:09 +0100
-Message-Id: <1403727611-6825-33-git-send-email-tvboxspy@gmail.com> (sfid-20140625_223010_354973_37876162)
-In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
-References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 25 Jun 2014 14:30:11 -0400
+Date: Wed, 25 Jun 2014 14:21:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi 2014-06-24
+Message-ID: <20140625182103.GC3445@tuxdriver.com> (sfid-20140625_203019_258924_BA216A7D)
+References: <53A9D396.1020306@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53A9D396.1020306@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 23 -----------------------
- 1 file changed, 23 deletions(-)
+On Tue, Jun 24, 2014 at 10:37:58PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> I have been travelling so this comes a bit late. Nevertheless, it is relatively small.
+> 
+> I have here a fix from Eliad for scheduled scan: it fixes a firmware assertion. Arik reverts a patch I made that didn't take into account that 3160 doesn't have UAPSD and hence, we can't assume that all newer firmwares support the feature. Here too, the visible effect is a firmware assertion. Along with that, we have a few fixes and additions to the device list.
+> 
+> Please tell me if you have problems. Thanks!
+> 
+> The following changes since commit 7171511eaec5bf23fb06078f59784a3a0626b38f:
+> 
+>   Linux 3.16-rc1 (2014-06-15 17:45:28 -1000)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to a42c9fcc4a88cdd246fab3bcf06c4487afee3d88:
+> 
+>   Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag" (2014-06-24 22:01:46 +0300)
+> 
+> ----------------------------------------------------------------
+> Arik Nemtsov (1):
+>       Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag"
+> 
+> Eliad Peller (1):
+>       iwlwifi: mvm: rework sched scan channel configuration
+> 
+> Oren Givon (1):
+>       iwlwifi: update the 7265 series HW IDs
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 6479ced..b49effa 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -206,27 +206,12 @@ static void usb_device_reset(struct vnt_private *pDevice);
- 
- static void
- device_set_options(struct vnt_private *pDevice) {
--
--    u8    abyBroadcastAddr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--    u8    abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
--    u8 abySNAP_Bridgetunnel[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0xF8};
--
--    memcpy(pDevice->abyBroadcastAddr, abyBroadcastAddr, ETH_ALEN);
--    memcpy(pDevice->abySNAP_RFC1042, abySNAP_RFC1042, ETH_ALEN);
--    memcpy(pDevice->abySNAP_Bridgetunnel, abySNAP_Bridgetunnel, ETH_ALEN);
--
-     pDevice->cbTD = TX_DESC_DEF0;
-     pDevice->cbRD = RX_DESC_DEF0;
-     pDevice->uChannel = CHANNEL_DEF;
--    pDevice->wRTSThreshold = RTS_THRESH_DEF;
--    pDevice->wFragmentationThreshold = FRAG_THRESH_DEF;
-     pDevice->byShortRetryLimit = SHORT_RETRY_DEF;
-     pDevice->byLongRetryLimit = LONG_RETRY_DEF;
--    pDevice->byShortPreamble = PREAMBLE_TYPE_DEF;
--    pDevice->b11hEnable = X80211h_MODE_DEF;
-     pDevice->op_mode = NL80211_IFTYPE_UNSPECIFIED;
--    pDevice->uConnectionRate = DATA_RATE_DEF;
--    if (pDevice->uConnectionRate < RATE_AUTO) pDevice->bFixRate = true;
-     pDevice->byBBType = BBP_TYPE_DEF;
-     pDevice->byPacketType = pDevice->byBBType;
-     pDevice->byAutoFBCtrl = AUTO_FB_0;
-@@ -306,14 +291,6 @@ static int device_init_registers(struct vnt_private *pDevice)
- 	/* only used in 11g type, sync with ERP IE */
- 	pDevice->bNonERPPresent = false;
- 	pDevice->bBarkerPreambleMd = false;
--	if (pDevice->bFixRate) {
--		pDevice->wCurrentRate = (u16)pDevice->uConnectionRate;
--	} else {
--		if (pDevice->byBBType == BB_TYPE_11B)
--			pDevice->wCurrentRate = RATE_11M;
--		else
--			pDevice->wCurrentRate = RATE_54M;
--	}
- 
- 	pDevice->byTopOFDMBasicRate = RATE_24M;
- 	pDevice->byTopCCKBasicRate = RATE_1M;
+Pulling now...
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
