@@ -1,26 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:45908 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbaFHVR4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55286 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbaFYTpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 17:17:56 -0400
-Date: Sun, 08 Jun 2014 14:17:55 -0700 (PDT)
-Message-Id: <20140608.141755.1908631588109576565.davem@davemloft.net> (sfid-20140608_231830_442161_250160AD)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-06-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140606160557.GA3208@tuxdriver.com>
-References: <20140606160557.GA3208@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 25 Jun 2014 15:45:12 -0400
+Date: Wed, 25 Jun 2014 15:41:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+	iss_storagedev@hp.com, linux-crypto@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-eata@i-connect.net,
+	devel@driverdev.osuosl.org, linux-arch@vger.kernel.org
+Subject: Re: [PATCH 00/22] Add and use pci_zalloc_consistent
+Message-ID: <20140625194112.GJ3445@tuxdriver.com> (sfid-20140625_214532_156578_748DB206)
+References: <cover.1403530604.git.joe@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1403530604.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 6 Jun 2014 12:05:58 -0400
+On Mon, Jun 23, 2014 at 06:41:28AM -0700, Joe Perches wrote:
+> Adding the helper reduces object code size as well as overall
+> source size line count.
+> 
+> It's also consistent with all the various zalloc mechanisms
+> in the kernel.
+> 
+> Done with a simple cocci script and some typing.
+> 
+> Joe Perches (22):
 
-> Please accept this batch of fixes intended for the 3.16 stream.
+>   ipw2100: Use pci_zalloc_consistent
+>   mwl8k: Use pci_zalloc_consistent
+>   rtl818x: Use pci_zalloc_consistent
+>   rtlwifi: Use pci_zalloc_consistent
 
-Pulled, thanks John.
+Sure, fine by me.
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
