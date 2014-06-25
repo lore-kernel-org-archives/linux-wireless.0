@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45053 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaF3H7u (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59456 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755985AbaFYQsy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 03:59:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Denton Gentry <denton.gentry@gmail.com>
-Subject: Re: [RFC/RFT 2/2] ath10k: fix Rx aggregation reordering
-References: <1403860015-31601-1-git-send-email-michal.kazior@tieto.com>
-	<1403860015-31601-3-git-send-email-michal.kazior@tieto.com>
-	<8761jmtp1y.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=n-NGGbJ9tJ+Q=7Lhnd2XxWTWRZLBV-q1gDoc7bFitrA@mail.gmail.com>
-Date: Mon, 30 Jun 2014 10:59:44 +0300
-In-Reply-To: <CA+BoTQ=n-NGGbJ9tJ+Q=7Lhnd2XxWTWRZLBV-q1gDoc7bFitrA@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 30 Jun 2014 07:41:07 +0200")
-Message-ID: <8738emsu8f.fsf@kamboji.qca.qualcomm.com> (sfid-20140630_095953_588945_28396027)
+	Wed, 25 Jun 2014 12:48:54 -0400
+Message-ID: <53AAFD75.7090603@candelatech.com> (sfid-20140625_184857_915005_AB06CAAE)
+Date: Wed, 25 Jun 2014 09:48:53 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: Re: [RFC] wireless: improve dfs-region intersection.
+References: <1402517314-20110-1-git-send-email-greearb@candelatech.com> <20140623191504.GD1390@garbanzo.do-not-panic.com> <53A89011.1010806@candelatech.com> <20140623205451.GG1390@garbanzo.do-not-panic.com> <53A89A0F.9090509@candelatech.com> <20140624004442.GH1390@garbanzo.do-not-panic.com> <53A8E3F9.7000001@candelatech.com> <CAB=NE6XJaHNAL17mN7Ghw9GnatOwaOacikv5XupK7xKjUe=m_Q@mail.gmail.com>
+In-Reply-To: <CAB=NE6XJaHNAL17mN7Ghw9GnatOwaOacikv5XupK7xKjUe=m_Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+I started trying to do some more DFS testing on a 3.14.8+ kernel,
+and from what I can tell, the US region is configured for
+DFS-Unset.  I was assuming this should be set to DFS_FCC.
 
-> On 27 June 2014 16:17, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->>> @@ -21,6 +21,7 @@
->>>  #include "txrx.h"
->>>  #include "debug.h"
->>>  #include "trace.h"
->>> +#include "mac.h"
->>
->> Why this? At least from a quick search I didn't see any reason to add this.
->
-> ath10k_get_arvif()
+I tried installing the latest regulatory.bin.  crda is whatever
+is standard on Fedora 19.
 
-Ah, ok. BTW, in the future we should rename it to ath10k_mac_get_arvif()
-to make it clear it's coming from mac.c.
+Do you know if DFS is supposed to work at all in the 3.14 kernel?
+
+I'm certain I had this working earlier on this machine,
+but I was on a somewhat patched linux.ath tree at the
+time it seems....
+
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
