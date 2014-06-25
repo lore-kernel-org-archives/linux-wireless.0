@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56181 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:61514 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835AbaFJQpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 12:45:50 -0400
-Message-ID: <1402418724.4152.3.camel@jlt4.sipsolutions.net> (sfid-20140610_184601_398167_D61FF18F)
-Subject: Re: [PATCH] wireless-regdb: add DFS CAC time parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 10 Jun 2014 18:45:24 +0200
-In-Reply-To: <CALhHN=qZuPMjQMWGf0+J0ZKnj=5EGtfC=nWjJAYj2YWu=TTYLg@mail.gmail.com> (sfid-20140609_093354_496554_75DBC341)
-References: <1399624824-9204-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <CAB=NE6UuZFDLdA-KW=ohaFwXjj_3wSY84cj3-KPO7HoKREPHOA@mail.gmail.com>
-	 <20140520142453.GB13981@tuxdriver.com>
-	 <CALhHN=qtxwww9hQ7XxK8tan3+4eSoXo3D_g9YLD0QhQDPcDUmg@mail.gmail.com>
-	 <20140520180832.GD13981@tuxdriver.com>
-	 <1400610273.4474.6.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6WiuydxR62dvua_OEyV+sqxvH8aOUHOBLS3ePz1dGCLAw@mail.gmail.com>
-	 <1400688233.4136.8.camel@jlt4.sipsolutions.net>
-	 <20140521180020.GA13656@tuxdriver.com>
-	 <1400699356.4136.13.camel@jlt4.sipsolutions.net>
-	 <CALhHN=qZuPMjQMWGf0+J0ZKnj=5EGtfC=nWjJAYj2YWu=TTYLg@mail.gmail.com>
-	 (sfid-20140609_093354_496554_75DBC341)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751755AbaFYGLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 02:11:51 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v3] mac80211: fix dtim period propagation to the driver
+Date: Wed, 25 Jun 2014 09:11:47 +0300
+Message-Id: <1403676707-9568-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140625_081158_015235_62672B6D)
+In-Reply-To: <1403282419-8468-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1403282419-8468-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-09 at 09:33 +0200, Janusz Dziedzic wrote:
+In case the beacon is heard before we try to associate,
+the dtim_period was not communicated to the low level
+driver. This led to disconnections with iwlmvm which needs
+to know the dtim_period before it can move its firmware to
+'associated' state. The following print would appear in the
+log prior the disconnection.
 
-> Why not just skip this binary interface between regdb --> crda and use
-> signed db.txt file?
+iwlwifi: No association and the time event is over already...
 
-I fail to see how that's any better? If anything, it seems to me that it
-would be *harder* to keep the database text format parseable to old CRDA
-versions when making changes.
+Note that we usually hear the beacon only after the
+association because we associate based on the probe
+responses from the scan. This is why this bug has not been
+discovered until now.
 
-johannes
+https://bugzilla.kernel.org/show_bug.cgi?id=78101
+
+Cc: <stable@vger.kernel.org> [3.9+]
+Fixes: c65dd1477b6f ("mac80211: inform the driver about update of dtim_period")
+Reported-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+v2: fix typos in commit message
+v3: move the assignment to the proper place (if tim)
+    change the "Fixes" + stable tag
+---
+ net/mac80211/mlme.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e37b97d..92fd200 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4427,6 +4427,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			const struct ieee80211_tim_ie *tim;
+ 			tim = (void *)(tim_ie + 2);
+ 			ifmgd->dtim_period = tim->dtim_period;
++			sdata->vif.bss_conf.dtim_period =
++				ifmgd->dtim_period ? : 1;
+ 			dtim_count = tim->dtim_count;
+ 		}
+ 		ifmgd->have_beacon = true;
+-- 
+1.8.1.msysgit.1
 
