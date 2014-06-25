@@ -1,57 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:51611 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbaF2E5h (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:59685 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbaFYUVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 00:57:37 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so6730291wgg.8
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 21:57:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P1=hWuxoicxcFx4O_v9veNMQr1pA5rf06LgAasO+rXPsg@mail.gmail.com>
-References: <CAH5Ym4iX=7TvPAajyb_PzrfsD7UmbsOYOvU9YqZk78zaDaQNGA@mail.gmail.com>
-	<CANUX_P1=hWuxoicxcFx4O_v9veNMQr1pA5rf06LgAasO+rXPsg@mail.gmail.com>
-Date: Sat, 28 Jun 2014 21:57:36 -0700
-Message-ID: <CAH5Ym4iQVD6aTztB1knfkFt4Y9f6pjqQY5aKM8ZdTwC3u-d3Dg@mail.gmail.com> (sfid-20140629_065741_440704_6DC6B63D)
-Subject: Re: BUG: iwlwifi microcode errors on Intel 7260HMW
-From: Sam Edwards <cfsworks@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Jun 2014 16:21:20 -0400
+Received: by mail-wg0-f42.google.com with SMTP id z12so2586724wgg.13
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:19 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/34] staging: vt6656: dead code wpactl
+Date: Wed, 25 Jun 2014 21:19:47 +0100
+Message-Id: <1403727611-6825-11-git-send-email-tvboxspy@gmail.com> (sfid-20140625_222125_965070_71233C11)
+In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Will do so immediately, thanks!
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/Makefile   |   1 -
+ drivers/staging/vt6656/main_usb.c |   1 -
+ drivers/staging/vt6656/wpactl.c   | 246 --------------------------------------
+ drivers/staging/vt6656/wpactl.h   |  47 --------
+ 4 files changed, 295 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/wpactl.c
+ delete mode 100644 drivers/staging/vt6656/wpactl.h
 
-On Sat, Jun 28, 2014 at 9:55 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> Hello!
->>
->> I've been working for a week to track down the cause of this bug.
->> Sadly, I have no background in wireless development and no knowledge
->> of the Intel microcode format, so I've gotten stuck.
->>
->> I'm trying to use an Intel 7260HMW with OpenWrt to act as an AP. I'm
->> using a recent snapshot ("Barrier Breaker") build of OpenWrt, on the
->> Linux 3.10.36 kernel. The iwlwifi driver is built from the Linux
->> driver backports package; a diff reveals that it is fully up-to-date
->> with the latest source in the upstream kernel repository.
->>
->> When trying to run hostapd, my kernel log repeats output similar to
->> this: http://pastebin.com/1UuUuMMg
->> The problems are not limited to trying to use the device as an AP.
->> When trying to associate to an existing network, I am given similar
->> output: http://pastebin.com/qxwbdHyu
->>
->> The wireless device is, however, capable of scanning for nearby APs,
->> but so far I have not been able to get it to do anything else.
->>
->> I've been unable to get the non-backported (i.e. 3.10.36) version of
->> the driver to load correctly, and I cannot easily test this on the
->> latest kernel either. However, if I should try a different version,
->> please let me know.
->>
->
-> Please open a bug on bugzilla.kernel.org and copy ilw@linux.intel.com
-> to the bug.
-> This is most likely a firmware bug.
->
-> Thank you.
+diff --git a/drivers/staging/vt6656/Makefile b/drivers/staging/vt6656/Makefile
+index 28cdb4f..466534e 100644
+--- a/drivers/staging/vt6656/Makefile
++++ b/drivers/staging/vt6656/Makefile
+@@ -21,7 +21,6 @@ vt6656_stage-y +=	main_usb.o \
+ 			tkip.o \
+ 			michael.o \
+ 			rf.o \
+-			wpactl.o \
+ 			usbpipe.o \
+ 			channel.o \
+ 			firmware.o \
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 0d71430..f4cbeb3 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -58,7 +58,6 @@
+ #include "wcmd.h"
+ #include "rxtx.h"
+ #include "bssdb.h"
+-#include "wpactl.h"
+ #include "dpc.h"
+ #include "datarate.h"
+ #include "rf.h"
+diff --git a/drivers/staging/vt6656/wpactl.c b/drivers/staging/vt6656/wpactl.c
+deleted file mode 100644
+index 3752072..0000000
+--- a/drivers/staging/vt6656/wpactl.c
++++ /dev/null
+@@ -1,246 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: wpactl.c
+- *
+- * Purpose: handle wpa supplicant ioctl input/out functions
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: July 28, 2006
+- *
+- * Functions:
+- *
+- * Revision History:
+- *
+- */
+-
+-#include "wpactl.h"
+-#include "key.h"
+-#include "mac.h"
+-#include "device.h"
+-#include "wmgr.h"
+-#include "iowpa.h"
+-#include "usbpipe.h"
+-#include "rf.h"
+-
+-static int msglevel = MSG_LEVEL_INFO;
+-
+-/*
+- * Description:
+- *      Set WPA algorithm & keys
+- *
+- * Parameters:
+- *  In:
+- *      pDevice -
+- *      param -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-int wpa_set_keys(struct vnt_private *pDevice, void *ctx)
+-{
+-	struct viawget_wpa_param *param = ctx;
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	u32 dwKeyIndex = 0;
+-	u8 abyKey[MAX_KEY_LEN];
+-	u8 abySeq[MAX_KEY_LEN];
+-	u64 KeyRSC;
+-	u8 byKeyDecMode = KEY_CTL_WEP;
+-	int ret = 0;
+-	u8 uu;
+-	int ii;
+-
+-	if (param->u.wpa_key.alg_name > WPA_ALG_CCMP)
+-		return -EINVAL;
+-
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "param->u.wpa_key.alg_name = %d \n",
+-		param->u.wpa_key.alg_name);
+-	if (param->u.wpa_key.alg_name == WPA_ALG_NONE) {
+-		pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+-		pDevice->bEncryptionEnable = false;
+-		pDevice->byKeyIndex = 0;
+-		pDevice->bTransmitKey = false;
+-		for (uu=0; uu<MAX_KEY_TABLE; uu++) {
+-			vnt_mac_disable_keyentry(pDevice, uu);
+-		}
+-		return ret;
+-	}
+-
+-	if (param->u.wpa_key.key_len > sizeof(abyKey))
+-		return -EINVAL;
+-
+-	memcpy(&abyKey[0], param->u.wpa_key.key, param->u.wpa_key.key_len);
+-
+-	dwKeyIndex = (u32)(param->u.wpa_key.key_index);
+-
+-	if (param->u.wpa_key.alg_name == WPA_ALG_WEP) {
+-		if (dwKeyIndex > 3) {
+-			return -EINVAL;
+-		} else {
+-			if (param->u.wpa_key.set_tx) {
+-				pDevice->byKeyIndex = (u8)dwKeyIndex;
+-				pDevice->bTransmitKey = true;
+-				dwKeyIndex |= (1 << 31);
+-			}
+-			KeybSetDefaultKey(  pDevice,
+-					&(pDevice->sKey),
+-					dwKeyIndex & ~(BIT30 | USE_KEYRSC),
+-					param->u.wpa_key.key_len,
+-					NULL,
+-					abyKey,
+-					KEY_CTL_WEP
+-				);
+-
+-		}
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
+-		pDevice->bEncryptionEnable = true;
+-		return ret;
+-	}
+-
+-	if (param->u.wpa_key.seq && param->u.wpa_key.seq_len > sizeof(abySeq))
+-		return -EINVAL;
+-
+-	memcpy(&abySeq[0], param->u.wpa_key.seq, param->u.wpa_key.seq_len);
+-
+-	if (param->u.wpa_key.seq_len > 0) {
+-		for (ii = 0 ; ii < param->u.wpa_key.seq_len ; ii++) {
+-			if (ii < 4)
+-				KeyRSC |= (abySeq[ii] << (ii * 8));
+-			else
+-				KeyRSC |= (abySeq[ii] << ((ii-4) * 8));
+-		}
+-		dwKeyIndex |= 1 << 29;
+-	}
+-
+-	if (param->u.wpa_key.key_index >= MAX_GROUP_KEY) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "return  dwKeyIndex > 3\n");
+-		return -EINVAL;
+-	}
+-
+-	if (param->u.wpa_key.alg_name == WPA_ALG_TKIP) {
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
+-	}
+-
+-	if (param->u.wpa_key.alg_name == WPA_ALG_CCMP) {
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
+-	}
+-
+-	if (param->u.wpa_key.set_tx)
+-		dwKeyIndex |= (1 << 31);
+-
+-	if (pDevice->eEncryptionStatus == Ndis802_11Encryption3Enabled)
+-		byKeyDecMode = KEY_CTL_CCMP;
+-	else if (pDevice->eEncryptionStatus == Ndis802_11Encryption2Enabled)
+-		byKeyDecMode = KEY_CTL_TKIP;
+-	else
+-		byKeyDecMode = KEY_CTL_WEP;
+-
+-	// Fix HCT test that set 256 bits KEY and Ndis802_11Encryption3Enabled
+-	if (pDevice->eEncryptionStatus == Ndis802_11Encryption3Enabled) {
+-		if (param->u.wpa_key.key_len == MAX_KEY_LEN)
+-			byKeyDecMode = KEY_CTL_TKIP;
+-		else if (param->u.wpa_key.key_len == WLAN_WEP40_KEYLEN)
+-			byKeyDecMode = KEY_CTL_WEP;
+-		else if (param->u.wpa_key.key_len == WLAN_WEP104_KEYLEN)
+-			byKeyDecMode = KEY_CTL_WEP;
+-	} else if (pDevice->eEncryptionStatus == Ndis802_11Encryption2Enabled) {
+-		if (param->u.wpa_key.key_len == WLAN_WEP40_KEYLEN)
+-			byKeyDecMode = KEY_CTL_WEP;
+-		else if (param->u.wpa_key.key_len == WLAN_WEP104_KEYLEN)
+-			byKeyDecMode = KEY_CTL_WEP;
+-	}
+-
+-	// Check TKIP key length
+-	if ((byKeyDecMode == KEY_CTL_TKIP) &&
+-		(param->u.wpa_key.key_len != MAX_KEY_LEN)) {
+-		// TKIP Key must be 256 bits
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "return - TKIP Key must be 256 bits!\n");
+-		return -EINVAL;
+-    }
+-	// Check AES key length
+-	if ((byKeyDecMode == KEY_CTL_CCMP) &&
+-		(param->u.wpa_key.key_len != AES_KEY_LEN)) {
+-		// AES Key must be 128 bits
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "return - AES Key must be 128 bits\n");
+-		return -EINVAL;
+-	}
+-
+-	if (is_broadcast_ether_addr(&param->addr[0]) || (param->addr == NULL)) {
+-		/* if broadcast, set the key as every key entry's group key */
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Groupe Key Assign.\n");
+-
+-		if ((KeybSetAllGroupKey(pDevice, &(pDevice->sKey), dwKeyIndex,
+-							param->u.wpa_key.key_len,
+-							&KeyRSC,
+-							(u8 *)abyKey,
+-							byKeyDecMode
+-					) == true) &&
+-			(KeybSetDefaultKey(pDevice,
+-					&(pDevice->sKey),
+-					dwKeyIndex,
+-					param->u.wpa_key.key_len,
+-					&KeyRSC,
+-					(u8 *)abyKey,
+-					byKeyDecMode
+-				) == true) ) {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "GROUP Key Assign.\n");
+-		} else {
+-			return -EINVAL;
+-		}
+-	} else {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Pairwise Key Assign.\n");
+-		// BSSID not 0xffffffffffff
+-		// Pairwise Key can't be WEP
+-		if (byKeyDecMode == KEY_CTL_WEP) {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Pairwise Key can't be WEP\n");
+-			return -EINVAL;
+-		}
+-		dwKeyIndex |= (1 << 30); // set pairwise key
+-		if (pMgmt->eConfigMode == WMAC_CONFIG_IBSS_STA) {
+-			//DBG_PRN_WLAN03(("return NDIS_STATUS_INVALID_DATA - WMAC_CONFIG_IBSS_STA\n"));
+-			return -EINVAL;
+-		}
+-		if (KeybSetKey(pDevice, &(pDevice->sKey), &param->addr[0],
+-				dwKeyIndex, param->u.wpa_key.key_len,
+-				&KeyRSC, (u8 *)abyKey, byKeyDecMode
+-				) == true) {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Pairwise Key Set\n");
+-		} else {
+-			// Key Table Full
+-			if (ether_addr_equal(param->addr, pDevice->abyBSSID)) {
+-				//DBG_PRN_WLAN03(("return NDIS_STATUS_INVALID_DATA -Key Table Full.2\n"));
+-				return -EINVAL;
+-			} else {
+-				// Save Key and configure just before associate/reassociate to BSSID
+-				// we do not implement now
+-				return -EINVAL;
+-			}
+-		}
+-	} // BSSID not 0xffffffffffff
+-	if ((ret == 0) && ((param->u.wpa_key.set_tx) != 0)) {
+-		pDevice->byKeyIndex = (u8)param->u.wpa_key.key_index;
+-		pDevice->bTransmitKey = true;
+-	}
+-	pDevice->bEncryptionEnable = true;
+-
+-	return ret;
+-}
+-
+diff --git a/drivers/staging/vt6656/wpactl.h b/drivers/staging/vt6656/wpactl.h
+deleted file mode 100644
+index e032a1b..0000000
+--- a/drivers/staging/vt6656/wpactl.h
++++ /dev/null
+@@ -1,47 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: wpactl.h
+- *
+- * Purpose:
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: March 1, 2005
+- *
+- */
+-
+-#ifndef __WPACTL_H__
+-#define __WPACTL_H__
+-
+-#include "device.h"
+-#include "iowpa.h"
+-
+-//WPA related
+-
+-typedef enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
+-
+-#define AUTH_ALG_OPEN_SYSTEM	0x01
+-#define AUTH_ALG_SHARED_KEY	0x02
+-#define AUTH_ALG_LEAP		0x04
+-
+-typedef unsigned long long NDIS_802_11_KEY_RSC;
+-
+-int wpa_set_keys(struct vnt_private *, void *ctx);
+-
+-#endif /* __WPACL_H__ */
+-- 
+1.9.1
+
