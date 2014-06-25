@@ -1,150 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:36078 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755306AbaFKX7n (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55104 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072AbaFYTaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 19:59:43 -0400
-Message-Id: <20140611234607.607201623@linutronix.de> (sfid-20140612_015956_964277_2B9F24B0)
-Date: Wed, 11 Jun 2014 23:59:18 -0000
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [patch 11/13] wireless: mwifiex: Use the proper interfaces
-References: <20140611234024.103571777@linutronix.de>
+	Wed, 25 Jun 2014 15:30:09 -0400
+Date: Wed, 25 Jun 2014 15:28:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2014-06-24
+Message-ID: <20140625192803.GA8870@tuxdriver.com> (sfid-20140625_213025_774937_99903755)
+References: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
+ <1403629678.10831.14.camel@jlt4.sipsolutions.net>
+ <20140625191834.GG3445@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140625191834.GG3445@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Why is converting time formats so desired if there are proper
-interfaces for this?
+On Wed, Jun 25, 2014 at 03:18:34PM -0400, John W. Linville wrote:
+> On Tue, Jun 24, 2014 at 07:07:58PM +0200, Johannes Berg wrote:
+> > On Tue, 2014-06-24 at 18:22 +0200, Johannes Berg wrote:
+> > 
+> > > The biggest thing here is probably Arik's TDLS rework, beyond that we
+> > > have smaller improvements and features like David's scanning IE thing,
+> > 
+> > The latter seems to cause some issues with the ath9k multi-channel code,
+> > I didn't realize you'd merged that in.
+> > 
+> > The fix is not very difficult, so maybe you can just fix it when you
+> > merge? See commit eb6a61549f530f1cc435512df3799f656094ba83 for how all
+> > the other drivers were changed.
+> 
+> I don't see that commit ID anywhere...?
+> 
+> The merge seemed to be clean too.  Are we looking at the same things?
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/mwifiex/cfg80211.c |    4 +---
- drivers/net/wireless/mwifiex/main.c     |    4 +---
- drivers/net/wireless/mwifiex/tdls.c     |    6 ++----
- drivers/net/wireless/mwifiex/uap_txrx.c |    4 +---
- drivers/net/wireless/mwifiex/wmm.c      |    9 +--------
- 5 files changed, 6 insertions(+), 21 deletions(-)
+Perhaps you meant c56ef6725068c?  That seems to have held the clues...
 
-Index: linux/drivers/net/wireless/mwifiex/cfg80211.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/cfg80211.c
-+++ linux/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -151,7 +151,6 @@ mwifiex_form_mgmt_frame(struct sk_buff *
- 	u8 addr[ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
- 	u16 pkt_len;
- 	u32 tx_control = 0, pkt_type = PKT_TYPE_MGMT;
--	struct timeval tv;
- 
- 	pkt_len = len + ETH_ALEN;
- 
-@@ -173,8 +172,7 @@ mwifiex_form_mgmt_frame(struct sk_buff *
- 	       len - sizeof(struct ieee80211_hdr_3addr));
- 
- 	skb->priority = LOW_PRIO_TID;
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 
- 	return 0;
- }
-Index: linux/drivers/net/wireless/mwifiex/main.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/main.c
-+++ linux/drivers/net/wireless/mwifiex/main.c
-@@ -611,7 +611,6 @@ mwifiex_hard_start_xmit(struct sk_buff *
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	struct sk_buff *new_skb;
- 	struct mwifiex_txinfo *tx_info;
--	struct timeval tv;
- 
- 	dev_dbg(priv->adapter->dev, "data: %lu BSS(%d-%d): Data <= kernel\n",
- 		jiffies, priv->bss_type, priv->bss_num);
-@@ -658,8 +657,7 @@ mwifiex_hard_start_xmit(struct sk_buff *
- 	 * firmware for aggregate delay calculation for stats and
- 	 * MSDU lifetime expiry.
- 	 */
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
-Index: linux/drivers/net/wireless/mwifiex/tdls.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/tdls.c
-+++ linux/drivers/net/wireless/mwifiex/tdls.c
-@@ -552,8 +552,7 @@ int mwifiex_send_tdls_data_frame(struct
- 	tx_info->bss_num = priv->bss_num;
- 	tx_info->bss_type = priv->bss_type;
- 
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
- 	return 0;
-@@ -710,8 +709,7 @@ int mwifiex_send_tdls_action_frame(struc
- 	pkt_len = skb->len - MWIFIEX_MGMT_FRAME_HEADER_SIZE - sizeof(pkt_len);
- 	memcpy(skb->data + MWIFIEX_MGMT_FRAME_HEADER_SIZE, &pkt_len,
- 	       sizeof(pkt_len));
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
- 	return 0;
-Index: linux/drivers/net/wireless/mwifiex/uap_txrx.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ linux/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -96,7 +96,6 @@ static void mwifiex_uap_queue_bridged_pk
- 	struct sk_buff *new_skb;
- 	struct mwifiex_txinfo *tx_info;
- 	int hdr_chop;
--	struct timeval tv;
- 	struct ethhdr *p_ethhdr;
- 
- 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
-@@ -192,8 +191,7 @@ static void mwifiex_uap_queue_bridged_pk
- 		tx_info->pkt_len = skb->len;
- 	}
- 
--	do_gettimeofday(&tv);
--	skb->tstamp = timeval_to_ktime(tv);
-+	__net_timestamp(skb);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
- 	atomic_inc(&adapter->tx_pending);
- 	atomic_inc(&adapter->pending_bridged_pkts);
-Index: linux/drivers/net/wireless/mwifiex/wmm.c
-===================================================================
---- linux.orig/drivers/net/wireless/mwifiex/wmm.c
-+++ linux/drivers/net/wireless/mwifiex/wmm.c
-@@ -886,15 +886,8 @@ u8
- mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
- 				  const struct sk_buff *skb)
- {
-+	u32 queue_delay = ktime_to_ms(net_timedelta(skb->tstamp));
- 	u8 ret_val;
--	struct timeval out_tstamp, in_tstamp;
--	u32 queue_delay;
--
--	do_gettimeofday(&out_tstamp);
--	in_tstamp = ktime_to_timeval(skb->tstamp);
--
--	queue_delay = (out_tstamp.tv_sec - in_tstamp.tv_sec) * 1000;
--	queue_delay += (out_tstamp.tv_usec - in_tstamp.tv_usec) / 1000;
- 
- 	/*
- 	 * Queue delay is passed as a uint8 in units of 2ms (ms shifted
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
