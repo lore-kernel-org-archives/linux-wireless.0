@@ -1,166 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18291 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750771AbaF2ORj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 10:17:39 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v3 2/4] brcmfmac: add device tree support for SDIO devices
-Date: Sun, 29 Jun 2014 16:16:59 +0200
-Message-Id: <1404051421-24377-3-git-send-email-hdegoede@redhat.com> (sfid-20140629_161746_963050_011A3C22)
-In-Reply-To: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
-References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:60821 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755603AbaFYUPa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 16:15:30 -0400
+Received: by mail-we0-f178.google.com with SMTP id x48so2532968wes.9
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:27 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/17] staging: vt6656: mac80211 conversion: enable power saving
+Date: Wed, 25 Jun 2014 21:14:29 +0100
+Message-Id: <1403727278-6666-9-git-send-email-tvboxspy@gmail.com> (sfid-20140625_221557_579585_9A9C4556)
+In-Reply-To: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chen-Yu Tsai <wens@csie.org>
+Convert vnt_enable_power_saving and vnt_disable_power_saving
 
-brcmfmac devices can use an out-of-band interrupt on a GPIO line.
-Currently this is specified using platform data. Add support for
-specifying out-of-band interrupt via device tree.
+Remove mgmt->wCurrAID and use priv->current_aid
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-[arend@broadcom.com: conditionalize more of-code, use driver debug routines]
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-[hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
- on how to handle this yet]
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+We nolonger send the PSbSendNullPacket from vnt_enable_power_saving
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/Makefile |  2 +
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |  4 ++
- drivers/net/wireless/brcm80211/brcmfmac/of.c     | 56 ++++++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/of.h     | 22 ++++++++++
- 4 files changed, 84 insertions(+)
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/of.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/of.h
+ drivers/staging/vt6656/power.c | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index 98e67c1..e2752cb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -44,3 +44,5 @@ brcmfmac-$(CONFIG_BRCMDBG) += \
- 		dhd_dbg.o
- brcmfmac-$(CONFIG_BRCM_TRACING) += \
- 		tracepoint.o
-+brcmfmac-$(CONFIG_OF) += \
-+		of.o
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index a16e644..0fc707c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -43,6 +43,7 @@
- #include "dhd_bus.h"
- #include "dhd_dbg.h"
- #include "sdio_host.h"
-+#include "of.h"
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index cc28192..6c34d36 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -60,8 +60,7 @@ static int msglevel = MSG_LEVEL_INFO;
  
- #define SDIOH_API_ACCESS_RETRY_LIMIT	2
+ void vnt_enable_power_saving(struct vnt_private *priv, u16 listen_interval)
+ {
+-	struct vnt_manager *mgmt = &priv->vnt_mgmt;
+-	u16 aid = mgmt->wCurrAID | BIT14 | BIT15;
++	u16 aid = priv->current_aid | BIT(14) | BIT(15);
  
-@@ -1043,6 +1044,9 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	sdiodev->dev = &sdiodev->func[1]->dev;
- 	sdiodev->pdata = brcmfmac_sdio_pdata;
+ 	/* set period of power up before TBTT */
+ 	vnt_mac_write_word(priv, MAC_REG_PWBT, C_PWBT);
+@@ -92,26 +91,12 @@ void vnt_enable_power_saving(struct vnt_private *priv, u16 listen_interval)
  
-+	if (!sdiodev->pdata)
-+		brcmf_of_probe(sdiodev);
-+
- 	atomic_set(&sdiodev->suspend, false);
- 	init_waitqueue_head(&sdiodev->request_word_wait);
- 	init_waitqueue_head(&sdiodev->request_buffer_wait);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-new file mode 100644
-index 0000000..f05f527
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-@@ -0,0 +1,56 @@
-+/*
-+ * Copyright (c) 2014 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#include <linux/init.h>
-+#include <linux/of.h>
-+#include <linux/of_irq.h>
-+#include <linux/mmc/card.h>
-+#include <linux/platform_data/brcmfmac-sdio.h>
-+#include <linux/mmc/sdio_func.h>
-+
-+#include <defs.h>
-+#include "dhd_dbg.h"
-+#include "sdio_host.h"
-+
-+void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
-+{
-+	struct device *dev = sdiodev->dev;
-+	struct device_node *np = dev->of_node;
-+	int irq;
-+	u32 irqf;
-+	u32 val;
-+
-+	if (!np || !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
-+		return;
-+
-+	sdiodev->pdata = devm_kzalloc(dev, sizeof(*sdiodev->pdata), GFP_KERNEL);
-+	if (!sdiodev->pdata)
-+		return;
-+
-+	irq = irq_of_parse_and_map(np, 0);
-+	if (irq < 0) {
-+		brcmf_err("interrupt could not be mapped: err=%d\n", irq);
-+		devm_kfree(dev, sdiodev->pdata);
-+		return;
-+	}
-+	irqf = irqd_get_trigger_type(irq_get_irq_data(irq));
-+
-+	sdiodev->pdata->oob_irq_supported = true;
-+	sdiodev->pdata->oob_irq_nr = irq;
-+	sdiodev->pdata->oob_irq_flags = irqf;
-+
-+	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
-+		sdiodev->pdata->drive_strength = val;
-+}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.h b/drivers/net/wireless/brcm80211/brcmfmac/of.h
-new file mode 100644
-index 0000000..5f7c355
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/of.h
-@@ -0,0 +1,22 @@
-+/*
-+ * Copyright (c) 2014 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifdef CONFIG_OF
-+void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev);
-+#else
-+static void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
-+{
-+}
-+#endif /* CONFIG_OF */
+ 		/* first time set listen next beacon */
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_LNBCN);
+-
+-		mgmt->wCountToWakeUp = listen_interval;
+-
+ 	} else {
+ 
+ 		/* always listen beacon */
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
+-
+-		mgmt->wCountToWakeUp = 0;
+ 	}
+ 
+-	priv->bEnablePSMode = true;
+-
+-	/* We don't send null pkt in ad hoc mode
+-	 * since beacon will handle this.
+-	 */
+-	if (priv->op_mode == NL80211_IFTYPE_STATION)
+-		PSbSendNullPacket(priv);
+-
+-	priv->bPWBitOn = true;
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "PS:Power Saving Mode Enable...\n");
+ }
+ 
+@@ -137,12 +122,6 @@ void vnt_disable_power_saving(struct vnt_private *priv)
+ 
+ 	/* set always listen beacon */
+ 	vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
+-	priv->bEnablePSMode = false;
+-
+-	if (priv->op_mode == NL80211_IFTYPE_STATION)
+-		PSbSendNullPacket(priv);
+-
+-	priv->bPWBitOn = false;
+ }
+ 
+ /*
 -- 
-2.0.0
+1.9.1
 
