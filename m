@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42120 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968AbaFJJIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2014 05:08:24 -0400
-Date: Tue, 10 Jun 2014 11:06:55 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: IvDoorn@gmail.com, helmut.schaa@googlemail.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rt2800usb: scheduling while atomic
-Message-ID: <20140610090655.GF1720@redhat.com> (sfid-20140610_110836_235782_115E486A)
-References: <5396C150.6030601@gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54337 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603AbaFYSaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 14:30:11 -0400
+Date: Wed, 25 Jun 2014 14:22:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2014-06-25
+Message-ID: <20140625182256.GD3445@tuxdriver.com> (sfid-20140625_203021_949267_479B2948)
+References: <20140625143006.GA18018@joana>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="2fHTh5uZTiUOsy+g"
-In-Reply-To: <5396C150.6030601@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140625143006.GA18018@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 25, 2014 at 11:30:06AM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> A few fixes for 3.16. This pull request contains a NULL dereference fix,
+> and some security/pairing fixes. Please pull. Thanks!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 616a8394b5df8c88f4dd416f4527439a4e365034:
+> 
+>   rt2x00: fix rfkill regression on rt2500pci (2014-06-17 14:11:16 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+> 
+> for you to fetch changes up to 48439d501e3d9e8634bdc0c418e066870039599d:
+> 
+>   Bluetooth: Ignore H5 non-link packets in non-active state (2014-06-23 18:22:48 +0200)
+> 
+> ----------------------------------------------------------------
+> Johan Hedberg (3):
+>       Bluetooth: Fix overriding higher security level in SMP
+>       Bluetooth: Refactor authentication method lookup into its own function
+>       Bluetooth: Fix rejecting pairing in case of insufficient capabilities
+> 
+> Loic Poulain (1):
+>       Bluetooth: Ignore H5 non-link packets in non-active state
+> 
+> Lukasz Rymanowski (1):
+>       Bluetooth: Fix for ACL disconnect when pairing fails
+> 
+> Marcel Holtmann (1):
+>       Revert "Bluetooth: Add a new PID/VID 0cf3/e005 for AR3012."
 
---2fHTh5uZTiUOsy+g
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Pulling now...
 
-On Tue, Jun 10, 2014 at 10:26:56AM +0200, Pontus Fuchs wrote:
-> I have a reproducible sleep in atomic when I set up hostapd with
-> TKIP on a rt2800 based USB dongle. As soon as a client connects I
-> see this. I guess get_tkip_seq may not sleep.
-
-Someone else reported that already, but fails to test provided patch:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2014-January/006538.html
-
-Does attached patch make the problem gone for you?
-
-Thanks
-Stanislaw
-
-
---2fHTh5uZTiUOsy+g
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="rt2x00_disable_tkip_on_usb.patch"
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 2183e79..87d7938 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -489,6 +489,8 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	crypto.cipher = rt2x00crypto_key_to_cipher(key);
- 	if (crypto.cipher == CIPHER_NONE)
- 		return -EOPNOTSUPP;
-+	if (crypto.cipher == CIPHER_TKIP && rt2x00_is_usb(rt2x00dev))
-+		return -EOPNOTSUPP;
- 
- 	crypto.cmd = cmd;
- 
-
---2fHTh5uZTiUOsy+g--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
