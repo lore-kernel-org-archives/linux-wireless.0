@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:36077 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755267AbaFKX7m (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55451 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752529AbaFYUAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 19:59:42 -0400
-Message-Id: <20140611234607.683770899@linutronix.de> (sfid-20140612_020035_577026_7496D74E)
-Date: Wed, 11 Jun 2014 23:59:18 -0000
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: John Stultz <john.stultz@linaro.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>,
+	Wed, 25 Jun 2014 16:00:13 -0400
+Date: Wed, 25 Jun 2014 15:56:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [patch 12/13] net: mac80211: Remove silly timespec dance
-References: <20140611234024.103571777@linutronix.de>
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] Revert "mwifiex: Use the proper interfaces"
+Message-ID: <20140625195633.GK3445@tuxdriver.com> (sfid-20140625_220025_996871_91F24BD0)
+References: <1403309262-5737-1-git-send-email-bzhao@marvell.com>
+ <alpine.DEB.2.10.1406220013470.5170@nanos>
+ <477F20668A386D41ADCC57781B1F70430FE56129EB@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE56129EB@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Converting time from one format to another seems to give coders a warm
-and fuzzy feeling.
+On Mon, Jun 23, 2014 at 12:23:11PM -0700, Bing Zhao wrote:
+> Hi Thomas,
+> 
+> > > This reverts commit a82fc3b4a2bceb7c6587249cb690342eb5065979.
+> > >
+> > > Thomas corrected me on that I misunderstood Johannes' comment
+> > > for net_timedelta() and the ktime_get_real() usage inside
+> > > __net_timestamp().
+> > 
+> > And still my V2 patch is functionally equivivalent to the current
+> > implementation but uses the proper interfaces for that.
+> 
+> Yes, your v2 patch is equivalent to the current code using the proper interfaces.
+> It also makes the code simpler and cleaner. Thanks!
+> 
+> Hi John,
+> 
+> Could you please apply the v2 patch titled "[patch V2] wireless: mwifiex: Use the proper interfaces" after applying this "revert" patch?
+> 
+> Thanks,
+> Bing
 
-Use the proper interfaces.
+OK, doing that now...
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- net/mac80211/status.c |    7 ++-----
- net/mac80211/tx.c     |    5 +----
- 2 files changed, 3 insertions(+), 9 deletions(-)
-
-Index: linux/net/mac80211/status.c
-===================================================================
---- linux.orig/net/mac80211/status.c
-+++ linux/net/mac80211/status.c
-@@ -473,8 +473,6 @@ static void ieee80211_tx_latency_end_msr
- 					    struct sta_info *sta,
- 					    struct ieee80211_hdr *hdr)
- {
--	ktime_t skb_dprt;
--	struct timespec dprt_time;
- 	u32 msrmnt;
- 	u16 tid;
- 	u8 *qc;
-@@ -506,9 +504,8 @@ static void ieee80211_tx_latency_end_msr
- 
- 	tx_lat = &sta->tx_lat[tid];
- 
--	ktime_get_ts(&dprt_time); /* time stamp completion time */
--	skb_dprt = ktime_set(dprt_time.tv_sec, dprt_time.tv_nsec);
--	msrmnt = ktime_to_ms(ktime_sub(skb_dprt, skb_arv));
-+	/* Calculate the latency */
-+	msrmnt = ktime_to_ms(net_timedelta(skb_arv));
- 
- 	if (tx_lat->max < msrmnt) /* update stats */
- 		tx_lat->max = msrmnt;
-Index: linux/net/mac80211/tx.c
-===================================================================
---- linux.orig/net/mac80211/tx.c
-+++ linux/net/mac80211/tx.c
-@@ -1767,15 +1767,12 @@ fail:
- static void ieee80211_tx_latency_start_msrmnt(struct ieee80211_local *local,
- 					      struct sk_buff *skb)
- {
--	struct timespec skb_arv;
- 	struct ieee80211_tx_latency_bin_ranges *tx_latency;
- 
- 	tx_latency = rcu_dereference(local->tx_latency);
- 	if (!tx_latency)
- 		return;
--
--	ktime_get_ts(&skb_arv);
--	skb->tstamp = ktime_set(skb_arv.tv_sec, skb_arv.tv_nsec);
-+	__net_timestamp(skb);
- }
- 
- /**
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
