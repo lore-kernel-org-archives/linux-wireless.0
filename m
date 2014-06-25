@@ -1,98 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:58282 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215AbaFXCyN (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:63048 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932158AbaFYUVc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 22:54:13 -0400
-Received: by mail-lb0-f181.google.com with SMTP id p9so5579830lbv.40
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 19:54:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53A8E3F9.7000001@candelatech.com>
-References: <1402517314-20110-1-git-send-email-greearb@candelatech.com>
- <20140623191504.GD1390@garbanzo.do-not-panic.com> <53A89011.1010806@candelatech.com>
- <20140623205451.GG1390@garbanzo.do-not-panic.com> <53A89A0F.9090509@candelatech.com>
- <20140624004442.GH1390@garbanzo.do-not-panic.com> <53A8E3F9.7000001@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 23 Jun 2014 19:53:51 -0700
-Message-ID: <CAB=NE6XJaHNAL17mN7Ghw9GnatOwaOacikv5XupK7xKjUe=m_Q@mail.gmail.com> (sfid-20140624_045417_392675_BF06A32F)
-Subject: Re: [RFC] wireless: improve dfs-region intersection.
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Jun 2014 16:21:32 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so2685643wes.40
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 17/34] staging: vt6656: dead code remove iowpa.h
+Date: Wed, 25 Jun 2014 21:19:54 +0100
+Message-Id: <1403727611-6825-18-git-send-email-tvboxspy@gmail.com> (sfid-20140625_222951_897917_F3A54C3A)
+In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 7:35 PM, Ben Greear <greearb@candelatech.com> wrote:
->
->>> Maybe just use time-zone or user hints in this case since NICs cannot
->>> be fully trusted.
->>
->>
->> WTF no, the regulatory hint stuff should all be automated and user input
->> should really only come from trusted sources, see the cell base station
->> hint as a good example use case. The NICs are trusted as that's what
->> regulatory bodies like folks to do. Hell even the country IEs are only
->> trusted for the alpha2, the actual contents are disregarded. Regular
->> user input should only help compliance further, that's it.
->
->
-> NICs just aren't that reliable, seems you can buy NICs with any number
-> of regulatory domains on the interweb, and then you can hop on a plane
-> and go other interesting places.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/dpc.c      |  1 -
+ drivers/staging/vt6656/iowpa.h    | 75 ---------------------------------------
+ drivers/staging/vt6656/main_usb.c |  1 -
+ drivers/staging/vt6656/wcmd.c     |  1 -
+ 4 files changed, 78 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/iowpa.h
 
-You can also reverse engineer firmware, also design RW support on OTPs
-and EEPROMs, so there's tons of ways one can circumvent regulatory,
-its not meant to be perfect, specially since tons of software is
-required for hugely complex regulatory compliance rules such as in
-DFS. We however do the best to enable all types of devices to be
-compliant, we do the very best, and its also why we get vendor support
-upstream even with open firmware designs. Location information is also
-important for a device that get calibrated for a specific region --
-the architecture on some devices mandates that you can only fit
-certain things into hardware / OTP / EEPOM and some folks optimize
-functionality of a card so that that very specific tuning applies only
-to a specific region it got certified for, so the ideal operation of a
-device is for what area it was designed for. If folks repuropose them
-it may not work as well.What ends up in the market will vary and what
-folks do in their basement or lab is up to them -- enable onus kernel
-flag stuff and go to town.
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index fe4b6ac..a0d52d7 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -44,7 +44,6 @@
+ #include "mac.h"
+ #include "baseband.h"
+ #include "rf.h"
+-#include "iowpa.h"
+ #include "datarate.h"
+ #include "usbpipe.h"
+ 
+diff --git a/drivers/staging/vt6656/iowpa.h b/drivers/staging/vt6656/iowpa.h
+deleted file mode 100644
+index 98f2b21..0000000
+--- a/drivers/staging/vt6656/iowpa.h
++++ /dev/null
+@@ -1,75 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: iowpa.h
+- *
+- * Purpose: Handles wpa supplicant ioctl interface
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 8, 2002
+- *
+- */
+-
+-#ifndef __IOWPA_H__
+-#define __IOWPA_H__
+-
+-#define WPA_IE_LEN 64
+-
+-struct viawget_wpa_param {
+-	u32 cmd;
+-	u8 addr[6];
+-	union {
+-		struct {
+-			u8 len;
+-			u8 data[0];
+-		} generic_elem;
+-		struct {
+-			u8 bssid[6];
+-			u8 ssid[32];
+-			u8 ssid_len;
+-			u8 *wpa_ie;
+-			u16 wpa_ie_len;
+-			int pairwise_suite;
+-			int group_suite;
+-			int key_mgmt_suite;
+-			int auth_alg;
+-			int mode;
+-			u8 roam_dbm;
+-		} wpa_associate;
+-		struct {
+-			int alg_name;
+-			u16 key_index;
+-			u16 set_tx;
+-			u8 *seq;
+-			u16 seq_len;
+-			u8 *key;
+-			u16 key_len;
+-		} wpa_key;
+-		struct {
+-			u8 ssid_len;
+-			u8 ssid[32];
+-		} scan_req;
+-		struct {
+-			u16 scan_count;
+-			u8 *buf;
+-		} scan_results;
+-	} u;
+-} __packed;
+-
+-#endif /* __IOWPA_H__ */
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index b9915a2..4a412d9 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -64,7 +64,6 @@
+ #include "usbpipe.h"
+ #include "channel.h"
+ #include "int.h"
+-#include "iowpa.h"
+ 
+ /* static int msglevel = MSG_LEVEL_DEBUG; */
+ static int          msglevel                =MSG_LEVEL_INFO;
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 00bed8c..d063229 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -51,7 +51,6 @@
+ #include "rxtx.h"
+ #include "rf.h"
+ #include "channel.h"
+-#include "iowpa.h"
+ 
+ static int msglevel = MSG_LEVEL_INFO;
+ //static int msglevel = MSG_LEVEL_DEBUG;
+-- 
+1.9.1
 
-There's tons of good resources an operating system can rely on to
-guarantee the region other than a stupid EEPROM / OTP / Country IE,
-the ideal solution folks should strive for would be a series of
-heuristics that can guarantee this and only use the OTP / whatever for
-when the location cannot be known for sure.
-
-An easy start up idea would be to find a really cheap way to ensure
-this for hardware other than GPS. The resolution would suffice to be
-ISO3166 specific to the most popular countries.
-
-> If you ever have a system with NICs with two different regulatory domains,
-
-Folks should not be selling these and if they end up with them the
-intersection is taken, and additionally user input is welcomed.
-
-> I assume it is very likely that it was not certified in that configuration.
-
-A device *sold* under that configuration would need to be certified.
-
-> Maybe the user's input (and AP's beacons and such) are more reliable in this
-> case.
-
-Location information should use a series of heuristics, and a degree
-of trust should be used to quality them. Userespace input for hints
-coming from cell base stations are of a good source, as an example and
-some folks ship products using it. Users should only be allowed to
-help compliance further, that's it. The default stuff should be done
-without any user input.
-
-> But, not worth arguing about at this point.  As long as the basic regulatory
-> bugs are fixed (as per the other thread), then my problems should be
-> solveable.
-
-Yes, lets use our time effectively please.
-
- Luis
