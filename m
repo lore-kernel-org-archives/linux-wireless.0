@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22816 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbaFDQPi (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:64160 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbaFYKRf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 12:15:38 -0400
-Date: Wed, 4 Jun 2014 21:46:21 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/13] ath9k: Channel context support
-Message-ID: <20140604161619.GA14852@qca.qualcomm.com> (sfid-20140604_181542_431423_2F0FD53C)
-References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1401890446.6079.31.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1401890446.6079.31.camel@jlt4.sipsolutions.net>
+	Wed, 25 Jun 2014 06:17:35 -0400
+Received: by mail-pb0-f41.google.com with SMTP id ma3so1536093pbc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:17:35 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id pr8sm4495715pbc.74.2014.06.25.03.17.33
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Wed, 25 Jun 2014 03:17:34 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/2] Fixes for errors/warnings reported by code analyzers.
+Date: Wed, 25 Jun 2014 15:47:26 +0530
+Message-Id: <1403691446-4933-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140625_121738_920378_E8CD6982)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 04:00:46PM +0200, Johannes Berg wrote:
-> On Wed, 2014-06-04 at 19:16 +0530, Rajkumar Manoharan wrote:
-> 
-> > These patches adds a basic infrastruture for multi channel
-> > context. Currently channel context usage is restricted by
-> > modparam "use_chanctx" as it is not yet fully implemented.
-> 
-> This isn't really a review - just a note. You should probably also tell
-> mac80211 that you use multiple HW queues (at least per chanctx) so you
-> avoid a situation where stopping one channel context leads to stopping
-> the entire traffic for that AC even on other contexts, otherwise you
-> could unfairly stop the other interface?
->
-Completely agree. IEEE80211_HW_QUEUE_CONTROL support is still in-progress.
+This patch set contains fixes for warnings and errors reported by
+static code analyzers.
 
-> I guess I'm also surprised by the implementation just switching from a
-> worker, I would have thought you'd switch from a HW timer interrupt and
-> use different hardware queues, but hey :)
->
-These are just a preparatory changes for enabling MCC. The actual
-scheduler is based on HW timers that will kickstart the worker thread.
-Will post all of the changes after completing regression test cycle.
+Jahnavi Meher (2):
+  rsi: Fixed errors and warnings reported by static code analyzers.
+  rsi: Fixed warnings reported by static code analyzers.
 
--Rajkumar
+ drivers/net/wireless/rsi/rsi_91x_core.c |   12 +++++++-----
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    5 +++--
+ 2 files changed, 10 insertions(+), 7 deletions(-)
+
