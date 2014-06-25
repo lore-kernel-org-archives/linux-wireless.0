@@ -1,76 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34844 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbaFEQIf (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:56012 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271AbaFYUPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 12:08:35 -0400
-Message-ID: <53909602.5010703@candelatech.com> (sfid-20140605_180842_617163_B0AEF0AD)
-Date: Thu, 05 Jun 2014 09:08:34 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Andy Lutomirski <luto@amacapital.net>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: compat-wireless-2014-05-22 breaks ath10k in an Archer C7 v2
-References: <CALCETrU=8+tnptdfva4p27nA-5=E31DwXagoLqUxYcLtEKrB+w@mail.gmail.com> <CA+BoTQmUyvTr+ga81EacbMkE4UVtMBP2PfBs_vH-PF4OvHuZQg@mail.gmail.com> <CALCETrUDWvXddiACacre3erhwrKCjO53iHVKmPrApTi65Z5yBA@mail.gmail.com> <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87r433ps7w.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 25 Jun 2014 16:15:08 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so2635214wes.14
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 00/17] staging: vt6656: conversion to mac80211
+Date: Wed, 25 Jun 2014 21:14:21 +0100
+Message-Id: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com> (sfid-20140625_221514_650539_0969296A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2014 03:26 AM, Kalle Valo wrote:
-> Andy Lutomirski <luto@amacapital.net> writes:
-> 
->> On Thu, May 29, 2014 at 12:48 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> +ath10k@lists.infradead.org
->>>
->>> On 28 May 2014 20:35, Andy Lutomirski <luto@amacapital.net> wrote:
->>>> It dies with 'otp calibration failed: 2'.
->>>>
->>>> Some older version of the driver seemed to work fine.
->>>
->>> ath10k did not verify otp result before so it could load successfully
->>> despite errors.
->>>
->>> Someone raised this problem yesterday on IRC. I'm not really sure how
->>> we should deal with this properly.
->>
->> Ideally, someone from Atheros could figure out what the error is.
-> 
-> Michal already did. The error means that for some reason the
-> calibaration data was not found from OTP. OTP is the storage area where
-> the calibration data is normally stored within QCA9880.
+The patches in this series convert the driver to mac80211.
 
-I fought this with .387 firmware and WLE900VX NICs.  If it's a common
-problem with more than a single NIC (ie, not just a bad piece of
-hardware), then one could load my firmware and my ath10k patches.
+As well as infrastructure mode the driver now operates in
+IBSS and access point modes.
 
-I have a way to effectively get text debug messages out of the
-OTP firmware code and can probably debug this (eventually...busy
-with other things currently).
+Host access point is now working with hostapd in nl80211 mode.
 
-If you know the basic hardware architecture of the NIC, then you can at least
-make a better guess of the calibration data and choose an eeprom
-table that is a better match than just total failure of OTP.
+These patches creates huge amount of dead code.
 
->> Barring that, the card seems to work okay without otp (I don't even
->> know what otp is), so just warning and continuing to load might be
->> better than bailing.
-> 
-> This means that your card is not properly calibrated and it doesn't
-> function in an optimal way (for example range or throughput is less than
-> what it could be).
+The driver nolonger supports WEP 256 mode due to no support in
+mac80211. The vendors code had removed support for this in their
+last version anyway.
 
-And, your MAC address will be wrong and identical to all other devices of this
-type, which means the second one of these NICs
-on your network will make everything go to hell.
+Malcolm Priestley (17):
+  staging: vt6656: mac80211 conversion: create rx function.
+  staging: vt6656: mac80211 conversion: Create tx functions
+  staging: vt6656: mac80211 conversion: add key functions
+  staging: vt6656: mac80211 conversion: main_usb add functions and
+    change usb_driver functions
+  staging: vt6656: mac80211 conversion: add channel bands
+  staging: vt6656: mac80211 conversion: add vnt_init to bScheduleCommand
+  staging: vt6656: mac80211 conversion: vnt_update_ifs change basic
+    rates
+  staging: vt6656: mac80211 conversion: enable power saving
+  staging: vt6656: mac80211 conversion: vRunCommand change beacon
+  staging: vt6656: mac80211 conversion: change vnt_next_tbtt_wakeup
+  staging: vt6656: mac80211 conversion: int.c changes
+  staging: vt6656: mac80211 conversion: vRunCommand channel changes
+  staging: vt6656: mac80211 conversion: move data rates to device.h
+  staging: vt6656: mac80211 conversion: change vnt_rf_set_txpower
+  staging: vt6656: vnt_mac_set_keyentry remove byLocalID check
+  staging: vt6656: mac80211 conversion: device_alloc_bufs use dev_err
+  staging: vt6656: mac80211 conversion: rxtx implement power save poll
 
-Thanks,
-Ben
+ drivers/staging/vt6656/Kconfig    |   2 +-
+ drivers/staging/vt6656/card.c     |  22 +-
+ drivers/staging/vt6656/channel.c  | 139 +++++++++
+ drivers/staging/vt6656/channel.h  |   2 +
+ drivers/staging/vt6656/datarate.h |  14 -
+ drivers/staging/vt6656/device.h   |  31 +-
+ drivers/staging/vt6656/dpc.c      | 137 +++++++-
+ drivers/staging/vt6656/dpc.h      |   3 +
+ drivers/staging/vt6656/int.c      |  49 +--
+ drivers/staging/vt6656/key.c      | 143 +++++++++
+ drivers/staging/vt6656/key.h      |  13 +
+ drivers/staging/vt6656/mac.c      |   4 -
+ drivers/staging/vt6656/main_usb.c | 640 +++++++++++++++++++++++++++++++-------
+ drivers/staging/vt6656/power.c    |  47 +--
+ drivers/staging/vt6656/rf.c       |  23 +-
+ drivers/staging/vt6656/rxtx.c     | 462 +++++++++++++++++++++++++--
+ drivers/staging/vt6656/rxtx.h     |   7 +-
+ drivers/staging/vt6656/usbpipe.c  |  32 +-
+ drivers/staging/vt6656/wcmd.c     |  34 +-
+ drivers/staging/vt6656/wcmd.h     |   2 +
+ 20 files changed, 1506 insertions(+), 300 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
