@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:48747 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbaF1W40 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54974 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbaFYTPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:26 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so4359706wib.7
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:24 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/8] staging: vt6656: vnt_tx_packet remove first assignment of time_stamp.
-Date: Sat, 28 Jun 2014 23:55:41 +0100
-Message-Id: <1403996146-4082-3-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005637_782726_32EE89FE)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 25 Jun 2014 15:15:19 -0400
+Date: Wed, 25 Jun 2014 15:09:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: Gus Wirth <gwirth79@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
+	ath5k-devel <ath5k-devel@venema.h4ckr.net>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: capture CCK and OFDM restarts
+Message-ID: <20140625190926.GF3445@tuxdriver.com> (sfid-20140625_211551_283789_452754A2)
+References: <539B7019.1050801@gmail.com>
+ <539B7639.30104@openwrt.org>
+ <539B85F0.3090004@gmail.com>
+ <539B96F7.9090101@gmail.com>
+ <CAFXAJYwL6Qo95mHn-sD52ryVRuPh1fmoZMVmCNJkhsu0mhm1KA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFXAJYwL6Qo95mHn-sD52ryVRuPh1fmoZMVmCNJkhsu0mhm1KA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is assigned later in function and should have been removed in
-an out-of-tree merge.
+On Mon, Jun 23, 2014 at 11:20:54PM +0200, Mathy Vanhoef wrote:
+> I'm sure the spelling error can be fixed when applying the patch.
+> 
+> This (and the previous patch) is useful for people using monitor mode
+> to diagnose network problems, monitor traffic, research things, etc.
+> So it would be nice to have it included!
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 3 ---
- 1 file changed, 3 deletions(-)
+It would also be nice if you could repost it properly, instead
+of expecting me to dig through email threads to piece together a
+mergeable patch...
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 5513121..e896dfe5d 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -929,9 +929,6 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	frame_size = tx_body_size + 4;
- 
--	/* Set time stamp */
--	tx_buffer_head->time_stamp = cpu_to_le16(DEFAULT_MGN_LIFETIME_RES_64us);
--
- 	/*Set fifo controls */
- 	if (pkt_type == PK_TYPE_11A)
- 		tx_buffer_head->wFIFOCtl = 0;
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
