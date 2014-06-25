@@ -1,675 +1,493 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17361 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934352AbaFTEjY (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:39530 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbaFYUVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 00:39:24 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 6/7] mwifiex: update Copyright to 2014
-Date: Thu, 19 Jun 2014 21:38:57 -0700
-Message-ID: <1403239138-3113-6-git-send-email-bzhao@marvell.com> (sfid-20140620_063931_196487_70B89DFE)
-In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
-References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Jun 2014 16:21:24 -0400
+Received: by mail-we0-f173.google.com with SMTP id t60so2602850wes.32
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:23 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 12/34] staging: vt6656: remove dead code wpa
+Date: Wed, 25 Jun 2014 21:19:49 +0100
+Message-Id: <1403727611-6825-13-git-send-email-tvboxspy@gmail.com> (sfid-20140625_222955_864597_2A1BB2EA)
+In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
-
-This patch updates mwifiex Copyright to 2014.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mwifiex/11ac.c          | 2 +-
- drivers/net/wireless/mwifiex/11ac.h          | 2 +-
- drivers/net/wireless/mwifiex/11h.c           | 2 +-
- drivers/net/wireless/mwifiex/11n.c           | 2 +-
- drivers/net/wireless/mwifiex/11n.h           | 2 +-
- drivers/net/wireless/mwifiex/11n_aggr.c      | 2 +-
- drivers/net/wireless/mwifiex/11n_aggr.h      | 2 +-
- drivers/net/wireless/mwifiex/11n_rxreorder.c | 2 +-
- drivers/net/wireless/mwifiex/11n_rxreorder.h | 2 +-
- drivers/net/wireless/mwifiex/Makefile        | 2 +-
- drivers/net/wireless/mwifiex/README          | 2 +-
- drivers/net/wireless/mwifiex/cfg80211.c      | 2 +-
- drivers/net/wireless/mwifiex/cfg80211.h      | 2 +-
- drivers/net/wireless/mwifiex/cfp.c           | 2 +-
- drivers/net/wireless/mwifiex/cmdevt.c        | 2 +-
- drivers/net/wireless/mwifiex/debugfs.c       | 2 +-
- drivers/net/wireless/mwifiex/decl.h          | 2 +-
- drivers/net/wireless/mwifiex/ethtool.c       | 2 +-
- drivers/net/wireless/mwifiex/fw.h            | 2 +-
- drivers/net/wireless/mwifiex/ie.c            | 2 +-
- drivers/net/wireless/mwifiex/init.c          | 2 +-
- drivers/net/wireless/mwifiex/ioctl.h         | 2 +-
- drivers/net/wireless/mwifiex/join.c          | 2 +-
- drivers/net/wireless/mwifiex/main.c          | 2 +-
- drivers/net/wireless/mwifiex/main.h          | 2 +-
- drivers/net/wireless/mwifiex/pcie.c          | 2 +-
- drivers/net/wireless/mwifiex/pcie.h          | 2 +-
- drivers/net/wireless/mwifiex/scan.c          | 2 +-
- drivers/net/wireless/mwifiex/sdio.c          | 2 +-
- drivers/net/wireless/mwifiex/sdio.h          | 2 +-
- drivers/net/wireless/mwifiex/sta_cmd.c       | 2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c   | 2 +-
- drivers/net/wireless/mwifiex/sta_event.c     | 2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c     | 2 +-
- drivers/net/wireless/mwifiex/sta_rx.c        | 2 +-
- drivers/net/wireless/mwifiex/sta_tx.c        | 2 +-
- drivers/net/wireless/mwifiex/txrx.c          | 2 +-
- drivers/net/wireless/mwifiex/uap_cmd.c       | 2 +-
- drivers/net/wireless/mwifiex/uap_event.c     | 2 +-
- drivers/net/wireless/mwifiex/uap_txrx.c      | 2 +-
- drivers/net/wireless/mwifiex/usb.c           | 2 +-
- drivers/net/wireless/mwifiex/usb.h           | 2 +-
- drivers/net/wireless/mwifiex/util.c          | 2 +-
- drivers/net/wireless/mwifiex/util.h          | 2 +-
- drivers/net/wireless/mwifiex/wmm.c           | 2 +-
- drivers/net/wireless/mwifiex/wmm.h           | 2 +-
- 46 files changed, 46 insertions(+), 46 deletions(-)
+ drivers/staging/vt6656/80211mgr.c |  11 --
+ drivers/staging/vt6656/Makefile   |   1 -
+ drivers/staging/vt6656/wpa.c      | 314 --------------------------------------
+ drivers/staging/vt6656/wpa.h      |  72 ---------
+ 4 files changed, 398 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/wpa.c
+ delete mode 100644 drivers/staging/vt6656/wpa.h
 
-diff --git a/drivers/net/wireless/mwifiex/11ac.c b/drivers/net/wireless/mwifiex/11ac.c
-index 706831d..59d23fb 100644
---- a/drivers/net/wireless/mwifiex/11ac.c
-+++ b/drivers/net/wireless/mwifiex/11ac.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11ac
-  *
-- * Copyright (C) 2013, Marvell International Ltd.
-+ * Copyright (C) 2013-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11ac.h b/drivers/net/wireless/mwifiex/11ac.h
-index 0b02cb6..1ca92c7 100644
---- a/drivers/net/wireless/mwifiex/11ac.h
-+++ b/drivers/net/wireless/mwifiex/11ac.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11ac
-  *
-- * Copyright (C) 2013, Marvell International Ltd.
-+ * Copyright (C) 2013-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index e76b0db..2668e83 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11h
-  *
-- * Copyright (C) 2013, Marvell International Ltd.
-+ * Copyright (C) 2013-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index e1c2f67..9d6d8d9 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 0b73fa0..2ee268b 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index 5b32106..b4c14b0 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n Aggregation
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.h b/drivers/net/wireless/mwifiex/11n_aggr.h
-index 892098d..0cd2a3e 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.h
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n Aggregation
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 0c3571f..b22bae3 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n RX Re-ordering
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index 0fc76e4..3a87bb0 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: 802.11n RX Re-ordering
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-index 2aa208f..9487d72 100644
---- a/drivers/net/wireless/mwifiex/Makefile
-+++ b/drivers/net/wireless/mwifiex/Makefile
-@@ -1,5 +1,5 @@
- #
--# Copyright (C) 2011, Marvell International Ltd.
-+# Copyright (C) 2011-2014, Marvell International Ltd.
- #
- # This software file (the "File") is distributed by Marvell International
- # Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/README b/drivers/net/wireless/mwifiex/README
-index 831a98f..31928ca 100644
---- a/drivers/net/wireless/mwifiex/README
-+++ b/drivers/net/wireless/mwifiex/README
-@@ -1,4 +1,4 @@
--# Copyright (C) 2011, Marvell International Ltd.
-+# Copyright (C) 2011-2014, Marvell International Ltd.
- #
- # This software file (the "File") is distributed by Marvell International
- # Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e8981af..6ec2ee3 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: CFG80211
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.h b/drivers/net/wireless/mwifiex/cfg80211.h
-index c584893..9083678 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.h
-+++ b/drivers/net/wireless/mwifiex/cfg80211.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: CFG80211
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
-index 0ddec3d..b8242eb 100644
---- a/drivers/net/wireless/mwifiex/cfp.c
-+++ b/drivers/net/wireless/mwifiex/cfp.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: Channel, Frequence and Power
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 421322f..606877b 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: commands and events
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 6a194a9..2713f7ac 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: debugfs
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 38da6ff..0e03fe3 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: generic data structures and APIs
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
-index 528bdfa..04e56b5 100644
---- a/drivers/net/wireless/mwifiex/ethtool.c
-+++ b/drivers/net/wireless/mwifiex/ethtool.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: ethtool
-  *
-- * Copyright (C) 2013, Marvell International Ltd.
-+ * Copyright (C) 2013-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 3175dd0..5561573 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: Firmware specific macros & structures
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index 3bf3d58..b933794 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -2,7 +2,7 @@
-  * Marvell Wireless LAN device driver: management IE handling- setting and
-  * deleting IE.
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 2b68cf3..269a277 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: HW/FW Initialization
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 1b57672..0847f3e 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: ioctl data structures & APIs
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 89dc62a..fc13564 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: association and ad-hoc start/join
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 6bc645a..1261d9a 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: major functions
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5e734f9..a2733b1 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: major data structures and prototypes
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index bf948fb..5f7afff 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: PCIE specific handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index ee073f5..a1a8fd3 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -3,7 +3,7 @@
-  * @brief This file contains definitions for PCI-E interface.
-  * driver.
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 45c5b34..dee717a 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: scan ioctl and command handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 95a1d1f..1da04a0 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: SDIO specific handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index e563309..6b8835e 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: SDIO specific definitions
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 88202ce..0f077aa 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: station command handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 577f297..822357b 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: station command response handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index f6395ef..f1c240e 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: station event handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 6b9395f..1a03d4d 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: functions for station ioctl
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 8b639d7..9ceb1db 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: station RX data handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
-index 5fce7e7..cf330ba 100644
---- a/drivers/net/wireless/mwifiex/sta_tx.c
-+++ b/drivers/net/wireless/mwifiex/sta_tx.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: station TX data handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 37f26af..0820568 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: generic TX/RX data handling
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 3264355..300bab4 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: AP specific command handling
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 92e77a3..7c2b9766 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: AP event handling
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index 9a56bc6..57fa47d 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: AP TX and RX data handling
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index a8ce813..7118a18 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: USB specific handling
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
-index 15b73d1..4c41c2a 100644
---- a/drivers/net/wireless/mwifiex/usb.h
-+++ b/drivers/net/wireless/mwifiex/usb.h
-@@ -1,7 +1,7 @@
- /*
-  * This file contains definitions for mwifiex USB interface driver.
-  *
-- * Copyright (C) 2012, Marvell International Ltd.
-+ * Copyright (C) 2012-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 6da5abf..cee0283 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: utility functions
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/util.h b/drivers/net/wireless/mwifiex/util.h
-index caadb37..40296cb 100644
---- a/drivers/net/wireless/mwifiex/util.h
-+++ b/drivers/net/wireless/mwifiex/util.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: utility functions
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index d3671d0..8cd123e 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: WMM
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
-index eca56e3..569bd73 100644
---- a/drivers/net/wireless/mwifiex/wmm.h
-+++ b/drivers/net/wireless/mwifiex/wmm.h
-@@ -1,7 +1,7 @@
- /*
-  * Marvell Wireless LAN device driver: WMM
-  *
-- * Copyright (C) 2011, Marvell International Ltd.
-+ * Copyright (C) 2011-2014, Marvell International Ltd.
-  *
-  * This software file (the "File") is distributed by Marvell International
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+diff --git a/drivers/staging/vt6656/80211mgr.c b/drivers/staging/vt6656/80211mgr.c
+index 61edb51..48baef9 100644
+--- a/drivers/staging/vt6656/80211mgr.c
++++ b/drivers/staging/vt6656/80211mgr.c
+@@ -54,7 +54,6 @@
+ #include "tether.h"
+ #include "80211mgr.h"
+ #include "80211hdr.h"
+-#include "wpa.h"
+ 
+ static int          msglevel                = MSG_LEVEL_INFO;
+ /*static int          msglevel                =MSG_LEVEL_DEBUG;*/
+@@ -158,10 +157,6 @@ vMgrDecodeBeacon(
+                 pFrame->pRSN = (PWLAN_IE_RSN)pItem;
+             break;
+         case WLAN_EID_RSN_WPA:
+-            if (pFrame->pRSNWPA == NULL) {
+-                if (WPAb_Is_RSN((PWLAN_IE_RSN_EXT)pItem) == true)
+-                    pFrame->pRSNWPA = (PWLAN_IE_RSN_EXT)pItem;
+-            }
+             break;
+ 
+         case WLAN_EID_ERP:
+@@ -325,8 +320,6 @@ vMgrDecodeAssocRequest(
+             break;
+         case WLAN_EID_RSN_WPA:
+             if (pFrame->pRSNWPA == NULL) {
+-                if (WPAb_Is_RSN((PWLAN_IE_RSN_EXT)pItem) == true)
+-                    pFrame->pRSNWPA = (PWLAN_IE_RSN_EXT)pItem;
+             }
+             break;
+         case WLAN_EID_EXTSUPP_RATES:
+@@ -491,8 +484,6 @@ vMgrDecodeReassocRequest(
+             break;
+         case WLAN_EID_RSN_WPA:
+ 		if (pFrame->pRSNWPA == NULL)
+-                if (WPAb_Is_RSN((PWLAN_IE_RSN_EXT)pItem) == true)
+-                    pFrame->pRSNWPA = (PWLAN_IE_RSN_EXT)pItem;
+             break;
+ 
+         case WLAN_EID_EXTSUPP_RATES:
+@@ -673,8 +664,6 @@ vMgrDecodeProbeResponse(
+             break;
+         case WLAN_EID_RSN_WPA:
+             if (pFrame->pRSNWPA == NULL) {
+-                if (WPAb_Is_RSN((PWLAN_IE_RSN_EXT)pItem) == true)
+-                    pFrame->pRSNWPA = (PWLAN_IE_RSN_EXT)pItem;
+             }
+             break;
+         case WLAN_EID_ERP:
+diff --git a/drivers/staging/vt6656/Makefile b/drivers/staging/vt6656/Makefile
+index 5ac0dbd..1be7d60 100644
+--- a/drivers/staging/vt6656/Makefile
++++ b/drivers/staging/vt6656/Makefile
+@@ -15,7 +15,6 @@ vt6656_stage-y +=	main_usb.o \
+ 			datarate.o \
+ 			rc4.o \
+ 			tether.o \
+-			wpa.o \
+ 			key.o \
+ 			tkip.o \
+ 			michael.o \
+diff --git a/drivers/staging/vt6656/wpa.c b/drivers/staging/vt6656/wpa.c
+deleted file mode 100644
+index 403c295..0000000
+--- a/drivers/staging/vt6656/wpa.c
++++ /dev/null
+@@ -1,314 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: wpa.c
+- *
+- * Purpose: Handles the Basic Service Set & Node Database functions
+- *
+- * Functions:
+- *      WPA_ParseRSN - Parse RSN IE.
+- *
+- * Revision History:
+- *
+- * Author: Kyle Hsu
+- *
+- * Date: July 14, 2003
+- *
+- */
+-
+-#include "tmacro.h"
+-#include "tether.h"
+-#include "device.h"
+-#include "80211hdr.h"
+-#include "bssdb.h"
+-#include "wmgr.h"
+-#include "wpa.h"
+-#include "80211mgr.h"
+-
+-static int          msglevel                =MSG_LEVEL_INFO;
+-
+-static const u8 abyOUI00[4] = { 0x00, 0x50, 0xf2, 0x00 };
+-static const u8 abyOUI01[4] = { 0x00, 0x50, 0xf2, 0x01 };
+-static const u8 abyOUI02[4] = { 0x00, 0x50, 0xf2, 0x02 };
+-static const u8 abyOUI03[4] = { 0x00, 0x50, 0xf2, 0x03 };
+-static const u8 abyOUI04[4] = { 0x00, 0x50, 0xf2, 0x04 };
+-static const u8 abyOUI05[4] = { 0x00, 0x50, 0xf2, 0x05 };
+-
+-/*+
+- *
+- * Description:
+- *    Clear RSN information in BSSList.
+- *
+- * Parameters:
+- *  In:
+- *      pBSSList - BSS list.
+- *  Out:
+- *      none
+- *
+- * Return Value: none.
+- *
+--*/
+-
+-void
+-WPA_ClearRSN(
+-     PKnownBSS        pBSSList
+-    )
+-{
+-    int ii;
+-    pBSSList->byGKType = WPA_TKIP;
+-    for (ii=0; ii < 4; ii ++)
+-        pBSSList->abyPKType[ii] = WPA_TKIP;
+-    pBSSList->wPKCount = 0;
+-    for (ii=0; ii < 4; ii ++)
+-        pBSSList->abyAuthType[ii] = WPA_AUTH_IEEE802_1X;
+-    pBSSList->wAuthCount = 0;
+-    pBSSList->byDefaultK_as_PK = 0;
+-    pBSSList->byReplayIdx = 0;
+-    pBSSList->sRSNCapObj.bRSNCapExist = false;
+-    pBSSList->sRSNCapObj.wRSNCap = 0;
+-    pBSSList->bWPAValid = false;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Parse RSN IE.
+- *
+- * Parameters:
+- *  In:
+- *      pBSSList - BSS list.
+- *      pRSN - Pointer to the RSN IE.
+- *  Out:
+- *      none
+- *
+- * Return Value: none.
+- *
+--*/
+-void
+-WPA_ParseRSN(
+-     PKnownBSS        pBSSList,
+-     PWLAN_IE_RSN_EXT pRSN
+-    )
+-{
+-    PWLAN_IE_RSN_AUTH  pIE_RSN_Auth = NULL;
+-    int                i, j, m, n = 0;
+-    u8 *              pbyCaps;
+-
+-    WPA_ClearRSN(pBSSList);
+-
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"WPA_ParseRSN: [%d]\n", pRSN->len);
+-
+-    // information element header makes sense
+-    if ((pRSN->len >= 6) // oui1(4)+ver(2)
+-         && (pRSN->byElementID == WLAN_EID_RSN_WPA) &&  !memcmp(pRSN->abyOUI, abyOUI01, 4)
+-         && (pRSN->wVersion == 1)) {
+-
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Legal RSN\n");
+-        // update each variable if pRSN is long enough to contain the variable
+-        if (pRSN->len >= 10) //oui1(4)+ver(2)+GKSuite(4)
+-        {
+-            if ( !memcmp(pRSN->abyMulticast, abyOUI01, 4))
+-                pBSSList->byGKType = WPA_WEP40;
+-            else if ( !memcmp(pRSN->abyMulticast, abyOUI02, 4))
+-                pBSSList->byGKType = WPA_TKIP;
+-            else if ( !memcmp(pRSN->abyMulticast, abyOUI03, 4))
+-                pBSSList->byGKType = WPA_AESWRAP;
+-            else if ( !memcmp(pRSN->abyMulticast, abyOUI04, 4))
+-                pBSSList->byGKType = WPA_AESCCMP;
+-            else if ( !memcmp(pRSN->abyMulticast, abyOUI05, 4))
+-                pBSSList->byGKType = WPA_WEP104;
+-            else
+-                // any vendor checks here
+-                pBSSList->byGKType = WPA_NONE;
+-
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"byGKType: %x\n", pBSSList->byGKType);
+-        }
+-
+-        if (pRSN->len >= 12) //oui1(4)+ver(2)+GKS(4)+PKSCnt(2)
+-        {
+-            j = 0;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"wPKCount: %d, sizeof(pBSSList->abyPKType): %zu\n", pRSN->wPKCount, sizeof(pBSSList->abyPKType));
+-	    for (i = 0; (i < pRSN->wPKCount) &&
+-		   (j < ARRAY_SIZE(pBSSList->abyPKType)); i++) {
+-                if(pRSN->len >= 12+i*4+4) { //oui1(4)+ver(2)+GKS(4)+PKSCnt(2)+PKS(4*i)
+-                    if ( !memcmp(pRSN->PKSList[i].abyOUI, abyOUI00, 4))
+-                        pBSSList->abyPKType[j++] = WPA_NONE;
+-                    else if ( !memcmp(pRSN->PKSList[i].abyOUI, abyOUI02, 4))
+-                        pBSSList->abyPKType[j++] = WPA_TKIP;
+-                    else if ( !memcmp(pRSN->PKSList[i].abyOUI, abyOUI03, 4))
+-                        pBSSList->abyPKType[j++] = WPA_AESWRAP;
+-                    else if ( !memcmp(pRSN->PKSList[i].abyOUI, abyOUI04, 4))
+-                        pBSSList->abyPKType[j++] = WPA_AESCCMP;
+-                    else
+-                        // any vendor checks here
+-                        ;
+-                }
+-                else
+-                    break;
+-                //DBG_PRN_GRP14(("abyPKType[%d]: %X\n", j-1, pBSSList->abyPKType[j-1]));
+-            } //for
+-            pBSSList->wPKCount = (u16)j;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"wPKCount: %d\n", pBSSList->wPKCount);
+-        }
+-
+-        m = pRSN->wPKCount;
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"m: %d\n", m);
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"14+m*4: %d\n", 14+m*4);
+-
+-        if (pRSN->len >= 14+m*4) { //oui1(4)+ver(2)+GKS(4)+PKSCnt(2)+PKS(4*m)+AKC(2)
+-            // overlay IE_RSN_Auth structure into correct place
+-            pIE_RSN_Auth = (PWLAN_IE_RSN_AUTH) pRSN->PKSList[m].abyOUI;
+-            j = 0;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"wAuthCount: %d, sizeof(pBSSList->abyAuthType): %zu\n",
+-                          pIE_RSN_Auth->wAuthCount, sizeof(pBSSList->abyAuthType));
+-	    for (i = 0; (i < pIE_RSN_Auth->wAuthCount) &&
+-		   (j < ARRAY_SIZE(pBSSList->abyAuthType)); i++) {
+-                if(pRSN->len >= 14+4+(m+i)*4) { //oui1(4)+ver(2)+GKS(4)+PKSCnt(2)+PKS(4*m)+AKC(2)+AKS(4*i)
+-                    if ( !memcmp(pIE_RSN_Auth->AuthKSList[i].abyOUI, abyOUI01, 4))
+-                        pBSSList->abyAuthType[j++] = WPA_AUTH_IEEE802_1X;
+-                    else if ( !memcmp(pIE_RSN_Auth->AuthKSList[i].abyOUI, abyOUI02, 4))
+-                        pBSSList->abyAuthType[j++] = WPA_AUTH_PSK;
+-                    else
+-                    // any vendor checks here
+-                    ;
+-                }
+-                else
+-                    break;
+-                //DBG_PRN_GRP14(("abyAuthType[%d]: %X\n", j-1, pBSSList->abyAuthType[j-1]));
+-            }
+-            if(j > 0)
+-                pBSSList->wAuthCount = (u16)j;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"wAuthCount: %d\n", pBSSList->wAuthCount);
+-        }
+-
+-        if (pIE_RSN_Auth != NULL) {
+-
+-            n = pIE_RSN_Auth->wAuthCount;
+-
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"n: %d\n", n);
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"14+4+(m+n)*4: %d\n", 14+4+(m+n)*4);
+-
+-            if(pRSN->len+2 >= 14+4+(m+n)*4) { //oui1(4)+ver(2)+GKS(4)+PKSCnt(2)+PKS(4*m)+AKC(2)+AKS(4*n)+Cap(2)
+-                pbyCaps = (u8 *)pIE_RSN_Auth->AuthKSList[n].abyOUI;
+-                pBSSList->byDefaultK_as_PK = (*pbyCaps) & WPA_GROUPFLAG;
+-                pBSSList->byReplayIdx = 2 << ((*pbyCaps >> WPA_REPLAYBITSSHIFT) & WPA_REPLAYBITS);
+-                pBSSList->sRSNCapObj.bRSNCapExist = true;
+-                pBSSList->sRSNCapObj.wRSNCap = *(u16 *)pbyCaps;
+-                //DBG_PRN_GRP14(("pbyCaps: %X\n", *pbyCaps));
+-                //DBG_PRN_GRP14(("byDefaultK_as_PK: %X\n", pBSSList->byDefaultK_as_PK));
+-                //DBG_PRN_GRP14(("byReplayIdx: %X\n", pBSSList->byReplayIdx));
+-            }
+-        }
+-        pBSSList->bWPAValid = true;
+-    }
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Search RSN information in BSSList.
+- *
+- * Parameters:
+- *  In:
+- *      byCmd    - Search type
+- *      byEncrypt- Encrypt Type
+- *      pBSSList - BSS list
+- *  Out:
+- *      none
+- *
+- * Return Value: none.
+- *
+--*/
+-bool
+-WPA_SearchRSN(
+-    u8                byCmd,
+-    u8                byEncrypt,
+-     PKnownBSS        pBSSList
+-    )
+-{
+-    int ii;
+-    u8 byPKType = WPA_NONE;
+-
+-    if (pBSSList->bWPAValid == false)
+-        return false;
+-
+-    switch(byCmd) {
+-    case 0:
+-
+-        if (byEncrypt != pBSSList->byGKType)
+-            return false;
+-
+-        if (pBSSList->wPKCount > 0) {
+-            for (ii = 0; ii < pBSSList->wPKCount; ii ++) {
+-                if (pBSSList->abyPKType[ii] == WPA_AESCCMP)
+-                    byPKType = WPA_AESCCMP;
+-                else if ((pBSSList->abyPKType[ii] == WPA_TKIP) && (byPKType != WPA_AESCCMP))
+-                     byPKType = WPA_TKIP;
+-                else if ((pBSSList->abyPKType[ii] == WPA_WEP40) && (byPKType != WPA_AESCCMP) && (byPKType != WPA_TKIP))
+-                     byPKType = WPA_WEP40;
+-                else if ((pBSSList->abyPKType[ii] == WPA_WEP104) && (byPKType != WPA_AESCCMP) && (byPKType != WPA_TKIP))
+-                     byPKType = WPA_WEP104;
+-            }
+-            if (byEncrypt != byPKType)
+-                return false;
+-        }
+-        return true;
+-//        if (pBSSList->wAuthCount > 0)
+-//            for (ii=0; ii < pBSSList->wAuthCount; ii ++)
+-//                if (byAuth == pBSSList->abyAuthType[ii])
+-//                    break;
+-        break;
+-
+-    default:
+-        break;
+-    }
+-    return false;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Check if RSN IE makes sense.
+- *
+- * Parameters:
+- *  In:
+- *      pRSN - Pointer to the RSN IE.
+- *  Out:
+- *      none
+- *
+- * Return Value: none.
+- *
+--*/
+-bool
+-WPAb_Is_RSN(
+-     PWLAN_IE_RSN_EXT pRSN
+-    )
+-{
+-    if (pRSN == NULL)
+-        return false;
+-
+-    if ((pRSN->len >= 6) && // oui1(4)+ver(2)
+-        (pRSN->byElementID == WLAN_EID_RSN_WPA) &&  !memcmp(pRSN->abyOUI, abyOUI01, 4) &&
+-        (pRSN->wVersion == 1)) {
+-        return true;
+-    }
+-    else
+-        return false;
+-}
+-
+diff --git a/drivers/staging/vt6656/wpa.h b/drivers/staging/vt6656/wpa.h
+deleted file mode 100644
+index 2a724c0..0000000
+--- a/drivers/staging/vt6656/wpa.h
++++ /dev/null
+@@ -1,72 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: wpa.h
+- *
+- * Purpose: Defines the macros, types, and functions for dealing
+- *          with WPA informations.
+- *
+- * Author: Kyle Hsu
+- *
+- * Date: Jul 14, 2003
+- *
+- */
+-
+-#ifndef __WPA_H__
+-#define __WPA_H__
+-
+-#include "80211hdr.h"
+-
+-#define WPA_NONE            0
+-#define WPA_WEP40           1
+-#define WPA_TKIP            2
+-#define WPA_AESWRAP         3
+-#define WPA_AESCCMP         4
+-#define WPA_WEP104          5
+-#define WPA_AUTH_IEEE802_1X 1
+-#define WPA_AUTH_PSK        2
+-
+-#define WPA_GROUPFLAG       0x02
+-#define WPA_REPLAYBITSSHIFT 2
+-#define WPA_REPLAYBITS      0x03
+-
+-void
+-WPA_ClearRSN(
+-     PKnownBSS        pBSSList
+-    );
+-
+-void
+-WPA_ParseRSN(
+-     PKnownBSS        pBSSList,
+-     PWLAN_IE_RSN_EXT pRSN
+-    );
+-
+-bool
+-WPA_SearchRSN(
+-    u8                byCmd,
+-    u8                byEncrypt,
+-     PKnownBSS        pBSSList
+-    );
+-
+-bool
+-WPAb_Is_RSN(
+-     PWLAN_IE_RSN_EXT pRSN
+-    );
+-
+-#endif /* __WPA_H__ */
 -- 
-1.8.2.3
+1.9.1
 
