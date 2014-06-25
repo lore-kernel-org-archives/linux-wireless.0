@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:35153 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbaFWOiY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 10:38:24 -0400
-Message-ID: <1403534300.7341.6.camel@lolumad> (sfid-20140623_163842_053334_3DE995A7)
-Subject: Re: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when
- checking usable channels
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Mon, 23 Jun 2014 16:38:20 +0200
-In-Reply-To: <1403517938.4418.16.camel@jlt4.sipsolutions.net>
-References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <53A6C0FF.9090104@openwrt.org>
-	 <1403514536.4418.6.camel@jlt4.sipsolutions.net>
-	 <53A7FBB2.2050703@openwrt.org>
-	 <1403517938.4418.16.camel@jlt4.sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52235 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757066AbaFYP5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 11:57:43 -0400
+Message-ID: <1403711846.4140.16.camel@jlt4.sipsolutions.net> (sfid-20140625_175747_034098_419DDEC0)
+Subject: Re: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module
+ parameter
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 25 Jun 2014 17:57:26 +0200
+In-Reply-To: <53A9B391.4050602@broadcom.com>
+References: <1402996581-10764-1-git-send-email-arend@broadcom.com>
+		 <1402996581-10764-3-git-send-email-arend@broadcom.com>
+	 <1403516075.4418.9.camel@jlt4.sipsolutions.net>
+	 <53A9B391.4050602@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-23 at 12:05 +0200, Johannes Berg wrote:
-> On Mon, 2014-06-23 at 12:04 +0200, Felix Fietkau wrote:
-> > On 2014-06-23 11:08, Johannes Berg wrote:
-> > > On Sun, 2014-06-22 at 13:41 +0200, Felix Fietkau wrote:
-> > >> On 2014-04-15 14:37, Rostislav Lisovy wrote:
-> > >> > Current code checks if the 20MHz bandwidth is allowed for
-> > >> > particular channel -- if it is not, the channel is disabled.
-> > >> > Since we need to use 5/10 MHz channels, this code is modified in
-> > >> > the way that the default bandwidth to check is 5MHz. If the
-> > >> > maximum bandwidth allowed by the channel is smaller than 5MHz,
-> > >> > the channel is disabled. Otherwise the channel is used and the
-> > >> > flags are set according to the bandwidth allowed by the channel.
-> > >> > 
-> > >> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-> > > 
-> > >> This change causes a regression and needs to be reverted or fixed.
-> > > 
-> > > Noted, I've reverted it in mac80211.git.
-> > > 
-> > >> It leaves Channel 12 enabled for US regdomain and does not prevent
-> > >> bringing up AP mode on it (IEEE80211_CHAN_NO_20MHZ does not get set).
-> > > 
-> > > I'm not sure this makes sense - CHAN_NO_20MHZ shouldn't get set on that
-> > > channel? It should be disabled for other reasons for AP mode - e.g.
-> > > NO_IR.
-> > I was thinking it could be valid in AP mode for 5 MHz operation.
+On Tue, 2014-06-24 at 19:21 +0200, Arend van Spriel wrote:
+
+> >> + * @wiphy: The wiphy to check.
+> >> + *
+> >> + * Return: true is 40MHz is disabled in 2.4G band.
+> >> + */
+> >> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
+> >
+> > Why should that have a wiphy argument?
 > 
-> Huh, ok, maybe. I guess Rostislav can look into the details :)
+> It is up to cfg80211 to determine the logic behind the function. It is 
+> just context supplied by the caller. The fact that it is determined by a 
+> module parameter is internal cfg80211 stuff.
+
+I just don't really see any way it would ever be per wiphy?
+
+> > Might also be simpler to just export the variable?
 > 
+> Either way is pretty simple I guess.
 
-I am a bit confused right now. The regression is that the channel used
-to be completely disabled and now it is not? The regulatory restrictions
-prohibit the 20MHz BW for this channel but 5MHz BW is alright?
+Yeah, dunno. I guess exporting the function at least makes sure nobody
+will try to set the variable, so that's somewhat useful...
 
-(I am out of office for the next few days, thus I am unfortunately
-unable to write/test any code.)
+I'd prefer to remove the wiphy argument though (and fix the kernel-doc)
 
-Rostislav;
+johannes
 
