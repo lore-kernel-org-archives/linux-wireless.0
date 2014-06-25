@@ -1,52 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14421 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755592AbaFPQiT (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:60153 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755685AbaFYUPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:19 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 05/25] wil6210: print more info about BSS found
-Date: Mon, 16 Jun 2014 19:37:03 +0300
-Message-ID: <1402936643-31819-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183839_033567_C12CA973)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Jun 2014 16:15:37 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so2678440wes.40
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:36 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/17] staging: vt6656: mac80211 conversion: move data rates to device.h
+Date: Wed, 25 Jun 2014 21:14:34 +0100
+Message-Id: <1403727278-6666-14-git-send-email-tvboxspy@gmail.com> (sfid-20140625_223005_304043_B549230B)
+In-Reply-To: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-print essential info to dmesg
+Move all RATE_* macros to device.h
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/staging/vt6656/datarate.h | 14 --------------
+ drivers/staging/vt6656/device.h   | 14 ++++++++++++++
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 6cc0e18..1c5e6e9 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -327,6 +327,17 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+diff --git a/drivers/staging/vt6656/datarate.h b/drivers/staging/vt6656/datarate.h
+index 96252ad..19b2c66 100644
+--- a/drivers/staging/vt6656/datarate.h
++++ b/drivers/staging/vt6656/datarate.h
+@@ -39,20 +39,6 @@
+ #define RETRY_TIMES_THRD_H         2    /* times */
+ #define RETRY_TIMES_THRD_L         1    /* times */
  
- 	if (ieee80211_is_beacon(fc) || ieee80211_is_probe_resp(fc)) {
- 		struct cfg80211_bss *bss;
-+		u64 tsf = le64_to_cpu(rx_mgmt_frame->u.beacon.timestamp);
-+		u16 cap = le16_to_cpu(rx_mgmt_frame->u.beacon.capab_info);
-+		u16 bi = le16_to_cpu(rx_mgmt_frame->u.beacon.beacon_int);
-+		const u8 *ie_buf = rx_mgmt_frame->u.beacon.variable;
-+		size_t ie_len = d_len - offsetof(struct ieee80211_mgmt,
-+						 u.beacon.variable);
-+		wil_dbg_wmi(wil, "Capability info : 0x%04x\n", cap);
-+		wil_dbg_wmi(wil, "TSF : 0x%016llx\n", tsf);
-+		wil_dbg_wmi(wil, "Beacon interval : %d\n", bi);
-+		wil_hex_dump_wmi("IE ", DUMP_PREFIX_OFFSET, 16, 1, ie_buf,
-+				 ie_len, true);
+-#define RATE_1M         0
+-#define RATE_2M         1
+-#define RATE_5M         2
+-#define RATE_11M        3
+-#define RATE_6M         4
+-#define RATE_9M         5
+-#define RATE_12M        6
+-#define RATE_18M        7
+-#define RATE_24M        8
+-#define RATE_36M        9
+-#define RATE_48M       10
+-#define RATE_54M       11
+-#define RATE_AUTO      12
+-
+ void RATEvParseMaxRate(struct vnt_private *, PWLAN_IE_SUPP_RATES pItemRates,
+ 	PWLAN_IE_SUPP_RATES pItemExtRates, int bUpdateBasicRate,
+ 	u16 *pwMaxBasicRate, u16 *pwMaxSuppRate, u16 *pwSuppRate,
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 2bd9830..6696365 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -53,6 +53,20 @@
+ #undef DEVICE_ETHTOOL_IOCTL_SUPPORT
+ #endif
  
- 		bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
- 						d_len, signal, GFP_KERNEL);
++#define RATE_1M		0
++#define RATE_2M		1
++#define RATE_5M		2
++#define RATE_11M	3
++#define RATE_6M		4
++#define RATE_9M		5
++#define RATE_12M	6
++#define RATE_18M	7
++#define RATE_24M	8
++#define RATE_36M	9
++#define RATE_48M	10
++#define RATE_54M	11
++#define RATE_AUTO	12
++
+ #define MAX_RATE			12
+ 
+ /*
 -- 
 1.9.1
 
