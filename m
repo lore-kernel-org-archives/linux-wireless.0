@@ -1,156 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28817 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752456AbaFGCsD (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:34546 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754719AbaFYKn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2014 22:48:03 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Chin-Ran Lo <crlo@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: get rid of 'ethtool wol' code
-Date: Fri, 6 Jun 2014 19:47:43 -0700
-Message-ID: <1402109264-7095-2-git-send-email-bzhao@marvell.com> (sfid-20140607_044808_803624_72BC9577)
-In-Reply-To: <1402109264-7095-1-git-send-email-bzhao@marvell.com>
-References: <1402109264-7095-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Jun 2014 06:43:58 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so7723522wib.17
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:43:57 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v11 0/5] cfg/mac80211: implement multi-vif csa
+Date: Wed, 25 Jun 2014 12:35:05 +0200
+Message-Id: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com> (sfid-20140625_124401_856501_E69C72E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi,
 
-"iw wowlan" command takes care all wake on wlan use cases.
-So we will remove older configuration option through 'ethtool'
-utility.
+The patchset implements multi-interface
+reservations and multi-interface channel
+switching.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/Makefile   |  1 -
- drivers/net/wireless/mwifiex/cfg80211.c |  1 -
- drivers/net/wireless/mwifiex/ethtool.c  | 70 ---------------------------------
- drivers/net/wireless/mwifiex/main.h     |  2 -
- 4 files changed, 74 deletions(-)
- delete mode 100644 drivers/net/wireless/mwifiex/ethtool.c
+There are still some cases that aren't handled
+well (at least degradation of number of channels
+due to interface combinations that I'm aware of).
 
-diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-index 2aa208f..855a376 100644
---- a/drivers/net/wireless/mwifiex/Makefile
-+++ b/drivers/net/wireless/mwifiex/Makefile
-@@ -39,7 +39,6 @@ mwifiex-y += sta_tx.o
- mwifiex-y += sta_rx.o
- mwifiex-y += uap_txrx.o
- mwifiex-y += cfg80211.o
--mwifiex-y += ethtool.o
- mwifiex-y += 11h.o
- mwifiex-y += tdls.o
- mwifiex-$(CONFIG_DEBUG_FS) += debugfs.o
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 9afac2b..a045f66 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2296,7 +2296,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
- 	dev->watchdog_timeo = MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT;
- 	dev->hard_header_len += MWIFIEX_MIN_DATA_HEADER_LEN;
--	dev->ethtool_ops = &mwifiex_ethtool_ops;
- 
- 	mdev_priv = netdev_priv(dev);
- 	*((unsigned long *) mdev_priv) = (unsigned long) priv;
-diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
-deleted file mode 100644
-index bfb3990..0000000
---- a/drivers/net/wireless/mwifiex/ethtool.c
-+++ /dev/null
-@@ -1,70 +0,0 @@
--/*
-- * Marvell Wireless LAN device driver: ethtool
-- *
-- * Copyright (C) 2013, Marvell International Ltd.
-- *
-- * This software file (the "File") is distributed by Marvell International
-- * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-- * (the "License").  You may use, redistribute and/or modify this File in
-- * accordance with the terms and conditions of the License, a copy of which
-- * is available by writing to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
-- * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
-- *
-- * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
-- * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
-- * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
-- * this warranty disclaimer.
-- */
--
--#include "main.h"
--
--static void mwifiex_ethtool_get_wol(struct net_device *dev,
--				    struct ethtool_wolinfo *wol)
--{
--	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
--	u32 conditions = le32_to_cpu(priv->adapter->hs_cfg.conditions);
--
--	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
--
--	if (conditions == HS_CFG_COND_DEF)
--		return;
--
--	if (conditions & HS_CFG_COND_UNICAST_DATA)
--		wol->wolopts |= WAKE_UCAST;
--	if (conditions & HS_CFG_COND_MULTICAST_DATA)
--		wol->wolopts |= WAKE_MCAST;
--	if (conditions & HS_CFG_COND_BROADCAST_DATA)
--		wol->wolopts |= WAKE_BCAST;
--	if (conditions & HS_CFG_COND_MAC_EVENT)
--		wol->wolopts |= WAKE_PHY;
--}
--
--static int mwifiex_ethtool_set_wol(struct net_device *dev,
--				   struct ethtool_wolinfo *wol)
--{
--	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
--	u32 conditions = 0;
--
--	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
--		return -EOPNOTSUPP;
--
--	if (wol->wolopts & WAKE_UCAST)
--		conditions |= HS_CFG_COND_UNICAST_DATA;
--	if (wol->wolopts & WAKE_MCAST)
--		conditions |= HS_CFG_COND_MULTICAST_DATA;
--	if (wol->wolopts & WAKE_BCAST)
--		conditions |= HS_CFG_COND_BROADCAST_DATA;
--	if (wol->wolopts & WAKE_PHY)
--		conditions |= HS_CFG_COND_MAC_EVENT;
--	if (wol->wolopts == 0)
--		conditions |= HS_CFG_COND_DEF;
--	priv->adapter->hs_cfg.conditions = cpu_to_le32(conditions);
--
--	return 0;
--}
--
--const struct ethtool_ops mwifiex_ethtool_ops = {
--	.get_wol = mwifiex_ethtool_get_wol,
--	.set_wol = mwifiex_ethtool_set_wol,
--};
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 1398afa..d8f3bea 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1215,8 +1215,6 @@ int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
- 			    struct device_node *node, const char *prefix);
- void mwifiex_dnld_txpwr_table(struct mwifiex_private *priv);
- 
--extern const struct ethtool_ops mwifiex_ethtool_ops;
--
- void mwifiex_del_all_sta_list(struct mwifiex_private *priv);
- void mwifiex_del_sta_entry(struct mwifiex_private *priv, const u8 *mac);
- void
+
+v11:
+ * rebase to latest mac80211-next/master
+   (eb6a61549f530f1cc435512df3799f656094ba83)
+ * lots of fixes (see notes in [1/5])
+
+
+Michal Kazior (5):
+  mac80211: implement multi-vif in-place reservations
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  cfg80211: remove channel_switch combination check
+
+ include/net/cfg80211.h     |   7 +-
+ include/net/mac80211.h     |   8 +-
+ net/mac80211/cfg.c         |  82 +++--
+ net/mac80211/chan.c        | 861 +++++++++++++++++++++++++++++++++++++--------
+ net/mac80211/ieee80211_i.h |  31 +-
+ net/mac80211/mlme.c        |  99 ++++--
+ net/mac80211/util.c        |  44 ++-
+ net/wireless/nl80211.c     |  11 -
+ 8 files changed, 906 insertions(+), 237 deletions(-)
+
 -- 
-1.8.2.3
+1.8.5.3
 
