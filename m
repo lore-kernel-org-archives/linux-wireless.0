@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:64627 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756022AbaF3QSW (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34913 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757871AbaFYQvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 12:18:22 -0400
-Received: by mail-wg0-f42.google.com with SMTP id z12so8104344wgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 09:18:20 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH 1/7] rtl818x_pci: Fix BSSID register written incorrectly
-Date: Mon, 30 Jun 2014 18:17:48 +0200
-Message-Id: <1404145068-15903-1-git-send-email-andrea.merello@gmail.com> (sfid-20140630_181836_049077_370FD6A6)
+	Wed, 25 Jun 2014 12:51:19 -0400
+Message-ID: <53AAFDF3.9030707@broadcom.com> (sfid-20140625_185138_509373_0336400C)
+Date: Wed, 25 Jun 2014 18:50:59 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/3] cfg80211: expose cfg80211_disable_40mhz_24ghz module
+ parameter
+References: <1402996581-10764-1-git-send-email-arend@broadcom.com>		 <1402996581-10764-3-git-send-email-arend@broadcom.com>	 <1403516075.4418.9.camel@jlt4.sipsolutions.net>	 <53A9B391.4050602@broadcom.com> <1403711846.4140.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1403711846.4140.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSSID register was written with six byte-writes.
-It seems that, similarly to what happens with MAC registers, they needs to be
-written with one 16-bit and one 32-bit writes, otherwise the write does not work.
+On 25-06-14 17:57, Johannes Berg wrote:
+> On Tue, 2014-06-24 at 19:21 +0200, Arend van Spriel wrote:
+>
+>>>> + * @wiphy: The wiphy to check.
+>>>> + *
+>>>> + * Return: true is 40MHz is disabled in 2.4G band.
+>>>> + */
+>>>> +bool wiphy_is_40mhz_24ghz_disabled(struct wiphy *wiphy);
+>>>
+>>> Why should that have a wiphy argument?
+>>
+>> It is up to cfg80211 to determine the logic behind the function. It is
+>> just context supplied by the caller. The fact that it is determined by a
+>> module parameter is internal cfg80211 stuff.
+>
+> I just don't really see any way it would ever be per wiphy?
 
-The byte write didn't work only on my rtl8185, while it worked on rtl8180 and
-rtl8187se, BTW since there are probably a number of different ASIC revisions out
-of there, I let the change to affect all cards.
-It shouldn't hurt anyway.
+Maybe you are right. By the way, is OBSS support a requirement to do 
+40MHz in 2.4G?
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+>>> Might also be simpler to just export the variable?
+>>
+>> Either way is pretty simple I guess.
+>
+> Yeah, dunno. I guess exporting the function at least makes sure nobody
+> will try to set the variable, so that's somewhat useful...
+>
+> I'd prefer to remove the wiphy argument though (and fix the kernel-doc)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 1e25929..e2dcede 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -1461,9 +1461,10 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
- 	vif_priv = (struct rtl8180_vif *)&vif->drv_priv;
- 
- 	if (changed & BSS_CHANGED_BSSID) {
--		for (i = 0; i < ETH_ALEN; i++)
--			rtl818x_iowrite8(priv, &priv->map->BSSID[i],
--					 info->bssid[i]);
-+		rtl818x_iowrite16(priv, (__le16 __iomem *)&priv->map->BSSID[0],
-+				  le16_to_cpu(*(__le16 *)info->bssid));
-+		rtl818x_iowrite32(priv, (__le32 __iomem *)&priv->map->BSSID[2],
-+				  le32_to_cpu(*(__le32 *)(info->bssid + 2)));
- 
- 		if (is_valid_ether_addr(info->bssid)) {
- 			if (vif->type == NL80211_IFTYPE_ADHOC)
--- 
-1.9.1
+No problem. Will do.
+
+Gr. AvS
 
