@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17988 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752508AbaFDNra (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:51529 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755612AbaFYUPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 09:47:30 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 12/13] ath9k: Add ATH_OP_MULTI_CHANNEL
-Date: Wed, 4 Jun 2014 19:16:38 +0530
-Message-ID: <1401889599-412-13-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140604_154753_105418_E2D8A7A1)
-In-Reply-To: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1401889599-412-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Jun 2014 16:15:32 -0400
+Received: by mail-we0-f175.google.com with SMTP id k48so2654251wev.6
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:15:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/17] staging: vt6656: mac80211 conversion: change vnt_next_tbtt_wakeup
+Date: Wed, 25 Jun 2014 21:14:31 +0100
+Message-Id: <1403727278-6666-11-git-send-email-tvboxspy@gmail.com> (sfid-20140625_223021_240548_EA8EFCE7)
+In-Reply-To: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727278-6666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Wake up to listen to next beacon when struct ieee80211_conf -> listen_interval == 1
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath.h           |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 12 ++++++++++++
- 2 files changed, 13 insertions(+)
+ drivers/staging/vt6656/power.c | 24 +++++++-----------------
+ 1 file changed, 7 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index a889fd6..fd9e530 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -63,6 +63,7 @@ enum ath_op_flags {
- 	ATH_OP_PRIM_STA_VIF,
- 	ATH_OP_HW_RESET,
- 	ATH_OP_SCANNING,
-+	ATH_OP_MULTI_CHANNEL,
- };
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index 6c34d36..ace0cba 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -293,25 +293,15 @@ int PSbSendNullPacket(struct vnt_private *pDevice)
  
- enum ath_bus_type {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index f7842ee..3cb86f4 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -186,8 +186,10 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+ int vnt_next_tbtt_wakeup(struct vnt_private *priv)
  {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp;
- 	bool active = false;
-+	u8 i, n_active = 0;
+-	struct vnt_manager *mgmt = &priv->vnt_mgmt;
++	struct ieee80211_hw *hw = priv->hw;
++	struct ieee80211_conf *conf = &hw->conf;
+ 	int wake_up = false;
  
- 	if (!ctx)
- 		return;
-@@ -207,6 +209,16 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 		}
+-	if (mgmt->wListenInterval >= 2) {
+-		if (mgmt->wCountToWakeUp == 0)
+-			mgmt->wCountToWakeUp = mgmt->wListenInterval;
+-
+-		mgmt->wCountToWakeUp--;
+-
+-		if (mgmt->wCountToWakeUp == 1) {
+-			/* Turn on wake up to listen next beacon */
+-			vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_LNBCN);
+-			priv->bPSRxBeacon = false;
+-			wake_up = true;
+-		} else if (!priv->bPSRxBeacon) {
+-			/* Listen until RxBeacon */
+-			vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_LNBCN);
+-		}
++	if (conf->listen_interval == 1) {
++		/* Turn on wake up to listen next beacon */
++		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_LNBCN);
++		wake_up = true;
  	}
- 	ctx->active = active;
 +
-+	for (i = 0; i < ATH9K_NUM_CHANCTX; i++) {
-+		ctx = &sc->chanctx[i];
-+		if (ctx->assigned && !list_empty(&ctx->vifs))
-+			n_active++;
-+	}
-+	if (n_active > 1)
-+		set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
-+	else
-+		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
+ 	return wake_up;
  }
- 
- static bool
+-
 -- 
-2.0.0
+1.9.1
 
