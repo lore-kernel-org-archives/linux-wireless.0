@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28429 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934020AbaFIJfa (ORCPT
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:49417 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756294AbaFYOaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 05:35:30 -0400
-Date: Mon, 9 Jun 2014 12:35:18 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: qca_vkondrat@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: re: wil6210: improve debug for WMI receive
-Message-ID: <20140609093518.GA10589@mwanda> (sfid-20140609_113537_426998_6B8E648C)
+	Wed, 25 Jun 2014 10:30:12 -0400
+Date: Wed, 25 Jun 2014 11:30:06 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2014-06-25
+Message-ID: <20140625143006.GA18018@joana> (sfid-20140625_163056_784890_410745BF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Vladimir Kondratiev,
 
-The patch a715c7ddd65a: "wil6210: improve debug for WMI receive" from
-May 29, 2014, leads to the following static checker warning:
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-	drivers/net/wireless/ath/wil6210/wmi.c:746 wmi_recv_cmd()
-	info: ignoring unreachable code.
+Hi John,
 
-drivers/net/wireless/ath/wil6210/wmi.c
-   739                  spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
-   740                  {
-   741                          int q = queue_work(wil->wmi_wq,
-   742                                             &wil->wmi_event_worker);
-   743                          wil_dbg_wmi(wil, "queue_work -> %d\n", q);
-   744                  }
-   745          }
-   746          if (n > 1)
-                ^^^^^^^^^^
-We never reach this if statemtent.
+A few fixes for 3.16. This pull request contains a NULL dereference fix,
+and some security/pairing fixes. Please pull. Thanks!
 
-   747                  wil_dbg_wmi(wil, "%s -> %d events processed\n", __func__, n);
-   748  }
+	Gustavo
 
-regards,
-dan carpenter
+---
+The following changes since commit 616a8394b5df8c88f4dd416f4527439a4e365034:
+
+  rt2x00: fix rfkill regression on rt2500pci (2014-06-17 14:11:16 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+
+for you to fetch changes up to 48439d501e3d9e8634bdc0c418e066870039599d:
+
+  Bluetooth: Ignore H5 non-link packets in non-active state (2014-06-23 18:22:48 +0200)
+
+----------------------------------------------------------------
+Johan Hedberg (3):
+      Bluetooth: Fix overriding higher security level in SMP
+      Bluetooth: Refactor authentication method lookup into its own function
+      Bluetooth: Fix rejecting pairing in case of insufficient capabilities
+
+Loic Poulain (1):
+      Bluetooth: Ignore H5 non-link packets in non-active state
+
+Lukasz Rymanowski (1):
+      Bluetooth: Fix for ACL disconnect when pairing fails
+
+Marcel Holtmann (1):
+      Revert "Bluetooth: Add a new PID/VID 0cf3/e005 for AR3012."
+
+ drivers/bluetooth/ath3k.c  |  2 --
+ drivers/bluetooth/btusb.c  |  1 -
+ drivers/bluetooth/hci_h5.c |  1 +
+ net/bluetooth/hci_conn.c   | 12 ++++++++++-
+ net/bluetooth/smp.c        | 60 ++++++++++++++++++++++++++++++++++++++++-------------
+ 5 files changed, 58 insertions(+), 18 deletions(-)
+
+
+--tThc/1wpZn/ma/RB
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJTqtzuAAoJEPs3PUX4s20oA54QAJD3YwZjoL5ZCb6CPz09/Fnf
+pdWxKLc1qzoMtWnn5bWro/ujEZVSNrQ1GFYIPE7pkBxIKRveGiQ7qe21PyT4jPpN
+RObiuFFyqpyTa8+VyXqdasMYbYKCd+K4QV1fGP0AOOOc0qosXcYl9CuerIx2v10H
+1ecw59M/XMhBRqGx2zKXNshPNQQKc/33pDdwVqmh728+Lza9HQdZ2nJHJK6IFxT5
+rteav6H5I7hQACcGyLcMCloLpa4TxOrj98Fq34NIDipzC6Tuue+6UBIOVLlOsjgI
+WaK5DqzDleWDSwpxosmI52hcYrg5/OSE9jEevPH5V1X9za1AFCM+ISCIfdWugz2W
+6RGeKKTBET+uL7agSLooIQfYBZ49jBbxlN0UeZcTPGFvNRLIcMAx6XoYesiPNViK
+hsQNpwg51viyL8BauXfS4972rbcEh4SYfQhphD+EmBsV3GpVL1711yyZytiu+mLd
+ECTzm62qc+1yEpE7hP5aBcYnFpce2wl8S4IA4MifZ6YwMMOOvXZg8agwiEdxWw5b
+66EocXmdYH3eTfdNbfxQ75QWuph0dNqpuJAFYOQmN1l8TCzi9Yu1RYAJWqHI18Zb
+e79yaJnZkUwbnXjawk4NjJm1IPwYmJ35VQrroAQ6Fg/XVPEdhAMvsGU1P4RTURAj
+qyyKydv+5DIhUBy093BG
+=ZbpF
+-----END PGP SIGNATURE-----
+
+--tThc/1wpZn/ma/RB--
