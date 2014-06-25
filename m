@@ -1,71 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49913 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256AbaFPQiL (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:55245 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383AbaFYKoJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:11 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 00/25] wil6210 patches
-Date: Mon, 16 Jun 2014 19:36:58 +0300
-Message-ID: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_183816_152299_E42DF92B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 25 Jun 2014 06:44:09 -0400
+Received: by mail-we0-f177.google.com with SMTP id u56so1755738wes.8
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:44:07 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: luca@coelho.fi, johannes@sipsolutions.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v11 5/5] cfg80211: remove channel_switch combination check
+Date: Wed, 25 Jun 2014 12:35:10 +0200
+Message-Id: <1403692510-27873-6-git-send-email-michal.kazior@tieto.com> (sfid-20140625_124421_130109_3FC8DF34)
+In-Reply-To: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
+References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of the patches are various debug, tracing and performance
-monitoring features. 60G technology overall is not mature yet,
-as well as wil6210's firmware, so many debug hooks are needed
-for the future work.
+Driver is now responsible for veryfing if the
+switch is possible.
 
-Fixes include "fix disconnect handling for AP" and
-"fix for unreachable code in wmi_recv_cmd"
+Since this is inherently tricky driver may decide
+to disconnect an interface later with
+cfg80211_stop_iface().
 
-Another commit to mention is
-"work around for platforms with broken INTx"
-where platform with broken BIOS is addressed.
+This doesn't mean driver can accept everything. It
+should do it's best to verify requests and reject
+them as soon as possible.
 
-Vladimir Kondratiev (25):
-  wil6210: Tx mgmt frame from debugfs
-  wil6210: indicate mgmt_tx status
-  wil6210: print debug info when starting AP
-  wil6210: trace wil->status on debugfs
-  wil6210: print more info about BSS found
-  wil6210: more debug info for vring
-  wil6210: Tx performance monitoring
-  wil6210: Allow driver load if FW not ready
-  wil6210: BACK: track last dropped SSN
-  wil6210: debugfs interface to send raw WMI command
-  wil6210: writeable ITR registers
-  wil6210: print error when notifying about FW error
-  wil6210: debug print when scan request state changes
-  wil6210: Use "name = value" format in the debugfs
-  wil6210: add 'freq' and 'link' debugfs entries
-  wil6210: Debug print GRO Rx result
-  wil6210: avoid dmesg pollution by Tx errors
-  wil6210: fix disconnect handling for AP
-  wil6210: remove unused #include
-  wil6210: map additional registers on target
-  wil6210: fix for unreachable code in wmi_recv_cmd
-  wil6210: work around for platforms with broken INTx
-  wil6210: add 'info' debugfs entry
-  wil6210: interrupt statistics
-  wil6210: track Tx queue state
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
- drivers/net/wireless/ath/wil6210/cfg80211.c   |  68 +++++-
- drivers/net/wireless/ath/wil6210/debugfs.c    | 304 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/interrupt.c  |   3 +
- drivers/net/wireless/ath/wil6210/main.c       |  22 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |  31 ++-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |   1 +
- drivers/net/wireless/ath/wil6210/txrx.c       |  33 ++-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  10 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |  40 ++--
- 9 files changed, 465 insertions(+), 47 deletions(-)
+Notes:
+    v7:
+     * emphasize channel switching verification should not be
+       taken lightly [Johannes]
+     * update channel_switch description in cfg80211.h
 
+ include/net/cfg80211.h |  7 ++++++-
+ net/wireless/nl80211.c | 11 -----------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b9eeae3..0a080c4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2301,7 +2301,12 @@ struct cfg80211_qos_map {
+  *	reliability. This operation can not fail.
+  * @set_coalesce: Set coalesce parameters.
+  *
+- * @channel_switch: initiate channel-switch procedure (with CSA)
++ * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
++ *	responsible for veryfing if the switch is possible. Since this is
++ *	inherently tricky driver may decide to disconnect an interface later
++ *	with cfg80211_stop_iface(). This doesn't mean driver can accept
++ *	everything. It should do it's best to verify requests and reject them
++ *	as soon as possible.
+  *
+  * @set_qos_map: Set QoS mapping information to the driver
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8f46b8f..c102951 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6013,17 +6013,6 @@ skip_beacons:
+ 		params.radar_required = true;
+ 	}
+ 
+-	/* TODO: I left this here for now.  With channel switch, the
+-	 * verification is a bit more complicated, because we only do
+-	 * it later when the channel switch really happens.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   params.chandef.chan,
+-					   CHAN_MODE_SHARED,
+-					   radar_detect_width);
+-	if (err)
+-		return err;
+-
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
+ 
 -- 
-1.9.1
+1.8.5.3
 
