@@ -1,55 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:48666 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbaFWSe2 (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:50737 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932224AbaFYUVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 14:34:28 -0400
-Received: by mail-pb0-f49.google.com with SMTP id rr13so6176114pbb.36
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 11:34:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140623182623.GC1390@garbanzo.do-not-panic.com>
-References: <1402469724-22358-1-git-send-email-arik@wizery.com>
- <1402469724-22358-4-git-send-email-arik@wizery.com> <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com>
- <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com> <20140623182623.GC1390@garbanzo.do-not-panic.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 23 Jun 2014 21:34:13 +0300
-Message-ID: <CA+XVXffrepXAKitqhL4C87Jxy4MiF+iAO_PP6YZkMKtqeckV+Q@mail.gmail.com> (sfid-20140623_203431_864097_DF58FD1F)
-Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Jun 2014 16:21:39 -0400
+Received: by mail-we0-f176.google.com with SMTP id u56so2685154wes.7
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 13:21:38 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 21/34] staging: vt6656: remove dead code from power.c/h
+Date: Wed, 25 Jun 2014 21:19:58 +0100
+Message-Id: <1403727611-6825-22-git-send-email-tvboxspy@gmail.com> (sfid-20140625_223023_842485_967D62D0)
+In-Reply-To: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
+References: <1403727611-6825-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 9:26 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Mon, Jun 23, 2014 at 08:14:43PM +0300, Arik Nemtsov wrote:
->> On Thu, Jun 19, 2014 at 2:34 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> >> Allow driver and user hints to set the "world" regulatory domain,
->> >
->> > NACK - as expressed in the other patch, letting the drivers to use the
->> > new API to set the world regulatory domain doesn't make sense as we
->> > have custom apply stuff, and the world regulatory domain is not
->> > something dynamic.
->>
->> Well we want to set the world regdomain from FW. This obviously
->> happens after wiphy registration, so I don't think the custom apply
->> can be used here? (since we generally want cfg80211 to own the
->> regdomain settings).
->
-> Can the driver not obtain the world regulatory domain from firmware
-> prior to wiphy registration? Why not?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/power.c | 153 -----------------------------------------
+ drivers/staging/vt6656/power.h |   7 --
+ 2 files changed, 160 deletions(-)
 
-Since the FW is not running yet :)
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index 1bdbefc..dbda303 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -28,9 +28,6 @@
+  * Functions:
+  *      vnt_enable_power_saving - Enable Power Saving Mode
+  *      PSvDiasblePowerSaving - Disable Power Saving Mode
+- *      PSbConsiderPowerDown - Decide if we can Power Down
+- *      PSvSendPSPOLL - Send PS-POLL packet
+- *      PSbSendNullPacket - Send Null packet
+  *      vnt_next_tbtt_wakeup - Decide if we need to wake up at next Beacon
+  *
+  * Revision History:
+@@ -39,7 +36,6 @@
+ 
+ #include "mac.h"
+ #include "device.h"
+-#include "wmgr.h"
+ #include "power.h"
+ #include "wcmd.h"
+ #include "rxtx.h"
+@@ -127,155 +123,6 @@ void vnt_disable_power_saving(struct vnt_private *priv)
+ /*
+  *
+  * Routine Description:
+- * Consider to power down when no more packets to tx or rx.
+- *
+- * Return Value:
+- *    true, if power down success
+- *    false, if fail
+- */
+-
+-int PSbConsiderPowerDown(struct vnt_private *pDevice, int bCheckRxDMA,
+-	int bCheckCountToWakeUp)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	u8 byData;
+-
+-	/* check if already in Doze mode */
+-	vnt_control_in_u8(pDevice, MESSAGE_REQUEST_MACREG,
+-					MAC_REG_PSCTL, &byData);
+-
+-	if ((byData & PSCTL_PS) != 0)
+-		return true;
+-
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA) {
+-		/* check if in TIM wake period */
+-		if (pMgmt->bInTIMWake)
+-			return false;
+-	}
+-
+-	/* check scan state */
+-	if (pDevice->bCmdRunning)
+-		return false;
+-
+-	/* Tx Burst */
+-	if (pDevice->bPSModeTxBurst)
+-		return false;
+-
+-	/* Froce PSEN on */
+-	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_PSEN);
+-
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA) {
+-		if (bCheckCountToWakeUp && (pMgmt->wCountToWakeUp == 0
+-			|| pMgmt->wCountToWakeUp == 1)) {
+-				return false;
+-		}
+-	}
+-
+-	pDevice->bPSRxBeacon = true;
+-
+-	/* no Tx, no Rx isr, now go to Doze */
+-	vnt_mac_reg_bits_on(pDevice, MAC_REG_PSCTL, PSCTL_GO2DOZE);
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Go to Doze ZZZZZZZZZZZZZZZ\n");
+-	return true;
+-}
+-
+-/*
+- *
+- * Routine Description:
+- * Send PS-POLL packet
+- *
+- * Return Value:
+- *    None.
+- *
+- */
+-
+-void PSvSendPSPOLL(struct vnt_private *pDevice)
+-{
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	struct vnt_tx_mgmt *pTxPacket = NULL;
+-
+-	memset(pMgmt->pbyPSPacketPool, 0, sizeof(struct vnt_tx_mgmt)
+-		+ WLAN_HDR_ADDR2_LEN);
+-	pTxPacket = (struct vnt_tx_mgmt *)pMgmt->pbyPSPacketPool;
+-	pTxPacket->p80211Header = (PUWLAN_80211HDR)((u8 *)pTxPacket
+-		+ sizeof(struct vnt_tx_mgmt));
+-
+-	pTxPacket->p80211Header->sA2.wFrameCtl = cpu_to_le16(
+-		(
+-			WLAN_SET_FC_FTYPE(WLAN_TYPE_CTL) |
+-			WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_PSPOLL) |
+-			WLAN_SET_FC_PWRMGT(0)
+-		));
+-
+-	pTxPacket->p80211Header->sA2.wDurationID =
+-		pMgmt->wCurrAID | BIT14 | BIT15;
+-	memcpy(pTxPacket->p80211Header->sA2.abyAddr1, pMgmt->abyCurrBSSID,
+-		WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA2.abyAddr2, pMgmt->abyMACAddr,
+-		WLAN_ADDR_LEN);
+-	pTxPacket->cbMPDULen = WLAN_HDR_ADDR2_LEN;
+-	pTxPacket->cbPayloadLen = 0;
+-
+-	/* log failure if sending failed */
+-}
+-
+-/*
+- *
+- * Routine Description:
+- * Send NULL packet to AP for notification power state of STA
+- *
+- * Return Value:
+- *    None.
+- *
+- */
+-
+-int PSbSendNullPacket(struct vnt_private *pDevice)
+-{
+-	struct vnt_tx_mgmt *pTxPacket = NULL;
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	u16 flags = 0;
+-
+-	if (pDevice->bLinkPass == false)
+-		return false;
+-
+-	if (pDevice->bEnablePSMode == false && pDevice->tx_trigger == false)
+-		return false;
+-
+-	memset(pMgmt->pbyPSPacketPool, 0, sizeof(struct vnt_tx_mgmt)
+-		+ WLAN_NULLDATA_FR_MAXLEN);
+-	pTxPacket = (struct vnt_tx_mgmt *)pMgmt->pbyPSPacketPool;
+-	pTxPacket->p80211Header = (PUWLAN_80211HDR)((u8 *)pTxPacket
+-		+ sizeof(struct vnt_tx_mgmt));
+-
+-	flags = WLAN_SET_FC_FTYPE(WLAN_TYPE_DATA) |
+-			WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_NULL);
+-
+-	if (pDevice->bEnablePSMode)
+-		flags |= WLAN_SET_FC_PWRMGT(1);
+-	else
+-		flags |= WLAN_SET_FC_PWRMGT(0);
+-
+-	pTxPacket->p80211Header->sA3.wFrameCtl = cpu_to_le16(flags);
+-
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA)
+-		pTxPacket->p80211Header->sA3.wFrameCtl |=
+-			cpu_to_le16((u16)WLAN_SET_FC_TODS(1));
+-
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr1, pMgmt->abyCurrBSSID,
+-		WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr2, pMgmt->abyMACAddr,
+-		WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr3, pMgmt->abyCurrBSSID,
+-		WLAN_BSSID_LEN);
+-	pTxPacket->cbMPDULen = WLAN_HDR_ADDR3_LEN;
+-	pTxPacket->cbPayloadLen = 0;
+-	/* log error if sending failed */
+-	return true;
+-}
+-
+-/*
+- *
+- * Routine Description:
+  * Check if Next TBTT must wake up
+  *
+  * Return Value:
+diff --git a/drivers/staging/vt6656/power.h b/drivers/staging/vt6656/power.h
+index 313f077..bd9de77 100644
+--- a/drivers/staging/vt6656/power.h
++++ b/drivers/staging/vt6656/power.h
+@@ -33,15 +33,8 @@
+ #define     PS_FAST_INTERVAL         1         // Fast power saving listen interval
+ #define     PS_MAX_INTERVAL          4         // MAX power saving listen interval
+ 
+-/*  PSDevice pDevice */
+-/*  PSDevice hDeviceContext */
+-
+-int PSbConsiderPowerDown(struct vnt_private *, int bCheckRxDMA,
+-	int bCheckCountToWakeUp);
+ void vnt_disable_power_saving(struct vnt_private *);
+ void vnt_enable_power_saving(struct vnt_private *, u16);
+-void PSvSendPSPOLL(struct vnt_private *);
+-int PSbSendNullPacket(struct vnt_private *);
+ int vnt_next_tbtt_wakeup(struct vnt_private *);
+ 
+ #endif /* __POWER_H__ */
+-- 
+1.9.1
 
->
-> One thing to be careful on all this new API design is to ensure that
-> upon disconnect we want the driver to go back to the original state,
-> whatever that is.
-
-This particular part is unrelated to connection state AFAICT. It just
-allows someone (driver, user) to set the "00" regdomain.
-
-Arik
