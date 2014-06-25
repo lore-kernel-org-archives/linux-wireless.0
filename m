@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6088 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752952AbaFMPyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2014 11:54:37 -0400
-Message-ID: <1402674875.11828.1.camel@dcbw.local> (sfid-20140613_175441_089493_A841B2B5)
-Subject: Re: [PATCH 0/5] Fixes, changes for 40MHz and adding support for
- 5GHz and bgscan.
-From: Dan Williams <dcbw@redhat.com>
-To: Jahnavi Meher <jahnavi.meher@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 13 Jun 2014 10:54:35 -0500
-In-Reply-To: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
-References: <1402670579-8818-1-git-send-email-jahnavi.meher@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:62856 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaFYKSY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2014 06:18:24 -0400
+Received: by mail-pb0-f54.google.com with SMTP id un15so1531922pbc.27
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:18:24 -0700 (PDT)
+Received: from localhost.localdomain ([115.248.87.14])
+        by mx.google.com with ESMTPSA id be7sm15959605pad.9.2014.06.25.03.18.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Wed, 25 Jun 2014 03:18:23 -0700 (PDT)
+From: Jahnavi Meher <jahnavi.meher@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] rsi: Fixed warnings reported by static code analyzers.
+Date: Wed, 25 Jun 2014 15:48:15 +0530
+Message-Id: <1403691495-5001-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140625_121827_598907_DA0DB929)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-06-13 at 20:12 +0530, Jahnavi Meher wrote:
-> This series of patches contains some fixes, adds support for
-> 5GHz and bgscan and contains changes required for 40MHz. Also
-> the logic related to dequeuing of packets from hal has been
-> changed.
+Fixed a warning related to incorrect return type and removed an
+unnecessary semi colon.
 
-No comment yet on the patches themselves, but you probably want to
-prefix the mails (and git commits) with "rsi: <rest of message>".
-Probably just forgot this time since the last version of this patchset
-had the right prefix :)
+Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-dan
-
-> Jahnavi Meher (5):
->   Fixes and clean up of code
->   Change the logic for dequeuing packets in hal.
->   Adding support for 5GHz.
->   Adding support for host based bgscan
->   Changes for 40MHz
-> 
->  drivers/net/wireless/rsi/rsi_91x_core.c     |   85 +++++++---
->  drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   10 +-
->  drivers/net/wireless/rsi/rsi_91x_mac80211.c |  143 ++++++++++++++---
->  drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  237 +++++++++++++++++++--------
->  drivers/net/wireless/rsi/rsi_91x_pkt.c      |   17 ++
->  drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +-
->  drivers/net/wireless/rsi/rsi_main.h         |   12 ++
->  drivers/net/wireless/rsi/rsi_mgmt.h         |   25 +++-
->  drivers/net/wireless/rsi/rsi_sdio.h         |    8 +-
->  9 files changed, 416 insertions(+), 129 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 1cd0914..f3d3995 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -92,6 +92,7 @@ static u32 rsi_get_num_pkts_dequeue(struct rsi_common *common, u8 q_num)
+ 	struct sk_buff *skb;
+ 	u32 pkt_cnt = 0;
+ 	s16 txop = common->tx_qinfo[q_num].txop * 32;
++	__le16 r_txop;
+ 	struct ieee80211_rate rate;
+ 
+ 	rate.bitrate = RSI_RATE_MCS0 * 5 * 10; /* Convert to Kbps */
+@@ -104,10 +105,11 @@ static u32 rsi_get_num_pkts_dequeue(struct rsi_common *common, u8 q_num)
+ 		return 0;
+ 
+ 	do {
+-		txop -= ieee80211_generic_frame_duration(adapter->hw,
+-							 adapter->vifs[0],
+-							 common->band,
+-							 skb->len, &rate);
++		r_txop = ieee80211_generic_frame_duration(adapter->hw,
++							  adapter->vifs[0],
++							  common->band,
++							  skb->len, &rate);
++		txop -= le16_to_cpu(r_txop);
+ 		pkt_cnt += 1;
+ 		/*checking if pkts are still there*/
+ 		if (skb_queue_len(&common->tx_queue[q_num]) - pkt_cnt)
+@@ -191,7 +193,7 @@ get_queue_num:
+ 	if (q_num == VO_Q || q_num == VI_Q) {
+ 		common->pkt_cnt = rsi_get_num_pkts_dequeue(common, q_num);
+ 		common->pkt_cnt -= 1;
+-	};
++	}
+ 
+ 	return q_num;
+ }
+-- 
+1.7.1
 
