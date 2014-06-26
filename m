@@ -1,33 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37976 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751401AbaFEM3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 08:29:50 -0400
-Message-ID: <1401971372.4168.0.camel@jlt4.sipsolutions.net> (sfid-20140605_143000_886297_5FF9785F)
-Subject: Re: [PATCH v2] mac80211: allow tx via monitor iface when DFS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Jun 2014 14:29:32 +0200
-In-Reply-To: <1401948777-3262-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140605_081323_512048_6A292FA1)
-References: <1401948777-3262-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140605_081323_512048_6A292FA1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26182 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754139AbaFZQB4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 12:01:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com>
+	<87ioojz1b1.fsf@kamboji.qca.qualcomm.com>
+	<538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com>
+	<538CC949.5020901@candelatech.com>
+	<CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com>
+	<538CD507.1050803@candelatech.com>
+	<87bnu7pqe2.fsf@kamboji.qca.qualcomm.com>
+	<53909372.1040707@candelatech.com>
+	<87fvjimsxj.fsf@kamboji.qca.qualcomm.com>
+	<5391E620.4090706@candelatech.com>
+	<87vbscj2ho.fsf@kamboji.qca.qualcomm.com>
+	<53932F52.2030203@candelatech.com>
+	<8738ffiysv.fsf@kamboji.qca.qualcomm.com>
+	<539483B1.5020401@candelatech.com>
+	<87ppiih4zk.fsf@kamboji.qca.qualcomm.com>
+	<5395CE36.30407@candelatech.com> <5395D718.4090704@candelatech.com>
+	<5395E089.1000601@candelatech.com>
+	<87fvjde1u0.fsf@kamboji.qca.qualcomm.com>
+	<53AC3BBD.3050003@candelatech.com>
+Date: Thu, 26 Jun 2014 19:01:39 +0300
+In-Reply-To: <53AC3BBD.3050003@candelatech.com> (Ben Greear's message of "Thu,
+	26 Jun 2014 08:26:53 -0700")
+Message-ID: <87egyby80s.fsf@kamboji.qca.qualcomm.com> (sfid-20140626_180200_384624_A36D3185)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-06-05 at 08:12 +0200, Janusz Dziedzic wrote:
-> Allow send frames using monitor interface
-> when DFS chandef and we pass CAC (beaconing
-> allowed).
-> 
-> This fix problem when old kernel and new backports used,
-> in such case hostapd create/use also monitor interface.
-> Before this patch all frames hostapd send using monitor
-> iface were dropped when AP was configured on DFS channel.
+Ben Greear <greearb@candelatech.com> writes:
 
-Applied.
+> On 06/09/2014 11:05 PM, Kalle Valo wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>> 
+>>>>>> As kbuild found some compilation problems, I think it would be easier if
+>>>>>> I make the final changes to your patches and send that for review. Would
+>>>>>> that be ok for you?
+>>>>>
+>>>>> Yes, that would be great.
+>>>>
+>>>> In case it helps, let me post my latest patches...will get those up
+>>>> in an hour or two.
+>>>
+>>> Actually, I seem to have just forgotten everything over the weekend...the
+>>> v2 patches I posted last Friday are current with my own tree.  So,
+>>> if you can tweak them to your satisfaction, that should work fine for
+>>> me.
+>> 
+>> Great, thanks. I'll try to send a new version today. If you could then
+>> review them carefully and test as well, that would be really good.
+>
+> Any chance we could get at least some version of this in soon?
 
-johannes
+I'll should be do it soon. Something else came up and I wasn't able to
+work on this. Sorry about that.
 
+-- 
+Kalle Valo
