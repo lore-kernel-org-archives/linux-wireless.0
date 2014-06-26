@@ -1,520 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49048 "EHLO sipsolutions.net"
+Received: from mail.evertz.com ([204.187.63.106]:31245 "EHLO mail.evertz.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753705AbaFXOK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 10:10:58 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>
-Subject: [PATCH 2/2] mac80211: split sched scan IEs
-Date: Tue, 24 Jun 2014 16:10:47 +0200
-Message-Id: <1403619047-13064-2-git-send-email-johannes@sipsolutions.net> (sfid-20140624_161106_975243_E4B65C33)
-In-Reply-To: <1403619047-13064-1-git-send-email-johannes@sipsolutions.net>
-References: <1403619047-13064-1-git-send-email-johannes@sipsolutions.net>
+	id S1755875AbaFZOhw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 10:37:52 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Subject: Stack trace during RTL8821AE driver init in 3.15.1 kernel
+Date: Thu, 26 Jun 2014 10:37:47 -0400
+Message-ID: <C70A636B101FD44999B82525C3E92AFA03D9038B@otis.burlington.evertz.tv> (sfid-20140626_163805_021200_021FB519)
+From: "Kevin Folz" <kfolz@evertz.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Hello all,
 
-Split sched scan IEs to band specific and not band specific
-blocks. Common IEs blocks may be sent to the FW once per command,
-instead of per band.
+I have a Gigabyte Brix GB-BXi7-4770R running Ubuntu Saucy 13.10, with an Azurewave AW-CB161H (Realtek RTL8821AE) mini-pcie card. 
 
-This allows optimization of size of the command, which may be
-required by some drivers (eg. iwlmvm with newer firmware version).
+Dmesg shows a stack trace during driver init. Full dmesg output can be found: http://pastebin.com/U0YMP6ti
 
-As this changes the mac80211 API, update all drivers to use the
-new version correctly, even if they don't (yet) make use of the
-split data.
+root@brix:~# dpkg -l | grep linux-
+ii  linux-firmware                        1.131                                      all          Firmware for Linux kernel drivers
+ii  linux-headers-3.15.1-031501           3.15.1-031501.201406161841                 all          Header files related to Linux kernel version 3.15.1
+ii  linux-headers-3.15.1-031501-generic   3.15.1-031501.201406161841                 amd64        Linux kernel headers for version 3.15.1 on 64 bit x86 SMP
+ii  linux-image-3.15.1-031501-generic     3.15.1-031501.201406161841                 amd64        Linux kernel image for version 3.15.1 on 64 bit x86 SMP
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 27 +++++++++++------
- drivers/net/wireless/ti/wl12xx/scan.c       | 20 +++++++-----
- drivers/net/wireless/ti/wl12xx/scan.h       |  2 +-
- drivers/net/wireless/ti/wl18xx/scan.c       | 16 +++++++---
- drivers/net/wireless/ti/wl18xx/scan.h       |  2 +-
- drivers/net/wireless/ti/wlcore/cmd.c        | 11 ++++---
- drivers/net/wireless/ti/wlcore/cmd.h        |  3 +-
- drivers/net/wireless/ti/wlcore/main.c       |  2 +-
- drivers/net/wireless/ti/wlcore/scan.h       |  2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h     |  2 +-
- include/net/mac80211.h                      | 23 +++-----------
- net/mac80211/driver-ops.h                   |  2 +-
- net/mac80211/scan.c                         | 47 +++++++++++++++--------------
- 15 files changed, 88 insertions(+), 75 deletions(-)
+A similar error message was present in 3.14.1.
+[    3.653712] WARNING: CPU: 1 PID: 572 at /home/apw/COD/linux/net/wireless/reg.c:1388 wiphy_apply_custom_regulatory+0xc5/0xf0 [cfg80211]()
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 4dc2e05f49ce..7dd363dd3ad3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1828,7 +1828,7 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
- static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 					struct ieee80211_vif *vif,
- 					struct cfg80211_sched_scan_request *req,
--					struct ieee80211_sched_scan_ies *ies)
-+					struct ieee80211_scan_ies *ies)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	int ret;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index fcc6c29482d0..97630f9a7cb9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -854,7 +854,7 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 			      struct ieee80211_vif *vif,
- 			      struct cfg80211_sched_scan_request *req,
--			      struct ieee80211_sched_scan_ies *ies);
-+			      struct ieee80211_scan_ies *ies);
- int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
- 				       struct cfg80211_sched_scan_request *req);
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 4b6c7d4bd199..3206fa097255 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -204,7 +204,8 @@ static void iwl_mvm_scan_fill_channels(struct iwl_scan_cmd *cmd,
-  */
- static u16 iwl_mvm_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
- 				  int n_ssids, const u8 *ssid, int ssid_len,
--				  const u8 *ie, int ie_len,
-+				  const u8 *band_ie, int band_ie_len,
-+				  const u8 *common_ie, int common_ie_len,
- 				  int left)
- {
- 	int len = 0;
-@@ -244,12 +245,19 @@ static u16 iwl_mvm_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
- 
- 	len += ssid_len + 2;
- 
--	if (WARN_ON(left < ie_len))
-+	if (WARN_ON(left < band_ie_len + common_ie_len))
- 		return len;
- 
--	if (ie && ie_len) {
--		memcpy(pos, ie, ie_len);
--		len += ie_len;
-+	if (band_ie && band_ie_len) {
-+		memcpy(pos, band_ie, band_ie_len);
-+		pos += band_ie_len;
-+		len += band_ie_len;
-+	}
-+
-+	if (common_ie && common_ie_len) {
-+		memcpy(pos, common_ie, common_ie_len);
-+		pos += common_ie_len;
-+		len += common_ie_len;
- 	}
- 
- 	return (u16)len;
-@@ -382,7 +390,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 			    (struct ieee80211_mgmt *)cmd->data,
- 			    vif->addr,
- 			    req->n_ssids, ssid, ssid_len,
--			    req->ie, req->ie_len,
-+			    req->ie, req->ie_len, NULL, 0,
- 			    mvm->fw->ucode_capa.max_probe_length));
- 
- 	iwl_mvm_scan_fill_channels(cmd, req, basic_ssid, &params);
-@@ -561,7 +569,7 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- 
- static void iwl_scan_offload_build_tx_cmd(struct iwl_mvm *mvm,
- 					  struct ieee80211_vif *vif,
--					  struct ieee80211_sched_scan_ies *ies,
-+					  struct ieee80211_scan_ies *ies,
- 					  enum ieee80211_band band,
- 					  struct iwl_tx_cmd *cmd,
- 					  u8 *data)
-@@ -577,7 +585,8 @@ static void iwl_scan_offload_build_tx_cmd(struct iwl_mvm *mvm,
- 	cmd_len = iwl_mvm_fill_probe_req((struct ieee80211_mgmt *)data,
- 					 vif->addr,
- 					 1, NULL, 0,
--					 ies->ie[band], ies->len[band],
-+					 ies->ies[band], ies->len[band],
-+					 ies->common_ies, ies->common_ie_len,
- 					 SCAN_OFFLOAD_PROBE_REQ_SIZE);
- 	cmd->len = cpu_to_le16(cmd_len);
- }
-@@ -735,7 +744,7 @@ static void iwl_build_channel_cfg(struct iwl_mvm *mvm,
- int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 			      struct ieee80211_vif *vif,
- 			      struct cfg80211_sched_scan_request *req,
--			      struct ieee80211_sched_scan_ies *ies)
-+			      struct ieee80211_scan_ies *ies)
- {
- 	int band_2ghz = mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels;
- 	int band_5ghz = mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
-diff --git a/drivers/net/wireless/ti/wl12xx/scan.c b/drivers/net/wireless/ti/wl12xx/scan.c
-index 7541bd1a4a4b..0c0d5cd98514 100644
---- a/drivers/net/wireless/ti/wl12xx/scan.c
-+++ b/drivers/net/wireless/ti/wl12xx/scan.c
-@@ -156,7 +156,7 @@ static int wl1271_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 					 cmd->params.role_id, band,
- 					 wl->scan.ssid, wl->scan.ssid_len,
- 					 wl->scan.req->ie,
--					 wl->scan.req->ie_len, false);
-+					 wl->scan.req->ie_len, NULL, 0, false);
- 	if (ret < 0) {
- 		wl1271_error("PROBE request template failed");
- 		goto out;
-@@ -317,7 +317,7 @@ static void wl12xx_adjust_channels(struct wl1271_cmd_sched_scan_config *cmd,
- int wl1271_scan_sched_scan_config(struct wl1271 *wl,
- 				  struct wl12xx_vif *wlvif,
- 				  struct cfg80211_sched_scan_request *req,
--				  struct ieee80211_sched_scan_ies *ies)
-+				  struct ieee80211_scan_ies *ies)
- {
- 	struct wl1271_cmd_sched_scan_config *cfg = NULL;
- 	struct wlcore_scan_channels *cfg_channels = NULL;
-@@ -378,8 +378,11 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
- 						 wlvif->role_id, band,
- 						 req->ssids[0].ssid,
- 						 req->ssids[0].ssid_len,
--						 ies->ie[band],
--						 ies->len[band], true);
-+						 ies->ies[band],
-+						 ies->len[band],
-+						 ies->common_ies,
-+						 ies->common_ie_len,
-+						 true);
- 		if (ret < 0) {
- 			wl1271_error("2.4GHz PROBE request template failed");
- 			goto out;
-@@ -392,8 +395,11 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
- 						 wlvif->role_id, band,
- 						 req->ssids[0].ssid,
- 						 req->ssids[0].ssid_len,
--						 ies->ie[band],
--						 ies->len[band], true);
-+						 ies->ies[band],
-+						 ies->len[band],
-+						 ies->common_ies,
-+						 ies->common_ie_len,
-+						 true);
- 		if (ret < 0) {
- 			wl1271_error("5GHz PROBE request template failed");
- 			goto out;
-@@ -449,7 +455,7 @@ out_free:
- 
- int wl12xx_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif  *wlvif,
- 			    struct cfg80211_sched_scan_request *req,
--			    struct ieee80211_sched_scan_ies *ies)
-+			    struct ieee80211_scan_ies *ies)
- {
- 	int ret;
- 
-diff --git a/drivers/net/wireless/ti/wl12xx/scan.h b/drivers/net/wireless/ti/wl12xx/scan.h
-index 264af7ac2785..427f9af85a00 100644
---- a/drivers/net/wireless/ti/wl12xx/scan.h
-+++ b/drivers/net/wireless/ti/wl12xx/scan.h
-@@ -135,6 +135,6 @@ int wl12xx_scan_stop(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- void wl12xx_scan_completed(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- int wl12xx_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif  *wlvif,
- 			    struct cfg80211_sched_scan_request *req,
--			    struct ieee80211_sched_scan_ies *ies);
-+			    struct ieee80211_scan_ies *ies);
- void wl12xx_scan_sched_scan_stop(struct wl1271 *wl,  struct wl12xx_vif *wlvif);
- #endif
-diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
-index 2b642f8c9266..98666f235a12 100644
---- a/drivers/net/wireless/ti/wl18xx/scan.c
-+++ b/drivers/net/wireless/ti/wl18xx/scan.c
-@@ -113,6 +113,8 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 				 req->ssids ? req->ssids[0].ssid_len : 0,
- 				 req->ie,
- 				 req->ie_len,
-+				 NULL,
-+				 0,
- 				 false);
- 		if (ret < 0) {
- 			wl1271_error("2.4GHz PROBE request template failed");
-@@ -128,6 +130,8 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 				 req->ssids ? req->ssids[0].ssid_len : 0,
- 				 req->ie,
- 				 req->ie_len,
-+				 NULL,
-+				 0,
- 				 false);
- 		if (ret < 0) {
- 			wl1271_error("5GHz PROBE request template failed");
-@@ -161,7 +165,7 @@ static
- int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
- 				  struct wl12xx_vif *wlvif,
- 				  struct cfg80211_sched_scan_request *req,
--				  struct ieee80211_sched_scan_ies *ies)
-+				  struct ieee80211_scan_ies *ies)
- {
- 	struct wl18xx_cmd_scan_params *cmd;
- 	struct wlcore_scan_channels *cmd_channels = NULL;
-@@ -237,8 +241,10 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
- 				 cmd->role_id, band,
- 				 req->ssids ? req->ssids[0].ssid : NULL,
- 				 req->ssids ? req->ssids[0].ssid_len : 0,
--				 ies->ie[band],
-+				 ies->ies[band],
- 				 ies->len[band],
-+				 ies->common_ies,
-+				 ies->common_ie_len,
- 				 true);
- 		if (ret < 0) {
- 			wl1271_error("2.4GHz PROBE request template failed");
-@@ -252,8 +258,10 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
- 				 cmd->role_id, band,
- 				 req->ssids ? req->ssids[0].ssid : NULL,
- 				 req->ssids ? req->ssids[0].ssid_len : 0,
--				 ies->ie[band],
-+				 ies->ies[band],
- 				 ies->len[band],
-+				 ies->common_ies,
-+				 ies->common_ie_len,
- 				 true);
- 		if (ret < 0) {
- 			wl1271_error("5GHz PROBE request template failed");
-@@ -277,7 +285,7 @@ out:
- 
- int wl18xx_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			    struct cfg80211_sched_scan_request *req,
--			    struct ieee80211_sched_scan_ies *ies)
-+			    struct ieee80211_scan_ies *ies)
- {
- 	return wl18xx_scan_sched_scan_config(wl, wlvif, req, ies);
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/scan.h b/drivers/net/wireless/ti/wl18xx/scan.h
-index eadee42689d1..2e636aa5dba9 100644
---- a/drivers/net/wireless/ti/wl18xx/scan.h
-+++ b/drivers/net/wireless/ti/wl18xx/scan.h
-@@ -122,6 +122,6 @@ int wl18xx_scan_stop(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- void wl18xx_scan_completed(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- int wl18xx_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			    struct cfg80211_sched_scan_request *req,
--			    struct ieee80211_sched_scan_ies *ies);
-+			    struct ieee80211_scan_ies *ies);
- void wl18xx_scan_sched_scan_stop(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- #endif
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 40dc30f4faaa..e269c0a57017 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1124,7 +1124,8 @@ out:
- int wl12xx_cmd_build_probe_req(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			       u8 role_id, u8 band,
- 			       const u8 *ssid, size_t ssid_len,
--			       const u8 *ie, size_t ie_len, bool sched_scan)
-+			       const u8 *ie0, size_t ie0_len, const u8 *ie1,
-+			       size_t ie1_len, bool sched_scan)
- {
- 	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
- 	struct sk_buff *skb;
-@@ -1136,13 +1137,15 @@ int wl12xx_cmd_build_probe_req(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	wl1271_debug(DEBUG_SCAN, "build probe request band %d", band);
- 
- 	skb = ieee80211_probereq_get(wl->hw, vif, ssid, ssid_len,
--				     ie_len);
-+				     ie0_len + ie1_len);
- 	if (!skb) {
- 		ret = -ENOMEM;
- 		goto out;
- 	}
--	if (ie_len)
--		memcpy(skb_put(skb, ie_len), ie, ie_len);
-+	if (ie0_len)
-+		memcpy(skb_put(skb, ie0_len), ie0, ie0_len);
-+	if (ie1_len)
-+		memcpy(skb_put(skb, ie1_len), ie1, ie1_len);
- 
- 	if (sched_scan &&
- 	    (wl->quirks & WLCORE_QUIRK_DUAL_PROBE_TMPL)) {
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index b084830a61cf..6788d7356ca5 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -64,7 +64,8 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- int wl12xx_cmd_build_probe_req(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			       u8 role_id, u8 band,
- 			       const u8 *ssid, size_t ssid_len,
--			       const u8 *ie, size_t ie_len, bool sched_scan);
-+			       const u8 *ie, size_t ie_len, const u8 *common_ie,
-+			       size_t common_ie_len, bool sched_scan);
- struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
- 					      struct wl12xx_vif *wlvif,
- 					      struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e5ffb8b91dd4..48f83868f9cb 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3637,7 +3637,7 @@ out:
- static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
- 				      struct cfg80211_sched_scan_request *req,
--				      struct ieee80211_sched_scan_ies *ies)
-+				      struct ieee80211_scan_ies *ies)
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-diff --git a/drivers/net/wireless/ti/wlcore/scan.h b/drivers/net/wireless/ti/wlcore/scan.h
-index a6ab24b5c0f9..4dadd0c62cde 100644
---- a/drivers/net/wireless/ti/wlcore/scan.h
-+++ b/drivers/net/wireless/ti/wlcore/scan.h
-@@ -37,7 +37,7 @@ void wl1271_scan_complete_work(struct work_struct *work);
- int wl1271_scan_sched_scan_config(struct wl1271 *wl,
- 				     struct wl12xx_vif *wlvif,
- 				     struct cfg80211_sched_scan_request *req,
--				     struct ieee80211_sched_scan_ies *ies);
-+				     struct ieee80211_scan_ies *ies);
- int wl1271_scan_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- void wlcore_scan_sched_scan_results(struct wl1271 *wl);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 95a54504f0cc..71320509b56d 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -95,7 +95,7 @@ struct wlcore_ops {
- 	int (*scan_stop)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 	int (*sched_scan_start)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 				struct cfg80211_sched_scan_request *req,
--				struct ieee80211_sched_scan_ies *ies);
-+				struct ieee80211_scan_ies *ies);
- 	void (*sched_scan_stop)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 	int (*get_spare_blocks)(struct wl1271 *wl, bool is_gem);
- 	int (*set_key)(struct wl1271 *wl, enum set_key_cmd cmd,
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6e49b0e64874..1046ba2a996c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -754,26 +754,11 @@ struct ieee80211_tx_info {
- };
- 
- /**
-- * struct ieee80211_sched_scan_ies - scheduled scan IEs
-- *
-- * This structure is used to pass the appropriate IEs to be used in scheduled
-- * scans for all bands.  It contains both the IEs passed from the userspace
-- * and the ones generated by mac80211.
-- *
-- * @ie: array with the IEs for each supported band
-- * @len: array with the total length of the IEs for each band
-- */
--struct ieee80211_sched_scan_ies {
--	u8 *ie[IEEE80211_NUM_BANDS];
--	size_t len[IEEE80211_NUM_BANDS];
--};
--
--/**
-  * struct ieee80211_scan_ies - descriptors for different blocks of IEs
-  *
-- * This structure is used to point to different blocks of IEs in HW scan.
-- * These blocks contain the IEs passed by userspace and the ones generated
-- * by mac80211.
-+ * This structure is used to point to different blocks of IEs in HW scan
-+ * and scheduled scan. These blocks contain the IEs passed by userspace
-+ * and the ones generated by mac80211.
-  *
-  * @ies: pointers to band specific IEs.
-  * @len: lengths of band_specific IEs.
-@@ -2917,7 +2902,7 @@ struct ieee80211_ops {
- 	int (*sched_scan_start)(struct ieee80211_hw *hw,
- 				struct ieee80211_vif *vif,
- 				struct cfg80211_sched_scan_request *req,
--				struct ieee80211_sched_scan_ies *ies);
-+				struct ieee80211_scan_ies *ies);
- 	int (*sched_scan_stop)(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif);
- 	void (*sw_scan_start)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index faa0d90f6e80..11423958116a 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -346,7 +346,7 @@ static inline int
- drv_sched_scan_start(struct ieee80211_local *local,
- 		     struct ieee80211_sub_if_data *sdata,
- 		     struct cfg80211_sched_scan_request *req,
--		     struct ieee80211_sched_scan_ies *ies)
-+		     struct ieee80211_scan_ies *ies)
- {
- 	int ret;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 116959e070d0..a0a938145dcc 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -1003,10 +1003,13 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 					struct cfg80211_sched_scan_request *req)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_sched_scan_ies sched_scan_ies = {};
-+	struct ieee80211_scan_ies sched_scan_ies = {};
- 	struct cfg80211_chan_def chandef;
--	int ret, i, iebufsz;
--	struct ieee80211_scan_ies dummy_ie_desc;
-+	int ret, i, iebufsz, num_bands = 0;
-+	u32 rate_masks[IEEE80211_NUM_BANDS] = {};
-+	u8 bands_used = 0;
-+	u8 *ie;
-+	size_t len;
- 
- 	iebufsz = local->scan_ies_len + req->ie_len;
- 
-@@ -1016,37 +1019,35 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 		return -ENOTSUPP;
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
--		u32 rate_masks[IEEE80211_NUM_BANDS] = {};
--
--		if (!local->hw.wiphy->bands[i])
--			continue;
--
--		sched_scan_ies.ie[i] = kzalloc(iebufsz, GFP_KERNEL);
--		if (!sched_scan_ies.ie[i]) {
--			ret = -ENOMEM;
--			goto out_free;
-+		if (local->hw.wiphy->bands[i]) {
-+			bands_used |= BIT(i);
-+			rate_masks[i] = (u32) -1;
-+			num_bands++;
- 		}
-+	}
- 
--		ieee80211_prepare_scan_chandef(&chandef, req->scan_width);
--		rate_masks[i] = (u32) -1;
--
--		sched_scan_ies.len[i] =
--			ieee80211_build_preq_ies(local, sched_scan_ies.ie[i],
--						 iebufsz, &dummy_ie_desc,
--						 req->ie, req->ie_len, BIT(i),
--						 rate_masks, &chandef);
-+	ie = kzalloc(num_bands * iebufsz, GFP_KERNEL);
-+	if (!ie) {
-+		ret = -ENOMEM;
-+		goto out;
- 	}
- 
-+	ieee80211_prepare_scan_chandef(&chandef, req->scan_width);
-+
-+	len = ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
-+				       &sched_scan_ies, req->ie,
-+				       req->ie_len, bands_used,
-+				       rate_masks, &chandef);
-+
- 	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
- 	if (ret == 0) {
- 		rcu_assign_pointer(local->sched_scan_sdata, sdata);
- 		local->sched_scan_req = req;
- 	}
- 
--out_free:
--	while (i > 0)
--		kfree(sched_scan_ies.ie[--i]);
-+	kfree(ie);
- 
-+out:
- 	if (ret) {
- 		/* Clean in case of failure after HW restart or upon resume. */
- 		RCU_INIT_POINTER(local->sched_scan_sdata, NULL);
--- 
-2.0.0
+If I can help in any way, please let me know.
 
+-----
+[    4.119673] ------------[ cut here ]------------
+[    4.119687] WARNING: CPU: 5 PID: 510 at /home/apw/COD/linux/net/wireless/reg.c:1508 wiphy_apply_custom_regulatory+0xbc/0xe0 [cfg80211]()
+[    4.119688] wiphy should have REGULATORY_CUSTOM_REG
+[    4.119689] Modules linked in: rtl8821ae(C+) mac80211 x86_pkg_temp_thermal snd_soc_rt5640 intel_powerclamp coretemp snd_soc_core snd_compress kvm crct10dif_pclmul crc32_pclmul cfg80211 btusb ghash_clmulni_intel aesni_intel mei_me(+) aes_x86_64 snd_seq_midi lrw gf128mul mei glue_helper snd_hda_intel(+) snd_seq_midi_event ablk_helper snd_hda_controller bluetooth cryptd snd_hda_codec snd_hwdep snd_rawmidi i915(+) snd_seq snd_pcm 6lowpan_iphc snd_seq_device lpc_ich snd_timer snd drm_kms_helper drm i2c_hid hid 8250_dw dw_dmac i2c_algo_bit i2c_designware_platform dw_dmac_core snd_soc_sst_acpi i2c_designware_core video soundcore spi_pxa2xx_platform mac_hid lp parport nls_iso8859_1 nls_utf8 cifs fscache ahci r8169 libahci mii sdhci_acpi sdhci
+[    4.119713] CPU: 5 PID: 510 Comm: systemd-udevd Tainted: G         C    3.15.1-031501-generic #201406161841
+[    4.119714] Hardware name: GIGABYTE M4HM87P-00/M4HM87P-00, BIOS F4 03/10/2014
+[    4.119715]  00000000000005e4 ffff8800d600fa38 ffffffff8176e144 000000000000428a
+[    4.119716]  ffff8800d600fa88 ffff8800d600fa78 ffffffff8106ce2c 0000000000000000
+[    4.119718]  ffffffffa0704080 ffff880212398220 ffffffffa06bf5a0 ffff880212816098
+[    4.119719] Call Trace:
+[    4.119724]  [<ffffffff8176e144>] dump_stack+0x46/0x58
+[    4.119726]  [<ffffffff8106ce2c>] warn_slowpath_common+0x8c/0xc0
+[    4.119736]  [<ffffffffa06bf5a0>] ? rtl_regd_init+0x310/0x310 [rtl8821ae]
+[    4.119737]  [<ffffffff8106cf16>] warn_slowpath_fmt+0x46/0x50
+[    4.119745]  [<ffffffffa045aa5c>] wiphy_apply_custom_regulatory+0xbc/0xe0 [cfg80211]
+[    4.119751]  [<ffffffffa06bf5a0>] ? rtl_regd_init+0x310/0x310 [rtl8821ae]
+[    4.119755]  [<ffffffffa06bf3e2>] rtl_regd_init+0x152/0x310 [rtl8821ae]
+[    4.119760]  [<ffffffffa06ba771>] rtl_init_core+0x41/0x170 [rtl8821ae]
+[    4.119767]  [<ffffffffa06ce7bd>] rtl_pci_probe+0x28d/0x920 [rtl8821ae]
+[    4.119769]  [<ffffffff813bf99e>] local_pci_probe+0x4e/0xa0
+[    4.119772]  [<ffffffff8124b092>] ? kernfs_create_link+0x52/0xa0
+[    4.119773]  [<ffffffff813c0db9>] __pci_device_probe+0xb9/0xf0
+[    4.119774]  [<ffffffff813c0e2a>] pci_device_probe+0x3a/0x60
+[    4.119776]  [<ffffffff814b4581>] really_probe+0x91/0x380
+[    4.119777]  [<ffffffff814b49f7>] driver_probe_device+0x47/0xa0
+[    4.119779]  [<ffffffff814b4afb>] __driver_attach+0xab/0xb0
+[    4.119780]  [<ffffffff814b4a50>] ? driver_probe_device+0xa0/0xa0
+[    4.119782]  [<ffffffff814b288e>] bus_for_each_dev+0x5e/0x90
+[    4.119783]  [<ffffffff814b413e>] driver_attach+0x1e/0x20
+[    4.119784]  [<ffffffff814b3c44>] bus_add_driver+0x124/0x260
+[    4.119789]  [<ffffffffa050f000>] ? 0xffffffffa050efff
+[    4.119790]  [<ffffffff814b5214>] driver_register+0x64/0xf0
+[    4.119792]  [<ffffffffa050f000>] ? 0xffffffffa050efff
+[    4.119794]  [<ffffffff813bfd1c>] __pci_register_driver+0x4c/0x50
+[    4.119799]  [<ffffffffa050f02b>] rtl8821ae_module_init+0x2b/0x1000 [rtl8821ae]
+[    4.119801]  [<ffffffff8100217a>] do_one_initcall+0xfa/0x1b0
+[    4.119803]  [<ffffffff8105db33>] ? set_memory_nx+0x43/0x50
+[    4.119808]  [<ffffffff8176322c>] do_init_module+0x80/0x1d1
+[    4.119811]  [<ffffffff810edcc1>] load_module+0x4e1/0x600
+[    4.119812]  [<ffffffff810eb2d0>] ? show_initstate+0x50/0x50
+[    4.119814]  [<ffffffff810ede94>] SyS_init_module+0xb4/0x100
+[    4.119817]  [<ffffffff8178487f>] tracesys+0xe1/0xe6
+[    4.119818] ---[ end trace 52ffc03936ebe53b ]---
+
+Thanks,
+Kevin Folz - Embedded Platform Engineer - Evertz
