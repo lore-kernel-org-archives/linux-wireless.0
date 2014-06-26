@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38009 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750864AbaFEMjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 08:39:35 -0400
-Message-ID: <1401971964.4168.4.camel@jlt4.sipsolutions.net> (sfid-20140605_143939_080817_18E6812A)
-Subject: Re: [PATCH v3 0/2] mac80211: fix csa counters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Jun 2014 14:39:24 +0200
-In-Reply-To: <1401970897-21389-1-git-send-email-michal.kazior@tieto.com> (sfid-20140605_142925_177877_7C1D13CC)
-References: <1401345535-22991-1-git-send-email-michal.kazior@tieto.com>
-	 <1401970897-21389-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140605_142925_177877_7C1D13CC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:40524 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755410AbaFZP0y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 11:26:54 -0400
+Message-ID: <53AC3BBD.3050003@candelatech.com> (sfid-20140626_172705_339857_97E8EF99)
+Date: Thu, 26 Jun 2014 08:26:53 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: Firmware debugging patches?
+References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com> <538CC68C.10808@gmail.com> <538CC949.5020901@candelatech.com> <CANUX_P2vbKD3zkwE=DvJJWpo=gEMORCBy=XFoC2YSFpmg9sr_A@mail.gmail.com> <538CD507.1050803@candelatech.com> <87bnu7pqe2.fsf@kamboji.qca.qualcomm.com> <53909372.1040707@candelatech.com> <87fvjimsxj.fsf@kamboji.qca.qualcomm.com> <5391E620.4090706@candelatech.com> <87vbscj2ho.fsf@kamboji.qca.qualcomm.com> <53932F52.2030203@candelatech.com> <8738ffiysv.fsf@kamboji.qca.qualcomm.com> <539483B1.5020401@candelatech.com> <87ppiih4zk.fsf@kamboji.qca.qualcomm.com> <5395CE36.30407@candelatech.com> <5395D718.4090704@candelatech.com> <5395E089.1000601@candelatech.com> <87fvjde1u0.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87fvjde1u0.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-06-05 at 14:21 +0200, Michal Kazior wrote:
-> Hi,
+On 06/09/2014 11:05 PM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
 > 
-> I was seeing strange WARN_ON splat loops and
-> crashes while I was testing my multi-vif CSA.
+>>>>> As kbuild found some compilation problems, I think it would be easier if
+>>>>> I make the final changes to your patches and send that for review. Would
+>>>>> that be ok for you?
+>>>>
+>>>> Yes, that would be great.
+>>>
+>>> In case it helps, let me post my latest patches...will get those up
+>>> in an hour or two.
+>>
+>> Actually, I seem to have just forgotten everything over the weekend...the
+>> v2 patches I posted last Friday are current with my own tree.  So,
+>> if you can tweak them to your satisfaction, that should work fine for
+>> me.
 > 
-> CSA counters weren't properly reset and on some
-> failpaths this caused a mess. There were also
-> possible SMP inconsitencies/races.
-> 
-> 
-> v2:
->  * dropped the atomic counter patch
->  * fix patch 1
-> 
-> v3:
->  * change sizeof(*x) -> sizeof(x[0]) [Johannes]
->  * rebase to 1238bbdc6c2cee366eea5ce5d56170b7fdd6ffd7
+> Great, thanks. I'll try to send a new version today. If you could then
+> review them carefully and test as well, that would be really good.
 
-Applied, thanks!
+Any chance we could get at least some version of this in soon?
 
-johannes
+It would be nice to have a good way for users to report more than
+just the basic crash dump registers...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
