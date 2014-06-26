@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:57018 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317AbaFHHWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2014 03:22:13 -0400
-Received: from nebulos.localnet ([88.217.181.182]) by smtp.web.de (mrweb004)
- with ESMTPSA (Nemesis) id 0MSnyP-1XJD301GTd-00Rt8F for
- <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2014 09:22:11 +0200
-From: blue-t@web.de
-To: linux-wireless@vger.kernel.org
-Subject: What is the state of mt7610un mainline support?
-Date: Sun, 08 Jun 2014 09:22:10 +0200
-Message-ID: <7708158.pL1FsGGcj0@nebulos> (sfid-20140608_092558_949956_B46B390A)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45773 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756280AbaFZLYA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 07:24:00 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 3/3] ath9k: Calculate sleep duration
+Date: Thu, 26 Jun 2014 16:54:42 +0530
+Message-ID: <1403781882-468-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140626_132404_499406_C1A4C9CA)
+In-Reply-To: <1403781882-468-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1403781882-468-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Right now sleep duration is configured as beacon interval. It should be
+the multiple of beacon interval by listen period which helps to
+reduce station power consumption.
 
-i recently bought an AVM!Wlan Stick AC 430 (ID 057c:8501 AVM GmbH) which 
-currently doesn't work at all with 3.15 kernel.
-A magnifying glass revealed that this device is using an mt7610un chipset.
-I tried to add the device id to the mt7610u driver from 
-http://www.mediatek.com/en/downloads/?sort=os but that didn't work out.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/common-beacon.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.c b/drivers/net/wireless/ath/ath9k/common-beacon.c
+index 775d1d2..733be51 100644
+--- a/drivers/net/wireless/ath/ath9k/common-beacon.c
++++ b/drivers/net/wireless/ath/ath9k/common-beacon.c
+@@ -57,7 +57,7 @@ int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
+ 				 struct ath9k_beacon_state *bs)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int dtim_intval;
++	int dtim_intval, sleepduration;
+ 	u64 tsf;
  
-Mar  8 16:36:46 kernel: [  250.686059] usb 3-2: Product: FRITZ!WLAN USB Stick 
-AC 430
-Mar  8 16:36:47 kernel: [  251.684085] scsi 7:0:0:0: CD-ROM            FRITZ!   
-WLAN selfinstall 1.00 PQ: 0 ANSI: 0 CCS
-Mar  8 16:37:12 kernel: [  277.161689] usb 3-2: Product: FRITZ!WLAN AC 430
-Mar  8 16:37:12 kernel: [  277.163995] ==>RT65xx_WLAN_ChipOnOff(): OnOff:1, 
-Reset= 0, pAd->WlanFunCtrl:0x0, Reg-WlanFunCtrl=0xff000002
-Mar  8 16:37:15 kernel: [  279.692549] ERROR!!! NICLoadFirmware failed, 
-Status[=0x00000001]
+ 	/* No need to configure beacon if we are not associated */
+@@ -75,6 +75,7 @@ int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
+ 	 * last beacon we received (which may be none).
+ 	 */
+ 	dtim_intval = conf->intval * conf->dtim_period;
++	sleepduration = ah->hw->conf.listen_interval * conf->intval;
  
-The  firmware shipped with the official driver was copied to /lib/firmware first 
-though.
-Firmware loading wasn't required for the earlier devices from that 
-manufacturer if i understand  the discussion in 
-http://www.spinics.net/lists/linux-wireless/msg123246.html correctly.
-Do we need a similiar fix here?
+ 	/*
+ 	 * Pull nexttbtt forward to reflect the current
+@@ -112,7 +113,7 @@ int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
+ 	 */
  
-Regards
-Sam
+ 	bs->bs_sleepduration = TU_TO_USEC(roundup(IEEE80211_MS_TO_TU(100),
+-						 conf->intval));
++						  sleepduration));
+ 	if (bs->bs_sleepduration > bs->bs_dtimperiod)
+ 		bs->bs_sleepduration = bs->bs_dtimperiod;
  
+-- 
+2.0.0
 
