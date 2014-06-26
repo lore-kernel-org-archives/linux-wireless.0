@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49444 "EHLO sipsolutions.net"
+Received: from mail.ispras.ru ([83.149.199.45]:40222 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755550AbaFXRIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 13:08:15 -0400
-Message-ID: <1403629678.10831.14.camel@jlt4.sipsolutions.net> (sfid-20140624_190818_634601_B2BAE21D)
-Subject: Re: pull-request: mac80211-next 2014-06-24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Jun 2014 19:07:58 +0200
-In-Reply-To: <1403626964.10831.12.camel@jlt4.sipsolutions.net> (sfid-20140624_182313_006352_507DF583)
-References: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
-	 (sfid-20140624_182313_006352_507DF583)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751559AbaFZWvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 18:51:36 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Fariya Fatima <fariyaf@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH 1/2] rsi: GFP_ATOMIC is not needed in rsi_init_usb_interface()
+Date: Fri, 27 Jun 2014 02:51:24 +0400
+Message-Id: <1403823085-10464-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140627_005230_467050_E66F7D59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-06-24 at 18:22 +0200, Johannes Berg wrote:
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> The biggest thing here is probably Arik's TDLS rework, beyond that we
-> have smaller improvements and features like David's scanning IE thing,
-
-The latter seems to cause some issues with the ath9k multi-channel code,
-I didn't realize you'd merged that in.
-
-The fix is not very difficult, so maybe you can just fix it when you
-merge? See commit eb6a61549f530f1cc435512df3799f656094ba83 for how all
-the other drivers were changed.
-
-johannes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 4c46e5631e2f..2e0254606e3d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -397,7 +397,7 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 		return -ENOMEM;
+ 	}
+ 
+-	rsi_dev->tx_buffer = kmalloc(2048, GFP_ATOMIC);
++	rsi_dev->tx_buffer = kmalloc(2048, GFP_KERNEL);
+ 	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
+ 	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
+ 	rsi_dev->tx_blk_size = 252;
+-- 
+1.9.1
 
