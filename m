@@ -1,411 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51760 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933794AbaFTEjZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2014 00:39:25 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/7] mwifiex: add firmware dump feature for SDIO
-Date: Thu, 19 Jun 2014 21:38:55 -0700
-Message-ID: <1403239138-3113-4-git-send-email-bzhao@marvell.com> (sfid-20140620_063929_436902_F5ED1000)
-In-Reply-To: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
-References: <1403239138-3113-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.ispras.ru ([83.149.199.45]:40228 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751877AbaFZWvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2014 18:51:38 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Fariya Fatima <fariyaf@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH 2/2] rsi: fix memory leaks and error handling in rsi_91x_usb
+Date: Fri, 27 Jun 2014 02:51:25 +0400
+Message-Id: <1403823085-10464-2-git-send-email-khoroshilov@ispras.ru> (sfid-20140627_005201_713310_98E7895F)
+In-Reply-To: <1403823085-10464-1-git-send-email-khoroshilov@ispras.ru>
+References: <1403823085-10464-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The patch fixes a couple of issues:
+- absence of deallocation of rsi_dev->rx_usb_urb[0] in the driver;
+- potential NULL pointer dereference because of lack of checks for memory
+  allocation success in rsi_init_usb_interface().
 
-Firmware dump feature is added for SDIO based chipsets
-which can be used with the help of ethtool commands.
+By the way, it makes rsi_probe() returning error code instead of 1
+and fixes comments regarding returning values.
 
-1) Trigger firmware dump operation:
-ethtool --set-dump mlan0 0xff
+Found by Linux Driver Verification project (linuxtesting.org).
 
-When the operation is completed, udev event will be sent to
-trigger external application.
-
-2) Following udev rule can be used to get the data from ethtool:
-DRIVER=="mwifiex_sdio", ACTION=="change", RUN+="/sbin/mwifiex_sdio_fw_dump.sh"
-
-mwifiex_sdio_fw_dump.sh: #!/bin/bash
-ethtool --set-dump mlan0 0
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/ITCM.log
-
-ethtool --set-dump mlan0 1
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/DTCM.log
-
-ethtool --set-dump mlan0 2
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/SQRAM.log
-
-ethtool --set-dump mlan0 3
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/APU.log
-
-ethtool --set-dump mlan0 4
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/CIU.log
-
-ethtool --set-dump mlan0 5
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/ICU.log
-
-ethtool --set-dump mlan0 6
-ethtool --get-dump mlan0
-ethtool --get-dump mlan0 data /tmp/MAC.log
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
- drivers/net/wireless/mwifiex/sdio.c | 209 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/sdio.h |  12 +++
- 2 files changed, 221 insertions(+)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 58 ++++++++++++++++++++++------------
+ 1 file changed, 38 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index b34270d..95a1d1f 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -50,6 +50,24 @@ static struct mwifiex_if_ops sdio_ops;
- 
- static struct semaphore add_remove_card_sem;
- 
-+static struct memory_type_mapping mem_type_mapping_tbl[] = {
-+	{"ITCM", NULL, 0, 0xF0},
-+	{"DTCM", NULL, 0, 0xF1},
-+	{"SQRAM", NULL, 0, 0xF2},
-+	{"APU", NULL, 0, 0xF3},
-+	{"CIU", NULL, 0, 0xF4},
-+	{"ICU", NULL, 0, 0xF5},
-+	{"MAC", NULL, 0, 0xF6},
-+	{"EXT7", NULL, 0, 0xF7},
-+	{"EXT8", NULL, 0, 0xF8},
-+	{"EXT9", NULL, 0, 0xF9},
-+	{"EXT10", NULL, 0, 0xFA},
-+	{"EXT11", NULL, 0, 0xFB},
-+	{"EXT12", NULL, 0, 0xFC},
-+	{"EXT13", NULL, 0, 0xFD},
-+	{"EXTLAST", NULL, 0, 0xFE},
-+};
-+
- /*
-  * SDIO probe.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 2e0254606e3d..de4d100b84dd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -25,7 +25,7 @@
+  * @len: Length to be written.
+  * @endpoint: Type of endpoint.
   *
-@@ -87,6 +105,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 		card->tx_buf_size = data->tx_buf_size;
- 		card->mp_tx_agg_buf_size = data->mp_tx_agg_buf_size;
- 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
-+		card->supports_fw_dump = data->supports_fw_dump;
+- * Return: status: 0 on success, -1 on failure.
++ * Return: status: 0 on success, a negative error code on failure.
+  */
+ static int rsi_usb_card_write(struct rsi_hw *adapter,
+ 			      void *buf,
+@@ -60,7 +60,7 @@ static int rsi_usb_card_write(struct rsi_hw *adapter,
+  * @data: Pointer to the data that has to be written.
+  * @count: Number of multiple bytes to be written.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, a negative error code on failure.
+  */
+ static int rsi_write_multiple(struct rsi_hw *adapter,
+ 			      u8 endpoint,
+@@ -147,7 +147,7 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+  * @value: Value to be read.
+  * @len: length of data to be read.
+  *
+- * Return: status: 0 on success, -1 on failure.
++ * Return: status: 0 on success, a negative error code on failure.
+  */
+ static int rsi_usb_reg_read(struct usb_device *usbdev,
+ 			    u32 reg,
+@@ -189,7 +189,7 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
+  * @value: Value to write.
+  * @len: Length of data to be written.
+  *
+- * Return: status: 0 on success, -1 on failure.
++ * Return: status: 0 on success, a negative error code on failure.
+  */
+ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			     u32 reg,
+@@ -249,7 +249,7 @@ static void rsi_rx_done_handler(struct urb *urb)
+  * rsi_rx_urb_submit() - This function submits the given URB to the USB stack.
+  * @adapter: Pointer to the adapter structure.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, a negative error code on failure.
+  */
+ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+ {
+@@ -281,7 +281,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+  * @data: Pointer to the data that has to be written.
+  * @count: Number of multiple bytes to be written on to the registers.
+  *
+- * Return: status: 0 on success, -1 on failure.
++ * Return: status: 0 on success, a negative error code on failure.
+  */
+ int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
+ 				    u32 addr,
+@@ -331,7 +331,7 @@ int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
+  * @pkt: Pointer to the data to be written on to the card.
+  * @len: Length of the data to be written on to the card.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, a negative error code on failure.
+  */
+ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
+ 				       u8 *pkt,
+@@ -359,6 +359,7 @@ static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+ 
+ 	rsi_kill_thread(&dev->rx_thread);
++	usb_free_urb(dev->rx_usb_urb[0]);
+ 	kfree(adapter->priv->rx_data_pkt);
+ 	kfree(dev->tx_buffer);
+ }
+@@ -368,7 +369,7 @@ static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
+  * @adapter: Pointer to the adapter structure.
+  * @pfunction: Pointer to USB interface structure.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, a negative error code on failure.
+  */
+ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 				  struct usb_interface *pfunction)
+@@ -398,7 +399,15 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
  	}
  
- 	sdio_claim_host(func);
-@@ -1779,6 +1798,8 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	adapter->dev = &func->dev;
+ 	rsi_dev->tx_buffer = kmalloc(2048, GFP_KERNEL);
++	if (!rsi_dev->tx_buffer) {
++		status = -ENOMEM;
++		goto fail_tx;
++	}
+ 	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
++	if (!rsi_dev->rx_usb_urb[0]) {
++		status = -ENOMEM;
++		goto fail_rx;
++	}
+ 	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
+ 	rsi_dev->tx_blk_size = 252;
  
- 	strcpy(adapter->fw_name, card->firmware);
-+	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
-+	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
+@@ -413,7 +422,7 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 				    rsi_usb_rx_thread, "RX-Thread");
+ 	if (status) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to init rx thrd\n", __func__);
+-		goto fail;
++		goto fail_thread;
+ 	}
+ 
+ #ifdef CONFIG_RSI_DEBUGFS
+@@ -424,8 +433,11 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 	rsi_dbg(INIT_ZONE, "%s: Enabled the interface\n", __func__);
+ 	return 0;
+ 
+-fail:
++fail_thread:
++	usb_free_urb(rsi_dev->rx_usb_urb[0]);
++fail_rx:
+ 	kfree(rsi_dev->tx_buffer);
++fail_tx:
+ 	kfree(common->rx_data_pkt);
+ 	return status;
+ }
+@@ -437,7 +449,7 @@ fail:
+  * @pfunction: Pointer to the USB interface structure.
+  * @id: Pointer to the usb_device_id structure.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, a negative error code on failure.
+  */
+ static int rsi_probe(struct usb_interface *pfunction,
+ 		     const struct usb_device_id *id)
+@@ -445,6 +457,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	struct rsi_hw *adapter;
+ 	struct rsi_91x_usbdev *dev;
+ 	u16 fw_status;
++	int status;
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+@@ -452,10 +465,11 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+-		return 1;
++		return -ENOMEM;
+ 	}
+ 
+-	if (rsi_init_usb_interface(adapter, pfunction)) {
++	status = rsi_init_usb_interface(adapter, pfunction);
++	if (status) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init usb interface\n",
+ 			__func__);
+ 		goto err;
+@@ -465,26 +479,30 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+ 
+-	if (rsi_usb_reg_read(dev->usbdev, FW_STATUS_REG, &fw_status, 2) < 0)
++	status = rsi_usb_reg_read(dev->usbdev, FW_STATUS_REG, &fw_status, 2);
++	if (status)
+ 		goto err1;
+ 	else
+ 		fw_status &= 1;
+ 
+ 	if (!fw_status) {
+-		if (rsi_usb_device_init(adapter->priv)) {
++		status = rsi_usb_device_init(adapter->priv);
++		if (status) {
+ 			rsi_dbg(ERR_ZONE, "%s: Failed in device init\n",
+ 				__func__);
+ 			goto err1;
+ 		}
+ 
+-		if (rsi_usb_reg_write(dev->usbdev,
+-				      USB_INTERNAL_REG_1,
+-				      RSI_USB_READY_MAGIC_NUM, 1) < 0)
++		status = rsi_usb_reg_write(dev->usbdev,
++					   USB_INTERNAL_REG_1,
++					   RSI_USB_READY_MAGIC_NUM, 1);
++		if (status)
+ 			goto err1;
+ 		rsi_dbg(INIT_ZONE, "%s: Performed device init\n", __func__);
+ 	}
+ 
+-	if (rsi_rx_urb_submit(adapter))
++	status = rsi_rx_urb_submit(adapter);
++	if (status)
+ 		goto err1;
  
  	return 0;
- }
-@@ -1936,6 +1957,180 @@ static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
- 	mmc_add_host(target);
- }
- 
-+/* This function read/write firmware */
-+static enum
-+rdwr_status mwifiex_sdio_rdwr_firmware(struct mwifiex_adapter *adapter,
-+				       u8 doneflag)
-+{
-+	struct sdio_mmc_card *card = adapter->card;
-+	int ret, tries;
-+	u8 ctrl_data = 0;
-+
-+	sdio_writeb(card->func, FW_DUMP_HOST_READY, card->reg->fw_dump_ctrl,
-+		    &ret);
-+	if (ret) {
-+		dev_err(adapter->dev, "SDIO Write ERR\n");
-+		return RDWR_STATUS_FAILURE;
-+	}
-+	for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
-+		ctrl_data = sdio_readb(card->func, card->reg->fw_dump_ctrl,
-+				       &ret);
-+		if (ret) {
-+			dev_err(adapter->dev, "SDIO read err\n");
-+			return RDWR_STATUS_FAILURE;
-+		}
-+		if (ctrl_data == FW_DUMP_DONE)
-+			break;
-+		if (doneflag && ctrl_data == doneflag)
-+			return RDWR_STATUS_DONE;
-+		if (ctrl_data != FW_DUMP_HOST_READY) {
-+			dev_info(adapter->dev,
-+				 "The ctrl reg was changed, re-try again!\n");
-+			sdio_writeb(card->func, FW_DUMP_HOST_READY,
-+				    card->reg->fw_dump_ctrl, &ret);
-+			if (ret) {
-+				dev_err(adapter->dev, "SDIO write err\n");
-+				return RDWR_STATUS_FAILURE;
-+			}
-+		}
-+		usleep_range(100, 200);
-+	}
-+	if (ctrl_data == FW_DUMP_HOST_READY) {
-+		dev_err(adapter->dev, "Fail to pull ctrl_data\n");
-+		return RDWR_STATUS_FAILURE;
-+	}
-+
-+	return RDWR_STATUS_SUCCESS;
-+}
-+
-+/* This function dump firmware memory to file */
-+static void mwifiex_sdio_fw_dump_work(struct work_struct *work)
-+{
-+	struct mwifiex_adapter *adapter =
-+			container_of(work, struct mwifiex_adapter, iface_work);
-+	struct sdio_mmc_card *card = adapter->card;
-+	int ret = 0;
-+	unsigned int reg, reg_start, reg_end;
-+	u8 *dbg_ptr, *end_ptr, dump_num, idx, i, read_reg, doneflag = 0;
-+	struct timeval t;
-+	enum rdwr_status stat;
-+	u32 memory_size;
-+	static char *env[] = { "DRIVER=mwifiex_sdio", "EVENT=fw_dump", NULL };
-+
-+	if (!card->supports_fw_dump)
-+		return;
-+
-+	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
-+		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
-+
-+		if (entry->mem_ptr) {
-+			vfree(entry->mem_ptr);
-+			entry->mem_ptr = NULL;
-+		}
-+		entry->mem_size = 0;
-+	}
-+
-+	mwifiex_pm_wakeup_card(adapter);
-+	sdio_claim_host(card->func);
-+
-+	do_gettimeofday(&t);
-+	dev_info(adapter->dev, "== mwifiex firmware dump start: %u.%06u ==\n",
-+		 (u32)t.tv_sec, (u32)t.tv_usec);
-+
-+	stat = mwifiex_sdio_rdwr_firmware(adapter, doneflag);
-+	if (stat == RDWR_STATUS_FAILURE)
-+		goto done;
-+
-+	reg = card->reg->fw_dump_start;
-+	/* Read the number of the memories which will dump */
-+	dump_num = sdio_readb(card->func, reg, &ret);
-+	if (ret) {
-+		dev_err(adapter->dev, "SDIO read memory length err\n");
-+		goto done;
-+	}
-+
-+	/* Read the length of every memory which will dump */
-+	for (idx = 0; idx < dump_num; idx++) {
-+		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
-+
-+		stat = mwifiex_sdio_rdwr_firmware(adapter, doneflag);
-+		if (stat == RDWR_STATUS_FAILURE)
-+			goto done;
-+
-+		memory_size = 0;
-+		reg = card->reg->fw_dump_start;
-+		for (i = 0; i < 4; i++) {
-+			read_reg = sdio_readb(card->func, reg, &ret);
-+			if (ret) {
-+				dev_err(adapter->dev, "SDIO read err\n");
-+				goto done;
-+			}
-+			memory_size |= (read_reg << i*8);
-+			reg++;
-+		}
-+
-+		if (memory_size == 0) {
-+			dev_info(adapter->dev, "Firmware dump Finished!\n");
-+			break;
-+		}
-+
-+		dev_info(adapter->dev,
-+			 "%s_SIZE=0x%x\n", entry->mem_name, memory_size);
-+		entry->mem_ptr = vmalloc(memory_size + 1);
-+		entry->mem_size = memory_size;
-+		if (!entry->mem_ptr) {
-+			dev_err(adapter->dev, "Vmalloc %s failed\n",
-+				entry->mem_name);
-+			goto done;
-+		}
-+		dbg_ptr = entry->mem_ptr;
-+		end_ptr = dbg_ptr + memory_size;
-+
-+		doneflag = entry->done_flag;
-+		do_gettimeofday(&t);
-+		dev_info(adapter->dev, "Start %s output %u.%06u, please wait...\n",
-+			 entry->mem_name, (u32)t.tv_sec, (u32)t.tv_usec);
-+
-+		do {
-+			stat = mwifiex_sdio_rdwr_firmware(adapter, doneflag);
-+			if (stat == RDWR_STATUS_FAILURE)
-+				goto done;
-+
-+			reg_start = card->reg->fw_dump_start;
-+			reg_end = card->reg->fw_dump_end;
-+			for (reg = reg_start; reg <= reg_end; reg++) {
-+				*dbg_ptr = sdio_readb(card->func, reg, &ret);
-+				if (ret) {
-+					dev_err(adapter->dev,
-+						"SDIO read err\n");
-+					goto done;
-+				}
-+				if (dbg_ptr < end_ptr)
-+					dbg_ptr++;
-+				else
-+					dev_err(adapter->dev,
-+						"Allocated buf not enough\n");
-+			}
-+
-+			if (stat != RDWR_STATUS_DONE)
-+				continue;
-+
-+			dev_info(adapter->dev, "%s done: size=0x%tx\n",
-+				 entry->mem_name, dbg_ptr - entry->mem_ptr);
-+			break;
-+		} while (1);
-+	}
-+	do_gettimeofday(&t);
-+	dev_info(adapter->dev, "== mwifiex firmware dump end: %u.%06u ==\n",
-+		 (u32)t.tv_sec, (u32)t.tv_usec);
-+
-+	kobject_uevent_env(&adapter->wiphy->dev.kobj, KOBJ_CHANGE, env);
-+
-+done:
-+	sdio_release_host(card->func);
-+	adapter->curr_mem_idx = 0;
-+}
-+
- static void mwifiex_sdio_work(struct work_struct *work)
- {
- 	struct mwifiex_adapter *adapter =
-@@ -1944,6 +2139,9 @@ static void mwifiex_sdio_work(struct work_struct *work)
- 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
- 			       &adapter->iface_work_flags))
- 		mwifiex_sdio_card_reset_work(adapter);
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_FW_DUMP,
-+			       &adapter->iface_work_flags))
-+		mwifiex_sdio_fw_dump_work(work);
+@@ -493,7 +511,7 @@ err1:
+ err:
+ 	rsi_91x_deinit(adapter);
+ 	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
+-	return 1;
++	return status;
  }
  
- /* This function resets the card */
-@@ -1957,6 +2155,16 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- 	schedule_work(&adapter->iface_work);
- }
- 
-+/* This function dumps FW information */
-+static void mwifiex_sdio_fw_dump(struct mwifiex_adapter *adapter)
-+{
-+	if (test_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &adapter->iface_work_flags))
-+		return;
-+
-+	set_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &adapter->iface_work_flags);
-+	schedule_work(&adapter->iface_work);
-+}
-+
- static struct mwifiex_if_ops sdio_ops = {
- 	.init_if = mwifiex_init_sdio,
- 	.cleanup_if = mwifiex_cleanup_sdio,
-@@ -1978,6 +2186,7 @@ static struct mwifiex_if_ops sdio_ops = {
- 	.event_complete = mwifiex_sdio_event_complete,
- 	.card_reset = mwifiex_sdio_card_reset,
- 	.iface_work = mwifiex_sdio_work,
-+	.fw_dump = mwifiex_sdio_fw_dump,
- };
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 6eea30b..e563309 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -219,6 +219,9 @@ struct mwifiex_sdio_card_reg {
- 	u8 rd_len_p0_l;
- 	u8 rd_len_p0_u;
- 	u8 card_misc_cfg_reg;
-+	u8 fw_dump_ctrl;
-+	u8 fw_dump_start;
-+	u8 fw_dump_end;
- };
- 
- struct sdio_mmc_card {
-@@ -231,6 +234,7 @@ struct sdio_mmc_card {
- 	u8 mp_agg_pkt_limit;
- 	bool supports_sdio_new_mode;
- 	bool has_control_mask;
-+	bool supports_fw_dump;
- 	u16 tx_buf_size;
- 	u32 mp_tx_agg_buf_size;
- 	u32 mp_rx_agg_buf_size;
-@@ -257,6 +261,7 @@ struct mwifiex_sdio_device {
- 	u8 mp_agg_pkt_limit;
- 	bool supports_sdio_new_mode;
- 	bool has_control_mask;
-+	bool supports_fw_dump;
- 	u16 tx_buf_size;
- 	u32 mp_tx_agg_buf_size;
- 	u32 mp_rx_agg_buf_size;
-@@ -307,6 +312,9 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
- 	.rd_len_p0_l = 0x0c,
- 	.rd_len_p0_u = 0x0d,
- 	.card_misc_cfg_reg = 0xcc,
-+	.fw_dump_ctrl = 0xe2,
-+	.fw_dump_start = 0xe3,
-+	.fw_dump_end = 0xea,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
-@@ -319,6 +327,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
-+	.supports_fw_dump = false,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
-@@ -331,6 +340,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
-+	.supports_fw_dump = false,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
-@@ -343,6 +353,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
-+	.supports_fw_dump = false,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
-@@ -355,6 +366,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.supports_fw_dump = true,
- };
- 
- /*
+ /**
 -- 
-1.8.2.3
+1.9.1
 
