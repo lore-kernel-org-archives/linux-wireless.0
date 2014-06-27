@@ -1,86 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:63058 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaFBSqi (ORCPT
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:34403 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773AbaF0Ojr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 14:46:38 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so5517585wgh.11
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2014 11:46:37 -0700 (PDT)
-Message-ID: <538CC68C.10808@gmail.com> (sfid-20140602_204642_233328_65F190F1)
-Date: Mon, 02 Jun 2014 21:46:36 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 27 Jun 2014 10:39:47 -0400
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware debugging patches?
-References: <53891ACD.7070902@candelatech.com> <87wqczz3h9.fsf@kamboji.qca.qualcomm.com> <538CA904.4000508@candelatech.com> <87ioojz1b1.fsf@kamboji.qca.qualcomm.com> <538CB782.1000509@candelatech.com>
-In-Reply-To: <538CB782.1000509@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Fri, 27 Jun 2014 16:39:42 +0200
+Message-ID: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com> (sfid-20140627_163953_850269_AAC37D9E)
+Subject: mwifiex card reset
+From: Andreas Fenkart <afenkart@gmail.com>
+To: Bing Zhao <bzhao@marvell.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>, devicetree@vger.kernel.org
+Cc: Tony Lindgren <tony@atomide.com>, Daniel Mack <daniel@zonque.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> [Good stuff snipped, adding linux-wireless as this is a more
-> general issue if we are going to consider general framework]
-> 
-> 
-> Maybe we should start with goals before getting to implementation
-> details.  Here's my wish list that is ath10k specific, but probably
-> similar to other firmware users:
-> 
-> 1)  We need the firmware crash text currently printed to
-> /var/log/messages.
-> 
-> 2)  It would be nice to get the firmware RAM and stack dumps at time of
-> crash to debug more interesting crashes.
+I have an mwifiex module(sd8787) behind omap_hsmmc(am33xx-soc)
+The module is non-removable wired fix to soc. Now the wifi module
+needs 2 clocks; one is a sleep clock the other used when not
+sleeping.
+While the sleep clock is fixed, @32 kHz, the system clock can be
+one out of several values, but can be be derived automatically
+from the sleep clock. But this requires the clock to be present
+when the wifi module comes out of reset.
 
-Right - but typically you'll have closed source / IP / whatever there..
+Another problem is software reboot, at initial power on the wifi
+card will react to mmc discovery. After a software reset of the
+host it will not, because it has already been disvovered and
+didn't notice the host rebooted, unless we reset it as well.
+While this seems obvious, the problem is that the reset is needed
+before the card can be discovered. Which means we cannot move the
+reset logic into the mwifiex driver, since that driver has not
+yet been selected through vendor/product id.
 
-> 
-> 3)  It would be nice to know about firmware debug messages for
-> the period of time directly before the crash (maybe 2-5 minutes?)
-> 
-> 4)  It would be nice to have this interleaved with kernel, supplicant,
-> and related logs.
-> 
-> 
-> We need a solution for different types of users.  I suspect the number
-> of crashes seen in the wild will be more for users nearer the top
-> of this list.
-> 
-> a) Normal Fedora/Ubuntu/etc default-installed distribution user
-> with ath10k NIC has wifi issues, firmware crashes, they don't
-> really know what firmware means or that it crashed, but some automated crash-log
-> tool notices and gathers debug info for automated bug reporting.
+the reset logic:
+        gpiod_set_value(card->gpiod_reset, 0);
+        clk_enable(card->sleep_clock);
+        udelay(1000);
+        gpiod_set_value(card->gpiod_reset, 1);
 
-I am working on that for our firmware. I recently added such capability relying on udev to notify the userspace that something bad happens. I gather all the data and prepare a binary file that is sent through debugfs (pulled by a script triggered by udev). I remember the first crash only.
+The idea so far was to extend the device-tree node of the
+mmc slot by some reset leafs;
 
-> 
-> b) Slightly more advanced user actually notices the problem at coffee shop
-> earlier today, posts about it when they get home, and we ask for
-> debug info.
-> 
-> c) Experienced and determined user has similar issues, but is able to
-> reproduce the problem and/or turn on more advanced debugging efforts.
-> 
-> d)  Even more determined user that can and will recompile kernels and/or
-> try patches.
-> 
-> 
-> Anything that has to be enabled before-hand will not help a) and b) above.
-> 
-> If support is not compiled into default kernels, c) will not help you either.
-> 
-> If it is difficult or requires acquiring cutting edge tools not in their
-> distribution by default, many of c) and some of d) will just ignore the problem or use
-> different hardware.
-> 
-> If we are storing crashes for something like ethtool to report, we need
-> RAM and/or disk storage so the firmware RAM dumps and such can be stored until
-> the user and/or automated tools ask for them.  We need some way to automatically
-> clean up old crashes so disk/ram is not overly utilized.  For APs,
-> they are low on both RAM and 'disk', so storing crash logs for any
-> length of time may be problematic.
- 
-I did something simpler - but it works. I don't really know the ethtool infrastructure though.
+&mmc {
+        ti,non-removable;
+        ..
+        peripheral-clocks = <&clk &clk2 ...>;
+        peripheral-reset-gpios = <&gpio0 1 1 &gpio1 2 3 ...>;
+}
+
+in mmc_add_host, all clocks will be enabled and gpios be pulled
+low for 1 msec
+
+Is this a feasible solution?
+
+
+Another related issue, is the card reset in mwifiex driver:
+
+static void sdio_card_reset_worker(struct work_struct *work)
+{
+        struct mmc_host *target = reset_host;
+
+        pr_err("Resetting card...\n");
+        mmc_remove_host(target);
+        /* 20ms delay is based on experiment with sdhci controller */
+        mdelay(20);
+        mmc_add_host(target);
+}
+static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
+
+There are obviously a lot of problems with this, e.g. custom debugfs
+entries created in the driver will be lost. But sometimes this
+code might avert disaster in case the command handlers between
+driver and firmware lost synchronization
+
+How could this be done in a better way?
