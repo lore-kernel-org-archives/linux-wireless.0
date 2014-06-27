@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58086 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149AbaFBWLh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 18:11:37 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1WraS6-0004qE-Jp
-	for linux-wireless@vger.kernel.org; Tue, 03 Jun 2014 00:11:34 +0200
-Received: from 89-68-80-14.dynamic.chello.pl ([89.68.80.14])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2014 00:11:34 +0200
-Received: from pitkotko by 89-68-80-14.dynamic.chello.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2014 00:11:34 +0200
-To: linux-wireless@vger.kernel.org
-From: piotr <pitkotko@gmail.com>
-Subject: Re: [Ilw] Wireless Centrino 2230-N issues
-Date: Mon, 2 Jun 2014 22:11:22 +0000 (UTC)
-Message-ID: <loom.20140603T000209-622@post.gmane.org> (sfid-20140603_001140_687156_7CD7478F)
-References: <536F6620.9030001@gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303DF0FF6@HASMSX103.ger.corp.intel.com> <loom.20140530T020912-598@post.gmane.org> <53882EAD.4010609@gmail.com> <53882EF4.4070105@gmail.com> <loom.20140530T111920-677@post.gmane.org> <CANUX_P0JenW+GDT3N0Qj5BPGqMXqUWiBnj=TQ+nMEsjS4HFm1w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:45488 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbaF0Tji (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2014 15:39:38 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-firmware@kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] README: clarify redistribution requirements covering patents
+Date: Fri, 27 Jun 2014 12:39:27 -0700
+Message-Id: <1403897967-5894-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140627_213958_900638_26C3C5E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@...> writes:
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> 
-> Can you please send the whole dmesg output?
+Firmware licenses on linux-firmware should include an implicit
+or explicit patent grant to end users for full device operation
+otherwise it would start making linux-firmware useless for many
+Linux distributions which have positions against patent encumbered
+software [0] [1] [2] and it would mean cherry picking firmware files
+out. It can also mean making it problematic to redistribute linux-firmware
+in some jurisdictions which could have different positions on
+patents, or have already outlawed software patents.
 
-[115535.469083] iwlwifi 0000:01:00.0: Could not complete ALIVE transition: -5
-[115535.469370] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -5
-[115535.469412] iwlwifi 0000:01:00.0: Unable to initialize device.
-[115535.471365] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[115535.478424] iwlwifi 0000:01:00.0: Radio type=0x2-0x0-0x0
-[115535.525086] iwlwifi 0000:01:00.0: Command COEX_PRIORITY_TABLE_CMD
-failed: FW Error
+Licenses with implicit patent grants are allowed given that otherwise
+we couldn't carry permissively licensed firmwares which would be silly,
+but using permissively licensed firmware files which remove patent
+grants explicitly are not allowed.
 
-This repeats over and over again.
+A clarifications is needed as one attempt was already made to include
+firmware encumbered by patents without a grant [3] and it was decided
+we would not allow these. We clarify this to make this requirement
+explicit and prevent these type of further attempts.
 
+[0] https://www.debian.org/legal/patent
+[1] http://fedoraproject.org/wiki/Software_Patents#Red_Hat.27s_position_on_Software_Patents
+[2] http://www.openinventionnetwork.com/about-us/
+[3] https://lkml.org/lkml/2014/3/14/182
 
-Piotr
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
 
+This wasn't clear and at one point one entity already tried to get
+included a firmware that explicitly removes any patent grants for
+users.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+ README | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-
+diff --git a/README b/README
+index f2ed92e..d2a56ec 100644
+--- a/README
++++ b/README
+@@ -18,7 +18,10 @@ and also cc: to related mailing lists.
+ 
+ Your commit should include an update to the WHENCE file clearly
+ identifying the licence under which the firmware is available, and
+-that it is redistributable. If the licence is long and involved, it's
++that it is redistributable. Being redistributable includes ensuring
++the firmware license provided includes an implicit or explicit
++patent grant to end users to ensure full functionality of device
++operation with the firmware. If the licence is long and involved, it's
+ permitted to include it in a separate file and refer to it from the
+ WHENCE file.
+ And if it were possible, a changelog of the firmware itself.
+-- 
+2.0.0
 
