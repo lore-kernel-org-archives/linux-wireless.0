@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43896 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbaFAQiq (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:61128 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125AbaF0SRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 12:38:46 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n15so2000839lbi.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 09:38:45 -0700 (PDT)
-Message-ID: <538B5714.6060107@cogentembedded.com> (sfid-20140601_183914_333769_8E0FDBF3)
-Date: Sun, 01 Jun 2014 20:38:44 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Fri, 27 Jun 2014 14:17:11 -0400
+Received: by mail-ob0-f178.google.com with SMTP id wn1so6119830obc.9
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 11:17:11 -0700 (PDT)
 MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: phy.c:  Cleaning up
- uninitialized variables
-References: <1401626948-16183-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1401626948-16183-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1403860015-31601-1-git-send-email-michal.kazior@tieto.com>
+References: <1403860015-31601-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 27 Jun 2014 11:17:11 -0700
+Message-ID: <CABnBrYWuro1i3SvjpEMF+5rcja=7e_7RP2y-m4hVi_Ld4LYHuQ@mail.gmail.com> (sfid-20140627_201715_127838_E80AC34D)
+Subject: Re: [RFC/RFT 0/2] mac80211/ath10k: fix Rx reordering
+From: Denton Gentry <denton.gentry@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+With these two changes the iperf throughput of the Windows STA
+increased to 283 Mbps, up from ~45 Mbps prior to these changes.
 
-On 06/01/2014 04:49 PM, Rickard Strandqvist wrote:
+Everything else is as constant as I can hold it, no other code changes
+and in the same physical location. It is an open air office
+environment, the noise environment can vary day to day.
 
-> There is a risk that the variable will be used without being initialized.
-
-> This was largely found by using a static code analysis program called cppcheck.
-
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-> index 3d1f0dd..66abaf6 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-> @@ -203,11 +203,11 @@ u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitmask)
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
->   	u32 returnvalue, originalvalue, bitshift;
-> -	u8 dbi_direct;
+On Fri, Jun 27, 2014 at 2:06 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Hi,
 >
->   	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "regaddr(%#x), bitmask(%#x)\n",
->   		 regaddr, bitmask);
->   	if (rtlhal->during_mac1init_radioa || rtlhal->during_mac0init_radiob) {
-> +		u8 dbi_direct = 0;
-
-    Empty line is needed here, after declarations, like above.
-
->   		/* mac1 use phy0 read radio_b. */
->   		/* mac0 use phy1 read radio_b. */
->   		if (rtlhal->during_mac1init_radioa)
-
-WBR, Sergei
-
+> I'm posting these 2 patches together in a single
+> patchset for easier review/testing for now. Once
+> review goes well I can split up the patchset and
+> send patches separately if it is desired so.
+>
+> Recently Denton pointed out ath10k fails to
+> perform Rx reordering and this causes performance
+> issues in some cases.
+>
+> Due to ath10k design I had to come up with a patch
+> for mac80211 to allow Rx reordering offloading via
+> existing Rx BA sessions code.
+>
+> I've tested this pretty lightly so far. With the
+> patchset `iperf -u` reports 0* out-of-order
+> frames. Without the patch I'm seeing 400+ per
+> second (the particular number isn't relevant as it
+> depends on throughput and environment). It seems
+> to improve single-threaded TCP performance as
+> well. All test traffic is station -> ath10k AP.
+>
+> * There are a few out-of-rder frames in the first
+> second after Rx tid is set up. I suspect this is
+> because ath10k is forced to start Rx BA sesion
+> with an arbitrary start_seq_num.
+>
+> Note: This is based on https://github.com/kvalo/ath
+> 30a165cb84793fa3896ad93497e11eed651b1813.
+>
+>
+> Michal Kazior (2):
+>   mac80211: add support for Rx reordering offloading
+>   ath10k: fix Rx aggregation reordering
+>
+>  drivers/net/wireless/ath/ath10k/htt_rx.c |  92 +++++++++++++++++++++++++-
+>  drivers/net/wireless/ath/ath10k/mac.c    |  30 +++++++++
+>  drivers/net/wireless/ath/ath10k/txrx.c   |   3 +-
+>  drivers/net/wireless/ath/ath10k/txrx.h   |   1 +
+>  include/net/mac80211.h                   |  40 ++++++++++++
+>  net/mac80211/agg-rx.c                    | 108 ++++++++++++++++++++++++-------
+>  net/mac80211/ieee80211_i.h               |  16 +++++
+>  net/mac80211/iface.c                     |  25 +++++++
+>  8 files changed, 287 insertions(+), 28 deletions(-)
+>
+> --
+> 1.8.5.3
+>
