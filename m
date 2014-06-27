@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:48121 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaFWKTJ convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56899 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbaF0JRZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 06:19:09 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so3857540wib.13
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2014 03:19:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1400769683.4174.25.camel@jlt4.sipsolutions.net>
-References: <1400767955-16313-1-git-send-email-michal.kazior@tieto.com>
-	<1400767955-16313-3-git-send-email-michal.kazior@tieto.com>
-	<1400769683.4174.25.camel@jlt4.sipsolutions.net>
-Date: Mon, 23 Jun 2014 12:19:03 +0200
-Message-ID: <CA+BoTQk=DU=-HzVo-XsQTpCt6CS7aXxQMy5hTyQ7qC56ebBLZQ@mail.gmail.com> (sfid-20140623_121914_682994_6AF4A993)
-Subject: Re: [PATCH 2/2] ath10k: make core registering async
+	Fri, 27 Jun 2014 05:17:25 -0400
+Received: by mail-we0-f174.google.com with SMTP id u57so4992015wes.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 02:17:24 -0700 (PDT)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Denton Gentry <denton.gentry@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT 0/2] mac80211/ath10k: fix Rx reordering
+Date: Fri, 27 Jun 2014 11:06:53 +0200
+Message-Id: <1403860015-31601-1-git-send-email-michal.kazior@tieto.com> (sfid-20140627_111728_722087_435AD2E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi,
+
+I'm posting these 2 patches together in a single
+patchset for easier review/testing for now. Once
+review goes well I can split up the patchset and
+send patches separately if it is desired so.
+
+Recently Denton pointed out ath10k fails to
+perform Rx reordering and this causes performance
+issues in some cases.
+
+Due to ath10k design I had to come up with a patch
+for mac80211 to allow Rx reordering offloading via
+existing Rx BA sessions code.
+
+I've tested this pretty lightly so far. With the
+patchset `iperf -u` reports 0* out-of-order
+frames. Without the patch I'm seeing 400+ per
+second (the particular number isn't relevant as it
+depends on throughput and environment). It seems
+to improve single-threaded TCP performance as
+well. All test traffic is station -> ath10k AP.
+
+* There are a few out-of-rder frames in the first
+second after Rx tid is set up. I suspect this is
+because ath10k is forced to start Rx BA sesion
+with an arbitrary start_seq_num. 
+
+Note: This is based on https://github.com/kvalo/ath
+30a165cb84793fa3896ad93497e11eed651b1813.
 
 
-On 22 May 2014 16:41, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-05-22 at 16:12 +0200, Michal Kazior wrote:
->
->> As a side effect there's no way to propagate
->> registering errors to the pci subsystem but this
->> probably isn't really necessary.
->
-> You should probably unbind if it fails - iwlwifi does that.
+Michal Kazior (2):
+  mac80211: add support for Rx reordering offloading
+  ath10k: fix Rx aggregation reordering
 
-Hmm..
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  92 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/mac.c    |  30 +++++++++
+ drivers/net/wireless/ath/ath10k/txrx.c   |   3 +-
+ drivers/net/wireless/ath/ath10k/txrx.h   |   1 +
+ include/net/mac80211.h                   |  40 ++++++++++++
+ net/mac80211/agg-rx.c                    | 108 ++++++++++++++++++++++++-------
+ net/mac80211/ieee80211_i.h               |  16 +++++
+ net/mac80211/iface.c                     |  25 +++++++
+ 8 files changed, 287 insertions(+), 28 deletions(-)
 
-As it stands ath10k now deadlocks when firmware probing worker fails
-and calls device_release_driver(). This indirectly hits pci remove()
-callback which waits for the worker. Oops.
+-- 
+1.8.5.3
 
-So I've taken a look how other driver do it so I can come up with a
-solution - most of them seem use completions. After taking a closer
-look I came to a conclusion this is inherently racy too. Consider the
-following scenario:
-
- [syscall]
- insmod
- pci->probe()
- queue_work()
- return
- [worker]
- probe_fw()
- [syscall]
- rmmod
- dev_lock()
- pci->remove()
- wait_for_completion()
- [worker]
- complete_all()
- device_release_driver()
- dev_lock()
- {already held, yield}
- [syscall]
- free(internal structures)
- dev_unlock()
- return
- [worker]
- {woken up, but dev->driver == NULL so no callbacks}
- dev_unlock()
- return
-
-The driver code section may not be reachable anymore upon worker
-returning from the device_release_driver() call, right? Also since
-ath10k uses an internal worker it also means the work_struct would be
-already freed by the syscall flow (i.e. worker would run after driver
-has supposedly been cleaned up..). Even if ath10k was to use
-request_firmware_nowait(), which allocates a temporary work_struct,
-the unreachable code section still remains a problem.
-
-Or maybe this isn't really a problem and/or I'm missing something?
-
-
-Michał
