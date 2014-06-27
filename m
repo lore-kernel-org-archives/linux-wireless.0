@@ -1,93 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10495 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932155AbaFUKUn (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:35663 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbaF0GxE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 06:20:43 -0400
-Message-ID: <53A55C78.1030706@broadcom.com> (sfid-20140621_122104_659738_5B866968)
-Date: Sat, 21 Jun 2014 12:20:40 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-CC: Brett Rudley <brudley@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net/wireless/brcm80211/brcmfmac: Make return type reflect
- actual semantics
-References: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
-In-Reply-To: <1403299923-21533-1-git-send-email-linux@rasmusvillemoes.dk>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 27 Jun 2014 02:53:04 -0400
+Received: by mail-wi0-f177.google.com with SMTP id r20so2259858wiv.10
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2014 23:53:03 -0700 (PDT)
+References: <2508403.0JHOuVQMG0@x750lb01> <53ACB8B0.7030007@lwfinger.net>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <53ACB8B0.7030007@lwfinger.net>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <386D9605-ACF0-426B-8E30-5301F6881A46@gmail.com> (sfid-20140627_085312_788806_7CBC9BE3)
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Driver for Mediatek MT7630E
+Date: Fri, 27 Jun 2014 08:53:03 +0200
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/14 23:32, Rasmus Villemoes wrote:
-> Applying ++ to a bool is equivalent to setting it true, regardless of
-> its initial value (bools are not uint1_t). Hence the function
-> wl_get_vif_state_all can only ever return true/false. The only
-> in-tree caller uses its return value as a boolean. So update its
-> return type, and since the list traversal and bit testing have no side
-> effects, just return true immediately.
+Hi Larry,
 
-Hi Rasmus,
+Although I stepped down as rt2x00 maintainer I'm still following developments.
+I noticed that Mediatek have published a Linux MT7630E driver on their website as well.
+This one seems to be a bit newer than the one in the github repo (at least it is based on a newer rt2x00 version).
+Maybe you should check that one out.
 
-At the moment the function is indeed only used to determine whether any 
-vif is in connected state. I am ok with your patch if you would also 
-rename the function to brcmf_get_vif_state_any(). You may add 
-'Reviewed-by: Arend van Spriel <arend@broadcom.com>' to the patch.
+---
+Gertjan
 
-Regards,
-Arend
+Sent from my iPad
 
-> Signed-off-by: Rasmus Villemoes<linux@rasmusvillemoes.dk>
-> ---
->
-> Notes:
->      Alternatively, if the function is supposed to return a count, the
->      one-line fix would be
->
->      -	bool result = 0;
->      +	u32 result = 0;
->
->   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 7 +++----
->   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h | 2 +-
->   2 files changed, 4 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index d8fa276..ec5f8c5 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -5625,16 +5625,15 @@ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
->   	return wdev->iftype;
->   }
->
-> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
-> +bool wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
->   {
->   	struct brcmf_cfg80211_vif *vif;
-> -	bool result = 0;
->
->   	list_for_each_entry(vif,&cfg->vif_list, list) {
->   		if (test_bit(state,&vif->sme_state))
-> -			result++;
-> +			return true;
->   	}
-> -	return result;
-> +	return false;
->   }
->
->   static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event *event,
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-> index 283c525..c702e4e 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-> @@ -477,7 +477,7 @@ const struct brcmf_tlv *
->   brcmf_parse_tlvs(const void *buf, int buflen, uint key);
->   u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
->   			struct ieee80211_channel *ch);
-> -u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
-> +bool wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
->   void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
->   				  struct brcmf_cfg80211_vif *vif);
->   bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
-
+> On 27 jun. 2014, at 02:20, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+>> On 06/25/2014 04:41 AM, Josip Volf - Wuk wrote:
+>> Larry Finger wrote:
+>>> For interested readers, I have modified the GitHub code to compile using
+>>> the current wireless-testing kernel source. If there is sufficient
+>>> interest, I could set up a new GH repo for it as an interim measure with
+>>> conditional code allowing it to build on recent kernels (3.5+).
+>> 
+>> I have a notebook with MT7630 wireless device:
+>> 02:00.0 Network controller [0280]: MEDIATEK Corp. Device [14c3:7630]
+>>         Subsystem: Foxconn International, Inc. Device [105b:e074]
+>> 
+>> Is it possible to create a GH repo, I'm not a developer but I'm willing to
+>> help any way I can, and I'm also a quick learner :)
+> 
+> I forked the older git repo to http://github.com/lwfinger/mt7630. The code there will build on any kernel 3.5 or newer (including 3.16).
+> 
+> Although it will build, it still needs a lot of work. The driver is very "chatty" and spams the logs. Even more disturbing is that it fails to authenticate to any of my APs. That includes WPA1 and WPA2 variants. As usual, the necessary commands are as follows:
+> 
+> git clone http://github.com/lwfinger/mt7630
+> cd mt7630
+> make
+> sudo make install
+> 
+> If the make step fails, you have not set up your system to build an out-of-kernel driver. The driver produced here will replace rt2800pci and some other related drivers.
+> 
+> Larry
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
