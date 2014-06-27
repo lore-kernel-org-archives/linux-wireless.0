@@ -1,100 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:34250 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069AbaFDR0f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 13:26:35 -0400
-Received: by mail-we0-f176.google.com with SMTP id q59so8665453wes.21
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2014 10:26:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/15] staging: vt6656: FIRMWAREbDownload remove camel case
-Date: Wed,  4 Jun 2014 18:25:27 +0100
-Message-Id: <1401902735-3882-7-git-send-email-tvboxspy@gmail.com> (sfid-20140604_192638_481249_82C9421E)
-In-Reply-To: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
-References: <1401902735-3882-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56978 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752740AbaF0HpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2014 03:45:14 -0400
+Message-ID: <1403855097.5610.1.camel@jlt4.sipsolutions.net> (sfid-20140627_094518_195755_45E2CCF6)
+Subject: Re: Can we make ieee80211_iface_combination.limits non-const?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Jun 2014 09:44:57 +0200
+In-Reply-To: <53AC814C.9040201@candelatech.com>
+References: <53AC6454.5090605@candelatech.com>
+	  (sfid-20140626_202012_477893_089B637F) <1403813187.4463.1.camel@jlt4.sipsolutions.net>
+	 <53AC814C.9040201@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-camel case changes
-pDevice -> priv
-NdisStatus -> status
-pBuffer -> buffer
-wLength -> length
+On Thu, 2014-06-26 at 13:23 -0700, Ben Greear wrote:
+> On 06/26/2014 01:06 PM, Johannes Berg wrote:
+> > On Thu, 2014-06-26 at 11:20 -0700, Ben Greear wrote:
+> >> Depending on firmware loaded (and/or module options), a different
+> >> number of vdev interfaces may be supported.
+> >>
+> >> Can we remove the const from the "struct ieee80211_iface_limit *limits"
+> >> member of ieee80211_iface_combination?
+> > 
+> > No, it would break drivers who actually have a static const for the
+> > pointer target.
+> 
+> That could be easily fixed, eh?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/firmware.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+Yeah but it'd be stupid :)
 
-diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
-index 1159f0b..9e31e6c 100644
---- a/drivers/staging/vt6656/firmware.c
-+++ b/drivers/staging/vt6656/firmware.c
-@@ -43,14 +43,14 @@ static int msglevel = MSG_LEVEL_INFO;
- 
- #define FIRMWARE_CHUNK_SIZE	0x400
- 
--int FIRMWAREbDownload(struct vnt_private *pDevice)
-+int FIRMWAREbDownload(struct vnt_private *priv)
- {
--	struct device *dev = &pDevice->usb->dev;
-+	struct device *dev = &priv->usb->dev;
- 	const struct firmware *fw;
--	int NdisStatus;
--	void *pBuffer = NULL;
-+	int status;
-+	void *buffer = NULL;
- 	bool result = false;
--	u16 wLength;
-+	u16 length;
- 	int ii, rc;
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Download firmware\n");
-@@ -62,24 +62,24 @@ int FIRMWAREbDownload(struct vnt_private *pDevice)
- 			goto out;
- 	}
- 
--	pBuffer = kmalloc(FIRMWARE_CHUNK_SIZE, GFP_KERNEL);
--	if (!pBuffer)
-+	buffer = kmalloc(FIRMWARE_CHUNK_SIZE, GFP_KERNEL);
-+	if (!buffer)
- 		goto out;
- 
- 	for (ii = 0; ii < fw->size; ii += FIRMWARE_CHUNK_SIZE) {
--		wLength = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
--		memcpy(pBuffer, fw->data + ii, wLength);
-+		length = min_t(int, fw->size - ii, FIRMWARE_CHUNK_SIZE);
-+		memcpy(buffer, fw->data + ii, length);
- 
--		NdisStatus = vnt_control_out(pDevice,
-+		status = vnt_control_out(priv,
- 						0,
- 						0x1200+ii,
- 						0x0000,
--						wLength,
--						pBuffer);
-+						length,
-+						buffer);
- 
- 		DBG_PRT(MSG_LEVEL_DEBUG,
- 			KERN_INFO"Download firmware...%d %zu\n", ii, fw->size);
--		if (NdisStatus != STATUS_SUCCESS)
-+		if (status != STATUS_SUCCESS)
- 			goto free_fw;
- 	}
- 
-@@ -88,7 +88,7 @@ free_fw:
- 	release_firmware(fw);
- 
- out:
--	kfree(pBuffer);
-+	kfree(buffer);
- 
- 	return result;
- }
--- 
-1.9.1
+> > You don't have to assign something that's const, but you also can't be
+> > changing it on the fly after wiphy registration anyway.
+> 
+> This would be done before registration.  I like static init
+> for defaults, but wanted to poke a few variables at run-time
+> based on firmware, etc.
+
+I don't really get it anyway. If you're going to do anything dynamic,
+you don't want to be changing a global static value anyway. You want to
+be making a copy or so and building it in a dynamic data structure, and
+then point to it.
+
+johannes
 
