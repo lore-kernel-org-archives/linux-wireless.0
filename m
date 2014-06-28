@@ -1,47 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:55645 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352AbaFBOUa (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51421 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbaF1Nu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2014 10:20:30 -0400
-From: Emil Goode <emilgoode@gmail.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Emil Goode <emilgoode@gmail.com>
-Subject: [PATCH] NFC: st21nfca: Remove double assignment of .owner in struct device_driver
-Date: Mon,  2 Jun 2014 16:21:00 +0200
-Message-Id: <1401718860-10901-1-git-send-email-emilgoode@gmail.com> (sfid-20140602_162048_264045_97D8C67B)
+	Sat, 28 Jun 2014 09:50:27 -0400
+From: Markus Pargmann <mpa@pengutronix.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, kernel@pengutronix.de,
+	Markus Pargmann <mpa@pengutronix.de>
+Subject: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
+Date: Sat, 28 Jun 2014 15:49:13 +0200
+Message-Id: <1403963353-27317-1-git-send-email-mpa@pengutronix.de> (sfid-20140628_155031_560338_99B8A029)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The .owner member of struct device_driver is assigned THIS_MODULE twice.
+A custom regulatory domain was introduced in this commit:
+cc0ba0d522c4 (mwifiex: support custom world regulatory domain)
 
-Introduced by:
+The commit description says that it was introduced because the world
+regulatory domain does not include channels 52-64 and 100-140. These
+channels are described in the world regulatory domain now, so we can
+drop this custom regulatory domain.
 
-commit c44cb2edd01ca31471d9385f0895891b006ab904
-("NFC: dts: st21nfca: Add device-tree (Open Firmware) support to st21nfca")
-
-Signed-off-by: Emil Goode <emilgoode@gmail.com>
+Signed-off-by: Markus Pargmann <mpa@pengutronix.de>
+Acked-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/nfc/st21nfca/i2c.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 36 ---------------------------------
+ 1 file changed, 36 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 3f954ed..95942ca 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -710,7 +710,6 @@ static struct i2c_driver st21nfca_hci_i2c_driver = {
- 	.driver = {
- 		.owner = THIS_MODULE,
- 		.name = ST21NFCA_HCI_I2C_DRIVER_NAME,
--		.owner = THIS_MODULE,
- 		.of_match_table = of_match_ptr(of_st21nfca_i2c_match),
- 	},
- 	.probe = st21nfca_hci_i2c_probe,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e95dec91a561..201edbf76c81 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -42,36 +42,6 @@ static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
+ 	.beacon_int_infra_match = true,
+ };
+ 
+-static const struct ieee80211_regdomain mwifiex_world_regdom_custom = {
+-	.n_reg_rules = 7,
+-	.alpha2 =  "99",
+-	.reg_rules = {
+-		/* Channel 1 - 11 */
+-		REG_RULE(2412-10, 2462+10, 40, 3, 20, 0),
+-		/* Channel 12 - 13 */
+-		REG_RULE(2467-10, 2472+10, 20, 3, 20,
+-			 NL80211_RRF_NO_IR),
+-		/* Channel 14 */
+-		REG_RULE(2484-10, 2484+10, 20, 3, 20,
+-			 NL80211_RRF_NO_IR |
+-			 NL80211_RRF_NO_OFDM),
+-		/* Channel 36 - 48 */
+-		REG_RULE(5180-10, 5240+10, 40, 3, 20,
+-			 NL80211_RRF_NO_IR),
+-		/* Channel 149 - 165 */
+-		REG_RULE(5745-10, 5825+10, 40, 3, 20,
+-			 NL80211_RRF_NO_IR),
+-		/* Channel 52 - 64 */
+-		REG_RULE(5260-10, 5320+10, 40, 3, 30,
+-			 NL80211_RRF_NO_IR |
+-			 NL80211_RRF_DFS),
+-		/* Channel 100 - 140 */
+-		REG_RULE(5500-10, 5700+10, 40, 3, 30,
+-			 NL80211_RRF_NO_IR |
+-			 NL80211_RRF_DFS),
+-	}
+-};
+-
+ /*
+  * This function maps the nl802.11 channel type into driver channel type.
+  *
+@@ -2916,12 +2886,6 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 				WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
+-	wiphy->regulatory_flags |=
+-			REGULATORY_CUSTOM_REG |
+-			REGULATORY_STRICT_REG;
+-
+-	wiphy_apply_custom_regulatory(wiphy, &mwifiex_world_regdom_custom);
+-
+ #ifdef CONFIG_PM
+ 	wiphy->wowlan = &mwifiex_wowlan_support;
+ #endif
 -- 
-1.7.10.4
+2.0.0
 
