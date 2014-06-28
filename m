@@ -1,87 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:54265 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756103AbaFWNm4 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48747 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751747AbaF1W40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2014 09:42:56 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 15/22] ipw2100: Use pci_zalloc_consistent
-Date: Mon, 23 Jun 2014 06:41:43 -0700
-Message-Id: <300ca978edde7122af48aae0f6de0d06730c5fbc.1403530604.git.joe@perches.com> (sfid-20140623_154618_604328_0C4B3732)
-In-Reply-To: <cover.1403530604.git.joe@perches.com>
-References: <cover.1403530604.git.joe@perches.com>
+	Sat, 28 Jun 2014 18:56:26 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so4359706wib.7
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:24 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/8] staging: vt6656: vnt_tx_packet remove first assignment of time_stamp.
+Date: Sat, 28 Jun 2014 23:55:41 +0100
+Message-Id: <1403996146-4082-3-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005637_782726_32EE89FE)
+In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the now unnecessary memset too.
+This is assigned later in function and should have been removed in
+an out-of-tree merge.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2100.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index dfc6dfc..1ab8e50 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -3449,8 +3449,9 @@ static int ipw2100_msg_allocate(struct ipw2100_priv *priv)
- 		return -ENOMEM;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 5513121..e896dfe5d 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -929,9 +929,6 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
  
- 	for (i = 0; i < IPW_COMMAND_POOL_SIZE; i++) {
--		v = pci_alloc_consistent(priv->pci_dev,
--					 sizeof(struct ipw2100_cmd_header), &p);
-+		v = pci_zalloc_consistent(priv->pci_dev,
-+					  sizeof(struct ipw2100_cmd_header),
-+					  &p);
- 		if (!v) {
- 			printk(KERN_ERR DRV_NAME ": "
- 			       "%s: PCI alloc failed for msg "
-@@ -3459,8 +3460,6 @@ static int ipw2100_msg_allocate(struct ipw2100_priv *priv)
- 			break;
- 		}
+ 	frame_size = tx_body_size + 4;
  
--		memset(v, 0, sizeof(struct ipw2100_cmd_header));
+-	/* Set time stamp */
+-	tx_buffer_head->time_stamp = cpu_to_le16(DEFAULT_MGN_LIFETIME_RES_64us);
 -
- 		priv->msg_buffers[i].type = COMMAND;
- 		priv->msg_buffers[i].info.c_struct.cmd =
- 		    (struct ipw2100_cmd_header *)v;
-@@ -4336,16 +4335,12 @@ static int status_queue_allocate(struct ipw2100_priv *priv, int entries)
- 	IPW_DEBUG_INFO("enter\n");
- 
- 	q->size = entries * sizeof(struct ipw2100_status);
--	q->drv =
--	    (struct ipw2100_status *)pci_alloc_consistent(priv->pci_dev,
--							  q->size, &q->nic);
-+	q->drv = pci_zalloc_consistent(priv->pci_dev, q->size, &q->nic);
- 	if (!q->drv) {
- 		IPW_DEBUG_WARNING("Can not allocate status queue.\n");
- 		return -ENOMEM;
- 	}
- 
--	memset(q->drv, 0, q->size);
--
- 	IPW_DEBUG_INFO("exit\n");
- 
- 	return 0;
-@@ -4374,13 +4369,12 @@ static int bd_queue_allocate(struct ipw2100_priv *priv,
- 
- 	q->entries = entries;
- 	q->size = entries * sizeof(struct ipw2100_bd);
--	q->drv = pci_alloc_consistent(priv->pci_dev, q->size, &q->nic);
-+	q->drv = pci_zalloc_consistent(priv->pci_dev, q->size, &q->nic);
- 	if (!q->drv) {
- 		IPW_DEBUG_INFO
- 		    ("can't allocate shared memory for buffer descriptors\n");
- 		return -ENOMEM;
- 	}
--	memset(q->drv, 0, q->size);
- 
- 	IPW_DEBUG_INFO("exit\n");
- 
+ 	/*Set fifo controls */
+ 	if (pkt_type == PK_TYPE_11A)
+ 		tx_buffer_head->wFIFOCtl = 0;
 -- 
-1.8.1.2.459.gbcd45b4.dirty
+1.9.1
 
