@@ -1,68 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35663 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbaF0GxE convert rfc822-to-8bit (ORCPT
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:50503 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751035AbaF1HXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 02:53:04 -0400
-Received: by mail-wi0-f177.google.com with SMTP id r20so2259858wiv.10
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2014 23:53:03 -0700 (PDT)
-References: <2508403.0JHOuVQMG0@x750lb01> <53ACB8B0.7030007@lwfinger.net>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <53ACB8B0.7030007@lwfinger.net>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <386D9605-ACF0-426B-8E30-5301F6881A46@gmail.com> (sfid-20140627_085312_788806_7CBC9BE3)
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: Driver for Mediatek MT7630E
-Date: Fri, 27 Jun 2014 08:53:03 +0200
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 28 Jun 2014 03:23:32 -0400
+Date: Sat, 28 Jun 2014 10:23:23 +0300
+From: Tony Lindgren <tony@atomide.com>
+To: James Cameron <quozl@laptop.org>
+Cc: Andreas Fenkart <afenkart@gmail.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	devicetree@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+Subject: Re: mwifiex card reset
+Message-ID: <20140628072322.GC7410@atomide.com> (sfid-20140628_092345_384247_8A7E7035)
+References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
+ <20140628052220.GG10407@us.netrek.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140628052220.GG10407@us.netrek.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+* James Cameron <quozl@laptop.org> [140628 08:24]:
+> On Fri, Jun 27, 2014 at 04:39:42PM +0200, Andreas Fenkart wrote:
+> > I have an mwifiex module(sd8787) behind omap_hsmmc(am33xx-soc)
+> > The module is non-removable wired fix to soc. Now the wifi module
+> > needs 2 clocks; one is a sleep clock the other used when not
+> > sleeping.
+> > While the sleep clock is fixed, @32 kHz, the system clock can be
+> > one out of several values, but can be be derived automatically
+> > from the sleep clock. But this requires the clock to be present
+> > when the wifi module comes out of reset.
+> > 
+> > Another problem is software reboot, at initial power on the wifi
+> > card will react to mmc discovery. After a software reset of the
+> > host it will not, because it has already been disvovered and
+> > didn't notice the host rebooted, unless we reset it as well.
+> > While this seems obvious, the problem is that the reset is needed
+> > before the card can be discovered. Which means we cannot move the
+> > reset logic into the mwifiex driver, since that driver has not
+> > yet been selected through vendor/product id.
+> > 
+> 
+> we had same problem with sd8787 and a different system design.  we
+> added reset-gpios property [1] and used it in sdhci-pxav3.c [2] as
+> sdhci_pxav3_toggle_reset_gpio()
+> 
+> 1.
+> 
+> http://code.coreboot.org/p/openfirmware/source/tree/HEAD/cpu/arm/olpc/sdhci.fth#L104
+> 
+> 2.
+> 
+> http://dev.laptop.org/git/olpc-kernel/tree/drivers/mmc/host/sdhci-pxav3.c?h=arm-3.5#n229
+> 
+> > the reset logic:
+> >         gpiod_set_value(card->gpiod_reset, 0);
+> >         clk_enable(card->sleep_clock);
+> >         udelay(1000);
+> >         gpiod_set_value(card->gpiod_reset, 1);
+> > 
+> > The idea so far was to extend the device-tree node of the
+> > mmc slot by some reset leafs;
+> > 
+> > &mmc {
+> >         ti,non-removable;
+> >         ..
+> >         peripheral-clocks = <&clk &clk2 ...>;
+> >         peripheral-reset-gpios = <&gpio0 1 1 &gpio1 2 3 ...>;
+> > }
+> > 
+> > in mmc_add_host, all clocks will be enabled and gpios be pulled
+> > low for 1 msec
+> 
+> we used 5ms.
+> 
+> > Is this a feasible solution?
+> > 
+> > 
+> > Another related issue, is the card reset in mwifiex driver:
+> > 
+> > static void sdio_card_reset_worker(struct work_struct *work)
+> > {
+> >         struct mmc_host *target = reset_host;
+> > 
+> >         pr_err("Resetting card...\n");
+> >         mmc_remove_host(target);
+> >         /* 20ms delay is based on experiment with sdhci controller */
+> >         mdelay(20);
+> >         mmc_add_host(target);
+> > }
+> > static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
+> > 
+> > There are obviously a lot of problems with this, e.g. custom debugfs
+> > entries created in the driver will be lost. But sometimes this
+> > code might avert disaster in case the command handlers between
+> > driver and firmware lost synchronization
+> > 
+> > How could this be done in a better way?
+> 
+> i'm interested as well.
 
-Although I stepped down as rt2x00 maintainer I'm still following developments.
-I noticed that Mediatek have published a Linux MT7630E driver on their website as well.
-This one seems to be a bit newer than the one in the github repo (at least it is based on a newer rt2x00 version).
-Maybe you should check that one out.
+Wouldn't it be best to have the mwifiex properly handle the
+reset GPIOs and idle status pins?
 
----
-Gertjan
+Those are not part of the SDIO spec AFAIK, and the mmc
+controller should not need to care about those.
 
-Sent from my iPad
+Also, at least omaps also have an issue where suspend won't
+work with mwifiex loaded FYI.
 
-> On 27 jun. 2014, at 02:20, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
->> On 06/25/2014 04:41 AM, Josip Volf - Wuk wrote:
->> Larry Finger wrote:
->>> For interested readers, I have modified the GitHub code to compile using
->>> the current wireless-testing kernel source. If there is sufficient
->>> interest, I could set up a new GH repo for it as an interim measure with
->>> conditional code allowing it to build on recent kernels (3.5+).
->> 
->> I have a notebook with MT7630 wireless device:
->> 02:00.0 Network controller [0280]: MEDIATEK Corp. Device [14c3:7630]
->>         Subsystem: Foxconn International, Inc. Device [105b:e074]
->> 
->> Is it possible to create a GH repo, I'm not a developer but I'm willing to
->> help any way I can, and I'm also a quick learner :)
-> 
-> I forked the older git repo to http://github.com/lwfinger/mt7630. The code there will build on any kernel 3.5 or newer (including 3.16).
-> 
-> Although it will build, it still needs a lot of work. The driver is very "chatty" and spams the logs. Even more disturbing is that it fails to authenticate to any of my APs. That includes WPA1 and WPA2 variants. As usual, the necessary commands are as follows:
-> 
-> git clone http://github.com/lwfinger/mt7630
-> cd mt7630
-> make
-> sudo make install
-> 
-> If the make step fails, you have not set up your system to build an out-of-kernel driver. The driver produced here will replace rt2800pci and some other related drivers.
-> 
-> Larry
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+
+Tony
