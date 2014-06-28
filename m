@@ -1,302 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57884 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754402AbaFKKss (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2014 06:48:48 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 08/28] ath9k: Implement remain-on-channal support
-Date: Wed, 11 Jun 2014 16:17:56 +0530
-Message-ID: <1402483696-2498-9-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140611_124851_195888_F1D97A6A)
-In-Reply-To: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1402483696-2498-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:52181 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751273AbaF1CpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2014 22:45:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1X0idT-0007p7-Ir
+	for linux-wireless@vger.kernel.org; Sat, 28 Jun 2014 04:45:04 +0200
+Received: from 64-31-120-162.static-ip.telepacific.net ([64.31.120.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 04:45:03 +0200
+Received: from frodo.lai by 64-31-120-162.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 04:45:03 +0200
+To: linux-wireless@vger.kernel.org
+From: frodo <frodo.lai@gmail.com>
+Subject: Re: Integrate Intel 3160 Freescale imx.6 with AOSP 4.3 (3.0.35 kernel) and backports 3.14.1
+Date: Sat, 28 Jun 2014 02:39:34 +0000 (UTC)
+Message-ID: <loom.20140628T041047-206@post.gmane.org> (sfid-20140628_044524_663409_B76AB023)
+References: <43860A184C2C6446B49A5DEBD1F0DA6B815E766D@PDIMBX.PDIARM.local> <CANUX_P0N6oqDHOSJ-=bM11uf730ishMxwWD_yLtwYZrK02qp=Q@mail.gmail.com> <43860A184C2C6446B49A5DEBD1F0DA6B815E76D0@PDIMBX.PDIARM.local> <CB3B3D4774441E42AA3EA0E1BA8230A0333FC1FA@HASMSX106.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
 
-Add remain on channel support in order to enable multi-channel
-concurrency.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |   6 ++
- drivers/net/wireless/ath/ath9k/init.c  |   1 +
- drivers/net/wireless/ath/ath9k/main.c  | 126 +++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/xmit.c  |   6 +-
- 4 files changed, 124 insertions(+), 15 deletions(-)
+Peer, Ilan <ilan.peer@...> writes:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d6b0c4e..a8ae3e9 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -338,6 +338,9 @@ enum ath_offchannel_state {
- 	ATH_OFFCHANNEL_PROBE_SEND,
- 	ATH_OFFCHANNEL_PROBE_WAIT,
- 	ATH_OFFCHANNEL_SUSPEND,
-+	ATH_OFFCHANNEL_ROC_START,
-+	ATH_OFFCHANNEL_ROC_WAIT,
-+	ATH_OFFCHANNEL_ROC_DONE,
- };
- 
- struct ath_offchannel {
-@@ -347,6 +350,9 @@ struct ath_offchannel {
- 	struct ieee80211_vif *scan_vif;
- 	int scan_idx;
- 	enum ath_offchannel_state state;
-+	struct ieee80211_channel *roc_chan;
-+	struct ieee80211_vif *roc_vif;
-+	int roc_duration;
- };
- 
- void ath9k_fill_chanctx_ops(void);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9f5e1e4..001b7d0 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -751,6 +751,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			hw->wiphy->n_iface_combinations = 1;
- 			hw->wiphy->max_scan_ssids = 255;
- 			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
-+			hw->wiphy->max_remain_on_channel_duration = 10000;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5da62ef..9e10434d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2176,22 +2176,48 @@ ath_scan_next_channel(struct ath_softc *sc)
- 	ath_chanctx_offchan_switch(sc, chan);
- }
- 
-+static void ath_offchannel_next(struct ath_softc *sc)
-+{
-+	struct ieee80211_vif *vif;
-+
-+	if (sc->offchannel.scan_req) {
-+		vif = sc->offchannel.scan_vif;
-+		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
-+		ath_scan_next_channel(sc);
-+	} else if (sc->offchannel.roc_vif) {
-+		vif = sc->offchannel.roc_vif;
-+		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
-+		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
-+		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
-+	} else {
-+		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc), NULL);
-+		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
-+		if (sc->ps_idle)
-+			ath_cancel_work(sc);
-+	}
-+}
-+
-+static void ath_roc_complete(struct ath_softc *sc, bool abort)
-+{
-+	sc->offchannel.roc_vif = NULL;
-+	sc->offchannel.roc_chan = NULL;
-+	if (!abort)
-+		ieee80211_remain_on_channel_expired(sc->hw);
-+	ath_offchannel_next(sc);
-+	ath9k_ps_restore(sc);
-+}
-+
- static void ath_scan_complete(struct ath_softc *sc, bool abort)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
--	ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc), NULL);
- 	sc->offchannel.scan_req = NULL;
- 	sc->offchannel.scan_vif = NULL;
- 	sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
- 	ieee80211_scan_completed(sc->hw, abort);
- 	clear_bit(ATH_OP_SCANNING, &common->op_flags);
-+	ath_offchannel_next(sc);
- 	ath9k_ps_restore(sc);
--
--	if (!sc->ps_idle)
--		return;
--
--	ath_cancel_work(sc);
- }
- 
- static void ath_scan_send_probe(struct ath_softc *sc,
-@@ -2253,11 +2279,11 @@ static void ath_scan_channel_start(struct ath_softc *sc)
- 
- void ath_offchannel_channel_change(struct ath_softc *sc)
- {
--	if (!sc->offchannel.scan_req)
--		return;
--
- 	switch (sc->offchannel.state) {
- 	case ATH_OFFCHANNEL_PROBE_SEND:
-+		if (!sc->offchannel.scan_req)
-+			return;
-+
- 		if (sc->cur_chan->chandef.chan !=
- 		    sc->offchannel.chan.chandef.chan)
- 			return;
-@@ -2265,8 +2291,23 @@ void ath_offchannel_channel_change(struct ath_softc *sc)
- 		ath_scan_channel_start(sc);
- 		break;
- 	case ATH_OFFCHANNEL_IDLE:
-+		if (!sc->offchannel.scan_req)
-+			return;
-+
- 		ath_scan_complete(sc, false);
- 		break;
-+	case ATH_OFFCHANNEL_ROC_START:
-+		if (sc->cur_chan != &sc->offchannel.chan)
-+			break;
-+
-+		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
-+		mod_timer(&sc->offchannel.timer, jiffies +
-+			  msecs_to_jiffies(sc->offchannel.roc_duration));
-+		ieee80211_ready_on_channel(sc->hw);
-+		break;
-+	case ATH_OFFCHANNEL_ROC_DONE:
-+		ath_roc_complete(sc, false);
-+		break;
- 	default:
- 		break;
- 	}
-@@ -2277,11 +2318,11 @@ void ath_offchannel_timer(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *)data;
- 	struct ath_chanctx *ctx = ath_chanctx_get_oper_chan(sc);
- 
--	if (!sc->offchannel.scan_req)
--		return;
--
- 	switch (sc->offchannel.state) {
- 	case ATH_OFFCHANNEL_PROBE_WAIT:
-+		if (!sc->offchannel.scan_req)
-+			return;
-+
- 		if (ctx->active) {
- 			sc->offchannel.state = ATH_OFFCHANNEL_SUSPEND;
- 			ath_chanctx_switch(sc, ctx, NULL);
-@@ -2290,8 +2331,16 @@ void ath_offchannel_timer(unsigned long data)
- 		}
- 		/* fall through */
- 	case ATH_OFFCHANNEL_SUSPEND:
-+		if (!sc->offchannel.scan_req)
-+			return;
-+
- 		ath_scan_next_channel(sc);
- 		break;
-+	case ATH_OFFCHANNEL_ROC_START:
-+	case ATH_OFFCHANNEL_ROC_WAIT:
-+		sc->offchannel.state = ATH_OFFCHANNEL_ROC_DONE;
-+		ath_chanctx_switch(sc, ctx, NULL);
-+		break;
- 	default:
- 		break;
- 	}
-@@ -2316,9 +2365,9 @@ static int ath9k_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	sc->offchannel.scan_vif = vif;
- 	sc->offchannel.scan_req = req;
- 	sc->offchannel.scan_idx = 0;
--	sc->offchannel.chan.txpower = vif->bss_conf.txpower;
- 
--	ath_scan_next_channel(sc);
-+	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE)
-+		ath_offchannel_next(sc);
- 
- out:
- 	mutex_unlock(&sc->mutex);
-@@ -2337,6 +2386,53 @@ static void ath9k_cancel_hw_scan(struct ieee80211_hw *hw,
- 	mutex_unlock(&sc->mutex);
- }
- 
-+static int ath9k_remain_on_channel(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_channel *chan, int duration,
-+				   enum ieee80211_roc_type type)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	int ret = 0;
-+
-+	mutex_lock(&sc->mutex);
-+
-+	if (WARN_ON(sc->offchannel.roc_vif)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ath9k_ps_wakeup(sc);
-+	sc->offchannel.roc_vif = vif;
-+	sc->offchannel.roc_chan = chan;
-+	sc->offchannel.roc_duration = duration;
-+
-+	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE)
-+		ath_offchannel_next(sc);
-+
-+out:
-+	mutex_unlock(&sc->mutex);
-+
-+	return ret;
-+}
-+
-+static int ath9k_cancel_remain_on_channel(struct ieee80211_hw *hw)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	mutex_lock(&sc->mutex);
-+
-+	del_timer_sync(&sc->offchannel.timer);
-+
-+	if (sc->offchannel.roc_vif) {
-+		if (sc->offchannel.state >= ATH_OFFCHANNEL_ROC_START)
-+			ath_roc_complete(sc, true);
-+	}
-+
-+	mutex_unlock(&sc->mutex);
-+
-+	return 0;
-+}
-+
- void ath9k_fill_chanctx_ops(void)
- {
- 	if (!ath9k_use_chanctx)
-@@ -2344,6 +2440,8 @@ void ath9k_fill_chanctx_ops(void)
- 
- 	ath9k_ops.hw_scan = ath9k_hw_scan;
- 	ath9k_ops.cancel_hw_scan = ath9k_cancel_hw_scan;
-+	ath9k_ops.remain_on_channel  = ath9k_remain_on_channel;
-+	ath9k_ops.cancel_remain_on_channel = ath9k_cancel_remain_on_channel;
- }
- 
- struct ieee80211_ops ath9k_ops = {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 7972e1e..22460a1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2197,6 +2197,9 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (vif)
- 		avp = (void *)vif->drv_priv;
- 
-+	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
-+		txctl->force_channel = true;
-+
- 	ret = ath_tx_prepare(hw, skb, txctl);
- 	if (ret)
- 	    return ret;
-@@ -2234,7 +2237,8 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (txctl->an && queue)
- 		tid = ath_get_skb_tid(sc, txctl->an, skb);
- 
--	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
-+	if (info->flags & (IEEE80211_TX_CTL_PS_RESPONSE |
-+			   IEEE80211_TX_CTL_TX_OFFCHAN)) {
- 		ath_txq_unlock(sc, txq);
- 		txq = sc->tx.uapsdq;
- 		ath_txq_lock(sc, txq);
--- 
-2.0.0
+> 
+> Hi Rob,
+> 
+> From the logcat output below it looks like u are using a version of 
+wpa_supplicant that does not include some
+> fixes that are required for properly setting up the P2P_DEVICE interface.
+> 
+> Can you try switching to using the upstream hostap repository? Using the 
+upstream version you should
+> enable the p2p_device=1 driver parameter and in addition pass the P2P 
+Device configuration file using
+> the -m option. Something like this:
+> 
+> wpa_supplicant -i wlan0 -c <conf> ....  -pp2p_device=1 ... -m <p2p config 
+file>
+> 
+> The wpa_supplicant will create the P2P Device interface and start it so no 
+need to add the interface using
+> iw. Note that the name of the created interface is p2p-dev-wlan0 (or 
+something like that) so you'll need to
+> tweak it so that Android framework would be happy.
+> 
+> Regards,
+> 
+> Ilan.
+> 
+
+
+Hi Ilan,
+
+I checkout the branch android-kk from hostap repository and tried the 
+wpa_supplicant command with -m option:
+/system/bin/wpa_supplicant -dt -i wlan0 -Dnl80211 -
+c/data/misc/wifi/wpa_supplicant.conf -pp2p_device=1 -
+m/data/misc/wifi/p2p_supplicant.conf -O/data/misc/wifi/sockets -B
+
+I got two interfaces in /data/misc/wifi/sockets
+130|root@ar6mx:/ # ls /data/misc/wifi/sockets/
+p2p-dev-wlan0
+wlan0
+
+However, the wpa_supplicant failed to create P2P_DEVICE wit error "Invalid 
+argumen". How can I debug this? Thanks.
+
+D/wpa_supplicant( 3843): nl80211: Create interface iftype 10 (P2P_DEVICE)
+D/wpa_supplicant( 3843): nl80211: New P2P Device interface p2p-dev-wlan0 
+(0x4) created
+D/wpa_supplicant( 3843): Override interface parameter: ctrl_interface 
+('(null)' -> '/data/misc/wifi/sockets')
+D/wpa_supplicant( 3843): Initializing interface 'p2p-dev-wlan0' conf 
+'/data/misc/wifi/p2p_supplicant.conf' driver 'nl80211' ctrl_interface 
+'/data/misc/wifi/sockets' bridge 'N/A'
+D/wpa_supplicant( 3843): Configuration file 
+'/data/misc/wifi/p2p_supplicant.conf' -> 
+'/data/misc/wifi/p2p_supplicant.conf'
+D/wpa_supplicant( 3843): Reading configuration file 
+'/data/misc/wifi/p2p_supplicant.conf'
+D/wpa_supplicant( 3843): ctrl_interface='/data/system/wpa_supplicant'
+D/wpa_supplicant( 3843): update_config=1
+D/wpa_supplicant( 3843): ap_scan=1
+I/wpa_supplicant( 3843): rfkill: Cannot open RFKILL control device
+D/wpa_supplicant( 3843): nl80211: RFKILL status not available
+E/wpa_supplicant( 3843): Could not read interface p2p-dev-wlan0 flags: No 
+such device
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:4
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:2
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:1
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:5
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:6
+D/wpa_supplicant( 3843): nl80211: Supported cipher 00-14-72:1
+D/wpa_supplicant( 3843): nl80211: Using driver-based off-channel TX
+I/wpa_supplicant( 3843): nl80211: send_and_recv->nl_recvmsgs failed: 20
+D/wpa_supplicant( 3843): nl80211: Use separate P2P group interface (driver 
+advertised support)
+D/wpa_supplicant( 3843): nl80211: interface p2p-dev-wlan0 in phy phy0
+D/wpa_supplicant( 3843): nl80211: Set mode ifindex 0 iftype 10 (P2P_DEVICE)
+I/wpa_supplicant( 3843): nl80211: send_and_recv->nl_recvmsgs failed: -22
+D/wpa_supplicant( 3843): nl80211: Failed to set interface 0 to mode 10: -22 
+(Invalid argument)
+
+Frodo
+
 
