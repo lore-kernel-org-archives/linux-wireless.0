@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:61790 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbaF3IWP (ORCPT
+Received: from mdfmta010.mxout.tch.inty.net ([91.221.169.51]:45116 "EHLO
+	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751920AbaF2TTF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 04:22:15 -0400
-Message-ID: <53B11E34.60601@broadcom.com> (sfid-20140630_102223_742799_6BC83C2C)
-Date: Mon, 30 Jun 2014 10:22:12 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 29 Jun 2014 15:19:05 -0400
+Message-ID: <53B066A5.4070003@dpets.co.uk> (sfid-20140629_211910_106093_C0F6ABC3)
+Date: Sun, 29 Jun 2014 20:19:01 +0100
+From: John Talbut <jt@dpets.co.uk>
 MIME-Version: 1.0
-To: John Talbut <jt@dpets.co.uk>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	<linux-wireless@vger.kernel.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
 Subject: Re: Firmware loading with static kernel and initramfs
-References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net> <53B0F10D.7030801@dpets.co.uk>
-In-Reply-To: <53B0F10D.7030801@dpets.co.uk>
-Content-Type: text/plain; charset="UTF-8"
+References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net>
+In-Reply-To: <53B05B72.1010502@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30-06-14 07:09, John Talbut wrote:
-> On 29/06/14 23:11, Larry Finger wrote:
->> On 06/29/2014 02:19 PM, John Talbut wrote:
->>> I originally had the problem with a Broadcom BCM43225 wireless.  This
->>> was with a
->>> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
->>> and this
->>> is still working with a 3.14 kernel.
->>
->> What sort of patch was that? Driver brcmsmac is still using
->> request_firmware().
-> 
-> I believe it was this patch:
-> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
 
-Correct. IFF_UP was recommended event to consider user-space ready to
-handle request_firmware. However, this may not work for drivers that
-initialize the wiphy information based on info retrieved from firmware.
 
-Regards,
-Arend
+On 29/06/14 19:31, Larry Finger wrote:
+> On 06/29/2014 12:15 PM, John Talbut wrote:
+>> There seems to be a general problem when using a static kernel and
+>> initramfs in
+>> that the wireless drivers try to load firmware before the disks are
+>> mounted and
+>> the /lib/firmware folder is available.  Various people seem to have
+>> come across
+>> problems with firmware not loading, some of which seem to relate to this
+>> problem, which they have approached as if it is a problem with their
+>> particular
+>> driver.  However it seems to be a general problem and I have had it
+>> with three
+>> different drivers.
+>>
+>> There seems to be a number of possible approaches to this: loading the
+>> firmware
+>> in an initramfs; changing the sequence in which wireless drivers start
+>> so that
+>> they wait until the disks are mounted; compiling the firmware into the
+>> kernel
+>> and loading the firmware as part of ifup. I see that the latter has
+>> been done
+>> for one driver
+>> (http://thread.gmane.org/gmane.linux.kernel.wireless.general/3390).
+>>
+>> What is the current situation with this problem and what needs doing?
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> What kernel version, and what wireless drivers have this problem?
+>
+> At one point, there was a timeout of 30 seconds for request_firmware()
+> calls, and that led to problems even when the drivers were built as
+> modules. That situation was handled in a number of wireless drivers by
+> using request_firmware_nowait(); however, my understanding was that user
+> space was fixed to avoid the timeout. I think udev was the component
+> that changed. What version of that are you using?
+>
+> Larry
+>
+I originally had the problem with a Broadcom BCM43225 wireless.  This 
+was with a 3.8 kernel.  This was solved by a patch to the kernel 
+brcmsmac driver and this is still working with a 3.14 kernel.
 
->>
->>> Currently I have the problem with an Intel Centrino Wireless-N 130.
->>> The problem
->>> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
->>> version
->>> 204-5linuxmint.
->>
->> The current Intel drivers all use request_firmware_nowait(), but I'm not
->> sure when they were changed.
->>
->>> A friend seems to have the problem with a Realtek 8129se wireless but
->>> we are
->>> still checking out that this is the problem.
->>
->> To my knowledge, there is no Realtek 8129se driver. Do you mean
->> rtl8192se? If so, that one has used request_firmware_nowait() for some
->> time.
-> 
-> Yes, the rtl8192se driver.
-> 
-> John
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Currently I have the problem with an Intel Centrino Wireless-N 130.  The 
+problem was present with a 3.11 kernel and currently with a 3.14 kernel. 
+  udev version 204-5linuxmint.
 
+A friend seems to have the problem with a Realtek 8129se wireless but we 
+are still checking out that this is the problem.
+
+John
