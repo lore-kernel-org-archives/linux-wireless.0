@@ -1,96 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:53640 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755797AbaFQLt6 (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:50373 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752718AbaF2KnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2014 07:49:58 -0400
-Message-ID: <53A02B5A.3070409@broadcom.com> (sfid-20140617_135003_362997_26D6EA0B)
-Date: Tue, 17 Jun 2014 13:49:46 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 29 Jun 2014 06:43:22 -0400
+Date: Sun, 29 Jun 2014 13:43:18 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 05/10] mac80211: use TDLS initiator in tdls_mgmt
+ operations
+Message-ID: <20140629104318.GA32230@w1.fi> (sfid-20140629_124344_246091_C3F8C1E1)
+References: <1402496307-32522-1-git-send-email-arik@wizery.com>
+ <1402496307-32522-5-git-send-email-arik@wizery.com>
 MIME-Version: 1.0
-To: Hans de Goede <hdegoede@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Chen-Yu Tsai <wens@csie.org>, <linux-wireless@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	<linux-sunxi@googlegroups.com>
-Subject: Re: [PATCH v2 4/4] brcmfmac: Fix OOB interrupt not working for BCM43362
-References: <1402941407-8210-1-git-send-email-hdegoede@redhat.com> <1402941407-8210-5-git-send-email-hdegoede@redhat.com>
-In-Reply-To: <1402941407-8210-5-git-send-email-hdegoede@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402496307-32522-5-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-06-14 19:56, Hans de Goede wrote:
-> It has taken me a long long time to get the OOB interrupt working on the
-> AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
-> end I found these magic register pokes in the cubietruck kernel tree:
-> https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
->
-> I'm not entirely sure if this specific to the AP6210 module, or if this
-> should be done for all BCM43362 sdio devices.
+On Wed, Jun 11, 2014 at 05:18:22PM +0300, Arik Nemtsov wrote:
+> The TDLS initiator is set once during link setup. If determines the
+> address ordering in the link identifier IE.
+> Use the value from userspace in order to have a correct teardown packet.
+> With the current code, a teardown from the responder side fails the TDLS
+> MIC check because of a bad link identifier IE.
 
-Hi Hans,
+This series, and in particular, this patch, seems to break number of
+TDLS use cases (well, almost all use of TDLS) with "old" user space
+tools. This should be fixed or reverted until the changes are in state
+that avoid such breaking of the old user interface. We cannot assume
+that everyone will be updating kernel and wpa_supplicant in sync.
 
-I was still not sure about this one so I asked around. Apart from the 
-nvram settings I emailed earlier one more is needed:
+I would recommend running through full mac80211_hwsim test cases from
+hostap.git when doing any changes to existing nl80211
+commands/attributes or how they are used.
 
-sd_gpout=1
-sd_oobonly=1
-sd_gpval=1
-*muxenab=0x11*
+> diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+> @@ -242,27 +243,42 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+> -	/* the TDLS link IE is always added last */
+> +	/* sanity check for initiator */
 
-Could you give that a try?
+These sanity checks do not work with old user space since initiator will
+be hardcoded to false for those cases.
 
-Regards,
-Arend
-
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 16 ++++++++++++++++
->   1 file changed, 16 insertions(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 0fc707c..58e86a5 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -39,7 +39,9 @@
->   #include <brcm_hw_ids.h>
->   #include <brcmu_utils.h>
->   #include <brcmu_wifi.h>
-> +#include <chipcommon.h>
->   #include <soc.h>
-> +#include "chip.h"
->   #include "dhd_bus.h"
->   #include "dhd_dbg.h"
->   #include "sdio_host.h"
-> @@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
->   {
->   	int ret = 0;
->   	u8 data;
-> +	u32 addr, gpiocontrol;
->   	unsigned long flags;
->
->   	if ((sdiodev->pdata) && (sdiodev->pdata->oob_irq_supported)) {
-> @@ -148,6 +151,19 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
->
->   		sdio_claim_host(sdiodev->func[1]);
->
-> +		if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
-> +			/* assign GPIO to SDIO core */
-> +			addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
-> +			gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr, &ret);
-> +			gpiocontrol |= 0x2;
-> +			brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol, &ret);
-> +
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_SELECT, 0xf,
-> +					  &ret);
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_OUT, 0, &ret);
-> +			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_EN, 0x2, &ret);
+>  	switch (action_code) {
+>  	case WLAN_TDLS_SETUP_REQUEST:
+>  	case WLAN_TDLS_SETUP_CONFIRM:
+> -	case WLAN_TDLS_TEARDOWN:
+>  	case WLAN_TDLS_DISCOVERY_REQUEST:
+> -		/* we are the initiator */
+> -		ieee80211_tdls_add_link_ie(skb, sdata->vif.addr, peer,
+> -					   sdata->u.mgd.bssid);
+> +		if (!initiator) {
+> +			ret = -EINVAL;
+> +			goto fail;
 > +		}
-> +
->   		/* must configure SDIO_CCCR_IENx to enable irq */
->   		data = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_IENx, &ret);
->   		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
->
 
+This will reject all new request frames unless user space tools are
+modified to add NL80211_ATTR_TDLS_INITIATOR.
+
+For most of these, it should be possible to set initiator based on
+action_code if the attribute had been designed to support backwards
+compatibility, but it wasn't, i.e., there is no way of knowing whether
+the user space is aware of this new attribute since it is a flag
+attribute. For example, an u32 encoding an enum that indicates whether
+the device is the initiator would have allowed cfg80211 to figure out on
+its own which role the device is in if the new attribute is not
+included.
+
+Is it already too late to change the nl80211 attribute since this hit
+wireless-testing.git? I was about to commit wpa_supplicant changes to
+start using this new attribute, but I don't think I'll do it now to
+avoid getting any actual users added for this until the kernel side
+design gets fixed to address existing user space behavior.
+
+
+PS.
+
+This location and patch is not the only one that breaks TDLS tests.
+'mac80211: make sure TDLS peer STA exists during setup' is also breaking
+things at least for special test functionality (e.g.,
+ap_wpa2_tdls_bssid_mismatch and ap_wpa2_tdls_concurrent_init). I'm not
+sure what to do about those, though.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
