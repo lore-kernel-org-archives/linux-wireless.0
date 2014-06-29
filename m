@@ -1,90 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:44710 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755172AbaFXTwd (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:50756 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752652AbaF2Tk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:52:33 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so888296wgh.28
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:31 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/27] iwlwifi: mvm: add back support for low-priority scan
-Date: Tue, 24 Jun 2014 22:51:57 +0300
-Message-Id: <1403639541-4621-3-git-send-email-egrumbach@gmail.com> (sfid-20140624_215243_010493_E4CE2F1E)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+	Sun, 29 Jun 2014 15:40:28 -0400
+Received: by mail-we0-f170.google.com with SMTP id w61so7218174wes.29
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 12:40:27 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/2] staging: vt6656: implement get_stats ieee80211_low_level_stats
+Date: Sun, 29 Jun 2014 20:39:54 +0100
+Message-Id: <1404070795-3034-1-git-send-email-tvboxspy@gmail.com> (sfid-20140629_214032_182418_37CE2DD4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The driver already report low_level_stats via vnt_interrupt_data.
 
-The low-priority scan feature can be useful, e.g. for OBSS
-scans (if those are required by the AP); add back support
-for it, restoring the maximum out time to the value it was
-for low-priority scan before that was removed.
+Allow mac80211 to collect them via vnt_get_stats
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 9 ++++++---
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/device.h   |  1 +
+ drivers/staging/vt6656/int.c      |  6 ++++++
+ drivers/staging/vt6656/main_usb.c | 11 +++++++++++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 7215f59..41c0aac 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -374,6 +374,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->wiphy->max_sched_scan_ie_len = SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index f1ed43e..4d1eb22 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -438,6 +438,7 @@ struct vnt_private {
+ 	u8 byChannelSwitchCount;
  
- 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
-+			       NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			       NL80211_FEATURE_P2P_GO_OPPPS;
+ 	struct iw_statistics wstats; /* wireless stats */
++	struct ieee80211_low_level_stats low_stats;
+ };
  
- 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index df8f3eb..896c21d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -267,7 +267,7 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
- 
- static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- 				     struct ieee80211_vif *vif,
--				     int n_ssids,
-+				     int n_ssids, u32 flags,
- 				     struct iwl_mvm_scan_params *params)
+ #define ADD_ONE_WITH_WRAP_AROUND(uVar, uModulo) {   \
+diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
+index 23d045c..1913b73 100644
+--- a/drivers/staging/vt6656/int.c
++++ b/drivers/staging/vt6656/int.c
+@@ -79,6 +79,7 @@ void INTnsProcessData(struct vnt_private *priv)
  {
- 	bool global_bound = false;
-@@ -289,6 +289,9 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- 		params->max_out_time = 250;
+ 	struct vnt_interrupt_data *int_data;
+ 	struct net_device_stats *stats = &priv->stats;
++	struct ieee80211_low_level_stats *low_stats = &priv->low_stats;
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsInterruptProcessData\n");
+ 
+@@ -133,6 +134,11 @@ void INTnsProcessData(struct vnt_private *priv)
+ #endif
+ 		}
+ 		priv->qwCurrTSF = le64_to_cpu(int_data->tsf);
++
++		low_stats->dot11RTSSuccessCount += int_data->rts_success;
++		low_stats->dot11RTSFailureCount += int_data->rts_fail;
++		low_stats->dot11ACKFailureCount += int_data->ack_fail;
++		low_stats->dot11FCSErrorCount += int_data->fcs_err;
  	}
  
-+	if (flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
-+		params->max_out_time = 200;
+ 	if (int_data->isr1 != 0)
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 14845ec..8a4695e 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1006,6 +1006,16 @@ static void vnt_sw_scan_complete(struct ieee80211_hw *hw)
+ 	BBvUpdatePreEDThreshold(priv, false);
+ }
+ 
++static int vnt_get_stats(struct ieee80211_hw *hw,
++				struct ieee80211_low_level_stats *stats)
++{
++	struct vnt_private *priv = hw->priv;
 +
- not_bound:
- 
- 	for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
-@@ -332,7 +335,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 	cmd->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
- 	cmd->rxchain_sel_flags = iwl_mvm_scan_rx_chain(mvm);
- 
--	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
-+	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, req->flags, &params);
- 	cmd->max_out_time = cpu_to_le32(params.max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params.suspend_time);
- 	if (params.passive_fragmented)
-@@ -758,7 +761,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 	if (!scan_cfg)
- 		return -ENOMEM;
- 
--	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
-+	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, 0, &params);
- 	iwl_build_scan_cmd(mvm, vif, req, &scan_cfg->scan_cmd, &params);
- 	scan_cfg->scan_cmd.len = cpu_to_le16(cmd_len);
- 
++	memcpy(stats, &priv->low_stats, sizeof(*stats));
++
++	return 0;
++}
++
+ static u64 vnt_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct vnt_private *priv = hw->priv;
+@@ -1043,6 +1053,7 @@ static const struct ieee80211_ops vnt_mac_ops = {
+ 	.set_key		= vnt_set_key,
+ 	.sw_scan_start		= vnt_sw_scan_start,
+ 	.sw_scan_complete	= vnt_sw_scan_complete,
++	.get_stats		= vnt_get_stats,
+ 	.get_tsf		= vnt_get_tsf,
+ 	.set_tsf		= vnt_set_tsf,
+ 	.reset_tsf		= vnt_reset_tsf,
 -- 
-1.8.3.2
+1.9.1
 
