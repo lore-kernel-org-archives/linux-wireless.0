@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:60991 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754357AbaFUVCn (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:44112 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbaF2EzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2014 17:02:43 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n3so2327519wiv.15
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2014 14:02:42 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Peter Wu <lekensteyn@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false 
-Date: Sat, 21 Jun 2014 23:03:41 +0200
-Message-Id: <1403384623-9737-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140621_230246_389690_12E01AFE)
+	Sun, 29 Jun 2014 00:55:24 -0400
+Received: by mail-la0-f44.google.com with SMTP id ty20so4023894lab.31
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 21:55:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAH5Ym4iX=7TvPAajyb_PzrfsD7UmbsOYOvU9YqZk78zaDaQNGA@mail.gmail.com>
+References: <CAH5Ym4iX=7TvPAajyb_PzrfsD7UmbsOYOvU9YqZk78zaDaQNGA@mail.gmail.com>
+Date: Sun, 29 Jun 2014 07:55:22 +0300
+Message-ID: <CANUX_P1=hWuxoicxcFx4O_v9veNMQr1pA5rf06LgAasO+rXPsg@mail.gmail.com> (sfid-20140629_065531_844694_7A7041B8)
+Subject: Re: BUG: iwlwifi microcode errors on Intel 7260HMW
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Sam Edwards <cfsworks@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a logical error in an if statement that always evaluates to false.
+> Hello!
+>
+> I've been working for a week to track down the cause of this bug.
+> Sadly, I have no background in wireless development and no knowledge
+> of the Intel microcode format, so I've gotten stuck.
+>
+> I'm trying to use an Intel 7260HMW with OpenWrt to act as an AP. I'm
+> using a recent snapshot ("Barrier Breaker") build of OpenWrt, on the
+> Linux 3.10.36 kernel. The iwlwifi driver is built from the Linux
+> driver backports package; a diff reveals that it is fully up-to-date
+> with the latest source in the upstream kernel repository.
+>
+> When trying to run hostapd, my kernel log repeats output similar to
+> this: http://pastebin.com/1UuUuMMg
+> The problems are not limited to trying to use the device as an AP.
+> When trying to associate to an existing network, I am given similar
+> output: http://pastebin.com/qxwbdHyu
+>
+> The wireless device is, however, capable of scanning for nearby APs,
+> but so far I have not been able to get it to do anything else.
+>
+> I've been unable to get the non-backported (i.e. 3.10.36) version of
+> the driver to load correctly, and I cannot easily test this on the
+> latest kernel either. However, if I should try a different version,
+> please let me know.
+>
 
-This has after same discussion resulted in that we add a macro to handle this.
+Please open a bug on bugzilla.kernel.org and copy ilw@linux.intel.com
+to the bug.
+This is most likely a firmware bug.
 
-This was partly found using a static code analysis program called cppcheck.
-
-Rickard Strandqvist (1):
-  net: wireless: rtlwifi: rtl8192de: hw.c:  Cleaning up if statement that always evaluates to false
-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
--- 
-1.7.10.4
-
+Thank you.
