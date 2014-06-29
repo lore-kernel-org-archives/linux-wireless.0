@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:43092 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaFHBij (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:55684 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311AbaF2SbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jun 2014 21:38:39 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n3so24139wiv.9
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2014 18:38:38 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Peter Wu <lekensteyn@gmail.com>,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: rtlwifi: rtl8192cu: hw.c:  Cleaning up if statement that always evaluates to false
-Date: Sun,  8 Jun 2014 03:39:33 +0200
-Message-Id: <1402191573-25878-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140608_033857_808532_7F27FD3A)
+	Sun, 29 Jun 2014 14:31:11 -0400
+Received: by mail-oa0-f51.google.com with SMTP id j17so7812462oag.24
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 11:31:11 -0700 (PDT)
+Message-ID: <53B05B72.1010502@lwfinger.net> (sfid-20140629_203116_212788_AA7A2293)
+Date: Sun, 29 Jun 2014 13:31:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Talbut <jt@dpets.co.uk>, linux-wireless@vger.kernel.org
+Subject: Re: Firmware loading with static kernel and initramfs
+References: <53B049A3.7000803@dpets.co.uk>
+In-Reply-To: <53B049A3.7000803@dpets.co.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find a logical error in an if statement '(X & 0xfc) == 0x3' is always false
+On 06/29/2014 12:15 PM, John Talbut wrote:
+> There seems to be a general problem when using a static kernel and initramfs in
+> that the wireless drivers try to load firmware before the disks are mounted and
+> the /lib/firmware folder is available.  Various people seem to have come across
+> problems with firmware not loading, some of which seem to relate to this
+> problem, which they have approached as if it is a problem with their particular
+> driver.  However it seems to be a general problem and I have had it with three
+> different drivers.
+>
+> There seems to be a number of possible approaches to this: loading the firmware
+> in an initramfs; changing the sequence in which wireless drivers start so that
+> they wait until the disks are mounted; compiling the firmware into the kernel
+> and loading the firmware as part of ifup. I see that the latter has been done
+> for one driver (http://thread.gmane.org/gmane.linux.kernel.wireless.general/3390).
+>
+> What is the current situation with this problem and what needs doing?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-After pointing this out, Larry Finger informed what would be the correct one.
-'(X & 0x3) == 0x3'
+What kernel version, and what wireless drivers have this problem?
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+At one point, there was a timeout of 30 seconds for request_firmware() calls, 
+and that led to problems even when the drivers were built as modules. That 
+situation was handled in a number of wireless drivers by using 
+request_firmware_nowait(); however, my understanding was that user space was 
+fixed to avoid the timeout. I think udev was the component that changed. What 
+version of that are you using?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 07cb06d..40b9ad6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1360,7 +1360,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
- 	}
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & 0xfc) == MSR_AP)
-+	if ((bt_msr & MSR_AP) == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
--- 
-1.7.10.4
+Larry
 
