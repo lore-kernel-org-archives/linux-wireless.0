@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25469 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932290AbaFXQ44 (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:60889 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383AbaF2Jcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 12:56:56 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 3/5] ath9k_hw: fix XPABIASLEVEL settings for AR9531
-Date: Tue, 24 Jun 2014 22:27:38 +0530
-Message-ID: <1403629060-14245-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140624_185701_884853_C9AAA0CD)
-In-Reply-To: <1403629060-14245-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1403629060-14245-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Sun, 29 Jun 2014 05:32:45 -0400
+Received: by mail-oa0-f52.google.com with SMTP id j17so7524858oag.11
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 02:32:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <53AF5FB8.3060505@lwfinger.net>
+References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
+	<53AF5FB8.3060505@lwfinger.net>
+Date: Sun, 29 Jun 2014 17:32:44 +0800
+Message-ID: <CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com> (sfid-20140629_113249_140005_4930E212)
+Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
+ DHCP lease
+From: lolilolicon <lolilolicon@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On Sun, Jun 29, 2014 at 8:37 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+> Something went wrong in your bisection. Commit 88daf80 is a merge commit and
+> is unlikely to be the bad one. You might try a checkout of b080e04 and try
+> it to see if it is bad or good. That is the first non-merge commit before
+> 88daf80.
+>
+> Larry
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 235053b..80c6eac 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3535,7 +3535,8 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	int bias = ar9003_modal_header(ah, is2ghz)->xpaBiasLvl;
- 
--	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
-+	    AR_SREV_9531(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
- 	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
--- 
-2.0.0
+I have no clue how you identified b080e04, but I tested it and it is good.
+I'm not good at git so please bear with me. What I know is 88daf80 is
+bad, and both its two parents 010d3c3 and 35582ad are good: does that
+not mean 88daf80 is the first bad commit?
 
+% git bisect start 88daf80 010d3c3 35582ad
+88daf80dcca19ff995cc263592426f734a9702f3 is the first bad commit
+
+What am I getting wrong?
