@@ -1,87 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:55245 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383AbaFYKoJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 06:44:09 -0400
-Received: by mail-we0-f177.google.com with SMTP id u56so1755738wes.8
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2014 03:44:07 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v11 5/5] cfg80211: remove channel_switch combination check
-Date: Wed, 25 Jun 2014 12:35:10 +0200
-Message-Id: <1403692510-27873-6-git-send-email-michal.kazior@tieto.com> (sfid-20140625_124421_130109_3FC8DF34)
-In-Reply-To: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
-References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26242 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753094AbaF2ORo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jun 2014 10:17:44 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v3 4/4] brcmfmac: Fix OOB interrupt not working for BCM43362
+Date: Sun, 29 Jun 2014 16:17:01 +0200
+Message-Id: <1404051421-24377-5-git-send-email-hdegoede@redhat.com> (sfid-20140629_161748_729105_5039B285)
+In-Reply-To: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
+References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver is now responsible for veryfing if the
-switch is possible.
+It has taken me a long long time to get the OOB interrupt working on the
+AP6210 sdio wifi/bt module found on various Allwinner A20 boards. In the
+end I found these magic register pokes in the cubietruck kernel tree:
+https://github.com/cubieboard2/linux-sunxi/commit/7f08ba395617d17e7a711507503d89a50406fe7a
 
-Since this is inherently tricky driver may decide
-to disconnect an interface later with
-cfg80211_stop_iface().
+This is also done for the bcm43362 in broadcom's internal/proprietary driver.
 
-This doesn't mean driver can accept everything. It
-should do it's best to verify requests and reject
-them as soon as possible.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Notes:
-    v7:
-     * emphasize channel switching verification should not be
-       taken lightly [Johannes]
-     * update channel_switch description in cfg80211.h
-
- include/net/cfg80211.h |  7 ++++++-
- net/wireless/nl80211.c | 11 -----------
- 2 files changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b9eeae3..0a080c4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2301,7 +2301,12 @@ struct cfg80211_qos_map {
-  *	reliability. This operation can not fail.
-  * @set_coalesce: Set coalesce parameters.
-  *
-- * @channel_switch: initiate channel-switch procedure (with CSA)
-+ * @channel_switch: initiate channel-switch procedure (with CSA). Driver is
-+ *	responsible for veryfing if the switch is possible. Since this is
-+ *	inherently tricky driver may decide to disconnect an interface later
-+ *	with cfg80211_stop_iface(). This doesn't mean driver can accept
-+ *	everything. It should do it's best to verify requests and reject them
-+ *	as soon as possible.
-  *
-  * @set_qos_map: Set QoS mapping information to the driver
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8f46b8f..c102951 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6013,17 +6013,6 @@ skip_beacons:
- 		params.radar_required = true;
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 0fc707c..58e86a5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -39,7 +39,9 @@
+ #include <brcm_hw_ids.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
++#include <chipcommon.h>
+ #include <soc.h>
++#include "chip.h"
+ #include "dhd_bus.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+@@ -119,6 +121,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret = 0;
+ 	u8 data;
++	u32 addr, gpiocontrol;
+ 	unsigned long flags;
  
--	/* TODO: I left this here for now.  With channel switch, the
--	 * verification is a bit more complicated, because we only do
--	 * it later when the channel switch really happens.
--	 */
--	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
--					   params.chandef.chan,
--					   CHAN_MODE_SHARED,
--					   radar_detect_width);
--	if (err)
--		return err;
--
- 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
- 		params.block_tx = true;
+ 	if ((sdiodev->pdata) && (sdiodev->pdata->oob_irq_supported)) {
+@@ -148,6 +151,19 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
  
+ 		sdio_claim_host(sdiodev->func[1]);
+ 
++		if (sdiodev->bus_if->chip == BCM43362_CHIP_ID) {
++			/* assign GPIO to SDIO core */
++			addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
++			gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr, &ret);
++			gpiocontrol |= 0x2;
++			brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol, &ret);
++
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_SELECT, 0xf,
++					  &ret);
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_OUT, 0, &ret);
++			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_EN, 0x2, &ret);
++		}
++
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+ 		data = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_IENx, &ret);
+ 		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
 -- 
-1.8.5.3
+2.0.0
 
