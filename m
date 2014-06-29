@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:60465 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754392AbaFNNvA (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:38337 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbaF2Tq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2014 09:51:00 -0400
-Received: by mail-pb0-f52.google.com with SMTP id rq2so934148pbb.25
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2014 06:50:59 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id xz7sm37803113pac.3.2014.06.14.06.50.58
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Sat, 14 Jun 2014 06:50:59 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/16] rsi: Changed the radio caps frame.
-Date: Sat, 14 Jun 2014 19:20:50 +0530
-Message-Id: <1402753850-13979-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140614_155102_641810_977A40B6)
+	Sun, 29 Jun 2014 15:46:59 -0400
+Received: by mail-we0-f174.google.com with SMTP id u57so7410825wes.33
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 12:46:58 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: treat LCNXN-PHY as extra N-PHY devices
+Date: Sun, 29 Jun 2014 21:46:45 +0200
+Message-Id: <1404071205-12568-1-git-send-email-zajec5@gmail.com> (sfid-20140629_214703_778932_EC2032BC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed the radio caps frame and added the required fields.
+LCNXN is simply a continuation of N, e.g. code handling LCNXN revs 0 and
+1 is mostly the same as for N-PHY revs 7+.
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |    7 +++++++
- drivers/net/wireless/rsi/rsi_mgmt.h     |   15 +++++++++++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/net/wireless/b43/main.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 2cdb36a..c3d8da9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -331,6 +331,13 @@ static int rsi_load_radio_caps(struct rsi_common *common)
- 		}
- 	}
- 
-+	radio_caps->sifs_tx_11n = cpu_to_le16(SIFS_TX_11N_VALUE);
-+	radio_caps->sifs_tx_11b = cpu_to_le16(SIFS_TX_11B_VALUE);
-+	radio_caps->slot_rx_11n = cpu_to_le16(SHORT_SLOT_VALUE);
-+	radio_caps->ofdm_ack_tout = cpu_to_le16(OFDM_ACK_TOUT_VALUE);
-+	radio_caps->cck_ack_tout = cpu_to_le16(CCK_ACK_TOUT_VALUE);
-+	radio_caps->preamble_type = cpu_to_le16(LONG_PREAMBLE);
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 3e4333c..0b1aac4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4331,6 +4331,13 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 	analog_type = (tmp & B43_PHYVER_ANALOG) >> B43_PHYVER_ANALOG_SHIFT;
+ 	phy_type = (tmp & B43_PHYVER_TYPE) >> B43_PHYVER_TYPE_SHIFT;
+ 	phy_rev = (tmp & B43_PHYVER_VERSION);
 +
- 	radio_caps->desc_word[7] |= cpu_to_le16(radio_id << 8);
- 
- 	for (ii = 0; ii < MAX_HW_QUEUES; ii++) {
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 0641068..6ccf9d9 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -128,6 +128,15 @@
- #define EP_5GHZ_20MHZ			2
- #define EP_5GHZ_40MHZ			3
- 
-+#define SIFS_TX_11N_VALUE		580
-+#define SIFS_TX_11B_VALUE		346
-+#define SHORT_SLOT_VALUE		360
-+#define LONG_SLOT_VALUE			640
-+#define OFDM_ACK_TOUT_VALUE		2720
-+#define CCK_ACK_TOUT_VALUE		9440
-+#define LONG_PREAMBLE			0x0000
-+#define SHORT_PREAMBLE			0x0001
++	/* LCNXN is continuation of N which run out of revisions */
++	if (phy_type == B43_PHYTYPE_LCNXN) {
++		phy_type = B43_PHYTYPE_N;
++		phy_rev += 16;
++	}
 +
- #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
- 				 FIF_BCN_PRBRESP_PROMISC)
- enum opmode {
-@@ -243,6 +252,12 @@ struct rsi_radio_caps {
- 	u8 num_11n_rates;
- 	u8 num_11ac_rates;
- 	__le16 gcpd_per_rate[20];
-+	__le16 sifs_tx_11n;
-+	__le16 sifs_tx_11b;
-+	__le16 slot_rx_11n;
-+	__le16 ofdm_ack_tout;
-+	__le16 cck_ack_tout;
-+	__le16 preamble_type;
- } __packed;
- 
- static inline u32 rsi_get_queueno(u8 *addr, u16 offset)
+ 	switch (phy_type) {
+ #ifdef CONFIG_B43_PHY_G
+ 	case B43_PHYTYPE_G:
 -- 
-1.7.1
+1.8.4.5
 
