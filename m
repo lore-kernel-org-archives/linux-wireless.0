@@ -1,121 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63181 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755642AbaFPQiu (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:50217 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398AbaF2VIC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 12:38:50 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 21/25] wil6210: fix for unreachable code in wmi_recv_cmd
-Date: Mon, 16 Jun 2014 19:37:19 +0300
-Message-ID: <1402936643-31819-22-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140616_190457_664474_B81C9DA8)
-In-Reply-To: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1402936643-31819-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sun, 29 Jun 2014 17:08:02 -0400
+Received: by mail-oa0-f54.google.com with SMTP id eb12so7843257oac.41
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 14:08:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <53B047F7.2000204@lwfinger.net>
+References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
+	<53AF5FB8.3060505@lwfinger.net>
+	<CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com>
+	<53B047F7.2000204@lwfinger.net>
+Date: Mon, 30 Jun 2014 05:08:01 +0800
+Message-ID: <CAMtVo_NLnfDsYrcf7_Pzt47WyMexkzuZuUREYhoKC2F8ZyfXzQ@mail.gmail.com> (sfid-20140629_230807_099830_7F453C96)
+Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
+ DHCP lease
+From: lolilolicon <lolilolicon@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Dan Carpenter <dan.carpenter@oracle.com>:
+On Mon, Jun 30, 2014 at 1:08 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 06/29/2014 04:32 AM, lolilolicon wrote:
+>>
+>> % git bisect start 88daf80 010d3c3 35582ad
+>> 88daf80dcca19ff995cc263592426f734a9702f3 is the first bad commit
+>>
+>> What am I getting wrong?
+>
+>
+> I am not an expert in git, but I think you are being too restrictive with
+> that command. If you do "git bisect start 88daf80 010d3c3", there are ath9k
+> patches in the code left to test. With the other option "git bisect start
+> 88daf80 35582ad", git visualize does not show any ath9k changes.
 
-The patch a715c7ddd65a: "wil6210: improve debug for WMI receive" from
-May 29, 2014, leads to the following static checker warning:
+In fact it was through `git bisect start 88daf80 010d3c3` that I found
+out 35582ad was good:
 
-        drivers/net/wireless/ath/wil6210/wmi.c:746 wmi_recv_cmd()
-        info: ignoring unreachable code.
+% git bisect log
+# bad: [88daf80dcca19ff995cc263592426f734a9702f3] Merge branch
+'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+into for-davem
+# good: [010d3c3989706d800ae72253773fa6537cc9f74c] bonding: fix
+bond_arp_rcv() race of curr_active_slave
+git bisect start '88daf80dcca19ff995cc263592426f734a9702f3'
+'010d3c3989706d800ae72253773fa6537cc9f74c'
+# good: [841577c3d33b8a2bff66d1b506d8198b25900bde] Merge branch
+'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next
+git bisect good 841577c3d33b8a2bff66d1b506d8198b25900bde
+# good: [e57f1734d87aa0e9a00905ed08888f0c62f56227] mwifiex: add key
+material v2 support
+git bisect good e57f1734d87aa0e9a00905ed08888f0c62f56227
+# good: [0e028ab0fb2da47fd235dafd4159859892e73d08] Merge branch
+'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless
+git bisect good 0e028ab0fb2da47fd235dafd4159859892e73d08
+# good: [41ed1a787c4940d58d5870c633ab6291dd4679dd] wlcore: consider
+multiple APs when checking active_link_count
+git bisect good 41ed1a787c4940d58d5870c633ab6291dd4679dd
+# good: [546c505bdc64c471be33a5ab525458431d718f5e] wcn36xx: Wait
+longer for SMD commands to complete
+git bisect good 546c505bdc64c471be33a5ab525458431d718f5e
+# good: [2ba0b46175967a40773f8be15f6678307fa3f45a] wcn36xx: Rename
+wcn36xx_vif.ucast_dpu_signature to self_ucast_dpu_sign
+git bisect good 2ba0b46175967a40773f8be15f6678307fa3f45a
+# good: [908628db148ed542fcfde1bff9e5d4607f684b73] wcn36xx: Update
+dtim period before starting BSS
+git bisect good 908628db148ed542fcfde1bff9e5d4607f684b73
+# good: [35582ad9d342025653aaf28ed321bf5352488d7f] Staging: rtl8812ae:
+remove modules field of rate_control_ops
+git bisect good 35582ad9d342025653aaf28ed321bf5352488d7f
+# first bad commit: [88daf80dcca19ff995cc263592426f734a9702f3] Merge
+branch 'master' of
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+into for-davem
 
-drivers/net/wireless/ath/wil6210/wmi.c
-   739                  spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
-   740                  {
-   741                          int q = queue_work(wil->wmi_wq,
-   742                                             &wil->wmi_event_worker);
-   743                          wil_dbg_wmi(wil, "queue_work -> %d\n", q);
-   744                  }
-   745          }
-   746          if (n > 1)
-                ^^^^^^^^^^
-We never reach this if statemtent.
+I think `git bisect start 88daf80 35582ad` would probably get me a
+series of good commits and reach 010d3c3, in the same manner.
 
-   747                  wil_dbg_wmi(wil, "%s -> %d events processed\n", __func__, n);
-   748  }
+Since 88daf80, which is bad, has two parents which are both good, I
+feel that it's the merge that produced the bug. Maybe 88daf80 is one
+of those "evil merges"?
 
-Exit loop with "break", not "return".
+% git show 88daf80
+commit 88daf80dcca19ff995cc263592426f734a9702f3
+Merge: 010d3c3 35582ad
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Thu Feb 20 15:02:02 2014 -0500
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+    Merge branch 'master' of
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+into for-davem
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index b92a042..a136dab 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -683,14 +683,12 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 
- 	for (n = 0;; n++) {
- 		u16 len;
-+		bool q;
- 
- 		r->head = ioread32(wil->csr + HOST_MBOX +
- 				   offsetof(struct wil6210_mbox_ctl, rx.head));
--		if (r->tail == r->head) {
--			if (n == 0)
--				wil_dbg_wmi(wil, "No events?\n");
--			return;
--		}
-+		if (r->tail == r->head)
-+			break;
- 
- 		wil_dbg_wmi(wil, "Mbox head %08x tail %08x\n",
- 			    r->head, r->tail);
-@@ -699,14 +697,14 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 				     sizeof(struct wil6210_mbox_ring_desc));
- 		if (d_tail.sync == 0) {
- 			wil_err(wil, "Mbox evt not owned by FW?\n");
--			return;
-+			break;
- 		}
- 
- 		/* read cmd header from descriptor */
- 		if (0 != wmi_read_hdr(wil, d_tail.addr, &hdr)) {
- 			wil_err(wil, "Mbox evt at 0x%08x?\n",
- 				le32_to_cpu(d_tail.addr));
--			return;
-+			break;
- 		}
- 		len = le16_to_cpu(hdr.len);
- 		wil_dbg_wmi(wil, "Mbox evt %04x %04x %04x %02x\n",
-@@ -720,7 +718,7 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 					     event.wmi) + len, 4),
- 			      GFP_KERNEL);
- 		if (!evt)
--			return;
-+			break;
- 
- 		evt->event.hdr = hdr;
- 		cmd = (void *)&evt->event.wmi;
-@@ -752,14 +750,11 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 		spin_lock_irqsave(&wil->wmi_ev_lock, flags);
- 		list_add_tail(&evt->list, &wil->pending_wmi_ev);
- 		spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
--		{
--			int q =	queue_work(wil->wmi_wq,
--					   &wil->wmi_event_worker);
--			wil_dbg_wmi(wil, "queue_work -> %d\n", q);
--		}
-+		q = queue_work(wil->wmi_wq, &wil->wmi_event_worker);
-+		wil_dbg_wmi(wil, "queue_work -> %d\n", q);
- 	}
--	if (n > 1)
--		wil_dbg_wmi(wil, "%s -> %d events processed\n", __func__, n);
-+	/* normally, 1 event per IRQ should be processed */
-+	wil_dbg_wmi(wil, "%s -> %d events queued\n", __func__, n);
- }
- 
- int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
--- 
-1.9.1
 
+>
+> Larry
+>
