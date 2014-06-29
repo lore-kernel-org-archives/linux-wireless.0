@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34734 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753374AbaFDOIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2014 10:08:37 -0400
-Message-ID: <1401890908.6079.32.camel@jlt4.sipsolutions.net> (sfid-20140604_160840_359749_0728FE84)
-Subject: Re: [PATCH] mac80211: remove ignore_plink_timer flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Jun 2014 16:08:28 +0200
-In-Reply-To: <1401888451-9612-1-git-send-email-me@bobcopeland.com> (sfid-20140604_152812_599798_BB7E8B6B)
-References: <1401888451-9612-1-git-send-email-me@bobcopeland.com>
-	 (sfid-20140604_152812_599798_BB7E8B6B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mdfmta010.mxout.tch.inty.net ([91.221.169.51]:38510 "EHLO
+	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751558AbaF2RXM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jun 2014 13:23:12 -0400
+Received: from smtp.demon.co.uk (unknown [127.0.0.1])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mdfmta010.tch.inty.net (Postfix) with ESMTP id 04F9B400C96
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 18:15:52 +0100 (BST)
+Received: from mdfmta004.tch.inty.net (unknown [127.0.0.1])
+	by mdfmta004.tch.inty.net (Postfix) with ESMTP id DFECBAC40A6
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 18:15:29 +0100 (BST)
+Received: from mdfmta004.tch.inty.net (unknown [127.0.0.1])
+	by mdfmta004.tch.inty.net (Postfix) with ESMTP id BC04CAC408F
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 18:15:29 +0100 (BST)
+Received: from [192.168.0.7] (unknown [80.176.227.157])
+	by mdfmta004.tch.inty.net (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2014 18:15:28 +0100 (BST)
+Message-ID: <53B049A3.7000803@dpets.co.uk> (sfid-20140629_192316_237097_2AFC0D41)
+Date: Sun, 29 Jun 2014 18:15:15 +0100
+From: John Talbut <jt@dpets.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Firmware loading with static kernel and initramfs
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-06-04 at 09:27 -0400, Bob Copeland wrote:
-> The mesh_plink code is doing some interesting things with the
-> ignore_plink_timer flag.  It seems the original intent was to
-> handle this race:
-> 
-> cpu 0                           cpu 1
-> -----                           -----
->                                 start timer handler for state X
-> acquire sta_lock
-> change state from X to Y
-> mod_timer() / del_timer()
-> release sta_lock
->                                 acquire sta_lock
->                                 execute state Y timer too soon
-> 
-> However, using the mod_timer()/del_timer() return values to
-> detect these cases is broken.  As a result, timers get ignored
-> unnecessarily, and stations can get stuck in the peering state
-> machine.
-> 
-> Instead, we can detect the case by looking at the timer expiration.
-> In the case of del_timer, just ignore the timers in the following
-> (LISTEN/ESTAB) states since they won't have timers anyway.
+There seems to be a general problem when using a static kernel and 
+initramfs in that the wireless drivers try to load firmware before the 
+disks are mounted and the /lib/firmware folder is available.  Various 
+people seem to have come across problems with firmware not loading, some 
+of which seem to relate to this problem, which they have approached as 
+if it is a problem with their particular driver.  However it seems to be 
+a general problem and I have had it with three different drivers.
 
-I'm not entirely sure about the expiration thing - doesn't seem
-different from the outside flag? But anyway - applied.
+There seems to be a number of possible approaches to this: loading the 
+firmware in an initramfs; changing the sequence in which wireless 
+drivers start so that they wait until the disks are mounted; compiling 
+the firmware into the kernel and loading the firmware as part of ifup. 
+I see that the latter has been done for one driver 
+(http://thread.gmane.org/gmane.linux.kernel.wireless.general/3390).
 
-johannes
-
+What is the current situation with this problem and what needs doing?
