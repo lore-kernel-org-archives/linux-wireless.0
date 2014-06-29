@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:51878 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754974AbaF3QSg (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:46259 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbaF2AhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 12:18:36 -0400
-Received: by mail-wi0-f170.google.com with SMTP id cc10so5997397wib.5
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 09:18:35 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH 2/7] rtl818x_pci: Fix rtl8185 excessive IFS after CTS-to-self
-Date: Mon, 30 Jun 2014 18:18:25 +0200
-Message-Id: <1404145105-15954-1-git-send-email-andrea.merello@gmail.com> (sfid-20140630_181839_837412_B9E1A6EB)
+	Sat, 28 Jun 2014 20:37:09 -0400
+Received: by mail-oa0-f49.google.com with SMTP id i7so7217004oag.36
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 17:37:09 -0700 (PDT)
+Message-ID: <53AF5FB8.3060505@lwfinger.net> (sfid-20140629_023722_678647_37C450F1)
+Date: Sat, 28 Jun 2014 19:37:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: lolilolicon <lolilolicon@gmail.com>, ath9k-devel@qca.qualcomm.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com
+Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
+ DHCP lease
+References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
+In-Reply-To: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Measuring time between _end_ of CTS-to-self and _end_ of datapacket (with a
-prism54 board and mac80211 hacked to let the MAC timestamp stay untouched in the
-radiotap header) resulted in about 300uS, while the datapacket itself should be
-by far shorter (less than 100uS) and IFS should be SIFS (10uS).
-This measure was confirmed whith a scope: about 250uS IFS has been seen between
-the two packets.
+On 06/28/2014 04:17 PM, lolilolicon wrote:
+> This bug was introduced in merge commit 88daf80 (if I did the bisect correctly).
+>
+> A workaround around the bug is to set the ath9k_htc param nohwcrypt=1.
+>
+> The difference in the journal/log between good and bad is that in the
+> presence of the bug, dhcpcd would time out soliciting a DHCP lease.
+> Some other users report that they're getting an IP, but the connection
+> is very slow.
+>
+> Also reported elsewhere:
+> https://bugs.archlinux.org/task/40905
+> https://bugzilla.kernel.org/show_bug.cgi?id=78581
+>
+> Apologies if I messed up anything (sending to the wrong ML/people,
+> inadequate info, etc.)
+> If you need anything else, just ask.
 
-This situation causes the CTS-to-self protection mechanism to work incorrectly
-due to the NAV expiring during, or even before beginning, the packet
-transmission, and it also causes the performances to be anyway reduced due to
-time waste.
+Something went wrong in your bisection. Commit 88daf80 is a merge commit and is 
+unlikely to be the bad one. You might try a checkout of b080e04 and try it to 
+see if it is bad or good. That is the first non-merge commit before 88daf80.
 
-This problem has been seen at every packet TXed with CTS-to-self enabled on
-rtl8185 board.
-rtl8187se seems not affected (and rtl8180, being a 802.11b card, does not have
-CTS-to-self mechaninsm).
-
-This patch fixes this by adding a magic register write, making the board wait
-for correct SIFS after CTS-to-self packet.
-
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index e2dcede..73baf26 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -879,6 +879,8 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
- 		reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
- 		rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | (1 << 2));
- 		rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-+		/* fix eccessive IFS after CTS-to-self */
-+		rtl818x_iowrite8(priv, REG_ADDR1(0x1ff), 0x35);
- 	}
- 
- 	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
--- 
-1.9.1
+Larry
 
