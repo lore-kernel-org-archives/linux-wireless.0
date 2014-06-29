@@ -1,109 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:33713 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbaFEND6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2014 09:03:58 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n15so10472595wiw.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2014 06:03:56 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: luca@coelho.fi, johannes@sipsolutions.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v8 2/5] mac80211: make check_combinations() aware of chanctx reservation
-Date: Thu,  5 Jun 2014 14:56:17 +0200
-Message-Id: <1401972980-21484-3-git-send-email-michal.kazior@tieto.com> (sfid-20140605_150403_801478_D8E831C5)
-In-Reply-To: <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
-References: <1401348851-26732-1-git-send-email-michal.kazior@tieto.com>
- <1401972980-21484-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18291 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbaF2ORj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jun 2014 10:17:39 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v3 2/4] brcmfmac: add device tree support for SDIO devices
+Date: Sun, 29 Jun 2014 16:16:59 +0200
+Message-Id: <1404051421-24377-3-git-send-email-hdegoede@redhat.com> (sfid-20140629_161746_963050_011A3C22)
+In-Reply-To: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
+References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_check_combinations() computes
-radar_detect accordingly depending on chanctx
-reservation status.
+From: Chen-Yu Tsai <wens@csie.org>
 
-This makes it possible to use the function for
-channel_switch validation.
+brcmfmac devices can use an out-of-band interrupt on a GPIO line.
+Currently this is specified using platform data. Add support for
+specifying out-of-band interrupt via device tree.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+[arend@broadcom.com: conditionalize more of-code, use driver debug routines]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+[hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+ on how to handle this yet]
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile |  2 +
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |  4 ++
+ drivers/net/wireless/brcm80211/brcmfmac/of.c     | 56 ++++++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/of.h     | 22 ++++++++++
+ 4 files changed, 84 insertions(+)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/of.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/of.h
 
-Notes:
-    v3:
-     * fix typo in comment [Johannes]
-     * fix comment style [Johannes]
-    
-    v7:
-     * use replaces/replaced_by pointers
-     * replace radar_detect calculation in ieee80211_max_num_channels() too
-    
-    v8:
-     * use replace_state/replace_ctx instead of replaces/replaced_by (rebased)
-
- net/mac80211/util.c | 35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8e661ea..16dc720 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2837,6 +2837,35 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
- 	ps->dtim_count = dtim_count;
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 98e67c1..e2752cb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -44,3 +44,5 @@ brcmfmac-$(CONFIG_BRCMDBG) += \
+ 		dhd_dbg.o
+ brcmfmac-$(CONFIG_BRCM_TRACING) += \
+ 		tracepoint.o
++brcmfmac-$(CONFIG_OF) += \
++		of.o
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index a16e644..0fc707c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -43,6 +43,7 @@
+ #include "dhd_bus.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
++#include "of.h"
  
-+static u8 ieee80211_chanctx_radar_detect(struct ieee80211_local *local,
-+					 struct ieee80211_chanctx *ctx)
+ #define SDIOH_API_ACCESS_RETRY_LIMIT	2
+ 
+@@ -1043,6 +1044,9 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	sdiodev->dev = &sdiodev->func[1]->dev;
+ 	sdiodev->pdata = brcmfmac_sdio_pdata;
+ 
++	if (!sdiodev->pdata)
++		brcmf_of_probe(sdiodev);
++
+ 	atomic_set(&sdiodev->suspend, false);
+ 	init_waitqueue_head(&sdiodev->request_word_wait);
+ 	init_waitqueue_head(&sdiodev->request_buffer_wait);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
+new file mode 100644
+index 0000000..f05f527
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
+@@ -0,0 +1,56 @@
++/*
++ * Copyright (c) 2014 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/init.h>
++#include <linux/of.h>
++#include <linux/of_irq.h>
++#include <linux/mmc/card.h>
++#include <linux/platform_data/brcmfmac-sdio.h>
++#include <linux/mmc/sdio_func.h>
++
++#include <defs.h>
++#include "dhd_dbg.h"
++#include "sdio_host.h"
++
++void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
 +{
-+	struct ieee80211_sub_if_data *sdata;
-+	u8 radar_detect = 0;
++	struct device *dev = sdiodev->dev;
++	struct device_node *np = dev->of_node;
++	int irq;
++	u32 irqf;
++	u32 val;
 +
-+	lockdep_assert_held(&local->chanctx_mtx);
++	if (!np || !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
++		return;
 +
-+	if (WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED))
-+		return 0;
++	sdiodev->pdata = devm_kzalloc(dev, sizeof(*sdiodev->pdata), GFP_KERNEL);
++	if (!sdiodev->pdata)
++		return;
 +
-+	list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list)
-+		if (sdata->reserved_radar_required)
-+			radar_detect |= BIT(sdata->reserved_chandef.width);
++	irq = irq_of_parse_and_map(np, 0);
++	if (irq < 0) {
++		brcmf_err("interrupt could not be mapped: err=%d\n", irq);
++		devm_kfree(dev, sdiodev->pdata);
++		return;
++	}
++	irqf = irqd_get_trigger_type(irq_get_irq_data(irq));
 +
-+	/*
-+	 * An in-place reservation context should not have any assigned vifs
-+	 * until it replaces the other context.
-+	 */
-+	WARN_ON(ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER &&
-+		!list_empty(&ctx->assigned_vifs));
++	sdiodev->pdata->oob_irq_supported = true;
++	sdiodev->pdata->oob_irq_nr = irq;
++	sdiodev->pdata->oob_irq_flags = irqf;
 +
-+	list_for_each_entry(sdata, &ctx->assigned_vifs, assigned_chanctx_list)
-+		if (sdata->radar_required)
-+			radar_detect |= BIT(sdata->vif.bss_conf.chandef.width);
-+
-+	return radar_detect;
++	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
++		sdiodev->pdata->drive_strength = val;
 +}
-+
- int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 				 const struct cfg80211_chan_def *chandef,
- 				 enum ieee80211_chanctx_mode chanmode,
-@@ -2880,8 +2909,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
- 			continue;
--		if (ctx->conf.radar_enabled)
--			radar_detect |= BIT(ctx->conf.def.width);
-+		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
- 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
- 			num_different_channels++;
- 			continue;
-@@ -2943,8 +2971,7 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
- 
- 		num_different_channels++;
- 
--		if (ctx->conf.radar_enabled)
--			radar_detect |= BIT(ctx->conf.def.width);
-+		radar_detect |= ieee80211_chanctx_radar_detect(local, ctx);
- 	}
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.h b/drivers/net/wireless/brcm80211/brcmfmac/of.h
+new file mode 100644
+index 0000000..5f7c355
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/of.h
+@@ -0,0 +1,22 @@
++/*
++ * Copyright (c) 2014 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifdef CONFIG_OF
++void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev);
++#else
++static void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
++{
++}
++#endif /* CONFIG_OF */
 -- 
-1.8.5.3
+2.0.0
 
