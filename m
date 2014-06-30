@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.marcant.net ([217.14.160.186]:38777 "EHLO
-	mail2.marcant.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900AbaF0JPM convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:51878 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754974AbaF3QSg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 05:15:12 -0400
-Received: from localhost (mcontrol3.marcant.net [217.14.168.56])
-	by localhost (Postfix) with ESMTP id C62A54ACB40
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 10:44:36 +0200 (CEST)
-Received: from mail2.marcant.net ([127.0.0.1])
- by localhost (mail2.marcant.net [127.0.0.1]) (amavisd-maia, port 10030)
- with ESMTP id 12136-05 for <linux-wireless@vger.kernel.org>;
- Fri, 27 Jun 2014 10:44:32 +0200 (CEST)
-Received: from admins.marcant.net (eth2.rossini.bi.marcant.net [217.14.160.189])
-	by mail2.marcant.net (Postfix) with ESMTP id A16D74ACC51
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 10:44:32 +0200 (CEST)
-Received: from [192.168.191.144] (varus [192.168.191.144])
-	by admins.marcant.net (Postfix) with ESMTP id 893F396E
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2014 10:44:32 +0200 (CEST)
-Message-ID: <53AD2EEE.4040704@marcant.net> (sfid-20140627_111516_502367_90D54F91)
-Date: Fri, 27 Jun 2014 10:44:30 +0200
-From: =?ISO-8859-1?Q?Andr=E9_Valentin?= <avalentin@marcant.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath10k OTP loading issues
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Jun 2014 12:18:36 -0400
+Received: by mail-wi0-f170.google.com with SMTP id cc10so5997397wib.5
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 09:18:35 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH 2/7] rtl818x_pci: Fix rtl8185 excessive IFS after CTS-to-self
+Date: Mon, 30 Jun 2014 18:18:25 +0200
+Message-Id: <1404145105-15954-1-git-send-email-andrea.merello@gmail.com> (sfid-20140630_181839_837412_B9E1A6EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Measuring time between _end_ of CTS-to-self and _end_ of datapacket (with a
+prism54 board and mac80211 hacked to let the MAC timestamp stay untouched in the
+radiotap header) resulted in about 300uS, while the datapacket itself should be
+by far shorter (less than 100uS) and IFS should be SIFS (10uS).
+This measure was confirmed whith a scope: about 250uS IFS has been seen between
+the two packets.
 
-I got problems initializing my ath10k PCI card in my Zyxel NBG 6716. It worked until some weeks, now, the driver does not load. I debugged a bit and this is what I got:
-Fri Jun 27 08:03:42 2014 kern.info kernel: [62908.290000] ath10k_pci 0000:01:00.0: BAR 0: assigned [mem 0x12000000-0x121fffff 64bit]
-Fri Jun 27 08:03:43 2014 kern.info kernel: [62908.610000] ath10k: pci irq legacy irq_mode 0 reset_mode 0
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.620000] ath10k: boot upload otp to 0x1234 len 6917
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.780000] ath10k: otp calibration failed: 2
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: failed to run otp: -22
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: could not init core (-22)
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: could not probe fw (-22)
-Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: failed to register driver core: -22
-Fri Jun 27 08:03:43 2014 kern.warn kernel: [62909.060000] ath10k_pci: probe of 0000:01:00.0 failed with error -22
+This situation causes the CTS-to-self protection mechanism to work incorrectly
+due to the NAV expiring during, or even before beginning, the packet
+transmission, and it also causes the performances to be anyway reduced due to
+time waste.
 
+This problem has been seen at every packet TXed with CTS-to-self enabled on
+rtl8185 board.
+rtl8187se seems not affected (and rtl8180, being a 802.11b card, does not have
+CTS-to-self mechaninsm).
 
-If I remove OTP loading the card initializes fine, but I think I will not have a good performance. So bad idea.
-Currently I use compat-wireless-2014-05-22, with some patches form openwrt.
-The firmware-2.bin has been checked, it is the same as offered here:
-https://github.com/kvalo/ath10k-firmware
+This patch fixes this by adding a magic register write, making the board wait
+for correct SIFS after CTS-to-self packet.
 
-Perhaps somebody has a hint for me?
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Kind regards,
-
-André
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index e2dcede..73baf26 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -879,6 +879,8 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 		reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 		rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | (1 << 2));
+ 		rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++		/* fix eccessive IFS after CTS-to-self */
++		rtl818x_iowrite8(priv, REG_ADDR1(0x1ff), 0x35);
+ 	}
+ 
+ 	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
+-- 
+1.9.1
 
