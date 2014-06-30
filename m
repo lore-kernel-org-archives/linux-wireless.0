@@ -1,83 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:39347 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbaFATJ0 (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:49430 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754666AbaF3QSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2014 15:09:26 -0400
-Received: by mail-lb0-f178.google.com with SMTP id w7so2013530lbi.37
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2014 12:09:24 -0700 (PDT)
-Message-ID: <538B7A64.1000306@cogentembedded.com> (sfid-20140601_210946_150407_5CA8D6B1)
-Date: Sun, 01 Jun 2014 23:09:24 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Michael Braun <michael-dev@fami-braun.de>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-CC: netdev@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rt2800usb:fix hang during firmware load
-References: <20140601174736.7980.18330.stgit@charlie.fem.tu-ilmenau.de> <20140601175252.7980.64143.stgit@charlie.fem.tu-ilmenau.de>
-In-Reply-To: <20140601175252.7980.64143.stgit@charlie.fem.tu-ilmenau.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 30 Jun 2014 12:18:47 -0400
+Received: by mail-wg0-f51.google.com with SMTP id x12so8203279wgg.34
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 09:18:46 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH 3/7] rtl818x_pci: add comment pointing to the rtl8187se reference code
+Date: Mon, 30 Jun 2014 18:18:36 +0200
+Message-Id: <1404145117-15995-1-git-send-email-andrea.merello@gmail.com> (sfid-20140630_181856_298541_B6895375)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2014 09:52 PM, Michael Braun wrote:
+Rtl8187se support has been added to the rtl818x_pci driver by extracting a lot
+of information from a rtl8187se Linux staging driver included in the kernel at
+the time rtl8187se support was added.
+The rtl818x_pci main file has a comment that advertises this.
 
-> The device 057c:8501 (AVM Fritz! WLAN v2 rev. B) boots into a state that does not actually require loading a firmware file.
+Recently this staging driver has been removed from the kernel, but I still feel
+it can be useful as "reference" code (in case of bugs, or to implement
+improvements in rtl818x_pci driver).
 
-    Wrap the changelog lines on at least 80 chars please.
+This one-line patch adds a comment in rtl818x_pci driver to point people
+searching for that "reference code" to the last kernel version still containing
+it (3.14).
 
-> The vendors driver finds out about this by checking a firmware state
-> register, so this patch adopts this here.
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Finally, with this patch applied, my wifi dongle actually becomes
-> usefull (scan + connect to wpa network works).
-
-    s/usefull/useful/.
-
-> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
-> ---
->   drivers/net/wireless/rt2x00/rt2800usb.c |   14 ++++++++++++--
->   1 file changed, 12 insertions(+), 2 deletions(-)
-
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index b601422..71bf101 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -240,6 +240,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
->   	int status;
->   	u32 offset;
->   	u32 length;
-> +	__le32 fwMode;
->
->   	/*
->   	 * Check which section of the firmware we need.
-> @@ -257,8 +258,17 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
->   	/*
->   	 * Write firmware to device.
->   	 */
-> -	rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-> -				      data + offset, length);
-> +	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-> +				 USB_VENDOR_REQUEST_IN, 0, 0x11, &fwMode,
-> +				 sizeof(fwMode), REGISTER_TIMEOUT_FIRMWARE);
-> +
-> +	if ((fwMode & 0x00000003) == 2) {
-
-    Same comment as for the patch #1.
-
-> +		rt2x00_info(rt2x00dev,
-> +		      "Firmware loading not required - NIC in AutoRun mode\n");
-
-    This line should start under 'rt2xx00dev', like below.
-
-> +	} else {
-> +		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-> +					      data + offset, length);
-> +	}
-
-WBR, Sergei
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 73baf26..8a64bc1 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -16,6 +16,7 @@
+  *
+  * based also on:
+  *  - portions of rtl8187se Linux staging driver, Copyright Realtek corp.
++ *    (available in drivers/staging/rtl8187se directory of Linux 3.14)
+  *  - other GPL, unpublished (until now), Linux driver code,
+  *    Copyright Larry Finger <Larry.Finger@lwfinger.net>
+  *
+-- 
+1.9.1
 
