@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:56919 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbaFPOP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2014 10:15:56 -0400
-Received: by mail-pa0-f45.google.com with SMTP id rd3so3928769pab.18
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2014 07:15:55 -0700 (PDT)
-Received: from localhost.localdomain ([115.248.87.14])
-        by mx.google.com with ESMTPSA id vc5sm69569177pac.19.2014.06.16.07.15.53
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Mon, 16 Jun 2014 07:15:55 -0700 (PDT)
-From: Jahnavi Meher <jahnavi.meher@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 12/16] rsi: Added debug messages.
-Date: Mon, 16 Jun 2014 19:45:45 +0530
-Message-Id: <1402928145-4115-1-git-send-email-jahnavi.meher@gmail.com> (sfid-20140616_161558_786135_FC0452CC)
+Received: from bar.sig21.net ([80.81.252.164]:39736 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753906AbaF3Jzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2014 05:55:37 -0400
+Date: Mon, 30 Jun 2014 11:55:09 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Victor <silentworks@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux
+ 3.15.1 (was: No channels available (no IR) in 5Ghz band for intel 7260-ac
+Message-ID: <20140630095508.GA23387@sig21.net> (sfid-20140630_115541_456842_EE8BA7B9)
+References: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3+bvv_TBVAR2dto+pYAQWdx-49cVbG_1gY8Qun_=cD5Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added some debug messages.
+Hi Emmanuel,
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Tue, Jun 24, 2014 at 03:50:43PM +0300, Emmanuel Grumbach wrote:
+> >> On 06/24/2014 03:50 AM, Luis R. Rodriguez wrote:
+> >>> On Mon, Jun 23, 2014 at 10:55:48PM +0200, Victor wrote:
+> >>>> Hello, first of all i'm not sure if this is the proper place to ask
+> >>>> since it seems mostly dev-related, but i have been looking everywhere
+> >>>> trying to find a solution without luck, so i'm not sure if i
+> >>>> encountered some kind of bug.
+> >>>>
+> >>>> Context: Setup of wireless AP using an intel 7260-ac on 5Ghz+ band, linux 3.15.1
+> >>
+> >> This configuration is not supported.
+> >
+> > Do you know why? it is supported in other kernel version?, i got the
+> > device mainly for to be used as 802.11ac AP  :/, on the product brief
+> > they state it is designed for AP mode
+> > http://www.intel.es/content/dam/www/public/us/en/documents/product-briefs/dual-band-wireless-ac-7260-bluetooth-brief.pdf,
+> > and in iw it appears as supported too
+> 
+> AP mode is supported - not on 5.2 GHz band.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 264e8fa..6f6a4d0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -284,6 +284,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 
- 		skb = rsi_core_dequeue_pkt(common, q_num);
- 		if (skb == NULL) {
-+			rsi_dbg(ERR_ZONE, "skb null\n");
- 			mutex_unlock(&common->tx_rxlock);
- 			break;
- 		}
-@@ -357,6 +358,7 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 	if ((q_num != MGMT_SOFT_Q) &&
- 	    ((skb_queue_len(&common->tx_queue[q_num]) + 1) >=
- 	     DATA_QUEUE_WATER_MARK)) {
-+		rsi_dbg(ERR_ZONE, "%s: sw queue full\n", __func__);
- 		if (!ieee80211_queue_stopped(adapter->hw, WME_AC(q_num)))
- 			ieee80211_stop_queue(adapter->hw, WME_AC(q_num));
- 		rsi_set_event(&common->tx_thread.event);
--- 
-1.7.1
+Just out of curiosity, may I ask why?  Shouldn't regdb/crda allow
+you to support it?
 
+Thanks,
+Johannes
