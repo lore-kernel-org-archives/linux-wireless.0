@@ -1,114 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52181 "EHLO plane.gmane.org"
+Received: from mx1.redhat.com ([209.132.183.28]:12255 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751273AbaF1CpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2014 22:45:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1X0idT-0007p7-Ir
-	for linux-wireless@vger.kernel.org; Sat, 28 Jun 2014 04:45:04 +0200
-Received: from 64-31-120-162.static-ip.telepacific.net ([64.31.120.162])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 04:45:03 +0200
-Received: from frodo.lai by 64-31-120-162.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 04:45:03 +0200
-To: linux-wireless@vger.kernel.org
-From: frodo <frodo.lai@gmail.com>
-Subject: Re: Integrate Intel 3160 Freescale imx.6 with AOSP 4.3 (3.0.35 kernel) and backports 3.14.1
-Date: Sat, 28 Jun 2014 02:39:34 +0000 (UTC)
-Message-ID: <loom.20140628T041047-206@post.gmane.org> (sfid-20140628_044524_663409_B76AB023)
-References: <43860A184C2C6446B49A5DEBD1F0DA6B815E766D@PDIMBX.PDIARM.local> <CANUX_P0N6oqDHOSJ-=bM11uf730ishMxwWD_yLtwYZrK02qp=Q@mail.gmail.com> <43860A184C2C6446B49A5DEBD1F0DA6B815E76D0@PDIMBX.PDIARM.local> <CB3B3D4774441E42AA3EA0E1BA8230A0333FC1FA@HASMSX106.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754950AbaF3JJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2014 05:09:54 -0400
+Message-ID: <53B1293B.7060901@redhat.com> (sfid-20140630_110959_648037_0D01CCAA)
+Date: Mon, 30 Jun 2014 11:09:15 +0200
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH v3 1/4] dt: bindings: add bindings for Broadcom bcm43xx
+ sdio devices
+References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com> <1404051421-24377-2-git-send-email-hdegoede@redhat.com> <53B12059.50808@broadcom.com>
+In-Reply-To: <53B12059.50808@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-
-Peer, Ilan <ilan.peer@...> writes:
-
+On 06/30/2014 10:31 AM, Arend van Spriel wrote:
+> On 29-06-14 16:16, Hans de Goede wrote:
+>> From: Arend van Spriel <arend@broadcom.com>
+>>
+>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+>> integrated in ARM platforms. Currently, the brcmfmac driver for
+>> these devices support use of platform data. This patch specifies
+>> the bindings that allow this platform data to be expressed in the
+>> devicetree.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>>  on how to handle this yet]
+>> [hdegoede@redhat.com: move from bindings/staging to bindings]
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
+>>  1 file changed, 41 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> new file mode 100644
+>> index 0000000..5dbf169
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -0,0 +1,41 @@
+>> +Broadcom BCM43xx Fullmac wireless SDIO devices
+>> +
+>> +This node provides properties for controlling the Broadcom wireless device. The
+>> +node is expected to be specified as a child node to the SDIO controller that
+>> +connects the device to the system.
+>> +
+>> +Required properties:
+>> +
+>> + - compatible : Should be "brcm,bcm4329-fmac".
+>> +
+>> +Optional properties:
+>> + - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+>> +	(default = 6).
+>> + - interrupt-parent : the phandle for the interrupt controller to which the
+>> +	device interrupts are connected.
+>> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+>> +	When not specified the device will use in-band SDIO interrupts.
+>> + - interrupt-names : name of the out-of-band interrupt, which must be set
+>> +	to "host-wake".
+>> +
+>> +Example:
+>> +
+>> +mmc3: mmc@01c12000 {
+>> +	#address-cells = <1>;
+>> +	#size-cells = <0>;
+>> +
+>> +	pinctrl-names = "default";
+>> +	pinctrl-0 = <&mmc3_pins_a>;
+>> +	vmmc-supply = <&reg_vmmc3>;
+>> +	bus-width = <4>;
+>> +	non-removable;
+>> +	status = "okay";
+>> +
+>> +	brcmf: bcrmf@1 {
+>> +		reg = <1>;
 > 
-> Hi Rob,
-> 
-> From the logcat output below it looks like u are using a version of 
-wpa_supplicant that does not include some
-> fixes that are required for properly setting up the P2P_DEVICE interface.
-> 
-> Can you try switching to using the upstream hostap repository? Using the 
-upstream version you should
-> enable the p2p_device=1 driver parameter and in addition pass the P2P 
-Device configuration file using
-> the -m option. Something like this:
-> 
-> wpa_supplicant -i wlan0 -c <conf> ....  -pp2p_device=1 ... -m <p2p config 
-file>
-> 
-> The wpa_supplicant will create the P2P Device interface and start it so no 
-need to add the interface using
-> iw. Note that the name of the created interface is p2p-dev-wlan0 (or 
-something like that) so you'll need to
-> tweak it so that Android framework would be happy.
-> 
-> Regards,
-> 
-> Ilan.
-> 
+> I guess the reg property is needed to have this node linked to sdio func
+> 1 dev, right?
 
+Right.
 
-Hi Ilan,
+> I would add it to the list of required properties above
+> even if this behaviour is already described in a more generic binding.
 
-I checkout the branch android-kk from hostap repository and tried the 
-wpa_supplicant command with -m option:
-/system/bin/wpa_supplicant -dt -i wlan0 -Dnl80211 -
-c/data/misc/wifi/wpa_supplicant.conf -pp2p_device=1 -
-m/data/misc/wifi/p2p_supplicant.conf -O/data/misc/wifi/sockets -B
+Then we would also need to describe the need to add:
 
-I got two interfaces in /data/misc/wifi/sockets
-130|root@ar6mx:/ # ls /data/misc/wifi/sockets/
-p2p-dev-wlan0
-wlan0
+	#address-cells = <1>;
+	#size-cells = <0>;
 
-However, the wpa_supplicant failed to create P2P_DEVICE wit error "Invalid 
-argumen". How can I debug this? Thanks.
+To the mmc-host node itself, I don't think that that really
+belongs here, and thus the description of the reg property itself
+also does not really belong here IMHO.
 
-D/wpa_supplicant( 3843): nl80211: Create interface iftype 10 (P2P_DEVICE)
-D/wpa_supplicant( 3843): nl80211: New P2P Device interface p2p-dev-wlan0 
-(0x4) created
-D/wpa_supplicant( 3843): Override interface parameter: ctrl_interface 
-('(null)' -> '/data/misc/wifi/sockets')
-D/wpa_supplicant( 3843): Initializing interface 'p2p-dev-wlan0' conf 
-'/data/misc/wifi/p2p_supplicant.conf' driver 'nl80211' ctrl_interface 
-'/data/misc/wifi/sockets' bridge 'N/A'
-D/wpa_supplicant( 3843): Configuration file 
-'/data/misc/wifi/p2p_supplicant.conf' -> 
-'/data/misc/wifi/p2p_supplicant.conf'
-D/wpa_supplicant( 3843): Reading configuration file 
-'/data/misc/wifi/p2p_supplicant.conf'
-D/wpa_supplicant( 3843): ctrl_interface='/data/system/wpa_supplicant'
-D/wpa_supplicant( 3843): update_config=1
-D/wpa_supplicant( 3843): ap_scan=1
-I/wpa_supplicant( 3843): rfkill: Cannot open RFKILL control device
-D/wpa_supplicant( 3843): nl80211: RFKILL status not available
-E/wpa_supplicant( 3843): Could not read interface p2p-dev-wlan0 flags: No 
-such device
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:4
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:2
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:1
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:5
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-0f-ac:6
-D/wpa_supplicant( 3843): nl80211: Supported cipher 00-14-72:1
-D/wpa_supplicant( 3843): nl80211: Using driver-based off-channel TX
-I/wpa_supplicant( 3843): nl80211: send_and_recv->nl_recvmsgs failed: 20
-D/wpa_supplicant( 3843): nl80211: Use separate P2P group interface (driver 
-advertised support)
-D/wpa_supplicant( 3843): nl80211: interface p2p-dev-wlan0 in phy phy0
-D/wpa_supplicant( 3843): nl80211: Set mode ifindex 0 iftype 10 (P2P_DEVICE)
-I/wpa_supplicant( 3843): nl80211: send_and_recv->nl_recvmsgs failed: -22
-D/wpa_supplicant( 3843): nl80211: Failed to set interface 0 to mode 10: -22 
-(Invalid argument)
+Regards,
 
-Frodo
-
-
+Hans
