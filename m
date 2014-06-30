@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:48838 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbaFXTwm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2014 15:52:42 -0400
-Received: by mail-wi0-f178.google.com with SMTP id n15so1252372wiw.5
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2014 12:52:40 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/27] iwlwifi: mvm: fixes for 8000 NVM flow
-Date: Tue, 24 Jun 2014 22:52:03 +0300
-Message-Id: <1403639541-4621-9-git-send-email-egrumbach@gmail.com> (sfid-20140624_220200_863376_838E1FC1)
-In-Reply-To: <53A9D6CF.9040100@gmail.com>
-References: <53A9D6CF.9040100@gmail.com>
+Received: from svenfoo.org ([82.94.215.22]:60580 "EHLO mail.zonque.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757141AbaF3TaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2014 15:30:12 -0400
+Message-ID: <53B1BAC1.3090902@zonque.org> (sfid-20140630_213020_292815_7EA0F3FD)
+Date: Mon, 30 Jun 2014 21:30:09 +0200
+From: Daniel Mack <daniel@zonque.org>
+MIME-Version: 1.0
+To: Tony Lindgren <tony@atomide.com>,
+	Andreas Fenkart <afenkart@gmail.com>
+CC: James Cameron <quozl@laptop.org>, Bing Zhao <bzhao@marvell.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>, devicetree@vger.kernel.org
+Subject: Re: mwifiex card reset
+References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com> <20140628052220.GG10407@us.netrek.org> <20140628072322.GC7410@atomide.com> <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com> <20140630061912.GA2461@atomide.com>
+In-Reply-To: <20140630061912.GA2461@atomide.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+Hi Tony, everyone,
 
-The nvm_file should be loaded by default for SDIO
-procucts only. Change the configuration accordingly.
-While at it, fix a typo in the device name.
+Thanks Andreas for addressing this issue! So far, we've been using a
+terrible hack in the hsmmc in order to bring the card into a workable
+state, and we're looking for a nicer solution for awhile.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-8000.c   | 3 +--
- drivers/net/wireless/iwlwifi/iwl-config.h | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+On 06/30/2014 08:19 AM, Tony Lindgren wrote:
+> * Andreas Fenkart <afenkart@gmail.com> [140629 12:43]:
+>> 2014-06-28 9:23 GMT+02:00 Tony Lindgren <tony@atomide.com>:
+>>> * James Cameron <quozl@laptop.org> [140628 08:24]:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 0a1bb5f..51486cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -119,10 +119,9 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
--	.default_nvm_file = DEFAULT_NVM_FILE_FAMILY_8000,
- };
- 
--const struct iwl_cfg iwl8260_n_cfg = {
-+const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
- 	.name = "Intel(R) Dual Band Wireless-AC 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
- 	IWL_DEVICE_8000,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index b7047905..034c2fc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -337,7 +337,7 @@ extern const struct iwl_cfg iwl7265_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2n_cfg;
- extern const struct iwl_cfg iwl7265_n_cfg;
- extern const struct iwl_cfg iwl8260_2ac_cfg;
--extern const struct iwl_cfg iwl8260_n_cfg;
-+extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- #endif /* CONFIG_IWLMVM */
- 
- #endif /* __IWL_CONFIG_H__ */
--- 
-1.8.3.2
+>>> Wouldn't it be best to have the mwifiex properly handle the
+>>> reset GPIOs and idle status pins?
+>>
+>> doesn't work see ref 1) above
+> 
+> OK so we can't do much anything at mwifiex probe time on SDIO bus because
+> it won't probe unless the pins are configured.
+> 
+> Maybe we should have a separate mwifiex-power helper module that just
+> manages the reset/idle/regulator pins? Then mwifiex-reset can be always
+> loaded and configure things so mwifiex-sdio can probe properly.
+> 
+> And mwifiex-reset helper can also provide the user space interfaces
+> for the reset/idle/regulator pins.
+
+Yes, a helper might be the best solution. It could even be a generic
+one, that just takes any number of clocks, reset GPIOs and regulators
+and takes care for sequencing them. However, we need to reference that
+helper from the mwifiex driver, for two reasons.
+
+a) we need to make sure the reset helper gets to do its job before the
+mwifiex driver scans the SDIO bus, and
+
+b) the reset helper needs to be called when the mmc host controller
+wants to do a card reset.
+
+Hence, we'll need some sort of internal API for this, and a phandle in
+dts. I wonder whether that glue logic might be better off living in the
+mmc core, as mwifiex might well be interfaced to other hosts?
+
+
+Thanks,
+Daniel
 
