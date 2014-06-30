@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:62844 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbaG3LUL (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:39138 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751425AbaF3WE3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 07:20:11 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/8] brcmfmac: add support for PCIe fullmac devices
-Date: Wed, 30 Jul 2014 13:19:59 +0200
-Message-ID: <1406719207-5126-1-git-send-email-arend@broadcom.com> (sfid-20140730_132027_829961_AFACC333)
+	Mon, 30 Jun 2014 18:04:29 -0400
+Received: by mail-pa0-f46.google.com with SMTP id eu11so9389757pac.33
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 15:04:29 -0700 (PDT)
+Date: Mon, 30 Jun 2014 15:04:24 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/5] cfg80211: treat the special "unknown" alpha2 as valid
+Message-ID: <20140630220424.GM1390@garbanzo.do-not-panic.com> (sfid-20140701_000433_468075_2E31BB18)
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-3-git-send-email-arik@wizery.com>
+ <CAB=NE6UZPcgAAJ6GAnjy2nSdYhLRqxo4h1ZZoZ7vYsAbYBiw+Q@mail.gmail.com>
+ <CA+XVXfc=zDyie-3xO86k98zKQUZqDm0dEf9d5qMDAX83svfR_Q@mail.gmail.com>
+ <20140623182333.GB1390@garbanzo.do-not-panic.com>
+ <CA+XVXfe91Lcf2H1vEficPTNumdd2sBOR8KV8cD5tsy+po4M0mg@mail.gmail.com>
+ <CAB=NE6Va7ynqAsRkgVQ1hCLMu6_Wco_=-Wa5dqrSzPMkA-pYeQ@mail.gmail.com>
+ <CA+XVXfeTn99ZW9OzUQZNNaHLCMNipsubVP8CVLapWA8Z3oM4+w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXfeTn99ZW9OzUQZNNaHLCMNipsubVP8CVLapWA8Z3oM4+w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series mainly adds support 11ac devices using a PCIe host interface.
-These devices also uses different protocol layer to communicate with
-the firmware on the device. Implementation has been ready for some time
-and got testing coverage while awaiting approval to publish.
+On Tue, Jun 24, 2014 at 09:09:41AM +0300, Arik Nemtsov wrote:
+> On Mon, Jun 23, 2014 at 9:57 PM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > On Mon, Jun 23, 2014 at 11:32 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> >>> modifieres for user_reg_hint_type, you'd want a driver_reg_hint_type,
+> >
+> > Minor note, since the driver reg hint type can be require the
+> > regulatory data source to be internal to the driver (firmware or
+> > driver, we won't know) and since the new API can allow the
+> > driver/firmware to pass and let the request come from CRDA /
+> > wireless-regdb / internal db the driver hint is different from the
+> > final *set* regulatory domain. So for example although the goal was to
+> > query firmware first if the driver passed and let the source of
+> > regulatory data come from CRDA / wireless-regdb / internal regdb we'd
+> > want to ensure userspace is informed of this. So I think we'd need a
+> > regulatory data structure source type as well, right now it'd default
+> > to wireless-regdb as the source (that would suffice for CRDA or
+> > internal-db), and your changes would add an internal-driver source.
+> 
+> Sure I can add a source to the regulatory_request structure. It will
+> have something like CORE, CRDA, INTERNAL_REGDB, DRIVER.
 
-This series is intended for 3.17 and applies to the master branch of
-the wireless-next repository.
+OK.
 
-Daniel Kim (1):
-  brcmfmac: Do not use strcpy and strcat
+> > Since this is allowing drivers to be explicit about their regulatory
+> > data it would be nice if as part of this we can then get 'iw reg get'
+> > the ability to then spit out per wiphy regd. Since even the custom
+> > regd requires passing a custom regd this could even enable parsing
+> > that data as well. This should make trouble shooting for intersections
+> > much easier on complex systems.
+> 
+> This would have to wait a bit on my side.
 
-Hante Meuleman (7):
-  brcmfmac: Export brcmf_netif_rx for new protocol msgbuf.
-  brcmfmac: Add protocol addressing mode and peer deletion API.
-  brcmfmac: Adding msgbuf protocol.
-  brcmfmac: Adding PCIe bus layer support.
-  brcmfmac: Update pcie reset device routine.
-  brcmfmac: Fix msgbuf flow control.
-  brcmfmac: Add TDLS support to msgbuf.
+OK.
 
- drivers/net/wireless/brcm80211/Kconfig             |   10 +
- drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    5 +
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |   20 +
- drivers/net/wireless/brcm80211/brcmfmac/chip.c     |    8 +
- .../net/wireless/brcm80211/brcmfmac/commonring.c   |  274 +++
- .../net/wireless/brcm80211/brcmfmac/commonring.h   |   69 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    7 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   33 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   36 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    9 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 +-
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c |  502 ++++++
- drivers/net/wireless/brcm80211/brcmfmac/flowring.h |   84 +
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |    6 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    5 +
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 1398 +++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h   |   40 +
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 1846 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/pcie.h     |   29 +
- drivers/net/wireless/brcm80211/brcmfmac/proto.c    |   29 +-
- drivers/net/wireless/brcm80211/brcmfmac/proto.h    |   31 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   57 +-
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   11 +
- 23 files changed, 4498 insertions(+), 36 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/commonring.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/commonring.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/flowring.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/flowring.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/pcie.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/pcie.h
-
--- 
-1.9.1
-
+  Luis
