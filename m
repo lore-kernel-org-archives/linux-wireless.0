@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:52898 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045AbaFIOVp (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52965 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932114AbaF3QTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2014 10:21:45 -0400
-Message-ID: <1402323702.11505.18.camel@umadbro> (sfid-20140609_162206_873868_5B4A0D81)
-Subject: Re: [RFC 1/4] cfg80211: Add channel flags limiting availability to
- OCB mode only
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Liraz Perelmooter <liraz.perelmooter@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>,
-	wireless-regdb@lists.infradead.org, green@qti.qualcomm.com
-Date: Mon, 09 Jun 2014 16:21:42 +0200
-In-Reply-To: <20140603221837.GU26450@wotan.suse.de>
-References: <1401468984-24575-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1401468984-24575-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1401825693.4157.44.camel@jlt4.sipsolutions.net>
-	 <20140603221837.GU26450@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 30 Jun 2014 12:19:10 -0400
+Received: by mail-we0-f174.google.com with SMTP id u57so8240730wes.5
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 09:19:09 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH 4/7] rtl8180: fix incorrect TX retry.
+Date: Mon, 30 Jun 2014 18:18:55 +0200
+Message-Id: <1404145135-16076-1-git-send-email-andrea.merello@gmail.com> (sfid-20140630_181917_397533_39A11905)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Luis;
-Thank you for the introduction in the wireless-regdb mailing-list.
+HW is programmed with wrong retry count value for TX:
 
-On Wed, 2014-06-04 at 00:18 +0200, Luis R. Rodriguez wrote:
-> Rostislav, can you provide documentation references which would
-> clarify
-> the stance on 802.11p and restrictions for only allowing  OCB mode?
+Mac80211 passes to driver the number of times the TX should be attempted.
+The HW, instead, wants the number of time the TX should be retried if it fails
+the first time (assuming we have to TX it at least one time).
 
-If I may cite the 802.11-2012 standard:
--- 1st Quote
-4.3.11 STA transmission of data frames outside the context of a BSS
+This patch correct this.
 
-Communication of data frames when dot11OCBActivated is true might take
-place in a frequency band that is dedicated for its use, and such a band
-might require licensing depending on the regulatory domain. A STA for
-which dot11OCBActivated is true initially transmits and receives on a
-channel known in advance, either through regulatory designation or some
-other out-of-band communication.
--- End of quote
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--- 2nd Quote
-Annex E (normative) Country elements and operating classes
-E.2.3 5.9 GHz band in the United States (5.850–5.925 GHz)
-...
-STAs shall have dot11OCBActivated set to true.
-
-E.2.4 5.9 GHz band in Europe (5.855–5.925 GHz)
-STAs shall have dot11OCBActivated set to true.
--- end of quote
-
-Regards;
-Rostislav
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 8a64bc1..4f4fcf8 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -542,7 +542,7 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
+ 
+ 	entry->flags2 = info->control.rates[1].idx >= 0 ?
+ 		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
+-	entry->retry_limit = info->control.rates[0].count;
++	entry->retry_limit = info->control.rates[0].count - 1;
+ 
+ 	/* We must be sure that tx_flags is written last because the HW
+ 	 * looks at it to check if the rest of data is valid or not
+-- 
+1.9.1
 
