@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:50422 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753072AbaF2SIg (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:42772 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbaF3LEj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 14:08:36 -0400
-Date: Sun, 29 Jun 2014 21:08:33 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 05/10] mac80211: use TDLS initiator in tdls_mgmt
- operations
-Message-ID: <20140629180833.GA15371@w1.fi> (sfid-20140629_201001_500276_B8A8796D)
-References: <1402496307-32522-1-git-send-email-arik@wizery.com>
- <1402496307-32522-5-git-send-email-arik@wizery.com>
- <20140629104318.GA32230@w1.fi>
- <CA+XVXfeZNbTiMwid4bBX5Ft4Pz-FjDz7jwLkJqsf2FSY8YkvgQ@mail.gmail.com>
+	Mon, 30 Jun 2014 07:04:39 -0400
+Received: by mail-oa0-f44.google.com with SMTP id i7so8660276oag.3
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 04:04:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+XVXfeZNbTiMwid4bBX5Ft4Pz-FjDz7jwLkJqsf2FSY8YkvgQ@mail.gmail.com>
+In-Reply-To: <53B141CB.7010000@broadcom.com>
+References: <1404071205-12568-1-git-send-email-zajec5@gmail.com>
+	<53B141CB.7010000@broadcom.com>
+Date: Mon, 30 Jun 2014 13:04:38 +0200
+Message-ID: <CACna6rzisWW9YGQpOz9-PVD5bFg5ApzVfNSLbWmVJOYXgssqkQ@mail.gmail.com> (sfid-20140630_130442_146145_424BF807)
+Subject: Re: [PATCH] b43: treat LCNXN-PHY as extra N-PHY devices
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 29, 2014 at 06:23:01PM +0300, Arik Nemtsov wrote:
-> Well I have to say I didn't really consider mac80211 TDLS
-> functionality "ready for prime time" when I've discovered this bug.
-> It's something pretty basic.
-> The breakage of older userspace was semi-deliberate here.
+On 30 June 2014 12:54, Arend van Spriel <arend@broadcom.com> wrote:
+> On 29-06-14 21:46, Rafał Miłecki wrote:
+>> LCNXN is simply a continuation of N, e.g. code handling LCNXN revs 0 and
+>> 1 is mostly the same as for N-PHY revs 7+.
+>
+> Hi Rafał,
+>
+> LCNXN is actually a LCN phy with 2 streams (mimo).
 
-It may have lacked some functionality, but it is being deployed at least
-in number of test setups.. Any such breakage of already exposed kernel
-functionality needs to really be clearly identified in the commit
-message, so that it is obvious to whoever may be reviewing the changes.
+Err, I don't think so. Could you take a closer look at this? I'm
+pretty sure LCNXN is continuation of N.
 
-> But your logic is sound. If you consider this important, we can fix this.
-
-I'm more concerned about non-mac80211 drivers since there are number of
-those with TDLS support in deployed devices. However, ath9k enabled TDLS
-support already in 2011 and as far as I know, it was working more or
-less fine for single channel use cases since that point in time (even if
-some of the teardown operations may have failed based on these new
-patches and frames getting delivered through incorrect path, etc.).
-
-While I may not be able to point to any specific deployment of
-mac80211-based TDLS implementation, I don't think that it is acceptable
-to break functionality that has been enabled for multiple years.. So
-yes, I think that these patches will need to be fixed or reverted to
-avoid such regressions.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Maybe you were thinking about LCN40? I don't know much about LCN40,
+maybe it's a variation of LCN?
