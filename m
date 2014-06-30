@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43787 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753094AbaF2ORw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2014 10:17:52 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v3 1/4] dt: bindings: add bindings for Broadcom bcm43xx sdio devices
-Date: Sun, 29 Jun 2014 16:16:58 +0200
-Message-Id: <1404051421-24377-2-git-send-email-hdegoede@redhat.com> (sfid-20140629_161755_800371_4A752356)
-In-Reply-To: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
-References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:60281 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754665AbaF3JkW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2014 05:40:22 -0400
+Received: by mail-wi0-f176.google.com with SMTP id n3so5691431wiv.15
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 02:40:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix unregister deadlock when fw probe fails
+Date: Mon, 30 Jun 2014 11:32:00 +0200
+Message-Id: <1404120720-14649-1-git-send-email-michal.kazior@tieto.com> (sfid-20140630_114025_709935_2D0E99C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+If firmware probing worker failed it called
+device_release_driver() which synchronously called
+remove() pci callback. The callback in turn waited
+for the worker that called it to finish resulting
+in a deadlock.
 
-The Broadcom bcm43xx sdio devices are fullmac devices that may be
-integrated in ARM platforms. Currently, the brcmfmac driver for
-these devices support use of platform data. This patch specifies
-the bindings that allow this platform data to be expressed in the
-devicetree.
+Waiting for a completion instead of a worker, like
+some other drivers do, doesn't seem like the best
+idea either:
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-[hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
- on how to handle this yet]
-[hdegoede@redhat.com: move from bindings/staging to bindings]
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+  Syscall                 Worker
+
+                          probe_fw()
+  rmmod
+  dev_lock()
+  pci->remove()
+  wait_for_completion()
+                          complete_all()
+                          device_release_driver()
+                          dev_lock()
+                          [sleep]
+  free(ar)
+  dev_unlock()
+                          [resume]
+
+There's no guarantee that Worker upon resuming can
+still access any data/code of the module.
+
+Leaving device bound to a driver is not as harmful
+as deadlocking so remove the call to
+device_release_driver() while a proper solution is
+figured out.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+ drivers/net/wireless/ath/ath10k/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-new file mode 100644
-index 0000000..5dbf169
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -0,0 +1,41 @@
-+Broadcom BCM43xx Fullmac wireless SDIO devices
-+
-+This node provides properties for controlling the Broadcom wireless device. The
-+node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+
-+ - compatible : Should be "brcm,bcm4329-fmac".
-+
-+Optional properties:
-+ - brcm,drive-strength : drive strength used for SDIO pins on device in mA
-+	(default = 6).
-+ - interrupt-parent : the phandle for the interrupt controller to which the
-+	device interrupts are connected.
-+ - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
-+	When not specified the device will use in-band SDIO interrupts.
-+ - interrupt-names : name of the out-of-band interrupt, which must be set
-+	to "host-wake".
-+
-+Example:
-+
-+mmc3: mmc@01c12000 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc3_pins_a>;
-+	vmmc-supply = <&reg_vmmc3>;
-+	bus-width = <4>;
-+	non-removable;
-+	status = "okay";
-+
-+	brcmf: bcrmf@1 {
-+		reg = <1>;
-+		compatible = "brcm,bcm4329-fmac";
-+		interrupt-parent = <&pio>;
-+		interrupts = <10 8>; /* PH10 / EINT10 */
-+		interrupt-names = "host-wake";
-+	};
-+};
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 82017f5..b70e443 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -984,7 +984,9 @@ err_unregister_mac:
+ err_release_fw:
+ 	ath10k_core_free_firmware_files(ar);
+ err:
+-	device_release_driver(ar->dev);
++	/* TODO: It's probably a good idea to release device from the driver
++	 * but calling device_release_driver() here will cause a deadlock.
++	 */
+ 	return;
+ }
+ 
 -- 
-2.0.0
+1.8.5.3
 
