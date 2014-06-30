@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:46259 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbaF2AhJ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:61790 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbaF3IWP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 20:37:09 -0400
-Received: by mail-oa0-f49.google.com with SMTP id i7so7217004oag.36
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 17:37:09 -0700 (PDT)
-Message-ID: <53AF5FB8.3060505@lwfinger.net> (sfid-20140629_023722_678647_37C450F1)
-Date: Sat, 28 Jun 2014 19:37:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 30 Jun 2014 04:22:15 -0400
+Message-ID: <53B11E34.60601@broadcom.com> (sfid-20140630_102223_742799_6BC83C2C)
+Date: Mon, 30 Jun 2014 10:22:12 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: lolilolicon <lolilolicon@gmail.com>, ath9k-devel@qca.qualcomm.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com
-Subject: Re: Bug: USB wifi card TL-WN722N (AR9271, ath9k_htc) fails to get
- DHCP lease
-References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
-In-Reply-To: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: John Talbut <jt@dpets.co.uk>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: Firmware loading with static kernel and initramfs
+References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net> <53B0F10D.7030801@dpets.co.uk>
+In-Reply-To: <53B0F10D.7030801@dpets.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2014 04:17 PM, lolilolicon wrote:
-> This bug was introduced in merge commit 88daf80 (if I did the bisect correctly).
->
-> A workaround around the bug is to set the ath9k_htc param nohwcrypt=1.
->
-> The difference in the journal/log between good and bad is that in the
-> presence of the bug, dhcpcd would time out soliciting a DHCP lease.
-> Some other users report that they're getting an IP, but the connection
-> is very slow.
->
-> Also reported elsewhere:
-> https://bugs.archlinux.org/task/40905
-> https://bugzilla.kernel.org/show_bug.cgi?id=78581
->
-> Apologies if I messed up anything (sending to the wrong ML/people,
-> inadequate info, etc.)
-> If you need anything else, just ask.
+On 30-06-14 07:09, John Talbut wrote:
+> On 29/06/14 23:11, Larry Finger wrote:
+>> On 06/29/2014 02:19 PM, John Talbut wrote:
+>>> I originally had the problem with a Broadcom BCM43225 wireless.  This
+>>> was with a
+>>> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
+>>> and this
+>>> is still working with a 3.14 kernel.
+>>
+>> What sort of patch was that? Driver brcmsmac is still using
+>> request_firmware().
+> 
+> I believe it was this patch:
+> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
 
-Something went wrong in your bisection. Commit 88daf80 is a merge commit and is 
-unlikely to be the bad one. You might try a checkout of b080e04 and try it to 
-see if it is bad or good. That is the first non-merge commit before 88daf80.
+Correct. IFF_UP was recommended event to consider user-space ready to
+handle request_firmware. However, this may not work for drivers that
+initialize the wiphy information based on info retrieved from firmware.
 
-Larry
+Regards,
+Arend
+
+>>
+>>> Currently I have the problem with an Intel Centrino Wireless-N 130.
+>>> The problem
+>>> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
+>>> version
+>>> 204-5linuxmint.
+>>
+>> The current Intel drivers all use request_firmware_nowait(), but I'm not
+>> sure when they were changed.
+>>
+>>> A friend seems to have the problem with a Realtek 8129se wireless but
+>>> we are
+>>> still checking out that this is the problem.
+>>
+>> To my knowledge, there is no Realtek 8129se driver. Do you mean
+>> rtl8192se? If so, that one has used request_firmware_nowait() for some
+>> time.
+> 
+> Yes, the rtl8192se driver.
+> 
+> John
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
