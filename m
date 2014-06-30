@@ -1,165 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:36571 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761022AbaGSLbW (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:57276 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbaF3WVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 07:31:22 -0400
-Received: by mail-we0-f178.google.com with SMTP id w61so5643275wes.9
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:21 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/16] staging: vt6656: struct vnt_private remove camel case antenna variables
-Date: Sat, 19 Jul 2014 12:30:16 +0100
-Message-Id: <1405769418-2815-14-git-send-email-tvboxspy@gmail.com> (sfid-20140719_135109_165357_E14F3D93)
-In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
-References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 30 Jun 2014 18:21:37 -0400
+Received: by mail-pa0-f48.google.com with SMTP id et14so9347925pad.35
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 15:21:37 -0700 (PDT)
+Date: Mon, 30 Jun 2014 15:21:32 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user
+ hints
+Message-ID: <20140630222132.GN1390@garbanzo.do-not-panic.com> (sfid-20140701_002141_430155_E8E6F236)
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-4-git-send-email-arik@wizery.com>
+ <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com>
+ <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com>
+ <20140623182623.GC1390@garbanzo.do-not-panic.com>
+ <CA+XVXffrepXAKitqhL4C87Jxy4MiF+iAO_PP6YZkMKtqeckV+Q@mail.gmail.com>
+ <20140623204800.GF1390@garbanzo.do-not-panic.com>
+ <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-bTxRxAntInv -> tx_rx_ant_inv
-dwRxAntennaSel -> rx_antenna_sel
-byRxAntennaMode -> rx_antenna_mode
-byTxAntennaMode -> tx_antenna_mode
-byRadioCtl -> radio_ctl
+On Tue, Jun 24, 2014 at 08:55:28AM +0300, Arik Nemtsov wrote:
+> On Mon, Jun 23, 2014 at 11:48 PM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > On Mon, Jun 23, 2014 at 09:34:13PM +0300, Arik Nemtsov wrote:
+> >> On Mon, Jun 23, 2014 at 9:26 PM, Luis R. Rodriguez
+> >> <mcgrof@do-not-panic.com> wrote:
+> >> > On Mon, Jun 23, 2014 at 08:14:43PM +0300, Arik Nemtsov wrote:
+> >> >> On Thu, Jun 19, 2014 at 2:34 AM, Luis R. Rodriguez
+> >> >> <mcgrof@do-not-panic.com> wrote:
+> >> >> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> >> >> >> Allow driver and user hints to set the "world" regulatory domain,
+> >> >> >
+> >> >> > NACK - as expressed in the other patch, letting the drivers to use the
+> >> >> > new API to set the world regulatory domain doesn't make sense as we
+> >> >> > have custom apply stuff, and the world regulatory domain is not
+> >> >> > something dynamic.
+> >> >>
+> >> >> Well we want to set the world regdomain from FW. This obviously
+> >> >> happens after wiphy registration, so I don't think the custom apply
+> >> >> can be used here? (since we generally want cfg80211 to own the
+> >> >> regdomain settings).
+> >> >
+> >> > Can the driver not obtain the world regulatory domain from firmware
+> >> > prior to wiphy registration? Why not?
+> >>
+> >> Since the FW is not running yet :)
+> >
+> > Is that a limitation that can be corrected on the driver ? Can the wiphy
+> > registration be moved to after wiphy firmware is loaded ? If this is too
+> > hard I see this as a good reason to extend the API or add a new similar
+> > call that would allow for this case. The reason for the restriction on wiphy
+> > registration was due to the fact that we didn't want to mess with _orig
+> > parameters after wiphy registration, and we didn't want drivers poking
+> > with those. The _orig parameters then can be set by cfg80211 through two
+> > ways, one is the driver say reads EEPROM stuff and sets the channel
+> > structs with the restrictions it had prior to wiphy registration or if
+> > drivers could deduce a regulatory domain structure they could use the
+> > wiphy_apply_custom_regulatory() which would do the same for them.
+> >
+> > Note that what this does is let drivers fill a set of channel data
+> > structures and then with these mechanisms set the max allowed superset.
+> > Anything after this is a subset of the original set of allowed
+> > parameters. Please review handle_channel().
+> >
+> > The difficulty in allowing changing the _orig stuff after wiphy
+> > registration is we'd then have to ensure that the current state
+> > of the regulatory machine is replicated on the device driver. Just
+> > consider doing this properly and I think we'll be good.
+> 
+> We can't access the FW before wiphy registration. In some scenarios
+> the module is loaded during system boot, before we can really access
+> the HW bus. We only start the FW on the first ifup.
+> To allow ifup, we need the wiphy registered. We have no "hook" where
+> we can register the wiphy after the wifi HW bus if fully available.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 10 +++++-----
- drivers/staging/vt6656/main_usb.c | 38 +++++++++++++++++++-------------------
- drivers/staging/vt6656/wcmd.c     | 12 ++++++------
- 3 files changed, 30 insertions(+), 30 deletions(-)
+What hw bus? Buses can probe, even if its a fake bus type of thing
+you can use platform_device_register_simple(), look at
+drivers/net/ethernet/8390/ne.c as a complex example.
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index ecf8da0..c4e83b5 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -317,11 +317,11 @@ struct vnt_private {
- 	u32 current_rssi;
- 
- 	/* Antenna Diversity */
--	int bTxRxAntInv;
--	u32 dwRxAntennaSel;
--	u8 byRxAntennaMode;
--	u8 byTxAntennaMode;
--	u8 byRadioCtl;
-+	int tx_rx_ant_inv;
-+	u32 rx_antenna_sel;
-+	u8 rx_antenna_mode;
-+	u8 tx_antenna_mode;
-+	u8 radio_ctl;
- 
- 	/* IFS & Cw */
- 	u32 uSIFS;  /* Current SIFS */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 4ca6639..1137a19 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -239,9 +239,9 @@ static int device_init_registers(struct vnt_private *priv)
- 	antenna = priv->abyEEPROM[EEP_OFS_ANTENNA];
- 
- 	if (antenna & EEP_ANTINV)
--		priv->bTxRxAntInv = true;
-+		priv->tx_rx_ant_inv = true;
- 	else
--		priv->bTxRxAntInv = false;
-+		priv->tx_rx_ant_inv = false;
- 
- 	antenna &= (EEP_ANTENNA_AUX | EEP_ANTENNA_MAIN);
- 
-@@ -249,35 +249,35 @@ static int device_init_registers(struct vnt_private *priv)
- 		antenna = (EEP_ANTENNA_AUX | EEP_ANTENNA_MAIN);
- 
- 	if (antenna == (EEP_ANTENNA_AUX | EEP_ANTENNA_MAIN)) {
--		priv->byTxAntennaMode = ANT_B;
--		priv->dwRxAntennaSel = 1;
-+		priv->tx_antenna_mode = ANT_B;
-+		priv->rx_antenna_sel = 1;
- 
--		if (priv->bTxRxAntInv == true)
--			priv->byRxAntennaMode = ANT_A;
-+		if (priv->tx_rx_ant_inv == true)
-+			priv->rx_antenna_mode = ANT_A;
- 		else
--			priv->byRxAntennaMode = ANT_B;
-+			priv->rx_antenna_mode = ANT_B;
- 	} else  {
--		priv->dwRxAntennaSel = 0;
-+		priv->rx_antenna_sel = 0;
- 
- 		if (antenna & EEP_ANTENNA_AUX) {
--			priv->byTxAntennaMode = ANT_A;
-+			priv->tx_antenna_mode = ANT_A;
- 
--			if (priv->bTxRxAntInv == true)
--				priv->byRxAntennaMode = ANT_B;
-+			if (priv->tx_rx_ant_inv == true)
-+				priv->rx_antenna_mode = ANT_B;
- 			else
--				priv->byRxAntennaMode = ANT_A;
-+				priv->rx_antenna_mode = ANT_A;
- 		} else {
--			priv->byTxAntennaMode = ANT_B;
-+			priv->tx_antenna_mode = ANT_B;
- 
--		if (priv->bTxRxAntInv == true)
--			priv->byRxAntennaMode = ANT_A;
-+		if (priv->tx_rx_ant_inv == true)
-+			priv->rx_antenna_mode = ANT_A;
- 		else
--			priv->byRxAntennaMode = ANT_B;
-+			priv->rx_antenna_mode = ANT_B;
- 		}
- 	}
- 
- 	/* Set initial antenna mode */
--	vnt_set_antenna_mode(priv, priv->byRxAntennaMode);
-+	vnt_set_antenna_mode(priv, priv->rx_antenna_mode);
- 
- 	/* get Auto Fall Back type */
- 	priv->byAutoFBCtrl = AUTO_FB_0;
-@@ -348,9 +348,9 @@ static int device_init_registers(struct vnt_private *priv)
- 
- 	vnt_set_short_slot_time(priv);
- 
--	priv->byRadioCtl = priv->abyEEPROM[EEP_OFS_RADIOCTL];
-+	priv->radio_ctl = priv->abyEEPROM[EEP_OFS_RADIOCTL];
- 
--	if ((priv->byRadioCtl & EEP_RADIOCTL_ENABLE) != 0) {
-+	if ((priv->radio_ctl & EEP_RADIOCTL_ENABLE) != 0) {
- 		status = vnt_control_in(priv, MESSAGE_TYPE_READ,
- 			MAC_REG_GPIOCTL1, MESSAGE_REQUEST_MACREG, 1, &tmp);
- 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index c56b7b3..304f6d6 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -146,17 +146,17 @@ void vnt_run_command(struct work_struct *work)
- 
- 	case WLAN_CMD_CHANGE_ANTENNA_START:
- 		dev_dbg(&priv->usb->dev, "Change from Antenna%d to",
--							priv->dwRxAntennaSel);
-+							priv->rx_antenna_sel);
- 
--		if (priv->dwRxAntennaSel == 0) {
--			priv->dwRxAntennaSel = 1;
--			if (priv->bTxRxAntInv == true)
-+		if (priv->rx_antenna_sel == 0) {
-+			priv->rx_antenna_sel = 1;
-+			if (priv->tx_rx_ant_inv == true)
- 				vnt_set_antenna_mode(priv, ANT_RXA);
- 			else
- 				vnt_set_antenna_mode(priv, ANT_RXB);
- 		} else {
--			priv->dwRxAntennaSel = 0;
--			if (priv->bTxRxAntInv == true)
-+			priv->rx_antenna_sel = 0;
-+			if (priv->tx_rx_ant_inv == true)
- 				vnt_set_antenna_mode(priv, ANT_RXB);
- 			else
- 				vnt_set_antenna_mode(priv, ANT_RXA);
--- 
-2.0.1
+Also if a bus is not yet set up or if resouces are still being
+brought up and the driver needs to be poked at a later time you can
+verify what you need access for and return -EPROBE_DEFER upon probe
+if things can't move forward which will force the driver to be
+probed at a later time.
 
+> Nor do we want to find this hook, because of multiple platforms etc.
+
+I'm pretty sure you can find it, but I do also understand that
+restructuring the driver is a bit of work so I'm fine with you saying
+its a lot of work but saying its no possible seems not fully
+supported yet.
+
+> But I'm not sure why you're mentioning the workings of
+> handle_channel() for this patch. It doesn't allow changing the
+> original flags set at registration. It just allows drivers and the
+> user to assign the world regdomain, and also to change the native "00"
+> definitions with the FW regdomain. It shouldn't harm anything AFAICT.
+
+You're missing the point for why I bring up handle_channel().
+handle_channel() *can* update orig_* parameters for you for an alpha2
+which you *shoud* consider. Additionally handle_channel() takes into
+consideration the regulatory state machine and can apply a regulatory
+domain to different wiphys by design to help with compliance. The
+handle_channel_custom() is designed for custom regulatory domains
+and do not propagate to other wiphys.
+
+> >> > One thing to be careful on all this new API design is to ensure that
+> >> > upon disconnect we want the driver to go back to the original state,
+> >> > whatever that is.
+> >>
+> >> This particular part is unrelated to connection state AFAICT. It just
+> >> allows someone (driver, user) to set the "00" regdomain.
+> >
+> > There are two things here, one is the custom world regulatory domain
+> > that firmware is setting, the other is the new API to allow an alpha2
+> > regulatory domain. The resetting of regulatory domains needs to ensure
+> > that if the first regulatory domain was a world regulatory domain, and
+> > then a driver alpha2 is set these regulatory domains will be applied in
+> > the same order when it disconnects. If the APIs are used properly this
+> > is guaranteed already for us and its one reason for seeing if we can
+> > just use existing APIs. See restore_custom_reg_settings() as an example.
+> 
+> I believe there's no issue introduced by this code.
+
+You are extending usage of custom regulatory data to be hooked onto the
+orig_* parameters, which by design was made to help upkeep the minimum
+allowed set, the custom regulatory domain allows for *world roaming*
+which can mean reducing this set, but note it will never *enable* new
+channels. The alpha2 hint *can* enable new channels by design by
+updating orig_* parameters. These are two different type of regulatory
+domain hints.
+
+  Luis
