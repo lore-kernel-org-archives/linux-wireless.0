@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55104 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754072AbaFYTaJ (ORCPT
+Received: from mdfmta005.mxout.tbr.inty.net ([91.221.168.46]:39955 "EHLO
+	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751802AbaF3FQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2014 15:30:09 -0400
-Date: Wed, 25 Jun 2014 15:28:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-06-24
-Message-ID: <20140625192803.GA8870@tuxdriver.com> (sfid-20140625_213025_774937_99903755)
-References: <1403626964.10831.12.camel@jlt4.sipsolutions.net>
- <1403629678.10831.14.camel@jlt4.sipsolutions.net>
- <20140625191834.GG3445@tuxdriver.com>
+	Mon, 30 Jun 2014 01:16:07 -0400
+Message-ID: <53B0F10D.7030801@dpets.co.uk> (sfid-20140630_071611_798372_F9F56EBB)
+Date: Mon, 30 Jun 2014 06:09:33 +0100
+From: John Talbut <jt@dpets.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140625191834.GG3445@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Firmware loading with static kernel and initramfs
+References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net>
+In-Reply-To: <53B08F07.3000308@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 03:18:34PM -0400, John W. Linville wrote:
-> On Tue, Jun 24, 2014 at 07:07:58PM +0200, Johannes Berg wrote:
-> > On Tue, 2014-06-24 at 18:22 +0200, Johannes Berg wrote:
-> > 
-> > > The biggest thing here is probably Arik's TDLS rework, beyond that we
-> > > have smaller improvements and features like David's scanning IE thing,
-> > 
-> > The latter seems to cause some issues with the ath9k multi-channel code,
-> > I didn't realize you'd merged that in.
-> > 
-> > The fix is not very difficult, so maybe you can just fix it when you
-> > merge? See commit eb6a61549f530f1cc435512df3799f656094ba83 for how all
-> > the other drivers were changed.
-> 
-> I don't see that commit ID anywhere...?
-> 
-> The merge seemed to be clean too.  Are we looking at the same things?
+On 29/06/14 23:11, Larry Finger wrote:
+> On 06/29/2014 02:19 PM, John Talbut wrote:
+>> I originally had the problem with a Broadcom BCM43225 wireless.  This
+>> was with a
+>> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
+>> and this
+>> is still working with a 3.14 kernel.
+>
+> What sort of patch was that? Driver brcmsmac is still using
+> request_firmware().
 
-Perhaps you meant c56ef6725068c?  That seems to have held the clues...
+I believe it was this patch:
+https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
+>
+>> Currently I have the problem with an Intel Centrino Wireless-N 130.
+>> The problem
+>> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
+>> version
+>> 204-5linuxmint.
+>
+> The current Intel drivers all use request_firmware_nowait(), but I'm not
+> sure when they were changed.
+>
+>> A friend seems to have the problem with a Realtek 8129se wireless but
+>> we are
+>> still checking out that this is the problem.
+>
+> To my knowledge, there is no Realtek 8129se driver. Do you mean
+> rtl8192se? If so, that one has used request_firmware_nowait() for some
+> time.
+
+Yes, the rtl8192se driver.
 
 John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
