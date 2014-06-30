@@ -1,172 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:39102 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbaF1W41 (ORCPT
+Received: from mdfmta004.mxout.tbr.inty.net ([91.221.168.45]:34042 "EHLO
+	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754997AbaF3JIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2014 18:56:27 -0400
-Received: by mail-wi0-f182.google.com with SMTP id bs8so4293605wib.9
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2014 15:56:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/8] staging: vt6656: Remove rx handing from RXvWorkItem
-Date: Sat, 28 Jun 2014 23:55:42 +0100
-Message-Id: <1403996146-4082-4-git-send-email-tvboxspy@gmail.com> (sfid-20140629_005638_359444_2F662D75)
-In-Reply-To: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
-References: <1403996146-4082-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 30 Jun 2014 05:08:44 -0400
+Message-ID: <53B12918.1060806@dpets.co.uk> (sfid-20140630_110856_329605_D784924F)
+Date: Mon, 30 Jun 2014 10:08:40 +0100
+From: John Talbut <jt@dpets.co.uk>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Firmware loading with static kernel and initramfs
+References: <53B049A3.7000803@dpets.co.uk> <53B05B72.1010502@lwfinger.net> <53B066A5.4070003@dpets.co.uk> <53B08F07.3000308@lwfinger.net> <53B0F10D.7030801@dpets.co.uk> <53B11E34.60601@broadcom.com>
+In-Reply-To: <53B11E34.60601@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In s_nsBulkInUsbIoCompleteRead reuse or reallocate sb_buff and resubmit
-urb.
 
-In device_alloc_bufs allocate memory to rcb individually and
-call PIPEnsBulkInUsbRead to submit the urbs
 
-Change handling to free rcb in device_free_rx_bufs
+On 30/06/14 09:22, Arend van Spriel wrote:
+> On 30-06-14 07:09, John Talbut wrote:
+>> On 29/06/14 23:11, Larry Finger wrote:
+>>> On 06/29/2014 02:19 PM, John Talbut wrote:
+>>>> I originally had the problem with a Broadcom BCM43225 wireless.  This
+>>>> was with a
+>>>> 3.8 kernel.  This was solved by a patch to the kernel brcmsmac driver
+>>>> and this
+>>>> is still working with a 3.14 kernel.
+>>>
+>>> What sort of patch was that? Driver brcmsmac is still using
+>>> request_firmware().
+>>
+>> I believe it was this patch:
+>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c?id=25b5632fb35ca61b8ae3eee235edcdc2883f7a5e
+>
+> Correct. IFF_UP was recommended event to consider user-space ready to
+> handle request_firmware. However, this may not work for drivers that
+> initialize the wiphy information based on info retrieved from firmware.
+>
+> Regards,
+> Arend
+>
+The command, based on your suggestion, Arend, for the Broadcom wireless,:
+echo 0000:01:00.1 > /sys/bus/pci/drivers/iwlwifi/bind
+brings up the Intel wireless.
 
-Remove calls to workqueue.
+Regards
+John
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 38 +++++++++++++++-----------------------
- drivers/staging/vt6656/usbpipe.c  | 25 +++++++++++++++----------
- 2 files changed, 30 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 86d9470..19d42ce 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -514,6 +514,8 @@ static void device_free_rx_bufs(struct vnt_private *priv)
- 
- 	for (ii = 0; ii < priv->cbRD; ii++) {
- 		rcb = priv->apRCB[ii];
-+		if (!rcb)
-+			continue;
- 
- 		/* deallocate URBs */
- 		if (rcb->pUrb) {
-@@ -524,9 +526,9 @@ static void device_free_rx_bufs(struct vnt_private *priv)
- 		/* deallocate skb */
- 		if (rcb->skb)
- 			dev_kfree_skb(rcb->skb);
--	}
- 
--	kfree(priv->pRCBMem);
-+		kfree(rcb);
-+	}
- 
- 	return;
- }
-@@ -576,22 +578,16 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 		tx_context->in_use = false;
- 	}
- 
--	/* allocate RCB mem */
--	priv->pRCBMem = kzalloc((sizeof(struct vnt_rcb) * priv->cbRD),
--								GFP_KERNEL);
--	if (priv->pRCBMem == NULL) {
--		dev_err(&priv->usb->dev, "alloc rx usb context failed\n");
--		goto free_tx;
--	}
--
--	priv->FirstRecvFreeList = NULL;
--	priv->LastRecvFreeList = NULL;
--	priv->NumRecvFreeList = 0;
-+	for (ii = 0; ii < priv->cbRD; ii++) {
-+		priv->apRCB[ii] = kzalloc(sizeof(struct vnt_rcb), GFP_KERNEL);
-+		if (!priv->apRCB[ii]) {
-+			dev_err(&priv->usb->dev,
-+					"failed to allocate rcb no %d\n", ii);
-+			goto free_rx_tx;
-+		}
- 
--	rcb = (struct vnt_rcb *)priv->pRCBMem;
-+		rcb = priv->apRCB[ii];
- 
--	for (ii = 0; ii < priv->cbRD; ii++) {
--		priv->apRCB[ii] = rcb;
- 		rcb->pDevice = priv;
- 
- 		/* allocate URBs */
-@@ -611,11 +607,9 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 
- 		rcb->bBoolInUse = false;
- 
--		EnqueueRCB(priv->FirstRecvFreeList,
--						priv->LastRecvFreeList, rcb);
--
--		priv->NumRecvFreeList++;
--		rcb++;
-+		/* submit rx urb */
-+		if (PIPEnsBulkInUsbRead(priv, rcb))
-+			goto free_rx_tx;
- 	}
- 
- 	priv->pInterruptURB = usb_alloc_urb(0, GFP_ATOMIC);
-@@ -678,7 +672,6 @@ static int vnt_start(struct ieee80211_hw *hw)
- 
- 	priv->int_interval = 1;  /* bInterval is set to 1 */
- 
--	schedule_work(&priv->read_work_item);
- 	INTvWorkItem(priv);
- 
- 	priv->flags |= DEVICE_FLAGS_OPENED;
-@@ -722,7 +715,6 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 	MP_CLEAR_FLAG(priv, fMP_POST_READS);
- 
- 	cancel_delayed_work_sync(&priv->run_command_work);
--	cancel_work_sync(&priv->read_work_item);
- 
- 	priv->bCmdRunning = false;
- 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 6a7e692..428193e 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -230,9 +230,6 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
- 	int status = 0;
- 	struct urb *urb;
- 
--	if (priv->Flags & fMP_DISCONNECTED)
--		return STATUS_FAILURE;
--
- 	urb = rcb->pUrb;
- 	if (rcb->skb == NULL) {
- 		dev_dbg(&priv->usb->dev, "rcb->skb is null\n");
-@@ -303,16 +300,24 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 	}
- 
--	rcb->Ref--;
--	if (rcb->Ref == 0) {
--		dev_dbg(&priv->usb->dev,
--				"RxvFreeNormal %d\n", priv->NumRecvFreeList);
-+	if (re_alloc_skb) {
-+		rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
-+		if (!rcb->skb) {
-+			dev_dbg(&priv->usb->dev, "Failed to re-alloc rx skb\n");
- 
--		spin_lock_irqsave(&priv->lock, flags);
-+			rcb->bBoolInUse = false;
- 
--		RXvFreeRCB(rcb, re_alloc_skb);
-+			return;
-+		}
- 
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		urb->transfer_buffer = skb_put(rcb->skb,
-+						skb_tailroom(rcb->skb));
-+	}
-+
-+	if (usb_submit_urb(urb, GFP_ATOMIC)) {
-+		dev_dbg(&priv->usb->dev, "Failed to re submit rx skb\n");
-+
-+		rcb->bBoolInUse = false;
- 	}
- 
- 	return;
--- 
-1.9.1
-
+>>>
+>>>> Currently I have the problem with an Intel Centrino Wireless-N 130.
+>>>> The problem
+>>>> was present with a 3.11 kernel and currently with a 3.14 kernel.  udev
+>>>> version
+>>>> 204-5linuxmint.
+>>>
+>>> The current Intel drivers all use request_firmware_nowait(), but I'm not
+>>> sure when they were changed.
+>>>
+>>>> A friend seems to have the problem with a Realtek 8129se wireless but
+>>>> we are
+>>>> still checking out that this is the problem.
+>>>
+>>> To my knowledge, there is no Realtek 8129se driver. Do you mean
+>>> rtl8192se? If so, that one has used request_firmware_nowait() for some
+>>> time.
+>>
+>> Yes, the rtl8192se driver.
+>>
+>> John
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
