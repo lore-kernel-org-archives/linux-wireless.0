@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [199.83.51.51] ([199.83.51.51]:51352 "EHLO mantis.wzyboy.im"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751515AbaGKHOi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 03:14:38 -0400
-Received: from mail-ie0-f180.google.com (mail-ie0-f180.google.com [209.85.223.180])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id E509188047
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 15:06:58 +0800 (CST)
-Received: by mail-ie0-f180.google.com with SMTP id at20so579589iec.11
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 00:06:57 -0700 (PDT)
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:60606 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbaGAHsH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 03:48:07 -0400
+Date: Tue, 1 Jul 2014 09:47:59 +0200
+From: Markus Pargmann <mpa@pengutronix.de>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Subject: Re: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
+Message-ID: <20140701074759.GD28033@pengutronix.de> (sfid-20140701_094811_954562_9BF409DC)
+References: <1403963353-27317-1-git-send-email-mpa@pengutronix.de>
+ <477F20668A386D41ADCC57781B1F70430FE5F37532@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-From: Sascha Weaver <wzyboy@wzyboy.org>
-Date: Fri, 11 Jul 2014 15:06:41 +0800
-Message-ID: <CALkVjQbNMNs__LsNG450fCpTNmAR3kfDFn2o7xxrdLjSi1wu=w@mail.gmail.com> (sfid-20140711_091442_936210_1202913D)
-Subject: [iwlwifi] Wireless-AC 7260 disconnects every half and hour
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="NtwzykIc2mflq5ck"
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE5F37532@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I recently bought an Intel Wireless-AC 7260 (Dual band) to replace my
-Intel Wireless-N 7260.
+--NtwzykIc2mflq5ck
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The new wireless card connects to 5 GHz nicely and provides good
-performance. However, it disconnects every half and hour. It will
-automatically reconnects, but the process takes ten seconds or more,
-during which all my network connections are lost (route table is
-reset, I think).
+Hi Bing,
 
-My old Wireless-N 7260 does not act like this. Is there something I
-can do to speed up the re-association process (which happens half an
-hour) and prevent connection lost during the process?
+On Mon, Jun 30, 2014 at 11:18:07PM -0700, Bing Zhao wrote:
+> Hi Markus,
+>=20
+> > Subject: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
+>=20
+> This patch has been merged to wireless-next already:
+> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/co=
+mmit/?id=3D7d8831bb1bfbf8db896bfc1de9d0b3bc7a8e60f0
 
+Thanks, I didn't notice.
 
-Here is a part of the dmesg. You can see it disconnects every half an hour.
+Regards,
 
-Jul 09 10:45:48 xenien kernel: wlan0: deauthenticated from
-c0:7b:bc:1a:85:ff (Reason: 2=PREV_AUTH_NOT_VALID)
-Jul 09 10:45:48 xenien kernel: cfg80211: Calling CRDA for country: CN
-Jul 09 10:45:52 xenien kernel: wlan0: authenticate with c0:7b:bc:1a:54:bf
-Jul 09 10:45:52 xenien kernel: wlan0: send auth to c0:7b:bc:1a:54:bf (try 1/3)
-Jul 09 10:45:52 xenien kernel: wlan0: authenticated
-Jul 09 10:45:52 xenien kernel: wlan0: associate with c0:7b:bc:1a:54:bf (try 1/3)
-Jul 09 10:45:52 xenien kernel: wlan0: RX AssocResp from
-c0:7b:bc:1a:54:bf (capab=0x11 status=0 aid=160)
-Jul 09 10:45:52 xenien kernel: wlan0: associated
-Jul 09 11:16:02 xenien kernel: wlan0: deauthenticated from
-c0:7b:bc:1a:54:bf (Reason: 2=PREV_AUTH_NOT_VALID)
-Jul 09 11:16:02 xenien kernel: cfg80211: Calling CRDA to update world
-regulatory domain
-Jul 09 11:16:05 xenien kernel: wlan0: authenticate with 18:9c:5d:97:8d:2f
-Jul 09 11:16:05 xenien kernel: wlan0: send auth to 18:9c:5d:97:8d:2f (try 1/3)
-Jul 09 11:16:05 xenien kernel: wlan0: authenticated
-Jul 09 11:16:05 xenien kernel: wlan0: associate with 18:9c:5d:97:8d:2f (try 1/3)
-Jul 09 11:16:05 xenien kernel: wlan0: RX AssocResp from
-18:9c:5d:97:8d:2f (capab=0x11 status=0 aid=54)
-Jul 09 11:16:05 xenien kernel: wlan0: associated
-Jul 09 11:46:15 xenien kernel: wlan0: deauthenticated from
-18:9c:5d:97:8d:2f (Reason: 2=PREV_AUTH_NOT_VALID)
-Jul 09 11:46:15 xenien kernel: cfg80211: Calling CRDA to update world
-regulatory domain
-Jul 09 11:46:18 xenien kernel: wlan0: authenticate with c0:7b:bc:1a:75:6f
-Jul 09 11:46:18 xenien kernel: wlan0: send auth to c0:7b:bc:1a:75:6f (try 1/3)
-Jul 09 11:46:18 xenien kernel: wlan0: authenticated
-Jul 09 11:46:18 xenien kernel: wlan0: associate with c0:7b:bc:1a:75:6f (try 1/3)
-Jul 09 11:46:18 xenien kernel: wlan0: RX AssocResp from
-c0:7b:bc:1a:75:6f (capab=0x11 status=0 aid=86)
-Jul 09 11:46:18 xenien kernel: wlan0: associated
+Markus
 
+--=20
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
+--NtwzykIc2mflq5ck
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
--- 
-Sascha Weaver
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTsmevAAoJEEpcgKtcEGQQKEwP/2RQXtaMaGXs+L17RIBVPXvp
+roZAaKLWtXawu4FsC5Jr2zpKUflAq4KtrqBbL3mcgmk/Ic4aoABPP1Rz3ARG70Xq
+qC0mRcNHdyJv1a67fYf9dHghncAd+6xW8GRMcp93LpAHxOYG+px6DOqWv+yDcxVX
+VRxrAuPQNwJs1C+z5bOHpbD1SWlEbckR/FatEGWJLi1kTV+SujsEgXkRDvAg57hv
+VRUyUQexVNwM1wW/NuSO8nAhOQSusvAjDd9EYERz3VT24xVCD51SaSvFTaDxdMuI
+rUq6+OQKmVC+bApx01Ry+h6DtJGu707ghD/26sWxSkeiuCs63engOcSGug4K8YsL
+Eex0rEFT3KuzAtQzCdF7kKLLLPB3kkAsHrXpDwIQX82SSOvzqfDwrIoRNyBgx6UQ
+BEWXMnkqojEnN4eC6KoZDSF2WxvhURPOZW47WTfY8tIQVNsn9cPNR2TQhqQmv+fu
+t1rqvI3H80fyekRHpAKHWJyKkBHOHRD03d9kJcT0bfkzV6Ob4Fb9n05hp/EfCc+6
+MrGKK6kvlucwr+P38xDXkBzoMVQvYuj+BQnQYlyhmMeneGsYAw332K7BGKHG0WIn
+EZ7/U/3mX+ko4mZhatu5+892ldElBVjAv28sE/GvxqQ9d8C1H5s3eNrK3AJ8HLB4
+0B+zsWL8pU5OKnBu7Teg
+=ObWD
+-----END PGP SIGNATURE-----
+
+--NtwzykIc2mflq5ck--
