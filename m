@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32967 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751137AbaGXKyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 06:54:49 -0400
-Message-ID: <1406199271.14675.10.camel@jlt4.sipsolutions.net> (sfid-20140724_125519_352167_B8180F6A)
-Subject: Re: [PATCH] mac80211_hwsim: fix compiler warning on MIPS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Bresticker <abrestic@chromium.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 24 Jul 2014 12:54:31 +0200
-In-Reply-To: <1406065431-20813-1-git-send-email-abrestic@chromium.org> (sfid-20140722_234503_746857_0630E11C)
-References: <1406065431-20813-1-git-send-email-abrestic@chromium.org>
-	 (sfid-20140722_234503_746857_0630E11C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41350 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753916AbaGAHCe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 03:02:34 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>
+CC: Daniel Mack <daniel@zonque.org>, Tony Lindgren <tony@atomide.com>,
+	Andreas Fenkart <afenkart@gmail.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Tue, 1 Jul 2014 00:02:25 -0700
+Subject: RE: mwifiex card reset
+Message-ID: <477F20668A386D41ADCC57781B1F70430FE5F3754E@SC-VEXCH1.marvell.com> (sfid-20140701_090247_133209_90E89AA5)
+References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
+ <20140628052220.GG10407@us.netrek.org> <20140628072322.GC7410@atomide.com>
+ <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com>
+ <20140630061912.GA2461@atomide.com> <53B1BAC1.3090902@zonque.org>
+ <477F20668A386D41ADCC57781B1F70430FE5F37540@SC-VEXCH1.marvell.com>
+ <20140701065721.GM24891@us.netrek.org>
+In-Reply-To: <20140701065721.GM24891@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-07-22 at 14:43 -0700, Andrew Bresticker wrote:
-> The dividend in do_div() is expected to be an unsigned 64-bit integer,
-> which leads to the following warning when building for 32-bit MIPS:
+Hi James,
+
+> On Mon, Jun 30, 2014 at 11:44:29PM -0700, Bing Zhao wrote:
+> > I may have missed something, but doesn't the MMC_POWER_OFF and
+> > MMC_POWER_ON|UP handling in controller driver help?
+> > Anyway the clocks/GPIOs/regulators are sort of platform dependent.
+> > Would it be better putting it in /arch/arm/mach-xxxxx/?
 > 
->   drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_set_tsf':
->   drivers/net/wireless/mac80211_hwsim.c:664:98: warning: comparison of distinct pointer types lacks a cast [enabled by default]
->     data->bcn_delta = do_div(delta, bcn_int);
+> Wouldn't device tree for mmc be better?
+
+Yes, device tree is better for defining clocks/GPIO/regulators, etc.
+But I guess the reset logic (making use of these definitions) cannot be device tree?
+
+Regards,
+Bing
+
 > 
-> Since we care about the signedness of delta when adjusting tsf_offset
-> and bcm_delta, use the absolute value for the division and compare
-> the two timestamps to determine the sign.
-
-Applied, thanks.
-
-johannes
-
+> --
+> James Cameron
+> http://quozl.linux.org.au/
