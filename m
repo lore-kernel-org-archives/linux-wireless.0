@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:53455 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656AbaG1V0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 17:26:24 -0400
-Received: from saldaea ([84.134.4.86]) by smtp.web.de (mrweb103) with ESMTPSA
- (Nemesis) id 0Lal6K-1WnUtq3DEe-00kRyt for <linux-wireless@vger.kernel.org>;
- Mon, 28 Jul 2014 23:26:22 +0200
-Date: Mon, 28 Jul 2014 23:26:15 +0200
-From: Julian Wollrath <jwollrath@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi microcode SW error and traces on v3.16-rc7
-Message-ID: <20140728232615.110136d0@saldaea> (sfid-20140728_232642_346134_7A5B4D6C)
-In-Reply-To: <20140728224847.69537b1c@saldaea>
-References: <20140728224847.69537b1c@saldaea>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3367 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751187AbaGAGoh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 02:44:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Mack <daniel@zonque.org>, Tony Lindgren <tony@atomide.com>,
+	Andreas Fenkart <afenkart@gmail.com>
+CC: James Cameron <quozl@laptop.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Mon, 30 Jun 2014 23:44:29 -0700
+Subject: RE: mwifiex card reset
+Message-ID: <477F20668A386D41ADCC57781B1F70430FE5F37540@SC-VEXCH1.marvell.com> (sfid-20140701_084442_019711_A9B50D90)
+References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
+ <20140628052220.GG10407@us.netrek.org> <20140628072322.GC7410@atomide.com>
+ <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com>
+ <20140630061912.GA2461@atomide.com> <53B1BAC1.3090902@zonque.org>
+In-Reply-To: <53B1BAC1.3090902@zonque.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/iZ9UbOqTqeWT9ImflE4Mr.G"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/iZ9UbOqTqeWT9ImflE4Mr.G
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-> during wakeup from suspend to RAM
-Small correction, it was during a wakeup from suspend to disk.
-
-With best regards,
-Julian Wollrath
-
---Sig_/iZ9UbOqTqeWT9ImflE4Mr.G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJT1r/9AAoJEFl2dmpRMS8zXmkH/R4koUIvMSsvDXqjaBGYmEvb
-b5navFWcLtuBCxavXjmqbOay5K7m56paNAdbc4Iyxs6YG1chnk0MUXzjX6qI8KrK
-ih4qbWD4aAqIN7vqId3NUqTMru/Irt940v4/UIfrJQTIjZDgxqHzTobrsl6xGDgh
-DY9j3laqWgadzMQBj1dYv0ssDx9rIvD0ZzVjkkOjYKCQI8Tfzywwi0FfIc8sB6xt
-DR7PaBqUV+mrv5BRAvEQJFXIGalQGSnaXHyEIb/6Lc5jsidWgkPXUwX8apwJiepk
-VX9vBVnGjkrI3jJTQSipdXIhmQL3xT7soxiyVTiLLNIrfcZhCu8dDBH+6HewrHM=
-=zjYC
------END PGP SIGNATURE-----
-
---Sig_/iZ9UbOqTqeWT9ImflE4Mr.G--
+SGkgRGFuaWVsLA0KDQo+ID4gT0sgc28gd2UgY2FuJ3QgZG8gbXVjaCBhbnl0aGluZyBhdCBtd2lm
+aWV4IHByb2JlIHRpbWUgb24gU0RJTyBidXMNCj4gPiBiZWNhdXNlIGl0IHdvbid0IHByb2JlIHVu
+bGVzcyB0aGUgcGlucyBhcmUgY29uZmlndXJlZC4NCj4gPg0KPiA+IE1heWJlIHdlIHNob3VsZCBo
+YXZlIGEgc2VwYXJhdGUgbXdpZmlleC1wb3dlciBoZWxwZXIgbW9kdWxlIHRoYXQganVzdA0KPiA+
+IG1hbmFnZXMgdGhlIHJlc2V0L2lkbGUvcmVndWxhdG9yIHBpbnM/IFRoZW4gbXdpZmlleC1yZXNl
+dCBjYW4gYmUNCj4gPiBhbHdheXMgbG9hZGVkIGFuZCBjb25maWd1cmUgdGhpbmdzIHNvIG13aWZp
+ZXgtc2RpbyBjYW4gcHJvYmUgcHJvcGVybHkuDQo+ID4NCj4gPiBBbmQgbXdpZmlleC1yZXNldCBo
+ZWxwZXIgY2FuIGFsc28gcHJvdmlkZSB0aGUgdXNlciBzcGFjZSBpbnRlcmZhY2VzDQo+ID4gZm9y
+IHRoZSByZXNldC9pZGxlL3JlZ3VsYXRvciBwaW5zLg0KPiANCj4gWWVzLCBhIGhlbHBlciBtaWdo
+dCBiZSB0aGUgYmVzdCBzb2x1dGlvbi4gSXQgY291bGQgZXZlbiBiZSBhIGdlbmVyaWMgb25lLCB0
+aGF0DQo+IGp1c3QgdGFrZXMgYW55IG51bWJlciBvZiBjbG9ja3MsIHJlc2V0IEdQSU9zIGFuZCBy
+ZWd1bGF0b3JzIGFuZCB0YWtlcyBjYXJlDQo+IGZvciBzZXF1ZW5jaW5nIHRoZW0uIEhvd2V2ZXIs
+IHdlIG5lZWQgdG8gcmVmZXJlbmNlIHRoYXQgaGVscGVyIGZyb20gdGhlDQo+IG13aWZpZXggZHJp
+dmVyLCBmb3IgdHdvIHJlYXNvbnMuDQo+IA0KPiBhKSB3ZSBuZWVkIHRvIG1ha2Ugc3VyZSB0aGUg
+cmVzZXQgaGVscGVyIGdldHMgdG8gZG8gaXRzIGpvYiBiZWZvcmUgdGhlDQo+IG13aWZpZXggZHJp
+dmVyIHNjYW5zIHRoZSBTRElPIGJ1cywgYW5kDQo+IA0KPiBiKSB0aGUgcmVzZXQgaGVscGVyIG5l
+ZWRzIHRvIGJlIGNhbGxlZCB3aGVuIHRoZSBtbWMgaG9zdCBjb250cm9sbGVyIHdhbnRzDQo+IHRv
+IGRvIGEgY2FyZCByZXNldC4NCj4gDQo+IEhlbmNlLCB3ZSdsbCBuZWVkIHNvbWUgc29ydCBvZiBp
+bnRlcm5hbCBBUEkgZm9yIHRoaXMsIGFuZCBhIHBoYW5kbGUgaW4gZHRzLiBJDQo+IHdvbmRlciB3
+aGV0aGVyIHRoYXQgZ2x1ZSBsb2dpYyBtaWdodCBiZSBiZXR0ZXIgb2ZmIGxpdmluZyBpbiB0aGUg
+bW1jIGNvcmUsIGFzDQo+IG13aWZpZXggbWlnaHQgd2VsbCBiZSBpbnRlcmZhY2VkIHRvIG90aGVy
+IGhvc3RzPw0KDQpJIG1heSBoYXZlIG1pc3NlZCBzb21ldGhpbmcsIGJ1dCBkb2Vzbid0IHRoZSBN
+TUNfUE9XRVJfT0ZGIGFuZCBNTUNfUE9XRVJfT058VVAgaGFuZGxpbmcgaW4gY29udHJvbGxlciBk
+cml2ZXIgaGVscD8NCkFueXdheSB0aGUgY2xvY2tzL0dQSU9zL3JlZ3VsYXRvcnMgYXJlIHNvcnQg
+b2YgcGxhdGZvcm0gZGVwZW5kZW50LiBXb3VsZCBpdCBiZSBiZXR0ZXIgcHV0dGluZyBpdCBpbiAv
+YXJjaC9hcm0vbWFjaC14eHh4eC8/DQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gDQo+IFRoYW5r
+cywNCj4gRGFuaWVsDQoNCg==
