@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:58239 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932921AbaGWSyG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42380 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756481AbaGAUaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 14:54:06 -0400
-Date: Wed, 23 Jul 2014 19:53:32 +0100
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] firmware validation
-Message-ID: <20140723195332.0bf0401c@alan.etchedpixels.co.uk> (sfid-20140723_205428_280831_8FFAF14E)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 1 Jul 2014 16:30:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain from wireless-regdb
+Date: Tue,  1 Jul 2014 16:17:54 -0400
+Message-Id: <1404245874-350-1-git-send-email-linville@tuxdriver.com> (sfid-20140701_223023_012879_A749E7BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 14 Jul 2014 14:38:10 -0700
-Kees Cook <keescook@chromium.org> wrote:
+Since "wireless-regdb: remove antenna gain" was merged in the
+wireless-regdb tree, this script has been incompatible with the
+'official' regulatory database.  Let's fix it up.
 
-> This creates a new LSM hook to validate the contents (and origin) of
-> component firmware being provided to the kernel from userspace via the
-> request_firmware() interface.
-> 
-> Additionally creates a test module and test cases for all of the existing
-> interfaces as well as the new "fd" interface.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+I think the dfs_cac stuff is still broken, since it does not account
+for the starting offset of the flags.
 
-There is a specific reason that this is a good idea. On any system with
-basic capabilities only anyone owning DAC capabilities can replace the
-firmware file on disk. So for some devices DAC implies a route to RAWIO
-which is not good.
+ net/wireless/genregdb.awk | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Alan
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+index 40c37fc5b67c..c4f90ddb1a7d 100644
+--- a/net/wireless/genregdb.awk
++++ b/net/wireless/genregdb.awk
+@@ -56,21 +56,19 @@ function parse_reg_rule()
+ 	end = $3
+ 	bw = $5
+ 	sub(/\),/, "", bw)
+-	gain = $6
+-	sub(/\(/, "", gain)
+-	sub(/,/, "", gain)
+-	power = $7
++	power = $6
++	sub(/\(/, "", power)
+ 	sub(/\)/, "", power)
+ 	sub(/,/, "", power)
+ 	# power might be in mW...
+-	units = $8
++	units = $7
+ 	sub(/\)/, "", units)
+ 	sub(/,/, "", units)
+-	dfs_cac = $9
++	dfs_cac = $8
+ 	if (units == "mW") {
+ 		power = 10 * log(power)/log(10)
+ 	} else {
+-		dfs_cac = $8
++		dfs_cac = $7
+ 	}
+ 	sub(/,/, "", dfs_cac)
+ 	sub(/\(/, "", dfs_cac)
+@@ -107,7 +105,7 @@ function parse_reg_rule()
+ 
+ 	}
+ 	flags = flags "0"
+-	printf "\t\tREG_RULE_EXT(%d, %d, %d, %d, %.0f, %d, %s),\n", start, end, bw, gain, power, dfs_cac, flags
++	printf "\t\tREG_RULE_EXT(%d, %d, %d, 0, %.0f, %d, %s),\n", start, end, bw, power, dfs_cac, flags
+ 	rules++
+ }
+ 
+-- 
+1.9.3
+
