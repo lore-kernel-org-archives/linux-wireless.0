@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f74.google.com ([209.85.220.74]:60067 "EHLO
-	mail-pa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbaG2Ggm (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:12156 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbaGAKNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 02:36:42 -0400
-Received: by mail-pa0-f74.google.com with SMTP id lj1so2047269pab.5
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 23:36:42 -0700 (PDT)
-From: Denton Gentry <denton.gentry@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: Denton Gentry <denton.gentry@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: fix start_seq_num in Rx reorder offload
-Date: Mon, 28 Jul 2014 23:36:32 -0700
-Message-Id: <1406615792-1899-1-git-send-email-denton.gentry@gmail.com> (sfid-20140729_083646_259966_121DE7E1)
+	Tue, 1 Jul 2014 06:13:22 -0400
+Message-ID: <53B289BE.10507@broadcom.com> (sfid-20140701_121326_122961_4955C489)
+Date: Tue, 1 Jul 2014 12:13:18 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] b43: treat LCNXN-PHY as extra N-PHY devices
+References: <1404071205-12568-1-git-send-email-zajec5@gmail.com>	<53B141CB.7010000@broadcom.com> <CACna6rzisWW9YGQpOz9-PVD5bFg5ApzVfNSLbWmVJOYXgssqkQ@mail.gmail.com>
+In-Reply-To: <CACna6rzisWW9YGQpOz9-PVD5bFg5ApzVfNSLbWmVJOYXgssqkQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta->last_seq_ctrl is the seq_ctrl field from the last header
-seen, need to shift it 4 bits to extract the sequence number.
-Otherwise the ieee80211_sn_less() check at the top of
-ieee80211_sta_manage_reorder_buf drops frames until the sequence
-number catches up.
+On 30-06-14 13:04, Rafał Miłecki wrote:
+> On 30 June 2014 12:54, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 29-06-14 21:46, Rafał Miłecki wrote:
+>>> LCNXN is simply a continuation of N, e.g. code handling LCNXN revs 0 and
+>>> 1 is mostly the same as for N-PHY revs 7+.
+>>
+>> Hi Rafał,
+>>
+>> LCNXN is actually a LCN phy with 2 streams (mimo).
+> 
+> Err, I don't think so. Could you take a closer look at this? I'm
+> pretty sure LCNXN is continuation of N.
 
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Denton Gentry <denton.gentry@gmail.com>
----
- net/mac80211/iface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+You got me. I taken a closer look. It seems to stand for e'x'tended n.
+There was separate phy code for it, but in recent code it seems to be
+handled by n phy code. So you are right.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 7e5afaa..7434ffe 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1195,8 +1195,8 @@ static void ieee80211_iface_work(struct work_struct *work)
- 			if (sta) {
- 				u16 last_seq;
- 
--				last_seq = le16_to_cpu(
--					sta->last_seq_ctrl[rx_agg->tid]);
-+				last_seq = IEEE80211_SEQ_TO_SN(le16_to_cpu(
-+					sta->last_seq_ctrl[rx_agg->tid]));
- 
- 				__ieee80211_start_rx_ba_session(sta,
- 						0, 0,
--- 
-2.0.0.526.g5318336
+> Maybe you were thinking about LCN40? I don't know much about LCN40,
+> maybe it's a variation of LCN?
+
+Probably.
+
+Gr. AvS
 
