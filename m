@@ -1,99 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:41195 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbaGLOmY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 10:42:24 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so588441wib.4
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 07:42:23 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] ssb: extract antenna gains from SPROMs revs 4+ properly
-Date: Sat, 12 Jul 2014 16:42:10 +0200
-Message-Id: <1405176130-15908-2-git-send-email-zajec5@gmail.com> (sfid-20140712_164245_871885_9447EC7F)
-In-Reply-To: <1405176130-15908-1-git-send-email-zajec5@gmail.com>
-References: <1405176130-15908-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:57601 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755926AbaGAPKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 11:10:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1X1zh6-0002ua-9K
+	for linux-wireless@vger.kernel.org; Tue, 01 Jul 2014 17:10:04 +0200
+Received: from 67-3-189-166.omah.qwest.net ([67.3.189.166])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 17:10:04 +0200
+Received: from nmschulte by 67-3-189-166.omah.qwest.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 17:10:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Nathan Schulte <nmschulte@gmail.com>
+Subject: Re: [ath9k-devel] Bug: USB wifi card TL-WN722N (AR9271, =?utf-8?b?YXRoOWtfaHRjKQ==?= fails to get DHCP lease
+Date: Tue, 1 Jul 2014 04:41:25 +0000 (UTC)
+Message-ID: <loom.20140701T064007-256@post.gmane.org> (sfid-20140701_171010_457597_CE37CFAB)
+References: <CAMtVo_MxCfV7MWC+ksWc=PJM0KEHDUVuCMpg0NCWBW8EeLU5Jw@mail.gmail.com>	<53AF5FB8.3060505@lwfinger.net>	<CAMtVo_PAkxCkxO7ETV6r=Xg75LLRt0GHi8GdqhT4tXKZSpmOvQ@mail.gmail.com>	<53B047F7.2000204@lwfinger.net>	<CAMtVo_NLnfDsYrcf7_Pzt47WyMexkzuZuUREYhoKC2F8ZyfXzQ@mail.gmail.com> <20140630142007.GA29198@tuxdriver.com> <53B19D6B.2030601@rempel-privat.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are encoded the same way as in older SPROMs.
+Oleksij Rempel <linux@...> writes:
+> i would prefer to wait for correct git bisect results.
+>  <at> lolilolicon did you tried "git bisect start v3.14 v3.15" instead of
+> your restricted variant?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/pci.c | 48 ++++++++++++++++++++++++++++++++----------------
- 1 file changed, 32 insertions(+), 16 deletions(-)
+You may find it useful to read this part of the git manual regarding 
+bisection and merge commits:
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index ca973d1..0b3c966 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -526,14 +526,22 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
- 	}
- 
- 	/* Extract the antenna gain values. */
--	SPEX(antenna_gain.a0, SSB_SPROM4_AGAIN01,
--	     SSB_SPROM4_AGAIN0, SSB_SPROM4_AGAIN0_SHIFT);
--	SPEX(antenna_gain.a1, SSB_SPROM4_AGAIN01,
--	     SSB_SPROM4_AGAIN1, SSB_SPROM4_AGAIN1_SHIFT);
--	SPEX(antenna_gain.a2, SSB_SPROM4_AGAIN23,
--	     SSB_SPROM4_AGAIN2, SSB_SPROM4_AGAIN2_SHIFT);
--	SPEX(antenna_gain.a3, SSB_SPROM4_AGAIN23,
--	     SSB_SPROM4_AGAIN3, SSB_SPROM4_AGAIN3_SHIFT);
-+	out->antenna_gain.a0 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM4_AGAIN01,
-+						     SSB_SPROM4_AGAIN0,
-+						     SSB_SPROM4_AGAIN0_SHIFT);
-+	out->antenna_gain.a1 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM4_AGAIN01,
-+						     SSB_SPROM4_AGAIN1,
-+						     SSB_SPROM4_AGAIN1_SHIFT);
-+	out->antenna_gain.a2 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM4_AGAIN23,
-+						     SSB_SPROM4_AGAIN2,
-+						     SSB_SPROM4_AGAIN2_SHIFT);
-+	out->antenna_gain.a3 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM4_AGAIN23,
-+						     SSB_SPROM4_AGAIN3,
-+						     SSB_SPROM4_AGAIN3_SHIFT);
- 
- 	sprom_extract_r458(out, in);
- 
-@@ -623,14 +631,22 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 	SPEX32(ofdm5ghpo, SSB_SPROM8_OFDM5GHPO, 0xFFFFFFFF, 0);
- 
- 	/* Extract the antenna gain values. */
--	SPEX(antenna_gain.a0, SSB_SPROM8_AGAIN01,
--	     SSB_SPROM8_AGAIN0, SSB_SPROM8_AGAIN0_SHIFT);
--	SPEX(antenna_gain.a1, SSB_SPROM8_AGAIN01,
--	     SSB_SPROM8_AGAIN1, SSB_SPROM8_AGAIN1_SHIFT);
--	SPEX(antenna_gain.a2, SSB_SPROM8_AGAIN23,
--	     SSB_SPROM8_AGAIN2, SSB_SPROM8_AGAIN2_SHIFT);
--	SPEX(antenna_gain.a3, SSB_SPROM8_AGAIN23,
--	     SSB_SPROM8_AGAIN3, SSB_SPROM8_AGAIN3_SHIFT);
-+	out->antenna_gain.a0 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM8_AGAIN01,
-+						     SSB_SPROM8_AGAIN0,
-+						     SSB_SPROM8_AGAIN0_SHIFT);
-+	out->antenna_gain.a1 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM8_AGAIN01,
-+						     SSB_SPROM8_AGAIN1,
-+						     SSB_SPROM8_AGAIN1_SHIFT);
-+	out->antenna_gain.a2 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM8_AGAIN23,
-+						     SSB_SPROM8_AGAIN2,
-+						     SSB_SPROM8_AGAIN2_SHIFT);
-+	out->antenna_gain.a3 = sprom_extract_antgain(out->revision, in,
-+						     SSB_SPROM8_AGAIN23,
-+						     SSB_SPROM8_AGAIN3,
-+						     SSB_SPROM8_AGAIN3_SHIFT);
- 
- 	/* Extract cores power info info */
- 	for (i = 0; i < ARRAY_SIZE(pwr_info_offset); i++) {
--- 
-1.8.4.5
+https://www.kernel.org/pub/software/scm/git/docs/user-manual.html#bisect-
+merges
+
+I hope this is helpful and not just noise!
+
+--
+Nate
 
