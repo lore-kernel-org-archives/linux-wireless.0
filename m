@@ -1,213 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:37211 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbaGKAB4 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:65114 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755438AbaGAOD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:01:56 -0400
-Received: by mail-wi0-f170.google.com with SMTP id cc10so5254282wib.5
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:01:52 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/14] wlcore: save seq num only between recoveries
-Date: Fri, 11 Jul 2014 03:01:26 +0300
-Message-Id: <1405036899-27396-2-git-send-email-eliad@wizery.com> (sfid-20140711_020159_095184_7D763AA2)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+	Tue, 1 Jul 2014 10:03:58 -0400
+Received: by mail-pa0-f46.google.com with SMTP id eu11so10581972pac.5
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 07:03:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140630222132.GN1390@garbanzo.do-not-panic.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-4-git-send-email-arik@wizery.com> <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com>
+ <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com>
+ <20140623182623.GC1390@garbanzo.do-not-panic.com> <CA+XVXffrepXAKitqhL4C87Jxy4MiF+iAO_PP6YZkMKtqeckV+Q@mail.gmail.com>
+ <20140623204800.GF1390@garbanzo.do-not-panic.com> <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
+ <20140630222132.GN1390@garbanzo.do-not-panic.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 1 Jul 2014 17:03:42 +0300
+Message-ID: <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com> (sfid-20140701_160402_111693_63F981FF)
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We want seq num (freed_pkts) to be initialized
-on each new connection, but keep persistent
-between recoveries/suspends.
+On Tue, Jul 1, 2014 at 1:21 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+>
+> On Tue, Jun 24, 2014 at 08:55:28AM +0300, Arik Nemtsov wrote:
+> > On Mon, Jun 23, 2014 at 11:48 PM, Luis R. Rodriguez
+> > <mcgrof@do-not-panic.com> wrote:
+> > > On Mon, Jun 23, 2014 at 09:34:13PM +0300, Arik Nemtsov wrote:
+> > >> On Mon, Jun 23, 2014 at 9:26 PM, Luis R. Rodriguez
+> > >> <mcgrof@do-not-panic.com> wrote:
+> > >> > On Mon, Jun 23, 2014 at 08:14:43PM +0300, Arik Nemtsov wrote:
+> > >> >> On Thu, Jun 19, 2014 at 2:34 AM, Luis R. Rodriguez
+> > >> >> <mcgrof@do-not-panic.com> wrote:
+> > >> >> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> > >> >> >> Allow driver and user hints to set the "world" regulatory domain,
+> > >> >> >
+> > >> >> > NACK - as expressed in the other patch, letting the drivers to use the
+> > >> >> > new API to set the world regulatory domain doesn't make sense as we
+> > >> >> > have custom apply stuff, and the world regulatory domain is not
+> > >> >> > something dynamic.
+> > >> >>
+> > >> >> Well we want to set the world regdomain from FW. This obviously
+> > >> >> happens after wiphy registration, so I don't think the custom apply
+> > >> >> can be used here? (since we generally want cfg80211 to own the
+> > >> >> regdomain settings).
+> > >> >
+> > >> > Can the driver not obtain the world regulatory domain from firmware
+> > >> > prior to wiphy registration? Why not?
+> > >>
+> > >> Since the FW is not running yet :)
+> > >
+> > > Is that a limitation that can be corrected on the driver ? Can the wiphy
+> > > registration be moved to after wiphy firmware is loaded ? If this is too
+> > > hard I see this as a good reason to extend the API or add a new similar
+> > > call that would allow for this case. The reason for the restriction on wiphy
+> > > registration was due to the fact that we didn't want to mess with _orig
+> > > parameters after wiphy registration, and we didn't want drivers poking
+> > > with those. The _orig parameters then can be set by cfg80211 through two
+> > > ways, one is the driver say reads EEPROM stuff and sets the channel
+> > > structs with the restrictions it had prior to wiphy registration or if
+> > > drivers could deduce a regulatory domain structure they could use the
+> > > wiphy_apply_custom_regulatory() which would do the same for them.
+> > >
+> > > Note that what this does is let drivers fill a set of channel data
+> > > structures and then with these mechanisms set the max allowed superset.
+> > > Anything after this is a subset of the original set of allowed
+> > > parameters. Please review handle_channel().
+> > >
+> > > The difficulty in allowing changing the _orig stuff after wiphy
+> > > registration is we'd then have to ensure that the current state
+> > > of the regulatory machine is replicated on the device driver. Just
+> > > consider doing this properly and I think we'll be good.
+> >
+> > We can't access the FW before wiphy registration. In some scenarios
+> > the module is loaded during system boot, before we can really access
+> > the HW bus. We only start the FW on the first ifup.
+> > To allow ifup, we need the wiphy registered. We have no "hook" where
+> > we can register the wiphy after the wifi HW bus if fully available.
+>
+> What hw bus? Buses can probe, even if its a fake bus type of thing
+> you can use platform_device_register_simple(), look at
+> drivers/net/ethernet/8390/ne.c as a complex example.
+>
+> Also if a bus is not yet set up or if resouces are still being
+> brought up and the driver needs to be poked at a later time you can
+> verify what you need access for and return -EPROBE_DEFER upon probe
+> if things can't move forward which will force the driver to be
+> probed at a later time.
+>
+> > Nor do we want to find this hook, because of multiple platforms etc.
+>
+> I'm pretty sure you can find it, but I do also understand that
+> restructuring the driver is a bit of work so I'm fine with you saying
+> its a lot of work but saying its no possible seems not fully
+> supported yet.
 
-Save the freed_pkts in the private block of the
-sta struct (we already do a similar thing for
-AP's stations).
+That would be a better choice of words - we don't want to restructure
+the entire driver over this.
 
-However, keep the old wlvif->total_freed_pkts
-in order to avoid too intrusive change.
+>
+> > But I'm not sure why you're mentioning the workings of
+> > handle_channel() for this patch. It doesn't allow changing the
+> > original flags set at registration. It just allows drivers and the
+> > user to assign the world regdomain, and also to change the native "00"
+> > definitions with the FW regdomain. It shouldn't harm anything AFAICT.
+>
+> You're missing the point for why I bring up handle_channel().
+> handle_channel() *can* update orig_* parameters for you for an alpha2
+> which you *shoud* consider. Additionally handle_channel() takes into
+> consideration the regulatory state machine and can apply a regulatory
+> domain to different wiphys by design to help with compliance. The
+> handle_channel_custom() is designed for custom regulatory domains
+> and do not propagate to other wiphys.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c      |  5 +-
- drivers/net/wireless/ti/wlcore/main.c     | 77 +++++++++++++++++++++++--------
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 17 ++++---
- 3 files changed, 68 insertions(+), 31 deletions(-)
+AFAICT, orig_flags only change if:
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index e269c0a..d298ead 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -372,9 +372,8 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	wl1271_tx_reset_link_queues(wl, *hlid);
- 	wl->links[*hlid].wlvif = NULL;
- 
--	if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
--	    (wlvif->bss_type == BSS_TYPE_AP_BSS &&
--	     *hlid == wlvif->ap.bcast_hlid)) {
-+	if (wlvif->bss_type == BSS_TYPE_AP_BSS &&
-+	    *hlid == wlvif->ap.bcast_hlid) {
- 		/*
- 		 * save the total freed packets in the wlvif, in case this is
- 		 * recovery or suspend
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 48f8386..2996cef 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -898,6 +898,41 @@ out:
- 	wlcore_set_partition(wl, &old_part);
- }
- 
-+static void wlcore_save_freed_pkts(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+				   u8 hlid, struct ieee80211_sta *sta)
-+{
-+	struct wl1271_station *wl_sta;
-+
-+	wl_sta = (void *)sta->drv_priv;
-+	wl_sta->total_freed_pkts = wl->links[hlid].total_freed_pkts;
-+
-+	/*
-+	 * increment the initial seq number on recovery to account for
-+	 * transmitted packets that we haven't yet got in the FW status
-+	 */
-+	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
-+		wl_sta->total_freed_pkts +=
-+				WL1271_TX_SQN_POST_RECOVERY_PADDING;
-+}
-+
-+static void wlcore_save_freed_pkts_addr(struct wl1271 *wl,
-+					struct wl12xx_vif *wlvif,
-+					u8 hlid, const u8 *addr)
-+{
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
-+
-+	if (WARN_ON(hlid == WL12XX_INVALID_LINK_ID ||
-+		    is_zero_ether_addr(addr)))
-+		return;
-+
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, addr);
-+	if (sta)
-+		wlcore_save_freed_pkts(wl, wlvif, hlid, sta);
-+	rcu_read_unlock();
-+}
-+
- static void wlcore_print_recovery(struct wl1271 *wl)
- {
- 	u32 pc = 0;
-@@ -961,6 +996,13 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		wlvif = list_first_entry(&wl->wlvif_list,
- 				       struct wl12xx_vif, list);
- 		vif = wl12xx_wlvif_to_vif(wlvif);
-+
-+		if (wlvif->bss_type == BSS_TYPE_STA_BSS &&
-+		    test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags)) {
-+			wlcore_save_freed_pkts_addr(wl, wlvif, wlvif->sta.hlid,
-+						    vif->bss_conf.bssid);
-+		}
-+
- 		__wl1271_op_remove_interface(wl, vif, false);
- 	}
- 
-@@ -4703,10 +4745,6 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
- 
- void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- {
--	struct wl1271_station *wl_sta;
--	struct ieee80211_sta *sta;
--	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
--
- 	if (!test_bit(hlid, wlvif->ap.sta_hlid_map))
- 		return;
- 
-@@ -4718,21 +4756,7 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- 	 * save the last used PN in the private part of iee80211_sta,
- 	 * in case of recovery/suspend
- 	 */
--	rcu_read_lock();
--	sta = ieee80211_find_sta(vif, wl->links[hlid].addr);
--	if (sta) {
--		wl_sta = (void *)sta->drv_priv;
--		wl_sta->total_freed_pkts = wl->links[hlid].total_freed_pkts;
--
--		/*
--		 * increment the initial seq number on recovery to account for
--		 * transmitted packets that we haven't yet got in the FW status
--		 */
--		if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
--			wl_sta->total_freed_pkts +=
--					WL1271_TX_SQN_POST_RECOVERY_PADDING;
--	}
--	rcu_read_unlock();
-+	wlcore_save_freed_pkts_addr(wl, wlvif, hlid, wl->links[hlid].addr);
- 
- 	wl12xx_free_link(wl, wlvif, &hlid);
- 	wl->active_sta_count--;
-@@ -4915,6 +4939,21 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 		clear_bit(WLVIF_FLAG_STA_STATE_SENT, &wlvif->flags);
- 	}
- 
-+	/* save seq number on disassoc (suspend) */
-+	if (is_sta &&
-+	    old_state == IEEE80211_STA_ASSOC &&
-+	    new_state == IEEE80211_STA_AUTH) {
-+		wlcore_save_freed_pkts(wl, wlvif, wlvif->sta.hlid, sta);
-+		wlvif->total_freed_pkts = 0;
-+	}
-+
-+	/* restore seq number on assoc (resume) */
-+	if (is_sta &&
-+	    old_state == IEEE80211_STA_AUTH &&
-+	    new_state == IEEE80211_STA_ASSOC) {
-+		wlvif->total_freed_pkts = wl_sta->total_freed_pkts;
-+	}
-+
- 	/* clear ROCs on failure or authorization */
- 	if (is_sta &&
- 	    (new_state == IEEE80211_STA_AUTHORIZED ||
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index c2c34a8..986da43 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -324,6 +324,7 @@ struct wl1271_station {
- 	 * total freed FW packets on the link to the STA - used for tracking the
- 	 * AES/TKIP PN across recoveries. Re-initialized each time from the
- 	 * wl1271_station structure.
-+	 * Used in both AP and STA mode.
- 	 */
- 	u64 total_freed_pkts;
- };
-@@ -460,21 +461,19 @@ struct wl12xx_vif {
- 	struct delayed_work pending_auth_complete_work;
- 
- 	/*
-+	 * total freed FW packets on the link.
-+	 * For STA this holds the PN of the link to the AP.
-+	 * For AP this holds the PN of the broadcast link.
-+	 */
-+	u64 total_freed_pkts;
-+
-+	/*
- 	 * This struct must be last!
- 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
- 	 * should be declared in this struct.
- 	 */
- 	struct {
- 		u8 persistent[0];
--
--		/*
--		 * total freed FW packets on the link - used for
--		 * storing the AES/TKIP PN during recovery, as this
--		 * structure is not zeroed out.
--		 * For STA this holds the PN of the link to the AP.
--		 * For AP this holds the PN of the broadcast link.
--		 */
--		u64 total_freed_pkts;
- 	};
- };
- 
--- 
-1.8.5.1.109.g3d252a9
+if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
+   request_wiphy && request_wiphy == wiphy &&
+   request_wiphy->regulatory_flags & REGULATORY_STRICT_REG) {
 
+We don't use REGULATORY_STRICT_REG, nor is the use-case "faking" our
+alpha2. The real alpha2 is used to narrow down the channel defs via
+the flags parameter. This patch just allows the FW to provide the
+definitions for the "00" regdomain via the get_regd() function.
+
+
+>
+> > >> > One thing to be careful on all this new API design is to ensure that
+> > >> > upon disconnect we want the driver to go back to the original state,
+> > >> > whatever that is.
+> > >>
+> > >> This particular part is unrelated to connection state AFAICT. It just
+> > >> allows someone (driver, user) to set the "00" regdomain.
+> > >
+> > > There are two things here, one is the custom world regulatory domain
+> > > that firmware is setting, the other is the new API to allow an alpha2
+> > > regulatory domain. The resetting of regulatory domains needs to ensure
+> > > that if the first regulatory domain was a world regulatory domain, and
+> > > then a driver alpha2 is set these regulatory domains will be applied in
+> > > the same order when it disconnects. If the APIs are used properly this
+> > > is guaranteed already for us and its one reason for seeing if we can
+> > > just use existing APIs. See restore_custom_reg_settings() as an example.
+> >
+> > I believe there's no issue introduced by this code.
+>
+> You are extending usage of custom regulatory data to be hooked onto the
+> orig_* parameters, which by design was made to help upkeep the minimum
+> allowed set, the custom regulatory domain allows for *world roaming*
+> which can mean reducing this set, but note it will never *enable* new
+> channels. The alpha2 hint *can* enable new channels by design by
+> updating orig_* parameters. These are two different type of regulatory
+> domain hints.
+
+See comment above.
+
+Arik
