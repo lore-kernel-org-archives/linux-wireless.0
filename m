@@ -1,189 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:44065 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756879AbaGNUW3 (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:64121 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaGANHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 16:22:29 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so3214610wiv.11
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 13:22:27 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC][PATCH 2/2] b43: N-PHY: support setting TX power
-Date: Mon, 14 Jul 2014 22:20:37 +0200
-Message-Id: <1405369237-3012-2-git-send-email-zajec5@gmail.com> (sfid-20140714_222235_864309_F57FEDB5)
-In-Reply-To: <1405369237-3012-1-git-send-email-zajec5@gmail.com>
-References: <1405369237-3012-1-git-send-email-zajec5@gmail.com>
+	Tue, 1 Jul 2014 09:07:19 -0400
+Received: by mail-pa0-f47.google.com with SMTP id kq14so10532668pab.6
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 06:07:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140630220316.GL1390@garbanzo.do-not-panic.com>
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-2-git-send-email-arik@wizery.com> <CAB=NE6Wburfgomm81BL-MPsqZSSCSMNyim29OWw3Twj8q2AOUQ@mail.gmail.com>
+ <CA+XVXff1SLHvP3PABdV1U2xw8CQW660xJR1QMUkW0QaaEpThYQ@mail.gmail.com> <20140630220316.GL1390@garbanzo.do-not-panic.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 1 Jul 2014 16:07:03 +0300
+Message-ID: <CA+XVXfcteEgTJ-QQ9q4KuqbPoygKCpccjwR2EdqX-aSHScRo4g@mail.gmail.com> (sfid-20140701_150724_093487_BDAB26B9)
+Subject: Re: [PATCH 2/5] cfg80211: allow drivers to provide regulatory settings
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-So far it was tested on BCM43228 only. I can say that changing TX power
-definitely affects performance, but I have to check for regressions.
----
- drivers/net/wireless/b43/b43.h   |  1 +
- drivers/net/wireless/b43/phy_n.c | 81 ++++++++++++++++++++++++++++++++++------
- drivers/net/wireless/b43/phy_n.h |  3 ++
- 3 files changed, 73 insertions(+), 12 deletions(-)
+On Tue, Jul 1, 2014 at 1:03 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+>> > The way this is implemented is a bit more exclusive than this kdoc
+>> > explains -- the way its implemented below allows only a single wiphy
+>> > *ever* to be registered with this capability. This means that external
+>> > attachments such as USB 802.11 devices that have this API requirement
+>> > cannot ensure that they will get this callback issued. What do we want
+>> > to do about that?
+>>
+>> Well Intel regulatory constraints require us to be the "dictator".
+>
+> That requirement is in no way in conflict with addressing support
+> for the get_regd() callback on multiple drivers. Let's separate
+> a requirement from not having done the required work for a full
+> patch.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 6cfd86d..9b8feb9 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -457,6 +457,7 @@ enum {
- #define B43_MACCTL_RADIOLOCK		0x00080000	/* Radio lock */
- #define B43_MACCTL_BEACPROMISC		0x00100000	/* Beacon Promiscuous */
- #define B43_MACCTL_KEEP_BADPLCP		0x00200000	/* Keep frames with bad PLCP */
-+#define B43_MACCTL_PHY_LOCK		0x00200000
- #define B43_MACCTL_KEEP_CTL		0x00400000	/* Keep control frames */
- #define B43_MACCTL_KEEP_BAD		0x00800000	/* Keep bad frames (FCS) */
- #define B43_MACCTL_PROMISC		0x01000000	/* Promiscuous mode */
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 479cda8..b60ac1f 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -34,6 +34,7 @@
- #include "radio_2056.h"
- #include "radio_2057.h"
- #include "main.h"
-+#include "ppr.h"
- 
- struct nphy_txgains {
- 	u16 tx_lpf[2];
-@@ -3396,16 +3397,6 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
-  * Tx and Rx
-  **************************************************/
- 
--static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
--{//TODO
--}
--
--static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
--							bool ignore_tssi)
--{//TODO
--	return B43_TXPWR_RES_DONE;
--}
--
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxPwrCtrlEnable */
- static void b43_nphy_tx_power_ctrl(struct b43_wldev *dev, bool enable)
- {
-@@ -3936,7 +3927,11 @@ static void b43_nphy_tx_power_ctl_setup(struct b43_wldev *dev)
- 			b1[0] = b1[1] = -1393;
- 		}
- 	}
--	/* target[0] = target[1] = nphy->tx_power_max; */
-+
-+	if (nphy->tx_pwr_max_ppr) {
-+		target[0] = b43_ppr_get_max(dev, nphy->tx_pwr_max_ppr);
-+		target[1] = target[0];
-+	}
- 
- 	if (dev->phy.rev >= 3) {
- 		if (sprom->fem.ghz2.tssipos)
-@@ -5642,6 +5637,67 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
- 	b43_mac_enable(dev);
- }
- 
-+static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
-+							bool ignore_tssi)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+	struct b43_phy_n *nphy = dev->phy.n;
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-+	struct ieee80211_channel *channel = dev->wl->hw->conf.chandef.chan;
-+	u8 max; /* qdBm */
-+	int hw_gain; /* qdBm */
-+	bool tx_pwr_state;
-+
-+	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
-+	    nphy->tx_pwr_last_recalc_limit == phy->desired_txpower)
-+		return B43_TXPWR_RES_DONE;
-+
-+	if (!nphy->tx_pwr_max_ppr) {
-+		nphy->tx_pwr_max_ppr = b43_ppr_alloc(dev);
-+		if (WARN_ON(!nphy->tx_pwr_max_ppr))
-+			return B43_TXPWR_RES_DONE;
-+	} else {
-+		b43_ppr_clear(dev, nphy->tx_pwr_max_ppr);
-+	}
-+
-+	/* HW limitations */
-+	b43_ppr_load_max_from_sprom(dev, nphy->tx_pwr_max_ppr, B43_BAND_2G);
-+
-+	/* Regulatory & user settings */
-+	max = INT_TO_Q52(phy->chandef->chan->max_power);
-+	max = min_t(u8, max, INT_TO_Q52(phy->desired_txpower));
-+	b43_ppr_apply_max(dev, nphy->tx_pwr_max_ppr, max);
-+
-+	/* Some extra gains */
-+	hw_gain = 6; /* N-PHY specific */
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-+		hw_gain += sprom->antenna_gain.a0;
-+	else
-+		hw_gain += sprom->antenna_gain.a1;
-+	b43_ppr_add(dev, nphy->tx_pwr_max_ppr, -hw_gain);
-+
-+	/* Make sure we didn't go too low */
-+	b43_ppr_apply_min(dev, nphy->tx_pwr_max_ppr, INT_TO_Q52(8));
-+
-+	/* Apply */
-+	tx_pwr_state = nphy->txpwrctrl;
-+	b43_mac_suspend(dev);
-+	b43_nphy_tx_power_ctl_setup(dev);
-+	if (dev->dev->core_rev == 11 || dev->dev->core_rev == 12) {
-+		b43_maskset32(dev, B43_MMIO_MACCTL, ~0, B43_MACCTL_PHY_LOCK);
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+		udelay(1);
-+	}
-+	b43_nphy_tx_power_ctrl(dev, nphy->txpwrctrl);
-+	if (dev->dev->core_rev == 11 || dev->dev->core_rev == 12)
-+		b43_maskset32(dev, B43_MMIO_MACCTL, ~B43_MACCTL_PHY_LOCK, 0);
-+	b43_mac_enable(dev);
-+
-+	nphy->tx_pwr_last_recalc_freq = channel->center_freq;
-+	nphy->tx_pwr_last_recalc_limit = phy->desired_txpower;
-+	return B43_TXPWR_RES_DONE;
-+}
-+
- /**************************************************
-  * N-PHY init
-  **************************************************/
-@@ -6158,6 +6214,7 @@ static int b43_nphy_op_allocate(struct b43_wldev *dev)
- 	nphy = kzalloc(sizeof(*nphy), GFP_KERNEL);
- 	if (!nphy)
- 		return -ENOMEM;
-+
- 	dev->phy.n = nphy;
- 
- 	return 0;
-@@ -6221,6 +6278,7 @@ static void b43_nphy_op_free(struct b43_wldev *dev)
- 	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_n *nphy = phy->n;
- 
-+	kfree(nphy->tx_pwr_max_ppr);
- 	kfree(nphy);
- 	phy->n = NULL;
- }
-@@ -6413,5 +6471,4 @@ const struct b43_phy_operations b43_phyops_n = {
- 	.switch_channel		= b43_nphy_op_switch_channel,
- 	.get_default_chan	= b43_nphy_op_get_default_chan,
- 	.recalc_txpower		= b43_nphy_op_recalc_txpower,
--	.adjust_txpower		= b43_nphy_op_adjust_txpower,
- };
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index 7fd5d5f..2f934da 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -963,6 +963,9 @@ struct b43_phy_n {
- 	struct b43_phy_n_txpwrindex txpwrindex[2];
- 	struct b43_phy_n_pwr_ctl_info pwr_ctl_info[2];
- 	struct b43_chanspec txiqlocal_chanspec;
-+	struct b43_ppr *tx_pwr_max_ppr;
-+	u16 tx_pwr_last_recalc_freq;
-+	int tx_pwr_last_recalc_limit;
- 
- 	u8 txrx_chain;
- 	u16 tx_rx_cal_phy_saveregs[11];
--- 
-1.8.4.5
+Fair enough.
 
+>
+>> This feature is also primarily designed for systems which are not
+>> extensible, so you can't really add another device.
+>> I guess we'll have to solve this when the need arises.
+>
+> The patch in question does not address denying wiphy registration
+> if two drivers have get_regd() implemented, that's essentially what
+> this *should* be trying to do but:
+>
+> 1) Its not documented above
+> 2) The limitation of the patch in no way is part of matching the
+>    requirement you mention. That is, the requirement to have Intel's
+>    driver as "dictator" has nothing to do with allowing or not
+>    multiple similar drivers that can help with compliance by providing
+>    their own regulatory dynamically.
+> 3) You are putting the requirement of implmenting support for
+>    multiple drivers with get_regd() on the next user of get_regd()
+>    which wants to integrate support for an intel card with theirs,
+>    that's unfair and far sighted for an implementation.
+>
+> The requirement you have has nothing to do with the limitation
+> you have so this patch is unacceptable. I also provided recommendations
+> on how you can lift this limitation, so it shouldn't be hard.
+
+I already prevent the registration of a second "get_regd" callback. I
+just re-read your previous email and I'm not sure what's the
+recommendation here. The 2-card scenario where one of the cards
+doesn't use "get_regd" should be fine - it will just use the
+regulatory settings from the "get_regd" one. Only the
+2-cards-using-"get_regd" scenario is not supported, and AFAICT it
+doesn't exist in practice, and also requires complicated treatment
+(perhaps the two "dictators" differ in their definition of the
+regdomains?)
+
+
+>
+>> > Lets be upfront -- how many regulatory domains will you guys return
+>> > right now in which the same alpha2 will be kept? I don't like this for
+>> > one bit at all, if you are going to return a 99 for a specific alpha2
+>> > it must mean firmware / driver has the ability to search for an alpha2
+>> > for a set of custom regulatory domains, which should also mean you
+>> > should be able to return a set of alpha2s that can be used for the
+>> > custom regulatory domain, so I'd like to see that added as a possible
+>> > return set. This should set expectations for users, build a better
+>> > understanding of how all this works, and most importantly enable easy
+>> > and shorter scraping of the firmware for our own research and
+>> > development and advancement of wireless-regdb as otherwise we'd have
+>> > to loop over every alpha2 and then deduce grouping. This is the only
+>> > way I see this being reasonable to accept upstream.
+>>
+>> I think you're misunderstanding things here. We only give back real
+>> regulatory domains. The "99" is only used as a means the get the
+>> currently NVRAM flashed regdomain from FW.
+>
+> If its real regulatory domains then why is the alpha2 not set?
+
+We call get_regd with "99", expecting the driver/FW to reply with the
+current alpha2 as burned in ROM/FW.
+
+>
+>> We discussed this on the other patch.. Perhaps I should tweak the
+>> explanation a bit here.
+>
+> Yes please.
+
+Sure. It will explain what I just wrote above.
+
+>
+>> > We also should be clear now in the documentation about the differences
+>> > and purpose behind this API and the custom regulatory which tons of
+>> > folks already use. In this case the requirement was dynamic changes
+>> > and to ensure these changes get back to userspace permissively as
+>> > otherwise they could not. The way I see it the custom stuff should be
+>> > used for custom world regulatory domains -- this new API is for
+>> > specific alpha2s. This should also mean then that this API should
+>> > *not* be used to query the firmware for the world regulatory domain.
+>>
+>> Why not? What's problematic here?
+>> I would much prefer to keep a single API for everything.
+>
+> Because APIs already exist for some of what you want already. In
+> particular it seems to me you can implement the alpha2 hint with
+> the callback by using a capability flag and having the core deal
+> the callback and then applying the regulatory domain.
+> Please check but I think you might want alpha2 cases to have handle_channel()
+> apply the rules on the orig_* parameters which which happens when
+> REGULATORY_STRICT_REG is set, ie, you may want to require having
+> set the callback to have REGULATORY_STRICT_REG set. This allows
+> drivers to enforce the orig_ values reflecting the regulatory
+> domain data structure. regulatory_hint() also propagates to other drivers
+> as well and the code also considers the regulatory state for older
+> types of requests to decide what it should do for each driver and
+> each case given that we have very different drivers with different
+> regulatory requirements.
+>
+> The wiphy_apply_custom_regulatory() is only for custom regulatory
+> domains, the difference is that wiphy_apply_custom_regulatory() doesn't
+> take into consideration the regulatory state machine and changes that
+> have happened over time, it is also specific to only one wiphy. Lastly
+> it doesn't update orig_* parameters.
+>
+> For the non alpha2 cases it seems you want a post registration
+> wiphy_apply_custom_regulatory() type of call which would only apply
+> to that wiphy, never update orig_* parameters, and consider then also
+> the regulatory state machine. If you don't care about the regulatory
+> state machine that makes you special and you must deal with both.
+>
+> We can't blend the two types of calls because they are very different
+> in terms of purpose and also the implications on other drivers.
+> Adding a new API to let custom world regulatory domains or specific
+> alpha2s would make the other two APIs kind of pointless, we want to
+> be specific.
+
+I don't want to touch orig_flags, since the FW burned regdomain can be
+overridden. I do want to register the wiphy very early, before the FW
+is loaded. Also I want to get the default alpha2 and associated
+regdomain from the FW at runtime. Don't think any combination of the
+current APIs allows that.
+I can prepare a separate API call just for the purpose of getting the
+initial alpha2+regdomain setting, but I have to say it seems pretty
+pointless. The current flow where we send "99" and get the real alpha2
+works well.
+
+
+>> >> +                                                                                           Returning
+>> >> + *     NULL will cause the regdomain to remain the same.
+>> >
+>> >
+>> > What do you mean by this? Can you please elaborate exactly what this means?
+>>
+>> It means we will ignore the request. Not sure what's to elaborate.
+>
+> Why would you do that? Explain why a regulatory hint would be issued
+> and then the driver could decide to ignore it. Seems kind of pointless
+> if the driver was the one originally issuing the request!
+
+The driver isn't the only one that can issue requests. Userspace can
+issue them too (and in fact does). Basically the driver/FW can say
+"leave the same regdomain, don't touch it".
+It's a policy decision.
+
+>
+>> >>  static struct regulatory_request core_request_world = {
+>> >> @@ -129,6 +132,15 @@ static int reg_num_devs_support_basehint;
+>> >>   */
+>> >>  static bool reg_is_indoor;
+>> >>
+>> >> +/*
+>> >> + * Wiphy with a get_regd() callback that can provide regulatory information
+>> >> + * when the country code changes. Only the first wiphy registered with the
+>> >> + * get_regd callback will be called to provide a regdomain on country-code
+>> >> + * changes.
+>> >> + * (protected by RTNL)
+>> >> + */
+>> >> +static struct wiphy *regd_info_wiphy;
+>> >
+>> > Note all my feedback on the kdoc comment about this. This obviously
+>> > doesn't scale well but more importantly given that devices bus
+>> > configuration can change (regardless of what systemd folks think) it
+>> > means that we can get different results on a system with 2 internal
+>> > cards. Systems with multiple built in 802.11 cards were something of a
+>> > theoretical myth back in the day when we started with 802.11 but not
+>> > anymore. For example I'm very aware of some Freebox 802.11 APs with
+>> > multiple built in 802.11 cards and from different vendors!  No only
+>> > can this lead to issues with cards on different buses and races
+>> > therein, but it could also produce different results on different
+>> > architectures.
+>>
+>> Agree it's a hairy issue, but I think we should get to this in a later
+>> patch. It's not a simple issue or "fix".
+>> Might need different policies, intersections, etc.
+>
+> Exactly, no address this, otheriwse having an intel driver present would
+> mean not being able to register other similar type of drivers loaded
+> on a system. This is unacceptable.
+
+I agree it will prevent other "get_regd" cards from registering on the
+same system, but I don't think the limitation really exists in
+practice.
+These are not Intel cards one can buy off the shelf. They are soldered
+to platforms that are non-extensible. It also means I have no ability
+to test this code.
+
+>
+>> >>  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+>> >>  {
+>> >>         return rtnl_dereference(cfg80211_regdomain);
+>> >> @@ -538,9 +550,39 @@ static int call_crda(const char *alpha2)
+>> >>         return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
+>> >>  }
+>> >>
+>> >> +static int call_wiphy_regd_info(const char *alpha2)
+>> >> +{
+>> >> +       struct ieee80211_regdomain *regd;
+>> >> +
+>> >> +       if (!regd_info_wiphy)
+>> >> +               return -ENOENT;
+>> >> +
+>> >> +       /* can happen if the driver removes the callback at runtime */
+>> >> +       if (WARN_ON(!regd_info_wiphy->get_regd))
+>> >> +               return -EINVAL;
+>> >
+>> > I'd rather see a capability flag for this, that way we can also tell
+>> > userspace of this ridiculous incarnation of crap on firmware, and when
+>> > set we'd expect this to be set. If we want to address the dynamic
+>> > removal / addition of the callback that can be dealt with when the
+>> > time comes, but that doesn't seem to be required givenou'refe that you
+>> > added API to let the firmware let cfg80211 pass through and use the
+>> > wireless-regdb data.
+>>
+>> Sure I'll add a capability flag.
+>
+> OK.
+>
+>> >> +
+>> >> +       regd = regd_info_wiphy->get_regd(regd_info_wiphy, alpha2);
+>> >> +       if (IS_ERR(regd))
+>> >> +               return -EIO;
+>> >> +
+>> >
+>> > You're not feeding the firmware information on availability of the
+>> > userspace regulatory domain, in the case of it was allowed, it seems
+>> > to me that firmware might make a better decision in the case that
+>> > userspace lacks information. Userspace can also be upgraded at runtime
+>> > dynamically so whether or not userspace has a regulatory domain can
+>> > change at run time. Please consider this.
+>>
+>> The Intel use case doesn't use userspace regulatory information at
+>> all. This can be extended later I guess.
+>
+> The "Intel use case" is different than "I'm adding a general API" case.
+> You can easily extend the API to pass the regulatory domain for
+> inspection even if you don't use it on the driver.
+
+Perhaps this shouldn't be part of this feature? It's of no use to the
+driver or to the user of the system. If someone wants to use userspace
+information, they should extend the APIs IMHO.
+
+Arik
