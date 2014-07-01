@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:54166 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbaGXWet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 18:34:49 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so65405wib.2
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 15:34:48 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/5] staging: vt6656: dpc.h remove dead function prototypes
-Date: Thu, 24 Jul 2014 23:34:14 +0100
-Message-Id: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com> (sfid-20140725_003453_874025_38A5B914)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20645 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751269AbaGAGSI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 02:18:08 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Markus Pargmann <mpa@pengutronix.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Date: Mon, 30 Jun 2014 23:18:07 -0700
+Subject: RE: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
+Message-ID: <477F20668A386D41ADCC57781B1F70430FE5F37532@SC-VEXCH1.marvell.com> (sfid-20140701_081820_335296_718F309A)
+References: <1403963353-27317-1-git-send-email-mpa@pengutronix.de>
+In-Reply-To: <1403963353-27317-1-git-send-email-mpa@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing
-RXvWorkItem
-RXvFreeRCB
+Hi Markus,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/dpc.h | 4 ----
- 1 file changed, 4 deletions(-)
+> Subject: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
 
-diff --git a/drivers/staging/vt6656/dpc.h b/drivers/staging/vt6656/dpc.h
-index 1df2ae8..d538aa3 100644
---- a/drivers/staging/vt6656/dpc.h
-+++ b/drivers/staging/vt6656/dpc.h
-@@ -32,10 +32,6 @@
- #include "device.h"
- #include "wcmd.h"
- 
--void RXvWorkItem(struct work_struct *work);
--
--void RXvFreeRCB(struct vnt_rcb *pRCB, int bReAllocSkb);
--
- int vnt_rx_data(struct vnt_private *, struct vnt_rcb *,
- 	unsigned long bytes_recieved);
- 
--- 
-2.0.1
+This patch has been merged to wireless-next already:
+http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/commit/?id=7d8831bb1bfbf8db896bfc1de9d0b3bc7a8e60f0
+
+> 
+> A custom regulatory domain was introduced in this commit:
+> cc0ba0d522c4 (mwifiex: support custom world regulatory domain)
+> 
+> The commit description says that it was introduced because the world
+> regulatory domain does not include channels 52-64 and 100-140. These
+> channels are described in the world regulatory domain now, so we can drop
+> this custom regulatory domain.
+> 
+> Signed-off-by: Markus Pargmann <mpa@pengutronix.de>
+> Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Regards,
+Bing
 
