@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:48582 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761146AbaGYTwg (ORCPT
+Received: from home.trained-monkey.org ([178.250.213.29]:37023 "EHLO
+	ultrasam.lan.trained-monkey.org" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752883AbaGAHWk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 15:52:36 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so1550283wiw.12
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:35 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/12] staging: vt6656: rename device_free_rx_bufs to vnt_free_rx_bufs
-Date: Fri, 25 Jul 2014 20:51:48 +0100
-Message-Id: <1406317916-21884-4-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215240_912742_67102ACA)
-In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
-References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 1 Jul 2014 03:22:40 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] staging: rtl8723au: Another case of unnecessary null test before kfree
+References: <1404028145-4526-1-git-send-email-fabf@skynet.be>
+Date: Tue, 01 Jul 2014 09:01:45 +0200
+In-Reply-To: <1404028145-4526-1-git-send-email-fabf@skynet.be> (Fabian
+	Frederick's message of "Sun, 29 Jun 2014 09:49:05 +0200")
+Message-ID: <wrfjvbrhsgti.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140701_092257_564810_2551EE0F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-changing vnt to device
+Fabian Frederick <fabf@skynet.be> writes:
+> Fix checkpatch warning:
+> WARNING: kfree(NULL) is safe this check is probably not required
+>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_ap.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
+> index c8700b3..8714ae3 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_ap.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_ap.c
+> @@ -1270,8 +1270,7 @@ static void update_bcn_wps_ie(struct rtw_adapter *padapter)
+>  		pnetwork->IELength = wps_offset + (wps_ielen+2) + remainder_ielen;
+>  	}
+>  
+> -	if (pbackup_remainder_ie)
+> -		kfree(pbackup_remainder_ie);
+> +	kfree(pbackup_remainder_ie);
+>  }
+>  
+>  static void update_bcn_p2p_ie(struct rtw_adapter *padapter)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+This one is no longer an issue due to other changes in my tree.
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 88484c8..76678c8 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -397,7 +397,7 @@ static void vnt_free_tx_bufs(struct vnt_private *priv)
- 	return;
- }
- 
--static void device_free_rx_bufs(struct vnt_private *priv)
-+static void vnt_free_rx_bufs(struct vnt_private *priv)
- {
- 	struct vnt_rcb *rcb;
- 	int ii;
-@@ -518,7 +518,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 	return true;
- 
- free_rx_tx:
--	device_free_rx_bufs(priv);
-+	vnt_free_rx_bufs(priv);
- 
- free_tx:
- 	vnt_free_tx_bufs(priv);
-@@ -567,7 +567,7 @@ static int vnt_start(struct ieee80211_hw *hw)
- 	return 0;
- 
- free_all:
--	device_free_rx_bufs(priv);
-+	vnt_free_rx_bufs(priv);
- 	vnt_free_tx_bufs(priv);
- 	device_free_int_bufs(priv);
- 
-@@ -603,7 +603,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 	priv->cmd_running = false;
- 
- 	vnt_free_tx_bufs(priv);
--	device_free_rx_bufs(priv);
-+	vnt_free_rx_bufs(priv);
- 	device_free_int_bufs(priv);
- 
- 	usb_kill_urb(priv->interrupt_urb);
--- 
-2.0.1
-
+Cheers,
+Jes
