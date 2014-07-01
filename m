@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:53247 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760008AbaGDDM4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42378 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754812AbaGAUaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 23:12:56 -0400
-Received: by mail-ve0-f169.google.com with SMTP id pa12so1118104veb.14
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 20:12:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140703151034.GA10238@localhost>
-References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
-	<20140628205414.GA17825@localhost>
-	<CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
-	<20140703142837.GA11380@localhost>
-	<20140703151034.GA10238@localhost>
-Date: Fri, 4 Jul 2014 11:12:55 +0800
-Message-ID: <CAEFj9866CKbFrPFyxqj=LyiaGdWmK3Fw7Fw8wB4TCgRcJ2j8tQ@mail.gmail.com> (sfid-20140704_051303_381424_2C26E601)
-Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with new plid
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	Tue, 1 Jul 2014 16:30:14 -0400
+Date: Tue, 1 Jul 2014 16:18:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Felix Fietkau <nbd@openwrt.org>, John Walker <john@x109.net>,
+	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	netfilter-devel@vger.kernel.org,
+	Richard Fontana <fontana@sharpeleven.org>
+Subject: Re: Parser stable fix question for CFG80211_INTERNAL_REGDB
+Message-ID: <20140701201850.GE6358@tuxdriver.com> (sfid-20140701_223024_742772_C3C0599F)
+References: <CAB=NE6WfTXiScyXHReEWcpQ9EKpu1YCVQypa-B5BBO6aYXh3fA@mail.gmail.com>
+ <CAB=NE6VTN==Ewvf4HhTcadWLzjZnYkF1xSM1Yej6QfotWHKY0A@mail.gmail.com>
+ <20140701144149.GB6358@tuxdriver.com>
+ <20140701171713.GO27687@wotan.suse.de>
+ <CAB=NE6W4yg2_290aKacM0ar63yoVt_G8h59iWGxfCanV+AM=vA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6W4yg2_290aKacM0ar63yoVt_G8h59iWGxfCanV+AM=vA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Bob
+On Tue, Jul 01, 2014 at 11:54:43AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Jul 1, 2014 at 10:17 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> >> How is this any different from any other kernel support issue?
+> >
+> > This is a build issue that does not cause any errors, users go through with the install
+> > just fine and only at run time do they discover the issue. We never documented
+> > the expecations nor do I think we expected this before. This is also caused by an
+> > input file from userspace, I do consider the issue unexpected.
+> 
+> This is a bit more broken given that DFS CAC patches are upstream but
+> we haven't yet even provided the removal of antenna gain on the awk
+> script but for some reason it did add the DFS CAC parsing to the awk
+> script, so upstream has the awk DFS CAC parser options, we don't yet
+> even use it, and the antenna gain wasn't removed. I'll work on that
+> patch but parsing things in awk is getting a bit hairy for the
+> conditionals. We can use the C parser now that we have on but the DFS
+> CAC stuf was not yet ironed out for CRDA and wireless-regdb...
 
-Thanks for your explanation.
+I wrote that awk script years ago so that we could get rid of the
+old hard-coded rulesets and so I could have something working in RHEL5.
 
-I am also thinking whether it is easy to replicate the mentioned
-problem. It seems that the re-auth is working fine.
+I never merged the DFS CAC stuff in wireless-regdb, because of the
+unresolved issue of supporting multiple formats.  It looks to me like
+the dfs_cac stuff in genregdb.awk is broken, since it doesn't seem
+to account for flags.
 
-Regards,
-Chun-Yeow
+I sent a patch that should account for the antenna gain issue.
+Please give it a review.
 
-On Thu, Jul 3, 2014 at 11:10 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Thu, Jul 03, 2014 at 10:28:37AM -0400, Bob Copeland wrote:
->> > What is the consequence if we don't handle this case? Is the peer
->> > going to do the re-auth again?
->> >
->> > Regards,
->> > Chun-Yeow
->>
->> It shouldn't be a big problem -- looking at 802.11-2012 figure 13-2:
->
-> Actually, thinking about it more, a worse case is if B reaches
-> ESTAB and then A reboots.  Now, A sends an Open, gets back
-> a Confirm that A will ignore (due to no plid).  A will still
-> timeout and send a Close frame to restart everything, but we
-> would have to wait quite a while to re-establish the peering.
->
-> --
-> Bob Copeland %% www.bobcopeland.com
+Obviously, we need to talk more about this in Chicago if not before...
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
