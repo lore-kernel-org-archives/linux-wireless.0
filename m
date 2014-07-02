@@ -1,181 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:44294 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561AbaGKACg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:02:36 -0400
-Received: by mail-we0-f179.google.com with SMTP id p10so25455wes.10
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:35 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
+Received: from cantor2.suse.de ([195.135.220.15]:44197 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965068AbaGBATj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2014 20:19:39 -0400
+Date: Wed, 2 Jul 2014 02:19:36 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 14/14] wlcore/wl18xx/wl12xx: convert bitmaps to unsigned longs
-Date: Fri, 11 Jul 2014 03:01:39 +0300
-Message-Id: <1405036899-27396-15-git-send-email-eliad@wizery.com> (sfid-20140711_022952_908567_8AFA7459)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ming Lei <ming.lei@canonical.com>, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna
+	gain from wireless-regdb
+Message-ID: <20140702001936.GQ27687@wotan.suse.de> (sfid-20140702_021942_467223_8BAF8BE4)
+References: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The *_bit operations expect unsigned longs.
-Instead of casting the pointers, simply define various
-bitmaps as unsigned long (instead of u32).
+On Tue, Jul 01, 2014 at 04:17:54PM -0400, John W. Linville wrote:
+> Since "wireless-regdb: remove antenna gain" was merged in the
+> wireless-regdb tree, this script has been incompatible with the
+> 'official' regulatory database.  Let's fix it up.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> I think the dfs_cac stuff is still broken, since it does not account
+> for the starting offset of the flags.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c    |  2 +-
- drivers/net/wireless/ti/wl18xx/main.c    | 16 ++++++++--------
- drivers/net/wireless/ti/wlcore/debugfs.c |  2 +-
- drivers/net/wireless/ti/wlcore/main.c    |  8 ++++----
- drivers/net/wireless/ti/wlcore/tx.c      |  2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h  |  4 ++--
- 6 files changed, 17 insertions(+), 17 deletions(-)
+Indeed, but that also breaks other stuff too, because the DFS CAC stuff
+is optional it means the flags can now start at different locations, it
+also means that we need to distinguish a flag from a CAC. 
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index d50dfac..0bccf12 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1668,7 +1668,7 @@ static bool wl12xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
- {
- 	u8 thold;
- 
--	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
-+	if (test_bit(hlid, &wl->fw_fast_lnk_map))
- 		thold = wl->conf.tx.fast_link_thold;
- 	else
- 		thold = wl->conf.tx.slow_link_thold;
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index edc3e4d..7af1936 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1609,7 +1609,7 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
- 	u8 thold;
- 	struct wl18xx_fw_status_priv *status_priv =
- 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
--	u32 suspend_bitmap;
-+	unsigned long suspend_bitmap;
- 
- 	/* if we don't have the link map yet, assume they all low prio */
- 	if (!status_priv)
-@@ -1617,12 +1617,12 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
- 
- 	/* suspended links are never high priority */
- 	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
--	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
-+	if (test_bit(hlid, &suspend_bitmap))
- 		return false;
- 
- 	/* the priority thresholds are taken from FW */
--	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) &&
--	    !test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
-+	if (test_bit(hlid, &wl->fw_fast_lnk_map) &&
-+	    !test_bit(hlid, &wl->ap_fw_ps_map))
- 		thold = status_priv->tx_fast_link_prio_threshold;
- 	else
- 		thold = status_priv->tx_slow_link_prio_threshold;
-@@ -1636,17 +1636,17 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
- 	u8 thold;
- 	struct wl18xx_fw_status_priv *status_priv =
- 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
--	u32 suspend_bitmap;
-+	unsigned long suspend_bitmap;
- 
- 	/* if we don't have the link map yet, assume they all low prio */
- 	if (!status_priv)
- 		return true;
- 
- 	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
--	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
-+	if (test_bit(hlid, &suspend_bitmap))
- 		thold = status_priv->tx_suspend_threshold;
--	else if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) &&
--		 !test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
-+	else if (test_bit(hlid, &wl->fw_fast_lnk_map) &&
-+		 !test_bit(hlid, &wl->ap_fw_ps_map))
- 		thold = status_priv->tx_fast_stop_threshold;
- 	else
- 		thold = status_priv->tx_slow_stop_threshold;
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index 89893c7..0be21f6 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -496,7 +496,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_INT(sg_enabled);
- 	DRIVER_STATE_PRINT_INT(enable_11a);
- 	DRIVER_STATE_PRINT_INT(noise);
--	DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
-+	DRIVER_STATE_PRINT_LHEX(ap_fw_ps_map);
- 	DRIVER_STATE_PRINT_LHEX(ap_ps_map);
- 	DRIVER_STATE_PRINT_HEX(quirks);
- 	DRIVER_STATE_PRINT_HEX(irq);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index ec21141..575c8f6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -333,7 +333,7 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
- {
- 	bool fw_ps;
- 
--	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
-+	fw_ps = test_bit(hlid, &wl->ap_fw_ps_map);
- 
- 	/*
- 	 * Wake up from high level PS if the STA is asleep with too little
-@@ -360,13 +360,13 @@ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
- 					   struct wl12xx_vif *wlvif,
- 					   struct wl_fw_status *status)
- {
--	u32 cur_fw_ps_map;
-+	unsigned long cur_fw_ps_map;
- 	u8 hlid;
- 
- 	cur_fw_ps_map = status->link_ps_bitmap;
- 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
- 		wl1271_debug(DEBUG_PSM,
--			     "link ps prev 0x%x cur 0x%x changed 0x%x",
-+			     "link ps prev 0x%lx cur 0x%lx changed 0x%lx",
- 			     wl->ap_fw_ps_map, cur_fw_ps_map,
- 			     wl->ap_fw_ps_map ^ cur_fw_ps_map);
- 
-@@ -4754,7 +4754,7 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- 
- 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
- 	__clear_bit(hlid, &wl->ap_ps_map);
--	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
-+	__clear_bit(hlid, &wl->ap_fw_ps_map);
- 
- 	/*
- 	 * save the last used PN in the private part of iee80211_sta,
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 40b4311..f0ac361 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -126,7 +126,7 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl,
- 	if (WARN_ON(!test_bit(hlid, wlvif->links_map)))
- 		return;
- 
--	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
-+	fw_ps = test_bit(hlid, &wl->ap_fw_ps_map);
- 	tx_pkts = wl->links[hlid].allocated_pkts;
- 
- 	/*
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 13459c4..df78cf1 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -388,10 +388,10 @@ struct wl1271 {
- 	int active_link_count;
- 
- 	/* Fast/slow links bitmap according to FW */
--	u32 fw_fast_lnk_map;
-+	unsigned long fw_fast_lnk_map;
- 
- 	/* AP-mode - a bitmap of links currently in PS mode according to FW */
--	u32 ap_fw_ps_map;
-+	unsigned long ap_fw_ps_map;
- 
- 	/* AP-mode - a bitmap of links currently in PS mode in mac80211 */
- 	unsigned long ap_ps_map;
--- 
-1.8.5.1.109.g3d252a9
+Here's a complex example we should test for as an example now:
 
+country US: DFS-FCC
+	(2400 - 2450 @ 40), (100 mW)
+	(2450 - 2500 @ 0), (100 mW), DFS, AUTO-BW
+	(5170 - 5250 @ 80), (100 mW), DFS, AUTO-BW, NO-OUTDOOR
+	(5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+	(5735 - 5835 @ 80), (30)
+	(57240 - 63720 @ 2160), (40)
+
+The changes below seem to address it. I think awk is too fragile to
+scale well and keep us sane. A C parser exists but right now it
+ignores the DFS CAC. Having a parser is nice as it allows us to
+modify the db.txt on the fly, however parser still requires a bit
+of an update in code. If we wanted to avoid the parser all together
+we could just merge a CRDA reader at build time and require a
+a regulatory.bin file for reading instead of the db.txt. If we
+had support for that then its really only one step further from
+having full CRDA functionality upstream on the kernel, ie letting
+us read the file at run time rather than just build time. If we
+are to follow the steps from udev with its firmware loader helper
+we might as well merge CRDA upstream, in fact we could just use
+request_firmware_direct() for the reader, what remains questionable
+to me is the signing stuff, but if we already have support module
+signing checks it doesn't seem far fetched to be able to have
+request firmware verify a signature on a file, which probably
+ain't such a bad idea anyway. If we did this we'd have two options:
+
+1) regulatory.bin reader at build time to build the static regulatory domains
+2) the same reader code can use request the file at run time via
+   request_firmware_direct() and if we added signature verification
+   it can replace CRDA
+
+We'd eliminate the ASCII representation completely from the build picture
+and peg a regulatory.bin firmware to each kernel then. Thoughts?
+
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+index 40c37fc..baf2426 100644
+--- a/net/wireless/genregdb.awk
++++ b/net/wireless/genregdb.awk
+@@ -51,32 +51,41 @@ function parse_country_head() {
+ 
+ function parse_reg_rule()
+ {
++	flag_starts_at = 7
++
+ 	start = $1
+ 	sub(/\(/, "", start)
+ 	end = $3
+ 	bw = $5
+ 	sub(/\),/, "", bw)
+-	gain = $6
+-	sub(/\(/, "", gain)
+-	sub(/,/, "", gain)
+-	power = $7
+-	sub(/\)/, "", power)
+-	sub(/,/, "", power)
++	gain = 0
++	power = $6
+ 	# power might be in mW...
+-	units = $8
++	units = $7
++	dfs_cac = 0
++
++	sub(/\(/, "", power)
++	sub(/\),/, "", power)
++	sub(/\),/, "", units)
+ 	sub(/\)/, "", units)
+-	sub(/,/, "", units)
+-	dfs_cac = $9
++
+ 	if (units == "mW") {
++		flag_starts_at = 8
+ 		power = 10 * log(power)/log(10)
++		if ($8 ~ /[[:digit:]]/) {
++			flag_starts_at = 9
++			dfs_cac = $8
++		}
+ 	} else {
+-		dfs_cac = $8
++		if ($7 ~ /[[:digit:]]/) {
++			flag_starts_at = 8
++			dfs_cac = $7
++		}
+ 	}
+-	sub(/,/, "", dfs_cac)
+ 	sub(/\(/, "", dfs_cac)
+-	sub(/\)/, "", dfs_cac)
++	sub(/\),/, "", dfs_cac)
+ 	flagstr = ""
+-	for (i=8; i<=NF; i++)
++	for (i=flag_starts_at; i<=NF; i++)
+ 		flagstr = flagstr $i
+ 	split(flagstr, flagarray, ",")
+ 	flags = ""
