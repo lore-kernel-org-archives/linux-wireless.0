@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:63799 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932659AbaGYTxE (ORCPT
+Received: from smtprelay0207.hostedemail.com ([216.40.44.207]:42564 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756283AbaGBQaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 15:53:04 -0400
-Received: by mail-wg0-f48.google.com with SMTP id x13so4644495wgg.31
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:53:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/12] staging: vt6656: rf.h clean up comments
-Date: Fri, 25 Jul 2014 20:51:56 +0100
-Message-Id: <1406317916-21884-12-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215328_833585_2EF1011B)
-In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
-References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 2 Jul 2014 12:30:17 -0400
+Message-ID: <1404318611.14624.80.camel@joe-AO725> (sfid-20140702_183045_225614_E0F8DE3A)
+Subject: Re: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Wed, 02 Jul 2014 09:30:11 -0700
+In-Reply-To: <1404309961.5102.35.camel@smile.fi.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404308611.14624.78.camel@joe-AO725>
+	 <1404309961.5102.35.camel@smile.fi.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rf.h | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+On Wed, 2014-07-02 at 17:06 +0300, Andy Shevchenko wrote:
+> On Wed, 2014-07-02 at 06:43 -0700, Joe Perches wrote:
+> > On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
+> > > In kernel we have function to escape a given string. Let's use it instead of
+> > > custom approach.
+> > > 
+> > > This fixes a bug. The current implementation wrongly prints octal numbers: only
+> > > two first digits are used in case when 3 are required and the rest of the
+> > > string ends up cut off.
+> 
+> []
+> 
+> > This code looks like it was adapted from the old print_mac
+> > ethernet code that was eventually replaced by a vsprintf
+> > pointer extension %pM
+> > 
+> > So a better way to do this might be to add and use yet
+> > another vsprintf %p<foo> extension for ssids.
+> 
+> Might be, but it
+>  - doesn't reduce necessity of string_escape_mem (not only ssid are
+> escaped in kernel)
+>  - prevents user to choose a rule what exactly their would like to
+> escape (look at the other patches against ssid escaping)
+> 
 
-diff --git a/drivers/staging/vt6656/rf.h b/drivers/staging/vt6656/rf.h
-index 8cebb6a..3acdc65 100644
---- a/drivers/staging/vt6656/rf.h
-+++ b/drivers/staging/vt6656/rf.h
-@@ -32,9 +32,7 @@
- 
- #include "device.h"
- 
--//
--// Baseband RF pair definition in eeprom (Bits 6..0)
--//
-+/* Baseband RF pair definition in eeprom (Bits 6..0) */
- #define RF_RFMD2959         0x01
- #define RF_MAXIMAG          0x02
- #define RF_AL2230           0x03
-@@ -46,8 +44,8 @@
- #define RF_VT3226           0x09
- #define RF_AIROHA7230       0x0a
- #define RF_UW2453           0x0b
--#define RF_VT3226D0         0x0c //RobertYu:20051114
--#define RF_VT3342A0         0x0d //RobertYu:20060609
-+#define RF_VT3226D0         0x0c /* RobertYu:20051114 */
-+#define RF_VT3342A0         0x0d /* RobertYu:20060609 */
- #define RF_AL2230S          0x0e
- 
- #define RF_EMU              0x80
--- 
-2.0.1
+%pE<FLAGS> would allow the same arbitrary combinations
+of your flags.
+
 
