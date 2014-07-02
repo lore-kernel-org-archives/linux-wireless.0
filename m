@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:38168 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933166AbaGVWZx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25911 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbaGBIK5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 18:25:53 -0400
+	Wed, 2 Jul 2014 04:10:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: =?utf-8?Q?Andr=C3=A9?= Valentin <avalentin@marcant.net>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: ath10k OTP loading issues
+References: <53AD2EEE.4040704@marcant.net>
+Date: Wed, 2 Jul 2014 11:10:47 +0300
+In-Reply-To: <53AD2EEE.4040704@marcant.net> (=?utf-8?Q?=22Andr=C3=A9?=
+ Valentin"'s message of
+	"Fri, 27 Jun 2014 10:44:30 +0200")
+Message-ID: <87tx70p4e0.fsf@kamboji.qca.qualcomm.com> (sfid-20140702_101122_777089_BD2ACAC2)
 MIME-Version: 1.0
-In-Reply-To: <CAGXu5jLFQja7NGorKFrnMWHNW++YuyuX0MziOtZip91rbz0ovA@mail.gmail.com>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
- <1405373897-31671-4-git-send-email-keescook@chromium.org> <20140714222419.GC10393@wotan.suse.de>
- <CAGXu5j+V807cyDdyEzoRzSjYEyhkDntaEkKOx6n=OzUoF31-sA@mail.gmail.com>
- <CAB=NE6WnP-7YCr8DzCq-HOLZVuQxmCa+nwN7kQBxTnUHK+xMRg@mail.gmail.com>
- <CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com>
- <CAB=NE6VMca9gkvino-_SbThX3DgNSMJ+x-AkmyPR-G-x4Pq_jA@mail.gmail.com> <CAGXu5jLFQja7NGorKFrnMWHNW++YuyuX0MziOtZip91rbz0ovA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Tue, 22 Jul 2014 15:25:31 -0700
-Message-ID: <CAB=NE6U98N6FxHLPQqZvnWpOcK7DBV-Opyd_PcORoMCBDZEYog@mail.gmail.com> (sfid-20140723_004119_430329_035669F1)
-Subject: Re: [PATCH 3/7] security: introduce kernel_fw_from_file hook
-To: Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 3:20 PM, Kees Cook <keescook@chromium.org> wrote:
-> On Tue, Jul 22, 2014 at 3:11 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> On Tue, Jul 22, 2014 at 1:55 PM, Kees Cook <keescook@chromium.org> wrote:
->>> On Tue, Jul 22, 2014 at 12:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->>>> On Mon, Jul 14, 2014 at 3:31 PM, Kees Cook <keescook@chromium.org> wrote:
->>>>> Yup, with this and the module hook, adding a similar hook for kexec
->>>>> makes sense as well. A paranoid kernel doesn't want to trust anything
->>>>> it's loading from userspace. :)
->>>>
->>>> Well I'm actually wondering if we could generalize requiring hooks or
->>>> not for LSM as part of the general kobject definition. Then we
->>>> wouldn't need to keep growing hooks for modules, firmware, kexec
->>>> images, etc, but instead using the interfaces for kobjects and who
->>>> depend on them. How that would actually look -- I'm not sure, but just
->>>> a thought.
->>>
->>> Yeah, there does seem to be a repeated "get a thing from userspace"
->>> method here, but the interfaces have been rather scattered so far. I
->>> haven't seen an obvious way to consolidate them yet.
->>
->> If we are going to be adding a new system call for each type of
->> userspace object to help LSMs with requirements I wonder if its a
->> worthy endeavor to review. This series didn't add one but you had
->> mentioned finit_module() for example, are we going to want one for
->> finit_firmware() finit_kexec_image(), etc?
+Hi,
+
+please always CC ath10k list, that way you get attention of all ath10k
+developers.
+
+André Valentin <avalentin@marcant.net> writes:
+
+> I got problems initializing my ath10k PCI card in my Zyxel NBG 6716.
+> It worked until some weeks, now, the driver does not load. I debugged
+> a bit and this is what I got:
 >
-> The kernel pulls in firmware directly from the filesystem, so no
-> syscall there. :) kexec just had kexec_load_file added as a syscall
-> (it takes 2 fds: kernel and initrd).
+> Fri Jun 27 08:03:42 2014 kern.info kernel: [62908.290000] ath10k_pci 0000:01:00.0: BAR 0: assigned [mem 0x12000000-0x121fffff 64bit]
+> Fri Jun 27 08:03:43 2014 kern.info kernel: [62908.610000] ath10k: pci irq legacy irq_mode 0 reset_mode 0
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.620000] ath10k: boot upload otp to 0x1234 len 6917
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.780000] ath10k: otp calibration failed: 2
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: failed to run otp: -22
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62908.790000] ath10k: could not init core (-22)
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: could not probe fw (-22)
+> Fri Jun 27 08:03:43 2014 kern.err kernel: [62909.060000] ath10k: failed to register driver core: -22
+> Fri Jun 27 08:03:43 2014 kern.warn kernel: [62909.060000] ath10k_pci: probe of 0000:01:00.0 failed with error -22
+>
+> If I remove OTP loading the card initializes fine, but I think I will
+> not have a good performance. So bad idea.
 
-OK, too late then now. Look forward to the rest of the stuff then.
+All that was changed recently was that we now check the error code
+coming from otp.bin. So you have had this issue all along, it was just
+hidden before.
 
- Luis
+-- 
+Kalle Valo
