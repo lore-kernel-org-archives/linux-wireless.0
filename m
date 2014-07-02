@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29927 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:26015 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760577AbaGPIdr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 04:33:47 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Raphael Silva <rapphil@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] rtl8723au: Corrections in the coding style
-References: <1405254518-2744-1-git-send-email-rapphil@gmail.com>
-Date: Wed, 16 Jul 2014 10:33:40 +0200
-In-Reply-To: <1405254518-2744-1-git-send-email-rapphil@gmail.com> (Raphael
-	Silva's message of "Sun, 13 Jul 2014 09:28:38 -0300")
-Message-ID: <wrfj38e1pusb.fsf@redhat.com> (sfid-20140716_103355_190062_A9786F27)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751297AbaGBNU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2014 09:20:59 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 5/6] staging: rtl8192e: re-use string_escape_mem()
+Date: Wed,  2 Jul 2014 16:20:28 +0300
+Message-Id: <1404307229-19186-6-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152119_186601_80BD8A99)
+In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raphael Silva <rapphil@gmail.com> writes:
-> Some corrections were made to the code in order to conform to the
-> Kernel Coding Style.
->
-> Signed-off-by: Raphael Silva <rapphil@gmail.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 42 ++++++++++++++++++----------
->  1 file changed, 27 insertions(+), 15 deletions(-)
+Let's use kernel's library function to escape a buffer.
 
-[jes@yoga jes.git]$ make drivers/staging/rtl8723au/r8723au.ko
-  CHK     include/config/kernel.release
-  CHK     include/generated/uapi/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CC [M]  drivers/staging/rtl8723au/core/rtw_sta_mgt.o
-drivers/staging/rtl8723au/core/rtw_sta_mgt.c: In function 'rtw_free_stainfo23a':
-drivers/staging/rtl8723au/core/rtw_sta_mgt.c:256:27: error: expected expression before ';' token
-  pstapriv->asoc_sta_count-;
-                           ^
-I fixed this up this time - next time, compile your patches before you
-post them.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/staging/rtl8192e/rtllib.h | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-Thank you,
-Jes
+diff --git a/drivers/staging/rtl8192e/rtllib.h b/drivers/staging/rtl8192e/rtllib.h
+index 83f5f57..cb99160 100644
+--- a/drivers/staging/rtl8192e/rtllib.h
++++ b/drivers/staging/rtl8192e/rtllib.h
+@@ -31,6 +31,7 @@
+ #include <linux/timer.h>
+ #include <linux/sched.h>
+ #include <linux/semaphore.h>
++#include <linux/string_helpers.h>
+ 
+ #include <linux/delay.h>
+ #include <linux/wireless.h>
+@@ -2956,7 +2957,6 @@ extern inline int rtllib_get_scans(struct rtllib_device *ieee)
+ static inline const char *escape_essid(const char *essid, u8 essid_len)
+ {
+ 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+ 	char *d = escaped;
+ 
+ 	if (rtllib_is_empty_essid(essid, essid_len)) {
+@@ -2965,15 +2965,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len)
+ 	}
+ 
+ 	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
+-			*d++ = *s++;
+-		}
+-	}
++	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
++			       ESCAPE_NULL, NULL);
+ 	*d = '\0';
+ 	return escaped;
+ }
+-- 
+2.0.0
+
