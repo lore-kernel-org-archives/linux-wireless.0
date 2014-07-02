@@ -1,42 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:30174 "EHLO
-	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753140AbaGLSLq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 14:11:46 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH V2 8/9] rtlwifi: remove unnecessary break after goto
-Date: Sat, 12 Jul 2014 20:09:47 +0200
-Message-Id: <1405188597-2815-9-git-send-email-fabf@skynet.be> (sfid-20140712_201214_463618_A7634FC9)
-In-Reply-To: <1405188597-2815-1-git-send-email-fabf@skynet.be>
-References: <1405188597-2815-1-git-send-email-fabf@skynet.be>
+Received: from mga03.intel.com ([143.182.124.21]:22494 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752712AbaGBNUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2014 09:20:36 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
+Date: Wed,  2 Jul 2014 16:20:26 +0300
+Message-Id: <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152307_252223_DD9FA203)
+In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/net/wireless/rtlwifi/rtl8192se/fw.c | 1 -
- 1 file changed, 1 deletion(-)
+In kernel we have function to escape a given string. Let's use it instead of
+custom approach.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.c b/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-index 380e7d4..73fa4a1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-@@ -438,7 +438,6 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 				 "Unexpected Download step!!\n");
- 			goto fail;
--			break;
- 		}
+This fixes a bug. The current implementation wrongly prints octal numbers: only
+two first digits are used in case when 3 are required and the rest of the
+string ends up cut off.
+
+Additionally the \f, \v, \a, and \e are escaped to their alphabetic
+representation. It's safe to do since the print_ssid() is currently used for
+messaging only.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ net/wireless/lib80211.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
+
+diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+index a55c27b..0c2f67b 100644
+--- a/net/wireless/lib80211.c
++++ b/net/wireless/lib80211.c
+@@ -22,6 +22,7 @@
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
++#include <linux/string_helpers.h>
  
- 		/* <2> Download image file */
+ #include <net/lib80211.h>
+ 
+@@ -48,31 +49,10 @@ static void lib80211_crypt_deinit_handler(unsigned long data);
+ 
+ const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
+ {
+-	const char *s = ssid;
+ 	char *d = buf;
+ 
+ 	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
+-	while (ssid_len--) {
+-		if (isprint(*s)) {
+-			*d++ = *s++;
+-			continue;
+-		}
+-
+-		*d++ = '\\';
+-		if (*s == '\0')
+-			*d++ = '0';
+-		else if (*s == '\n')
+-			*d++ = 'n';
+-		else if (*s == '\r')
+-			*d++ = 'r';
+-		else if (*s == '\t')
+-			*d++ = 't';
+-		else if (*s == '\\')
+-			*d++ = '\\';
+-		else
+-			d += snprintf(d, 3, "%03o", *s);
+-		s++;
+-	}
++	d += string_escape_mem_any_np(ssid, ssid_len, buf, ~0UL, NULL);
+ 	*d = '\0';
+ 	return buf;
+ }
 -- 
-1.9.1
+2.0.0
 
