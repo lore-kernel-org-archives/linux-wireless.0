@@ -1,80 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:57107 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933210AbaGOS4C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 14:56:02 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so77479wiv.7
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:56:00 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/12] staging: vt6656: rename PIPEnsSendBulkOut to vnt_tx_context.
-Date: Tue, 15 Jul 2014 19:54:39 +0100
-Message-Id: <1405450483-2875-8-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205613_020203_011CD11B)
-In-Reply-To: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
-References: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:11278 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753658AbaGBNVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2014 09:21:44 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 6/6] staging: rtl8192u: re-use string_escape_mem()
+Date: Wed,  2 Jul 2014 16:20:29 +0300
+Message-Id: <1404307229-19186-7-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152201_595521_4F1172E4)
+In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are just tx the context
+Let's use kernel's library function to escape a buffer instead of custom code.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/staging/vt6656/rxtx.c    | 4 ++--
- drivers/staging/vt6656/usbpipe.c | 2 +-
- drivers/staging/vt6656/usbpipe.h | 3 +--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/rtl8192u/ieee80211/ieee80211.h | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 1f1ec04..76b7f17 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -928,7 +928,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211.h b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+index 1040bab..bb5f604 100644
+--- a/drivers/staging/rtl8192u/ieee80211/ieee80211.h
++++ b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+@@ -31,6 +31,7 @@
+ #include <linux/sched.h>
+ #include <linux/semaphore.h>
+ #include <linux/interrupt.h>
++#include <linux/string_helpers.h>
  
- 	spin_lock_irqsave(&priv->lock, flags);
+ #include <linux/delay.h>
+ #include <linux/wireless.h>
+@@ -2576,7 +2577,6 @@ static inline int ieee80211_get_scans(struct ieee80211_device *ieee)
  
--	if (PIPEnsSendBulkOut(priv, tx_context) != STATUS_PENDING) {
-+	if (vnt_tx_context(priv, tx_context) != STATUS_PENDING) {
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 		return -EIO;
+ static inline const char *escape_essid(const char *essid, u8 essid_len) {
+ 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+ 	char *d = escaped;
+ 
+ 	if (ieee80211_is_empty_essid(essid, essid_len)) {
+@@ -2585,15 +2585,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len) {
  	}
-@@ -1022,7 +1022,7 @@ static int vnt_beacon_xmit(struct vnt_private *priv,
  
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--	if (PIPEnsSendBulkOut(priv, context) != STATUS_PENDING)
-+	if (vnt_tx_context(priv, context) != STATUS_PENDING)
- 		ieee80211_free_txskb(priv->hw, context->skb);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index e7239d6..db1bc1a 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -337,7 +337,7 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
-  *
-  */
- 
--int PIPEnsSendBulkOut(struct vnt_private *priv,
-+int vnt_tx_context(struct vnt_private *priv,
- 				struct vnt_usb_send_context *context)
- {
- 	int status;
-diff --git a/drivers/staging/vt6656/usbpipe.h b/drivers/staging/vt6656/usbpipe.h
-index 94694fe..49c284f 100644
---- a/drivers/staging/vt6656/usbpipe.h
-+++ b/drivers/staging/vt6656/usbpipe.h
-@@ -40,7 +40,6 @@ void vnt_control_in_u8(struct vnt_private *, u8, u8, u8 *);
- 
- int vnt_start_interrupt_urb(struct vnt_private *);
- int PIPEnsBulkInUsbRead(struct vnt_private *, struct vnt_rcb *pRCB);
--int PIPEnsSendBulkOut(struct vnt_private *,
--				struct vnt_usb_send_context *pContext);
-+int vnt_tx_context(struct vnt_private *, struct vnt_usb_send_context *);
- 
- #endif /* __USBPIPE_H__ */
+ 	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
+-			*d++ = *s++;
+-		}
+-	}
++	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
++			       ESCAPE_NULL, NULL);
+ 	*d = '\0';
+ 	return escaped;
+ }
 -- 
-2.0.1
+2.0.0
 
