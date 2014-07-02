@@ -1,133 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:54993 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752880AbaGJS5L (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35903 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753566AbaGBWBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:57:11 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so192407wib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 15/16] staging: vt6656: s_vFillCTSHead remove camel case
-Date: Thu, 10 Jul 2014 19:56:16 +0100
-Message-Id: <1405018577-6832-15-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205728_185282_2F3B4C62)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 2 Jul 2014 18:01:51 -0400
+Date: Wed, 2 Jul 2014 15:01:50 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/6] lib / string_helpers: introduce string_escape_mem()
+Message-Id: <20140702150150.b87702934d47fd481646f6ff@linux-foundation.org> (sfid-20140703_000210_128261_506DEF12)
+In-Reply-To: <1404307229-19186-3-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<1404307229-19186-3-git-send-email-andriy.shevchenko@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case changes
-byPktType -> pkt_type
-cbFrameLength -> frame_len
-bNeedAck -> need_ack
-pDevice -> priv
-uCTSFrameLen -> cts_frame_len
+On Wed,  2 Jul 2014 16:20:25 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 66 +++++++++++++++++++++----------------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
+> This is almost the opposite function to string_unescape(). Nevertheless it
+> handles \0 and could be used for any byte buffer.
+> 
+> The documentation is supplied together with the function prototype.
+> 
+> The test cases covers most of the scenarios and would be expanded later on.
+> 
+> ...
+>
+> --- a/include/linux/string_helpers.h
+> +++ b/include/linux/string_helpers.h
+> @@ -71,4 +71,87 @@ static inline int string_unescape_any_inplace(char *buf)
+>  	return string_unescape_any(buf, buf, 0);
+>  }
+>  
+> +#define ESCAPE_SPACE		0x01
+> +#define ESCAPE_SPECIAL		0x02
+> +#define ESCAPE_NULL		0x04
+> +#define ESCAPE_OCTAL		0x08
+> +#define ESCAPE_ANY		\
+> +	(ESCAPE_SPACE | ESCAPE_OCTAL | ESCAPE_SPECIAL | ESCAPE_NULL)
+> +#define ESCAPE_NP		0x10
+> +#define ESCAPE_ANY_NP		(ESCAPE_ANY | ESCAPE_NP)
+> +#define ESCAPE_HEX		0x20
+> +
+> +/**
+> + * string_escape_mem - quote characters in the given memory buffer
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index ad1a1b6..dce6cb5 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -520,60 +520,60 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
- }
- 
- static u16 s_vFillCTSHead(struct vnt_usb_send_context *tx_context,
--	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
--	int bNeedAck, u16 wCurrentRate)
-+	u8 pkt_type, union vnt_tx_data_head *head, u32 frame_len,
-+	int need_ack, u16 current_rate)
- {
--	struct vnt_private *pDevice = tx_context->priv;
--	u32 uCTSFrameLen = 14;
-+	struct vnt_private *priv = tx_context->priv;
-+	u32 cts_frame_len = 14;
- 
- 	if (!head)
- 		return 0;
- 
- 	if (tx_context->fb_option) {
- 		/* Auto Fall back */
--		struct vnt_cts_fb *pBuf = &head->cts_g_fb;
-+		struct vnt_cts_fb *buf = &head->cts_g_fb;
- 		/* Get SignalField,ServiceField,Length */
--		vnt_get_phy_field(pDevice, uCTSFrameLen,
--			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
--		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
--			cbFrameLength, byPktType,
--			wCurrentRate, bNeedAck);
-+		vnt_get_phy_field(priv, cts_frame_len,
-+			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
-+		buf->duration_ba = s_uGetRTSCTSDuration(priv, CTSDUR_BA,
-+			frame_len, pkt_type,
-+			current_rate, need_ack);
- 		/* Get CTSDuration_ba_f0 */
--		pBuf->cts_duration_ba_f0 = s_uGetRTSCTSDuration(pDevice,
--			CTSDUR_BA_F0, cbFrameLength, byPktType,
--			pDevice->tx_rate_fb0, bNeedAck);
-+		buf->cts_duration_ba_f0 = s_uGetRTSCTSDuration(priv,
-+			CTSDUR_BA_F0, frame_len, pkt_type,
-+			priv->tx_rate_fb0, need_ack);
- 		/* Get CTSDuration_ba_f1 */
--		pBuf->cts_duration_ba_f1 = s_uGetRTSCTSDuration(pDevice,
--			CTSDUR_BA_F1, cbFrameLength, byPktType,
--			pDevice->tx_rate_fb1, bNeedAck);
-+		buf->cts_duration_ba_f1 = s_uGetRTSCTSDuration(priv,
-+			CTSDUR_BA_F1, frame_len, pkt_type,
-+			priv->tx_rate_fb1, need_ack);
- 		/* Get CTS Frame body */
--		pBuf->data.duration = pBuf->duration_ba;
--		pBuf->data.frame_control =
-+		buf->data.duration = buf->duration_ba;
-+		buf->data.frame_control =
- 			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
- 
--		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
-+		memcpy(buf->data.ra, priv->abyCurrentNetAddr, ETH_ALEN);
- 
--		return vnt_rxtx_datahead_g_fb(tx_context, byPktType,
--				wCurrentRate, &pBuf->data_head, cbFrameLength,
--				bNeedAck);
-+		return vnt_rxtx_datahead_g_fb(tx_context, pkt_type,
-+				current_rate, &buf->data_head, frame_len,
-+				need_ack);
- 	} else {
--		struct vnt_cts *pBuf = &head->cts_g;
-+		struct vnt_cts *buf = &head->cts_g;
- 		/* Get SignalField,ServiceField,Length */
--		vnt_get_phy_field(pDevice, uCTSFrameLen,
--			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
-+		vnt_get_phy_field(priv, cts_frame_len,
-+			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
- 		/* Get CTSDuration_ba */
--		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice,
--			CTSDUR_BA, cbFrameLength, byPktType,
--			wCurrentRate, bNeedAck);
-+		buf->duration_ba = s_uGetRTSCTSDuration(priv,
-+			CTSDUR_BA, frame_len, pkt_type,
-+			current_rate, need_ack);
- 		/*Get CTS Frame body*/
--		pBuf->data.duration = pBuf->duration_ba;
--		pBuf->data.frame_control =
-+		buf->data.duration = buf->duration_ba;
-+		buf->data.frame_control =
- 			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
- 
--		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
-+		memcpy(buf->data.ra, priv->abyCurrentNetAddr, ETH_ALEN);
- 
--		return vnt_rxtx_datahead_g(tx_context, byPktType, wCurrentRate,
--				&pBuf->data_head, cbFrameLength, bNeedAck);
-+		return vnt_rxtx_datahead_g(tx_context, pkt_type, current_rate,
-+				&buf->data_head, frame_len, need_ack);
-         }
- 
- 	return 0;
--- 
-1.9.1
+It drive me nuts when the kerneldoc is in the .h file.  Who thinks of
+looking there?  I realise that string_unescape() already did that, but
+I'd prefer that we fix string_unescape() rather than imitate it.
 
+> --- a/lib/string_helpers.c
+> +++ b/lib/string_helpers.c
+
+This is a lot of code!  Adds nearly a kbyte.  I'm surprised that
+escaping a string is so verbose.
+
+I wonder if the implementation really needs to be so comprehensive?
+
+Would a table-driven approach be more compact?
+
+>  static int __init test_string_helpers_init(void)
+>  {
+>  	unsigned int i;
+> @@ -112,6 +315,16 @@ static int __init test_string_helpers_init(void)
+>  	test_string_unescape("unescape inplace",
+>  			     get_random_int() % (UNESCAPE_ANY + 1), true);
+>  
+> +	/* Without dictionary */
+> +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
+> +		test_string_escape("escape 0", escape0, i, TEST_STRING_2_DICT_0);
+> +
+> +	/* With dictionary */
+> +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
+> +		test_string_escape("escape 1", escape1, i, TEST_STRING_2_DICT_1);
+> +
+> +	test_string_escape_nomem();
+> +
+>  	return -EINVAL;
+>  }
+
+I wonder why this returns -EINVAL.
