@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:43613 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbaGLGtq (ORCPT
+Received: from mail2.marcant.net ([217.14.160.186]:44506 "EHLO
+	mail2.marcant.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbaGBIeR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 02:49:46 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 9/9] brcmfmac: add brcmf_p2p_detach() call in brcmf_cfg80211_detach()
-Date: Sat, 12 Jul 2014 08:49:42 +0200
-Message-ID: <1405147782-12768-10-git-send-email-arend@broadcom.com> (sfid-20140712_085013_260542_A87355EC)
-In-Reply-To: <1405147782-12768-1-git-send-email-arend@broadcom.com>
-References: <1405147782-12768-1-git-send-email-arend@broadcom.com>
+	Wed, 2 Jul 2014 04:34:17 -0400
+Message-ID: <53B3C3FF.1060207@marcant.net> (sfid-20140702_103421_874723_DE1ED108)
+Date: Wed, 02 Jul 2014 10:34:07 +0200
+From: =?UTF-8?B?QW5kcsOpIFZhbGVudGlu?= <avalentin@marcant.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: ath10k OTP loading issues
+References: <53AD2EEE.4040704@marcant.net> <53AD4F17.6070604@marcant.net> <87pphop499.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87pphop499.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_p2p_detach() was only called in error flow of the
-brcmf_cfg80211_attach() routine, but it also needs to be called
-upon brcmf_cfg80211_detach().
+Hi!
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 1 +
- 1 file changed, 1 insertion(+)
+>> have some kind of magic so I can identify it?
+> 
+> MAC addresses are good one to check. Basically it should be similar data
+> as in board.bin.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index d3bb4e0..48078a3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -5682,6 +5682,7 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
- 	WARN_ON(!list_empty(&cfg->vif_list));
- 	wiphy_unregister(cfg->wiphy);
- 	brcmf_btcoex_detach(cfg);
-+	brcmf_p2p_detach(&cfg->p2p);
- 	wl_deinit_priv(cfg);
- 	brcmf_free_wiphy(cfg->wiphy);
- }
--- 
-1.9.1
+Of course I already tried this. But no luck. Do you have another idea.
+Or is the MAC somehow encrypted ? I searched for the ASCII represantation and
+a binary string generated from the MAC bytes.
 
+Thanks,
+
+André
