@@ -1,632 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:50573 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756430AbaGVT1a (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:37132 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbaGBPFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:30 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so6608461wiv.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:29 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/20] iwlwifi: mvm: BT Coex - fix the ACK / CTS kill mask
-Date: Tue, 22 Jul 2014 22:26:41 +0300
-Message-Id: <1406057211-31752-10-git-send-email-egrumbach@gmail.com> (sfid-20140722_212747_331002_F4396273)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+	Wed, 2 Jul 2014 11:05:55 -0400
+Received: by mail-wi0-f182.google.com with SMTP id bs8so665333wib.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2014 08:05:47 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: initialize hardware tables on new devices
+Date: Wed,  2 Jul 2014 17:05:35 +0200
+Message-Id: <1404313535-11814-1-git-send-email-zajec5@gmail.com> (sfid-20140702_170559_849978_1CDA9FC0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-According to new requirements, the ACK / CTS kill mask is
-not related to reduced TX power anymore. This allows to
-remove the code that tracked reduced TX power enablement
-across different interfaces.
-The ACK / CTS kill mask is now fetch from a table. It
-depends on the Activity grading (activity from BT) and on
-the Look Up Table (LUT) type.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c        | 170 +++++++++++--------------
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 102 +++------------
- drivers/net/wireless/iwlwifi/mvm/debugfs.c     |  21 ++-
- drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h |   2 +
- drivers/net/wireless/iwlwifi/mvm/mvm.h         |  13 +-
- 5 files changed, 115 insertions(+), 193 deletions(-)
+Init of volatile table is based on the following dump from 6.30.223.141:
+phy_write(0x0072) <- 0x2400
+phy_write(0x0073) <- 0x0002
+phy_write(0x0072) <- 0x2404
+phy_write(0x0073) <- 0x0012
+phy_write(0x0072) <- 0x2408
+phy_write(0x0073) <- 0x0008
+phy_write(0x0072) <- 0x2420
+phy_write(0x0073) <- 0x0002
+phy_write(0x0072) <- 0x2424
+phy_write(0x0073) <- 0x0018
+phy_write(0x0072) <- 0x2428
+phy_write(0x0073) <- 0x0002
+---
+ drivers/net/wireless/b43/tables_nphy.c | 288 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/b43/tables_nphy.h |   4 +
+ 2 files changed, 281 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index e0a5cf2..a65b1bb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -72,16 +72,56 @@
- 
- #define BT_ANTENNA_COUPLING_THRESHOLD		(30)
- 
--const u32 iwl_bt_ack_kill_msk[BT_KILL_MSK_MAX] = {
--	[BT_KILL_MSK_DEFAULT] = 0xffff0000,
--	[BT_KILL_MSK_SCO_HID_A2DP] = 0xffffffff,
--	[BT_KILL_MSK_REDUCED_TXPOW] = 0,
-+const u32 iwl_bt_ctl_kill_msk[BT_KILL_MSK_MAX] = {
-+	[BT_KILL_MSK_DEFAULT] = 0xfffffc00,
-+	[BT_KILL_MSK_NEVER] = 0xffffffff,
-+	[BT_KILL_MSK_ALWAYS] = 0,
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index b221715..dd87685 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2146,6 +2146,192 @@ static const u16 b43_ntab_antswctl_r3[4][32] = {
+ 	}
  };
  
--const u32 iwl_bt_cts_kill_msk[BT_KILL_MSK_MAX] = {
--	[BT_KILL_MSK_DEFAULT] = 0xffff0000,
--	[BT_KILL_MSK_SCO_HID_A2DP] = 0xffffffff,
--	[BT_KILL_MSK_REDUCED_TXPOW] = 0,
-+const u8 iwl_bt_cts_kill_msk[BT_MAX_AG][BT_COEX_MAX_LUT] = {
-+	{
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+	},
-+	{
-+		BT_KILL_MSK_NEVER,
-+		BT_KILL_MSK_NEVER,
-+		BT_KILL_MSK_NEVER,
-+	},
-+	{
-+		BT_KILL_MSK_NEVER,
-+		BT_KILL_MSK_NEVER,
-+		BT_KILL_MSK_NEVER,
-+	},
-+	{
-+		BT_KILL_MSK_DEFAULT,
-+		BT_KILL_MSK_NEVER,
-+		BT_KILL_MSK_DEFAULT,
-+	},
++/* static tables, PHY revision >= 7 */
++
++/* Copied from brcmsmac (5.75.11) */
++static const u32 b43_ntab_tmap_r7[] = {
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0xf1111110, 0x11111111, 0x11f11111, 0x00000111,
++	0x11000000, 0x1111f111, 0x11111111, 0x111111f1,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x000aa888,
++	0x88880000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0xa1111110, 0x11111111, 0x11c11111, 0x00000111,
++	0x11000000, 0x1111a111, 0x11111111, 0x111111a1,
++	0xa2222220, 0x22222222, 0x22c22222, 0x00000222,
++	0x22000000, 0x2222a222, 0x22222222, 0x222222a2,
++	0xf1111110, 0x11111111, 0x11f11111, 0x00011111,
++	0x11110000, 0x1111f111, 0x11111111, 0x111111f1,
++	0xa8aa88a0, 0xa88888a8, 0xa8a8a88a, 0x00088aaa,
++	0xaaaa0000, 0xa8a8aa88, 0xa88aaaaa, 0xaaaa8a8a,
++	0xaaa8aaa0, 0x8aaa8aaa, 0xaa8a8a8a, 0x000aaa88,
++	0x8aaa0000, 0xaaa8a888, 0x8aa88a8a, 0x8a88a888,
++	0x08080a00, 0x0a08080a, 0x080a0a08, 0x00080808,
++	0x080a0000, 0x080a0808, 0x080a0808, 0x0a0a0a08,
++	0xa0a0a0a0, 0x80a0a080, 0x8080a0a0, 0x00008080,
++	0x80a00000, 0x80a080a0, 0xa080a0a0, 0x8080a0a0,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x99999000, 0x9b9b99bb, 0x9bb99999, 0x9999b9b9,
++	0x9b99bb90, 0x9bbbbb9b, 0x9b9b9bb9, 0x00000999,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00aaa888,
++	0x22000000, 0x2222b222, 0x22222222, 0x222222b2,
++	0xb2222220, 0x22222222, 0x22d22222, 0x00000222,
++	0x11000000, 0x1111a111, 0x11111111, 0x111111a1,
++	0xa1111110, 0x11111111, 0x11c11111, 0x00000111,
++	0x33000000, 0x3333b333, 0x33333333, 0x333333b3,
++	0xb3333330, 0x33333333, 0x33d33333, 0x00000333,
++	0x22000000, 0x2222a222, 0x22222222, 0x222222a2,
++	0xa2222220, 0x22222222, 0x22c22222, 0x00000222,
++	0x99b99b00, 0x9b9b99bb, 0x9bb99999, 0x9999b9b9,
++	0x9b99bb99, 0x9bbbbb9b, 0x9b9b9bb9, 0x00000999,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa88, 0x8aaaaa8a, 0x8a8a8aa8, 0x08aaa888,
++	0x22222200, 0x2222f222, 0x22222222, 0x222222f2,
++	0x22222222, 0x22222222, 0x22f22222, 0x00000222,
++	0x11000000, 0x1111f111, 0x11111111, 0x11111111,
++	0xf1111111, 0x11111111, 0x11f11111, 0x01111111,
++	0xbb9bb900, 0xb9b9bb99, 0xb99bbbbb, 0xbbbb9b9b,
++	0xb9bb99bb, 0xb99999b9, 0xb9b9b99b, 0x00000bbb,
++	0xaa000000, 0xa8a8aa88, 0xa88aaaaa, 0xaaaa8a8a,
++	0xa8aa88aa, 0xa88888a8, 0xa8a8a88a, 0x0a888aaa,
++	0xaa000000, 0xa8a8aa88, 0xa88aaaaa, 0xaaaa8a8a,
++	0xa8aa88a0, 0xa88888a8, 0xa8a8a88a, 0x00000aaa,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0xbbbbbb00, 0x999bbbbb, 0x9bb99b9b, 0xb9b9b9bb,
++	0xb9b99bbb, 0xb9b9b9bb, 0xb9bb9b99, 0x00000999,
++	0x8a000000, 0xaa88a888, 0xa88888aa, 0xa88a8a88,
++	0xa88aa88a, 0x88a8aaaa, 0xa8aa8aaa, 0x0888a88a,
++	0x0b0b0b00, 0x090b0b0b, 0x0b090b0b, 0x0909090b,
++	0x09090b0b, 0x09090b0b, 0x09090b09, 0x00000909,
++	0x0a000000, 0x0a080808, 0x080a080a, 0x080a0a08,
++	0x080a080a, 0x0808080a, 0x0a0a0a08, 0x0808080a,
++	0xb0b0b000, 0x9090b0b0, 0x90b09090, 0xb0b0b090,
++	0xb0b090b0, 0x90b0b0b0, 0xb0b09090, 0x00000090,
++	0x80000000, 0xa080a080, 0xa08080a0, 0xa0808080,
++	0xa080a080, 0x80a0a0a0, 0xa0a080a0, 0x00a0a0a0,
++	0x22000000, 0x2222f222, 0x22222222, 0x222222f2,
++	0xf2222220, 0x22222222, 0x22f22222, 0x00000222,
++	0x11000000, 0x1111f111, 0x11111111, 0x111111f1,
++	0xf1111110, 0x11111111, 0x11f11111, 0x00000111,
++	0x33000000, 0x3333f333, 0x33333333, 0x333333f3,
++	0xf3333330, 0x33333333, 0x33f33333, 0x00000333,
++	0x22000000, 0x2222f222, 0x22222222, 0x222222f2,
++	0xf2222220, 0x22222222, 0x22f22222, 0x00000222,
++	0x99000000, 0x9b9b99bb, 0x9bb99999, 0x9999b9b9,
++	0x9b99bb90, 0x9bbbbb9b, 0x9b9b9bb9, 0x00000999,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0x88888000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00aaa888,
++	0x88a88a00, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa88, 0x8aaaaa8a, 0x8a8a8aa8, 0x000aa888,
++	0x88880000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa88, 0x8aaaaa8a, 0x8a8a8aa8, 0x08aaa888,
++	0x11000000, 0x1111a111, 0x11111111, 0x111111a1,
++	0xa1111110, 0x11111111, 0x11c11111, 0x00000111,
++	0x11000000, 0x1111a111, 0x11111111, 0x111111a1,
++	0xa1111110, 0x11111111, 0x11c11111, 0x00000111,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0x88000000, 0x8a8a88aa, 0x8aa88888, 0x8888a8a8,
++	0x8a88aa80, 0x8aaaaa8a, 0x8a8a8aa8, 0x00000888,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
++	0x00000000, 0x00000000, 0x00000000, 0x00000000,
 +};
 +
-+const u8 iwl_bt_ack_kill_msk[BT_MAX_AG][BT_COEX_MAX_LUT] = {
-+	{
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+	},
-+	{
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+	},
-+	{
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_ALWAYS,
-+	},
-+	{
-+		BT_KILL_MSK_DEFAULT,
-+		BT_KILL_MSK_ALWAYS,
-+		BT_KILL_MSK_DEFAULT,
-+	},
- };
++/* Extracted from MMIO dump of 6.30.223.141 */
++static const u32 b43_ntab_noisevar_r7[] = {
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++	0x020c020c, 0x0000014d, 0x020c020c, 0x0000014d,
++};
++
+ /* TX gain tables */
+ static const u32 b43_ntab_tx_gain_rev0_1_2[] = {
+ 	0x03cc2b44, 0x03cc2b42, 0x03cc2a44, 0x03cc2a42,
+@@ -3031,6 +3217,91 @@ void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
+ 		b43_ntab_write_bulk(dev, offset, ARRAY_SIZE(data), data); \
+ 	} while (0)
  
- static const __le32 iwl_bt_prio_boost[BT_COEX_BOOST_SIZE] = {
-@@ -611,54 +651,43 @@ send_cmd:
- 	return ret;
- }
- 
--static int iwl_mvm_bt_udpate_sw_boost(struct iwl_mvm *mvm,
--				      bool reduced_tx_power)
-+static int iwl_mvm_bt_udpate_sw_boost(struct iwl_mvm *mvm)
- {
--	enum iwl_bt_kill_msk bt_kill_msk;
--	struct iwl_bt_coex_sw_boost_update_cmd cmd = {};
- 	struct iwl_bt_coex_profile_notif *notif = &mvm->last_bt_notif;
-+	u32 primary_lut = le32_to_cpu(notif->primary_ch_lut);
-+	u32 secondary_lut = le32_to_cpu(notif->secondary_ch_lut);
-+	u32 ag = le32_to_cpu(notif->bt_activity_grading);
-+	struct iwl_bt_coex_sw_boost_update_cmd cmd = {};
-+	u8 ack_kill_msk[NUM_PHY_CTX] = {};
-+	u8 cts_kill_msk[NUM_PHY_CTX] = {};
-+	int i;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (reduced_tx_power) {
--		/* Reduced Tx power has precedence on the type of the profile */
--		bt_kill_msk = BT_KILL_MSK_REDUCED_TXPOW;
--	} else {
--		/* Low latency BT profile is active: give higher prio to BT */
--		if (BT_MBOX_MSG(notif, 3, SCO_STATE)  ||
--		    BT_MBOX_MSG(notif, 3, A2DP_STATE) ||
--		    BT_MBOX_MSG(notif, 3, SNIFF_STATE))
--			bt_kill_msk = BT_KILL_MSK_SCO_HID_A2DP;
--		else
--			bt_kill_msk = BT_KILL_MSK_DEFAULT;
--	}
-+	ack_kill_msk[0] = iwl_bt_ack_kill_msk[ag][primary_lut];
-+	cts_kill_msk[0] = iwl_bt_cts_kill_msk[ag][primary_lut];
- 
--	IWL_DEBUG_COEX(mvm,
--		       "Update kill_msk: %d - SCO %sactive A2DP %sactive SNIFF %sactive\n",
--		       bt_kill_msk,
--		       BT_MBOX_MSG(notif, 3, SCO_STATE) ? "" : "in",
--		       BT_MBOX_MSG(notif, 3, A2DP_STATE) ? "" : "in",
--		       BT_MBOX_MSG(notif, 3, SNIFF_STATE) ? "" : "in");
-+	ack_kill_msk[1] = iwl_bt_ack_kill_msk[ag][secondary_lut];
-+	cts_kill_msk[1] = iwl_bt_cts_kill_msk[ag][secondary_lut];
- 
- 	/* Don't send HCMD if there is no update */
--	if (bt_kill_msk == mvm->bt_kill_msk)
-+	if (!memcmp(ack_kill_msk, mvm->bt_ack_kill_msk, sizeof(ack_kill_msk)) ||
-+	    !memcmp(cts_kill_msk, mvm->bt_cts_kill_msk, sizeof(cts_kill_msk)))
- 		return 0;
- 
--	mvm->bt_kill_msk = bt_kill_msk;
-+	memcpy(mvm->bt_ack_kill_msk, ack_kill_msk,
-+	       sizeof(mvm->bt_ack_kill_msk));
-+	memcpy(mvm->bt_cts_kill_msk, cts_kill_msk,
-+	       sizeof(mvm->bt_cts_kill_msk));
- 
--	cmd.boost_values[0].kill_ack_msk =
--		cpu_to_le32(iwl_bt_ack_kill_msk[bt_kill_msk]);
--	cmd.boost_values[0].kill_cts_msk =
--		cpu_to_le32(iwl_bt_cts_kill_msk[bt_kill_msk]);
-+	BUILD_BUG_ON(ARRAY_SIZE(ack_kill_msk) < ARRAY_SIZE(cmd.boost_values));
- 
--	cmd.boost_values[1].kill_ack_msk = cmd.boost_values[0].kill_ack_msk;
--	cmd.boost_values[2].kill_cts_msk = cmd.boost_values[0].kill_cts_msk;
--	cmd.boost_values[1].kill_ack_msk = cmd.boost_values[0].kill_ack_msk;
--	cmd.boost_values[2].kill_cts_msk = cmd.boost_values[0].kill_cts_msk;
--
--	IWL_DEBUG_COEX(mvm, "ACK Kill msk = 0x%08x, CTS Kill msk = 0x%08x\n",
--		       iwl_bt_ack_kill_msk[bt_kill_msk],
--		       iwl_bt_cts_kill_msk[bt_kill_msk]);
-+	for (i = 0; i < ARRAY_SIZE(cmd.boost_values); i++) {
-+		cmd.boost_values[i].kill_ack_msk =
-+			cpu_to_le32(iwl_bt_ctl_kill_msk[ack_kill_msk[i]]);
-+		cmd.boost_values[i].kill_cts_msk =
-+			cpu_to_le32(iwl_bt_ctl_kill_msk[cts_kill_msk[i]]);
++static void b43_nphy_tables_init_shared_lut(struct b43_wldev *dev)
++{
++	ntab_upload(dev, B43_NTAB_C0_ESTPLT_R3, b43_ntab_estimatepowerlt0_r3);
++	ntab_upload(dev, B43_NTAB_C1_ESTPLT_R3, b43_ntab_estimatepowerlt1_r3);
++	ntab_upload(dev, B43_NTAB_C0_ADJPLT_R3, b43_ntab_adjustpower0_r3);
++	ntab_upload(dev, B43_NTAB_C1_ADJPLT_R3, b43_ntab_adjustpower1_r3);
++	ntab_upload(dev, B43_NTAB_C0_GAINCTL_R3, b43_ntab_gainctl0_r3);
++	ntab_upload(dev, B43_NTAB_C1_GAINCTL_R3, b43_ntab_gainctl1_r3);
++	ntab_upload(dev, B43_NTAB_C0_IQLT_R3, b43_ntab_iqlt0_r3);
++	ntab_upload(dev, B43_NTAB_C1_IQLT_R3, b43_ntab_iqlt1_r3);
++	ntab_upload(dev, B43_NTAB_C0_LOFEEDTH_R3, b43_ntab_loftlt0_r3);
++	ntab_upload(dev, B43_NTAB_C1_LOFEEDTH_R3, b43_ntab_loftlt1_r3);
++}
++
++static void b43_nphy_tables_init_rev7_volatile(struct b43_wldev *dev)
++{
++	struct ssb_sprom *sprom = dev->dev->bus_sprom;
++	u8 antswlut;
++	int core, offset, i;
++
++	const int antswlut0_offsets[] = { 0, 4, 8, }; /* Offsets for values */
++	const u8 antswlut0_values[][3] = {
++		{ 0x2, 0x12, 0x8 }, /* Core 0 */
++		{ 0x2, 0x18, 0x2 }, /* Core 1 */
++	};
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
++		antswlut = sprom->fem.ghz5.antswlut;
++	else
++		antswlut = sprom->fem.ghz2.antswlut;
++
++	switch (antswlut) {
++	case 0:
++		for (core = 0; core < 2; core++) {
++			for (i = 0; i < ARRAY_SIZE(antswlut0_values[0]); i++) {
++				offset = core ? 0x20 : 0x00;
++				offset += antswlut0_offsets[i];
++				b43_ntab_write(dev, B43_NTAB8(9, offset),
++					       antswlut0_values[core][i]);
++			}
++		}
++		break;
++	default:
++		b43err(dev->wl, "Unsupported antswlut: %d\n", antswlut);
++		break;
 +	}
- 
- 	return iwl_mvm_send_cmd_pdu(mvm, BT_COEX_UPDATE_SW_BOOST, 0,
- 				    sizeof(cmd), &cmd);
-@@ -700,8 +729,6 @@ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- struct iwl_bt_iterator_data {
- 	struct iwl_bt_coex_profile_notif *notif;
- 	struct iwl_mvm *mvm;
--	u32 num_bss_ifaces;
--	bool reduced_tx_power;
- 	struct ieee80211_chanctx_conf *primary;
- 	struct ieee80211_chanctx_conf *secondary;
- 	bool primary_ll;
-@@ -737,8 +764,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		/* Count BSSes vifs */
--		data->num_bss_ifaces++;
- 		/* default smps_mode for BSS / P2P client is AUTOMATIC */
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 		break;
-@@ -750,9 +775,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 					    smps_mode);
- 			return;
- 		}
--
--		/* the Ack / Cts kill mask must be default if AP / GO */
--		data->reduced_tx_power = false;
- 		break;
- 	default:
- 		return;
-@@ -766,7 +788,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		/* ... relax constraints and disable rssi events */
- 		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
- 				    smps_mode);
--		data->reduced_tx_power = false;
- 		if (vif->type == NL80211_IFTYPE_STATION) {
- 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
- 						    false);
-@@ -846,7 +867,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (iwl_get_coex_type(mvm, vif) == BT_COEX_LOOSE_LUT ||
- 	    mvm->cfg->bt_shared_single_ant || !vif->bss_conf.assoc ||
- 	    le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) == BT_OFF) {
--		data->reduced_tx_power = false;
- 		iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, false);
- 		iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
- 		return;
-@@ -861,23 +881,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (ave_rssi > -IWL_MVM_BT_COEX_EN_RED_TXP_THRESH) {
- 		if (iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, true))
- 			IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--
--		/*
--		 * bt_kill_msk can be BT_KILL_MSK_REDUCED_TXPOW only if all the
--		 * BSS / P2P clients have rssi above threshold.
--		 * We set the bt_kill_msk to BT_KILL_MSK_REDUCED_TXPOW before
--		 * the iteration, if one interface's rssi isn't good enough,
--		 * bt_kill_msk will be set to default values.
--		 */
- 	} else if (ave_rssi < -IWL_MVM_BT_COEX_DIS_RED_TXP_THRESH) {
- 		if (iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, false))
- 			IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--
--		/*
--		 * One interface hasn't rssi above threshold, bt_kill_msk must
--		 * be set to default values.
--		 */
--		data->reduced_tx_power = false;
- 	}
- 
- 	/* Begin to monitor the RSSI: it may influence the reduced Tx power */
-@@ -889,7 +895,6 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
- 	struct iwl_bt_iterator_data data = {
- 		.mvm = mvm,
- 		.notif = &mvm->last_bt_notif,
--		.reduced_tx_power = true,
- 	};
- 	struct iwl_bt_coex_ci_cmd cmd = {};
- 	u8 ci_bw_idx;
-@@ -959,14 +964,7 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
- 		memcpy(&mvm->last_bt_ci_cmd, &cmd, sizeof(cmd));
- 	}
- 
--	/*
--	 * If there are no BSS / P2P client interfaces, reduced Tx Power is
--	 * irrelevant since it is based on the RSSI coming from the beacon.
--	 * Use BT_KILL_MSK_DEFAULT in that case.
--	 */
--	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
--
--	if (iwl_mvm_bt_udpate_sw_boost(mvm, data.reduced_tx_power))
-+	if (iwl_mvm_bt_udpate_sw_boost(mvm))
- 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
- }
- 
-@@ -1035,16 +1033,6 @@ static void iwl_mvm_bt_rssi_iterator(void *_data, u8 *mac,
- 		return;
- 
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
--
--	data->num_bss_ifaces++;
--
--	/*
--	 * This interface doesn't support reduced Tx power (because of low
--	 * RSSI probably), then set bt_kill_msk to default values.
--	 */
--	if (!mvmsta->bt_reduced_txpower)
--		data->reduced_tx_power = false;
--	/* else - possibly leave it to BT_KILL_MSK_REDUCED_TXPOW */
- }
- 
- void iwl_mvm_bt_rssi_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-@@ -1053,7 +1041,6 @@ void iwl_mvm_bt_rssi_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	struct iwl_mvm_vif *mvmvif = (void *)vif->drv_priv;
- 	struct iwl_bt_iterator_data data = {
- 		.mvm = mvm,
--		.reduced_tx_power = true,
- 	};
- 	int ret;
- 
-@@ -1100,14 +1087,7 @@ void iwl_mvm_bt_rssi_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_bt_rssi_iterator, &data);
- 
--	/*
--	 * If there are no BSS / P2P client interfaces, reduced Tx Power is
--	 * irrelevant since it is based on the RSSI coming from the beacon.
--	 * Use BT_KILL_MSK_DEFAULT in that case.
--	 */
--	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
--
--	if (iwl_mvm_bt_udpate_sw_boost(mvm, data.reduced_tx_power))
-+	if (iwl_mvm_bt_udpate_sw_boost(mvm))
- 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index ce50363..9e3ba5a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -649,10 +649,6 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
- 	       sizeof(iwl_bt_prio_boost));
- 	memcpy(&bt_cmd->bt4_multiprio_lut, iwl_bt_mprio_lut,
- 	       sizeof(iwl_bt_mprio_lut));
--	bt_cmd->kill_ack_msk =
--		cpu_to_le32(iwl_bt_ack_kill_msk[BT_KILL_MSK_DEFAULT]);
--	bt_cmd->kill_cts_msk =
--		cpu_to_le32(iwl_bt_cts_kill_msk[BT_KILL_MSK_DEFAULT]);
- 
- send_cmd:
- 	memset(&mvm->last_bt_notif_old, 0, sizeof(mvm->last_bt_notif_old));
-@@ -664,12 +660,13 @@ send_cmd:
- 	return ret;
- }
- 
--static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm,
--					   bool reduced_tx_power)
-+static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm)
++}
++
++static void b43_nphy_tables_init_rev16(struct b43_wldev *dev)
++{
++	/* Static tables */
++	if (dev->phy.do_full_init) {
++		ntab_upload(dev, B43_NTAB_NOISEVAR_R7, b43_ntab_noisevar_r7);
++		b43_nphy_tables_init_shared_lut(dev);
++	}
++
++	/* Volatile tables */
++	b43_nphy_tables_init_rev7_volatile(dev);
++}
++
++static void b43_nphy_tables_init_rev7(struct b43_wldev *dev)
++{
++	/* Static tables */
++	if (dev->phy.do_full_init) {
++		ntab_upload(dev, B43_NTAB_FRAMESTRUCT_R3, b43_ntab_framestruct_r3);
++		ntab_upload(dev, B43_NTAB_PILOT_R3, b43_ntab_pilot_r3);
++		ntab_upload(dev, B43_NTAB_TMAP_R7, b43_ntab_tmap_r7);
++		ntab_upload(dev, B43_NTAB_INTLEVEL_R3, b43_ntab_intlevel_r3);
++		ntab_upload(dev, B43_NTAB_TDTRN_R3, b43_ntab_tdtrn_r3);
++		ntab_upload(dev, B43_NTAB_NOISEVAR_R7, b43_ntab_noisevar_r7);
++		ntab_upload(dev, B43_NTAB_MCS_R3, b43_ntab_mcs_r3);
++		ntab_upload(dev, B43_NTAB_TDI20A0_R3, b43_ntab_tdi20a0_r3);
++		ntab_upload(dev, B43_NTAB_TDI20A1_R3, b43_ntab_tdi20a1_r3);
++		ntab_upload(dev, B43_NTAB_TDI40A0_R3, b43_ntab_tdi40a0_r3);
++		ntab_upload(dev, B43_NTAB_TDI40A1_R3, b43_ntab_tdi40a1_r3);
++		ntab_upload(dev, B43_NTAB_PILOTLT_R3, b43_ntab_pilotlt_r3);
++		ntab_upload(dev, B43_NTAB_CHANEST_R3, b43_ntab_channelest_r3);
++		ntab_upload(dev, B43_NTAB_FRAMELT_R3, b43_ntab_framelookup_r3);
++		b43_nphy_tables_init_shared_lut(dev);
++	}
++
++	/* Volatile tables */
++	b43_nphy_tables_init_rev7_volatile(dev);
++}
++
+ static void b43_nphy_tables_init_rev3(struct b43_wldev *dev)
  {
--	enum iwl_bt_kill_msk bt_kill_msk;
--	struct iwl_bt_coex_cmd_old *bt_cmd;
- 	struct iwl_bt_coex_profile_notif_old *notif = &mvm->last_bt_notif_old;
-+	u32 primary_lut = le32_to_cpu(notif->primary_ch_lut);
-+	u32 ag = le32_to_cpu(notif->bt_activity_grading);
-+	struct iwl_bt_coex_cmd_old *bt_cmd;
-+	u8 ack_kill_msk, cts_kill_msk;
- 	struct iwl_host_cmd cmd = {
- 		.id = BT_CONFIG,
- 		.data[0] = &bt_cmd,
-@@ -680,31 +677,15 @@ static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (reduced_tx_power) {
--		/* Reduced Tx power has precedence on the type of the profile */
--		bt_kill_msk = BT_KILL_MSK_REDUCED_TXPOW;
--	} else {
--		/* Low latency BT profile is active: give higher prio to BT */
--		if (BT_MBOX_MSG(notif, 3, SCO_STATE)  ||
--		    BT_MBOX_MSG(notif, 3, A2DP_STATE) ||
--		    BT_MBOX_MSG(notif, 3, SNIFF_STATE))
--			bt_kill_msk = BT_KILL_MSK_SCO_HID_A2DP;
--		else
--			bt_kill_msk = BT_KILL_MSK_DEFAULT;
--	}
-+	ack_kill_msk = iwl_bt_ack_kill_msk[ag][primary_lut];
-+	cts_kill_msk = iwl_bt_cts_kill_msk[ag][primary_lut];
- 
--	IWL_DEBUG_COEX(mvm,
--		       "Update kill_msk: %d - SCO %sactive A2DP %sactive SNIFF %sactive\n",
--		       bt_kill_msk,
--		       BT_MBOX_MSG(notif, 3, SCO_STATE) ? "" : "in",
--		       BT_MBOX_MSG(notif, 3, A2DP_STATE) ? "" : "in",
--		       BT_MBOX_MSG(notif, 3, SNIFF_STATE) ? "" : "in");
--
--	/* Don't send HCMD if there is no update */
--	if (bt_kill_msk == mvm->bt_kill_msk)
-+	if (mvm->bt_ack_kill_msk[0] == ack_kill_msk &&
-+	    mvm->bt_cts_kill_msk[0] == cts_kill_msk)
- 		return 0;
- 
--	mvm->bt_kill_msk = bt_kill_msk;
-+	mvm->bt_ack_kill_msk[0] = ack_kill_msk;
-+	mvm->bt_cts_kill_msk[0] = cts_kill_msk;
- 
- 	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_KERNEL);
- 	if (!bt_cmd)
-@@ -712,16 +693,12 @@ static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm,
- 	cmd.data[0] = bt_cmd;
- 	bt_cmd->flags = cpu_to_le32(BT_COEX_NW_OLD);
- 
--	bt_cmd->kill_ack_msk = cpu_to_le32(iwl_bt_ack_kill_msk[bt_kill_msk]);
--	bt_cmd->kill_cts_msk = cpu_to_le32(iwl_bt_cts_kill_msk[bt_kill_msk]);
-+	bt_cmd->kill_ack_msk = cpu_to_le32(iwl_bt_ctl_kill_msk[ack_kill_msk]);
-+	bt_cmd->kill_cts_msk = cpu_to_le32(iwl_bt_ctl_kill_msk[cts_kill_msk]);
- 	bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_ENABLE |
- 					     BT_VALID_KILL_ACK |
- 					     BT_VALID_KILL_CTS);
- 
--	IWL_DEBUG_COEX(mvm, "ACK Kill msk = 0x%08x, CTS Kill msk = 0x%08x\n",
--		       iwl_bt_ack_kill_msk[bt_kill_msk],
--		       iwl_bt_cts_kill_msk[bt_kill_msk]);
--
- 	ret = iwl_mvm_send_cmd(mvm, &cmd);
- 
- 	kfree(bt_cmd);
-@@ -777,8 +754,6 @@ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- struct iwl_bt_iterator_data {
- 	struct iwl_bt_coex_profile_notif_old *notif;
- 	struct iwl_mvm *mvm;
--	u32 num_bss_ifaces;
--	bool reduced_tx_power;
- 	struct ieee80211_chanctx_conf *primary;
- 	struct ieee80211_chanctx_conf *secondary;
- 	bool primary_ll;
-@@ -814,8 +789,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		/* Count BSSes vifs */
--		data->num_bss_ifaces++;
- 		/* default smps_mode for BSS / P2P client is AUTOMATIC */
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 		break;
-@@ -827,9 +800,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 					    smps_mode);
- 			return;
- 		}
--
--		/* the Ack / Cts kill mask must be default if AP / GO */
--		data->reduced_tx_power = false;
- 		break;
- 	default:
- 		return;
-@@ -843,7 +813,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		/* ... relax constraints and disable rssi events */
- 		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
- 				    smps_mode);
--		data->reduced_tx_power = false;
- 		if (vif->type == NL80211_IFTYPE_STATION) {
- 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
- 						    false);
-@@ -920,7 +889,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (iwl_get_coex_type(mvm, vif) == BT_COEX_LOOSE_LUT ||
- 	    mvm->cfg->bt_shared_single_ant || !vif->bss_conf.assoc ||
- 	    !data->notif->bt_status) {
--		data->reduced_tx_power = false;
- 		iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, false);
- 		iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
- 		return;
-@@ -935,23 +903,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (ave_rssi > -IWL_MVM_BT_COEX_EN_RED_TXP_THRESH) {
- 		if (iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, true))
- 			IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--
--		/*
--		 * bt_kill_msk can be BT_KILL_MSK_REDUCED_TXPOW only if all the
--		 * BSS / P2P clients have rssi above threshold.
--		 * We set the bt_kill_msk to BT_KILL_MSK_REDUCED_TXPOW before
--		 * the iteration, if one interface's rssi isn't good enough,
--		 * bt_kill_msk will be set to default values.
--		 */
- 	} else if (ave_rssi < -IWL_MVM_BT_COEX_DIS_RED_TXP_THRESH) {
- 		if (iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id, false))
- 			IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
--
--		/*
--		 * One interface hasn't rssi above threshold, bt_kill_msk must
--		 * be set to default values.
--		 */
--		data->reduced_tx_power = false;
+ 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
+@@ -3057,16 +3328,7 @@ static void b43_nphy_tables_init_rev3(struct b43_wldev *dev)
+ 		ntab_upload(dev, B43_NTAB_PILOTLT_R3, b43_ntab_pilotlt_r3);
+ 		ntab_upload(dev, B43_NTAB_CHANEST_R3, b43_ntab_channelest_r3);
+ 		ntab_upload(dev, B43_NTAB_FRAMELT_R3, b43_ntab_framelookup_r3);
+-		ntab_upload(dev, B43_NTAB_C0_ESTPLT_R3, b43_ntab_estimatepowerlt0_r3);
+-		ntab_upload(dev, B43_NTAB_C1_ESTPLT_R3, b43_ntab_estimatepowerlt1_r3);
+-		ntab_upload(dev, B43_NTAB_C0_ADJPLT_R3, b43_ntab_adjustpower0_r3);
+-		ntab_upload(dev, B43_NTAB_C1_ADJPLT_R3, b43_ntab_adjustpower1_r3);
+-		ntab_upload(dev, B43_NTAB_C0_GAINCTL_R3, b43_ntab_gainctl0_r3);
+-		ntab_upload(dev, B43_NTAB_C1_GAINCTL_R3, b43_ntab_gainctl1_r3);
+-		ntab_upload(dev, B43_NTAB_C0_IQLT_R3, b43_ntab_iqlt0_r3);
+-		ntab_upload(dev, B43_NTAB_C1_IQLT_R3, b43_ntab_iqlt1_r3);
+-		ntab_upload(dev, B43_NTAB_C0_LOFEEDTH_R3, b43_ntab_loftlt0_r3);
+-		ntab_upload(dev, B43_NTAB_C1_LOFEEDTH_R3, b43_ntab_loftlt1_r3);
++		b43_nphy_tables_init_shared_lut(dev);
  	}
  
- 	/* Begin to monitor the RSSI: it may influence the reduced Tx power */
-@@ -963,7 +917,6 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
- 	struct iwl_bt_iterator_data data = {
- 		.mvm = mvm,
- 		.notif = &mvm->last_bt_notif_old,
--		.reduced_tx_power = true,
- 	};
- 	struct iwl_bt_coex_ci_cmd_old cmd = {};
- 	u8 ci_bw_idx;
-@@ -1037,14 +990,7 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
- 		memcpy(&mvm->last_bt_ci_cmd_old, &cmd, sizeof(cmd));
- 	}
+ 	/* Volatile tables */
+@@ -3115,7 +3377,11 @@ static void b43_nphy_tables_init_rev0(struct b43_wldev *dev)
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables */
+ void b43_nphy_tables_init(struct b43_wldev *dev)
+ {
+-	if (dev->phy.rev >= 3)
++	if (dev->phy.rev >= 16)
++		b43_nphy_tables_init_rev16(dev);
++	else if (dev->phy.rev >= 7)
++		b43_nphy_tables_init_rev7(dev);
++	else if (dev->phy.rev >= 3)
+ 		b43_nphy_tables_init_rev3(dev);
+ 	else
+ 		b43_nphy_tables_init_rev0(dev);
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 3a58aee..3ce2e6f 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -165,6 +165,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+ #define B43_NTAB_C1_LOFEEDTH_R3		B43_NTAB16(27, 448) /* Local Oscillator Feed Through lookup 1 */
+ #define B43_NTAB_C1_PAPD_COMP_R3	B43_NTAB16(27, 576)
  
--	/*
--	 * If there are no BSS / P2P client interfaces, reduced Tx Power is
--	 * irrelevant since it is based on the RSSI coming from the beacon.
--	 * Use BT_KILL_MSK_DEFAULT in that case.
--	 */
--	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
--
--	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm, data.reduced_tx_power))
-+	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm))
- 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
- }
- 
-@@ -1115,16 +1061,6 @@ static void iwl_mvm_bt_rssi_iterator(void *_data, u8 *mac,
- 		return;
- 
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
--
--	data->num_bss_ifaces++;
--
--	/*
--	 * This interface doesn't support reduced Tx power (because of low
--	 * RSSI probably), then set bt_kill_msk to default values.
--	 */
--	if (!mvmsta->bt_reduced_txpower)
--		data->reduced_tx_power = false;
--	/* else - possibly leave it to BT_KILL_MSK_REDUCED_TXPOW */
- }
- 
- void iwl_mvm_bt_rssi_event_old(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-@@ -1133,7 +1069,6 @@ void iwl_mvm_bt_rssi_event_old(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	struct iwl_mvm_vif *mvmvif = (void *)vif->drv_priv;
- 	struct iwl_bt_iterator_data data = {
- 		.mvm = mvm,
--		.reduced_tx_power = true,
- 	};
- 	int ret;
- 
-@@ -1175,14 +1110,7 @@ void iwl_mvm_bt_rssi_event_old(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_bt_rssi_iterator, &data);
- 
--	/*
--	 * If there are no BSS / P2P client interfaces, reduced Tx Power is
--	 * irrelevant since it is based on the RSSI coming from the beacon.
--	 * Use BT_KILL_MSK_DEFAULT in that case.
--	 */
--	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
--
--	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm, data.reduced_tx_power))
-+	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm))
- 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index ac9787c0..b268259 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -514,9 +514,9 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
- 
- 		pos += scnprintf(buf+pos, bufsz-pos, "BT Configuration CMD\n");
- 		pos += scnprintf(buf+pos, bufsz-pos, "\tACK Kill Mask 0x%08x\n",
--				 iwl_bt_ack_kill_msk[mvm->bt_kill_msk]);
-+				 iwl_bt_ctl_kill_msk[mvm->bt_ack_kill_msk[0]]);
- 		pos += scnprintf(buf+pos, bufsz-pos, "\tCTS Kill Mask 0x%08x\n",
--				 iwl_bt_cts_kill_msk[mvm->bt_kill_msk]);
-+				 iwl_bt_ctl_kill_msk[mvm->bt_cts_kill_msk[0]]);
- 
- 	} else {
- 		struct iwl_bt_coex_ci_cmd *cmd = &mvm->last_bt_ci_cmd;
-@@ -531,10 +531,19 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
- 			       le64_to_cpu(cmd->bt_secondary_ci));
- 
- 		pos += scnprintf(buf+pos, bufsz-pos, "BT Configuration CMD\n");
--		pos += scnprintf(buf+pos, bufsz-pos, "\tACK Kill Mask 0x%08x\n",
--				 iwl_bt_ack_kill_msk[mvm->bt_kill_msk]);
--		pos += scnprintf(buf+pos, bufsz-pos, "\tCTS Kill Mask 0x%08x\n",
--				 iwl_bt_cts_kill_msk[mvm->bt_kill_msk]);
-+		pos += scnprintf(buf+pos, bufsz-pos,
-+				 "\tPrimary: ACK Kill Mask 0x%08x\n",
-+				 iwl_bt_ctl_kill_msk[mvm->bt_ack_kill_msk[0]]);
-+		pos += scnprintf(buf+pos, bufsz-pos,
-+				 "\tPrimary: CTS Kill Mask 0x%08x\n",
-+				 iwl_bt_ctl_kill_msk[mvm->bt_cts_kill_msk[0]]);
-+		pos += scnprintf(buf+pos, bufsz-pos,
-+				 "\tSecondary: ACK Kill Mask 0x%08x\n",
-+				 iwl_bt_ctl_kill_msk[mvm->bt_ack_kill_msk[1]]);
-+		pos += scnprintf(buf+pos, bufsz-pos,
-+				 "\tSecondary: CTS Kill Mask 0x%08x\n",
-+				 iwl_bt_ctl_kill_msk[mvm->bt_cts_kill_msk[1]]);
++/* Static N-PHY tables, PHY revision >= 7 */
++#define B43_NTAB_TMAP_R7		B43_NTAB32(12,   0) /* TM AP */
++#define B43_NTAB_NOISEVAR_R7		B43_NTAB32(16,   0) /* noise variance */
 +
- 	}
- 
- 	mutex_unlock(&mvm->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-index ab12aaa..6987571 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-@@ -385,6 +385,8 @@ enum iwl_bt_activity_grading {
- 	BT_ON_NO_CONNECTION	= 1,
- 	BT_LOW_TRAFFIC		= 2,
- 	BT_HIGH_TRAFFIC		= 3,
-+
-+	BT_MAX_AG,
- }; /* BT_COEX_BT_ACTIVITY_GRADING_API_E_VER_1 */
- 
- enum iwl_bt_ci_compliance {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 2cead5d..5b17fdf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -660,7 +660,8 @@ struct iwl_mvm {
- 	wait_queue_head_t d0i3_exit_waitq;
- 
- 	/* BT-Coex */
--	u8 bt_kill_msk;
-+	u8 bt_ack_kill_msk[NUM_PHY_CTX];
-+	u8 bt_cts_kill_msk[NUM_PHY_CTX];
- 
- 	struct iwl_bt_coex_profile_notif_old last_bt_notif_old;
- 	struct iwl_bt_coex_ci_cmd_old last_bt_ci_cmd_old;
-@@ -1047,12 +1048,14 @@ int iwl_mvm_rx_ant_coupling_notif_old(struct iwl_mvm *mvm,
- 
- enum iwl_bt_kill_msk {
- 	BT_KILL_MSK_DEFAULT,
--	BT_KILL_MSK_SCO_HID_A2DP,
--	BT_KILL_MSK_REDUCED_TXPOW,
-+	BT_KILL_MSK_NEVER,
-+	BT_KILL_MSK_ALWAYS,
- 	BT_KILL_MSK_MAX,
- };
--extern const u32 iwl_bt_ack_kill_msk[BT_KILL_MSK_MAX];
--extern const u32 iwl_bt_cts_kill_msk[BT_KILL_MSK_MAX];
-+
-+extern const u8 iwl_bt_ack_kill_msk[BT_MAX_AG][BT_COEX_MAX_LUT];
-+extern const u8 iwl_bt_cts_kill_msk[BT_MAX_AG][BT_COEX_MAX_LUT];
-+extern const u32 iwl_bt_ctl_kill_msk[BT_KILL_MSK_MAX];
- 
- /* beacon filtering */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
+ #define B43_NTAB_TX_IQLO_CAL_LOFT_LADDER_40_SIZE	18
+ #define B43_NTAB_TX_IQLO_CAL_LOFT_LADDER_20_SIZE	18
+ #define B43_NTAB_TX_IQLO_CAL_IQIMB_LADDER_40_SIZE	18
 -- 
-1.8.3.2
+1.8.4.5
 
