@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60414 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933657AbaGVXAI (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58692 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178AbaGBI4R convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 19:00:08 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Improve 'hard' simulate fw crash.
-Date: Tue, 22 Jul 2014 16:00:04 -0700
-Message-Id: <1406070004-6238-1-git-send-email-greearb@candelatech.com> (sfid-20140723_010025_409037_8C46FC31)
+	Wed, 2 Jul 2014 04:56:17 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: =?utf-8?Q?Andr=C3=A9?= Valentin <avalentin@marcant.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: ath10k OTP loading issues
+References: <53AD2EEE.4040704@marcant.net> <53AD4F17.6070604@marcant.net>
+	<87pphop499.fsf@kamboji.qca.qualcomm.com>
+	<53B3C3FF.1060207@marcant.net>
+Date: Wed, 2 Jul 2014 11:56:09 +0300
+In-Reply-To: <53B3C3FF.1060207@marcant.net> (=?utf-8?Q?=22Andr=C3=A9?=
+ Valentin"'s message of
+	"Wed, 2 Jul 2014 10:34:07 +0200")
+Message-ID: <87egy4p2ae.fsf@kamboji.qca.qualcomm.com> (sfid-20140702_105621_045610_B32D1906)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+André Valentin <avalentin@marcant.net> writes:
 
-Different firmware may support different numbers of
-vdevs.  Use value that is always out of range for all
-firmware.
+> Hi!
+>
+>>> have some kind of magic so I can identify it?
+>> 
+>> MAC addresses are good one to check. Basically it should be similar data
+>> as in board.bin.
+>
+> Of course I already tried this. But no luck.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/debug.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+How exactly did you search for it? Are you sure you used the correct MAC
+address?
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 3030158..c9e35c87e 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -531,7 +531,10 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
- 	} else if (!strcmp(buf, "hard")) {
- 		ath10k_info("simulating hard firmware crash\n");
--		ret = ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
-+		/* 0x7fff is vdev id, and it is always out of range for all
-+		 * firmware variants in order to force a firmware crash.
-+		 */
-+		ret = ath10k_wmi_vdev_set_param(ar, 0x7fff,
- 					ar->wmi.vdev_param->rts_threshold, 0);
- 	} else {
- 		ret = -EINVAL;
+> Do you have another idea. Or is the MAC somehow encrypted ?
+
+Nothing special, the MAC address should should be within the first 20
+bytes. For example, here's 00:03:07:12:34:56:
+
+$ od -t x1 board.bin  | head -1
+0000000 44 08 df 30 02 04 00 03 07 12 34 56 00 00 6a 00
+
+But of course I might be missing something. Or the calibration data is
+somehow encrypted on the flash.
+
 -- 
-1.7.11.7
-
+Kalle Valo
