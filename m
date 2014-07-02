@@ -1,288 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60456 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932544AbaGVXCp (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:39645 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbaGBCEr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 19:02:45 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 5/5] ath10k:  save firmware RAM and ROM BSS sections on crash.
-Date: Tue, 22 Jul 2014 16:02:34 -0700
-Message-Id: <1406070154-6614-5-git-send-email-greearb@candelatech.com> (sfid-20140723_010250_496349_577A721D)
-In-Reply-To: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
-References: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
+	Tue, 1 Jul 2014 22:04:47 -0400
+Received: by mail-pd0-f169.google.com with SMTP id g10so11029195pdj.14
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 19:04:47 -0700 (PDT)
+Date: Tue, 1 Jul 2014 19:04:42 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user
+ hints
+Message-ID: <20140702020442.GP1390@garbanzo.do-not-panic.com> (sfid-20140702_040451_952877_4762ED46)
+References: <1402469724-22358-1-git-send-email-arik@wizery.com>
+ <1402469724-22358-4-git-send-email-arik@wizery.com>
+ <CAB=NE6XTgcMWNHppF7WgZjqGCyaZSOJLF4FUC1hwVyyaBrJ79g@mail.gmail.com>
+ <CA+XVXfedV=Frh8UmAzRfgPbOw8nq1Aa-Yr7QSgZTKe8h=bh78Q@mail.gmail.com>
+ <20140623182623.GC1390@garbanzo.do-not-panic.com>
+ <CA+XVXffrepXAKitqhL4C87Jxy4MiF+iAO_PP6YZkMKtqeckV+Q@mail.gmail.com>
+ <20140623204800.GF1390@garbanzo.do-not-panic.com>
+ <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
+ <20140630222132.GN1390@garbanzo.do-not-panic.com>
+ <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, Jul 01, 2014 at 05:03:42PM +0300, Arik Nemtsov wrote:
+> On Tue, Jul 1, 2014 at 1:21 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> >
+> > On Tue, Jun 24, 2014 at 08:55:28AM +0300, Arik Nemtsov wrote:
+> > > On Mon, Jun 23, 2014 at 11:48 PM, Luis R. Rodriguez
+> > > <mcgrof@do-not-panic.com> wrote:
+> > > > On Mon, Jun 23, 2014 at 09:34:13PM +0300, Arik Nemtsov wrote:
+> > > >> On Mon, Jun 23, 2014 at 9:26 PM, Luis R. Rodriguez
+> > > >> <mcgrof@do-not-panic.com> wrote:
+> > > >> > On Mon, Jun 23, 2014 at 08:14:43PM +0300, Arik Nemtsov wrote:
+> > > >> >> On Thu, Jun 19, 2014 at 2:34 AM, Luis R. Rodriguez
+> > > >> >> <mcgrof@do-not-panic.com> wrote:
+> > > >> >> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> > > >> >> >> Allow driver and user hints to set the "world" regulatory domain,
+> > > >> >> >
+> > > >> >> > NACK - as expressed in the other patch, letting the drivers to use the
+> > > >> >> > new API to set the world regulatory domain doesn't make sense as we
+> > > >> >> > have custom apply stuff, and the world regulatory domain is not
+> > > >> >> > something dynamic.
+> > > >> >>
+> > > >> >> Well we want to set the world regdomain from FW. This obviously
+> > > >> >> happens after wiphy registration, so I don't think the custom apply
+> > > >> >> can be used here? (since we generally want cfg80211 to own the
+> > > >> >> regdomain settings).
+> > > >> >
+> > > >> > Can the driver not obtain the world regulatory domain from firmware
+> > > >> > prior to wiphy registration? Why not?
+> > > >>
+> > > >> Since the FW is not running yet :)
+> > > >
+> > > > Is that a limitation that can be corrected on the driver ? Can the wiphy
+> > > > registration be moved to after wiphy firmware is loaded ? If this is too
+> > > > hard I see this as a good reason to extend the API or add a new similar
+> > > > call that would allow for this case. The reason for the restriction on wiphy
+> > > > registration was due to the fact that we didn't want to mess with _orig
+> > > > parameters after wiphy registration, and we didn't want drivers poking
+> > > > with those. The _orig parameters then can be set by cfg80211 through two
+> > > > ways, one is the driver say reads EEPROM stuff and sets the channel
+> > > > structs with the restrictions it had prior to wiphy registration or if
+> > > > drivers could deduce a regulatory domain structure they could use the
+> > > > wiphy_apply_custom_regulatory() which would do the same for them.
+> > > >
+> > > > Note that what this does is let drivers fill a set of channel data
+> > > > structures and then with these mechanisms set the max allowed superset.
+> > > > Anything after this is a subset of the original set of allowed
+> > > > parameters. Please review handle_channel().
+> > > >
+> > > > The difficulty in allowing changing the _orig stuff after wiphy
+> > > > registration is we'd then have to ensure that the current state
+> > > > of the regulatory machine is replicated on the device driver. Just
+> > > > consider doing this properly and I think we'll be good.
+> > >
+> > > We can't access the FW before wiphy registration. In some scenarios
+> > > the module is loaded during system boot, before we can really access
+> > > the HW bus. We only start the FW on the first ifup.
+> > > To allow ifup, we need the wiphy registered. We have no "hook" where
+> > > we can register the wiphy after the wifi HW bus if fully available.
+> >
+> > What hw bus? Buses can probe, even if its a fake bus type of thing
+> > you can use platform_device_register_simple(), look at
+> > drivers/net/ethernet/8390/ne.c as a complex example.
+> >
+> > Also if a bus is not yet set up or if resouces are still being
+> > brought up and the driver needs to be poked at a later time you can
+> > verify what you need access for and return -EPROBE_DEFER upon probe
+> > if things can't move forward which will force the driver to be
+> > probed at a later time.
+> >
+> > > Nor do we want to find this hook, because of multiple platforms etc.
+> >
+> > I'm pretty sure you can find it, but I do also understand that
+> > restructuring the driver is a bit of work so I'm fine with you saying
+> > its a lot of work but saying its no possible seems not fully
+> > supported yet.
+> 
+> That would be a better choice of words - we don't want to restructure
+> the entire driver over this.
 
-This can be used to get a useful back trace out of a firmware
-crash that involves an interrupt handler.  For instance, a
-null-pointer-exception would be this kind of trace.  A user-space
-tool can read the debugfs file and decode things as wished.
+Its a trade off call in the end and so far I can't see a good reason to
+enable dynamic custom world regulatory domains just because the "bus" is
+not available, please do look into using -EPROBE_DEFER. This would
+enable us to only consider the use case of the callback *only* to fetch
+direct alpha2s regulatory domains from the driver/firmware dynamically
+and that should be fairly easy to do. I rather incur a bit of penalty
+over work on your driver than to allow an API for a corner case that has
+not yet been quantitatively evaluated. Folks already complain about the
+complexity on regulatory code, I need to be a hard ass and ensure more
+simplicity one way or another. This is one way.
 
-This requires a packaged firmware with a new IE to describe the
-BSS section starts and length.
+So again, sorry but NACK.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.c  | 62 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h  | 11 ++++++
- drivers/net/wireless/ath/ath10k/debug.c | 32 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |  1 +
- drivers/net/wireless/ath/ath10k/pci.c   | 37 ++++++++++++++++++++
- 5 files changed, 143 insertions(+)
+> > > But I'm not sure why you're mentioning the workings of
+> > > handle_channel() for this patch. It doesn't allow changing the
+> > > original flags set at registration. It just allows drivers and the
+> > > user to assign the world regdomain, and also to change the native "00"
+> > > definitions with the FW regdomain. It shouldn't harm anything AFAICT.
+> >
+> > You're missing the point for why I bring up handle_channel().
+> > handle_channel() *can* update orig_* parameters for you for an alpha2
+> > which you *shoud* consider. Additionally handle_channel() takes into
+> > consideration the regulatory state machine and can apply a regulatory
+> > domain to different wiphys by design to help with compliance. The
+> > handle_channel_custom() is designed for custom regulatory domains
+> > and do not propagate to other wiphys.
+> 
+> AFAICT, orig_flags only change if:
+> 
+> if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
+>    request_wiphy && request_wiphy == wiphy &&
+>    request_wiphy->regulatory_flags & REGULATORY_STRICT_REG) {
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 93adb8c..08e96e7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -365,6 +365,12 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 	struct ath10k_fw_ie *hdr;
- 	const u8 *data;
- 	__le32 *timestamp;
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+	u32 old_ram_bss_len = ar->debug.fw_ram_bss_len;
-+	u32 old_rom_bss_len = ar->debug.fw_rom_bss_len;
-+	unsigned char *t1, *t2;
-+	unsigned long flags;
-+#endif
- 
- 	/* first fetch the firmware file (firmware-*.bin) */
- 	ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
-@@ -479,6 +485,38 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 			ar->otp_len = ie_len;
- 
- 			break;
-+		case ATH10K_FW_IE_BSS_INFO:
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+			spin_lock_irqsave(&ar->data_lock, flags);
-+
-+			ar->debug.fw_ram_bss_addr = le32_to_cpu(((u32 *)(data))[0]);
-+			ar->debug.fw_ram_bss_len = le32_to_cpu(((u32 *)(data))[1]);
-+			ar->debug.fw_rom_bss_addr = le32_to_cpu(((u32 *)(data))[2]);
-+			ar->debug.fw_rom_bss_len = le32_to_cpu(((u32 *)(data))[3]);
-+			t1 = t2 = NULL;
-+			if ((old_ram_bss_len < ar->debug.fw_ram_bss_len) &&
-+			    ar->debug.ram_bss_buf) {
-+				t1 = ar->debug.ram_bss_buf;
-+				ar->debug.ram_bss_buf = NULL;
-+			}
-+			if ((old_rom_bss_len < ar->debug.fw_rom_bss_len) &&
-+			    ar->debug.rom_bss_buf) {
-+				t2 = ar->debug.rom_bss_buf;
-+				ar->debug.rom_bss_buf = NULL;
-+			}
-+			spin_unlock_irqrestore(&ar->data_lock, flags);
-+			if (t1)
-+				vfree(t1);
-+			if (t2)
-+				vfree(t2);
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found FW bss info, RAM: addr 0x%x len 0x%x  ROM: addr 0x%x len 0x%x\n",
-+				   ar->debug.fw_ram_bss_addr,
-+				   ar->debug.fw_ram_bss_len,
-+				   ar->debug.fw_rom_bss_addr,
-+				   ar->debug.fw_rom_bss_len);
-+#endif
-+			break;
- 		default:
- 			ath10k_warn("Unknown FW IE: %u\n",
- 				    le32_to_cpu(hdr->id));
-@@ -1094,9 +1132,33 @@ EXPORT_SYMBOL(ath10k_core_create);
- 
- void ath10k_core_destroy(struct ath10k *ar)
- {
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+	unsigned long flags;
-+	unsigned char *t1 = NULL;
-+	unsigned char *t2 = NULL;
-+#endif
-+
- 	flush_workqueue(ar->workqueue);
- 	destroy_workqueue(ar->workqueue);
- 
-+#ifdef CONFIG_ATH10K_DEBUGFS
-+	spin_lock_irqsave(&ar->data_lock, flags);
-+	if (ar->debug.rom_bss_buf) {
-+		t1 = ar->debug.rom_bss_buf;
-+		ar->debug.rom_bss_buf = NULL;
-+	}
-+	if (ar->debug.ram_bss_buf) {
-+		t2 = ar->debug.ram_bss_buf;
-+		ar->debug.ram_bss_buf = NULL;
-+	}
-+	spin_unlock_irqrestore(&ar->data_lock, flags);
-+
-+	if (t1)
-+		vfree(t1);
-+	if (t2)
-+		vfree(t2);
-+#endif
-+
- 	ath10k_mac_destroy(ar);
- }
- EXPORT_SYMBOL(ath10k_core_destroy);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f122eae..f44957f 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -282,12 +282,16 @@ struct ath10k_vif_iter {
-  * @ATH10K_FW_ERROR_DUMP_REGDUMP: Register crash dump in binary format
-  * @ATH10K_FW_ERROR_DUMP_STACK:   Stack memory contents.
-  * @ATH10K_FW_ERROR_DUMP_EXC_STACK:  Exception stack contents
-+ * @ATH10K_FW_ERROR_DUMP_RAM_BSS:  BSS area for RAM code
-+ * @ATH10K_FW_ERROR_DUMP_ROM_BSS:  BSS area for ROM code
-  */
- enum ath10k_fw_error_dump_type {
- 	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
- 	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
- 	ATH10K_FW_ERROR_DUMP_STACK = 2,
- 	ATH10K_FW_ERROR_DUMP_EXC_STACK = 3,
-+	ATH10K_FW_ERROR_DUMP_RAM_BSS = 4,
-+	ATH10K_FW_ERROR_DUMP_ROM_BSS = 5,
- 
- 	ATH10K_FW_ERROR_DUMP_MAX,
- };
-@@ -370,6 +374,13 @@ struct ath10k_debug {
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
- 	unsigned char stack_buf[ATH10K_FW_STACK_SIZE];
- 	unsigned char exc_stack_buf[ATH10K_FW_STACK_SIZE];
-+
-+	unsigned char *rom_bss_buf;
-+	unsigned char *ram_bss_buf;
-+	unsigned int fw_ram_bss_addr;
-+	unsigned int fw_ram_bss_len;
-+	unsigned int fw_rom_bss_addr;
-+	unsigned int fw_rom_bss_len;
- };
- 
- enum ath10k_state {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 1cbc175..450b31d 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -618,6 +618,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	int hdr_len = sizeof(*dump_data);
- 	unsigned long flags;
- 	struct timespec timestamp;
-+	int rom_bss_len = 0;
-+	int ram_bss_len = 0;
- 
- 	len = hdr_len;
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.reg_dump_values);
-@@ -625,6 +627,19 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.stack_buf);
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.exc_stack_buf);
- 
-+	/* Need to store local copies to detect races */
-+	spin_lock_irqsave(&ar->data_lock, flags);
-+
-+	ram_bss_len = ar->debug.fw_ram_bss_len;
-+	rom_bss_len = ar->debug.fw_ram_bss_len;
-+
-+	if (ram_bss_len && ar->debug.ram_bss_buf)
-+		len += sizeof(*dump_tlv) + ram_bss_len;
-+	if (rom_bss_len && ar->debug.rom_bss_buf)
-+		len += sizeof(*dump_tlv) + rom_bss_len;
-+
-+	spin_unlock_irqrestore(&ar->data_lock, flags);
-+
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	sofar += hdr_len;
-@@ -704,6 +719,23 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	memcpy(dump_tlv->tlv_data, &ar->debug.exc_stack_buf, dump_tlv->tlv_len);
- 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
- 
-+	if (ram_bss_len >= ar->debug.fw_ram_bss_len &&
-+	    ar->debug.fw_ram_bss_len && ar->debug.ram_bss_buf) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = ATH10K_FW_ERROR_DUMP_RAM_BSS;
-+		dump_tlv->tlv_len = ar->debug.fw_ram_bss_len;
-+		memcpy(dump_tlv->tlv_data, ar->debug.ram_bss_buf, dump_tlv->tlv_len);
-+		sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+	}
-+	if (rom_bss_len >= ar->debug.fw_rom_bss_len &&
-+	    ar->debug.fw_rom_bss_len && ar->debug.rom_bss_buf) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = ATH10K_FW_ERROR_DUMP_ROM_BSS;
-+		dump_tlv->tlv_len = ar->debug.fw_rom_bss_len;
-+		memcpy(dump_tlv->tlv_data, ar->debug.rom_bss_buf, dump_tlv->tlv_len);
-+		sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+	}
-+
- 	spin_unlock_irqrestore(&ar->data_lock, flags);
- 
- 	WARN_ON(sofar != len);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 38a03e4..724bd94 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -53,6 +53,7 @@ enum ath10k_fw_ie_type {
- 	ATH10K_FW_IE_FEATURES = 2,
- 	ATH10K_FW_IE_FW_IMAGE = 3,
- 	ATH10K_FW_IE_OTP_IMAGE = 4,
-+	ATH10K_FW_IE_BSS_INFO = 5,
- };
- 
- /* Known pecularities:
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d298e14..6d43845 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -872,6 +872,37 @@ static void ath10k_save_firmware_exc_stack(struct ath10k *ar)
- 					ar->debug.exc_stack_buf,
- 					HI_ITEM(hi_err_stack));
- }
-+
-+static void ath10k_check_dump_fw_bss(struct ath10k *ar, u32 addr, u32 len,
-+				     bool is_rom) {
-+	int ret;
-+
-+	if (!addr)
-+		return;
-+	if (is_rom) {
-+		if (!ar->debug.rom_bss_buf)
-+			ar->debug.rom_bss_buf = kmalloc(len, GFP_ATOMIC);
-+		if (!ar->debug.rom_bss_buf)
-+			return;
-+
-+		ret = ath10k_pci_diag_read_mem(ar, addr, ar->debug.rom_bss_buf,
-+					       len);
-+		if (ret != 0)
-+			ath10k_err("failed to read FW ROM BSS memory: %d (addr %d sz %d)\n",
-+				   ret, addr, len);
-+	} else {
-+		if (!ar->debug.ram_bss_buf)
-+			ar->debug.ram_bss_buf = kmalloc(len, GFP_ATOMIC);
-+		if (!ar->debug.ram_bss_buf)
-+			return;
-+
-+		ret = ath10k_pci_diag_read_mem(ar, addr, ar->debug.ram_bss_buf,
-+					       len);
-+		if (ret != 0)
-+			ath10k_err("failed to read FW RAM BSS memory: %d (addr %d sz %d)\n",
-+				   ret, addr, len);
-+	}
-+}
- #endif
- 
- static void ath10k_pci_hif_dump_area(struct ath10k *ar)
-@@ -928,6 +959,12 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 	if (!ar->debug.crashed_since_read) {
- 		ath10k_save_firmware_stack(ar);
- 		ath10k_save_firmware_exc_stack(ar);
-+
-+		/* And the RAM BSS region, if we know it. */
-+		ath10k_check_dump_fw_bss(ar, ar->debug.fw_ram_bss_addr,
-+					 ar->debug.fw_ram_bss_len, false);
-+		ath10k_check_dump_fw_bss(ar, ar->debug.fw_rom_bss_addr,
-+					 ar->debug.fw_rom_bss_len, true);
- 	}
- 
- 	spin_unlock_bh(&ar->data_lock);
--- 
-1.7.11.7
+And also upon registration the values are kept as orig_, it lets the
+driver register what the device is capable of and not allow anything
+more.
 
+  Luis
