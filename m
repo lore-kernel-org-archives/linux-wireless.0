@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0041.hostedemail.com ([216.40.44.41]:51036 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752106AbaGHQgD (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35881 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbaGBVyM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 12:36:03 -0400
-Message-ID: <1404837357.932.20.camel@joe-AO725> (sfid-20140708_183626_026747_62F5D9B8)
-Subject: Re: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format
- specifier
-From: Joe Perches <joe@perches.com>
+	Wed, 2 Jul 2014 17:54:12 -0400
+Date: Wed, 2 Jul 2014 14:54:10 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Date: Tue, 08 Jul 2014 09:35:57 -0700
-In-Reply-To: <1404807878.5102.85.camel@smile.fi.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404751810.27043.90.camel@joe-AO725>
-	 <1404807878.5102.85.camel@smile.fi.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/6] lib / string_helpers: clean up test suite
+Message-Id: <20140702145410.e1885ad85c25a6f4b6cef2c4@linux-foundation.org> (sfid-20140702_235439_654540_F757DBE6)
+In-Reply-To: <1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-07-08 at 11:24 +0300, Andy Shevchenko wrote:
-> On Mon, 2014-07-07 at 09:50 -0700, Joe Perches wrote:
-> > Perhaps better if -1 was accepted by string_escape_mem
-> > as a strlen request or just ignored as a 0 length is
-> > above.
+On Wed,  2 Jul 2014 16:20:24 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+
+> This patch prepares test suite for a following update. It introduces
+> test_string_check_buf() helper which checks the result and dumps an error.
 > 
-> Would it be any benefit here?
+> ...
+>
+> --- a/lib/test-string_helpers.c
+> +++ b/lib/test-string_helpers.c
+> @@ -10,6 +10,26 @@
+>  #include <linux/string.h>
+>  #include <linux/string_helpers.h>
+>  
+> +static __init bool test_string_check_buf(const char *name, unsigned int flags,
+> +					 char *in, size_t p,
+> +					 char *out_real, size_t q_real,
+> +					 char *out_test, size_t q_test)
+> +{
+> +	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
+> +		return true;
+> +
+> +	pr_err("Test '%s' failed: flags = %u\n", name, flags);
+> +
+> +	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
+> +		       in, p, true);
+> +	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
+> +		       out_test, q_test, true);
+> +	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
+> +		       out_real, q_real, true);
 
-Dunno, it was just a thought for you.
-
-> > fyi: hex_string emits nothing on printk("%ph", buf);
-> 
-> Works just fine. How did you check it?
-
-By not reading the code correctly.
-So what you have is fine.
+Seems strange to mix KERN_ERR and KERN_WARNING.  The code's always been
+that way, but maybe it can be improved.
 
 
