@@ -1,44 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57134 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753028AbaGWO3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 10:29:55 -0400
-Message-ID: <1406125788.14675.0.camel@jlt4.sipsolutions.net> (sfid-20140723_162958_556613_47034D33)
-Subject: Re: [PATCH 1/2] cfg80211: add enable_dynack API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Philippe Duchein <wireless-dev@duchein.net>
-Date: Wed, 23 Jul 2014 16:29:48 +0200
-In-Reply-To: <CAA2SeNKL1ZQq_G6My1Fz+vmptML1RwjTjzxBM5v8sbXCq8C0nQ@mail.gmail.com> (sfid-20140723_005608_412420_2DDCEA67)
-References: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1405859555-31806-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1405937608.32255.15.camel@jlt4.sipsolutions.net>
-	 <CAA2SeNKL1ZQq_G6My1Fz+vmptML1RwjTjzxBM5v8sbXCq8C0nQ@mail.gmail.com>
-	 (sfid-20140723_005608_412420_2DDCEA67)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:54318 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751297AbaGBNng (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2014 09:43:36 -0400
+Message-ID: <1404308611.14624.78.camel@joe-AO725> (sfid-20140702_154352_269313_A2C5D5DC)
+Subject: Re: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Wed, 02 Jul 2014 06:43:31 -0700
+In-Reply-To: <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-23 at 00:56 +0200, Lorenzo Bianconi wrote:
-
-> > I think it may be better to handle this in the call that's normally used
-> > (coverage class setting), but allow the other attribute to make a sort
-> > of "dynamic coverage class". And internally, calling drivers, it seems
-> > fine to pass -1 or so since you can extend the datatype there, instead
-> > of introducing a new internal callback. External/internal doesn't always
-> > have to match perfectly.
-> >
+On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
+> In kernel we have function to escape a given string. Let's use it instead of
+> custom approach.
 > 
-> So we can pass coverage class equal to -1 to lower drivers in order to
-> enable ack timeout estimation. In this case I have to modify driver
-> routine signature in p54, ath5k and ath9k drivers. Moreover in
-> cfg80211/mac80211 stack we can take into account dynamic coverage
-> class using s16 datatype instead of u8 for coverage_class in wiphy
-> data structure.
+> This fixes a bug. The current implementation wrongly prints octal numbers: only
+> two first digits are used in case when 3 are required and the rest of the
+> string ends up cut off.
+[]
+> diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+[]
+> @@ -48,31 +49,10 @@ static void lib80211_crypt_deinit_handler(unsigned long data);
+>  
+>  const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
+>  {
+> -	const char *s = ssid;
+>  	char *d = buf;
+>  
+>  	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
+> -	while (ssid_len--) {
+> -		if (isprint(*s)) {
+> -			*d++ = *s++;
+> -			continue;
+> -		}
+> -
+> -		*d++ = '\\';
+> -		if (*s == '\0')
+> -			*d++ = '0';
+> -		else if (*s == '\n')
+> -			*d++ = 'n';
+> -		else if (*s == '\r')
+> -			*d++ = 'r';
+> -		else if (*s == '\t')
+> -			*d++ = 't';
+> -		else if (*s == '\\')
+> -			*d++ = '\\';
+> -		else
+> -			d += snprintf(d, 3, "%03o", *s);
+> -		s++;
+> -	}
+> +	d += string_escape_mem_any_np(ssid, ssid_len, buf, ~0UL, NULL);
+>  	*d = '\0';
+>  	return buf;
+>  }
 
-Right. But that seems reasonable, no?
+This code looks like it was adapted from the old print_mac
+ethernet code that was eventually replaced by a vsprintf
+pointer extension %pM
 
-johannes
+So a better way to do this might be to add and use yet
+another vsprintf %p<foo> extension for ssids.
+
 
