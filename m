@@ -1,115 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50122 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452AbaGSLa7 (ORCPT
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:48288 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbaGCMg3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 07:30:59 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hi2so1967960wib.5
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:30:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/16] staging: vt6656: struct vnt_private rename cdTD to num_tx_context
-Date: Sat, 19 Jul 2014 12:30:04 +0100
-Message-Id: <1405769418-2815-2-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133106_050701_A7318218)
-In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
-References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 3 Jul 2014 08:36:29 -0400
+Received: by mail-vc0-f176.google.com with SMTP id ik5so136233vcb.7
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 05:36:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140628205414.GA17825@localhost>
+References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
+	<20140628205414.GA17825@localhost>
+Date: Thu, 3 Jul 2014 20:36:28 +0800
+Message-ID: <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com> (sfid-20140703_143634_510932_6ACC7F91)
+Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with new plid
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: "devel@lists.open80211s.org" <devel@lists.open80211s.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-number of tx_context
+Hi, Bob
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 2 +-
- drivers/staging/vt6656/int.c      | 2 +-
- drivers/staging/vt6656/main_usb.c | 8 ++++----
- drivers/staging/vt6656/rxtx.c     | 4 ++--
- 4 files changed, 8 insertions(+), 8 deletions(-)
+What is the consequence if we don't handle this case? Is the peer
+going to do the re-auth again?
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 6b8c97f..416a55d 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -293,7 +293,7 @@ struct vnt_private {
- 
- 	/* Variables to track resources for the BULK Out Pipe */
- 	struct vnt_usb_send_context *tx_context[CB_MAX_TX_DESC];
--	u32 cbTD;
-+	u32 num_tx_context;
- 
- 	/* Variables to track resources for the Interrupt In Pipe */
- 	struct vnt_interrupt_buffer int_buf;
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index e404d9e..1ea2433 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -75,7 +75,7 @@ static int vnt_int_report_rate(struct vnt_private *priv, u8 pkt_no, u8 tsr)
- 	u8 tx_retry = (tsr & 0xf0) >> 4;
- 	s8 idx;
- 
--	if (pkt_no >= priv->cbTD)
-+	if (pkt_no >= priv->num_tx_context)
- 		return -EINVAL;
- 
- 	context = priv->tx_context[pkt_no];
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index a612b15..ba2467c 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -108,9 +108,9 @@ static void device_set_options(struct vnt_private *priv)
- {
- 	/* Set number of TX buffers */
- 	if (vnt_tx_buffers < CB_MIN_TX_DESC || vnt_tx_buffers > CB_MAX_TX_DESC)
--		priv->cbTD = TX_DESC_DEF0;
-+		priv->num_tx_context = TX_DESC_DEF0;
- 	else
--		priv->cbTD = vnt_tx_buffers;
-+		priv->num_tx_context = vnt_tx_buffers;
- 
- 	/* Set number of RX buffers */
- 	if (vnt_rx_buffers < CB_MIN_RX_DESC || vnt_rx_buffers > CB_MAX_RX_DESC)
-@@ -388,7 +388,7 @@ static void device_free_tx_bufs(struct vnt_private *priv)
- 	struct vnt_usb_send_context *tx_context;
- 	int ii;
- 
--	for (ii = 0; ii < priv->cbTD; ii++) {
-+	for (ii = 0; ii < priv->num_tx_context; ii++) {
- 		tx_context = priv->tx_context[ii];
- 		/* deallocate URBs */
- 		if (tx_context->urb) {
-@@ -452,7 +452,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 	struct vnt_rcb *rcb;
- 	int ii;
- 
--	for (ii = 0; ii < priv->cbTD; ii++) {
-+	for (ii = 0; ii < priv->num_tx_context; ii++) {
- 		tx_context = kmalloc(sizeof(struct vnt_usb_send_context),
- 								GFP_KERNEL);
- 		if (tx_context == NULL) {
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index f3bbfba..c4b9ca2 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -81,7 +81,7 @@ static struct vnt_usb_send_context
- 
- 	dev_dbg(&priv->usb->dev, "%s\n", __func__);
- 
--	for (ii = 0; ii < priv->cbTD; ii++) {
-+	for (ii = 0; ii < priv->num_tx_context; ii++) {
- 		if (!priv->tx_context[ii])
- 			return NULL;
- 
-@@ -97,7 +97,7 @@ static struct vnt_usb_send_context
- 		}
- 	}
- 
--	if (ii == priv->cbTD)
-+	if (ii == priv->num_tx_context)
- 		dev_dbg(&priv->usb->dev, "%s No Free Tx Context\n", __func__);
- 
- 	return NULL;
--- 
-2.0.1
+Regards,
+Chun-Yeow
 
+On Sun, Jun 29, 2014 at 4:54 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> [oops, +linux-wireless]
+> On Sat, Jun 28, 2014 at 04:35:25PM -0400, Bob Copeland wrote:
+>> The 802.11 standard says when processing a plink confirm
+>> frame:
+>>
+>> "If the peerLinkID in the mesh peering instance has not been
+>> set, the Local Link ID field of the Mesh Peering Confirm
+>> request shall be copied into the peerLinkID in the mesh
+>> peering instance."
+>>
+>> We were only doing this when receiving an open peering frame,
+>> but it could happen that the open frame gets lost and so we
+>> should handle this case rather than rejecting the confirm and
+>> failing the whole peering process.
+>>
+>> Reported-by: Yu Niiro <yu.niiro@gmail.com>
+>> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>> ---
+>>  net/mac80211/mesh_plink.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+>> index 63b8741..c47194d 100644
+>> --- a/net/mac80211/mesh_plink.c
+>> +++ b/net/mac80211/mesh_plink.c
+>> @@ -959,7 +959,8 @@ mesh_plink_get_event(struct ieee80211_sub_if_data *sdata,
+>>               if (!matches_local)
+>>                       event = CNF_RJCT;
+>>               if (!mesh_plink_free_count(sdata) ||
+>> -                 (sta->llid != llid || sta->plid != plid))
+>> +                 sta->llid != llid ||
+>> +                 (sta->plid && sta->plid != plid))
+>>                       event = CNF_IGNR;
+>>               else
+>>                       event = CNF_ACPT;
+>> @@ -1080,6 +1081,10 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+>>               goto unlock_rcu;
+>>       }
+>>
+>> +     /* 802.11-2012 13.3.7.2 - update plid on CNF if not set */
+>> +     if (!sta->plid && event == CNF_ACPT)
+>> +             sta->plid = plid;
+>> +
+>>       changed |= mesh_plink_fsm(sdata, sta, event);
+>>
+>>  unlock_rcu:
+>> --
+>> 2.0.0.rc2
+>>
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
