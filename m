@@ -1,129 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52390 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:61621 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753639AbaGGPWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:22:10 -0400
+	id S1750871AbaGCKtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2014 06:49:17 -0400
+Message-ID: <1404384546.5102.71.camel@smile.fi.intel.com> (sfid-20140703_124934_472883_223CD4E4)
+Subject: Re: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
+To: Joe Perches <joe@perches.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 01/10] lib / string_helpers: move documentation to c-file
-Date: Mon,  7 Jul 2014 18:21:43 +0300
-Message-Id: <1404746512-12749-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172311_249992_A4AA5AA9)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Thu, 03 Jul 2014 13:49:06 +0300
+In-Reply-To: <1404318611.14624.80.camel@joe-AO725>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404308611.14624.78.camel@joe-AO725>
+	 <1404309961.5102.35.camel@smile.fi.intel.com>
+	 <1404318611.14624.80.camel@joe-AO725>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The documentation of API belongs to c-file. This patch moves it accordingly.
+On Wed, 2014-07-02 at 09:30 -0700, Joe Perches wrote:
+> On Wed, 2014-07-02 at 17:06 +0300, Andy Shevchenko wrote:
+> > On Wed, 2014-07-02 at 06:43 -0700, Joe Perches wrote:
+> > > On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
+> > > > In kernel we have function to escape a given string. Let's use it instead of
+> > > > custom approach.
+> > > > 
+> > > > This fixes a bug. The current implementation wrongly prints octal numbers: only
+> > > > two first digits are used in case when 3 are required and the rest of the
+> > > > string ends up cut off.
+> > 
+> > []
+> > 
+> > > This code looks like it was adapted from the old print_mac
+> > > ethernet code that was eventually replaced by a vsprintf
+> > > pointer extension %pM
+> > > 
+> > > So a better way to do this might be to add and use yet
+> > > another vsprintf %p<foo> extension for ssids.
+> > 
+> > Might be, but it
+> >  - doesn't reduce necessity of string_escape_mem (not only ssid are
+> > escaped in kernel)
+> >  - prevents user to choose a rule what exactly their would like to
+> > escape (look at the other patches against ssid escaping)
+> > 
+> 
+> %pE<FLAGS> would allow the same arbitrary combinations
+> of your flags.
 
-There is no functional change.
+Makes sense. 
+Can do this as a separate patch.
+Though I would have a sane default for escaping SSIDs. I hope that one
+from print_ssid() could be the one.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- include/linux/string_helpers.h | 34 ----------------------------------
- lib/string_helpers.c           | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 34 deletions(-)
-
-diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
-index 3eeee96..5a30f2a 100644
---- a/include/linux/string_helpers.h
-+++ b/include/linux/string_helpers.h
-@@ -20,40 +20,6 @@ int string_get_size(u64 size, enum string_size_units units,
- #define UNESCAPE_ANY		\
- 	(UNESCAPE_SPACE | UNESCAPE_OCTAL | UNESCAPE_HEX | UNESCAPE_SPECIAL)
- 
--/**
-- * string_unescape - unquote characters in the given string
-- * @src:	source buffer (escaped)
-- * @dst:	destination buffer (unescaped)
-- * @size:	size of the destination buffer (0 to unlimit)
-- * @flags:	combination of the flags (bitwise OR):
-- *	%UNESCAPE_SPACE:
-- *		'\f' - form feed
-- *		'\n' - new line
-- *		'\r' - carriage return
-- *		'\t' - horizontal tab
-- *		'\v' - vertical tab
-- *	%UNESCAPE_OCTAL:
-- *		'\NNN' - byte with octal value NNN (1 to 3 digits)
-- *	%UNESCAPE_HEX:
-- *		'\xHH' - byte with hexadecimal value HH (1 to 2 digits)
-- *	%UNESCAPE_SPECIAL:
-- *		'\"' - double quote
-- *		'\\' - backslash
-- *		'\a' - alert (BEL)
-- *		'\e' - escape
-- *	%UNESCAPE_ANY:
-- *		all previous together
-- *
-- * Returns amount of characters processed to the destination buffer excluding
-- * trailing '\0'.
-- *
-- * Because the size of the output will be the same as or less than the size of
-- * the input, the transformation may be performed in place.
-- *
-- * Caller must provide valid source and destination pointers. Be aware that
-- * destination buffer will always be NULL-terminated. Source string must be
-- * NULL-terminated as well.
-- */
- int string_unescape(char *src, char *dst, size_t size, unsigned int flags);
- 
- static inline int string_unescape_inplace(char *buf, unsigned int flags)
-diff --git a/lib/string_helpers.c b/lib/string_helpers.c
-index 29033f3..74ec604 100644
---- a/lib/string_helpers.c
-+++ b/lib/string_helpers.c
-@@ -168,6 +168,44 @@ static bool unescape_special(char **src, char **dst)
- 	return true;
- }
- 
-+/**
-+ * string_unescape - unquote characters in the given string
-+ * @src:	source buffer (escaped)
-+ * @dst:	destination buffer (unescaped)
-+ * @size:	size of the destination buffer (0 to unlimit)
-+ * @flags:	combination of the flags (bitwise OR):
-+ *	%UNESCAPE_SPACE:
-+ *		'\f' - form feed
-+ *		'\n' - new line
-+ *		'\r' - carriage return
-+ *		'\t' - horizontal tab
-+ *		'\v' - vertical tab
-+ *	%UNESCAPE_OCTAL:
-+ *		'\NNN' - byte with octal value NNN (1 to 3 digits)
-+ *	%UNESCAPE_HEX:
-+ *		'\xHH' - byte with hexadecimal value HH (1 to 2 digits)
-+ *	%UNESCAPE_SPECIAL:
-+ *		'\"' - double quote
-+ *		'\\' - backslash
-+ *		'\a' - alert (BEL)
-+ *		'\e' - escape
-+ *	%UNESCAPE_ANY:
-+ *		all previous together
-+ *
-+ * Description:
-+ * The function unquotes characters in the given string.
-+ *
-+ * Because the size of the output will be the same as or less than the size of
-+ * the input, the transformation may be performed in place.
-+ *
-+ * Caller must provide valid source and destination pointers. Be aware that
-+ * destination buffer will always be NULL-terminated. Source string must be
-+ * NULL-terminated as well.
-+ *
-+ * Return:
-+ * The amount of the characters processed to the destination buffer excluding
-+ * trailing '\0' is returned.
-+ */
- int string_unescape(char *src, char *dst, size_t size, unsigned int flags)
- {
- 	char *out = dst;
 -- 
-2.0.1
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
 
