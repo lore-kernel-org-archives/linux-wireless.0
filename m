@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:49608 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaGJO7w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 10:59:52 -0400
-Received: by mail-ob0-f178.google.com with SMTP id nu7so2186856obb.23
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 07:59:49 -0700 (PDT)
-Message-ID: <53BEAA6E.8000304@lwfinger.net> (sfid-20140710_165955_735766_D7C71AC7)
-Date: Thu, 10 Jul 2014 09:59:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from cantor2.suse.de ([195.135.220.15]:37608 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752890AbaGCPfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2014 11:35:46 -0400
+Date: Thu, 3 Jul 2014 17:35:44 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: Re: [wireless-regdb] [PATCH] crda: db2rd, parse/print CAC time
+Message-ID: <20140703153544.GC27687@wotan.suse.de> (sfid-20140703_173549_436617_E326BAFC)
+References: <1404302531-18132-1-git-send-email-janusz.dziedzic@tieto.com> <CAB=NE6WN=6cu1rfHjLV32bvwAY6tnW9wrpVx5WHfdu0SJMvC0A@mail.gmail.com> <CALhHN=pfaLS_Axuky82QkUy1yaJw7qd+_Sss5h3nti9Li2g1Fw@mail.gmail.com> <CALhHN=oDHmz4Y4ZZUbyCU=gsM5_J=X7GH90qpCA_nqsjv9eK+A@mail.gmail.com>
 MIME-Version: 1.0
-To: John Talbut <jt@dpets.co.uk>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8192se static driver in 3.14 kernel not working
-References: <53BE5E49.6040603@dpets.co.uk>
-In-Reply-To: <53BE5E49.6040603@dpets.co.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALhHN=oDHmz4Y4ZZUbyCU=gsM5_J=X7GH90qpCA_nqsjv9eK+A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/10/2014 04:35 AM, John Talbut wrote:
-> It seems that we have a different problem with this driver from others I
-> mentioned in a recent thread.
->
-> I have compiled a kernel from the 3.14.7 from linux-source-3.14 from Debian for
-> use on a Samsung N120 netbook.
->
-> Included in the .config are:
->
-> CONFIG_WLAN=y
-> CONFIG_RTL_CARDS=y
-> CONFIG_RTL8192SE=y
->
-> There are no LKMs or initramfs.
->
-> The wireless does not work at all.  dmesg shows the pci device but there is no
-> sign of the wireless driver.
->
-> With a 2.6 kernel set up similarly the wireless works.
+On Thu, Jul 03, 2014 at 08:34:37AM +0200, Janusz Dziedzic wrote:
+> On 3 July 2014 08:26, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> > On 3 July 2014 00:06, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> >> On Wed, Jul 2, 2014 at 5:02 AM, Janusz Dziedzic
+> >> <janusz.dziedzic@tieto.com> wrote:
+> >>> db2rd, parse and print DFS CAC time
+> >>>
+> >>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> >>
+> >>
+> >> This doesn't print the DFS CAC if its a in a line like this:
+> >>
+> >> (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+> >>
+> > will check this, BTW BW=0 is not allowed I think.
+> >
+> 
+> Did such test:
+> country AE: DFS-FCC
+>         (2402 - 2482 @ 40), (20)
+>         (5170 - 5250 @ 80), (17)
+>         (5250 - 5330 @ 0), (24), (60000), DFS, AUTO-BW
+>         (5490 - 5730 @ 80), (24), DFS
+>         (5735 - 5835 @ 80), (30)
+> 
+> And get:
+> ./db2rd < db.txt
+> 
+> country AE: DFS-FCC
+>     (2402.000 - 2482.000 @ 40.000), (20.00), (N/A)
+>     (5170.000 - 5250.000 @ 80.000), (17.00), (N/A)
+>     (5250.000 - 5330.000 @ 0.000), (24.00), (60000), DFS, AUTO-BW
+>     (5490.000 - 5730.000 @ 80.000), (24.00), (N/A), DFS
+>     (5735.000 - 5835.000 @ 80.000), (30.00), (N/A)
+> 
+> Seems works fine. Did you install reglib, could be you are using old one?
+> I am using x86_64.
 
-Please post the entire .config.
+Heh yeah that's the issue, sorry, patch pushed!
 
-Larry
-
-
+  Luis
