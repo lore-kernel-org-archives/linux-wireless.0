@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:54977 "EHLO isis.lip6.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762090AbaGRPfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:35:34 -0400
-From: Benoit Taine <benoit.taine@lip6.fr>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: benoit.taine@lip6.fr, Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 7/25] rt2x00: Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 17:26:54 +0200
-Message-Id: <1405697232-11785-8-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173608_516942_47EC0F6D)
-In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Received: from mail-la0-f43.google.com ([209.85.215.43]:45833 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbaGCGej (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2014 02:34:39 -0400
+Received: by mail-la0-f43.google.com with SMTP id e16so7742308lan.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2014 23:34:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALhHN=pfaLS_Axuky82QkUy1yaJw7qd+_Sss5h3nti9Li2g1Fw@mail.gmail.com>
+References: <1404302531-18132-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6WN=6cu1rfHjLV32bvwAY6tnW9wrpVx5WHfdu0SJMvC0A@mail.gmail.com>
+	<CALhHN=pfaLS_Axuky82QkUy1yaJw7qd+_Sss5h3nti9Li2g1Fw@mail.gmail.com>
+Date: Thu, 3 Jul 2014 08:34:37 +0200
+Message-ID: <CALhHN=oDHmz4Y4ZZUbyCU=gsM5_J=X7GH90qpCA_nqsjv9eK+A@mail.gmail.com> (sfid-20140703_083604_111389_3EECC23E)
+Subject: Re: [PATCH] crda: db2rd, parse/print CAC time
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should prefer `struct pci_device_id` over `DEFINE_PCI_DEVICE_TABLE` to meet
-kernel coding style guidelines. This issue was reported by checkpatch.
+On 3 July 2014 08:26, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> On 3 July 2014 00:06, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+>> On Wed, Jul 2, 2014 at 5:02 AM, Janusz Dziedzic
+>> <janusz.dziedzic@tieto.com> wrote:
+>>> db2rd, parse and print DFS CAC time
+>>>
+>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>>
+>> This doesn't print the DFS CAC if its a in a line like this:
+>>
+>> (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+>>
+> will check this, BTW BW=0 is not allowed I think.
+>
 
-Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
+Did such test:
+country AE: DFS-FCC
+        (2402 - 2482 @ 40), (20)
+        (5170 - 5250 @ 80), (17)
+        (5250 - 5330 @ 0), (24), (60000), DFS, AUTO-BW
+        (5490 - 5730 @ 80), (24), DFS
+        (5735 - 5835 @ 80), (30)
 
----
-Tested by compilation without errors.
+And get:
+./db2rd < db.txt
 
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+country AE: DFS-FCC
+    (2402.000 - 2482.000 @ 40.000), (20.00), (N/A)
+    (5170.000 - 5250.000 @ 80.000), (17.00), (N/A)
+    (5250.000 - 5330.000 @ 0.000), (24.00), (60000), DFS, AUTO-BW
+    (5490.000 - 5730.000 @ 80.000), (24.00), (N/A), DFS
+    (5735.000 - 5835.000 @ 80.000), (30.00), (N/A)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 4ccfef5..bdf5590 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1821,7 +1821,7 @@ static const struct rt2x00_ops rt2400pci_ops = {
- /*
-  * RT2400pci module information.
-  */
--static DEFINE_PCI_DEVICE_TABLE(rt2400pci_device_table) = {
-+static const struct pci_device_id rt2400pci_device_table[] = {
- 	{ PCI_DEVICE(0x1814, 0x0101) },
- 	{ 0, }
- };
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index a511ccc..79f4fe6 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -2120,7 +2120,7 @@ static const struct rt2x00_ops rt2500pci_ops = {
- /*
-  * RT2500pci module information.
-  */
--static DEFINE_PCI_DEVICE_TABLE(rt2500pci_device_table) = {
-+static const struct pci_device_id rt2500pci_device_table[] = {
- 	{ PCI_DEVICE(0x1814, 0x0201) },
- 	{ 0, }
- };
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index a5b32ca..cc1b3cc 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -400,7 +400,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
- /*
-  * RT2800pci module information.
-  */
--static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
-+static const struct pci_device_id rt2800pci_device_table[] = {
- 	{ PCI_DEVICE(0x1814, 0x0601) },
- 	{ PCI_DEVICE(0x1814, 0x0681) },
- 	{ PCI_DEVICE(0x1814, 0x0701) },
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 9048a9c..8194550 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -3075,7 +3075,7 @@ static const struct rt2x00_ops rt61pci_ops = {
- /*
-  * RT61pci module information.
-  */
--static DEFINE_PCI_DEVICE_TABLE(rt61pci_device_table) = {
-+static const struct pci_device_id rt61pci_device_table[] = {
- 	/* RT2561s */
- 	{ PCI_DEVICE(0x1814, 0x0301) },
- 	/* RT2561 v2 */
+Seems works fine. Did you install reglib, could be you are using old one?
+I am using x86_64.
 
+BR
+Janusz
