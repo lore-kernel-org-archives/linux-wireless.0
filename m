@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54258 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611AbaGHVN3 (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:51216 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964923AbaGCO2l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 17:13:29 -0400
-Date: Tue, 08 Jul 2014 14:13:28 -0700 (PDT)
-Message-Id: <20140708.141328.1589777085621867948.davem@davemloft.net> (sfid-20140708_231349_824608_39D15737)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-07-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140703204141.GD13303@tuxdriver.com>
-References: <20140703191211.GB13303@tuxdriver.com>
-	<20140703204141.GD13303@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 3 Jul 2014 10:28:41 -0400
+Received: by mail-ie0-f175.google.com with SMTP id tp5so243320ieb.34
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 07:28:40 -0700 (PDT)
+Date: Thu, 3 Jul 2014 10:28:37 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with new
+ plid
+Message-ID: <20140703142837.GA11380@localhost> (sfid-20140703_162846_961326_9052E058)
+References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
+ <20140628205414.GA17825@localhost>
+ <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 3 Jul 2014 16:41:42 -0400
+[reordered top-posting]
 
-> On Thu, Jul 03, 2014 at 03:12:11PM -0400, John W. Linville wrote:
->> Dave,
->> 
->> Please pull this first batch of wireless updates intended for the
->> 3.17 stream...
->> 
->> For the mac80211 bits, Johannes says:
->> 
->> "The biggest thing here is probably Arik's TDLS rework, beyond that we
->> have smaller improvements and features like David's scanning IE thing,
->> Luca's queue work, some CSA work, etc. Also your PID rate control
->> removal, of course."
->> 
->> For the iwlwifi bits, Emmanuel says:
->> 
->> "I have here a fix from Eliad for scheduled scan: it fixes a firmware
->> assertion. Arik reverts a patch I made that didn't take into account
->> that 3160 doesn't have UAPSD and hence, we can't assume that all
->> newer firmwares support the feature. Here too, the visible effect
->> is a firmware assertion. Along with that, we have a few fixes and
->> additions to the device list."
+On Thu, Jul 03, 2014 at 08:36:28PM +0800, Chun-Yeow Yeoh wrote:
+> >> "If the peerLinkID in the mesh peering instance has not been
+> >> set, the Local Link ID field of the Mesh Peering Confirm
+> >> request shall be copied into the peerLinkID in the mesh
+> >> peering instance."
+> >>
+> Hi, Bob
 > 
-> I copied the wrong text.  It should have read as follows:
+> What is the consequence if we don't handle this case? Is the peer
+> going to do the re-auth again?
 > 
-> "I have here a whole bunch of various things. Andy contributes
-> better debug prints for dvm specific flows and a module parameter to
-> completely disable power save for dvm. Andrei is sharing the premises
-> of his work on CSA - more to come. Eran and Liad keep on working
-> on the new devices. I have the regular amount of BT Coex stuff and
-> I continue to work on the firmware error report system adding more
-> debug capabilities. More to come on that subject too."
-> 
-> Sorry for the confusion!
+> Regards,
+> Chun-Yeow
 
-I fixed the text up and pulled, thanks John.
+It shouldn't be a big problem -- looking at 802.11-2012 figure 13-2:
+
+Let's say station A is in OPN_SNT and station B is in OPN_RCVD,
+but station A failed to get the Open frame from B.
+
+When A gets a Confirm frame from B, it would ignore it (due to
+missing plid), then it would resend Open on dot11MeshRetryTimeout.
+Unfortunately, Confirm responses from B to that Open frame would
+be ignored too.
+
+However, B should also retry Open on dot11MeshRetryTimeout.
+If any are successful, A moves to OPN_RCVD, then both have plids
+and everything should be ok from then on.
+
+In the worst case, plink timer on either station fires
+dot11MeshMaxRetries times and peering instance closes.  Then peering
+can start over after leaving holding state and either station gets a
+beacon.
+
+So in sum, it just adds a bit of resiliency and means we don't have
+to wait for a dot11MeshRetryTimeout in the case of one lost open
+frame.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
