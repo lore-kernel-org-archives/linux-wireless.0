@@ -1,41 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:43315 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934546AbaGXUOF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 16:14:05 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so4649839wib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 13:14:04 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6656: Remove unused macro MP_TEST_FLAGS
-Date: Thu, 24 Jul 2014 21:13:19 +0100
-Message-Id: <1406232800-3694-7-git-send-email-tvboxspy@gmail.com> (sfid-20140724_221413_055936_BBF8EB54)
-In-Reply-To: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
-References: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:56736 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964933AbaGCJxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2014 05:53:18 -0400
+Message-ID: <1404381194.5102.69.camel@smile.fi.intel.com> (sfid-20140703_115340_354424_3DFFC60D)
+Subject: Re: [PATCH 2/6] lib / string_helpers: introduce string_escape_mem()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Thu, 03 Jul 2014 12:53:14 +0300
+In-Reply-To: <20140702150150.b87702934d47fd481646f6ff@linux-foundation.org>
+References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404307229-19186-3-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <20140702150150.b87702934d47fd481646f6ff@linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h | 2 --
- 1 file changed, 2 deletions(-)
+On Wed, 2014-07-02 at 15:01 -0700, Andrew Morton wrote:
+> On Wed,  2 Jul 2014 16:20:25 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> 
+> > This is almost the opposite function to string_unescape(). Nevertheless it
+> > handles \0 and could be used for any byte buffer.
+> > 
+> > The documentation is supplied together with the function prototype.
+> > 
+> > The test cases covers most of the scenarios and would be expanded later on.
+> > 
+> > ...
+> >
+> > --- a/include/linux/string_helpers.h
+> > +++ b/include/linux/string_helpers.h
+> > @@ -71,4 +71,87 @@ static inline int string_unescape_any_inplace(char *buf)
+> >  	return string_unescape_any(buf, buf, 0);
+> >  }
+> >  
+> > +#define ESCAPE_SPACE		0x01
+> > +#define ESCAPE_SPECIAL		0x02
+> > +#define ESCAPE_NULL		0x04
+> > +#define ESCAPE_OCTAL		0x08
+> > +#define ESCAPE_ANY		\
+> > +	(ESCAPE_SPACE | ESCAPE_OCTAL | ESCAPE_SPECIAL | ESCAPE_NULL)
+> > +#define ESCAPE_NP		0x10
+> > +#define ESCAPE_ANY_NP		(ESCAPE_ANY | ESCAPE_NP)
+> > +#define ESCAPE_HEX		0x20
+> > +
+> > +/**
+> > + * string_escape_mem - quote characters in the given memory buffer
+> 
+> It drive me nuts when the kerneldoc is in the .h file.  Who thinks of
+> looking there?  I realise that string_unescape() already did that, but
+> I'd prefer that we fix string_unescape() rather than imitate it.
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 21f810e..2ec086c 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -402,8 +402,6 @@ struct vnt_private {
- 		(uVar)++;				\
- }
- 
--#define MP_TEST_FLAGS(_M, _F)            (((_M)->flags & (_F)) == (_F))
--
- int vnt_init(struct vnt_private *priv);
- 
- #endif
+No problem, I will do this in separate patch.
+
+> 
+> > --- a/lib/string_helpers.c
+> > +++ b/lib/string_helpers.c
+> 
+> This is a lot of code!  Adds nearly a kbyte.  I'm surprised that
+> escaping a string is so verbose.
+> I wonder if the implementation really needs to be so comprehensive?
+
+I studied several kernel cases and try to cover most of them.
+
+> Would a table-driven approach be more compact?
+
+Do you mean something like ctype set of functions?
+
+I wouldn't think so, we have a lot of variations how we would like to
+escape. Currently I have such cases covered in terms of flags I
+introduced (not all of them in this series):
+ - ESCAPE_OCTAL (with dictionary)
+ - ESCAPE_ANY_NP
+ - ESCAPE_HEX | ESCAPE_NP
+ - ESCAPE_NULL
+... not yet in form of patch
+ - ESCAPE_SPACE | ESCAPE_SPECIAL (with dictionary)
+
+I can't currently realize how table could cover all of that.
+
+> >  static int __init test_string_helpers_init(void)
+> >  {
+> >  	unsigned int i;
+> > @@ -112,6 +315,16 @@ static int __init test_string_helpers_init(void)
+> >  	test_string_unescape("unescape inplace",
+> >  			     get_random_int() % (UNESCAPE_ANY + 1), true);
+> >  
+> > +	/* Without dictionary */
+> > +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
+> > +		test_string_escape("escape 0", escape0, i, TEST_STRING_2_DICT_0);
+> > +
+> > +	/* With dictionary */
+> > +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
+> > +		test_string_escape("escape 1", escape1, i, TEST_STRING_2_DICT_1);
+> > +
+> > +	test_string_escape_nomem();
+> > +
+> >  	return -EINVAL;
+> >  }
+> 
+> I wonder why this returns -EINVAL.
+
+The idea of course to not let module be loaded. I saw this return code
+in test_kstrtox.c. Would you suggest better approach?
+
+
 -- 
-2.0.1
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
 
