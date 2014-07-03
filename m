@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37608 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890AbaGCPfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:35:46 -0400
-Date: Thu, 3 Jul 2014 17:35:44 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: Re: [wireless-regdb] [PATCH] crda: db2rd, parse/print CAC time
-Message-ID: <20140703153544.GC27687@wotan.suse.de> (sfid-20140703_173549_436617_E326BAFC)
-References: <1404302531-18132-1-git-send-email-janusz.dziedzic@tieto.com> <CAB=NE6WN=6cu1rfHjLV32bvwAY6tnW9wrpVx5WHfdu0SJMvC0A@mail.gmail.com> <CALhHN=pfaLS_Axuky82QkUy1yaJw7qd+_Sss5h3nti9Li2g1Fw@mail.gmail.com> <CALhHN=oDHmz4Y4ZZUbyCU=gsM5_J=X7GH90qpCA_nqsjv9eK+A@mail.gmail.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:59526 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbaGCMcU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2014 08:32:20 -0400
+Received: by mail-oa0-f45.google.com with SMTP id o6so107713oag.32
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 05:32:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALhHN=oDHmz4Y4ZZUbyCU=gsM5_J=X7GH90qpCA_nqsjv9eK+A@mail.gmail.com>
+Date: Thu, 3 Jul 2014 14:32:19 +0200
+Message-ID: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com> (sfid-20140703_143223_738984_E3522C8E)
+Subject: Looking for someone with BCM43227 and (maybe) compilation skill ;)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 03, 2014 at 08:34:37AM +0200, Janusz Dziedzic wrote:
-> On 3 July 2014 08:26, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
-> > On 3 July 2014 00:06, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> >> On Wed, Jul 2, 2014 at 5:02 AM, Janusz Dziedzic
-> >> <janusz.dziedzic@tieto.com> wrote:
-> >>> db2rd, parse and print DFS CAC time
-> >>>
-> >>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> >>
-> >>
-> >> This doesn't print the DFS CAC if its a in a line like this:
-> >>
-> >> (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
-> >>
-> > will check this, BTW BW=0 is not allowed I think.
-> >
-> 
-> Did such test:
-> country AE: DFS-FCC
->         (2402 - 2482 @ 40), (20)
->         (5170 - 5250 @ 80), (17)
->         (5250 - 5330 @ 0), (24), (60000), DFS, AUTO-BW
->         (5490 - 5730 @ 80), (24), DFS
->         (5735 - 5835 @ 80), (30)
-> 
-> And get:
-> ./db2rd < db.txt
-> 
-> country AE: DFS-FCC
->     (2402.000 - 2482.000 @ 40.000), (20.00), (N/A)
->     (5170.000 - 5250.000 @ 80.000), (17.00), (N/A)
->     (5250.000 - 5330.000 @ 0.000), (24.00), (60000), DFS, AUTO-BW
->     (5490.000 - 5730.000 @ 80.000), (24.00), (N/A), DFS
->     (5735.000 - 5835.000 @ 80.000), (30.00), (N/A)
-> 
-> Seems works fine. Did you install reglib, could be you are using old one?
-> I am using x86_64.
+I want to add support for BCM43227 in b43, however I need help of some
+BCM43227 owner. Well, I could buy one by myself (less than 10$ on
+eBay), but I don't want to wait a month to receive it.
 
-Heh yeah that's the issue, sorry, patch pushed!
+So I need someone with:
+1) BCM43227 ;)
+2) Kernel with CONFIG_MMIOTRACE=y*
+3) Broadcom Linux STA driver 6.30.223.141
 
-  Luis
+So? Is there anyone around with BCM43227 willing to help?
+
+* Ubuntu 14.04 has CONFIG_MMIOTRACE=y by default, openSuSE 13.1
+doesn't. So you may need to compile kernel by yourself, depending on
+the distro.
+
+-- 
+Rafał
