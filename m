@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:51656 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046AbaGGNmz (ORCPT
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:46662 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753595AbaGDWFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 09:42:55 -0400
+	Fri, 4 Jul 2014 18:05:53 -0400
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1A4C020CFE
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Jul 2014 18:05:50 -0400 (EDT)
+Date: Fri, 4 Jul 2014 15:05:33 -0700
+From: Greg KH <greg@kroah.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Hans de Goede <hdegoede@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] brcmfmac: Fix brcmf_chip_ai_coredisable not applying
+ reset bits to BCMA_IOCTL
+Message-ID: <20140704220533.GA10958@kroah.com> (sfid-20140705_000613_413932_7968A295)
+References: <1402091675-6515-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1407041225290.6607-100000@netrider.rowland.org>
-References: <CAE4k23-Ut3ypV3FSccpbBoxHQRHxAeDEY9Ng4v0ay_MpTRs42g@mail.gmail.com>
-	<Pine.LNX.4.44L0.1407041225290.6607-100000@netrider.rowland.org>
-Date: Mon, 7 Jul 2014 15:42:55 +0200
-Message-ID: <CAE4k23_wQvGhVCf2LxqnjnooimCE2pvbrD+PQRh4s3fx0_L1AA@mail.gmail.com> (sfid-20140707_154301_426668_F160234A)
-Subject: Re: ath9k -> bogus usb xfer on at91
-From: Anders Darander <anders.darander@gmail.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402091675-6515-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 July 2014 18:30, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Fri, 4 Jul 2014, Anders Darander wrote:
--oe-linux-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/usb/core/urb.c:450
->> usb_submit_urb+0x2ac/0x460()
->> usb 1-1: BOGUS urb xfer, pipe 1 != type 3
+On Fri, Jun 06, 2014 at 11:54:31PM +0200, Arend van Spriel wrote:
+> From: Hans de Goede <hdegoede@redhat.com>
+> 
+> brcmfmac has been broken on my cubietruck with a BCM43362:
+> 
+> brcmfmac: brcmf_chip_recognition: found AXI chip: BCM43362, rev=1
+> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+>         Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+> 
+> since commit 53036261033: "brcmfmac: update core reset and disable routines".
+> 
+> The problem is that since this commit brcmf_chip_ai_resetcore no longer sets
+> BCMA_IOCTL itself before bringing the core out of reset, instead relying on
+> brcmf_chip_ai_coredisable to do so. But brcmf_chip_ai_coredisable is a nop
+> of the chip is already in reset. This patch modifies brcmf_chip_ai_coredisable
+> to always set BCMA_IOCTL even if the core is already in reset.
+> 
+> This fixes brcmfmac hanging in firmware loading on my board.
+> 
+> upstream: 75691d9e4f4e156f71f3eaee69a5bd27b7b10384
 
->
-> I can't tell exactly where the fault is, but this message means that an
-> URB was submitted for a bulk endpoint with a pipe of type
-> PIPE_INTERRUPT.
->
->> After temporarily reverting commit
->> 3482528e9aced9234d4e2a4a9538c882a9aa5aa2, which enables debug checks
->> on all USB urb's (previously is was only enabled for a
->> CONFIG_USB_DEBUG enabled kernel), the WiFi chip starts to work
->> correctly. The chip in question is a ar9721.
->>
->>  The same USB stick works without these messages on my laptop; while
->> another USB stick, based on an rtl8187 chip, works without these
->> messages on the target system (at91sam9g20)
->>
->> Any pointers to what it could be? Or suggestions on how to attack the issue?
->
-> Fix the URB submission to use the correct pipe type.
+I see no such commit id in Linus's tree, are you sure this is the id you
+need?
 
-Yeah, that's the plan. At least to try and fix it, I just have to find
-the spot where the
-wrong pipe type is selected. (And the summer vacation is approaching fast).
+thanks,
 
-Thanks for confirming my suspicion regarding the pipe type.
-
-Cheers,
-Anders
-
--- 
-Anders Darander
-EPO guidelines 1978: "If the contribution to the known art resides
-solely in a computer program then the subject matter is not
-patentable in whatever manner it may be presented in the claims."
+greg k-h
