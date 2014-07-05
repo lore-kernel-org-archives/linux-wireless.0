@@ -1,38 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41122 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708AbaG1TlZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 15:41:25 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [ANN]: new experimental firmware for 3160 / 7260 / 7265
-Date: Mon, 28 Jul 2014 19:41:08 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B248171@hasmsx107.ger.corp.intel.com> (sfid-20140728_214128_316744_47A212FC)
-References: <53D53C0A.6080407@gmail.com> <53D6A5D2.2030400@lwfinger.net>
-In-Reply-To: <53D6A5D2.2030400@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:44419 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965154AbaGESZA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jul 2014 14:25:00 -0400
+Received: by mail-wg0-f42.google.com with SMTP id n12so963436wgh.1
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:59 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 7/8] staging: vt6656: Include re_alloc_skb within lock.
+Date: Sat,  5 Jul 2014 19:24:26 +0100
+Message-Id: <1404584667-3582-7-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202507_601978_09772D63)
+In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+DQo+ID4gIFdlIGhhZCBhbiBpc3N1ZSB3aXRoIHRoZSB2ZXJzaW9uIG51bWJlciBpbiB0aGlz
-IHN0cmVhbSwgc28gSSBjYW4ndA0KPiA+IHJlbGVhc2UgaXQgb2ZmaWNpYWxseSwgbm9yIGNhbiBJ
-IHNlbmQgYSBwdWxsIHJlcXVlc3QgdG8gaW50ZWdyYXRlIGl0DQo+ID4gdG8gbGludXgtZmlybXdh
-cmUuZ2l0LiBJIGFtIHdvcmtpbmcgd2l0aCB0aGUgZmlybXdhcmUgdGVhbSB0byBmaXggdGhlDQo+
-ID4gdmVyc2lvbiBpc3N1ZS4gSSBzdGlsbCB3b3VsZCBiZSBnbGFkIHRvIGhhdmUgbW9yZSB0ZXN0
-aW5nIG9uIHRoaXMNCj4gPiBmaXJtd2FyZSwgc28gYW55IGZlZWRiYWNrIHdvdWxkIGJlIGdyZWF0
-bHkgYXBwcmVjaWF0ZWQuIEl0IGhhcyBnb25lDQo+ID4gdGhyb3VnaCBvdXIgcmVndWxhciB0ZXN0
-aW5nIGN5Y2xlcywgYnV0ICJmaWVsZCIgZmVlZGJhY2sgaXMgYWx3YXlzIHZhbHVhYmxlLg0KPiA+
-DQo+ID4gVGhhbmtzIGluIGFkdmFuY2UgdG8gYW55b25lIHdobyB3aWxsIHRlc3QgaXQuDQo+ID4N
-Cj4gPiBOZXcgKHRlbXBvcmFyeSkgdmVyc2lvbiBudW1iZXI6IDI1LjIyMy45LjANCj4gDQo+IEkg
-aGF2ZSBiZWVuIHJ1bm5pbmcgdGhlIG5ldyB2ZXJzaW9uIG9mIHRoZSA3MjYwIGZpcm13YXJlIGlu
-IHRoZSAyLjQgR0h6DQo+IGJhbmQuDQo+IEFmdGVyIGFwcHJveGltYXRlbHkgMjQgaG91cnMsIEkg
-aGF2ZSBoYWQgbm8gZGlzY29ubmVjdHMuIEF0IGEgZGlzdGFuY2Ugb2YNCj4gYWJvdXQgMiBtIGZy
-b20gYSBOZXRnZWFyIFdORFIzNDAwdjIgcm91dGVyLCBJIGdldCBuZXRwZXJmIHRyYW5zZmVycyBv
-ZiA2MS0NCj4gNjMgTWJwcyBpbiBib3RoIGRpcmVjdGlvbnMuIEluIHRoZSBtdWNoLXF1aWV0ZXIg
-NSBHSHogYmFuZCwgdGhlIHRyYW5zZmVycw0KPiBydW4gYXQNCj4gfjkwIE1icHMuDQo+IA0KPiBU
-aGUgbmV3IGZpcm13YXJlIGxvb2tzIGdvb2QuDQo+IA0KPiBMYXJyeQ0KPiANCj4gDQpUaGFua3Mg
-Zm9yIHRoYXQhDQpHb29kIG1lYW5zIGJldHRlciB0aGFuIHRoZSBwcmV2aW91cyBvbmUsIG9yIHRo
-ZSBwcmV2aW91cyBwZXJmb3JtZWQgd2VsbCB0b28/DQo=
+Remove variable re_alloc_skb and merge code within urb->actual_length.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index c5d4047..a7af4f58 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -276,7 +276,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 	struct vnt_rcb *rcb = urb->context;
+ 	struct vnt_private *priv = rcb->pDevice;
+ 	unsigned long flags;
+-	int re_alloc_skb = false;
+ 
+ 	switch (urb->status) {
+ 	case 0:
+@@ -294,24 +293,22 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 	if (urb->actual_length) {
+ 		spin_lock_irqsave(&priv->lock, flags);
+ 
+-		if (vnt_rx_data(priv, rcb, urb->actual_length))
+-			re_alloc_skb = true;
++		if (vnt_rx_data(priv, rcb, urb->actual_length)) {
++			rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
++			if (!rcb->skb) {
++				dev_dbg(&priv->usb->dev,
++					"Failed to re-alloc rx skb\n");
+ 
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-	}
+-
+-	if (re_alloc_skb) {
+-		rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
+-		if (!rcb->skb) {
+-			dev_dbg(&priv->usb->dev, "Failed to re-alloc rx skb\n");
+-
+-			rcb->bBoolInUse = false;
+-
+-			return;
++				rcb->bBoolInUse = false;
++				spin_unlock_irqrestore(&priv->lock, flags);
++				return;
++			}
+ 		}
+ 
+ 		urb->transfer_buffer = skb_put(rcb->skb,
+ 						skb_tailroom(rcb->skb));
++
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 	}
+ 
+ 	if (usb_submit_urb(urb, GFP_ATOMIC)) {
+-- 
+1.9.1
+
