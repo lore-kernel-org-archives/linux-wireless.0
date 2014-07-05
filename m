@@ -1,42 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:55465 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbaGFRLR (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40810 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817AbaGETJd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 13:11:17 -0400
-Message-ID: <53B9833D.4000600@lwfinger.net> (sfid-20140706_191147_582600_81212CAD)
-Date: Sun, 06 Jul 2014 12:11:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Yann E. MORIN" <yann.morin.1998@free.fr>
-CC: linux-kbuild@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Possible bug in kbuild
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 5 Jul 2014 15:09:33 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so14100274wib.11
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 12:09:31 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: helmut.schaa@googlemail.com, IvDoorn@gmail.com,
+	linville@tuxdriver.com
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org, mattias.nissler@gmx.de, xose.vazquez@gmail.com,
+	rain_maker@root-forum.org,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH] rt2800usb: Don't perform DMA from stack
+Date: Sat,  5 Jul 2014 21:07:17 +0200
+Message-Id: <1404587237-26187-1-git-send-email-andrea.merello@gmail.com> (sfid-20140705_210937_390975_AF2EE394)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A problem with configuration of IWLWIFI has been bisected to commit 48e2934, 
-where a new section was added to drivers/net/wireless/iwlwifi/Kconfig with the 
-following code:
+Function rt2800usb_autorun_detect() passes the address of a variable
+allocated onto the stack to be used for DMA by the USB layer. This has
+been caught by my debugging-enabled kernel.
 
-# don't call it _MODULE -- will confuse Kconfig/fixdep/...
-config IWLWIFI_OPMODE_MODULAR
-         bool
-         default y if IWLDVM=m
-         default y if IWLMVM=m
+This patch change things in order to allocate that variable via
+kmalloc, and it adjusts things to handle the kmalloc failure case,
+propagating the error.
 
-When the above section is present, 'make xconfig' fails to show a "Debugging 
-options" menu' even though 'make menuconfig' displays correctly. despite the 
-incorrect on-screen display, xconfig does not delete the affected info in 
-.config after it was set by menuconfig, thus the bug only seems to affect the 
-display in xconfig.
+[ 7363.238852] ------------[ cut here ]------------
+[ 7363.243529] WARNING: CPU: 1 PID: 5235 at lib/dma-debug.c:1153 check_for_stack+0xa4/0xf0()
+[ 7363.251759] ehci-pci 0000:00:04.1: DMA-API: device driver maps memory fromstack [addr=ffff88006b81bad4]
+[ 7363.261210] Modules linked in: rt2800usb(O+) rt2800lib(O) rt2x00usb(O) rt2x00lib(O) rtl818x_pci(O) rtl8187 led_class eeprom_93cx6 mac80211 cfg80211 [last unloaded: rt2x00lib]
+[ 7363.277143] CPU: 1 PID: 5235 Comm: systemd-udevd Tainted: G           O  3.16.0-rc3-wl+ #31
+[ 7363.285546] Hardware name: System manufacturer System Product Name/M3N78 PRO, BIOS ASUS M3N78 PRO ACPI BIOS Revision 1402 12/04/2009
+[ 7363.297511]  0000000000000009 ffff88006b81b710 ffffffff8175dcad ffff88006b81b758
+[ 7363.305062]  ffff88006b81b748 ffffffff8106d372 ffff88006cf10098 ffff88006cead6a0
+[ 7363.312622]  ffff88006b81bad4 ffffffff81c1e7c0 ffff88006cf10098 ffff88006b81b7a8
+[ 7363.320161] Call Trace:
+[ 7363.322661]  [<ffffffff8175dcad>] dump_stack+0x4d/0x6f
+[ 7363.327847]  [<ffffffff8106d372>] warn_slowpath_common+0x82/0xb0
+[ 7363.333893]  [<ffffffff8106d3e7>] warn_slowpath_fmt+0x47/0x50
+[ 7363.339686]  [<ffffffff813a93b4>] check_for_stack+0xa4/0xf0
+[ 7363.345298]  [<ffffffff813a995c>] debug_dma_map_page+0x10c/0x150
+[ 7363.351367]  [<ffffffff81521bd9>] usb_hcd_map_urb_for_dma+0x229/0x720
+[ 7363.357890]  [<ffffffff8152256d>] usb_hcd_submit_urb+0x2fd/0x930
+[ 7363.363929]  [<ffffffff810eac31>] ? irq_work_queue+0x71/0xd0
+[ 7363.369617]  [<ffffffff810ab5a7>] ? wake_up_klogd+0x37/0x50
+[ 7363.375219]  [<ffffffff810ab7a5>] ? console_unlock+0x1e5/0x420
+[ 7363.381081]  [<ffffffff810abc25>] ? vprintk_emit+0x245/0x530
+[ 7363.386773]  [<ffffffff81523d3c>] usb_submit_urb+0x30c/0x580
+[ 7363.392462]  [<ffffffff81524295>] usb_start_wait_urb+0x65/0xf0
+[ 7363.398325]  [<ffffffff815243ed>] usb_control_msg+0xcd/0x110
+[ 7363.404014]  [<ffffffffa005514d>] rt2x00usb_vendor_request+0xbd/0x170 [rt2x00usb]
+[ 7363.411544]  [<ffffffffa0074292>] rt2800usb_autorun_detect+0x32/0x50 [rt2800usb]
+[ 7363.418986]  [<ffffffffa0074aa1>] rt2800usb_read_eeprom+0x11/0x70 [rt2800usb]
+[ 7363.426168]  [<ffffffffa0063ffd>] rt2800_probe_hw+0x11d/0xf90 [rt2800lib]
+[ 7363.432989]  [<ffffffffa0074b7d>] rt2800usb_probe_hw+0xd/0x50 [rt2800usb]
+[ 7363.439808]  [<ffffffffa00453d8>] rt2x00lib_probe_dev+0x238/0x7c0 [rt2x00lib]
+[ 7363.446992]  [<ffffffffa00bfa48>] ? ieee80211_led_names+0xb8/0x100 [mac80211]
+[ 7363.454156]  [<ffffffffa0056116>] rt2x00usb_probe+0x156/0x1f0 [rt2x00usb]
+[ 7363.460971]  [<ffffffffa0074250>] rt2800usb_probe+0x10/0x20 [rt2800usb]
+[ 7363.467616]  [<ffffffff8152799e>] usb_probe_interface+0xce/0x1c0
+[ 7363.473651]  [<ffffffff81480c20>] really_probe+0x70/0x240
+[ 7363.479079]  [<ffffffff81480f01>] __driver_attach+0xa1/0xb0
+[ 7363.484682]  [<ffffffff81480e60>] ? __device_attach+0x70/0x70
+[ 7363.490461]  [<ffffffff8147eef3>] bus_for_each_dev+0x63/0xa0
+[ 7363.496146]  [<ffffffff814807c9>] driver_attach+0x19/0x20
+[ 7363.501570]  [<ffffffff81480468>] bus_add_driver+0x178/0x220
+[ 7363.507270]  [<ffffffff8148151b>] driver_register+0x5b/0xe0
+[ 7363.512874]  [<ffffffff815271b0>] usb_register_driver+0xa0/0x170
+[ 7363.518905]  [<ffffffffa007a000>] ? 0xffffffffa0079fff
+[ 7363.524074]  [<ffffffffa007a01e>] rt2800usb_driver_init+0x1e/0x20 [rt2800usb]
+[ 7363.531247]  [<ffffffff810002d4>] do_one_initcall+0x84/0x1b0
+[ 7363.536932]  [<ffffffff8113aa60>] ? kfree+0xd0/0x110
+[ 7363.541931]  [<ffffffff8112730a>] ? __vunmap+0xaa/0xf0
+[ 7363.547538]  [<ffffffff810ca07e>] load_module+0x1aee/0x2040
+[ 7363.553141]  [<ffffffff810c6f10>] ? store_uevent+0x50/0x50
+[ 7363.558676]  [<ffffffff810ca66e>] SyS_init_module+0x9e/0xc0
+[ 7363.564285]  [<ffffffff81764012>] system_call_fastpath+0x16/0x1b
+[ 7363.570338] ---[ end trace 01ef5f822bea9882 ]---
 
-Is there anything wrong with that section in iwlwifi's Kconfig, or is it a bug 
-in xconfig?
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index e11dab2..832006b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -231,9 +231,12 @@ static enum hrtimer_restart rt2800usb_tx_sta_fifo_timeout(struct hrtimer *timer)
+  */
+ static int rt2800usb_autorun_detect(struct rt2x00_dev *rt2x00dev)
+ {
+-	__le32 reg;
++	__le32 *reg;
+ 	u32 fw_mode;
+ 
++	reg = kmalloc(sizeof(*reg), GFP_KERNEL);
++	if (reg == NULL)
++		return -ENOMEM;
+ 	/* cannot use rt2x00usb_register_read here as it uses different
+ 	 * mode (MULTI_READ vs. DEVICE_MODE) and does not pass the
+ 	 * magic value USB_MODE_AUTORUN (0x11) to the device, thus the
+@@ -241,8 +244,9 @@ static int rt2800usb_autorun_detect(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
+ 				 USB_VENDOR_REQUEST_IN, 0, USB_MODE_AUTORUN,
+-				 &reg, sizeof(reg), REGISTER_TIMEOUT_FIRMWARE);
+-	fw_mode = le32_to_cpu(reg);
++				 reg, sizeof(*reg), REGISTER_TIMEOUT_FIRMWARE);
++	fw_mode = le32_to_cpu(*reg);
++	kfree(reg);
+ 
+ 	if ((fw_mode & 0x00000003) == 2)
+ 		return 1;
+@@ -261,6 +265,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	int status;
+ 	u32 offset;
+ 	u32 length;
++	int retval;
+ 
+ 	/*
+ 	 * Check which section of the firmware we need.
+@@ -278,7 +283,10 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Write firmware to device.
+ 	 */
+-	if (rt2800usb_autorun_detect(rt2x00dev)) {
++	retval = rt2800usb_autorun_detect(rt2x00dev);
++	if (retval < 0)
++		return retval;
++	if (retval) {
+ 		rt2x00_info(rt2x00dev,
+ 			    "Firmware loading not required - NIC in AutoRun mode\n");
+ 	} else {
+@@ -763,7 +771,12 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+  */
+ static int rt2800usb_efuse_detect(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (rt2800usb_autorun_detect(rt2x00dev))
++	int retval;
++
++	retval = rt2800usb_autorun_detect(rt2x00dev);
++	if (retval < 0)
++		return retval;
++	if (retval)
+ 		return 1;
+ 	return rt2800_efuse_detect(rt2x00dev);
+ }
+@@ -772,7 +785,10 @@ static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+ 
+-	if (rt2800usb_efuse_detect(rt2x00dev))
++	retval = rt2800usb_efuse_detect(rt2x00dev);
++	if (retval < 0)
++		return retval;
++	if (retval)
+ 		retval = rt2800_read_eeprom_efuse(rt2x00dev);
+ 	else
+ 		retval = rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
+-- 
+1.9.1
 
-Larry
