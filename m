@@ -1,142 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:42068 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762AbaGLGyf (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58892 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932107AbaGETcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 02:54:35 -0400
-Received: by mail-wi0-f170.google.com with SMTP id cc10so260328wib.3
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/10] staging: vt6656: vRunCommand remove camel case.
-Date: Sat, 12 Jul 2014 07:53:42 +0100
-Message-Id: <1405148028-4053-4-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085439_543257_645B0412)
-In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
-References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 5 Jul 2014 15:32:43 -0400
+Received: by mail-wg0-f44.google.com with SMTP id k14so2739198wgh.15
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 12:32:42 -0700 (PDT)
+Message-ID: <53B852D4.5060109@gmail.com> (sfid-20140705_213247_108619_810B55FB)
+Date: Sat, 05 Jul 2014 22:32:36 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2014-07-05
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="NRwPRr2Fuc0K3MjV4HePeMTDJxnWwhlL0"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pDevice -> priv
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--NRwPRr2Fuc0K3MjV4HePeMTDJxnWwhlL0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wcmd.c | 56 ++++++++++++++++++++++---------------------
- 1 file changed, 29 insertions(+), 27 deletions(-)
+Hi John,
 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 5001193..5621c14 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -61,78 +61,80 @@ static void vCommandTimerWait(struct vnt_private *priv, unsigned long msecs)
- 
- void vRunCommand(struct work_struct *work)
- {
--	struct vnt_private *pDevice =
-+	struct vnt_private *priv =
- 		container_of(work, struct vnt_private, run_command_work.work);
- 
--	if (pDevice->Flags & fMP_DISCONNECTED)
-+	if (priv->Flags & fMP_DISCONNECTED)
- 		return;
- 
--	if (pDevice->bCmdRunning != true)
-+	if (priv->bCmdRunning != true)
- 		return;
- 
--	switch (pDevice->eCommandState) {
-+	switch (priv->eCommandState) {
- 	case WLAN_CMD_INIT_MAC80211_START:
--		if (pDevice->mac_hw)
-+		if (priv->mac_hw)
- 			break;
- 
--		dev_info(&pDevice->usb->dev, "Starting mac80211\n");
-+		dev_info(&priv->usb->dev, "Starting mac80211\n");
- 
--		if (vnt_init(pDevice)) {
-+		if (vnt_init(priv)) {
- 			/* If fail all ends TODO retry */
--			dev_err(&pDevice->usb->dev, "failed to start\n");
--			ieee80211_free_hw(pDevice->hw);
-+			dev_err(&priv->usb->dev, "failed to start\n");
-+			ieee80211_free_hw(priv->hw);
- 			return;
- 		}
- 
- 		break;
- 
- 	case WLAN_CMD_TBTT_WAKEUP_START:
--		vnt_next_tbtt_wakeup(pDevice);
-+		vnt_next_tbtt_wakeup(priv);
- 		break;
- 
- 	case WLAN_CMD_BECON_SEND_START:
--		if (!pDevice->vif)
-+		if (!priv->vif)
- 			break;
- 
--		vnt_beacon_make(pDevice, pDevice->vif);
-+		vnt_beacon_make(priv, priv->vif);
- 
--		vnt_mac_reg_bits_on(pDevice, MAC_REG_TCR, TCR_AUTOBCNTX);
-+		vnt_mac_reg_bits_on(priv, MAC_REG_TCR, TCR_AUTOBCNTX);
- 
- 		break;
- 
- 	case WLAN_CMD_SETPOWER_START:
- 
--		vnt_rf_setpower(pDevice, pDevice->wCurrentRate,
--				pDevice->hw->conf.chandef.chan->hw_value);
-+		vnt_rf_setpower(priv, priv->wCurrentRate,
-+				priv->hw->conf.chandef.chan->hw_value);
- 
- 		break;
- 
- 	case WLAN_CMD_CHANGE_ANTENNA_START:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Change from Antenna%d to", (int)pDevice->dwRxAntennaSel);
--		if (pDevice->dwRxAntennaSel == 0) {
--			pDevice->dwRxAntennaSel = 1;
--			if (pDevice->bTxRxAntInv == true)
--				BBvSetAntennaMode(pDevice, ANT_RXA);
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+			"Change from Antenna%d to", (int)priv->dwRxAntennaSel);
-+
-+		if (priv->dwRxAntennaSel == 0) {
-+			priv->dwRxAntennaSel = 1;
-+			if (priv->bTxRxAntInv == true)
-+				BBvSetAntennaMode(priv, ANT_RXA);
- 			else
--				BBvSetAntennaMode(pDevice, ANT_RXB);
-+				BBvSetAntennaMode(priv, ANT_RXB);
- 		} else {
--			pDevice->dwRxAntennaSel = 0;
--			if (pDevice->bTxRxAntInv == true)
--				BBvSetAntennaMode(pDevice, ANT_RXB);
-+			priv->dwRxAntennaSel = 0;
-+			if (priv->bTxRxAntInv == true)
-+				BBvSetAntennaMode(priv, ANT_RXB);
- 			else
--				BBvSetAntennaMode(pDevice, ANT_RXA);
-+				BBvSetAntennaMode(priv, ANT_RXA);
- 		}
- 		break;
- 
- 	case WLAN_CMD_11H_CHSW_START:
--		vnt_set_channel(pDevice, pDevice->hw->conf.chandef.chan->hw_value);
-+		vnt_set_channel(priv, priv->hw->conf.chandef.chan->hw_value);
- 		break;
- 
- 	default:
- 		break;
- 	} //switch
- 
--	s_bCommandComplete(pDevice);
-+	s_bCommandComplete(priv);
- 
- 	return;
- }
--- 
-1.9.1
+This pull request is intended for 3.a16.
 
+I have here 2 patches that disable the usage of CTS to self. This keeps m=
+aking trouble to the firmware and is not a really reliable protection any=
+way. We may re-enable it in the future, but in rarer cases. Along with th=
+is, I have a fix from Ilan that prevents a firmware assertion.
+
+Please pull.
+
+The following changes since commit a42c9fcc4a88cdd246fab3bcf06c4487afee3d=
+88:
+
+  Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag" (2014-0=
+6-24 22:01:46 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to dc271ee0d04d12d6bfabacbec803289a7072fbd9:
+
+  iwlwifi: mvm: disable CTS to Self (2014-07-03 20:55:18 +0300)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: dvm: don't enable CTS to self
+      iwlwifi: mvm: disable CTS to Self
+
+Ilan Peer (1):
+      iwlwifi: mvm: Fix broadcast filtering
+
+ drivers/net/wireless/iwlwifi/dvm/rxon.c     | 12 ------------
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |  5 ++---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++++++------
+ 3 files changed, 8 insertions(+), 21 deletions(-)
+
+
+--NRwPRr2Fuc0K3MjV4HePeMTDJxnWwhlL0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTuFLXAAoJEC0Llv5uNjIBzGAP/3zyV27059dLAXYynlI1JtAj
+4AmmNUzlBlHh/zCMOnDQ5ySL3Rf08Cz1vyIq9giEz96mFEG1NYgX19fQYsnO5V7W
+bSRaKXCoTz66S7DGEVMvEnMwzkZVXFNEZJwdqvkLTMCxRrAq+FdRknk+fVcYt9ZT
+wPH7v1QQglUV5NS2QcOQAdEYx2ny49Bpwj2sJpfYbahOfHGdljlY0mxiz6qfqDbf
+bYz+pKVCUpgnB6Remj2LifU4aczGJ1u9UxPR6fnSDizCSycWkWHaFm6tCqGmT3cv
+Dx4tkdkw4iEIU2xzzAo9IpgM//kaTh5/XGEDozLjaCngIULz9WLWEAPPHgnrrktw
+qem2s3ZKbcswJc8xxZsSa3/buwMxxJoq+Sb8suIyoUt20NZ6/QWWGtrJvB2OVQj0
+LqBO4UqterFEqm3UJDJ9WRSnbY4ntvurQaJrEFsljcr7+J/z2uyCHhTxkjtHB+A8
+Hq5Ds1AQduEpMBFJmH3R7UP95qKFDCoLqhc8SJpPSxCY7Yt2Eg6Wc6EqVCpQAajh
+jejO5K+sGQZ+gwf8Rw89f5L4SxgTYGwm5BdHKWBMrFQS9/nOteCkR1gYTA9WXnTF
+Z+mhyAHqF5i2YOmo7+DsZz3oCpXUddgDNVzVfeH2s+L9tZdym2isU24bvOL/citA
+awvkZj4kL/5JO+JHzq6u
+=J8AS
+-----END PGP SIGNATURE-----
+
+--NRwPRr2Fuc0K3MjV4HePeMTDJxnWwhlL0--
