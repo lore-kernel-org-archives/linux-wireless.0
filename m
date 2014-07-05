@@ -1,127 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:59696 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756878AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:38:37 -0400
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] security: introduce kernel_fw_from_file hook
-Date: Mon, 14 Jul 2014 14:38:13 -0700
-Message-Id: <1405373897-31671-4-git-send-email-keescook@chromium.org> (sfid-20140714_234108_036941_472F403F)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:58782 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964792AbaGESYx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jul 2014 14:24:53 -0400
+Received: by mail-we0-f172.google.com with SMTP id u57so2683194wes.3
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/8] staging: vt6656: vnt_rf_set_txpower use power for priv->byCurPwr
+Date: Sat,  5 Jul 2014 19:24:21 +0100
+Message-Id: <1404584667-3582-2-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202457_019871_D95A371E)
+In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to validate the contents of firmware being loaded, there must be
-a hook to evaluate any loaded firmware that wasn't built into the kernel
-itself. Without this, there is a risk that a root user could load malicious
-firmware designed to mount an attack against kernel memory (e.g. via DMA).
+The byCurPwr value can change state while in another thread,.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Change to local variable power which is the last set value.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/linux/security.h |   16 ++++++++++++++++
- security/capability.c    |    6 ++++++
- security/security.c      |    6 ++++++
- 3 files changed, 28 insertions(+)
+ drivers/staging/vt6656/rf.c | 28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/security.h b/include/linux/security.h
-index 9c6b9722ff48..dbb80b3e99d7 100644
---- a/include/linux/security.h
-+++ b/include/linux/security.h
-@@ -702,6 +702,14 @@ static inline void security_free_mnt_opts(struct security_mnt_opts *opts)
-  *	@inode points to the inode to use as a reference.
-  *	The current task must be the one that nominated @inode.
-  *	Return 0 if successful.
-+ * @kernel_fw_from_file:
-+ *	Load firmware from userspace.
-+ *	@file contains the file structure pointing to the file containing
-+ *	the firmware to load. If the module is being loaded from a blob,
-+ *	this argument will be NULL.
-+ *	@buf pointer to buffer containing firmware contents.
-+ *	@size length of the firmware contents.
-+ *	Return 0 if permission is granted.
-  * @kernel_module_request:
-  *	Ability to trigger the kernel to automatically upcall to userspace for
-  *	userspace to load a kernel module with the given name.
-@@ -1565,6 +1573,7 @@ struct security_operations {
- 	void (*cred_transfer)(struct cred *new, const struct cred *old);
- 	int (*kernel_act_as)(struct cred *new, u32 secid);
- 	int (*kernel_create_files_as)(struct cred *new, struct inode *inode);
-+	int (*kernel_fw_from_file)(struct file *file, char *buf, size_t size);
- 	int (*kernel_module_request)(char *kmod_name);
- 	int (*kernel_module_from_file)(struct file *file);
- 	int (*task_fix_setuid) (struct cred *new, const struct cred *old,
-@@ -1837,6 +1846,7 @@ int security_prepare_creds(struct cred *new, const struct cred *old, gfp_t gfp);
- void security_transfer_creds(struct cred *new, const struct cred *old);
- int security_kernel_act_as(struct cred *new, u32 secid);
- int security_kernel_create_files_as(struct cred *new, struct inode *inode);
-+int security_kernel_fw_from_file(struct file *file, char *buf, size_t size);
- int security_kernel_module_request(char *kmod_name);
- int security_kernel_module_from_file(struct file *file);
- int security_task_fix_setuid(struct cred *new, const struct cred *old,
-@@ -2363,6 +2373,12 @@ static inline int security_kernel_create_files_as(struct cred *cred,
- 	return 0;
- }
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 8c2c2bd..971f844 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -821,11 +821,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
  
-+static inline int security_kernel_fw_from_file(struct file *file,
-+					       char *buf, size_t size)
-+{
-+	return 0;
-+}
-+
- static inline int security_kernel_module_request(char *kmod_name)
- {
- 	return 0;
-diff --git a/security/capability.c b/security/capability.c
-index e76373de3129..a74fde6a7468 100644
---- a/security/capability.c
-+++ b/security/capability.c
-@@ -401,6 +401,11 @@ static int cap_kernel_create_files_as(struct cred *new, struct inode *inode)
- 	return 0;
- }
+ 	switch (priv->byRFType) {
+ 	case RF_AL2230:
+-		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
++		if (power >= AL2230_PWR_IDX_LEN)
+ 			return false;
  
-+static int cap_kernel_fw_from_file(struct file *file, char *buf, size_t size)
-+{
-+	return 0;
-+}
-+
- static int cap_kernel_module_request(char *kmod_name)
- {
- 	return 0;
-@@ -1015,6 +1020,7 @@ void __init security_fixup_ops(struct security_operations *ops)
- 	set_to_cap_if_null(ops, cred_transfer);
- 	set_to_cap_if_null(ops, kernel_act_as);
- 	set_to_cap_if_null(ops, kernel_create_files_as);
-+	set_to_cap_if_null(ops, kernel_fw_from_file);
- 	set_to_cap_if_null(ops, kernel_module_request);
- 	set_to_cap_if_null(ops, kernel_module_from_file);
- 	set_to_cap_if_null(ops, task_fix_setuid);
-diff --git a/security/security.c b/security/security.c
-index 31614e9e96e5..35d37d0f0d49 100644
---- a/security/security.c
-+++ b/security/security.c
-@@ -845,6 +845,12 @@ int security_kernel_create_files_as(struct cred *new, struct inode *inode)
- 	return security_ops->kernel_create_files_as(new, inode);
- }
+-		ret &= vnt_rf_write_embedded(priv,
+-			al2230_power_table[priv->byCurPwr]);
++		ret &= vnt_rf_write_embedded(priv, al2230_power_table[power]);
  
-+int security_kernel_fw_from_file(struct file *file, char *buf, size_t size)
-+{
-+	return security_ops->kernel_fw_from_file(file, buf, size);
-+}
-+EXPORT_SYMBOL_GPL(security_kernel_fw_from_file);
-+
- int security_kernel_module_request(char *kmod_name)
- {
- 	return security_ops->kernel_module_request(kmod_name);
+ 		if (rate <= RATE_11M)
+ 			ret &= vnt_rf_write_embedded(priv, 0x0001b400 +
+@@ -835,11 +834,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 				(BY_AL2230_REG_LEN << 3) + IFREGCTL_REGW);
+ 		break;
+ 	case RF_AL2230S:
+-		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
++		if (power >= AL2230_PWR_IDX_LEN)
+ 			return false;
+ 
+-		ret &= vnt_rf_write_embedded(priv,
+-			al2230_power_table[priv->byCurPwr]);
++		ret &= vnt_rf_write_embedded(priv, al2230_power_table[power]);
+ 
+ 		if (rate <= RATE_11M) {
+ 			ret &= vnt_rf_write_embedded(priv, 0x040c1400 +
+@@ -862,14 +860,14 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 			ret &= vnt_rf_write_embedded(priv, 0x221bb900 +
+ 				(BY_AL7230_REG_LEN << 3)+IFREGCTL_REGW);
+ 
+-		if (priv->byCurPwr > AL7230_PWR_IDX_LEN)
++		if (power >= AL7230_PWR_IDX_LEN)
+ 			return false;
+ 
+ 		/*
+ 		* 0x080F1B00 for 3 wire control TxGain(D10)
+ 		* and 0x31 as TX Gain value
+ 		*/
+-		power_setting = 0x080c0b00 | ((priv->byCurPwr) << 12) |
++		power_setting = 0x080c0b00 | (power << 12) |
+ 				(BY_AL7230_REG_LEN << 3) | IFREGCTL_REGW;
+ 
+ 		ret &= vnt_rf_write_embedded(priv, power_setting);
+@@ -877,22 +875,22 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 		break;
+ 
+ 	case RF_VT3226:
+-		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
++		if (power >= VT3226_PWR_IDX_LEN)
+ 			return false;
+-		power_setting = ((0x3f - priv->byCurPwr) << 20) | (0x17 << 8) |
++		power_setting = ((0x3f - power) << 20) | (0x17 << 8) |
+ 				(BY_VT3226_REG_LEN << 3) | IFREGCTL_REGW;
+ 
+ 		ret &= vnt_rf_write_embedded(priv, power_setting);
+ 
+ 		break;
+ 	case RF_VT3226D0:
+-		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
++		if (power >= VT3226_PWR_IDX_LEN)
+ 			return false;
+ 
+ 		if (rate <= RATE_11M) {
+ 			u16 hw_value = priv->hw->conf.chandef.chan->hw_value;
+ 
+-			power_setting = ((0x3f-priv->byCurPwr) << 20) |
++			power_setting = ((0x3f - power) << 20) |
+ 				(0xe07 << 8) | (BY_VT3226_REG_LEN << 3) |
+ 						IFREGCTL_REGW;
+ 
+@@ -915,7 +913,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 			dev_dbg(&priv->usb->dev,
+ 					"@@@@ vnt_rf_set_txpower> 11G mode\n");
+ 
+-			power_setting = ((0x3f-priv->byCurPwr) << 20) |
++			power_setting = ((0x3f - power) << 20) |
+ 				(0x7 << 8) | (BY_VT3226_REG_LEN << 3) |
+ 					IFREGCTL_REGW;
+ 
+@@ -930,10 +928,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 		break;
+ 
+ 	case RF_VT3342A0:
+-		if (priv->byCurPwr >= VT3342_PWR_IDX_LEN)
++		if (power >= VT3342_PWR_IDX_LEN)
+ 			return false;
+ 
+-		power_setting =  ((0x3F-priv->byCurPwr) << 20) |
++		power_setting =  ((0x3f - power) << 20) |
+ 			(0x27 << 8) | (BY_VT3342_REG_LEN << 3) |
+ 					IFREGCTL_REGW;
+ 
 -- 
-1.7.9.5
+1.9.1
 
