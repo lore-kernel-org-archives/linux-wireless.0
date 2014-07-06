@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11278 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753658AbaGBNVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:21:44 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 6/6] staging: rtl8192u: re-use string_escape_mem()
-Date: Wed,  2 Jul 2014 16:20:29 +0300
-Message-Id: <1404307229-19186-7-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152201_595521_4F1172E4)
-In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:48381 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656AbaGFJhY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jul 2014 05:37:24 -0400
+Received: by mail-we0-f174.google.com with SMTP id u57so3148156wes.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:23 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 39/40] iwlwifi: mvm: remove 8000 HW family setting of adc sampling on nic config
+Date: Sun,  6 Jul 2014 12:36:15 +0300
+Message-Id: <1404639376-3792-39-git-send-email-egrumbach@gmail.com> (sfid-20140706_115955_785052_D5AE5B8D)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let's use kernel's library function to escape a buffer instead of custom code.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This patch removes the setting of the ADC sampling bits in
+the mvm nic configuration. This setting is not required by
+the firmware, and furthermore - it interferes with the DBGC
+when it is running in DRAM mode on PCIe.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Dor Shaish <dor.shaish@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/rtl8192u/ieee80211/ieee80211.h | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211.h b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
-index 1040bab..bb5f604 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211.h
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
-@@ -31,6 +31,7 @@
- #include <linux/sched.h>
- #include <linux/semaphore.h>
- #include <linux/interrupt.h>
-+#include <linux/string_helpers.h>
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 89a0956..7d7b2fb 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -166,8 +166,15 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
+ 	WARN_ON((radio_cfg_type << CSR_HW_IF_CONFIG_REG_POS_PHY_TYPE) &
+ 		 ~CSR_HW_IF_CONFIG_REG_MSK_PHY_TYPE);
  
- #include <linux/delay.h>
- #include <linux/wireless.h>
-@@ -2576,7 +2577,6 @@ static inline int ieee80211_get_scans(struct ieee80211_device *ieee)
+-	/* silicon bits */
+-	reg_val |= CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI;
++	/*
++	 * TODO: Bits 7-8 of CSR in 8000 HW family set the ADC sampling, and
++	 * shouldn't be set to any non-zero value. The same is supposed to be
++	 * true of the other HW, but unsetting them (such as the 7260) causes
++	 * automatic tests to fail on seemingly unrelated errors. Need to
++	 * further investigate this, but for now we'll separate cases.
++	 */
++	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
++		reg_val |= CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI;
  
- static inline const char *escape_essid(const char *essid, u8 essid_len) {
- 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
--	const char *s = essid;
- 	char *d = escaped;
- 
- 	if (ieee80211_is_empty_essid(essid, essid_len)) {
-@@ -2585,15 +2585,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len) {
- 	}
- 
- 	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
--	while (essid_len--) {
--		if (*s == '\0') {
--			*d++ = '\\';
--			*d++ = '0';
--			s++;
--		} else {
--			*d++ = *s++;
--		}
--	}
-+	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
-+			       ESCAPE_NULL, NULL);
- 	*d = '\0';
- 	return escaped;
- }
+ 	iwl_trans_set_bits_mask(mvm->trans, CSR_HW_IF_CONFIG_REG,
+ 				CSR_HW_IF_CONFIG_REG_MSK_MAC_DASH |
 -- 
-2.0.0
+1.8.3.2
 
