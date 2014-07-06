@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:41083 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750912AbaGFE3X (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:64865 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaGFJg6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 00:29:23 -0400
-Received: by mail-oa0-f42.google.com with SMTP id eb12so3203398oac.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 21:29:23 -0700 (PDT)
-Message-ID: <53B8D0AA.7020703@lwfinger.net> (sfid-20140706_063018_179490_A03D007F)
-Date: Sat, 05 Jul 2014 23:29:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Microcode SW errors for Intel 7260
-References: <53B756D8.1080909@lwfinger.net> <CANUX_P0wGNT-E0TnuMkrHV+LWyZAJjiaz+hEzYDVO9EWpJYzfA@mail.gmail.com>
-In-Reply-To: <CANUX_P0wGNT-E0TnuMkrHV+LWyZAJjiaz+hEzYDVO9EWpJYzfA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 6 Jul 2014 05:36:58 -0400
+Received: by mail-wg0-f45.google.com with SMTP id z12so1345368wgg.16
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:57 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/40] iwlwifi: 8000: drop a print when the address is invalid
+Date: Sun,  6 Jul 2014 12:35:59 +0300
+Message-Id: <1404639376-3792-23-git-send-email-egrumbach@gmail.com> (sfid-20140706_115951_898388_F0FFC6A0)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2014 01:10 PM, Emmanuel Grumbach wrote:
->
-> Please run with trace-cmd:
->
-> I need -e iwlwifi -e iwlwifi_msg
->
+From: Eran Harary <eran.harary@intel.com>
 
-Emmanuel,
+when driver takes the MAC address from the HW section and
+it isn't valid - print an error.
 
-I am obviously missing something. Neither iwlwifi nor iwlwifi_msg are listed in 
-/sys/kernel/debug/tracing/available_events/, thus trace-cmd cannot enable 
-logging those events. The output is as follows:
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-finger@linux-rcu3:~/wireless-testing> sudo trace-cmd record -e iwlwifi -e 
-iwlwifi_msg
-/sys/kernel/debug/tracing/events/iwlwifi_msg/filter
-/sys/kernel/debug/tracing/events/*/iwlwifi_msg/filter
-trace-cmd: No such file or directory
-   No events enabled with iwlwifi_msg
-finger@linux-rcu3:~/wireless-testing>
-
-
-I compared my .config with one for the openSUSE kernel 3.11.10, and the kernel 
-hacking section has the same settings.
-
-Do you have any suggestions?
-
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index dd76ed2..018af29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -549,6 +549,9 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 			data->hw_addr[1] = hw_addr[2];
+ 			data->hw_addr[0] = hw_addr[3];
+ 		}
++		if (!is_valid_ether_addr(data->hw_addr))
++			IWL_ERR_DEV(dev,
++				    "mac address from hw section is not valid\n");
+ 
+ 		return;
+ 	}
+-- 
+1.8.3.2
 
