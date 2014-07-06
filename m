@@ -1,166 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64610 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbaGKAJT (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46535 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbaGFJg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:09:19 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so7532wes.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:16 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/13] staging: vt6656: rxtx rename s_uGetRTSCTSDuration to vnt_get_rtscts_duration_le
-Date: Fri, 11 Jul 2014 01:08:20 +0100
-Message-Id: <1405037311-3666-2-git-send-email-tvboxspy@gmail.com> (sfid-20140711_020922_945380_5E5ADC91)
-In-Reply-To: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
-References: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 6 Jul 2014 05:36:28 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so14567430wib.5
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:27 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/40] iwlwifi: mvm: kill iwl_mvm_fw_error_rxf_dump
+Date: Sun,  6 Jul 2014 12:35:40 +0300
+Message-Id: <1404639376-3792-4-git-send-email-egrumbach@gmail.com> (sfid-20140706_113633_289310_E7A4171B)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function always returns little endian value.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Its content can move to the caller.
+While at it, move iwl_mvm_fw_error_rxf_dump to caller.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 54 +++++++++++++++++++++----------------------
- 1 file changed, 27 insertions(+), 27 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 100 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |   6 --
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  83 -----------------------
+ drivers/net/wireless/iwlwifi/mvm/utils.c    |  43 ------------
+ 4 files changed, 100 insertions(+), 132 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 0e853c1..c994c08 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -30,7 +30,7 @@
-  *      csMgmt_xmit - management tx function
-  *      s_uGetDataDuration - get tx data required duration
-  *      s_uFillDataHead- fulfill tx data duration header
-- *      s_uGetRTSCTSDuration- get rtx/cts required duration
-+ *      vnt_get_rtscts_duration_le- get rtx/cts required duration
-  *      s_uGetRTSCTSRsvTime- get rts/cts reserved time
-  *      s_uGetTxRsvTime- get frame reserved time
-  *      vnt_fill_cts_head- fulfill CTS ctl header
-@@ -92,7 +92,7 @@ static __le16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
- static __le16 s_uGetDataDuration(struct vnt_private *pDevice,
- 	u8 byPktType, int bNeedAck);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 9feca4a..9661a52 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -80,6 +80,8 @@
+ #include "fw-api-scan.h"
+ #include "iwl-phy-db.h"
+ #include "testmode.h"
++#include "iwl-fw-error-dump.h"
++#include "iwl-prph.h"
  
--static __le16 s_uGetRTSCTSDuration(struct vnt_private *priv,
-+static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv,
- 	u8 dur_type, u32 frame_length, u8 pkt_type, u16 rate,
- 	int need_ack);
- 
-@@ -229,7 +229,7 @@ static __le16 s_uGetDataDuration(struct vnt_private *pDevice,
+ static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
+ 	{
+@@ -645,6 +647,104 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
+ 	mvmvif->phy_ctxt = NULL;
  }
  
- //byFreqType: 0=>5GHZ 1=>2.4GHZ
--static __le16 s_uGetRTSCTSDuration(struct vnt_private *priv, u8 dur_type,
-+static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv, u8 dur_type,
- 	u32 frame_length, u8 pkt_type, u16 rate, int need_ack)
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++static void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
++{
++	struct iwl_fw_error_dump_file *dump_file;
++	struct iwl_fw_error_dump_data *dump_data;
++	struct iwl_fw_error_dump_info *dump_info;
++	const struct fw_img *img;
++	u32 sram_len, sram_ofs;
++	u32 file_len, rxf_len;
++	unsigned long flags;
++	u32 trans_len;
++	int reg_val;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	if (mvm->fw_error_dump)
++		return;
++
++	img = &mvm->fw->img[mvm->cur_ucode];
++	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
++	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
++
++	/* reading buffer size */
++	reg_val = iwl_trans_read_prph(mvm->trans, RXF_SIZE_ADDR);
++	rxf_len = (reg_val & RXF_SIZE_BYTE_CNT_MSK) >> RXF_SIZE_BYTE_CND_POS;
++
++	/* the register holds the value divided by 128 */
++	rxf_len = rxf_len << 7;
++
++	file_len = sizeof(*dump_file) +
++		   sizeof(*dump_data) * 3 +
++		   sram_len +
++		   rxf_len +
++		   sizeof(*dump_info);
++
++	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
++	if (trans_len)
++		file_len += trans_len;
++
++	dump_file = vmalloc(file_len);
++	if (!dump_file)
++		return;
++
++	mvm->fw_error_dump = dump_file;
++
++	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
++	dump_file->file_len = cpu_to_le32(file_len);
++	dump_data = (void *)dump_file->data;
++
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
++	dump_data->len = cpu_to_le32(sizeof(*dump_info));
++	dump_info = (void *) dump_data->data;
++	dump_info->device_family =
++		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
++	       sizeof(dump_info->fw_human_readable));
++	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
++		sizeof(dump_info->dev_human_readable));
++	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
++		sizeof(dump_info->bus_human_readable));
++
++	dump_data = iwl_fw_error_next_data(dump_data);
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
++	dump_data->len = cpu_to_le32(rxf_len);
++
++	if (iwl_trans_grab_nic_access(mvm->trans, false, &flags)) {
++		u32 *rxf = (void *)dump_data->data;
++		int i;
++
++		for (i = 0; i < (rxf_len / sizeof(u32)); i++) {
++			iwl_trans_write_prph(mvm->trans,
++					     RXF_LD_FENCE_OFFSET_ADDR,
++					     i * sizeof(u32));
++			rxf[i] = iwl_trans_read_prph(mvm->trans,
++						     RXF_FIFO_RD_FENCE_ADDR);
++		}
++		iwl_trans_release_nic_access(mvm->trans, &flags);
++	}
++
++	dump_data = iwl_fw_error_next_data(dump_data);
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
++	dump_data->len = cpu_to_le32(sram_len);
++	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
++				 sram_len);
++
++	if (trans_len) {
++		void *buf = iwl_fw_error_next_data(dump_data);
++		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
++							 trans_len);
++		dump_data = (void *)((u8 *)buf + real_trans_len);
++		dump_file->file_len =
++			cpu_to_le32(file_len - trans_len + real_trans_len);
++	}
++}
++#endif
++
+ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
  {
- 	u32 cts_time = 0, dur_time = 0;
-@@ -422,12 +422,12 @@ static u16 vnt_rxtx_rts_g_head(struct vnt_usb_send_context *tx_context,
- 	vnt_get_phy_field(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 4cc6788..e067d97 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -595,8 +595,6 @@ struct iwl_mvm {
+ 	/* -1 for always, 0 for never, >0 for that many times */
+ 	s8 restart_fw;
+ 	void *fw_error_dump;
+-	u32 *fw_error_rxf;
+-	u32 fw_error_rxf_len;
  
--	buf->duration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
--		PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack);
--	buf->duration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
--		pkt_type, current_rate, need_ack);
--	buf->duration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
--		pkt_type, current_rate, need_ack);
-+	buf->duration_bb = vnt_get_rtscts_duration_le(priv, RTSDUR_BB,
-+		frame_len, PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack);
-+	buf->duration_aa = vnt_get_rtscts_duration_le(priv, RTSDUR_AA,
-+		frame_len, pkt_type, current_rate, need_ack);
-+	buf->duration_ba = vnt_get_rtscts_duration_le(priv, RTSDUR_BA,
-+		frame_len, pkt_type, current_rate, need_ack);
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	struct led_classdev led;
+@@ -730,10 +728,6 @@ void iwl_mvm_hwrate_to_tx_rate(u32 rate_n_flags,
+ 			       struct ieee80211_tx_rate *r);
+ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+-void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm);
+-#endif
+ u8 first_antenna(u8 mask);
+ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx);
  
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration_aa);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 889374d..15c13a7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -550,7 +550,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
  
-@@ -448,21 +448,21 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_usb_send_context *tx_context,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
+ 	kfree(mvm->scan_cmd);
+ 	vfree(mvm->fw_error_dump);
+-	kfree(mvm->fw_error_rxf);
+ 	kfree(mvm->mcast_filter_cmd);
+ 	mvm->mcast_filter_cmd = NULL;
  
+@@ -821,88 +820,6 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ 	}
+ }
  
--	buf->duration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
--		PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack);
--	buf->duration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
--		pkt_type, current_rate, need_ack);
--	buf->duration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
--		pkt_type, current_rate, need_ack);
-+	buf->duration_bb = vnt_get_rtscts_duration_le(priv, RTSDUR_BB,
-+		frame_len, PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack);
-+	buf->duration_aa = vnt_get_rtscts_duration_le(priv, RTSDUR_AA,
-+		frame_len, pkt_type, current_rate, need_ack);
-+	buf->duration_ba = vnt_get_rtscts_duration_le(priv, RTSDUR_BA,
-+		frame_len, pkt_type, current_rate, need_ack);
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+-{
+-	struct iwl_fw_error_dump_file *dump_file;
+-	struct iwl_fw_error_dump_data *dump_data;
+-	struct iwl_fw_error_dump_info *dump_info;
+-	const struct fw_img *img;
+-	u32 sram_len, sram_ofs;
+-	u32 file_len;
+-	u32 trans_len;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	if (mvm->fw_error_dump)
+-		return;
+-
+-	img = &mvm->fw->img[mvm->cur_ucode];
+-	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+-	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+-
+-	file_len = sizeof(*dump_file) +
+-		   sizeof(*dump_data) * 3 +
+-		   sram_len +
+-		   mvm->fw_error_rxf_len +
+-		   sizeof(*dump_info);
+-
+-	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
+-	if (trans_len)
+-		file_len += trans_len;
+-
+-	dump_file = vmalloc(file_len);
+-	if (!dump_file)
+-		return;
+-
+-	mvm->fw_error_dump = dump_file;
+-
+-	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
+-	dump_file->file_len = cpu_to_le32(file_len);
+-	dump_data = (void *)dump_file->data;
+-
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
+-	dump_data->len = cpu_to_le32(sizeof(*dump_info));
+-	dump_info = (void *) dump_data->data;
+-	dump_info->device_family =
+-		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
+-	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
+-	       sizeof(dump_info->fw_human_readable));
+-	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
+-		sizeof(dump_info->dev_human_readable));
+-	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
+-		sizeof(dump_info->bus_human_readable));
+-
+-	iwl_mvm_fw_error_rxf_dump(mvm);
+-
+-	dump_data = iwl_fw_error_next_data(dump_data);
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
+-	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
+-	memcpy(dump_data->data, mvm->fw_error_rxf, mvm->fw_error_rxf_len);
+-
+-	dump_data = iwl_fw_error_next_data(dump_data);
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
+-	dump_data->len = cpu_to_le32(sram_len);
+-	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
+-				 sram_len);
+-
+-	kfree(mvm->fw_error_rxf);
+-	mvm->fw_error_rxf = NULL;
+-	mvm->fw_error_rxf_len = 0;
+-
+-	if (trans_len) {
+-		void *buf = iwl_fw_error_next_data(dump_data);
+-		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
+-							 trans_len);
+-		dump_data = (void *)((u8 *)buf + real_trans_len);
+-		dump_file->file_len =
+-			cpu_to_le32(file_len - trans_len + real_trans_len);
+-	}
+-}
+-#endif
+-
+ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 15db97c..ac249da 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -519,49 +519,6 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 		iwl_mvm_dump_umac_error_log(mvm);
+ }
  
- 
--	buf->rts_duration_ba_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F0,
-+	buf->rts_duration_ba_f0 = vnt_get_rtscts_duration_le(priv, RTSDUR_BA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack);
--	buf->rts_duration_aa_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
-+	buf->rts_duration_aa_f0 = vnt_get_rtscts_duration_le(priv, RTSDUR_AA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack);
--	buf->rts_duration_ba_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F1,
-+	buf->rts_duration_ba_f1 = vnt_get_rtscts_duration_le(priv, RTSDUR_BA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack);
--	buf->rts_duration_aa_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
-+	buf->rts_duration_aa_f1 = vnt_get_rtscts_duration_le(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack);
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration_aa);
-@@ -481,7 +481,7 @@ static u16 vnt_rxtx_rts_ab_head(struct vnt_usb_send_context *tx_context,
- 	vnt_get_phy_field(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->ab);
- 
--	buf->duration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration = vnt_get_rtscts_duration_le(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack);
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration);
-@@ -500,13 +500,13 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
- 	vnt_get_phy_field(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
- 
--	buf->duration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration = vnt_get_rtscts_duration_le(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack);
- 
--	buf->rts_duration_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
-+	buf->rts_duration_f0 = vnt_get_rtscts_duration_le(priv, RTSDUR_AA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack);
- 
--	buf->rts_duration_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
-+	buf->rts_duration_f1 = vnt_get_rtscts_duration_le(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack);
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration);
-@@ -531,15 +531,15 @@ static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
- 		/* Get SignalField,ServiceField,Length */
- 		vnt_get_phy_field(priv, cts_frame_len,
- 			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
--		buf->duration_ba = s_uGetRTSCTSDuration(priv, CTSDUR_BA,
-+		buf->duration_ba = vnt_get_rtscts_duration_le(priv, CTSDUR_BA,
- 			frame_len, pkt_type,
- 			current_rate, need_ack);
- 		/* Get CTSDuration_ba_f0 */
--		buf->cts_duration_ba_f0 = s_uGetRTSCTSDuration(priv,
-+		buf->cts_duration_ba_f0 = vnt_get_rtscts_duration_le(priv,
- 			CTSDUR_BA_F0, frame_len, pkt_type,
- 			priv->tx_rate_fb0, need_ack);
- 		/* Get CTSDuration_ba_f1 */
--		buf->cts_duration_ba_f1 = s_uGetRTSCTSDuration(priv,
-+		buf->cts_duration_ba_f1 = vnt_get_rtscts_duration_le(priv,
- 			CTSDUR_BA_F1, frame_len, pkt_type,
- 			priv->tx_rate_fb1, need_ack);
- 		/* Get CTS Frame body */
-@@ -558,7 +558,7 @@ static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
- 		vnt_get_phy_field(priv, cts_frame_len,
- 			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
- 		/* Get CTSDuration_ba */
--		buf->duration_ba = s_uGetRTSCTSDuration(priv,
-+		buf->duration_ba = vnt_get_rtscts_duration_le(priv,
- 			CTSDUR_BA, frame_len, pkt_type,
- 			current_rate, need_ack);
- 		/*Get CTS Frame body*/
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm)
+-{
+-	int i, reg_val;
+-	unsigned long flags;
+-
+-	if (!mvm->ucode_loaded || mvm->fw_error_rxf || mvm->fw_error_dump)
+-		return;
+-
+-	/* reading buffer size */
+-	reg_val = iwl_trans_read_prph(mvm->trans, RXF_SIZE_ADDR);
+-	mvm->fw_error_rxf_len =
+-		(reg_val & RXF_SIZE_BYTE_CNT_MSK) >> RXF_SIZE_BYTE_CND_POS;
+-
+-	/* the register holds the value divided by 128 */
+-	mvm->fw_error_rxf_len = mvm->fw_error_rxf_len << 7;
+-
+-	if (!mvm->fw_error_rxf_len)
+-		return;
+-
+-	mvm->fw_error_rxf =  kzalloc(mvm->fw_error_rxf_len, GFP_ATOMIC);
+-	if (!mvm->fw_error_rxf) {
+-		mvm->fw_error_rxf_len = 0;
+-		return;
+-	}
+-
+-	if (!iwl_trans_grab_nic_access(mvm->trans, false, &flags)) {
+-		kfree(mvm->fw_error_rxf);
+-		mvm->fw_error_rxf = NULL;
+-		mvm->fw_error_rxf_len = 0;
+-		return;
+-	}
+-
+-	for (i = 0; i < (mvm->fw_error_rxf_len / sizeof(u32)); i++) {
+-		iwl_trans_write_prph(mvm->trans, RXF_LD_FENCE_OFFSET_ADDR,
+-				     i * sizeof(u32));
+-		mvm->fw_error_rxf[i] =
+-			iwl_trans_read_prph(mvm->trans, RXF_FIFO_RD_FENCE_ADDR);
+-	}
+-	iwl_trans_release_nic_access(mvm->trans, &flags);
+-}
+-#endif
+-
+ /**
+  * iwl_mvm_send_lq_cmd() - Send link quality command
+  * @init: This command is sent as part of station initialization right
 -- 
-1.9.1
+1.8.3.2
 
