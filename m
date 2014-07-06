@@ -1,313 +1,327 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:38525 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753999AbaGHNLh (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:52322 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbaGFJgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 09:11:37 -0400
-Received: by mail-wi0-f175.google.com with SMTP id ho1so954594wib.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2014 06:11:35 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 5/7] b43: N-PHY: init and channel switching of radio 0x2057 rev 9
-Date: Tue,  8 Jul 2014 15:11:08 +0200
-Message-Id: <1404825070-5243-5-git-send-email-zajec5@gmail.com> (sfid-20140708_151144_488439_D491C8B1)
-In-Reply-To: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
-References: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Jul 2014 05:36:50 -0400
+Received: by mail-we0-f172.google.com with SMTP id u57so3149727wes.17
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:49 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/40] iwlwifi: mvm: rs: don't clear persistent fields
+Date: Sun,  6 Jul 2014 12:35:54 +0300
+Message-Id: <1404639376-3792-18-git-send-email-egrumbach@gmail.com> (sfid-20140706_115955_934360_471829BC)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c      |  47 ++++++++-
- drivers/net/wireless/b43/radio_2057.c | 188 ++++++++++++++++++++++++++++++++++
- 2 files changed, 234 insertions(+), 1 deletion(-)
+From: Eliad Peller <eliad@wizery.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 44349f5..479cda8 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -746,10 +746,55 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
- 			b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C2, 0x8);
- 		}
- 		break;
-+	case 9: /* e.g. PHY rev 16 */
-+		b43_radio_write(dev, R2057_LOGEN_PTAT_RESETS, 0x20);
-+		b43_radio_write(dev, R2057_VCOBUF_IDACS, 0x18);
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
-+			b43_radio_write(dev, R2057_LOGEN_PTAT_RESETS, 0x38);
-+			b43_radio_write(dev, R2057_VCOBUF_IDACS, 0x0f);
-+
-+			if (b43_is_40mhz(dev)) {
-+				/* TODO */
-+			} else {
-+				b43_radio_write(dev,
-+						R2057_PAD_BIAS_FILTER_BWS_CORE0,
-+						0x3c);
-+				b43_radio_write(dev,
-+						R2057_PAD_BIAS_FILTER_BWS_CORE1,
-+						0x3c);
-+			}
-+		}
-+		break;
- 	/* TODO */
- 	}
+iwl_mvm_rs_rate_init() is called multiple times to re-init
+the rate scaling statistics (e.g. after some idle time).
+
+It clears all the lq_sta sta, including some fields that
+shouldn't be cleared (e.g. debugfs pointers). Fix it
+by adding a new 'persistent' sub-struct, and
+avoid clearing it on (re-)init.
+
+Move the initialization of the persistent fields to
+rs_alloc_sta instead.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 87 ++++++++++++++++++-----------------
+ drivers/net/wireless/iwlwifi/mvm/rs.h | 24 ++++++----
+ 2 files changed, 59 insertions(+), 52 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 306a6ca..67bd8d7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -927,7 +927,7 @@ static bool rs_get_lower_rate_in_column(struct iwl_lq_sta *lq_sta,
+ 	u8 low;
+ 	u16 high_low;
+ 	u16 rate_mask;
+-	struct iwl_mvm *mvm = lq_sta->drv;
++	struct iwl_mvm *mvm = lq_sta->pers.drv;
  
--	/* TODO */
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		u16 txmix2g_tune_boost_pu = 0;
-+		u16 pad2g_tune_pus = 0;
-+
-+		if (b43_nphy_ipa(dev)) {
-+			switch (phy->radio_rev) {
-+			case 9:
-+				txmix2g_tune_boost_pu = 0x0041;
-+				/* TODO */
-+				break;
-+			}
-+			/* TODO */
-+		}
-+
-+		if (txmix2g_tune_boost_pu)
-+			b43_radio_write(dev, R2057_TXMIX2G_TUNE_BOOST_PU_CORE0,
-+					txmix2g_tune_boost_pu);
-+		if (pad2g_tune_pus)
-+			b43_radio_write(dev, R2057_PAD2G_TUNE_PUS_CORE0,
-+					pad2g_tune_pus);
-+		if (txmix2g_tune_boost_pu)
-+			b43_radio_write(dev, R2057_TXMIX2G_TUNE_BOOST_PU_CORE1,
-+					txmix2g_tune_boost_pu);
-+		if (pad2g_tune_pus)
-+			b43_radio_write(dev, R2057_PAD2G_TUNE_PUS_CORE1,
-+					pad2g_tune_pus);
-+	}
- 
- 	usleep_range(50, 100);
- 
-diff --git a/drivers/net/wireless/b43/radio_2057.c b/drivers/net/wireless/b43/radio_2057.c
-index df35745..941cf3d 100644
---- a/drivers/net/wireless/b43/radio_2057.c
-+++ b/drivers/net/wireless/b43/radio_2057.c
-@@ -105,6 +105,18 @@ static u16 r2057_rev8_init[][2] = {
- };
- */
- 
-+/* Extracted from MMIO dump of 6.30.223.141 */
-+static u16 r2057_rev9_init[][2] = {
-+	{ 0x27, 0x1f }, { 0x28, 0x0a }, { 0x29, 0x2f }, { 0x42, 0x1f },
-+	{ 0x48, 0x3f }, { 0x5c, 0x41 }, { 0x63, 0x14 }, { 0x64, 0x12 },
-+	{ 0x66, 0xff }, { 0x74, 0xa3 }, { 0x7b, 0x14 }, { 0x7c, 0x14 },
-+	{ 0x7d, 0xee }, { 0x86, 0xc0 }, { 0xc4, 0x10 }, { 0xc9, 0x01 },
-+	{ 0xe1, 0x41 }, { 0xe8, 0x14 }, { 0xe9, 0x12 }, { 0xeb, 0xff },
-+	{ 0xf5, 0x0a }, { 0xf8, 0x09 }, { 0xf9, 0xa3 }, { 0x100, 0x14 },
-+	{ 0x101, 0x10 }, { 0x102, 0xee }, { 0x10b, 0xc0 }, { 0x149, 0x10 },
-+	{ 0x14e, 0x01 }, { 0x1b7, 0x05 }, { 0x1c2, 0xa0 },
-+};
-+
- #define RADIOREGS7(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
- 		   r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
- 		   r20, r21, r22, r23, r24, r25, r26, r27) \
-@@ -145,6 +157,170 @@ static u16 r2057_rev8_init[][2] = {
- 	.phy_regs.phy_bw5	= r4,	\
- 	.phy_regs.phy_bw6	= r5
- 
-+/* Extracted from MMIO dump of 6.30.223.141 */
-+static const struct b43_nphy_chantabent_rev7 b43_nphy_chantab_phy_rev16_radio_rev9[] = {
-+	{
-+		.freq			= 2412,
-+		RADIOREGS7(0x48, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x6c,
-+			   0x09, 0x0f, 0x0a, 0x00, 0x0a, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
-+	},
-+	{
-+		.freq			= 2417,
-+		RADIOREGS7(0x4b, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x71,
-+			   0x09, 0x0f, 0x0a, 0x00, 0x0a, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
-+	},
-+	{
-+		.freq			= 2422,
-+		RADIOREGS7(0x4e, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x76,
-+			   0x09, 0x0f, 0x09, 0x00, 0x09, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
-+	},
-+	{
-+		.freq			= 2427,
-+		RADIOREGS7(0x52, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x7b,
-+			   0x09, 0x0f, 0x09, 0x00, 0x09, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
-+	},
-+	{
-+		.freq			= 2432,
-+		RADIOREGS7(0x55, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x80,
-+			   0x09, 0x0f, 0x08, 0x00, 0x08, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
-+	},
-+	{
-+		.freq			= 2437,
-+		RADIOREGS7(0x58, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x85,
-+			   0x09, 0x0f, 0x08, 0x00, 0x08, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
-+	},
-+	{
-+		.freq			= 2442,
-+		RADIOREGS7(0x5c, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8a,
-+			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
-+	},
-+	{
-+		.freq			= 2447,
-+		RADIOREGS7(0x5f, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8f,
-+			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
-+	},
-+	{
-+		.freq			= 2452,
-+		RADIOREGS7(0x62, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x94,
-+			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
-+	},
-+	{
-+		.freq			= 2457,
-+		RADIOREGS7(0x66, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x99,
-+			   0x09, 0x0f, 0x06, 0x00, 0x06, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
-+	},
-+	{
-+		.freq			= 2462,
-+		RADIOREGS7(0x69, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x9e,
-+			   0x09, 0x0f, 0x06, 0x00, 0x06, 0x00, 0x41, 0x63,
-+			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
-+			   0x00, 0x00, 0xf0, 0x00),
-+		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
-+	},
-+	{
-+		.freq			= 5180,
-+		RADIOREGS7(0xbe, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x06,
-+			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
-+			   0x9f, 0x2f, 0xa3, 0x00, 0xfc, 0x00, 0x00, 0x4f,
-+			   0x3a, 0x83, 0x00, 0xfc),
-+		PHYREGS(0x081c, 0x0818, 0x0814, 0x01f9, 0x01fa, 0x01fb),
-+	},
-+	{
-+		.freq			= 5200,
-+		RADIOREGS7(0xc5, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x08,
-+			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
-+			   0x7f, 0x2f, 0x83, 0x00, 0xf8, 0x00, 0x00, 0x4c,
-+			   0x4a, 0x83, 0x00, 0xf8),
-+		PHYREGS(0x0824, 0x0820, 0x081c, 0x01f7, 0x01f8, 0x01f9),
-+	},
-+	{
-+		.freq			= 5220,
-+		RADIOREGS7(0xcc, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x0a,
-+			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
-+			   0x6d, 0x3d, 0x83, 0x00, 0xf8, 0x00, 0x00, 0x2d,
-+			   0x2a, 0x73, 0x00, 0xf8),
-+		PHYREGS(0x082c, 0x0828, 0x0824, 0x01f5, 0x01f6, 0x01f7),
-+	},
-+	{
-+		.freq			= 5240,
-+		RADIOREGS7(0xd2, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x0c,
-+			   0x02, 0x0d, 0x00, 0x0d, 0x00, 0x8d, 0x00, 0x00,
-+			   0x4d, 0x1c, 0x73, 0x00, 0xf8, 0x00, 0x00, 0x4d,
-+			   0x2b, 0x73, 0x00, 0xf8),
-+		PHYREGS(0x0834, 0x0830, 0x082c, 0x01f3, 0x01f4, 0x01f5),
-+	},
-+	{
-+		.freq			= 5745,
-+		RADIOREGS7(0x7b, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x7d,
-+			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
-+			   0x08, 0x03, 0x03, 0x00, 0x30, 0x00, 0x00, 0x06,
-+			   0x02, 0x03, 0x00, 0x30),
-+		PHYREGS(0x08fe, 0x08fa, 0x08f6, 0x01c8, 0x01c8, 0x01c9),
-+	},
-+	{
-+		.freq			= 5765,
-+		RADIOREGS7(0x81, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x81,
-+			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
-+			   0x06, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x05,
-+			   0x02, 0x03, 0x00, 0x00),
-+		PHYREGS(0x0906, 0x0902, 0x08fe, 0x01c6, 0x01c7, 0x01c8),
-+	},
-+	{
-+		.freq			= 5785,
-+		RADIOREGS7(0x88, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x85,
-+			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
-+			   0x08, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x05,
-+			   0x21, 0x03, 0x00, 0x00),
-+		PHYREGS(0x090e, 0x090a, 0x0906, 0x01c4, 0x01c5, 0x01c6),
-+	},
-+	{
-+		.freq			= 5805,
-+		RADIOREGS7(0x8f, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x89,
-+			   0x04, 0x07, 0x00, 0x06, 0x00, 0x04, 0x00, 0x00,
-+			   0x06, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x03,
-+			   0x00, 0x03, 0x00, 0x00),
-+		PHYREGS(0x0916, 0x0912, 0x090e, 0x01c3, 0x01c4, 0x01c4),
-+	},
-+	{
-+		.freq			= 5825,
-+		RADIOREGS7(0x95, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x8d,
-+			   0x04, 0x07, 0x00, 0x05, 0x00, 0x03, 0x00, 0x00,
-+			   0x05, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x03,
-+			   0x00, 0x03, 0x00, 0x00),
-+		PHYREGS(0x091e, 0x091a, 0x0916, 0x01c1, 0x01c2, 0x01c3),
-+	},
-+};
-+
- void r2057_upload_inittabs(struct b43_wldev *dev)
+ 	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 	high_low = rs_get_adjacent_rate(mvm, rate->index, rate_mask,
+@@ -946,7 +946,7 @@ static bool rs_get_lower_rate_in_column(struct iwl_lq_sta *lq_sta,
+ static void rs_get_lower_rate_down_column(struct iwl_lq_sta *lq_sta,
+ 					  struct rs_rate *rate)
  {
- 	struct b43_phy *phy = &dev->phy;
-@@ -171,6 +347,12 @@ void r2057_upload_inittabs(struct b43_wldev *dev)
- 			size = ARRAY_SIZE(r2057_rev5a_init);
- 		}
- 		break;
-+	case 16:
-+		if (phy->radio_rev == 9) {
-+			table = r2057_rev9_init[0];
-+			size = ARRAY_SIZE(r2057_rev9_init);
-+		}
-+		break;
+-	struct iwl_mvm *mvm = lq_sta->drv;
++	struct iwl_mvm *mvm = lq_sta->pers.drv;
+ 
+ 	if (is_legacy(rate)) {
+ 		/* No column to downgrade from Legacy */
+@@ -1026,14 +1026,14 @@ static void rs_tx_status(void *mvm_r, struct ieee80211_supported_band *sband,
+ 	if (!lq_sta) {
+ 		IWL_DEBUG_RATE(mvm, "Station rate scaling not created yet.\n");
+ 		return;
+-	} else if (!lq_sta->drv) {
++	} else if (!lq_sta->pers.drv) {
+ 		IWL_DEBUG_RATE(mvm, "Rate scaling not initialized yet.\n");
+ 		return;
  	}
  
- 	B43_WARN_ON(!table);
-@@ -195,6 +377,12 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
- 
- 	/* TODO */
- 	switch (phy->rev) {
-+	case 16:
-+		if (phy->radio_rev == 9) {
-+			e_r7 = b43_nphy_chantab_phy_rev16_radio_rev9;
-+			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev16_radio_rev9);
-+		}
-+		break;
- 	default:
- 		break;
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* Disable last tx check if we are debugging with fixed rate */
+-	if (lq_sta->dbg_fixed_rate) {
++	if (lq_sta->pers.dbg_fixed_rate) {
+ 		IWL_DEBUG_RATE(mvm, "Fixed rate. avoid rate scaling\n");
+ 		return;
  	}
+@@ -1405,7 +1405,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 	int flush_interval_passed = 0;
+ 	struct iwl_mvm *mvm;
+ 
+-	mvm = lq_sta->drv;
++	mvm = lq_sta->pers.drv;
+ 	active_tbl = lq_sta->active_tbl;
+ 
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+@@ -1865,11 +1865,11 @@ static bool rs_tpc_perform(struct iwl_mvm *mvm,
+ 	int weak_tpt = IWL_INVALID_VALUE, strong_tpt = IWL_INVALID_VALUE;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-	if (lq_sta->dbg_fixed_txp_reduction <= TPC_MAX_REDUCTION) {
++	if (lq_sta->pers.dbg_fixed_txp_reduction <= TPC_MAX_REDUCTION) {
+ 		IWL_DEBUG_RATE(mvm, "fixed tpc: %d\n",
+-			       lq_sta->dbg_fixed_txp_reduction);
+-		lq_sta->lq.reduced_tpc = lq_sta->dbg_fixed_txp_reduction;
+-		return cur != lq_sta->dbg_fixed_txp_reduction;
++			       lq_sta->pers.dbg_fixed_txp_reduction);
++		lq_sta->lq.reduced_tpc = lq_sta->pers.dbg_fixed_txp_reduction;
++		return cur != lq_sta->pers.dbg_fixed_txp_reduction;
+ 	}
+ #endif
+ 
+@@ -2382,7 +2382,7 @@ static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
+ 	}
+ 
+ 	/* Treat uninitialized rate scaling data same as non-existing. */
+-	if (lq_sta && !lq_sta->drv) {
++	if (lq_sta && !lq_sta->pers.drv) {
+ 		IWL_DEBUG_RATE(mvm, "Rate scaling not initialized yet.\n");
+ 		mvm_sta = NULL;
+ 	}
+@@ -2401,12 +2401,18 @@ static void *rs_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
+ 			  gfp_t gfp)
+ {
+ 	struct iwl_mvm_sta *sta_priv = (struct iwl_mvm_sta *)sta->drv_priv;
+-	struct iwl_op_mode *op_mode __maybe_unused =
+-			(struct iwl_op_mode *)mvm_rate;
+-	struct iwl_mvm *mvm __maybe_unused = IWL_OP_MODE_GET_MVM(op_mode);
++	struct iwl_op_mode *op_mode = (struct iwl_op_mode *)mvm_rate;
++	struct iwl_mvm *mvm  = IWL_OP_MODE_GET_MVM(op_mode);
++	struct iwl_lq_sta *lq_sta = &sta_priv->lq_sta;
+ 
+ 	IWL_DEBUG_RATE(mvm, "create station rate scale window\n");
+ 
++	lq_sta->pers.drv = mvm;
++#ifdef CONFIG_MAC80211_DEBUGFS
++	lq_sta->pers.dbg_fixed_rate = 0;
++	lq_sta->pers.dbg_fixed_txp_reduction = TPC_INVALID;
++#endif
++
+ 	return &sta_priv->lq_sta;
+ }
+ 
+@@ -2552,7 +2558,9 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	sta_priv = (struct iwl_mvm_sta *)sta->drv_priv;
+ 	lq_sta = &sta_priv->lq_sta;
+-	memset(lq_sta, 0, sizeof(*lq_sta));
++
++	/* clear all non-persistent lq data */
++	memset(lq_sta, 0, offsetof(typeof(*lq_sta), pers));
+ 
+ 	sband = hw->wiphy->bands[band];
+ 
+@@ -2630,17 +2638,12 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	/* as default allow aggregation for all tids */
+ 	lq_sta->tx_agg_tid_en = IWL_AGG_ALL_TID;
+-	lq_sta->drv = mvm;
+ 
+ 	/* Set last_txrate_idx to lowest rate */
+ 	lq_sta->last_txrate_idx = rate_lowest_index(sband, sta);
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+ 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+-#ifdef CONFIG_MAC80211_DEBUGFS
+-	lq_sta->dbg_fixed_rate = 0;
+-	lq_sta->dbg_fixed_txp_reduction = TPC_INVALID;
+-#endif
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	iwl_mvm_reset_frame_stats(mvm, &mvm->drv_rx_stats);
+ #endif
+@@ -2811,12 +2814,12 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
+ 	u8 ant = initial_rate->ant;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-	if (lq_sta->dbg_fixed_rate) {
++	if (lq_sta->pers.dbg_fixed_rate) {
+ 		rs_build_rates_table_from_fixed(mvm, lq_cmd,
+ 						lq_sta->band,
+-						lq_sta->dbg_fixed_rate);
++						lq_sta->pers.dbg_fixed_rate);
+ 		lq_cmd->reduced_tpc = 0;
+-		ant = (lq_sta->dbg_fixed_rate & RATE_MCS_ANT_ABC_MSK) >>
++		ant = (lq_sta->pers.dbg_fixed_rate & RATE_MCS_ANT_ABC_MSK) >>
+ 			RATE_MCS_ANT_POS;
+ 	} else
+ #endif
+@@ -2926,14 +2929,14 @@ static void rs_program_fix_rate(struct iwl_mvm *mvm,
+ 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 
+ 	IWL_DEBUG_RATE(mvm, "sta_id %d rate 0x%X\n",
+-		       lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
++		       lq_sta->lq.sta_id, lq_sta->pers.dbg_fixed_rate);
+ 
+-	if (lq_sta->dbg_fixed_rate) {
++	if (lq_sta->pers.dbg_fixed_rate) {
+ 		struct rs_rate rate;
+-		rs_rate_from_ucode_rate(lq_sta->dbg_fixed_rate,
++		rs_rate_from_ucode_rate(lq_sta->pers.dbg_fixed_rate,
+ 					lq_sta->band, &rate);
+ 		rs_fill_lq_cmd(mvm, NULL, lq_sta, &rate);
+-		iwl_mvm_send_lq_cmd(lq_sta->drv, &lq_sta->lq, false);
++		iwl_mvm_send_lq_cmd(lq_sta->pers.drv, &lq_sta->lq, false);
+ 	}
+ }
+ 
+@@ -2946,16 +2949,16 @@ static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
+ 	size_t buf_size;
+ 	u32 parsed_rate;
+ 
+-	mvm = lq_sta->drv;
++	mvm = lq_sta->pers.drv;
+ 	memset(buf, 0, sizeof(buf));
+ 	buf_size = min(count, sizeof(buf) -  1);
+ 	if (copy_from_user(buf, user_buf, buf_size))
+ 		return -EFAULT;
+ 
+ 	if (sscanf(buf, "%x", &parsed_rate) == 1)
+-		lq_sta->dbg_fixed_rate = parsed_rate;
++		lq_sta->pers.dbg_fixed_rate = parsed_rate;
+ 	else
+-		lq_sta->dbg_fixed_rate = 0;
++		lq_sta->pers.dbg_fixed_rate = 0;
+ 
+ 	rs_program_fix_rate(mvm, lq_sta);
+ 
+@@ -2974,7 +2977,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	struct iwl_mvm *mvm;
+ 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
+ 	struct rs_rate *rate = &tbl->rate;
+-	mvm = lq_sta->drv;
++	mvm = lq_sta->pers.drv;
+ 	buff = kmalloc(2048, GFP_KERNEL);
+ 	if (!buff)
+ 		return -ENOMEM;
+@@ -2984,7 +2987,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			lq_sta->total_failed, lq_sta->total_success,
+ 			lq_sta->active_legacy_rate);
+ 	desc += sprintf(buff+desc, "fixed rate 0x%X\n",
+-			lq_sta->dbg_fixed_rate);
++			lq_sta->pers.dbg_fixed_rate);
+ 	desc += sprintf(buff+desc, "valid_tx_ant %s%s%s\n",
+ 	    (mvm->fw->valid_tx_ant & ANT_A) ? "ANT_A," : "",
+ 	    (mvm->fw->valid_tx_ant & ANT_B) ? "ANT_B," : "",
+@@ -3182,31 +3185,31 @@ static const struct file_operations rs_sta_dbgfs_drv_tx_stats_ops = {
+ static void rs_add_debugfs(void *mvm, void *mvm_sta, struct dentry *dir)
+ {
+ 	struct iwl_lq_sta *lq_sta = mvm_sta;
+-	lq_sta->rs_sta_dbgfs_scale_table_file =
++	lq_sta->pers.rs_sta_dbgfs_scale_table_file =
+ 		debugfs_create_file("rate_scale_table", S_IRUSR | S_IWUSR, dir,
+ 				    lq_sta, &rs_sta_dbgfs_scale_table_ops);
+-	lq_sta->rs_sta_dbgfs_stats_table_file =
++	lq_sta->pers.rs_sta_dbgfs_stats_table_file =
+ 		debugfs_create_file("rate_stats_table", S_IRUSR, dir,
+ 				    lq_sta, &rs_sta_dbgfs_stats_table_ops);
+-	lq_sta->rs_sta_dbgfs_drv_tx_stats_file =
++	lq_sta->pers.rs_sta_dbgfs_drv_tx_stats_file =
+ 		debugfs_create_file("drv_tx_stats", S_IRUSR | S_IWUSR, dir,
+ 				    lq_sta, &rs_sta_dbgfs_drv_tx_stats_ops);
+-	lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file =
++	lq_sta->pers.rs_sta_dbgfs_tx_agg_tid_en_file =
+ 		debugfs_create_u8("tx_agg_tid_enable", S_IRUSR | S_IWUSR, dir,
+ 				  &lq_sta->tx_agg_tid_en);
+-	lq_sta->rs_sta_dbgfs_reduced_txp_file =
++	lq_sta->pers.rs_sta_dbgfs_reduced_txp_file =
+ 		debugfs_create_u8("reduced_tpc", S_IRUSR | S_IWUSR, dir,
+-				  &lq_sta->dbg_fixed_txp_reduction);
++				  &lq_sta->pers.dbg_fixed_txp_reduction);
+ }
+ 
+ static void rs_remove_debugfs(void *mvm, void *mvm_sta)
+ {
+ 	struct iwl_lq_sta *lq_sta = mvm_sta;
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_scale_table_file);
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_stats_table_file);
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_drv_tx_stats_file);
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file);
+-	debugfs_remove(lq_sta->rs_sta_dbgfs_reduced_txp_file);
++	debugfs_remove(lq_sta->pers.rs_sta_dbgfs_scale_table_file);
++	debugfs_remove(lq_sta->pers.rs_sta_dbgfs_stats_table_file);
++	debugfs_remove(lq_sta->pers.rs_sta_dbgfs_drv_tx_stats_file);
++	debugfs_remove(lq_sta->pers.rs_sta_dbgfs_tx_agg_tid_en_file);
++	debugfs_remove(lq_sta->pers.rs_sta_dbgfs_reduced_txp_file);
+ }
+ #endif
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
+index 374a83d..2e1a683 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
+@@ -349,16 +349,6 @@ struct iwl_lq_sta {
+ 	struct iwl_lq_cmd lq;
+ 	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
+ 	u8 tx_agg_tid_en;
+-#ifdef CONFIG_MAC80211_DEBUGFS
+-	struct dentry *rs_sta_dbgfs_scale_table_file;
+-	struct dentry *rs_sta_dbgfs_stats_table_file;
+-	struct dentry *rs_sta_dbgfs_drv_tx_stats_file;
+-	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
+-	struct dentry *rs_sta_dbgfs_reduced_txp_file;
+-	u32 dbg_fixed_rate;
+-	u8 dbg_fixed_txp_reduction;
+-#endif
+-	struct iwl_mvm *drv;
+ 
+ 	/* used to be in sta_info */
+ 	int last_txrate_idx;
+@@ -369,6 +359,20 @@ struct iwl_lq_sta {
+ 
+ 	/* tx power reduce for this sta */
+ 	int tpc_reduce;
++
++	/* persistent fields - initialized only once - keep last! */
++	struct {
++#ifdef CONFIG_MAC80211_DEBUGFS
++		struct dentry *rs_sta_dbgfs_scale_table_file;
++		struct dentry *rs_sta_dbgfs_stats_table_file;
++		struct dentry *rs_sta_dbgfs_drv_tx_stats_file;
++		struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
++		struct dentry *rs_sta_dbgfs_reduced_txp_file;
++		u32 dbg_fixed_rate;
++		u8 dbg_fixed_txp_reduction;
++#endif
++		struct iwl_mvm *drv;
++	} pers;
+ };
+ 
+ /* Initialize station's rate scaling information after adding station */
 -- 
-1.8.4.5
+1.8.3.2
 
