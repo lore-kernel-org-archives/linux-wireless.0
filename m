@@ -1,162 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:47686 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757324AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:38:37 -0400
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] firmware_class: add "fd" input file
-Date: Mon, 14 Jul 2014 14:38:16 -0700
-Message-Id: <1405373897-31671-7-git-send-email-keescook@chromium.org> (sfid-20140714_233931_549769_BC7A77F7)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:35560 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbaGFWUV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jul 2014 18:20:21 -0400
+Received: by mail-wg0-f49.google.com with SMTP id a1so177697wgh.8
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 15:20:20 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/3] staging: vt6656: vnt_update_ifs vendor changes to uSIFS/uDIFS
+Date: Sun,  6 Jul 2014 23:19:48 +0100
+Message-Id: <1404685188-3182-3-git-send-email-tvboxspy@gmail.com> (sfid-20140707_002027_620955_FAECB081)
+In-Reply-To: <1404685188-3182-1-git-send-email-tvboxspy@gmail.com>
+References: <1404685188-3182-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As an alternative to loading bytes from the "data" blob when reading
-firmware, let kernel read from an fd, so that the LSM can reason about
-the origin of firmware contents during userspace on-demand loading.
+The latest vendor code makes changes to uSIFS and uDIFS.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+The orginal codes have been rearranged into a fall through switch
+statement.
+
+These reduce the time that device allows to TX packets and
+improves throughput.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- Documentation/firmware_class/README |   10 +++++
- drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 86 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/card.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
-index 71f86859d7d8..d899bdacba1e 100644
---- a/Documentation/firmware_class/README
-+++ b/Documentation/firmware_class/README
-@@ -59,6 +59,16 @@
-  8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
- 		 the firmware image and any related resource.
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index a5f8df1..ea06b63 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -408,6 +408,36 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	priv->uCwMax = C_CWMAX;
+ 	priv->uEIFS = C_EIFS;
  
-+ Alternative loading (via file descriptor):
-+ ==========================================
-+ Instead of "loading", and "data" above, firmware can be loaded through
-+ an open file descriptor as well, via the "fd" file:
++	switch (priv->byRFType) {
++	case RF_VT3226D0:
++		if (priv->byBBType != BB_TYPE_11B) {
++			priv->uSIFS -= 1;
++			priv->uDIFS -= 1;
++			break;
++		}
++	case RF_AIROHA7230:
++	case RF_AL2230:
++	case RF_AL2230S:
++		if (priv->byBBType != BB_TYPE_11B)
++			break;
++	case RF_RFMD2959:
++	case RF_VT3226:
++	case RF_VT3342A0:
++		priv->uSIFS -= 3;
++		priv->uDIFS -= 3;
++		break;
++	case RF_MAXIM2829:
++		if (priv->byBBType == BB_TYPE_11A) {
++			priv->uSIFS -= 5;
++			priv->uDIFS -= 5;
++		} else {
++			priv->uSIFS -= 2;
++			priv->uDIFS -= 2;
++		}
 +
-+ Replacing steps 2 thorugh 6 above with the following userspace actions,
-+ performs the same loading:
-+	- open firmware image file (e.g. as fd 3).
-+	- write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
-+
-  High level behavior (driver code):
-  ==================================
- 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index b38cbcd6ebb1..eac996447d28 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
- 	.write = firmware_data_write,
- };
- 
-+/**
-+ * fd_store - set value in the 'fd' control file
-+ * @dev: device pointer
-+ * @attr: device attribute pointer
-+ * @buf: buffer to scan for loading fd value
-+ * @count: number of bytes in @buf
-+ *
-+ * Parses an fd number from buf, and then loads firmware bytes from
-+ * the current process's matching open fd.
-+ *
-+ **/
-+static ssize_t fd_store(struct device *dev,
-+				 struct device_attribute *attr,
-+				 const char *buf, size_t count)
-+{
-+	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-+	struct firmware_buf *fw_buf = fw_priv->buf;
-+	ssize_t retval;
-+	int fd;
-+	struct fd f;
-+
-+	if (!capable(CAP_SYS_RAWIO))
-+		return -EPERM;
-+
-+	retval = kstrtoint(buf, 10, &fd);
-+	if (retval)
-+		return retval;
-+
-+	f = fdget(fd);
-+	if (!f.file)
-+		return -EBADF;
-+
-+	mutex_lock(&fw_lock);
-+	/* If we raced another loader, we must fail. */
-+	if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
-+		retval = -EINVAL;
-+		goto unlock;
++		break;
 +	}
 +
-+	fw_load_start(fw_buf);
-+	/* fw_read_file_contents uses vmalloc, not pages. */
-+	fw_buf->is_paged_buf = false;
-+	retval = fw_read_file_contents(f.file, fw_buf);
-+	if (retval) {
-+		/* If we called fw_load_start, we must abort on fail. */
-+		fw_load_abort(fw_priv);
-+		goto unlock;
-+	}
-+
-+	/* Success. */
-+	set_bit(FW_STATUS_DONE, &fw_buf->status);
-+	list_del_init(&fw_buf->pending_list);
-+	complete_all(&fw_buf->completion);
-+
-+unlock:
-+	mutex_unlock(&fw_lock);
-+	fdput(f);
-+
-+	if (retval)
-+		return retval;
-+	return count;
-+}
-+static DEVICE_ATTR_WO(fd);
-+
- static void firmware_class_timeout_work(struct work_struct *work)
- {
- 	struct firmware_priv *fw_priv = container_of(work,
-@@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
- 		mutex_lock(&fw_lock);
- 		list_del_init(&buf->pending_list);
- 		mutex_unlock(&fw_lock);
--		dev_err(f_dev, "%s: device_create_file failed\n", __func__);
-+		dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
- 		goto err_del_bin_attr;
- 	}
- 
-+	retval = device_create_file(f_dev, &dev_attr_fd);
-+	if (retval) {
-+		mutex_lock(&fw_lock);
-+		list_del_init(&buf->pending_list);
-+		mutex_unlock(&fw_lock);
-+		dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
-+		goto err_del_loading;
-+	}
-+
- 	if (opt_flags & FW_OPT_UEVENT) {
- 		buf->need_uevent = true;
- 		dev_set_uevent_suppress(f_dev, false);
-@@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
- 	if (!buf->data)
- 		retval = -ENOMEM;
- 
-+	device_remove_file(f_dev, &dev_attr_fd);
-+err_del_loading:
- 	device_remove_file(f_dev, &dev_attr_loading);
- err_del_bin_attr:
- 	device_remove_bin_file(f_dev, &firmware_attr_data);
+ 	data[0] = (u8)priv->uSIFS;
+ 	data[1] = (u8)priv->uDIFS;
+ 	data[2] = (u8)priv->uEIFS;
 -- 
-1.7.9.5
+1.9.1
 
