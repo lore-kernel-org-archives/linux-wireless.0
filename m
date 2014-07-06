@@ -1,66 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42840 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbaG1U7Y (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:59334 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaGFJgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:59:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add support for 10.2 firmware
-References: <1406287937-26507-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 28 Jul 2014 23:59:15 +0300
-In-Reply-To: <1406287937-26507-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 25 Jul 2014 13:32:17 +0200")
-Message-ID: <87oaw9jj30.fsf@kamboji.qca.qualcomm.com> (sfid-20140728_225927_383581_BCD0A30E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 6 Jul 2014 05:36:32 -0400
+Received: by mail-we0-f179.google.com with SMTP id w62so3125632wes.24
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:31 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/40] iwlwifi: mvm: read the mac address in family 8000
+Date: Sun,  6 Jul 2014 12:35:43 +0300
+Message-Id: <1404639376-3792-7-git-send-email-egrumbach@gmail.com> (sfid-20140706_113638_362157_C0DC8E11)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Eran Harary <eran.harary@intel.com>
 
-> The 10.2 firmware is a successor of 10.1 firmware
-> (formerly identified as 10.x). Both share a lot
-> but have some slight ABI differences that need to
-> be taken care of.
->
-> The 10.2 firmware introduces some new features but
-> those can be added in subsequent patches. This
-> patch makes ath10k boot and work with 10.2 with
-> comparable functionality to 10.1.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+In family 8000 products the MAC address in the OTP could be in either:
+- WFPM address
+- PCIE address
+In sdio product we should read it from the WFPM, in pcie product we
+should read it from the PCIe location.
+This is relevant only from otp version 0xE08 and above.
+While at it, fix the bytes order in version 0xE08.
 
-Thanks, applied with minor changes:
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 60 ++++++++++++++++++++++------
+ 1 file changed, 48 insertions(+), 12 deletions(-)
 
-> +static void ath10k_wmi_10_2_process_rx(struct ath10k *ar, struct sk_buff *skb)
-> +{
-> +	struct wmi_cmd_hdr *cmd_hdr;
-> +	enum wmi_10_2_event_id id;
-> +
-> +	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
-> +	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-> +
-> +	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-> +		return;
-> +
-> +	trace_ath10k_wmi_event(id, skb->data, skb->len);
-> +
-> +	switch (id) {
-> +
-> +
-> +	case WMI_10_2_MGMT_RX_EVENTID:
-
-checkpatch warned about extra newlines here.
-
-> +static void
-> +ath10k_wmi_peer_assoc_fill_main_636(struct ath10k *ar, void *buf,
-> +				    const struct wmi_peer_assoc_complete_arg *arg)
-> +{
-
-And this was too long. I "fixed" it by s/main_636/main/. I think the 636
-part was a bit redundant anyway.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index f0ae038..dd76ed2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -63,6 +63,7 @@
+ #include <linux/slab.h>
+ #include <linux/export.h>
+ #include <linux/etherdevice.h>
++#include <linux/pci.h>
+ #include "iwl-drv.h"
+ #include "iwl-modparams.h"
+ #include "iwl-nvm-parse.h"
+@@ -87,8 +88,10 @@ enum wkp_nvm_offsets {
+ 
+ enum family_8000_nvm_offsets {
+ 	/* NVM HW-Section offset (in words) definitions */
+-	HW_ADDR0_FAMILY_8000 = 0x12,
+-	HW_ADDR1_FAMILY_8000 = 0x16,
++	HW_ADDR0_WFPM_FAMILY_8000 = 0x12,
++	HW_ADDR1_WFPM_FAMILY_8000 = 0x16,
++	HW_ADDR0_PCIE_FAMILY_8000 = 0x8A,
++	HW_ADDR1_PCIE_FAMILY_8000 = 0x8E,
+ 	MAC_ADDRESS_OVERRIDE_FAMILY_8000 = 1,
+ 
+ 	/* NVM SW-Section offset (in words) definitions */
+@@ -504,16 +507,49 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 	}
+ 
+ 	if (nvm_hw) {
+-		/* take the MAC address from the OTP */
+-		hw_addr = (const u8 *)(nvm_hw + HW_ADDR0_FAMILY_8000);
+-		data->hw_addr[0] = hw_addr[3];
+-		data->hw_addr[1] = hw_addr[2];
+-		data->hw_addr[2] = hw_addr[1];
+-		data->hw_addr[3] = hw_addr[0];
+-
+-		hw_addr = (const u8 *)(nvm_hw + HW_ADDR1_FAMILY_8000);
+-		data->hw_addr[4] = hw_addr[1];
+-		data->hw_addr[5] = hw_addr[0];
++		/* read the MAC address from OTP */
++		if (!dev_is_pci(dev) || (data->nvm_version < 0xE08)) {
++			/* read the mac address from the WFPM location */
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR0_WFPM_FAMILY_8000);
++			data->hw_addr[0] = hw_addr[3];
++			data->hw_addr[1] = hw_addr[2];
++			data->hw_addr[2] = hw_addr[1];
++			data->hw_addr[3] = hw_addr[0];
++
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR1_WFPM_FAMILY_8000);
++			data->hw_addr[4] = hw_addr[1];
++			data->hw_addr[5] = hw_addr[0];
++		} else if ((data->nvm_version >= 0xE08) &&
++			   (data->nvm_version < 0xE0B)) {
++			/* read "reverse order"  from the PCIe location */
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR0_PCIE_FAMILY_8000);
++			data->hw_addr[5] = hw_addr[2];
++			data->hw_addr[4] = hw_addr[1];
++			data->hw_addr[3] = hw_addr[0];
++
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR1_PCIE_FAMILY_8000);
++			data->hw_addr[2] = hw_addr[3];
++			data->hw_addr[1] = hw_addr[2];
++			data->hw_addr[0] = hw_addr[1];
++		} else {
++			/* read from the PCIe location */
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR0_PCIE_FAMILY_8000);
++			data->hw_addr[5] = hw_addr[0];
++			data->hw_addr[4] = hw_addr[1];
++			data->hw_addr[3] = hw_addr[2];
++
++			hw_addr = (const u8 *)(nvm_hw +
++					       HW_ADDR1_PCIE_FAMILY_8000);
++			data->hw_addr[2] = hw_addr[1];
++			data->hw_addr[1] = hw_addr[2];
++			data->hw_addr[0] = hw_addr[3];
++		}
++
+ 		return;
+ 	}
+ 
 -- 
-Kalle Valo
+1.8.3.2
+
