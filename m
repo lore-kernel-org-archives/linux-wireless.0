@@ -1,29 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32928 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808AbaGXKnT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 06:43:19 -0400
-Message-ID: <1406198584.14675.8.camel@jlt4.sipsolutions.net> (sfid-20140724_124322_952880_A77288F3)
-Subject: Re: [PATCH] mac80211: disable 40MHz support in case of 20MHz AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>
-Date: Thu, 24 Jul 2014 12:43:04 +0200
-In-Reply-To: <1406190005-18611-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1406190005-18611-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f182.google.com ([74.125.82.182]:40637 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaGFJgs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jul 2014 05:36:48 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so3090081wes.41
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:47 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/40] iwlwifi: mvm: warn about empty OTP
+Date: Sun,  6 Jul 2014 12:35:53 +0300
+Message-Id: <1404639376-3792-17-git-send-email-egrumbach@gmail.com> (sfid-20140706_115955_640875_9B5884F7)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-07-24 at 11:20 +0300, Emmanuel Grumbach wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> If the AP only advertises support for 20MHz (in the
-> ht operation ie), disable 40MHz and VHT.
+From: Eran Harary <eran.harary@intel.com>
 
-Applied.
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index 1f1a550..b04805c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -530,6 +530,8 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 			}
+ #endif
+ 		}
++		if (!size_read)
++			IWL_ERR(mvm, "OTP is blank\n");
+ 		kfree(nvm_buffer);
+ 	}
+ 
+-- 
+1.8.3.2
 
