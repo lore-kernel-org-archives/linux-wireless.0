@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33074 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaGFJgl (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:33687 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515AbaGFJhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:36:41 -0400
-Received: by mail-wi0-f171.google.com with SMTP id n15so14608391wiw.4
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:40 -0700 (PDT)
+	Sun, 6 Jul 2014 05:37:04 -0400
+Received: by mail-wi0-f177.google.com with SMTP id r20so5486141wiv.4
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:02 -0700 (PDT)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/40] iwlwifi: mvm: BT Coex - convert the co-running update to new API
-Date: Sun,  6 Jul 2014 12:35:49 +0300
-Message-Id: <1404639376-3792-13-git-send-email-egrumbach@gmail.com> (sfid-20140706_115954_878872_FA3ED51B)
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/40] iwlwifi: mvm: don't pass update type to quota iterator
+Date: Sun,  6 Jul 2014 12:36:03 +0300
+Message-Id: <1404639376-3792-27-git-send-email-egrumbach@gmail.com> (sfid-20140706_115954_307900_810A57FA)
 In-Reply-To: <53B917DC.5050902@gmail.com>
 References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-No need to send the big BT_COEX_CMD command, we have now
-a much thiner command that updates only what is needed.
-Adapt the code to that.
+Simplify the quota iterator by not passing the update type,
+it only needs to know whether or not to skip an interface.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c | 36 +++++++--------------------------
- 1 file changed, 7 insertions(+), 29 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/quota.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 3854330..216357a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -1247,23 +1247,13 @@ int iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	u32 ant_isolation = le32_to_cpup((void *)pkt->data);
-+	struct iwl_bt_coex_corun_lut_update_cmd cmd = {};
- 	u8 __maybe_unused lower_bound, upper_bound;
--	int ret;
- 	u8 lut;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/quota.c b/drivers/net/wireless/iwlwifi/mvm/quota.c
+index 3f18786..6de0c63 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/quota.c
++++ b/drivers/net/wireless/iwlwifi/mvm/quota.c
+@@ -73,8 +73,7 @@ struct iwl_mvm_quota_iterator_data {
+ 	int colors[MAX_BINDINGS];
+ 	int low_latency[MAX_BINDINGS];
+ 	int n_low_latency_bindings;
+-	struct ieee80211_vif *vif;
+-	enum iwl_mvm_quota_update_type type;
++	struct ieee80211_vif *skip_vif;
+ };
  
--	struct iwl_bt_coex_cmd_old *bt_cmd;
--	struct iwl_host_cmd cmd = {
--		.id = BT_CONFIG,
--		.len = { sizeof(*bt_cmd), },
--		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
--	};
+ static void iwl_mvm_quota_iterator(void *_data, u8 *mac,
+@@ -89,8 +88,9 @@ static void iwl_mvm_quota_iterator(void *_data, u8 *mac,
+ 	 * skip it here in case we're not called from within
+ 	 * the add_interface callback (otherwise it won't show
+ 	 * up in iteration)
++	 * Also skip disabled interfaces here immediately.
+ 	 */
+-	if (data->type == IWL_MVM_QUOTA_UPDATE_TYPE_NEW && vif == data->vif)
++	if (vif == data->skip_vif)
+ 		return;
+ 
+ 	if (!mvmvif->phy_ctxt)
+@@ -105,10 +105,6 @@ static void iwl_mvm_quota_iterator(void *_data, u8 *mac,
+ 	if (WARN_ON_ONCE(id >= MAX_BINDINGS))
+ 		return;
+ 
+-	if (data->type == IWL_MVM_QUOTA_UPDATE_TYPE_DISABLED &&
+-	    vif == data->vif)
+-		return;
 -
- 	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
- 		return iwl_mvm_rx_ant_coupling_notif_old(mvm, rxb, dev_cmd);
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		if (vif->bss_conf.assoc)
+@@ -184,8 +180,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	struct iwl_mvm_quota_iterator_data data = {
+ 		.n_interfaces = {},
+ 		.colors = { -1, -1, -1, -1 },
+-		.vif = vif,
+-		.type = type,
++		.skip_vif = vif,
+ 	};
  
--	/* TODO */
--	return 0;
--
- 	if (!IWL_MVM_BT_COEX_CORUNNING)
- 		return 0;
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -205,8 +200,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		iwl_mvm_quota_iterator, &data);
+ 	if (type == IWL_MVM_QUOTA_UPDATE_TYPE_NEW) {
+-		data.vif = NULL;
+-		data.type = IWL_MVM_QUOTA_UPDATE_TYPE_REGULAR;
++		data.skip_vif = NULL;
+ 		iwl_mvm_quota_iterator(&data, vif->addr, vif);
+ 	}
  
-@@ -1297,25 +1287,13 @@ int iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
- 
- 	mvm->last_corun_lut = lut;
- 
--	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_KERNEL);
--	if (!bt_cmd)
--		return 0;
--	cmd.data[0] = bt_cmd;
--
--	bt_cmd->flags = cpu_to_le32(BT_COEX_NW_OLD);
--	bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_ENABLE |
--					     BT_VALID_CORUN_LUT_20 |
--					     BT_VALID_CORUN_LUT_40);
--
- 	/* For the moment, use the same LUT for 20GHz and 40GHz */
--	memcpy(bt_cmd->bt4_corun_lut20, antenna_coupling_ranges[lut].lut20,
--	       sizeof(bt_cmd->bt4_corun_lut20));
-+	memcpy(&cmd.corun_lut20, antenna_coupling_ranges[lut].lut20,
-+	       sizeof(cmd.corun_lut20));
- 
--	memcpy(bt_cmd->bt4_corun_lut40, antenna_coupling_ranges[lut].lut20,
--	       sizeof(bt_cmd->bt4_corun_lut40));
-+	memcpy(&cmd.corun_lut40, antenna_coupling_ranges[lut].lut20,
-+	       sizeof(cmd.corun_lut40));
- 
--	ret = iwl_mvm_send_cmd(mvm, &cmd);
--
--	kfree(bt_cmd);
--	return ret;
-+	return iwl_mvm_send_cmd_pdu(mvm, BT_COEX_UPDATE_CORUN_LUT, 0,
-+				    sizeof(cmd), &cmd);
- }
 -- 
 1.8.3.2
 
