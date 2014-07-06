@@ -1,67 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52561 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaG1UuX (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:47074 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664AbaGFSjZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:50:23 -0400
-Message-ID: <53D6B78E.1070705@candelatech.com> (sfid-20140728_225026_055526_F9CC4A1D)
-Date: Mon, 28 Jul 2014 13:50:22 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 6 Jul 2014 14:39:25 -0400
+Message-ID: <53B997D5.1060001@infradead.org> (sfid-20140706_203942_277868_44709EF7)
+Date: Sun, 06 Jul 2014 11:39:17 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
-References: <5338F1B8.5040305@candelatech.com> <12936014.DUEgOXk110@blech>
-In-Reply-To: <12936014.DUEgOXk110@blech>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Yann E. MORIN" <yann.morin.1998@free.fr>
+CC: linux-kbuild@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [patch] iwlwifi: fix Kconfig option continuity
+References: <53B9833D.4000600@lwfinger.net>
+In-Reply-To: <53B9833D.4000600@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2014 11:09 AM, Christian Lamparter wrote:
-> Hello,
+Hi,
+
+Please use a newline every 70-72 characters.  Some email clients don't do automatic
+line wrapping -- they just make the user scroll to the right to see very long lines.
+
+
+On 07/06/2014 10:11 AM, Larry Finger wrote:
+> A problem with configuration of IWLWIFI has been bisected to commit 48e2934, where a new section was added to drivers/net/wireless/iwlwifi/Kconfig with the following code:
 > 
-> On Sunday, March 30, 2014 09:40:24 PM Ben Greear wrote:
->> Due to hardware/firmware limitations, it does not appear possible to
->> have a wifi NIC do hardware decrypt when using multiple stations on a single
->> NIC (and have both stations connected to the same AP).
->>
->> This just happens to be one of my favourite things to do, and it kills
->> performance compared to normal 'Open' throughput.
->>
->> I am curious if anyone knows of any way to accelerate rx-decrypt, perhaps by
->> using a specialized hardware board or maybe a feature of certain CPUs?
+> # don't call it _MODULE -- will confuse Kconfig/fixdep/...
+> config IWLWIFI_OPMODE_MODULAR
+>         bool
+>         default y if IWLDVM=m
+>         default y if IWLMVM=m
 > 
-> You could check if your CPU (bios and kernel) have support for AES-NI [0].
-> AFAICT mac80211 utilizes the cryptoapi. Therefore anything that supports
-> the proper crypto bindings can be used to accelerate the encryption and
-> decryption process to some degree. And it just happens that thanks to
-> AES-NI parts of math can be efficiently calculated by the CPU. 
+> When the above section is present, 'make xconfig' fails to show a "Debugging options" menu' even though 'make menuconfig' displays correctly. despite the incorrect on-screen display, xconfig does not delete the affected info in .config after it was set by menuconfig, thus the bug only seems to affect the display in xconfig.
+> 
+> Is there anything wrong with that section in iwlwifi's Kconfig, or is it a bug in xconfig?
 
-I recently took a look at this again, and the Intel E5 I'm using
-does use the aesni instructions/driver as far as I can tell.
-
-Throughput is still around 500Mbps where open is around 800Mbps.
-
-perf top shows this:
-
-Samples: 37K of event 'cycles', Event count (approx.): 19360716192
- 12.01%  [kernel]                                      [k] math_state_restore
- 11.64%  [kernel]                                      [k] _aesni_enc1
-  8.25%  [kernel]                                      [k] __save_init_fpu
-  2.44%  [kernel]                                      [k] crypto_xor
-  1.87%  [kernel]                                      [k] irq_fpu_usable
-  1.30%  [kernel]                                      [k] aes_encrypt
-  0.76%  [kernel]                                      [k] __kernel_fpu_end
-....
+in menuconfig or nconfig:
+Notice that 'Debugging options' is not indented under iwlwifi, but listed at the
+same indent level.  That is a huge clue.
 
 
-Any other magic add-in cards that would somehow just make this all faster w/out
-having to do any real programming work? :)
+in xconfig:
+The 'Debugging options' menu is displayed, but it's not where you expect or want
+it to be found.  Look under 'Wireless LAN' and immediately under 'Atheros Wireless Cards'
+and it says 'Debugging options' (on the left panel).  Then the debugging options are
+displayed in the right hand panel.
 
-Thanks,
-Ben
+This is a common problem.  I have made Kconfig patches for it several times.
+Here is another one.  Works for me.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+---
+Fix iwlwifi options so that they all depend on IWLWIFI and are
+displayed under the iwlwifi driver instead of in other unexpected
+places.
 
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/iwlwifi/Kconfig |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+Index: lnx-316-rc3/drivers/net/wireless/iwlwifi/Kconfig
+===================================================================
+--- lnx-316-rc3.orig/drivers/net/wireless/iwlwifi/Kconfig
++++ lnx-316-rc3/drivers/net/wireless/iwlwifi/Kconfig
+@@ -39,9 +39,10 @@ config IWLWIFI
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+ 	  module will be called iwlwifi.
+ 
++if IWLWIFI
++
+ config IWLWIFI_LEDS
+ 	bool
+-	depends on IWLWIFI
+ 	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
+@@ -49,7 +50,6 @@ config IWLWIFI_LEDS
+ 
+ config IWLDVM
+ 	tristate "Intel Wireless WiFi DVM Firmware support"
+-	depends on IWLWIFI
+ 	default IWLWIFI
+ 	help
+ 	  This is the driver that supports the DVM firmware which is
+@@ -58,7 +58,6 @@ config IWLDVM
+ 
+ config IWLMVM
+ 	tristate "Intel Wireless WiFi MVM Firmware support"
+-	depends on IWLWIFI
+ 	help
+ 	  This is the driver that supports the MVM firmware which is
+ 	  currently only available for 7260 and 3160 devices.
+@@ -70,7 +69,7 @@ config IWLWIFI_OPMODE_MODULAR
+ 	default y if IWLMVM=m
+ 
+ comment "WARNING: iwlwifi is useless without IWLDVM or IWLMVM"
+-	depends on IWLWIFI && IWLDVM=n && IWLMVM=n
++	depends on IWLDVM=n && IWLMVM=n
+ 
+ config IWLWIFI_BCAST_FILTERING
+ 	bool "Enable broadcast filtering"
+@@ -86,11 +85,9 @@ config IWLWIFI_BCAST_FILTERING
+ 	  expect incoming broadcasts for their normal operations.
+ 
+ menu "Debugging Options"
+-	depends on IWLWIFI
+ 
+ config IWLWIFI_DEBUG
+ 	bool "Enable full debugging output in the iwlwifi driver"
+-	depends on IWLWIFI
+ 	---help---
+ 	  This option will enable debug tracing output for the iwlwifi drivers
+ 
+@@ -115,7 +112,7 @@ config IWLWIFI_DEBUG
+ 
+ config IWLWIFI_DEBUGFS
+         bool "iwlwifi debugfs support"
+-        depends on IWLWIFI && MAC80211_DEBUGFS
++        depends on MAC80211_DEBUGFS
+         ---help---
+ 	  Enable creation of debugfs files for the iwlwifi drivers. This
+ 	  is a low-impact option that allows getting insight into the
+@@ -123,13 +120,12 @@ config IWLWIFI_DEBUGFS
+ 
+ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+         bool "Experimental uCode support"
+-        depends on IWLWIFI && IWLWIFI_DEBUG
++        depends on IWLWIFI_DEBUG
+         ---help---
+ 	  Enable use of experimental ucode for testing and debugging.
+ 
+ config IWLWIFI_DEVICE_TRACING
+ 	bool "iwlwifi device access tracing"
+-	depends on IWLWIFI
+ 	depends on EVENT_TRACING
+ 	help
+ 	  Say Y here to trace all commands, including TX frames and IO
+@@ -144,4 +140,7 @@ config IWLWIFI_DEVICE_TRACING
+ 
+ 	  If unsure, say Y so we can help you better when problems
+ 	  occur.
++
+ endmenu
++
++endif
