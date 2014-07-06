@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:35893 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932854AbaGOS4A (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:47228 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbaGFJhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 14:56:00 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so5785196wes.29
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:55:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/12] staging: vt6656: rename s_nsInterruptUsbIoCompleteRead to vnt_start_interrupt_urb_complete
-Date: Tue, 15 Jul 2014 19:54:38 +0100
-Message-Id: <1405450483-2875-7-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205607_896737_F88EFE8F)
-In-Reply-To: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
-References: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 6 Jul 2014 05:37:19 -0400
+Received: by mail-wi0-f179.google.com with SMTP id cc10so5365721wib.0
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:17 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/40] iwlwifi: mvm: protect TDLS discovery session
+Date: Sun,  6 Jul 2014 12:36:12 +0300
+Message-Id: <1404639376-3792-36-git-send-email-egrumbach@gmail.com> (sfid-20140706_115956_248591_D067B0D2)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/usbpipe.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+From: Arik Nemtsov <arik@wizery.com>
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index a5c55f7..e7239d6 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -57,7 +57,7 @@
- #define URB_ASYNC_UNLINK    0
- #endif
+Use the new mac80211 callback to protect a TDLS discovery session so we
+can hear the discovery-response packet.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 57945fe..1acad83 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2017,6 +2017,18 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	mutex_unlock(&mvm->mutex);
+ }
  
--static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
-+static void vnt_start_interrupt_urb_complete(struct urb *urb);
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
- 
-@@ -145,7 +145,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
- 		usb_rcvintpipe(priv->usb, 1),
- 		priv->int_buf.data_buf,
- 		MAX_INTERRUPT_SIZE,
--		s_nsInterruptUsbIoCompleteRead,
-+		vnt_start_interrupt_urb_complete,
- 		priv,
- 		priv->int_interval);
- 
-@@ -173,7 +173,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
-  *
-  */
- 
--static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
-+static void vnt_start_interrupt_urb_complete(struct urb *urb)
- {
- 	struct vnt_private *priv = urb->context;
- 	int status;
++static void iwl_mvm_mac_mgd_protect_tdls_discover(struct ieee80211_hw *hw,
++						  struct ieee80211_vif *vif)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	u32 duration = 2 * vif->bss_conf.dtim_period * vif->bss_conf.beacon_int;
++
++	mutex_lock(&mvm->mutex);
++	/* Protect the session to hear the TDLS setup response on the channel */
++	iwl_mvm_protect_session(mvm, vif, duration, duration, 100);
++	mutex_unlock(&mvm->mutex);
++}
++
+ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+ 					struct ieee80211_vif *vif,
+ 					struct cfg80211_sched_scan_request *req,
+@@ -2781,6 +2793,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.sta_rc_update = iwl_mvm_sta_rc_update,
+ 	.conf_tx = iwl_mvm_mac_conf_tx,
+ 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
++	.mgd_protect_tdls_discover = iwl_mvm_mac_mgd_protect_tdls_discover,
+ 	.flush = iwl_mvm_mac_flush,
+ 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
+ 	.sched_scan_stop = iwl_mvm_mac_sched_scan_stop,
 -- 
-2.0.1
+1.8.3.2
 
