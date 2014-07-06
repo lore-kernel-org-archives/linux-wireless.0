@@ -1,120 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:47379 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbaGRFh2 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:64236 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662AbaGFJhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 01:37:28 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so221945wib.14
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 22:37:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/9] staging: vt6656: struct vnt_private pInterruptURB rename to interrupt_urb
-Date: Fri, 18 Jul 2014 06:36:14 +0100
-Message-Id: <1405661776-3345-7-git-send-email-tvboxspy@gmail.com> (sfid-20140718_073737_520573_D696BA63)
-In-Reply-To: <1405661776-3345-1-git-send-email-tvboxspy@gmail.com>
-References: <1405661776-3345-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 6 Jul 2014 05:37:22 -0400
+Received: by mail-wi0-f170.google.com with SMTP id cc10so13747721wib.3
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:21 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 38/40] iwlwifi: mvm: teardown TDLS peers when initiating DCM
+Date: Sun,  6 Jul 2014 12:36:14 +0300
+Message-Id: <1404639376-3792-38-git-send-email-egrumbach@gmail.com> (sfid-20140706_115953_170415_8E1CFC08)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   |  2 +-
- drivers/staging/vt6656/main_usb.c | 14 +++++++-------
- drivers/staging/vt6656/usbpipe.c  |  6 +++---
- 3 files changed, 11 insertions(+), 11 deletions(-)
+From: Arik Nemtsov <arik@wizery.com>
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 8257a64..22554af 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -284,7 +284,7 @@ struct vnt_private {
- 	unsigned long Flags;
- 
- 	/* USB */
--	struct urb *pInterruptURB;
-+	struct urb *interrupt_urb;
- 	u32 int_interval;
- 
- 	/* Variables to track resources for the BULK In Pipe */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index be498bc..fe2f0bc 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -517,8 +517,8 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 			goto free_rx_tx;
- 	}
- 
--	priv->pInterruptURB = usb_alloc_urb(0, GFP_ATOMIC);
--	if (priv->pInterruptURB == NULL) {
-+	priv->interrupt_urb = usb_alloc_urb(0, GFP_ATOMIC);
-+	if (priv->interrupt_urb == NULL) {
- 		dev_err(&priv->usb->dev, "Failed to alloc int urb\n");
- 		goto free_rx_tx;
- 	}
-@@ -526,7 +526,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 	priv->int_buf.data_buf = kmalloc(MAX_INTERRUPT_SIZE, GFP_KERNEL);
- 	if (priv->int_buf.data_buf == NULL) {
- 		dev_err(&priv->usb->dev, "Failed to alloc int buf\n");
--		usb_free_urb(priv->pInterruptURB);
-+		usb_free_urb(priv->interrupt_urb);
- 		goto free_rx_tx;
- 	}
- 
-@@ -590,8 +590,8 @@ free_all:
- 	device_free_tx_bufs(priv);
- 	device_free_int_bufs(priv);
- 
--	usb_kill_urb(priv->pInterruptURB);
--	usb_free_urb(priv->pInterruptURB);
-+	usb_kill_urb(priv->interrupt_urb);
-+	usb_free_urb(priv->interrupt_urb);
- 
- 	return -ENOMEM;
+The FW currently doesn't optimally support TDLS in DCM mode. Teardown
+all TDLS peers when we have more than a single phy context.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 8aa6fa4..2eb6ebe 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1885,6 +1885,28 @@ static void iwl_mvm_recalc_tdls_state(struct iwl_mvm *mvm,
+ 		iwl_mvm_power_update_mac(mvm);
  }
-@@ -629,8 +629,8 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 	device_free_rx_bufs(priv);
- 	device_free_int_bufs(priv);
  
--	usb_kill_urb(priv->pInterruptURB);
--	usb_free_urb(priv->pInterruptURB);
-+	usb_kill_urb(priv->interrupt_urb);
-+	usb_free_urb(priv->interrupt_urb);
- 
- 	return;
- }
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 126294d..9a88749 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -126,7 +126,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
- 
- 	priv->int_buf.in_use = true;
- 
--	usb_fill_int_urb(priv->pInterruptURB,
-+	usb_fill_int_urb(priv->interrupt_urb,
- 		priv->usb,
- 		usb_rcvintpipe(priv->usb, 1),
- 		priv->int_buf.data_buf,
-@@ -135,7 +135,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
- 		priv,
- 		priv->int_interval);
- 
--	status = usb_submit_urb(priv->pInterruptURB, GFP_ATOMIC);
-+	status = usb_submit_urb(priv->interrupt_urb, GFP_ATOMIC);
- 	if (status) {
- 		dev_dbg(&priv->usb->dev, "Submit int URB failed %d\n", status);
- 		priv->int_buf.in_use = false;
-@@ -172,7 +172,7 @@ static void vnt_start_interrupt_urb_complete(struct urb *urb)
- 		vnt_int_process_data(priv);
- 	}
- 
--	status = usb_submit_urb(priv->pInterruptURB, GFP_ATOMIC);
-+	status = usb_submit_urb(priv->interrupt_urb, GFP_ATOMIC);
- 	if (status) {
- 		dev_dbg(&priv->usb->dev, "Submit int URB failed %d\n", status);
- 	} else {
++static void iwl_mvm_teardown_tdls_peers(struct iwl_mvm *mvm)
++{
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_sta *mvmsta;
++	int i;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	for (i = 0; i < IWL_MVM_STATION_COUNT; i++) {
++		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[i],
++						lockdep_is_held(&mvm->mutex));
++		if (!sta || IS_ERR(sta) || !sta->tdls)
++			continue;
++
++		mvmsta = iwl_mvm_sta_from_mac80211(sta);
++		ieee80211_tdls_oper_request(mvmsta->vif, sta->addr,
++				NL80211_TDLS_TEARDOWN,
++				WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED,
++				GFP_KERNEL);
++	}
++}
++
+ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_sta *sta,
+@@ -1954,6 +1976,11 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 					     true);
+ 	} else if (old_state == IEEE80211_STA_ASSOC &&
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
++
++		/* we don't support TDLS during DCM */
++		if (iwl_mvm_phy_ctx_count(mvm) > 1)
++			iwl_mvm_teardown_tdls_peers(mvm);
++
+ 		/* enable beacon filtering */
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 		ret = 0;
 -- 
-2.0.1
+1.8.3.2
 
