@@ -1,160 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:48032 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932951AbaGPOhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 10:37:24 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC 2/2] ath10k: add spectral scan feature
-Date: Wed, 16 Jul 2014 16:35:41 +0200
-Message-ID: <3551054.tVFpeBPdYt@bentobox> (sfid-20140716_163729_221582_916600B2)
-In-Reply-To: <CA+BoTQm1i2UoTtPBf7Z3QLQDBs_1uXwdG8gYOkP556+a7AqcpQ@mail.gmail.com>
-References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> <1405441966-32681-3-git-send-email-sw@simonwunderlich.de> <CA+BoTQm1i2UoTtPBf7Z3QLQDBs_1uXwdG8gYOkP556+a7AqcpQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-we0-f169.google.com ([74.125.82.169]:34484 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbaGFJgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jul 2014 05:36:55 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so3158948wes.28
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:54 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/40] iwlwifi: mvm: init lmac scan command
+Date: Sun,  6 Jul 2014 12:35:57 +0300
+Message-Id: <1404639376-3792-21-git-send-email-egrumbach@gmail.com> (sfid-20140706_115952_677610_7911496D)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 July 2014 11:30:12 Michal Kazior wrote:
-> > +static void ath_debug_send_fft_sample(struct ath10k *ar,
-> > +                                     struct fft_sample_tlv
-> > *fft_sample_tlv) +{
-> 
-> Why ath_debug_... instead of ath10k_debug_.. ?
-> 
-> 
-> [...]
+From: David Spinadel <david.spinadel@intel.com>
 
-Will be modified.
+Initialize LMAC scan command.
+Fix EBS flag to be dependant on TLV flg and fix other bugs.
 
-> 
-> > +static int ath_get_spectral_vdevid(struct ath10k *ar)
-> 
-> ath_get_..? Shouldn't this be ath10k_get?
-> 
-> > +{
-> > +       struct ath10k_vif *arvif;
-> > +
-> > +       if (list_empty(&ar->arvifs))
-> > +               return -ENODEV;
-> > +
-> > +       arvif = list_first_entry(&ar->arvifs, typeof(*arvif), list);
-> > +       return arvif->vdev_id;
-> > +}
-> 
-> No locks? Access to arvifs must be protected with conf_mutex.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-Will be handled by the caller and lockdep_assert will be added to this 
-function
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 919ed0e..14fc6ad 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1099,6 +1099,7 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
+ 				       struct iwl_scan_req_unified_lmac *cmd,
+ 				       struct iwl_mvm_scan_params *params)
+ {
++	memset(cmd, 0, ksize(cmd));
+ 	cmd->active_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].active;
+ 	cmd->passive_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].passive;
+ 	/* TODO: Use params; now fragmented isn't used. */
+@@ -1107,14 +1108,19 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
+ 	cmd->max_out_time = cpu_to_le32(params->max_out_time);
+ 	cmd->suspend_time = cpu_to_le32(params->suspend_time);
+ 	cmd->scan_prio = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
+-	cmd->channel_opt[0].flags = mvm->last_ebs_successful ?
+-				cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS &
+-					    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE &
+-					    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD) :
+-				0;
+-	cmd->channel_opt[0].non_ebs_ratio = 0;
+ 	cmd->iter_num = cpu_to_le32(1);
+-	cmd->delay = 0;
++
++	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT &&
++	    mvm->last_ebs_successful) {
++		cmd->channel_opt[0].flags =
++			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
++				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
++				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
++		cmd->channel_opt[1].flags =
++			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
++				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
++				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
++	}
+ }
+ 
+ int iwl_mvm_unified_scan_lmac(struct iwl_mvm *mvm,
+-- 
+1.8.3.2
 
-> 
-> What happens when an interface is removed without spectral scan being
-> stopped?
-
-This is a question for the QCA firmware guys.
-
-> > +int ath10k_spectral_scan_config(struct ath10k *ar, enum spectral_mode
-> > mode) +{
-> > +       int count, ret;
-> 
-> We tend to use `res` in ath10k.
-
-Thanks, will be changed. But actually, I found a lot of ret stuff in the 
-ath10k code.
-
-[...]
-> + ath10k_warn("failed to configure spectral scan: %d\n", ret);
-[...]
-> "failed to parse phyerr tlv header at byte %d\n", i
-[...]
-> "failed to parse phyerr tlv payload at byte %d\n", i
-[...]
-> "failed to parse fft report at byte %d\n", i
-[...]
-> + ath10k_warn("failed to process fft report: %d\n", res)
-
-Ok, warning messages will be modified.
-
-> > +int ath10k_vdev_spectral_configure(struct ath10k *ar,
-> > +                             const struct wmi_vdev_spectral_configure_arg
-> > *arg)
-> ath10k_wmi_vdev_spectral_configure
-[...]
-> > +int ath10k_vdev_spectral_enable(struct ath10k *ar, u32 vdev_id, u32
-> > trigger, +                               u32 enable)
-> 
-> ath10k_wmi_vdev_spectral_enable
-
-Ok, will be renamed.
-
-> [...]
-> > +struct wmi_vdev_spectral_configure_arg {
-> > +       u32 vdev_id;
-> > +       u32 scan_count;
-> > +       u32 scan_period;
-> > +       u32 scan_priority;
-> > +       u32 scan_fft_size;
-> > +       u32 scan_gc_ena;
-> > +       u32 scan_restart_ena;
-> > +       u32 scan_noise_floor_ref;
-> > +       u32 scan_init_delay;
-> > +       u32 scan_nb_tone_thr;
-> > +       u32 scan_str_bin_thr;
-> > +       u32 scan_wb_rpt_mode;
-> > +       u32 scan_rssi_rpt_mode;
-> > +       u32 scan_rssi_thr;
-> > +       u32 scan_pwr_format;
-> > +       u32 scan_rpt_mode;
-> > +       u32 scan_bin_scale;
-> > +       u32 scan_dBm_adj;
-> > +       u32 scan_chn_mask;
-> 
-> Some stuff isn't self-explanatory. I'd love to see some of these
-> fields documented to account for possible values (wb_rpt_mode?) and
-> units (init_delay?).
-
-Sorry, I got no documentation to anything. So I cannot provide one to you. 
-Maybe you can get it easier than me.
-
-> [...]
-> 
-> > +struct fft_sample_ath10k_ht20 {
-> > +       struct fft_sample_tlv tlv;
-> > +       u8 mhz;
-> 
-> A more suitable name would be "chan_width_mhz" I guess?
-
-Ok,
-
-> > +       __be16 freq1;
-> > +       __be16 freq2;
-> > +       __be16 noise;
-> > +       __be16 max_magnitude;
-> > +       __be16 total_gain_db;
-> > +       __be16 base_pwr_db;
-> > +       __be64 tsf;
-> > +       s8 max_index;
-> > +       u8 rssi;
-> > +       u8 relpwr_db;
-> > +       u8 avgpwr_db;
-> > +
-> > +       u8 data[SPECTRAL_ATH10K_HT20_NUM_BINS];
-> 
-> And as pointed out the size/count of bins is most likely not
-> bandwidth-dependant. It's just a matter of resolution configured with
-> fft_size + bin_scale. Maybe this should be a variable-sized array?
-
-Ok, bin_scale didn't make a difference in my tests (I've just repeated them). 
-But 2 ** (fft_size - 1) seems to be relevant. We have to change the format 
-accordingly.
-
-But currently we don't see any change in the bandwidth (20MHz/40MHz) for the 
-different bin numbers. This has to be checked later in detail.
-
-Kind regards,
-	Sven
