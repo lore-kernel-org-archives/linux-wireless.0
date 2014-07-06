@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:52566 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbaGHQxS convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:59245 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbaGFJgZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 12:53:18 -0400
-Received: by mail-lb0-f182.google.com with SMTP id c11so4225610lbj.27
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2014 09:53:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <DUB408-EAS67453F4234155ACD2D3431D80D0@phx.gbl>
-References: <DUB408-EAS67453F4234155ACD2D3431D80D0@phx.gbl>
-Date: Tue, 8 Jul 2014 19:53:16 +0300
-Message-ID: <CANUX_P0+JonVkB9fizdWhuQ+gbWHphRQmcBhTa4PPhOyHAsx0A@mail.gmail.com> (sfid-20140708_185321_207578_5A85C896)
-Subject: Re: Intel 7260 desktop version
+	Sun, 6 Jul 2014 05:36:25 -0400
+Received: by mail-wg0-f52.google.com with SMTP id b13so3120386wgh.35
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:24 -0700 (PDT)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Metallus_M=C3=BCller?= <metallus@live.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/40] iwlwifi: remove wrong comment about alignment in iwl-fw-error-dump.h
+Date: Sun,  6 Jul 2014 12:35:38 +0300
+Message-Id: <1404639376-3792-2-git-send-email-egrumbach@gmail.com> (sfid-20140706_113628_857290_6DE5BC06)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Tue, Jul 8, 2014 at 2:07 AM, Metallus Müller <metallus@live.de> wrote:
-> Hello,
->
-> I am willing to purchase a intel 7260 WLAN card for desktop pc. On the page: http://wireless.kernel.org/en/users/Drivers/iwlwifi
-> I found drivers for this card. But there is no information given if they would work with the desktop version of the card to. So can you give me further information if those drivers also work for the desktop version of the intel 7260 WLAN AC card?
->
+The chunks of data do not need to be multipliers of 4 nor
+4-bytes aligned.
 
-I have no idea what "Desktop version" means. The cards supported by
-our driver are the one with the device ID that matches the list in the
-driver. I can say that this list is kept updated in the driver.
-Besides this, I don't know what the "Desktop version" is.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Thanks in advice ,
-> Metallus--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index ced5ba9..9fd860f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -92,8 +92,8 @@ enum iwl_fw_error_dump_type {
+ /**
+  * struct iwl_fw_error_dump_data - data for one type
+  * @type: %enum iwl_fw_error_dump_type
+- * @len: the length starting from %data - must be a multiplier of 4.
+- * @data: the data itself padded to be a multiplier of 4.
++ * @len: the length starting from %data
++ * @data: the data itself
+  */
+ struct iwl_fw_error_dump_data {
+ 	__le32 type;
+-- 
+1.8.3.2
+
