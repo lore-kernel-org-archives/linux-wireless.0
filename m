@@ -1,182 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54470 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbaGTDFC (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:57759 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbaGFJhH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 23:05:02 -0400
-MIME-Version: 1.0
-In-Reply-To: <1405373897-31671-7-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	<1405373897-31671-7-git-send-email-keescook@chromium.org>
-Date: Sun, 20 Jul 2014 11:04:59 +0800
-Message-ID: <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com> (sfid-20140720_050533_045080_8E68F0A3)
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-From: Ming Lei <ming.lei@canonical.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Jul 2014 05:37:07 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so3181227wes.12
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:06 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/40] iwlwifi: mvm: add switch_vif_chanctx operation
+Date: Sun,  6 Jul 2014 12:36:05 +0300
+Message-Id: <1404639376-3792-29-git-send-email-egrumbach@gmail.com> (sfid-20140706_115955_031568_14DD0FDD)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
-> As an alternative to loading bytes from the "data" blob when reading
-> firmware, let kernel read from an fd, so that the LSM can reason about
-> the origin of firmware contents during userspace on-demand loading.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
->From user space view, maybe it is better to keep previous usage and just
-check if loading is from 'data' blob or fd in 'echo 0 > loading' of
-firmware_loading_store(), then the 'fd' usage becomes very similar with
-before.
+Implement the switch_vif_chanctx operation with support for a
+single-vif and SWAP mode.  The REASSIGN mode and multi-vifs are not
+supported yet.
 
->
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  Documentation/firmware_class/README |   10 +++++
->  drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
->  2 files changed, 86 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
-> index 71f86859d7d8..d899bdacba1e 100644
-> --- a/Documentation/firmware_class/README
-> +++ b/Documentation/firmware_class/README
-> @@ -59,6 +59,16 @@
->   8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
->                  the firmware image and any related resource.
->
-> + Alternative loading (via file descriptor):
-> + ==========================================
-> + Instead of "loading", and "data" above, firmware can be loaded through
-> + an open file descriptor as well, via the "fd" file:
-> +
-> + Replacing steps 2 thorugh 6 above with the following userspace actions,
-> + performs the same loading:
-> +       - open firmware image file (e.g. as fd 3).
-> +       - write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
+This operation needs to implement 4 steps, namely unassign, remove,
+add and assign the chanctx.  In order to do this, split out these
+operations into locked and non-locked parts, thus allowing us to call
+them while locked.
 
-Then as above, here should be just to replace step 4, 5 as
-          - open image in user space
-          - echo fd > /sys/class/firmware/xxx/fd
+Additionally, in order to allow us to restart the hardware when
+something fails, add a boolean to the iwl_mvm_nic_restart() function
+that tells whether the restart was triggered by a FW error or
+something else.
 
-> +
->   High level behavior (driver code):
->   ==================================
->
-> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-> index b38cbcd6ebb1..eac996447d28 100644
-> --- a/drivers/base/firmware_class.c
-> +++ b/drivers/base/firmware_class.c
-> @@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
->         .write = firmware_data_write,
->  };
->
-> +/**
-> + * fd_store - set value in the 'fd' control file
-> + * @dev: device pointer
-> + * @attr: device attribute pointer
-> + * @buf: buffer to scan for loading fd value
-> + * @count: number of bytes in @buf
-> + *
-> + * Parses an fd number from buf, and then loads firmware bytes from
-> + * the current process's matching open fd.
-> + *
-> + **/
-> +static ssize_t fd_store(struct device *dev,
-> +                                struct device_attribute *attr,
-> +                                const char *buf, size_t count)
-> +{
-> +       struct firmware_priv *fw_priv = to_firmware_priv(dev);
-> +       struct firmware_buf *fw_buf = fw_priv->buf;
-> +       ssize_t retval;
-> +       int fd;
-> +       struct fd f;
-> +
-> +       if (!capable(CAP_SYS_RAWIO))
-> +               return -EPERM;
-> +
-> +       retval = kstrtoint(buf, 10, &fd);
-> +       if (retval)
-> +               return retval;
-> +
-> +       f = fdget(fd);
-> +       if (!f.file)
-> +               return -EBADF;
-> +
-> +       mutex_lock(&fw_lock);
-> +       /* If we raced another loader, we must fail. */
-> +       if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
-> +               retval = -EINVAL;
-> +               goto unlock;
-> +       }
-> +
-> +       fw_load_start(fw_buf);
-> +       /* fw_read_file_contents uses vmalloc, not pages. */
-> +       fw_buf->is_paged_buf = false;
-> +       retval = fw_read_file_contents(f.file, fw_buf);
-> +       if (retval) {
-> +               /* If we called fw_load_start, we must abort on fail. */
-> +               fw_load_abort(fw_priv);
-> +               goto unlock;
-> +       }
-> +
-> +       /* Success. */
-> +       set_bit(FW_STATUS_DONE, &fw_buf->status);
-> +       list_del_init(&fw_buf->pending_list);
-> +       complete_all(&fw_buf->completion);
-> +
-> +unlock:
-> +       mutex_unlock(&fw_lock);
-> +       fdput(f);
-> +
-> +       if (retval)
-> +               return retval;
-> +       return count;
-> +}
-> +static DEVICE_ATTR_WO(fd);
-> +
->  static void firmware_class_timeout_work(struct work_struct *work)
->  {
->         struct firmware_priv *fw_priv = container_of(work,
-> @@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->                 mutex_lock(&fw_lock);
->                 list_del_init(&buf->pending_list);
->                 mutex_unlock(&fw_lock);
-> -               dev_err(f_dev, "%s: device_create_file failed\n", __func__);
-> +               dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
->                 goto err_del_bin_attr;
->         }
->
-> +       retval = device_create_file(f_dev, &dev_attr_fd);
-> +       if (retval) {
-> +               mutex_lock(&fw_lock);
-> +               list_del_init(&buf->pending_list);
-> +               mutex_unlock(&fw_lock);
-> +               dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
-> +               goto err_del_loading;
-> +       }
-> +
->         if (opt_flags & FW_OPT_UEVENT) {
->                 buf->need_uevent = true;
->                 dev_set_uevent_suppress(f_dev, false);
-> @@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->         if (!buf->data)
->                 retval = -ENOMEM;
->
-> +       device_remove_file(f_dev, &dev_attr_fd);
-> +err_del_loading:
->         device_remove_file(f_dev, &dev_attr_loading);
->  err_del_bin_attr:
->         device_remove_bin_file(f_dev, &firmware_attr_data);
-> --
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 154 +++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |   2 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  11 +-
+ 3 files changed, 135 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 72f82a3..24cc569 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2282,17 +2282,17 @@ static int iwl_mvm_cancel_roc(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
+-static int iwl_mvm_add_chanctx(struct ieee80211_hw *hw,
+-			       struct ieee80211_chanctx_conf *ctx)
++static int __iwl_mvm_add_chanctx(struct iwl_mvm *mvm,
++				 struct ieee80211_chanctx_conf *ctx)
+ {
+-	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	u16 *phy_ctxt_id = (u16 *)ctx->drv_priv;
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt;
+ 	int ret;
+ 
++	lockdep_assert_held(&mvm->mutex);
++
+ 	IWL_DEBUG_MAC80211(mvm, "Add channel context\n");
+ 
+-	mutex_lock(&mvm->mutex);
+ 	phy_ctxt = iwl_mvm_get_free_phy_ctxt(mvm);
+ 	if (!phy_ctxt) {
+ 		ret = -ENOSPC;
+@@ -2310,19 +2310,40 @@ static int iwl_mvm_add_chanctx(struct ieee80211_hw *hw,
+ 	iwl_mvm_phy_ctxt_ref(mvm, phy_ctxt);
+ 	*phy_ctxt_id = phy_ctxt->id;
+ out:
++	return ret;
++}
++
++static int iwl_mvm_add_chanctx(struct ieee80211_hw *hw,
++			       struct ieee80211_chanctx_conf *ctx)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	int ret;
++
++	mutex_lock(&mvm->mutex);
++	ret = __iwl_mvm_add_chanctx(mvm, ctx);
+ 	mutex_unlock(&mvm->mutex);
++
+ 	return ret;
+ }
+ 
++static void __iwl_mvm_remove_chanctx(struct iwl_mvm *mvm,
++				     struct ieee80211_chanctx_conf *ctx)
++{
++	u16 *phy_ctxt_id = (u16 *)ctx->drv_priv;
++	struct iwl_mvm_phy_ctxt *phy_ctxt = &mvm->phy_ctxts[*phy_ctxt_id];
++
++	lockdep_assert_held(&mvm->mutex);
++
++	iwl_mvm_phy_ctxt_unref(mvm, phy_ctxt);
++}
++
+ static void iwl_mvm_remove_chanctx(struct ieee80211_hw *hw,
+ 				   struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+-	u16 *phy_ctxt_id = (u16 *)ctx->drv_priv;
+-	struct iwl_mvm_phy_ctxt *phy_ctxt = &mvm->phy_ctxts[*phy_ctxt_id];
+ 
+ 	mutex_lock(&mvm->mutex);
+-	iwl_mvm_phy_ctxt_unref(mvm, phy_ctxt);
++	__iwl_mvm_remove_chanctx(mvm, ctx);
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
+@@ -2351,17 +2372,16 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
+-static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+-				      struct ieee80211_vif *vif,
+-				      struct ieee80211_chanctx_conf *ctx)
++static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
++					struct ieee80211_vif *vif,
++					struct ieee80211_chanctx_conf *ctx)
+ {
+-	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	u16 *phy_ctxt_id = (u16 *)ctx->drv_priv;
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt = &mvm->phy_ctxts[*phy_ctxt_id];
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
+ 
+-	mutex_lock(&mvm->mutex);
++	lockdep_assert_held(&mvm->mutex);
+ 
+ 	mvmvif->phy_ctxt = phy_ctxt;
+ 
+@@ -2378,18 +2398,18 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 		 * (in bss_info_changed), similarly for IBSS.
+ 		 */
+ 		ret = 0;
+-		goto out_unlock;
++		goto out;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_MONITOR:
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+-		goto out_unlock;
++		goto out;
+ 	}
+ 
+ 	ret = iwl_mvm_binding_add_vif(mvm, vif);
+ 	if (ret)
+-		goto out_unlock;
++		goto out;
+ 
+ 	/*
+ 	 * Power state must be updated before quotas,
+@@ -2414,32 +2434,43 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 	}
+ 
+-	goto out_unlock;
++	goto out;
+ 
+- out_remove_binding:
++out_remove_binding:
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+ 	iwl_mvm_power_update_mac(mvm);
+- out_unlock:
+-	mutex_unlock(&mvm->mutex);
++out:
+ 	if (ret)
+ 		mvmvif->phy_ctxt = NULL;
+ 	return ret;
+ }
+-
+-static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
+-					 struct ieee80211_vif *vif,
+-					 struct ieee80211_chanctx_conf *ctx)
++static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+-	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	int ret;
+ 
+ 	mutex_lock(&mvm->mutex);
++	ret = __iwl_mvm_assign_vif_chanctx(mvm, vif, ctx);
++	mutex_unlock(&mvm->mutex);
++
++	return ret;
++}
++
++static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
++					   struct ieee80211_vif *vif,
++					   struct ieee80211_chanctx_conf *ctx)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++	lockdep_assert_held(&mvm->mutex);
+ 
+ 	iwl_mvm_remove_time_event(mvm, mvmvif, &mvmvif->time_event_data);
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_ADHOC:
+-		goto out_unlock;
++		goto out;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		mvmvif->monitor_active = false;
+ 		iwl_mvm_update_quotas(mvm, NULL);
+@@ -2447,7 +2478,7 @@ static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_AP:
+ 		/* This part is triggered only during CSA */
+ 		if (!vif->csa_active || !mvmvif->ap_ibss_active)
+-			goto out_unlock;
++			goto out;
+ 
+ 		mvmvif->ap_ibss_active = false;
+ 		iwl_mvm_update_quotas(mvm, NULL);
+@@ -2457,12 +2488,80 @@ static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+ 
+-out_unlock:
++out:
+ 	mvmvif->phy_ctxt = NULL;
+ 	iwl_mvm_power_update_mac(mvm);
++}
++
++static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
++					 struct ieee80211_vif *vif,
++					 struct ieee80211_chanctx_conf *ctx)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++
++	mutex_lock(&mvm->mutex);
++	__iwl_mvm_unassign_vif_chanctx(mvm, vif, ctx);
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
++static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
++				      struct ieee80211_vif_chanctx_switch *vifs,
++				      int n_vifs,
++				      enum ieee80211_chanctx_switch_mode mode)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	int ret;
++
++	/* we only support SWAP_CONTEXTS and with a single-vif right now */
++	if (mode != CHANCTX_SWMODE_SWAP_CONTEXTS || n_vifs > 1)
++		return -EOPNOTSUPP;
++
++	mutex_lock(&mvm->mutex);
++	__iwl_mvm_unassign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx);
++	__iwl_mvm_remove_chanctx(mvm, vifs[0].old_ctx);
++
++	ret = __iwl_mvm_add_chanctx(mvm, vifs[0].new_ctx);
++	if (ret) {
++		IWL_ERR(mvm, "failed to add new_ctx during channel switch\n");
++		goto out_reassign;
++	}
++
++	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].new_ctx);
++	if (ret) {
++		IWL_ERR(mvm,
++			"failed to assign new_ctx during channel switch\n");
++		goto out_remove;
++	}
++
++	goto out;
++
++out_remove:
++	__iwl_mvm_remove_chanctx(mvm, vifs[0].new_ctx);
++
++out_reassign:
++	ret = __iwl_mvm_add_chanctx(mvm, vifs[0].old_ctx);
++	if (ret) {
++		IWL_ERR(mvm, "failed to add old_ctx back after failure.\n");
++		goto out_restart;
++	}
++
++	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx);
++	if (ret) {
++		IWL_ERR(mvm, "failed to reassign old_ctx after failure.\n");
++		goto out_restart;
++	}
++
++	goto out;
++
++out_restart:
++	/* things keep failing, better restart the hw */
++	iwl_mvm_nic_restart(mvm, false);
++
++out:
++	mutex_unlock(&mvm->mutex);
++	return ret;
++}
++
+ static int iwl_mvm_set_tim(struct ieee80211_hw *hw,
+ 			   struct ieee80211_sta *sta,
+ 			   bool set)
+@@ -2627,6 +2726,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.change_chanctx = iwl_mvm_change_chanctx,
+ 	.assign_vif_chanctx = iwl_mvm_assign_vif_chanctx,
+ 	.unassign_vif_chanctx = iwl_mvm_unassign_vif_chanctx,
++	.switch_vif_chanctx = iwl_mvm_switch_vif_chanctx,
+ 
+ 	.start_ap = iwl_mvm_start_ap_ibss,
+ 	.stop_ap = iwl_mvm_stop_ap_ibss,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 5fedd55..fa8fcbc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1077,4 +1077,6 @@ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
+ int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		      bool added_vif);
+ 
++void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error);
++
+ #endif /* __IWL_MVM_H__ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 4e2823f..89a0956 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -764,7 +764,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
+ 	module_put(THIS_MODULE);
+ }
+ 
+-static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
++void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ {
+ 	iwl_abort_notification_waits(&mvm->notif_wait);
+ 
+@@ -821,11 +821,12 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ 		reprobe->dev = mvm->trans->dev;
+ 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
+ 		schedule_work(&reprobe->work);
+-	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR && mvm->restart_fw) {
++	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
++		   (!fw_error || mvm->restart_fw)) {
+ 		/* don't let the transport/FW power down */
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+ 
+-		if (mvm->restart_fw > 0)
++		if (fw_error && mvm->restart_fw > 0)
+ 			mvm->restart_fw--;
+ 		ieee80211_restart_hw(mvm->hw);
+ 	}
+@@ -837,7 +838,7 @@ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
+ 
+ 	iwl_mvm_dump_nic_error_log(mvm);
+ 
+-	iwl_mvm_nic_restart(mvm);
++	iwl_mvm_nic_restart(mvm, true);
+ }
+ 
+ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
+@@ -845,7 +846,7 @@ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 
+ 	WARN_ON(1);
+-	iwl_mvm_nic_restart(mvm);
++	iwl_mvm_nic_restart(mvm, true);
+ }
+ 
+ struct iwl_d0i3_iter_data {
+-- 
+1.8.3.2
+
