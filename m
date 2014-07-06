@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:58209 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbaG0Vnj (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:40442 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbaGFJg3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2014 17:43:39 -0400
-Received: by mail-we0-f173.google.com with SMTP id q58so6600429wes.4
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 14:43:38 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCHv3 6/6] ath9k: extend ath9k_set_coverage_class signature
-Date: Sun, 27 Jul 2014 23:43:35 +0200
-Message-Id: <1406497415-25983-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_234341_885922_8E79DC0D)
+	Sun, 6 Jul 2014 05:36:29 -0400
+Received: by mail-wi0-f174.google.com with SMTP id bs8so14459643wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:28 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/40] iwlwifi: mvm: update layout of firmware error dump
+Date: Sun,  6 Jul 2014 12:35:41 +0300
+Message-Id: <1404639376-3792-5-git-send-email-egrumbach@gmail.com> (sfid-20140706_113634_498037_BB9E9CC6)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Synchronize set_coverage_class routine signature with mac80211 function
-pointer. Function pointer prototype has been changed to activate ath9k ACK
-timeout estimation algorithm (dynack).
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+The memory was not zeroed - fix that. Also update the
+iwl_fw_error_dump_info structure.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e6ac8d2..97c028e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1959,7 +1959,8 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 9661a52..5e425d3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -686,7 +686,7 @@ static void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (trans_len)
+ 		file_len += trans_len;
  
--static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
-+static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
-+				     s16 coverage_class)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
+-	dump_file = vmalloc(file_len);
++	dump_file = vzalloc(file_len);
+ 	if (!dump_file)
+ 		return;
+ 
 -- 
-1.9.1
+1.8.3.2
 
