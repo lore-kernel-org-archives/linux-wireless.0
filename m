@@ -1,307 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:46145 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbaGPKU4 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:57271 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbaGFJgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 06:20:56 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so665711wgh.26
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 03:20:55 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Sun, 6 Jul 2014 05:36:40 -0400
+Received: by mail-we0-f172.google.com with SMTP id u57so3175109wes.31
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:39 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] mac80211: add support for Rx reordering offloading
-Date: Wed, 16 Jul 2014 12:12:15 +0200
-Message-Id: <1405505535-13126-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_122100_273286_737CB239)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/40] iwlwifi: mvm: BT Coex - convert the sw boost update to new API
+Date: Sun,  6 Jul 2014 12:35:48 +0300
+Message-Id: <1404639376-3792-12-git-send-email-egrumbach@gmail.com> (sfid-20140706_115952_211723_54B4B115)
+In-Reply-To: <53B917DC.5050902@gmail.com>
+References: <53B917DC.5050902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers may be performing most of Tx/Rx
-aggregation on their own (e.g. in firmware)
-including AddBa/DelBa negotiations but may
-otherwise require Rx reordering assistance.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The patch exports 2 new functions for establishing
-Rx aggregation sessions in assumption device
-driver has taken care of the necessary
-negotiations.
+No need to send the big BT_COEX_CMD command, we have now
+a much thiner command that updates only what is needed.
+Adapt the code to that, and open the patch to the updates.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-This was originally part of an RFC patchset for
-mac80211 and ath10k. I've split it up now and am
-posting patches separately.
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 58 +++++++++------------------------
+ 1 file changed, 16 insertions(+), 42 deletions(-)
 
-This loosely bases on `mac80211: fix Rx reordering
-with RX_FLAG_AMSDU_MORE` (some trivial conflicts
-may be involved).
-
-Notes:
-    v2:
-     * remove timeout, dialog_token, buf_size, start_seq_num arguments [Johannes]
-     * setup start_seq_num using last_seq_ctrl
-
- include/net/mac80211.h     |  34 +++++++++++++++
- net/mac80211/agg-rx.c      | 101 ++++++++++++++++++++++++++++++++++-----------
- net/mac80211/ieee80211_i.h |  11 +++++
- net/mac80211/iface.c       |  26 ++++++++++++
- 4 files changed, 149 insertions(+), 23 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9ce5cb1..dae2e24 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4552,6 +4552,40 @@ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
-  */
- void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
- 
-+/**
-+ * ieee80211_start_rx_ba_session_offl - start a Rx BA session
-+ *
-+ * Some device drivers may offload part of the Rx aggregation flow including
-+ * AddBa/DelBa negotiation but may otherwise be incapable of full Rx
-+ * reordering.
-+ *
-+ * Create structures responsible for reordering so device drivers may call here
-+ * when they complete AddBa negotiation.
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback
-+ * @addr: station mac address
-+ * @tid: the rx tid
-+ */
-+void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
-+					const u8 *addr, u16 tid);
-+
-+/**
-+ * ieee80211_stop_rx_ba_session_offl - stop a Rx BA session
-+ *
-+ * Some device drivers may offload part of the Rx aggregation flow including
-+ * AddBa/DelBa negotiation but may otherwise be incapable of full Rx
-+ * reordering.
-+ *
-+ * Destroy structures responsible for reordering so device drivers may call here
-+ * when they complete DelBa negotiation.
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback
-+ * @addr: station mac address
-+ * @tid: the rx tid
-+ */
-+void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
-+				       const u8 *addr, u16 tid);
-+
- /* Rate control API */
- 
- /**
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index d38c49b..f0e84bc 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -224,28 +224,15 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	ieee80211_tx_skb(sdata, skb);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index 23f639a..3854330 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -609,19 +609,12 @@ send_cmd:
+ 	return ret;
  }
  
--void ieee80211_process_addba_request(struct ieee80211_local *local,
--				     struct sta_info *sta,
--				     struct ieee80211_mgmt *mgmt,
--				     size_t len)
-+void __ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				     u8 dialog_token, u16 timeout,
-+				     u16 start_seq_num, u16 ba_policy, u16 tid,
-+				     u16 buf_size, bool tx)
+-static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm,
+-					   bool reduced_tx_power)
++static int iwl_mvm_bt_udpate_sw_boost(struct iwl_mvm *mvm,
++				      bool reduced_tx_power)
  {
-+	struct ieee80211_local *local = sta->sdata->local;
- 	struct tid_ampdu_rx *tid_agg_rx;
--	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num, status;
--	u8 dialog_token;
- 	int i, ret = -EOPNOTSUPP;
--
--	/* extract session parameters from addba request frame */
--	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
--	timeout = le16_to_cpu(mgmt->u.action.u.addba_req.timeout);
--	start_seq_num =
--		le16_to_cpu(mgmt->u.action.u.addba_req.start_seq_num) >> 4;
--
--	capab = le16_to_cpu(mgmt->u.action.u.addba_req.capab);
--	ba_policy = (capab & IEEE80211_ADDBA_PARAM_POLICY_MASK) >> 1;
--	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
--	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
--
--	status = WLAN_STATUS_REQUEST_DECLINED;
-+	u16 status = WLAN_STATUS_REQUEST_DECLINED;
+ 	enum iwl_bt_kill_msk bt_kill_msk;
+-	struct iwl_bt_coex_cmd_old *bt_cmd;
++	struct iwl_bt_coex_sw_boost_update_cmd cmd = {};
+ 	struct iwl_bt_coex_profile_notif *notif = &mvm->last_bt_notif;
+-	struct iwl_host_cmd cmd = {
+-		.id = BT_CONFIG,
+-		.data[0] = &bt_cmd,
+-		.len = { sizeof(*bt_cmd), },
+-		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
+-	};
+-	int ret = 0;
  
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
- 		ht_dbg(sta->sdata,
-@@ -264,7 +251,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 		status = WLAN_STATUS_INVALID_QOS_PARAM;
- 		ht_dbg_ratelimited(sta->sdata,
- 				   "AddBA Req with bad params from %pM on tid %u. policy %d, buffer size %d\n",
--				   mgmt->sa, tid, ba_policy, buf_size);
-+				   sta->sta.addr, tid, ba_policy, buf_size);
- 		goto end_no_lock;
- 	}
- 	/* determine default buffer size */
-@@ -281,7 +268,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 	if (sta->ampdu_mlme.tid_rx[tid]) {
- 		ht_dbg_ratelimited(sta->sdata,
- 				   "unexpected AddBA Req from %pM on tid %u\n",
--				   mgmt->sa, tid);
-+				   sta->sta.addr, tid);
+ 	lockdep_assert_held(&mvm->mutex);
  
- 		/* delete existing Rx BA session on the same tid */
- 		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
-@@ -353,6 +340,74 @@ end:
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
+@@ -651,26 +644,22 @@ static int iwl_mvm_bt_udpate_ctrl_kill_msk(struct iwl_mvm *mvm,
  
- end_no_lock:
--	ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
--				  dialog_token, status, 1, buf_size, timeout);
-+	if (tx)
-+		ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
-+					  dialog_token, status, 1, buf_size,
-+					  timeout);
-+}
-+
-+void ieee80211_process_addba_request(struct ieee80211_local *local,
-+				     struct sta_info *sta,
-+				     struct ieee80211_mgmt *mgmt,
-+				     size_t len)
-+{
-+	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num;
-+	u8 dialog_token;
-+
-+	/* extract session parameters from addba request frame */
-+	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
-+	timeout = le16_to_cpu(mgmt->u.action.u.addba_req.timeout);
-+	start_seq_num =
-+		le16_to_cpu(mgmt->u.action.u.addba_req.start_seq_num) >> 4;
-+
-+	capab = le16_to_cpu(mgmt->u.action.u.addba_req.capab);
-+	ba_policy = (capab & IEEE80211_ADDBA_PARAM_POLICY_MASK) >> 1;
-+	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-+	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
-+
-+	__ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
-+					start_seq_num, ba_policy, tid,
-+					buf_size, true);
-+}
-+
-+void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
-+					const u8 *addr, u16 tid)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_rx_agg *rx_agg;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb))
-+		return;
-+
-+	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
-+	memcpy(&rx_agg->addr, addr, ETH_ALEN);
-+	rx_agg->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_SDATA_QUEUE_RX_AGG_START;
-+	skb_queue_tail(&sdata->skb_queue, skb);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
-+}
-+EXPORT_SYMBOL(ieee80211_start_rx_ba_session_offl);
-+
-+void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
-+				       const u8 *addr, u16 tid)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_rx_agg *rx_agg;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb))
-+		return;
-+
-+	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
-+	memcpy(&rx_agg->addr, addr, ETH_ALEN);
-+	rx_agg->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_SDATA_QUEUE_RX_AGG_STOP;
-+	skb_queue_tail(&sdata->skb_queue, skb);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
-+EXPORT_SYMBOL(ieee80211_stop_rx_ba_session_offl);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ad5d8e4..34bffb0b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -926,10 +926,17 @@ ieee80211_vif_get_shift(struct ieee80211_vif *vif)
- 	return shift;
+ 	mvm->bt_kill_msk = bt_kill_msk;
+ 
+-	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_KERNEL);
+-	if (!bt_cmd)
+-		return -ENOMEM;
+-	cmd.data[0] = bt_cmd;
+-	bt_cmd->flags = cpu_to_le32(BT_COEX_NW_OLD);
++	cmd.boost_values[0].kill_ack_msk =
++		cpu_to_le32(iwl_bt_ack_kill_msk[bt_kill_msk]);
++	cmd.boost_values[0].kill_cts_msk =
++		cpu_to_le32(iwl_bt_cts_kill_msk[bt_kill_msk]);
+ 
+-	bt_cmd->kill_ack_msk = cpu_to_le32(iwl_bt_ack_kill_msk[bt_kill_msk]);
+-	bt_cmd->kill_cts_msk = cpu_to_le32(iwl_bt_cts_kill_msk[bt_kill_msk]);
+-	bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_ENABLE |
+-					     BT_VALID_KILL_ACK |
+-					     BT_VALID_KILL_CTS);
++	cmd.boost_values[1].kill_ack_msk = cmd.boost_values[0].kill_ack_msk;
++	cmd.boost_values[2].kill_cts_msk = cmd.boost_values[0].kill_cts_msk;
++	cmd.boost_values[1].kill_ack_msk = cmd.boost_values[0].kill_ack_msk;
++	cmd.boost_values[2].kill_cts_msk = cmd.boost_values[0].kill_cts_msk;
+ 
+ 	IWL_DEBUG_COEX(mvm, "ACK Kill msk = 0x%08x, CTS Kill msk = 0x%08x\n",
+ 		       iwl_bt_ack_kill_msk[bt_kill_msk],
+ 		       iwl_bt_cts_kill_msk[bt_kill_msk]);
+ 
+-	ret = iwl_mvm_send_cmd(mvm, &cmd);
+-
+-	kfree(bt_cmd);
+-	return ret;
++	return iwl_mvm_send_cmd_pdu(mvm, BT_COEX_UPDATE_SW_BOOST, 0,
++				    sizeof(cmd), &cmd);
  }
  
-+struct ieee80211_rx_agg {
-+	u8 addr[ETH_ALEN];
-+	u16 tid;
-+};
-+
- enum sdata_queue_type {
- 	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
- 	IEEE80211_SDATA_QUEUE_AGG_START		= 1,
- 	IEEE80211_SDATA_QUEUE_AGG_STOP		= 2,
-+	IEEE80211_SDATA_QUEUE_RX_AGG_START	= 3,
-+	IEEE80211_SDATA_QUEUE_RX_AGG_STOP	= 4,
- };
+ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
+@@ -986,7 +975,7 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
+ 	 */
+ 	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
  
- enum {
-@@ -1578,6 +1585,10 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				     u16 initiator, u16 reason, bool stop);
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				    u16 initiator, u16 reason, bool stop);
-+void __ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				     u8 dialog_token, u16 timeout,
-+				     u16 start_seq_num, u16 ba_policy, u16 tid,
-+				     u16 buf_size, bool tx);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 					 enum ieee80211_agg_stop_reason reason);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index bbf51b2..6a7967c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1140,6 +1140,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 	struct sk_buff *skb;
- 	struct sta_info *sta;
- 	struct ieee80211_ra_tid *ra_tid;
-+	struct ieee80211_rx_agg *rx_agg;
+-	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm, data.reduced_tx_power))
++	if (iwl_mvm_bt_udpate_sw_boost(mvm, data.reduced_tx_power))
+ 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
+ }
  
- 	if (!ieee80211_sdata_running(sdata))
+@@ -995,14 +984,11 @@ int iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
+ 			     struct iwl_device_cmd *dev_cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_bt_coex_profile_notif_old *notif = (void *)pkt->data;
++	struct iwl_bt_coex_profile_notif *notif = (void *)pkt->data;
+ 
+ 	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
+ 		return iwl_mvm_rx_bt_coex_notif_old(mvm, rxb, dev_cmd);
+ 
+-	/* TODO */
+-	return 0;
+-
+ 	IWL_DEBUG_COEX(mvm, "BT Coex Notification received\n");
+ 	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n", notif->bt_ci_compliance);
+ 	IWL_DEBUG_COEX(mvm, "\tBT primary_ch_lut %d\n",
+@@ -1085,9 +1071,6 @@ void iwl_mvm_bt_rssi_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  		return;
-@@ -1167,6 +1168,31 @@ static void ieee80211_iface_work(struct work_struct *work)
- 			ra_tid = (void *)&skb->cb;
- 			ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra,
- 						ra_tid->tid);
-+		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-+			rx_agg = (void *)&skb->cb;
-+			mutex_lock(&local->sta_mtx);
-+			sta = sta_info_get_bss(sdata, rx_agg->addr);
-+			if (sta) {
-+				u16 last_seq = sta->last_seq_ctrl[rx_agg->tid];
-+
-+				__ieee80211_start_rx_ba_session(sta,
-+						0, 0,
-+						ieee80211_sn_inc(last_seq),
-+						1, rx_agg->tid,
-+						IEEE80211_MAX_AMPDU_BUF,
-+						false);
-+			}
-+			mutex_unlock(&local->sta_mtx);
-+		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-+			rx_agg = (void *)&skb->cb;
-+			mutex_lock(&local->sta_mtx);
-+			sta = sta_info_get_bss(sdata, rx_agg->addr);
-+			if (sta)
-+				__ieee80211_stop_rx_ba_session(sta,
-+							rx_agg->tid,
-+							WLAN_BACK_RECIPIENT, 0,
-+							false);
-+			mutex_unlock(&local->sta_mtx);
- 		} else if (ieee80211_is_action(mgmt->frame_control) &&
- 			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
+ 	}
+ 
+-	/* TODO */
+-	return;
+-
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	/* Ignore updates if we are in force mode */
+@@ -1133,7 +1116,7 @@ void iwl_mvm_bt_rssi_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	 */
+ 	data.reduced_tx_power = data.reduced_tx_power && data.num_bss_ifaces;
+ 
+-	if (iwl_mvm_bt_udpate_ctrl_kill_msk(mvm, data.reduced_tx_power))
++	if (iwl_mvm_bt_udpate_sw_boost(mvm, data.reduced_tx_power))
+ 		IWL_ERR(mvm, "Failed to update the ctrl_kill_msk\n");
+ }
+ 
+@@ -1149,9 +1132,6 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
+ 	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
+ 		return iwl_mvm_coex_agg_time_limit_old(mvm, sta);
+ 
+-	/* TODO */
+-	return LINK_QUAL_AGG_TIME_LIMIT_DEF;
+-
+ 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
+ 	    BT_HIGH_TRAFFIC)
+ 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
+@@ -1213,9 +1193,6 @@ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
+ 	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
+ 		return iwl_mvm_bt_coex_is_tpc_allowed_old(mvm, band);
+ 
+-	/* TODO */
+-	return false;
+-
+ 	if (band != IEEE80211_BAND_2GHZ)
+ 		return false;
+ 
+@@ -1261,9 +1238,6 @@ void iwl_mvm_bt_coex_vif_change(struct iwl_mvm *mvm)
+ 		return;
+ 	}
+ 
+-	/* TODO */
+-	return;
+-
+ 	iwl_mvm_bt_coex_notif_handle(mvm);
+ }
+ 
 -- 
-1.8.5.3
+1.8.3.2
 
