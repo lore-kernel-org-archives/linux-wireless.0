@@ -1,154 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:39070 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbaGMBf2 (ORCPT
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:59409 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbaGGNkT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 21:35:28 -0400
-Received: by mail-vc0-f182.google.com with SMTP id hq11so4968800vcb.27
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 18:35:27 -0700 (PDT)
-From: Raphael Silva <rapphil@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	Raphael Silva <rapphil@gmail.com>
-Subject: [PATCH] rtl8723au: Corrections in the coding style
-Date: Sat, 12 Jul 2014 22:35:02 -0300
-Message-Id: <1405215302-9982-1-git-send-email-rapphil@gmail.com> (sfid-20140713_033537_341247_3F6F6797)
+	Mon, 7 Jul 2014 09:40:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <53B6DC5F.3090304@rempel-privat.de>
+References: <Pine.LNX.4.44L0.1407041225290.6607-100000@netrider.rowland.org>
+	<53B6DC5F.3090304@rempel-privat.de>
+Date: Mon, 7 Jul 2014 15:40:18 +0200
+Message-ID: <CAE4k238pWc4nB1S1S7OJBVh-_bUnO+D6uQJ98wMTk-E7FZ4+yw@mail.gmail.com> (sfid-20140707_154025_833367_5C18FBEA)
+Subject: Re: ath9k -> bogus usb xfer on at91
+From: Anders Darander <anders.darander@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some corrections were made to the code in order to conform to the
-Kernel Coding Style.
----
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 42 ++++++++++++++++++----------
- 1 file changed, 27 insertions(+), 15 deletions(-)
+On 4 July 2014 18:54, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 04.07.2014 18:30, schrieb Alan Stern:
+>> On Fri, 4 Jul 2014, Anders Darander wrote:
+>>> ~# usb 1-1: new full-speed USB device number 3 using at91_ohci
+>>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested
+>>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+>>> -----------[ cut here ]-----------
+>>> WARNING: CPU: 0 PID: 93 at
+>>> /mnt/cs-builds/anders/oe-build/build-ccu/tmp-eglibc/work/ccu-oe-linux-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/usb/core/urb.c:450
+>>> usb_submit_urb+0x2ac/0x460()
+>>> usb 1-1: BOGUS urb xfer, pipe 1 != type 3
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-index 8db844b..0290a9e 100644
---- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-@@ -26,7 +26,7 @@ static const u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 
- static void _rtw_init_stainfo(struct sta_info *psta)
- {
--	memset((u8 *)psta, 0, sizeof (struct sta_info));
-+	memset((u8 *)psta, 0, sizeof(struct sta_info));
- 	spin_lock_init(&psta->lock);
- 	INIT_LIST_HEAD(&psta->list);
- 	INIT_LIST_HEAD(&psta->hash_list);
-@@ -71,8 +71,10 @@ int _rtw_init_sta_priv23a(struct sta_priv *pstapriv)
- 	pstapriv->auth_list_cnt = 0;
- 	pstapriv->auth_to = 3; /*  3*2 = 6 sec */
- 	pstapriv->assoc_to = 3;
--	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min, expire after no any traffic. */
--	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min, expire after no any traffic. */
-+	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min,
-+	    expire after no any traffic. */
-+	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min,
-+	    expire after no any traffic. */
- 	pstapriv->expire_to = 3; /*  3*2 = 6 sec */
- 	pstapriv->max_num_sta = NUM_STA;
- #endif
-@@ -94,6 +96,7 @@ int _rtw_free_sta_priv23a(struct sta_priv *pstapriv)
- 
- 			list_for_each_safe(plist, ptmp, phead) {
- 				int i;
-+
- 				psta = container_of(plist, struct sta_info,
- 						    hash_list);
- 				for (i = 0; i < 16 ; i++) {
-@@ -144,14 +147,17 @@ rtw_alloc_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr, gfp_t gfp)
- 
- 	list_add_tail(&psta->hash_list, phash_list);
- 
--	pstapriv->asoc_sta_count ++ ;
-+	pstapriv->asoc_sta_count++;
- 
--/*  For the SMC router, the sequence number of first packet of WPS handshake will be 0. */
--/*  In this case, this packet will be dropped by recv_decache function if we use the 0x00 as the default value for tid_rxseq variable. */
-+/*  For the SMC router, the sequence number of first packet of WPS
-+     handshake will be 0. */
-+/*  In this case, this packet will be dropped by recv_decache function
-+    if we use the 0x00 as the default value for tid_rxseq variable. */
- /*  So, we initialize the tid_rxseq variable as the 0xffff. */
- 
- 	for (i = 0; i < 16; i++)
--		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i], &wRxSeqInitialValue, 2);
-+		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i],
-+			&wRxSeqInitialValue, 2);
- 
- 	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_info_,
- 		 ("alloc number_%d stainfo  with hwaddr = %pM\n",
-@@ -242,8 +248,12 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 	spin_unlock_bh(&pxmitpriv->lock);
- 
- 	list_del_init(&psta->hash_list);
--	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_, ("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", pstapriv->asoc_sta_count, psta->hwaddr[0], psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3], psta->hwaddr[4], psta->hwaddr[5]));
--	pstapriv->asoc_sta_count --;
-+	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_,
-+		("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x\n",
-+			pstapriv->asoc_sta_count, psta->hwaddr[0],
-+			psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3],
-+			psta->hwaddr[4], psta->hwaddr[5]));
-+	pstapriv->asoc_sta_count-;
- 
- 	/*  re-init sta_info; 20061114  will be init in alloc_stainfo */
- 	/* _rtw_init_sta_xmit_priv23a(&psta->sta_xmitpriv); */
-@@ -251,7 +261,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 
- 	del_timer_sync(&psta->addba_retry_timer);
- 
--	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
-+	/* for A-MPDU Rx reordering buffer control,
-+	   cancel reordering_ctrl_timer */
- 	for (i = 0; i < 16; i++) {
- 		struct list_head	*phead, *plist;
- 		struct recv_frame *prframe;
-@@ -261,7 +272,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 
- 		del_timer_sync(&preorder_ctrl->reordering_ctrl_timer);
- 
--		ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
-+		ppending_recvframe_queue =
-+			&preorder_ctrl->pending_recvframe_queue;
- 
- 		spin_lock_bh(&ppending_recvframe_queue->lock);
- 		phead =		get_list_head(ppending_recvframe_queue);
-@@ -301,7 +313,7 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 	pstapriv->sta_dz_bitmap &= ~CHKBIT(psta->aid);
- 	pstapriv->tim_bitmap &= ~CHKBIT(psta->aid);
- 
--	if ((psta->aid >0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
-+	if ((psta->aid > 0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
- 		pstapriv->sta_aid[psta->aid - 1] = NULL;
- 		psta->aid = 0;
- 	}
-@@ -318,7 +330,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
- 	struct list_head *plist, *phead, *ptmp;
- 	struct sta_info *psta;
- 	struct sta_priv *pstapriv = &padapter->stapriv;
--	struct sta_info* pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
-+	struct sta_info *pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
- 	s32 index;
- 
- 	if (pstapriv->asoc_sta_count == 1)
-@@ -332,7 +344,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
- 		list_for_each_safe(plist, ptmp, phead) {
- 			psta = container_of(plist, struct sta_info, hash_list);
- 
--			if (pbcmc_stainfo!= psta)
-+			if (pbcmc_stainfo != psta)
- 				rtw_free_stainfo23a(padapter, psta);
- 		}
- 	}
-@@ -374,7 +386,7 @@ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
- 	return psta;
- }
- 
--int rtw_init_bcmc_stainfo23a(struct rtw_adapter* padapter)
-+int rtw_init_bcmc_stainfo23a(struct rtw_adapter *padapter)
- {
- 	struct	sta_priv *pstapriv = &padapter->stapriv;
- 	struct sta_info		*psta;
+>>
+>> I can't tell exactly where the fault is, but this message means that an
+>> URB was submitted for a bulk endpoint with a pipe of type
+>> PIPE_INTERRUPT.
+>
+> Then kernel driver and firmware should be updated. There was some
+> Bulk/Interrupt issues which was fixed last year.
+
+Any pointers to the bulk/interrupt issues? Was it a general issue, or
+related either to
+at91-ohci or ar9271?
+
+As far as I've been able to find out, I've got the latest firmware
+(check again with linux-firmware).
+I've also tried with the master from open-ath9k-htc-firmware.
+
+> I hope this HW will not be used as AP.
+
+Is this based on the use of at91- SoC, or based on the ar9271?
+
+The primary use case is to run as a client, though there will likely
+be some instances where it'll
+function as a AP. (Though primarily for M2M communications), thus
+pretty low traffic.
+
+Cheers,
+Anders
+
 -- 
-1.9.1
-
+Anders Darander
+EPO guidelines 1978: "If the contribution to the known art resides
+solely in a computer program then the subject matter is not
+patentable in whatever manner it may be presented in the claims."
