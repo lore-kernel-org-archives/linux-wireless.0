@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42378 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754812AbaGAUaO (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:49516 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbaGGJiC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 16:30:14 -0400
-Date: Tue, 1 Jul 2014 16:18:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Felix Fietkau <nbd@openwrt.org>, John Walker <john@x109.net>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	netfilter-devel@vger.kernel.org,
-	Richard Fontana <fontana@sharpeleven.org>
-Subject: Re: Parser stable fix question for CFG80211_INTERNAL_REGDB
-Message-ID: <20140701201850.GE6358@tuxdriver.com> (sfid-20140701_223024_742772_C3C0599F)
-References: <CAB=NE6WfTXiScyXHReEWcpQ9EKpu1YCVQypa-B5BBO6aYXh3fA@mail.gmail.com>
- <CAB=NE6VTN==Ewvf4HhTcadWLzjZnYkF1xSM1Yej6QfotWHKY0A@mail.gmail.com>
- <20140701144149.GB6358@tuxdriver.com>
- <20140701171713.GO27687@wotan.suse.de>
- <CAB=NE6W4yg2_290aKacM0ar63yoVt_G8h59iWGxfCanV+AM=vA@mail.gmail.com>
+	Mon, 7 Jul 2014 05:38:02 -0400
+Received: by mail-ob0-f170.google.com with SMTP id uz6so4367573obc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:38:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6W4yg2_290aKacM0ar63yoVt_G8h59iWGxfCanV+AM=vA@mail.gmail.com>
+In-Reply-To: <53B93EBC.7010107@broadcom.com>
+References: <1404645103-26100-1-git-send-email-zajec5@gmail.com>
+	<53B93EBC.7010107@broadcom.com>
+Date: Mon, 7 Jul 2014 11:38:01 +0200
+Message-ID: <CACna6rwt3vr0cHxRR8XkSg+C9NDN5Oxi8Syus8fGBpGLJVVYPw@mail.gmail.com> (sfid-20140707_113807_249849_5837EF70)
+Subject: Re: [PATCH] bcma: support for PCIe Gen 2 as host platform
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 01, 2014 at 11:54:43AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jul 1, 2014 at 10:17 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> >> How is this any different from any other kernel support issue?
-> >
-> > This is a build issue that does not cause any errors, users go through with the install
-> > just fine and only at run time do they discover the issue. We never documented
-> > the expecations nor do I think we expected this before. This is also caused by an
-> > input file from userspace, I do consider the issue unexpected.
-> 
-> This is a bit more broken given that DFS CAC patches are upstream but
-> we haven't yet even provided the removal of antenna gain on the awk
-> script but for some reason it did add the DFS CAC parsing to the awk
-> script, so upstream has the awk DFS CAC parser options, we don't yet
-> even use it, and the antenna gain wasn't removed. I'll work on that
-> patch but parsing things in awk is getting a bit hairy for the
-> conditionals. We can use the C parser now that we have on but the DFS
-> CAC stuf was not yet ironed out for CRDA and wireless-regdb...
+On 6 July 2014 14:19, Arend van Spriel <arend@broadcom.com> wrote:
+> On 06-07-14 13:11, Rafał Miłecki wrote:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> I got reply from Bjorn, that we should *not* depend on PCI_EXP_LNKCAP:
+>> http://marc.info/?l=linux-pci&m=140457671930896&w=2
+>>
+>> So the change since RFC is adding a list of PCIe 1.0 and 2.0 devices.
+>> Use PCI_EXP_LNKCAP only as a fallback, in case someone tries sth like:
+>> echo "14e4 4360" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+>
+> Do you have to know this before or after enumerating the cores? They
+> have a different core id, right?
 
-I wrote that awk script years ago so that we could get rid of the
-old hard-coded rulesets and so I could have something working in RHEL5.
+Sure, having a list of cores would allow me to determine PCIe revision.
 
-I never merged the DFS CAC stuff in wireless-regdb, because of the
-unresolved issue of supporting multiple formats.  It looks to me like
-the dfs_cac stuff in genregdb.awk is broken, since it doesn't seem
-to account for flags.
+Unfortunately right now we have only this single bcma_bus_register
+call that does both: scanning and initialization. I'd need to first
+scan cores, then determine PCIe revision and finally initialize cores.
 
-I sent a patch that should account for the antenna gain issue.
-Please give it a review.
-
-Obviously, we need to talk more about this in Chicago if not before...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I wonder if I could try to use bcma_bus_scan_early that was developer
+for SoC needs...
