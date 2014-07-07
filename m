@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:52004 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbaGPVXV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:23:21 -0400
-Received: by mail-wg0-f52.google.com with SMTP id a1so1504415wgh.11
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:20 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/21] staging: vt6656: rename BBvUpdatePreEDThreshold to vnt_update_pre_ed_threshold
-Date: Wed, 16 Jul 2014 22:21:58 +0100
-Message-Id: <1405545731-6082-8-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232327_168108_3B63E46E)
-In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
-References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:52390 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753639AbaGGPWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:22:10 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 01/10] lib / string_helpers: move documentation to c-file
+Date: Mon,  7 Jul 2014 18:21:43 +0300
+Message-Id: <1404746512-12749-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172311_249992_A4AA5AA9)
+In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dropping BB
+The documentation of API belongs to c-file. This patch moves it accordingly.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+There is no functional change.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/staging/vt6656/baseband.c | 2 +-
- drivers/staging/vt6656/baseband.h | 2 +-
- drivers/staging/vt6656/main_usb.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ include/linux/string_helpers.h | 34 ----------------------------------
+ lib/string_helpers.c           | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 39e2629..91c24a3 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -581,7 +581,7 @@ void vnt_exit_deep_sleep(struct vnt_private *priv)
- 	vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x0d, 0x01);/* CR13 */
+diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
+index 3eeee96..5a30f2a 100644
+--- a/include/linux/string_helpers.h
++++ b/include/linux/string_helpers.h
+@@ -20,40 +20,6 @@ int string_get_size(u64 size, enum string_size_units units,
+ #define UNESCAPE_ANY		\
+ 	(UNESCAPE_SPACE | UNESCAPE_OCTAL | UNESCAPE_HEX | UNESCAPE_SPECIAL)
+ 
+-/**
+- * string_unescape - unquote characters in the given string
+- * @src:	source buffer (escaped)
+- * @dst:	destination buffer (unescaped)
+- * @size:	size of the destination buffer (0 to unlimit)
+- * @flags:	combination of the flags (bitwise OR):
+- *	%UNESCAPE_SPACE:
+- *		'\f' - form feed
+- *		'\n' - new line
+- *		'\r' - carriage return
+- *		'\t' - horizontal tab
+- *		'\v' - vertical tab
+- *	%UNESCAPE_OCTAL:
+- *		'\NNN' - byte with octal value NNN (1 to 3 digits)
+- *	%UNESCAPE_HEX:
+- *		'\xHH' - byte with hexadecimal value HH (1 to 2 digits)
+- *	%UNESCAPE_SPECIAL:
+- *		'\"' - double quote
+- *		'\\' - backslash
+- *		'\a' - alert (BEL)
+- *		'\e' - escape
+- *	%UNESCAPE_ANY:
+- *		all previous together
+- *
+- * Returns amount of characters processed to the destination buffer excluding
+- * trailing '\0'.
+- *
+- * Because the size of the output will be the same as or less than the size of
+- * the input, the transformation may be performed in place.
+- *
+- * Caller must provide valid source and destination pointers. Be aware that
+- * destination buffer will always be NULL-terminated. Source string must be
+- * NULL-terminated as well.
+- */
+ int string_unescape(char *src, char *dst, size_t size, unsigned int flags);
+ 
+ static inline int string_unescape_inplace(char *buf, unsigned int flags)
+diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+index 29033f3..74ec604 100644
+--- a/lib/string_helpers.c
++++ b/lib/string_helpers.c
+@@ -168,6 +168,44 @@ static bool unescape_special(char **src, char **dst)
+ 	return true;
  }
  
--void BBvUpdatePreEDThreshold(struct vnt_private *priv, int scanning)
-+void vnt_update_pre_ed_threshold(struct vnt_private *priv, int scanning)
++/**
++ * string_unescape - unquote characters in the given string
++ * @src:	source buffer (escaped)
++ * @dst:	destination buffer (unescaped)
++ * @size:	size of the destination buffer (0 to unlimit)
++ * @flags:	combination of the flags (bitwise OR):
++ *	%UNESCAPE_SPACE:
++ *		'\f' - form feed
++ *		'\n' - new line
++ *		'\r' - carriage return
++ *		'\t' - horizontal tab
++ *		'\v' - vertical tab
++ *	%UNESCAPE_OCTAL:
++ *		'\NNN' - byte with octal value NNN (1 to 3 digits)
++ *	%UNESCAPE_HEX:
++ *		'\xHH' - byte with hexadecimal value HH (1 to 2 digits)
++ *	%UNESCAPE_SPECIAL:
++ *		'\"' - double quote
++ *		'\\' - backslash
++ *		'\a' - alert (BEL)
++ *		'\e' - escape
++ *	%UNESCAPE_ANY:
++ *		all previous together
++ *
++ * Description:
++ * The function unquotes characters in the given string.
++ *
++ * Because the size of the output will be the same as or less than the size of
++ * the input, the transformation may be performed in place.
++ *
++ * Caller must provide valid source and destination pointers. Be aware that
++ * destination buffer will always be NULL-terminated. Source string must be
++ * NULL-terminated as well.
++ *
++ * Return:
++ * The amount of the characters processed to the destination buffer excluding
++ * trailing '\0' is returned.
++ */
+ int string_unescape(char *src, char *dst, size_t size, unsigned int flags)
  {
- 	u8 cr_201 = 0x0, cr_206 = 0x0;
- 	u8 ed_inx = priv->byBBPreEDIndex;
-diff --git a/drivers/staging/vt6656/baseband.h b/drivers/staging/vt6656/baseband.h
-index aee51a1..771ea40 100644
---- a/drivers/staging/vt6656/baseband.h
-+++ b/drivers/staging/vt6656/baseband.h
-@@ -99,6 +99,6 @@ void vnt_set_antenna_mode(struct vnt_private *, u8);
- int vnt_vt3184_init(struct vnt_private *);
- void vnt_set_deep_sleep(struct vnt_private *);
- void vnt_exit_deep_sleep(struct vnt_private *);
--void BBvUpdatePreEDThreshold(struct vnt_private *, int scanning);
-+void vnt_update_pre_ed_threshold(struct vnt_private *, int scanning);
- 
- #endif /* __BASEBAND_H__ */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 695c541..e822572 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -882,7 +882,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
- 
- 		vnt_set_short_slot_time(priv);
- 		vnt_set_vga_gain_offset(priv, priv->abyBBVGA[0]);
--		BBvUpdatePreEDThreshold(priv, false);
-+		vnt_update_pre_ed_threshold(priv, false);
- 	}
- 
- 	if (changed & BSS_CHANGED_TXPOWER)
-@@ -1003,7 +1003,7 @@ static void vnt_sw_scan_start(struct ieee80211_hw *hw)
- 
- 	vnt_set_bss_mode(priv);
- 	/* Set max sensitivity*/
--	BBvUpdatePreEDThreshold(priv, true);
-+	vnt_update_pre_ed_threshold(priv, true);
- }
- 
- static void vnt_sw_scan_complete(struct ieee80211_hw *hw)
-@@ -1011,7 +1011,7 @@ static void vnt_sw_scan_complete(struct ieee80211_hw *hw)
- 	struct vnt_private *priv = hw->priv;
- 
- 	/* Return sensitivity to channel level*/
--	BBvUpdatePreEDThreshold(priv, false);
-+	vnt_update_pre_ed_threshold(priv, false);
- }
- 
- static int vnt_get_stats(struct ieee80211_hw *hw,
+ 	char *out = dst;
 -- 
 2.0.1
 
