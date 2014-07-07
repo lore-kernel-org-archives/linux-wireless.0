@@ -1,179 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:42024 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756430AbaGVT1g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:36 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so1023429wiv.7
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:35 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliadx.peller@intel.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/20] iwlwifi: mvm: wait for handlers when stopping scans
-Date: Tue, 22 Jul 2014 22:26:43 +0300
-Message-Id: <1406057211-31752-12-git-send-email-egrumbach@gmail.com> (sfid-20140722_212741_369477_087C7538)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:52390 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753647AbaGGPWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:22:11 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 05/10] wireless: libertas: print esaped string via %*pE
+Date: Mon,  7 Jul 2014 18:21:47 +0300
+Message-Id: <1404746512-12749-6-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172340_405270_C1C62E5B)
+In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliadx.peller@intel.com>
+Instead of custom approach this allows to print escaped strings via recently
+added kernel extension: %*pE.
 
-The recent unified scan api change introduced issues
-when stopping ongoing scans, since both regular and
-sched scan now use same stopped notification.
-
-When issuing a new scan right after a running one,
-we get the "old" notification and handle it wrongly
-as notification for the current scan.
-
-Fix it by introducing a new function that make sure
-we consume the pending notifications before issuing
-a new scan.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: ArikX Nemtsov <arik@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 86 +++++++++++++++++------------
- 1 file changed, 51 insertions(+), 35 deletions(-)
+ drivers/net/wireless/libertas/cfg.c  | 8 ++------
+ drivers/net/wireless/libertas/mesh.c | 7 +++----
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 5219b3a..46ff7cd 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1718,6 +1718,47 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
- 	iwl_mvm_unref(mvm, IWL_MVM_REF_BSS_CHANGED);
- }
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 47a998d..1188814 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -590,7 +590,6 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 		int chan_no = -1;
+ 		const u8 *ssid = NULL;
+ 		u8 ssid_len = 0;
+-		DECLARE_SSID_BUF(ssid_buf);
  
-+static int iwl_mvm_cancel_scan_wait_notif(struct iwl_mvm *mvm,
-+					  enum iwl_scan_status scan_type)
-+{
-+	int ret;
-+	bool wait_for_handlers = false;
-+
-+	mutex_lock(&mvm->mutex);
-+
-+	if (mvm->scan_status != scan_type) {
-+		ret = 0;
-+		/* make sure there are no pending notifications */
-+		wait_for_handlers = true;
-+		goto out;
-+	}
-+
-+	switch (scan_type) {
-+	case IWL_MVM_SCAN_SCHED:
-+		ret = iwl_mvm_scan_offload_stop(mvm, true);
-+		break;
-+	case IWL_MVM_SCAN_OS:
-+		ret = iwl_mvm_cancel_scan(mvm);
-+		break;
-+	case IWL_MVM_SCAN_NONE:
-+	default:
-+		WARN_ON_ONCE(1);
-+		ret = -EINVAL;
-+		break;
-+	}
-+	if (ret)
-+		goto out;
-+
-+	wait_for_handlers = true;
-+out:
-+	mutex_unlock(&mvm->mutex);
-+
-+	/* make sure we consume the completion notification */
-+	if (wait_for_handlers)
-+		iwl_mvm_wait_for_async_handlers(mvm);
-+
-+	return ret;
-+}
- static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_scan_request *hw_req)
-@@ -1730,19 +1771,13 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 	    req->n_channels > mvm->fw->ucode_capa.n_scan_channels)
- 		return -EINVAL;
+ 		int len = get_unaligned_le16(pos);
+ 		pos += 2;
+@@ -644,10 +643,8 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 			struct ieee80211_channel *channel =
+ 				ieee80211_get_channel(wiphy, freq);
  
-+	ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_SCHED);
-+	if (ret)
-+		return ret;
-+
- 	mutex_lock(&mvm->mutex);
+-			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %s, "
+-				     "%d dBm\n",
+-				     bssid, capa, chan_no,
+-				     print_ssid(ssid_buf, ssid, ssid_len),
++			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %*pE, %d dBm\n",
++				     bssid, capa, chan_no, ssid_len, ssid,
+ 				     LBS_SCAN_RSSI_TO_MBM(rssi)/100);
  
--	switch (mvm->scan_status) {
--	case IWL_MVM_SCAN_SCHED:
--		ret = iwl_mvm_scan_offload_stop(mvm, true);
--		if (ret) {
--			ret = -EBUSY;
--			goto out;
--		}
--		break;
--	case IWL_MVM_SCAN_NONE:
--		break;
--	default:
-+	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
- 		ret = -EBUSY;
- 		goto out;
+ 			if (channel &&
+@@ -1982,7 +1979,6 @@ static int lbs_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+ 	int ret = 0;
+ 	struct cfg80211_bss *bss;
+-	DECLARE_SSID_BUF(ssid_buf);
+ 
+ 	if (dev == priv->mesh_dev)
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index 6fef746..b211ff8 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -93,7 +93,6 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
+ {
+ 	struct cmd_ds_mesh_config cmd;
+ 	struct mrvl_meshie *ie;
+-	DECLARE_SSID_BUF(ssid);
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	cmd.channel = cpu_to_le16(chan);
+@@ -122,9 +121,9 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
+ 	default:
+ 		return -1;
  	}
-@@ -1758,8 +1793,6 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- out:
- 	mutex_unlock(&mvm->mutex);
--	/* make sure to flush the Rx handler before the next scan arrives */
--	iwl_mvm_wait_for_async_handlers(mvm);
- 	return ret;
+-	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
+-		    action, priv->mesh_tlv, chan,
+-		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
++	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %*pE\n",
++		    action, priv->mesh_tlv, chan, priv->mesh_ssid_len,
++		    priv->mesh_ssid);
+ 
+ 	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
  }
- 
-@@ -2135,6 +2168,10 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	int ret;
- 
-+	ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_OS);
-+	if (ret)
-+		return ret;
-+
- 	mutex_lock(&mvm->mutex);
- 
- 	if (!iwl_mvm_is_idle(mvm)) {
-@@ -2142,26 +2179,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	switch (mvm->scan_status) {
--	case IWL_MVM_SCAN_OS:
--		IWL_DEBUG_SCAN(mvm, "Stopping previous scan for sched_scan\n");
--		ret = iwl_mvm_cancel_scan(mvm);
--		if (ret) {
--			ret = -EBUSY;
--			goto out;
--		}
--
--		/*
--		 * iwl_mvm_rx_scan_complete() will be called soon but will
--		 * not reset the scan status as it won't be IWL_MVM_SCAN_OS
--		 * any more since we queue the next scan immediately (below).
--		 * We make sure it is called before the next scan starts by
--		 * flushing the async-handlers work.
--		 */
--		break;
--	case IWL_MVM_SCAN_NONE:
--		break;
--	default:
-+	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
-@@ -2189,8 +2207,6 @@ err:
- 	mvm->scan_status = IWL_MVM_SCAN_NONE;
- out:
- 	mutex_unlock(&mvm->mutex);
--	/* make sure to flush the Rx handler before the next scan arrives */
--	iwl_mvm_wait_for_async_handlers(mvm);
- 	return ret;
- }
- 
 -- 
-1.8.3.2
+2.0.1
 
