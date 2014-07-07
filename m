@@ -1,99 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:36719 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbaG3VVS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 17:21:18 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so1760023wgg.4
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2014 14:21:17 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: use NS prefix for names of Northstar specific cores
-Date: Wed, 30 Jul 2014 23:21:06 +0200
-Message-Id: <1406755266-26859-1-git-send-email-zajec5@gmail.com> (sfid-20140730_232121_906757_04D1902D)
+Received: from arrakis.dune.hu ([78.24.191.176]:37584 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753293AbaGGMCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 08:02:55 -0400
+Message-ID: <53BA8C5D.4000604@openwrt.org> (sfid-20140707_140301_867682_6DAFDC09)
+Date: Mon, 07 Jul 2014 14:02:37 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>,
+	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+CC: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC 03/10] ath9k: add dynamic ack timeout estimation
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com> <1404725506-9571-4-git-send-email-lorenzo.bianconi83@gmail.com> <0D7AC98D-7356-44BC-8DBC-2916DF58F41F@net.t-labs.tu-berlin.de>
+In-Reply-To: <0D7AC98D-7356-44BC-8DBC-2916DF58F41F@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's cleaner and we don't have quite identical names like
-BCMA_CORE_PCIEG2 and BCMA_CORE_PCIE2.
+On 2014-07-07 13:41, Thomas H�hn wrote:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/scan.c       | 22 +++++++++++-----------
- include/linux/bcma/bcma.h | 22 +++++++++++-----------
- 2 files changed, 22 insertions(+), 22 deletions(-)
+>> +{
+>> +	struct ath_node *an;
+>> +	u32 to = 0;
+>> +	struct ath_dynack *da = &ah->dynack;
+>> +	struct ath_common *common = ath9k_hw_common(ah);
+>> +
+> 
+>> +	list_for_each_entry(an, &da->nodes, list)
+>> +		if (an->ackto > to)
+>> +			to = an->ackto;
+>> +
+> 
+> This list parsing would probably need rcu protection like:
+> 	
+> 	rcu_read_lock();
+> 	list_for_each_entry(an, &da->nodes, list)
+> 		if (an->ackto > to)
+> 			to = an->ackto;
+> 	rcu_read_unlock();
+Nope, that's already done in the calling code.
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 3776840..b4764c6 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -32,17 +32,17 @@ static const struct bcma_device_id_name bcma_bcm_device_names[] = {
- 	{ BCMA_CORE_4706_CHIPCOMMON, "BCM4706 ChipCommon" },
- 	{ BCMA_CORE_4706_SOC_RAM, "BCM4706 SOC RAM" },
- 	{ BCMA_CORE_4706_MAC_GBIT, "BCM4706 GBit MAC" },
--	{ BCMA_CORE_PCIEG2, "PCIe Gen 2" },
--	{ BCMA_CORE_DMA, "DMA" },
--	{ BCMA_CORE_SDIO3, "SDIO3" },
--	{ BCMA_CORE_USB20, "USB 2.0" },
--	{ BCMA_CORE_USB30, "USB 3.0" },
--	{ BCMA_CORE_A9JTAG, "ARM Cortex A9 JTAG" },
--	{ BCMA_CORE_DDR23, "Denali DDR2/DDR3 memory controller" },
--	{ BCMA_CORE_ROM, "ROM" },
--	{ BCMA_CORE_NAND, "NAND flash controller" },
--	{ BCMA_CORE_QSPI, "SPI flash controller" },
--	{ BCMA_CORE_CHIPCOMMON_B, "Chipcommon B" },
-+	{ BCMA_CORE_NS_PCIEG2, "PCIe Gen 2" },
-+	{ BCMA_CORE_NS_DMA, "DMA" },
-+	{ BCMA_CORE_NS_SDIO3, "SDIO3" },
-+	{ BCMA_CORE_NS_USB20, "USB 2.0" },
-+	{ BCMA_CORE_NS_USB30, "USB 3.0" },
-+	{ BCMA_CORE_NS_A9JTAG, "ARM Cortex A9 JTAG" },
-+	{ BCMA_CORE_NS_DDR23, "Denali DDR2/DDR3 memory controller" },
-+	{ BCMA_CORE_NS_ROM, "ROM" },
-+	{ BCMA_CORE_NS_NAND, "NAND flash controller" },
-+	{ BCMA_CORE_NS_QSPI, "SPI flash controller" },
-+	{ BCMA_CORE_NS_CHIPCOMMON_B, "Chipcommon B" },
- 	{ BCMA_CORE_ARMCA9, "ARM Cortex A9 core (ihost)" },
- 	{ BCMA_CORE_AMEMC, "AMEMC (DDR)" },
- 	{ BCMA_CORE_ALTA, "ALTA (I2S)" },
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 70b8d88..0272e49 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -73,17 +73,17 @@ struct bcma_host_ops {
- /* Core-ID values. */
- #define BCMA_CORE_OOB_ROUTER		0x367	/* Out of band */
- #define BCMA_CORE_4706_CHIPCOMMON	0x500
--#define BCMA_CORE_PCIEG2		0x501
--#define BCMA_CORE_DMA			0x502
--#define BCMA_CORE_SDIO3			0x503
--#define BCMA_CORE_USB20			0x504
--#define BCMA_CORE_USB30			0x505
--#define BCMA_CORE_A9JTAG		0x506
--#define BCMA_CORE_DDR23			0x507
--#define BCMA_CORE_ROM			0x508
--#define BCMA_CORE_NAND			0x509
--#define BCMA_CORE_QSPI			0x50A
--#define BCMA_CORE_CHIPCOMMON_B		0x50B
-+#define BCMA_CORE_NS_PCIEG2		0x501
-+#define BCMA_CORE_NS_DMA		0x502
-+#define BCMA_CORE_NS_SDIO3		0x503
-+#define BCMA_CORE_NS_USB20		0x504
-+#define BCMA_CORE_NS_USB30		0x505
-+#define BCMA_CORE_NS_A9JTAG		0x506
-+#define BCMA_CORE_NS_DDR23		0x507
-+#define BCMA_CORE_NS_ROM		0x508
-+#define BCMA_CORE_NS_NAND		0x509
-+#define BCMA_CORE_NS_QSPI		0x50A
-+#define BCMA_CORE_NS_CHIPCOMMON_B	0x50B
- #define BCMA_CORE_4706_SOC_RAM		0x50E
- #define BCMA_CORE_ARMCA9		0x510
- #define BCMA_CORE_4706_MAC_GBIT		0x52D
--- 
-1.8.4.5
+> I am not sure that you need to call the entire function with spin_lock as you do it now.
+> 
+>> +	if (to && da->ackto != to) {
+>> +		u32 slottime;
+>> +
+>> +		slottime = (to - 3) / 2;
+> 
+> Should the case to < 3 be covered or is it safe to have potentially slottime = 0 ?
+slottime should never be 0. It is not user configurable.
 
+>> +/**
+>> + * ath_dynack_compute_to - compute ack timeout
+>> + * @ah: ath hw
+>> + *
+>> + * should be called while holding qlock
+>> + */
+>> +static void ath_dynack_compute_to(struct ath_hw *ah)
+>> +{
+>> +	u32 ackto, ack_ts;
+>> +	u8 *dst, *src;
+>> +	struct ieee80211_sta *sta;
+>> +	struct ath_node *an;
+>> +	struct ts_info *st_ts;
+>> +	struct ath_dynack *da = &ah->dynack;
+>> +
+>> +	rcu_read_lock();
+>> +
+>> +	while (da->st_rbf.h_rb != da->st_rbf.t_rb &&
+>> +	       da->ack_rbf.h_rb != da->ack_rbf.t_rb) {
+>> +		ack_ts = da->ack_rbf.tstamp[da->ack_rbf.h_rb];
+>> +		st_ts = &da->st_rbf.ts[da->st_rbf.h_rb];
+>> +		dst = da->st_rbf.addr[da->st_rbf.h_rb].h_dest;
+>> +		src = da->st_rbf.addr[da->st_rbf.h_rb].h_src;
+>> +
+>> +		ath_dbg(ath9k_hw_common(ah), DYNACK,
+>> +			"ack_ts %u st_ts %u st_dur %u [%u-%u]\n",
+>> +			ack_ts, st_ts->tstamp, st_ts->dur,
+>> +			da->ack_rbf.h_rb, da->st_rbf.h_rb);
+>> +
+>> +		if (ack_ts > st_ts->tstamp + st_ts->dur) {
+>> +			ackto = ack_ts - st_ts->tstamp - st_ts->dur;
+>> +
+>> +			if (ackto < MAX_DELAY) {
+>> +				sta = ieee80211_find_sta_by_ifaddr(ah->hw, dst,
+>> +								   src);
+>> +				if (sta) {
+>> +					an = (struct ath_node *)sta->drv_priv;
+>> +					an->ackto = DYNACK_EWMA((u32)ackto,
+>> +								an->ackto);
+>> +					ath_dbg(ath9k_hw_common(ah), DYNACK,
+>> +						"%pM to %u\n", dst, an->ackto);
+>> +					if (time_is_before_jiffies(da->lto)) {
+>> +						ath_dynack_compute_ackto(ah);
+>> +						da->lto = jiffies + COMPUTE_TO;
+>> +					}
+>> +				}
+>> +				INCR(da->ack_rbf.h_rb, ATH_DYN_BUF);
+>> +			}
+>> +			INCR(da->st_rbf.h_rb, ATH_DYN_BUF);
+>> +		} else {
+>> +			INCR(da->ack_rbf.h_rb, ATH_DYN_BUF);
+>> +		}
+>> +	}
+>> +
+>> +	rcu_read_unlock();
+> 
+> I think it is sufficient to have the rcu_read_unlock just around
+> ieee80211_find_sta_by_ifaddr(). So the lock does not need to
+> include the whole while loop under lock.
+That doesn't make things any better - rcu_read_lock is not like a normal
+lock. Doing it once outside of the loop is not only simpler, but also
+slightly more efficient.
+
+- Felix
