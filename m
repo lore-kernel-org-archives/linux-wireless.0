@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37691 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932367AbaGUP07 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 11:26:59 -0400
-Date: Mon, 21 Jul 2014 08:26:35 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: Ming Lei <ming.lei@canonical.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-Message-ID: <20140721152635.GB6363@kroah.com> (sfid-20140721_172738_091190_B8BEC602)
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
- <1405373897-31671-7-git-send-email-keescook@chromium.org>
- <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
- <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
- <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
- <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:54370 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751198AbaGGPV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:21:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 00/10] lib: introduce string_escape_mem an %*pE specifier
+Date: Mon,  7 Jul 2014 18:21:42 +0300
+Message-Id: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172627_575223_5DCF87F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 08:08:16AM -0700, Kees Cook wrote:
-> Perhaps it would be easier if I also sent the patch to udev's helper,
-> so you could see how I propose handling the userspace change to using
-> the new interface?
+The introduced function is a kind of opposite to string_unescape. We have
+several users of such functionality each of them created custom implementation.
+The series contains clean up of test suite, adding new call, and switching few
+users to use it via %*pE specifier.
 
-As there is no more "udev firmware helper", I don't know what you would
-be patching here.  Firmware should always be loaded by the kernel
-directly, udev isn't involved anyore at all.
+Test suite covers all of existing and most of potential use cases.
 
-confused,
+Changelog v2:
+- addressed Joe's comments:
+  - added patch 4/10
+  - moving patches 5/10-10/10 to %*pE instead of direct string_escape_mem call,
+    as a result the series and code looks cleaner 
+- address few of Andrew's comments:
+  - added patch 1/10
+  - kernel documentation moved to c-file
+  - when test case fails the necessary messages are printed on KERN_WARNING
+    level
 
-greg k-h
+Andy Shevchenko (10):
+  lib / string_helpers: move documentation to c-file
+  lib / string_helpers: refactoring the test suite
+  lib / string_helpers: introduce string_escape_mem()
+  lib/vsprintf: add %*pE[achnops] format specifier
+  wireless: libertas: print esaped string via %*pE
+  wireless: ipw2x00: print SSID via %*pE
+  lib80211: remove unused print_ssid()
+  staging: wlan-ng: use %*pEhp to print SN
+  staging: rtl8192e: use %*pEn to escape buffer
+  staging: rtl8192u: use %*pEn to escape buffer
+
+ Documentation/printk-formats.txt               |  28 +++
+ drivers/net/wireless/ipw2x00/ipw2100.c         |  22 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c         | 270 +++++++--------------
+ drivers/net/wireless/ipw2x00/libipw_rx.c       |  65 +++---
+ drivers/net/wireless/ipw2x00/libipw_wx.c       |  16 +-
+ drivers/net/wireless/libertas/cfg.c            |   8 +-
+ drivers/net/wireless/libertas/mesh.c           |   7 +-
+ drivers/staging/rtl8192e/rtllib.h              |  14 +-
+ drivers/staging/rtl8192u/ieee80211/ieee80211.h |  14 +-
+ drivers/staging/wlan-ng/prism2sta.c            |  28 +--
+ include/linux/string_helpers.h                 |  65 +++---
+ include/net/lib80211.h                         |   5 -
+ lib/string_helpers.c                           | 312 +++++++++++++++++++++++++
+ lib/test-string_helpers.c                      | 250 +++++++++++++++++++-
+ lib/vsprintf.c                                 |  72 ++++++
+ net/wireless/lib80211.c                        |  32 ---
+ 16 files changed, 817 insertions(+), 391 deletions(-)
+
+-- 
+2.0.1
+
