@@ -1,76 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:48746 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbaG0RvN (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:29140 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751223AbaGGFn0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2014 13:51:13 -0400
-Received: by mail-wg0-f49.google.com with SMTP id k14so6342511wgh.32
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 10:51:12 -0700 (PDT)
-Message-ID: <53D53C0A.6080407@gmail.com> (sfid-20140727_195131_219196_2F4CA2B6)
-Date: Sun, 27 Jul 2014 20:51:06 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Mon, 7 Jul 2014 01:43:26 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Randy Dunlap <rdunlap@infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"Yann E. MORIN" <yann.morin.1998@free.fr>
+CC: "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: RE: [patch] iwlwifi: fix Kconfig option continuity
+Date: Mon, 7 Jul 2014 05:43:15 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3111FC8F0@hasmsx107.ger.corp.intel.com> (sfid-20140707_074343_948586_62F9772D)
+References: <53B9833D.4000600@lwfinger.net> <53B997D5.1060001@infradead.org>
+In-Reply-To: <53B997D5.1060001@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [ANN]: new experimental firmware for 3160 / 7260 / 7265
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="JwEdTvMlqg9cX6tQS7vMgIPvghENf5dVh"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---JwEdTvMlqg9cX6tQS7vMgIPvghENf5dVh
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> 
+> On 07/06/2014 10:11 AM, Larry Finger wrote:
+> > A problem with configuration of IWLWIFI has been bisected to commit
+> 48e2934, where a new section was added to
+> drivers/net/wireless/iwlwifi/Kconfig with the following code:
+> >
+> > # don't call it _MODULE -- will confuse Kconfig/fixdep/...
+> > config IWLWIFI_OPMODE_MODULAR
+> >         bool
+> >         default y if IWLDVM=m
+> >         default y if IWLMVM=m
+> >
+> > When the above section is present, 'make xconfig' fails to show a
+> "Debugging options" menu' even though 'make menuconfig' displays
+> correctly. despite the incorrect on-screen display, xconfig does not delete
+> the affected info in .config after it was set by menuconfig, thus the bug only
+> seems to affect the display in xconfig.
+> >
+> > Is there anything wrong with that section in iwlwifi's Kconfig, or is it a bug in
+> xconfig?
+> 
+> in menuconfig or nconfig:
+> Notice that 'Debugging options' is not indented under iwlwifi, but listed at
+> the same indent level.  That is a huge clue.
+> 
+> 
+> in xconfig:
+> The 'Debugging options' menu is displayed, but it's not where you expect or
+> want it to be found.  Look under 'Wireless LAN' and immediately under
+> 'Atheros Wireless Cards'
+> and it says 'Debugging options' (on the left panel).  Then the debugging
+> options are displayed in the right hand panel.
+> 
+> This is a common problem.  I have made Kconfig patches for it several times.
+> Here is another one.  Works for me.
+> 
+> ---
+> Fix iwlwifi options so that they all depend on IWLWIFI and are displayed
+> under the iwlwifi driver instead of in other unexpected places.
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
 
-We released an experimental firmware for 3160 / 7260 / 7265.
+Thanks for the patch. I'll add a commit message and submit it.
 
-It is available from my linux-firmware.git clone:
-
-3160: https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmwa=
-re.git/plain/iwlwifi-3160-9.ucode?h=3DCore6
-7260: https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmwa=
-re.git/plain/iwlwifi-7260-9.ucode?h=3DCore6
-7265: https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmwa=
-re.git/plain/iwlwifi-7265-9.ucode?h=3DCore6
-
-We had an issue with the version number in this stream, so I can't releas=
-e it officially, nor can I send a pull request to integrate it to linux-f=
-irmware.git.
-I am working with the firmware team to fix the version issue.
-I still would be glad to have more testing on this firmware, so any feedb=
-ack would be greatly appreciated.
-It has gone through our regular testing cycles, but "field" feedback is a=
-lways valuable.
-
-Thanks in advance to anyone who will test it.
-
-New (temporary) version number: 25.223.9.0
-
-
-
---JwEdTvMlqg9cX6tQS7vMgIPvghENf5dVh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJT1TwNAAoJEC0Llv5uNjIBYoIQAJtLmNgSJ4rWQoYLWFn/uhEQ
-MngLbNyONA3xMvBR8929V0PIC9+l1hQ61Jl15tFL/q5rjS9qifLRdnXU5N6BAnLv
-N0rAp6eswxDSBS04M0ZoQYcIoMqY1fZkGRKRkBVozh9byXcVvzFH7TveJj2G51ol
-1WbDCNnKN88WFL7s1t5PxHstV7G8PYYjn2pC57h08Oxjx2qk29ZYs7lDGe6gNrq9
-x2k4IgEBpEE2z81YUlN03mWukMEps5riAlgcMoIZLifNSA+jsHyP+0XhSdWHGrMo
-5kvltQq7M4sPZ98g7N+zwPLVgCjLs1ZUTfvm2y6zGRq2PM797mdjK1YC6j7RqlF3
-0j08B0grCeLKFmRnhxD+I7SsHpgAV+rOqSHzYVmVXUNKr8Y8JhDO7PnTUXo18NMs
-CuVjUB1LhjVuLgMkrVWGrSX5NRm4oiE7wH6AMNugxxle9tn7fdCw5j0B8Vdt6IRh
-ozwGcsNDoATNylS2Sea0tO6TOGh5ZS5/rpzJop0o3hncmcrRPKt9NcWnkJmUjDbR
-ZU3PMw1YxIzHkQTDMrUfLDbuqPgE3kkz8XkcqeCDf/pZAasB8+xd0Pd/p/8ZlW+J
-7p/srr+WrNxnFrnrMrmP9BEcETRuCLyXVKdWhv/EdDp8BublLxSMWordoQfjuhHw
-xxTSFQGFxvsRwa/LwEho
-=ngOF
------END PGP SIGNATURE-----
-
---JwEdTvMlqg9cX6tQS7vMgIPvghENf5dVh--
+>  drivers/net/wireless/iwlwifi/Kconfig |   17 ++++++++---------
+>  1 file changed, 8 insertions(+), 9 deletions(-)
+> 
+> Index: lnx-316-rc3/drivers/net/wireless/iwlwifi/Kconfig
+> ==========================================================
+> =========
+> --- lnx-316-rc3.orig/drivers/net/wireless/iwlwifi/Kconfig
+> +++ lnx-316-rc3/drivers/net/wireless/iwlwifi/Kconfig
+> @@ -39,9 +39,10 @@ config IWLWIFI
+>  	  say M here and read <file:Documentation/kbuild/modules.txt>.
+> The
+>  	  module will be called iwlwifi.
+> 
+> +if IWLWIFI
+> +
+>  config IWLWIFI_LEDS
+>  	bool
+> -	depends on IWLWIFI
+>  	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
+>  	select LEDS_TRIGGERS
+>  	select MAC80211_LEDS
+> @@ -49,7 +50,6 @@ config IWLWIFI_LEDS
+> 
+>  config IWLDVM
+>  	tristate "Intel Wireless WiFi DVM Firmware support"
+> -	depends on IWLWIFI
+>  	default IWLWIFI
+>  	help
+>  	  This is the driver that supports the DVM firmware which is @@ -58,7
+> +58,6 @@ config IWLDVM
+> 
+>  config IWLMVM
+>  	tristate "Intel Wireless WiFi MVM Firmware support"
+> -	depends on IWLWIFI
+>  	help
+>  	  This is the driver that supports the MVM firmware which is
+>  	  currently only available for 7260 and 3160 devices.
+> @@ -70,7 +69,7 @@ config IWLWIFI_OPMODE_MODULAR
+>  	default y if IWLMVM=m
+> 
+>  comment "WARNING: iwlwifi is useless without IWLDVM or IWLMVM"
+> -	depends on IWLWIFI && IWLDVM=n && IWLMVM=n
+> +	depends on IWLDVM=n && IWLMVM=n
+> 
+>  config IWLWIFI_BCAST_FILTERING
+>  	bool "Enable broadcast filtering"
+> @@ -86,11 +85,9 @@ config IWLWIFI_BCAST_FILTERING
+>  	  expect incoming broadcasts for their normal operations.
+> 
+>  menu "Debugging Options"
+> -	depends on IWLWIFI
+> 
+>  config IWLWIFI_DEBUG
+>  	bool "Enable full debugging output in the iwlwifi driver"
+> -	depends on IWLWIFI
+>  	---help---
+>  	  This option will enable debug tracing output for the iwlwifi drivers
+> 
+> @@ -115,7 +112,7 @@ config IWLWIFI_DEBUG
+> 
+>  config IWLWIFI_DEBUGFS
+>          bool "iwlwifi debugfs support"
+> -        depends on IWLWIFI && MAC80211_DEBUGFS
+> +        depends on MAC80211_DEBUGFS
+>          ---help---
+>  	  Enable creation of debugfs files for the iwlwifi drivers. This
+>  	  is a low-impact option that allows getting insight into the @@ -
+> 123,13 +120,12 @@ config IWLWIFI_DEBUGFS
+> 
+>  config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+>          bool "Experimental uCode support"
+> -        depends on IWLWIFI && IWLWIFI_DEBUG
+> +        depends on IWLWIFI_DEBUG
+>          ---help---
+>  	  Enable use of experimental ucode for testing and debugging.
+> 
+>  config IWLWIFI_DEVICE_TRACING
+>  	bool "iwlwifi device access tracing"
+> -	depends on IWLWIFI
+>  	depends on EVENT_TRACING
+>  	help
+>  	  Say Y here to trace all commands, including TX frames and IO @@ -
+> 144,4 +140,7 @@ config IWLWIFI_DEVICE_TRACING
+> 
+>  	  If unsure, say Y so we can help you better when problems
+>  	  occur.
+> +
+>  endmenu
+> +
+> +endif
