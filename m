@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53026 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756640AbaGRMuN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 08:50:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: handle attention flags correctly when A-MSDU
-References: <1405342041-7114-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Fri, 18 Jul 2014 15:50:05 +0300
-In-Reply-To: <1405342041-7114-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Mon, 14 Jul 2014 14:47:21 +0200")
-Message-ID: <87pph225mq.fsf@kamboji.qca.qualcomm.com> (sfid-20140718_145018_273858_D8A66F63)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:61235 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689AbaGGPWC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:22:02 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 10/10] staging: rtl8192u: use %*pEn to escape buffer
+Date: Mon,  7 Jul 2014 18:21:52 +0300
+Message-Id: <1404746512-12749-11-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172511_583029_DB909989)
+In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+Let's use kernel's native specifier to escape a buffer.
 
-> In case of A-MSDU RX we should check flags for all
-> MSDU subframes to be sure we have correct FCS status.
->
-> Before we check attention flags only for first frame
-> where we didn't have correct info about FCS status in
-> case of A-MSDU. Next didn't mark RX_FLAG_FAILED_FCS_CRC
-> for skb. As a side efect we see big TP drop when TCP used.
-> This was easy to reproduce when AP interface was used
-> and added monitor interface run in promiscuous mode.
->
-> Reported-by: Denton Gentry <denton.gentry@gmail.com>
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/staging/rtl8192u/ieee80211/ieee80211.h | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-I'm having a hard time to understand the commit log. I think it would
-make it easier to read if you first clearly describe the bug you are
-fixing and then, in a separate paragraph, tell how you fix it.
-
-So what is the bug Denton reported? "we see big TP drop when TCP used"
-implies that this happens with all TCP traffic, but that can't be right.
-Or did it happen with one of the reorder patches?
-
+diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211.h b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+index 1040bab..1a265f9 100644
+--- a/drivers/staging/rtl8192u/ieee80211/ieee80211.h
++++ b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+@@ -2576,25 +2576,13 @@ static inline int ieee80211_get_scans(struct ieee80211_device *ieee)
+ 
+ static inline const char *escape_essid(const char *essid, u8 essid_len) {
+ 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+-	char *d = escaped;
+ 
+ 	if (ieee80211_is_empty_essid(essid, essid_len)) {
+ 		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
+ 		return escaped;
+ 	}
+ 
+-	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
+-			*d++ = *s++;
+-		}
+-	}
+-	*d = '\0';
++	snprintf(escaped, sizeof(escaped), "%*pEn", essid_len, essid);
+ 	return escaped;
+ }
+ 
 -- 
-Kalle Valo
+2.0.1
+
