@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3465 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751309AbaG3U5n (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:38738 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbaGGJbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 16:57:43 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] MAINTAINERS: update for mwifiex driver maintainers
-Date: Wed, 30 Jul 2014 13:57:16 -0700
-Message-ID: <1406753836-16000-1-git-send-email-bzhao@marvell.com> (sfid-20140730_225747_038566_9683995D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 7 Jul 2014 05:31:51 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so4032192wes.26
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:31:50 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 02/10] ath9k: add duration field to ath_tx_status
+Date: Mon,  7 Jul 2014 11:31:38 +0200
+Message-Id: <1404725506-9571-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140707_113200_689644_E674C162)
+In-Reply-To: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar and Avinash are taking care of mwifiex driver as the
-maintainers now due to organizational change.
+Add duration field to ath_tx_status in order to report frame duration for each
+entry in multi-retry chain. These fields will be used in dynamic ack timeout
+processing
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- MAINTAINERS | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c | 7 +++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c | 9 +++++++++
+ drivers/net/wireless/ath/ath9k/mac.h        | 1 +
+ 3 files changed, 17 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 07a5930..966318c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5706,7 +5706,8 @@ S:	Maintained
- F:	drivers/net/ethernet/marvell/mvneta.*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 741b38d..b1d8d0e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -377,6 +377,13 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->evm1 = ads->AR_TxEVM1;
+ 	ts->evm2 = ads->AR_TxEVM2;
  
- MARVELL MWIFIEX WIRELESS DRIVER
--M:	Bing Zhao <bzhao@marvell.com>
-+M:	Amitkumar Karwar <akarwar@marvell.com>
-+M:	Avinash Patil <patila@marvell.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/net/wireless/mwifiex/
++	status = ACCESS_ONCE(ads->ds_ctl4);
++	ts->duration[0] = MS(status, AR_PacketDur0);
++	ts->duration[1] = MS(status, AR_PacketDur1);
++	status = ACCESS_ONCE(ads->ds_ctl5);
++	ts->duration[2] = MS(status, AR_PacketDur2);
++	ts->duration[3] = MS(status, AR_PacketDur3);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 729ffbf..d261c6e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -351,9 +351,11 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 				 struct ath_tx_status *ts)
+ {
+ 	struct ar9003_txs *ads;
++	struct ar9003_txc *adc;
+ 	u32 status;
+ 
+ 	ads = &ah->ts_ring[ah->ts_tail];
++	adc = (struct ar9003_txc *)ads;
+ 
+ 	status = ACCESS_ONCE(ads->status8);
+ 	if ((status & AR_TxDone) == 0)
+@@ -422,6 +424,13 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
+ 	ts->ts_rssi_ext2 = MS(status, AR_TxRSSIAnt12);
+ 
++	status = ACCESS_ONCE(adc->ctl15);
++	ts->duration[0] = MS(status, AR_PacketDur0);
++	ts->duration[1] = MS(status, AR_PacketDur1);
++	status = ACCESS_ONCE(adc->ctl16);
++	ts->duration[2] = MS(status, AR_PacketDur2);
++	ts->duration[3] = MS(status, AR_PacketDur3);
++
+ 	memset(ads, 0, sizeof(*ads));
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index da76867..06efbe8 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -121,6 +121,7 @@ struct ath_tx_status {
+ 	u32 evm0;
+ 	u32 evm1;
+ 	u32 evm2;
++	u32 duration[4];
+ };
+ 
+ struct ath_rx_status {
 -- 
-1.8.2.3
+1.9.1
 
