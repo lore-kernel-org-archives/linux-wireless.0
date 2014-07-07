@@ -1,59 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:48937 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857AbaGGJbx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48582 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbaGGSaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 05:31:53 -0400
-Received: by mail-wg0-f41.google.com with SMTP id k14so1408579wgh.12
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:31:52 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 04/10] ath9k: add config for (en|dis)abling ack timeout estimation
-Date: Mon,  7 Jul 2014 11:31:40 +0200
-Message-Id: <1404725506-9571-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140707_113201_358760_4517B09A)
-In-Reply-To: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Mon, 7 Jul 2014 14:30:11 -0400
+Date: Mon, 7 Jul 2014 14:23:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH v3 1/4] dt: bindings: add bindings for Broadcom bcm43xx
+ sdio devices
+Message-ID: <20140707182302.GA29650@tuxdriver.com> (sfid-20140707_203019_019718_7267F678)
+References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
+ <1404051421-24377-2-git-send-email-hdegoede@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404051421-24377-2-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ack timeout estimation to ath9k Makefile
+Any word from the devicetree folks?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/Kconfig  | 7 +++++++
- drivers/net/wireless/ath/ath9k/Makefile | 3 +++
- 2 files changed, 10 insertions(+)
+On Sun, Jun 29, 2014 at 04:16:58PM +0200, Hans de Goede wrote:
+> From: Arend van Spriel <arend@broadcom.com>
+> 
+> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+> integrated in ARM platforms. Currently, the brcmfmac driver for
+> these devices support use of platform data. This patch specifies
+> the bindings that allow this platform data to be expressed in the
+> devicetree.
+> 
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>  on how to handle this yet]
+> [hdegoede@redhat.com: move from bindings/staging to bindings]
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
+>  1 file changed, 41 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> new file mode 100644
+> index 0000000..5dbf169
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> @@ -0,0 +1,41 @@
+> +Broadcom BCM43xx Fullmac wireless SDIO devices
+> +
+> +This node provides properties for controlling the Broadcom wireless device. The
+> +node is expected to be specified as a child node to the SDIO controller that
+> +connects the device to the system.
+> +
+> +Required properties:
+> +
+> + - compatible : Should be "brcm,bcm4329-fmac".
+> +
+> +Optional properties:
+> + - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+> +	(default = 6).
+> + - interrupt-parent : the phandle for the interrupt controller to which the
+> +	device interrupts are connected.
+> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+> +	When not specified the device will use in-band SDIO interrupts.
+> + - interrupt-names : name of the out-of-band interrupt, which must be set
+> +	to "host-wake".
+> +
+> +Example:
+> +
+> +mmc3: mmc@01c12000 {
+> +	#address-cells = <1>;
+> +	#size-cells = <0>;
+> +
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&mmc3_pins_a>;
+> +	vmmc-supply = <&reg_vmmc3>;
+> +	bus-width = <4>;
+> +	non-removable;
+> +	status = "okay";
+> +
+> +	brcmf: bcrmf@1 {
+> +		reg = <1>;
+> +		compatible = "brcm,bcm4329-fmac";
+> +		interrupt-parent = <&pio>;
+> +		interrupts = <10 8>; /* PH10 / EINT10 */
+> +		interrupt-names = "host-wake";
+> +	};
+> +};
+> -- 
+> 2.0.0
+> 
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 8fcc029..ee61a4c 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -151,3 +151,10 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_DYNACK
-+	bool "Atheros ath9k ack timeout estimation algorithm (EXPERIMENTAL)"
-+	depends on ATH9K
-+	default n
-+	---help---
-+	  This option enables ath9k dynamic ack timeout estimation algorithm
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 6b4020a..73704c1 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -49,6 +49,9 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
- 
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- 					   ar9003_mci.o
-+
-+ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
-+
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
- 
- obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
