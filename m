@@ -1,103 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15862 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752550AbaGBNUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:20:39 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
+Received: from smtprelay0175.hostedemail.com ([216.40.44.175]:50140 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750917AbaGGQ0J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 12:26:09 -0400
+Message-ID: <1404750357.27043.78.camel@joe-AO725> (sfid-20140707_182628_749417_C858245C)
+Subject: Re: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format
+ specifier
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 1/6] lib / string_helpers: clean up test suite
-Date: Wed,  2 Jul 2014 16:20:24 +0300
-Message-Id: <1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152237_217412_D6CF6CBF)
-In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Date: Mon, 07 Jul 2014 09:25:57 -0700
+In-Reply-To: <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch prepares test suite for a following update. It introduces
-test_string_check_buf() helper which checks the result and dumps an error.
+[trivial notes]
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- lib/test-string_helpers.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+On Mon, 2014-07-07 at 18:21 +0300, Andy Shevchenko wrote:
+> This allows user to print a given buffer as esaped string. The rules applied
 
-diff --git a/lib/test-string_helpers.c b/lib/test-string_helpers.c
-index 6ac48de..ea86e02 100644
---- a/lib/test-string_helpers.c
-+++ b/lib/test-string_helpers.c
-@@ -10,6 +10,26 @@
- #include <linux/string.h>
- #include <linux/string_helpers.h>
- 
-+static __init bool test_string_check_buf(const char *name, unsigned int flags,
-+					 char *in, size_t p,
-+					 char *out_real, size_t q_real,
-+					 char *out_test, size_t q_test)
-+{
-+	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
-+		return true;
-+
-+	pr_err("Test '%s' failed: flags = %u\n", name, flags);
-+
-+	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
-+		       in, p, true);
-+	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_test, q_test, true);
-+	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_real, q_real, true);
-+
-+	return false;
-+}
-+
- struct test_string {
- 	const char *in;
- 	const char *out;
-@@ -39,7 +59,8 @@ static const struct test_string strings[] __initconst = {
- 	},
- };
- 
--static void __init test_string_unescape(unsigned int flags, bool inplace)
-+static void __init test_string_unescape(const char *name, unsigned int flags,
-+					bool inplace)
- {
- 	char in[256];
- 	char out_test[256];
-@@ -77,15 +98,8 @@ static void __init test_string_unescape(unsigned int flags, bool inplace)
- 		q_real = string_unescape(in, out_real, q_real, flags);
- 	}
- 
--	if (q_real != q_test || memcmp(out_test, out_real, q_test)) {
--		pr_warn("Test failed: flags = %u\n", flags);
--		print_hex_dump(KERN_WARNING, "Input: ",
--			       DUMP_PREFIX_NONE, 16, 1, in, p - 1, true);
--		print_hex_dump(KERN_WARNING, "Expected: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_test, q_test, true);
--		print_hex_dump(KERN_WARNING, "Got: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_real, q_real, true);
--	}
-+	test_string_check_buf(name, flags, in, p - 1, out_real, q_real,
-+			      out_test, q_test);
- }
- 
- static int __init test_string_helpers_init(void)
-@@ -94,8 +108,9 @@ static int __init test_string_helpers_init(void)
- 
- 	pr_info("Running tests...\n");
- 	for (i = 0; i < UNESCAPE_ANY + 1; i++)
--		test_string_unescape(i, false);
--	test_string_unescape(get_random_int() % (UNESCAPE_ANY + 1), true);
-+		test_string_unescape("unescape", i, false);
-+	test_string_unescape("unescape inplace",
-+			     get_random_int() % (UNESCAPE_ANY + 1), true);
- 
- 	return -EINVAL;
- }
--- 
-2.0.0
+as an escaped
+
+> accordingly to the mix of the flags provided by additional format letters.
+
+rules are applied according to an optional mix of flags
+
+> For example, if the given buffer:
+> 
+> 	1b 62 20 5c 43 07 22 90 0d 5d
+> 
+> The result strings could be:
+
+would be
+
+> 	%*pE            "\eb \C\a"\220\r]"
+
+Maybe say something about ssid's here.
+or maybe add an %*pES just for the ssid type.
+
+> diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+[]
+> @@ -70,6 +70,34 @@ DMA addresses types dma_addr_t:
+>  	For printing a dma_addr_t type which can vary based on build options,
+>  	regardless of the width of the CPU data path. Passed by reference.
+>  
+> +Raw buffer as an escaped string:
+> +
+> +	%*pE[achnops]
+> +
+> +	For printing raw buffer as an escaped string. For the following buffer
+> +
+> +		1b 62 20 5c 43 07 22 90 0d 5d
+> +
+> +	few examples show how the conversion could be done (the result string
+> +	without embraced quotes):
+
+'embraced' is a bit of an awkward word choice.  Maybe surrounding.
+
+> +
+> +		%*pE		"\eb \C\a"\220\r]"
+
+Oh, the initial commit log comments above are really for this block
+
+> +		%*pEhp		"\x1bb \C\x07"\x90\x0d]"
+> +		%*pEa		"\e\142\040\\\103\a\042\220\r\135"
+> +
+> +	The converion rules are defined by combination of the following flags
+
+conversion
+
+> +	(see string_escape_mem() kernel documentation for the details):
+> +		a - ESCAPE_ANY
+> +		c - ESCAPE_SPECIAL
+> +		h - ESCAPE_HEX
+> +		n - ESCAPE_NULL
+> +		o - ESCAPE_OCTAL
+> +		p - ESCAPE_NP
+> +		s - ESCAPE_SPACE
+> +	By default ESCAPE_ANY_NP is used.
+> +
+> +	If field width is ommited the 1 byte only will be escaped.
+
+omitted
+
 
