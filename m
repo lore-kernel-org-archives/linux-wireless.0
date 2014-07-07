@@ -1,50 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45389 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbaGNGvL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 02:51:11 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 3/7] wil6210: fix double definition of 'ctx'
-Date: Mon, 14 Jul 2014 09:49:39 +0300
-Message-ID: <1405320583-5775-4-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140714_085117_737524_48718D91)
-In-Reply-To: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:54407 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753641AbaGGPWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:22:10 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format specifier
+Date: Mon,  7 Jul 2014 18:21:46 +0300
+Message-Id: <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172301_220788_81A9D97E)
+In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+This allows user to print a given buffer as esaped string. The rules applied
+accordingly to the mix of the flags provided by additional format letters.
 
-Variable 'ctx' declarad again in the inner loop. Should use
-one from outer loop instead.
+For example, if the given buffer:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+	1b 62 20 5c 43 07 22 90 0d 5d
+
+The result strings could be:
+	%*pE            "\eb \C\a"\220\r]"
+	%*pEhp          "\x1bb \C\x07"\x90\x0d]"
+	%*pEa           "\e\142\040\\\103\a\042\220\r\135"
+
+Please, read Documentation/printk-formats.txt and lib/string_helpers.c kernel
+documentation to get further information.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Suggested-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ Documentation/printk-formats.txt | 28 ++++++++++++++++
+ lib/vsprintf.c                   | 72 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 100 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index af4b93e..d346794 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1108,8 +1108,10 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 		while (vring->swtail != new_swtail) {
- 			struct vring_tx_desc dd, *d = &dd;
- 			u16 dmalen;
--			struct wil_ctx *ctx = &vring->ctx[vring->swtail];
--			struct sk_buff *skb = ctx->skb;
-+			struct sk_buff *skb;
-+
-+			ctx = &vring->ctx[vring->swtail];
-+			skb = ctx->skb;
- 			_d = &vring->va[vring->swtail].tx;
+diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+index 3b56a99..e2dc566 100644
+--- a/Documentation/printk-formats.txt
++++ b/Documentation/printk-formats.txt
+@@ -70,6 +70,34 @@ DMA addresses types dma_addr_t:
+ 	For printing a dma_addr_t type which can vary based on build options,
+ 	regardless of the width of the CPU data path. Passed by reference.
  
- 			*d = *_d;
++Raw buffer as an escaped string:
++
++	%*pE[achnops]
++
++	For printing raw buffer as an escaped string. For the following buffer
++
++		1b 62 20 5c 43 07 22 90 0d 5d
++
++	few examples show how the conversion could be done (the result string
++	without embraced quotes):
++
++		%*pE		"\eb \C\a"\220\r]"
++		%*pEhp		"\x1bb \C\x07"\x90\x0d]"
++		%*pEa		"\e\142\040\\\103\a\042\220\r\135"
++
++	The converion rules are defined by combination of the following flags
++	(see string_escape_mem() kernel documentation for the details):
++		a - ESCAPE_ANY
++		c - ESCAPE_SPECIAL
++		h - ESCAPE_HEX
++		n - ESCAPE_NULL
++		o - ESCAPE_OCTAL
++		p - ESCAPE_NP
++		s - ESCAPE_SPACE
++	By default ESCAPE_ANY_NP is used.
++
++	If field width is ommited the 1 byte only will be escaped.
++
+ Raw buffer as a hex string:
+ 	%*ph	00 01 02  ...  3f
+ 	%*phC	00:01:02: ... :3f
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index 0eced40..6913046 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -33,6 +33,7 @@
+ #include <asm/page.h>		/* for PAGE_SIZE */
+ #include <asm/sections.h>	/* for dereference_function_descriptor() */
+ 
++#include <linux/string_helpers.h>
+ #include "kstrtox.h"
+ 
+ /**
+@@ -1101,6 +1102,63 @@ char *ip4_addr_string_sa(char *buf, char *end, const struct sockaddr_in *sa,
+ }
+ 
+ static noinline_for_stack
++char *escaped_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
++		     const char *fmt)
++{
++	bool found = true;
++	int count = 1;
++	unsigned int flags = 0;
++	int len;
++
++	if (spec.field_width == 0)
++		/* nothing to print */
++		return buf;
++
++	if (ZERO_OR_NULL_PTR(addr))
++		/* NULL pointer */
++		return string(buf, end, NULL, spec);
++
++	do {
++		switch (fmt[count++]) {
++		case 'a':
++			flags |= ESCAPE_ANY;
++			break;
++		case 'c':
++			flags |= ESCAPE_SPECIAL;
++			break;
++		case 'h':
++			flags |= ESCAPE_HEX;
++			break;
++		case 'n':
++			flags |= ESCAPE_NULL;
++			break;
++		case 'o':
++			flags |= ESCAPE_OCTAL;
++			break;
++		case 'p':
++			flags |= ESCAPE_NP;
++			break;
++		case 's':
++			flags |= ESCAPE_SPACE;
++			break;
++		default:
++			found = false;
++			break;
++		}
++	} while (found);
++
++	if (!flags)
++		flags = ESCAPE_ANY_NP;
++
++	len = spec.field_width < 0 ? 1 : spec.field_width;
++
++	/* Ignore the error. We print as many characters as we can */
++	string_escape_mem(addr, len, &buf, end - buf, flags, NULL);
++
++	return buf;
++}
++
++static noinline_for_stack
+ char *uuid_string(char *buf, char *end, const u8 *addr,
+ 		  struct printf_spec spec, const char *fmt)
+ {
+@@ -1236,6 +1294,17 @@ int kptr_restrict __read_mostly;
+  * - '[Ii][4S][hnbl]' IPv4 addresses in host, network, big or little endian order
+  * - 'I[6S]c' for IPv6 addresses printed as specified by
+  *       http://tools.ietf.org/html/rfc5952
++ * - 'E[achnops]' For an escaped buffer, where rules are defined by combination
++ *                of the following flags (see string_escape_mem() for the
++ *                details):
++ *                  a - ESCAPE_ANY
++ *                  c - ESCAPE_SPECIAL
++ *                  h - ESCAPE_HEX
++ *                  n - ESCAPE_NULL
++ *                  o - ESCAPE_OCTAL
++ *                  p - ESCAPE_NP
++ *                  s - ESCAPE_SPACE
++ *                By default ESCAPE_ANY_NP is used.
+  * - 'U' For a 16 byte UUID/GUID, it prints the UUID/GUID in the form
+  *       "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  *       Options for %pU are:
+@@ -1337,6 +1406,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
+ 			}}
+ 		}
+ 		break;
++	case 'E':
++		return escaped_string(buf, end, ptr, spec, fmt);
+ 	case 'U':
+ 		return uuid_string(buf, end, ptr, spec, fmt);
+ 	case 'V':
+@@ -1651,6 +1722,7 @@ qualifier:
+  * %piS depending on sa_family of 'struct sockaddr *' print IPv4/IPv6 address
+  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
+  *   case.
++ * %*pE[achnops] print an escaped buffer
+  * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
+  *           bytes of the input)
+  * %n is ignored
 -- 
-1.7.6
+2.0.1
 
