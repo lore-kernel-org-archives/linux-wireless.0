@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:36919 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbaGQRct (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:42916 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbaGGJbx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 13:32:49 -0400
-Received: by mail-wi0-f176.google.com with SMTP id bs8so8120772wib.15
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:32:46 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/6] b43: N-PHY: fix channel switching with 2 GHz radio 0x2057
-Date: Thu, 17 Jul 2014 19:31:01 +0200
-Message-Id: <1405618266-20200-1-git-send-email-zajec5@gmail.com> (sfid-20140717_193300_858483_0D33D34D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Jul 2014 05:31:53 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x13so3036355wgg.33
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:31:52 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 05/10] ath9k: do not overwrite ack timeout estimation
+Date: Mon,  7 Jul 2014 11:31:41 +0200
+Message-Id: <1404725506-9571-6-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140707_113214_793727_739EA3C2)
+In-Reply-To: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Values were written to wrong registers.
+Do not overwrite ack timeout estimation in ath9k_hw_init_global_settings() if
+dynack processing is enabled
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/b43/radio_2057.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/b43/radio_2057.c b/drivers/net/wireless/b43/radio_2057.c
-index ca22faa..c9c24b6 100644
---- a/drivers/net/wireless/b43/radio_2057.c
-+++ b/drivers/net/wireless/b43/radio_2057.c
-@@ -163,12 +163,12 @@ static u16 r2057_rev9_init[][2] = {
- 	.radio_vcobuf_tune			= r09,	\
- 	.radio_logen_mx2g_tune			= r10,	\
- 	.radio_logen_indbuf2g_tune		= r11,	\
--	.radio_lna2g_tune_core0			= r12,	\
--	.radio_txmix2g_tune_boost_pu_core0	= r13,	\
--	.radio_pad2g_tune_pus_core0		= r14,	\
--	.radio_lna2g_tune_core1			= r15,	\
--	.radio_txmix2g_tune_boost_pu_core1	= r16,	\
--	.radio_pad2g_tune_pus_core1		= r17
-+	.radio_txmix2g_tune_boost_pu_core0	= r12,	\
-+	.radio_pad2g_tune_pus_core0		= r13,	\
-+	.radio_lna2g_tune_core0			= r14,	\
-+	.radio_txmix2g_tune_boost_pu_core1	= r15,	\
-+	.radio_pad2g_tune_pus_core1		= r16,	\
-+	.radio_lna2g_tune_core1			= r17
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9a6b113..d9406ba 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1055,6 +1055,14 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	}
  
- #define PHYREGS(r0, r1, r2, r3, r4, r5)	\
- 	.phy_regs.phy_bw1a	= r0,	\
++	if (!ah->dynack.fix_to) {
++		acktimeout = ah->dynack.ackto;
++		ctstimeout = acktimeout;
++		slottime = (acktimeout - 3) / 2;
++	} else {
++		ah->dynack.ackto = acktimeout;
++	}
++
+ 	ath9k_hw_set_sifs_time(ah, sifstime);
+ 	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
 -- 
-1.8.4.5
+1.9.1
 
