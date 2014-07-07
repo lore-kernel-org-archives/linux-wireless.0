@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa12-05.prod.phx3.secureserver.net ([68.178.252.234]:32909
-	"EHLO p3plsmtpa12-05.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751336AbaGCVFz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49249 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751158AbaGGTPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 17:05:55 -0400
-Date: Thu, 3 Jul 2014 13:57:40 -0700
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [linux-nfc] [PATCH] NFC: trf7970a: Move trf7970a_init inside
- #ifdef CONFIG_PM_RUNTIME
-Message-ID: <20140703205740.GA19951@animalcreek.com> (sfid-20140703_230627_095087_CCE613A0)
-References: <1402923973-24316-1-git-send-email-geert@linux-m68k.org>
- <20140616155855.GA2539@animalcreek.com>
+	Mon, 7 Jul 2014 15:15:12 -0400
+Date: Mon, 7 Jul 2014 15:00:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2014-07-05
+Message-ID: <20140707190016.GC29650@tuxdriver.com> (sfid-20140707_211517_397917_61D20DFA)
+References: <53B852D4.5060109@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140616155855.GA2539@animalcreek.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53B852D4.5060109@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 16, 2014 at 08:58:55AM -0700, Mark A. Greer wrote:
-> On Mon, Jun 16, 2014 at 03:06:13PM +0200, Geert Uytterhoeven wrote:
-> > If CONFIG_PM_RUNTIME=n:
-> > 
-> > drivers/nfc/trf7970a.c:755: warning: ‘trf7970a_init’ defined but not used
-> > 
-> > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+On Sat, Jul 05, 2014 at 10:32:36PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
 > 
-> Acked-by: Mark A. Greer <mgreer@animalcreek.com>
+> This pull request is intended for 3.a16.
+> 
+> I have here 2 patches that disable the usage of CTS to self. This keeps making trouble to the firmware and is not a really reliable protection anyway. We may re-enable it in the future, but in rarer cases. Along with this, I have a fix from Ilan that prevents a firmware assertion.
+> 
+> Please pull.
+> 
+> The following changes since commit a42c9fcc4a88cdd246fab3bcf06c4487afee3d88:
+> 
+>   Revert "iwlwifi: remove IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT flag" (2014-06-24 22:01:46 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to dc271ee0d04d12d6bfabacbec803289a7072fbd9:
+> 
+>   iwlwifi: mvm: disable CTS to Self (2014-07-03 20:55:18 +0300)
 
-Actually, I'd like to change my mind on this.  I've modified the code
-locally and I will have to move trf7970a_init() back to where it originally
-was again, if this patch is taken.  If you can tolerate the warning for
-another week or so, I'll have a new set of patches that will fix it.
+Pulling now...
 
-Not a big deal if you still want to take it.
-
-Mark
---
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
