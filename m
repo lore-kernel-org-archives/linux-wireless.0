@@ -1,38 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34869 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:61235 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753489AbaG2Lln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 07:41:43 -0400
-Message-ID: <1406634097.7611.1.camel@jlt4.sipsolutions.net> (sfid-20140729_134157_838093_D3B07EB5)
-Subject: Re: [PATCH] regulatory: add NULL to alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Eliad Peller <eliad@wizery.com>
-Date: Tue, 29 Jul 2014 13:41:37 +0200
-In-Reply-To: <1402471415-22723-1-git-send-email-arik@wizery.com> (sfid-20140611_092347_345196_25D980A6)
-References: <1402471415-22723-1-git-send-email-arik@wizery.com>
-	 (sfid-20140611_092347_345196_25D980A6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752201AbaGGPWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2014 11:22:01 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 08/10] staging: wlan-ng: use %*pEhp to print SN
+Date: Mon,  7 Jul 2014 18:21:50 +0300
+Message-Id: <1404746512-12749-9-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172506_895352_2FE433CF)
+In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-06-11 at 10:23 +0300, Arik Nemtsov wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> alpha2 is defined as 2-chars array, but is used in multiple
-> places as string (e.g. with nla_put_string calls), which
-> might leak kernel data.
-> 
-> Solve it by simply adding an extra char for the NULL
-> terminator, making such operations safe.
-> 
-> Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+This is a generic specifier to print an escaped buffer by given criteria. Let's
+use it instead of custom approach.
 
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/staging/wlan-ng/prism2sta.c | 28 ++--------------------------
+ 1 file changed, 2 insertions(+), 26 deletions(-)
 
-Applied.
-
-johannes
+diff --git a/drivers/staging/wlan-ng/prism2sta.c b/drivers/staging/wlan-ng/prism2sta.c
+index 209e4db..688e827 100644
+--- a/drivers/staging/wlan-ng/prism2sta.c
++++ b/drivers/staging/wlan-ng/prism2sta.c
+@@ -60,7 +60,6 @@
+ #include <linux/netdevice.h>
+ #include <linux/workqueue.h>
+ #include <linux/byteorder/generic.h>
+-#include <linux/ctype.h>
+ 
+ #include <linux/io.h>
+ #include <linux/delay.h>
+@@ -81,27 +80,6 @@
+ #include "hfa384x.h"
+ #include "prism2mgmt.h"
+ 
+-/* Create a string of printable chars from something that might not be */
+-/* It's recommended that the str be 4*len + 1 bytes long */
+-#define wlan_mkprintstr(buf, buflen, str, strlen) \
+-{ \
+-	int i = 0; \
+-	int j = 0; \
+-	memset(str, 0, (strlen)); \
+-	for (i = 0; i < (buflen); i++) { \
+-		if (isprint((buf)[i])) { \
+-			(str)[j] = (buf)[i]; \
+-			j++; \
+-		} else { \
+-			(str)[j] = '\\'; \
+-			(str)[j+1] = 'x'; \
+-			(str)[j+2] = hex_asc_hi((buf)[i]); \
+-			(str)[j+3] = hex_asc_lo((buf)[i]); \
+-			j += 4; \
+-		} \
+-	} \
+-}
+-
+ static char *dev_info = "prism2_usb";
+ static wlandevice_t *create_wlan(void);
+ 
+@@ -607,7 +585,6 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
+ 	hfa384x_t *hw = (hfa384x_t *) wlandev->priv;
+ 	u16 temp;
+ 	u8 snum[HFA384x_RID_NICSERIALNUMBER_LEN];
+-	char pstr[(HFA384x_RID_NICSERIALNUMBER_LEN * 4) + 1];
+ 
+ 	/* Collect version and compatibility info */
+ 	/*  Some are critical, some are not */
+@@ -862,9 +839,8 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
+ 	result = hfa384x_drvr_getconfig(hw, HFA384x_RID_NICSERIALNUMBER,
+ 					snum, HFA384x_RID_NICSERIALNUMBER_LEN);
+ 	if (!result) {
+-		wlan_mkprintstr(snum, HFA384x_RID_NICSERIALNUMBER_LEN,
+-				pstr, sizeof(pstr));
+-		netdev_info(wlandev->netdev, "Prism2 card SN: %s\n", pstr);
++		netdev_info(wlandev->netdev, "Prism2 card SN: %*pEhp\n",
++			    HFA384x_RID_NICSERIALNUMBER_LEN, snum);
+ 	} else {
+ 		netdev_err(wlandev->netdev, "Failed to retrieve Prism2 Card SN\n");
+ 		goto failed;
+-- 
+2.0.1
 
