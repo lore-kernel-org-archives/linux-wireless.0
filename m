@@ -1,121 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:62925 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608AbaGFJhL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50599 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264AbaGGVAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:37:11 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so3114946wgg.8
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:10 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/40] iwlwifi: mvm: Protect mvm->csa_vif with RCU
-Date: Sun,  6 Jul 2014 12:36:08 +0300
-Message-Id: <1404639376-3792-32-git-send-email-egrumbach@gmail.com> (sfid-20140706_115956_389764_44F9C2D1)
-In-Reply-To: <53B917DC.5050902@gmail.com>
-References: <53B917DC.5050902@gmail.com>
+	Mon, 7 Jul 2014 17:00:15 -0400
+Date: Mon, 7 Jul 2014 16:48:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] bcma: support for PCIe Gen 2 as host platform
+Message-ID: <20140707204846.GF29650@tuxdriver.com> (sfid-20140707_230021_823504_0FD72EB3)
+References: <1404645103-26100-1-git-send-email-zajec5@gmail.com>
+ <53B93EBC.7010107@broadcom.com>
+ <CACna6rwt3vr0cHxRR8XkSg+C9NDN5Oxi8Syus8fGBpGLJVVYPw@mail.gmail.com>
+ <CACna6rwQmW6AX3BwfE5Q_MkcJ1UWMeeJ1VXXqxATH1oX15Zgkg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwQmW6AX3BwfE5Q_MkcJ1UWMeeJ1VXXqxATH1oX15Zgkg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+On Mon, Jul 07, 2014 at 09:37:10PM +0200, Rafał Miłecki wrote:
+> On 7 July 2014 11:38, Rafał Miłecki <zajec5@gmail.com> wrote:
+> > On 6 July 2014 14:19, Arend van Spriel <arend@broadcom.com> wrote:
+> >> On 06-07-14 13:11, Rafał Miłecki wrote:
+> >>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> >>> ---
+> >>> I got reply from Bjorn, that we should *not* depend on PCI_EXP_LNKCAP:
+> >>> http://marc.info/?l=linux-pci&m=140457671930896&w=2
+> >>>
+> >>> So the change since RFC is adding a list of PCIe 1.0 and 2.0 devices.
+> >>> Use PCI_EXP_LNKCAP only as a fallback, in case someone tries sth like:
+> >>> echo "14e4 4360" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+> >>
+> >> Do you have to know this before or after enumerating the cores? They
+> >> have a different core id, right?
+> >
+> > Sure, having a list of cores would allow me to determine PCIe revision.
+> >
+> > Unfortunately right now we have only this single bcma_bus_register
+> > call that does both: scanning and initialization. I'd need to first
+> > scan cores, then determine PCIe revision and finally initialize cores.
+> >
+> > I wonder if I could try to use bcma_bus_scan_early that was developer
+> > for SoC needs...
+> 
+> John: please kindly drop this patch for now. All other bcma/b43
+> patches are unaffected.
 
-Currently mvm->csa_vif is protected with mvm mutex. The RCU protection
-is required for "iwlwifi: mvm: Reflect GO channel switch in NoA" patch.
+OK
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 15 +++++++++------
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
- 3 files changed, 20 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 6d09472..19bd696 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -1206,6 +1206,7 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_mvm_tx_resp *beacon_notify_hdr;
-+	struct ieee80211_vif *csa_vif;
- 	u64 tsf;
- 
- 	lockdep_assert_held(&mvm->mutex);
-@@ -1231,13 +1232,15 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- 		     mvm->ap_last_beacon_gp2,
- 		     le32_to_cpu(beacon_notify_hdr->initial_rate));
- 
--	if (unlikely(mvm->csa_vif && mvm->csa_vif->csa_active)) {
--		if (!ieee80211_csa_is_complete(mvm->csa_vif)) {
--			ieee80211_csa_update_counter(mvm->csa_vif);
--			iwl_mvm_mac_ctxt_beacon_changed(mvm, mvm->csa_vif);
-+	csa_vif = rcu_dereference_protected(mvm->csa_vif,
-+					    lockdep_is_held(&mvm->mutex));
-+	if (unlikely(csa_vif && csa_vif->csa_active)) {
-+		if (!ieee80211_csa_is_complete(csa_vif)) {
-+			ieee80211_csa_update_counter(csa_vif);
-+			iwl_mvm_mac_ctxt_beacon_changed(mvm, csa_vif);
- 		} else {
--			ieee80211_csa_finish(mvm->csa_vif);
--			mvm->csa_vif = NULL;
-+			ieee80211_csa_finish(csa_vif);
-+			RCU_INIT_POINTER(mvm->csa_vif, NULL);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 78a78c0..984a1e7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1607,6 +1607,10 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&mvm->mutex);
- 
-+	/* Handle AP stop while in CSA */
-+	if (rcu_access_pointer(mvm->csa_vif) == vif)
-+		RCU_INIT_POINTER(mvm->csa_vif, NULL);
-+
- 	mvmvif->ap_ibss_active = false;
- 	mvm->ap_last_beacon_gp2 = 0;
- 
-@@ -2664,15 +2668,19 @@ static void iwl_mvm_channel_switch_beacon(struct ieee80211_hw *hw,
- 					  struct cfg80211_chan_def *chandef)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct ieee80211_vif *csa_vif;
- 
- 	mutex_lock(&mvm->mutex);
--	if (WARN(mvm->csa_vif && mvm->csa_vif->csa_active,
-+
-+	csa_vif = rcu_dereference_protected(mvm->csa_vif,
-+					    lockdep_is_held(&mvm->mutex));
-+	if (WARN(csa_vif && csa_vif->csa_active,
- 		 "Another CSA is already in progress"))
- 		goto out_unlock;
- 
- 	IWL_DEBUG_MAC80211(mvm, "CSA started to freq %d\n",
- 			   chandef->center_freq1);
--	mvm->csa_vif = vif;
-+	rcu_assign_pointer(mvm->csa_vif, vif);
- 
- out_unlock:
- 	mutex_unlock(&mvm->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index fa8fcbc..5bb42af 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -658,7 +658,7 @@ struct iwl_mvm {
- 	/* Indicate if device power save is allowed */
- 	bool ps_disabled;
- 
--	struct ieee80211_vif *csa_vif;
-+	struct ieee80211_vif __rcu *csa_vif;
- 
- 	/* system time of last beacon (for AP/GO interface) */
- 	u32 ap_last_beacon_gp2;
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
