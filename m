@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50286 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753618AbaGHNnR (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:48937 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbaGGJbx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 09:43:17 -0400
-Date: Tue, 8 Jul 2014 16:43:12 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Max.Stepanov@intel.com
+	Mon, 7 Jul 2014 05:31:53 -0400
+Received: by mail-wg0-f41.google.com with SMTP id k14so1408579wgh.12
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:31:52 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
 Cc: linux-wireless@vger.kernel.org
-Subject: re: mac80211: add generic cipher scheme support
-Message-ID: <20140708134312.GA6538@mwanda> (sfid-20140708_154323_656155_51EA9E52)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [RFC 04/10] ath9k: add config for (en|dis)abling ack timeout estimation
+Date: Mon,  7 Jul 2014 11:31:40 +0200
+Message-Id: <1404725506-9571-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140707_113201_358760_4517B09A)
+In-Reply-To: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Max Stepanov,
+Add ack timeout estimation to ath9k Makefile
 
-This is a semi-automatic email about new static checker warnings.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig  | 7 +++++++
+ drivers/net/wireless/ath/ath9k/Makefile | 3 +++
+ 2 files changed, 10 insertions(+)
 
-The patch 2475b1cc0d52: "mac80211: add generic cipher scheme support" 
-from Mar 24, 2013, leads to the following Smatch complaint:
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 8fcc029..ee61a4c 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -151,3 +151,10 @@ config ATH9K_HTC_DEBUGFS
+ 	depends on ATH9K_HTC && DEBUG_FS
+ 	---help---
+ 	  Say Y, if you need access to ath9k_htc's statistics.
++
++config ATH9K_DYNACK
++	bool "Atheros ath9k ack timeout estimation algorithm (EXPERIMENTAL)"
++	depends on ATH9K
++	default n
++	---help---
++	  This option enables ath9k dynamic ack timeout estimation algorithm
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 6b4020a..73704c1 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -49,6 +49,9 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
+ 
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
+ 					   ar9003_mci.o
++
++ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
++
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ 
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+-- 
+1.9.1
 
-net/mac80211/rx.c:1551 ieee80211_rx_h_decrypt()
-	 error: we previously assumed 'rx->sta' could be null (see line 1401)
-
-net/mac80211/rx.c
-  1400	
-  1401		if (rx->sta) {
-                    ^^^^^^^
-Many places in this function assume that ->sta can be NULL.
-
-  1402			int keyid = rx->sta->ptk_idx;
-  1403	
-  1404			if (ieee80211_has_protected(fc) && rx->sta->cipher_scheme) {
-  1405				cs = rx->sta->cipher_scheme;
-  1406				keyid = iwl80211_get_cs_keyid(cs, rx->skb);
-
-[ snip ]
-
-  1547		case WLAN_CIPHER_SUITE_AES_CMAC:
-  1548			result = ieee80211_crypto_aes_cmac_decrypt(rx);
-  1549			break;
-  1550		default:
-  1551			result = ieee80211_crypto_hw_decrypt(rx);
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-But if it's NULL here then we will Oops.
-
-  1552		}
-  1553	
-
-regards,
-dan carpenter
