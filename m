@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:37955 "EHLO
-	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752955AbaGTO0m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:26:42 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 13/30] airo: remove unnecessary break after return
-Date: Sun, 20 Jul 2014 16:25:14 +0200
-Message-Id: <1405866332-24652-4-git-send-email-fabf@skynet.be> (sfid-20140720_163243_893811_34064F33)
-In-Reply-To: <1405866332-24652-1-git-send-email-fabf@skynet.be>
-References: <1405866332-24652-1-git-send-email-fabf@skynet.be>
+Received: from mga03.intel.com ([143.182.124.21]:28047 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752269AbaGHIYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2014 04:24:43 -0400
+Message-ID: <1404807878.5102.85.camel@smile.fi.intel.com> (sfid-20140708_102509_049436_943972CB)
+Subject: Re: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format
+ specifier
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Tue, 08 Jul 2014 11:24:38 +0300
+In-Reply-To: <1404751810.27043.90.camel@joe-AO725>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404751810.27043.90.camel@joe-AO725>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/net/wireless/airo.c | 1 -
- 1 file changed, 1 deletion(-)
+On Mon, 2014-07-07 at 09:50 -0700, Joe Perches wrote:
+> On Mon, 2014-07-07 at 18:21 +0300, Andy Shevchenko wrote:
+> 
+> > diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+> []
+> >  static noinline_for_stack
+> > +char *escaped_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
+> > +		     const char *fmt)
+> []
+> > +	if (spec.field_width == 0)
+> > +		/* nothing to print */
+> > +		return buf;
+> []
+> > +	len = spec.field_width < 0 ? 1 : spec.field_width;
+> 
+> If field_width is not specified, emit a single byte?
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 64747d4..c26359d 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -7817,7 +7817,6 @@ static int readrids(struct net_device *dev, aironet_ioctl *comp) {
- 	case AIRORRID:      ridcode = comp->ridnum;     break;
- 	default:
- 		return -EINVAL;
--		break;
- 	}
- 
- 	if ((iobuf = kmalloc(RIDSIZE, GFP_KERNEL)) == NULL)
+A single byte to be escaped (it might be \000, for example, on output).
+
+> Perhaps better if -1 was accepted by string_escape_mem
+> as a strlen request or just ignored as a 0 length is
+> above.
+
+Would it be any benefit here?
+
+> fyi: hex_string emits nothing on printk("%ph", buf);
+
+Works just fine. How did you check it?
+
+pr_info("%ph\n", in); => test_string_helpers: 1b
+
+(I suppose "\n" flushes a buffer for me.)
+
 -- 
-1.9.1
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
 
