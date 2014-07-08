@@ -1,65 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:61610 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934533AbaGXUOD (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:6721 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753050AbaGHObl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 16:14:03 -0400
-Received: by mail-wg0-f46.google.com with SMTP id m15so3276425wgh.29
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 13:14:02 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/8] staging: vt6656: use clear_bit to remove device flag
-Date: Thu, 24 Jul 2014 21:13:18 +0100
-Message-Id: <1406232800-3694-6-git-send-email-tvboxspy@gmail.com> (sfid-20140724_221410_211407_667F4863)
-In-Reply-To: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
-References: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 8 Jul 2014 10:31:41 -0400
+From: "Stepanov, Max" <Max.Stepanov@intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mac80211: add generic cipher scheme support
+Date: Tue, 8 Jul 2014 14:31:37 +0000
+Message-ID: <3A934E7FDB083A4683727C7D377065951EAEA637@hasmsx109.ger.corp.intel.com> (sfid-20140708_163159_112508_EF696F7D)
+References: <20140708134312.GA6538@mwanda>
+In-Reply-To: <20140708134312.GA6538@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing MP_CLEAR_FLAG
+> This is a semi-automatic email about new static checker warnings.
+>
+> The patch 2475b1cc0d52: "mac80211: add generic cipher scheme support" 
+> from Mar 24, 2013, leads to the following Smatch complaint:
+>
+> net/mac80211/rx.c:1551 ieee80211_rx_h_decrypt()
+>	 error: we previously assumed 'rx->sta' could be null (see line 1401)
+> ...
+>  1551			result = ieee80211_crypto_hw_decrypt(rx);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ But if it's NULL here then we will Oops.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 1 -
- drivers/staging/vt6656/main_usb.c | 4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+Thank you Dan. I'll add verification of rx->sta == NULL to ieee80211_crypto_hw_decrypt().
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 5ac80d8..21f810e 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -402,7 +402,6 @@ struct vnt_private {
- 		(uVar)++;				\
- }
- 
--#define MP_CLEAR_FLAG(_M, _F)            ((_M)->flags &= ~(_F))
- #define MP_TEST_FLAGS(_M, _F)            (((_M)->flags & (_F)) == (_F))
- 
- int vnt_init(struct vnt_private *priv);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 7798221..d729d94 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -551,7 +551,7 @@ static int vnt_start(struct ieee80211_hw *hw)
- 		return -ENOMEM;
- 	}
- 
--	MP_CLEAR_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
-+	clear_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags);
- 
- 	if (device_init_registers(priv) == false) {
- 		dev_dbg(&priv->usb->dev, " init register fail\n");
-@@ -1025,7 +1025,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 
- 	usb_device_reset(priv);
- 
--	MP_CLEAR_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
-+	clear_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags);
- 	vnt_reset_command_timer(priv);
- 
- 	vnt_schedule_command(priv, WLAN_CMD_INIT_MAC80211);
--- 
-2.0.1
-
+Max
