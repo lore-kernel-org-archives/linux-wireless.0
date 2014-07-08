@@ -1,40 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32982 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53206 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822AbaGXK6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 06:58:49 -0400
-Message-ID: <1406199521.14675.13.camel@jlt4.sipsolutions.net> (sfid-20140724_125852_823480_37C113CF)
-Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with
- new plid
+	id S1751834AbaGHHKT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2014 03:10:19 -0400
+Message-ID: <1404803407.4419.3.camel@jlt4.sipsolutions.net> (sfid-20140708_091022_814551_414D730E)
+Subject: Re: [RFC/RFT 1/2] mac80211: add support for Rx reordering offloading
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Date: Thu, 24 Jul 2014 12:58:41 +0200
-In-Reply-To: <20140628205414.GA17825@localhost> (sfid-20140628_225418_043916_0596D325)
-References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
-	 <20140628205414.GA17825@localhost> (sfid-20140628_225418_043916_0596D325)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Denton Gentry <denton.gentry@gmail.com>
+Date: Tue, 08 Jul 2014 09:10:07 +0200
+In-Reply-To: <1403860015-31601-2-git-send-email-michal.kazior@tieto.com> (sfid-20140627_111730_127587_DA36C97E)
+References: <1403860015-31601-1-git-send-email-michal.kazior@tieto.com>
+	 <1403860015-31601-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140627_111730_127587_DA36C97E)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-06-28 at 16:54 -0400, Bob Copeland wrote:
-> [oops, +linux-wireless]
-> On Sat, Jun 28, 2014 at 04:35:25PM -0400, Bob Copeland wrote:
-> > The 802.11 standard says when processing a plink confirm
-> > frame:
-> > 
-> > "If the peerLinkID in the mesh peering instance has not been
-> > set, the Local Link ID field of the Mesh Peering Confirm
-> > request shall be copied into the peerLinkID in the mesh
-> > peering instance."
-> > 
-> > We were only doing this when receiving an open peering frame,
-> > but it could happen that the open frame gets lost and so we
-> > should handle this case rather than rejecting the confirm and
-> > failing the whole peering process.
+On Fri, 2014-06-27 at 11:06 +0200, Michal Kazior wrote:
 
-Applied.
+> +/**
+> + * ieee80211_start_rx_ba_session_offl - start a Rx BA session
+> + *
+> + * Some device drivers may offload part of the Rx aggregation flow including
+> + * AddBa/DelBa negotiation but may otherwise be incapable of full Rx
+> + * reordering.
+> + *
+> + * Create structures responsible for reordering so device drivers may call here
+> + * when they complete AddBa negotiation.
+> + *
+> + * @vif: &struct ieee80211_vif pointer from the add_interface callback
+> + * @addr: station mac address
+> + * @dialog_token:
+> + * @timeout: session timeout (in TU)
+
+Why would you need the dialog token (and why no docs?) and timeout?
+
+> + * @start_seq_num: starting frame sequence number
+> + * @tid: the rx tid
+
+> + * @buf_size: max number of frames in reorder buffer
+
+The buf_size also isn't really needed, is it? We are allowed to use a
+bigger buffer, I believe?
+
+> +void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
+> +					const u8 *addr, u8 dialog_token,
+> +					u16 timeout, u16 start_seq_num,
+> +					u16 tid, u16 buf_size)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct ieee80211_rx_agg *rx_agg;
+> +	struct sk_buff *skb = dev_alloc_skb(0);
+> +
+> +	if (unlikely(!skb))
+> +		return;
+> +
+> +	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
+> +	memcpy(&rx_agg->addr, addr, ETH_ALEN);
+> +	rx_agg->dialog_token = dialog_token;
+> +	rx_agg->timeout = timeout;
+> +	rx_agg->start_seq_num = start_seq_num;
+> +	rx_agg->ba_policy = 1;
+> +	rx_agg->tid = tid;
+> +	rx_agg->buf_size = buf_size;
+> +
+> +	skb->pkt_type = IEEE80211_SDATA_QUEUE_RX_AGG_START;
+> +	skb_queue_tail(&sdata->skb_queue, skb);
+> +	ieee80211_queue_work(&local->hw, &sdata->work);
+
+This seems problematic, since packets might be received immediately.
+
+On the teardown path it should probably also be invalidated immediately,
+no?
+
+Then again, we have the same problem already? Hmm.
 
 johannes
 
