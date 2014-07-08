@@ -1,338 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:62491 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbaGaUBA (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:44543 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753999AbaGHNL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2014 16:01:00 -0400
-Received: by mail-we0-f181.google.com with SMTP id k48so3312327wev.26
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 13:00:59 -0700 (PDT)
+	Tue, 8 Jul 2014 09:11:29 -0400
+Received: by mail-wi0-f182.google.com with SMTP id bs8so962319wib.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2014 06:11:28 -0700 (PDT)
 From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
 	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 3.18 6/7] b43: implement PPR (Power Per Rate) management/API
-Date: Thu, 31 Jul 2014 21:59:47 +0200
-Message-Id: <1406836788-23704-7-git-send-email-zajec5@gmail.com> (sfid-20140731_220106_095668_35C615D4)
-In-Reply-To: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
-References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
+Subject: [PATCH 2/7] b43: N-PHY: add TX gain tables for devices with specific EPA
+Date: Tue,  8 Jul 2014 15:11:05 +0200
+Message-Id: <1404825070-5243-2-git-send-email-zajec5@gmail.com> (sfid-20140708_151132_598260_00120E51)
+In-Reply-To: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
+References: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom hardware supports auto-adjustment of TX power depending on the
-currently used rate. So far all calculations were handled without any
-helpers (API) using big arrays and magic offsets.
-It seems Broadcom recently decided to clean this up by developing PPR.
-Their wlc_ppr.h can be found in open parts of the SDK.
-As we plan to implement support for rate-based TX power it makes sense
-to also implement our version of PPR as well.
-
 Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-Notes: I compile it unconditionally, other PHYs should use it as well. I
-already started working on HT-PHY.
+ drivers/net/wireless/b43/tables_nphy.c | 74 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 72 insertions(+), 2 deletions(-)
 
-V2: Drop unneeded __packed
-    Added Copyright/GPL header
-    Dropped some unneeded pointer (u32 replaced it)
-    Replaced BUG_ON with WARN_ON_ONCE
-    Fix indexing some array (use 4 + i)
----
- drivers/net/wireless/b43/Makefile |   1 +
- drivers/net/wireless/b43/b43.h    |   7 ++
- drivers/net/wireless/b43/ppr.c    | 199 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/ppr.h    |  45 +++++++++
- 4 files changed, 252 insertions(+)
- create mode 100644 drivers/net/wireless/b43/ppr.c
- create mode 100644 drivers/net/wireless/b43/ppr.h
-
-diff --git a/drivers/net/wireless/b43/Makefile b/drivers/net/wireless/b43/Makefile
-index 6e00b88..9f7965a 100644
---- a/drivers/net/wireless/b43/Makefile
-+++ b/drivers/net/wireless/b43/Makefile
-@@ -18,6 +18,7 @@ b43-y				+= xmit.o
- b43-y				+= dma.o
- b43-y				+= pio.o
- b43-y				+= rfkill.o
-+b43-y				+= ppr.o
- b43-$(CONFIG_B43_LEDS)		+= leds.o
- b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
- b43-$(CONFIG_B43_SDIO)		+= sdio.o
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index ff0c666..d55bd86 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -791,6 +791,13 @@ struct b43_firmware {
- 	bool pcm_request_failed;
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index b28dce9..3a5cd90 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2408,6 +2408,41 @@ static const u32 b43_ntab_tx_gain_epa_rev3_2g[] = {
+ 	0x1041003c, 0x1041003b, 0x10410039, 0x10410037,
  };
  
-+enum b43_band {
-+	B43_BAND_2G = 0,
-+	B43_BAND_5G_LO = 1,
-+	B43_BAND_5G_MI = 2,
-+	B43_BAND_5G_HI = 3,
++static const u32 b43_ntab_tx_gain_epa_rev3_hi_pwr_2g[] = {
++	0x0f410044, 0x0f410042, 0x0f410040, 0x0f41003e,
++	0x0f41003c, 0x0f41003b, 0x0f410039, 0x0f410037,
++	0x0e410044, 0x0e410042, 0x0e410040, 0x0e41003e,
++	0x0e41003c, 0x0e41003b, 0x0e410039, 0x0e410037,
++	0x0d410044, 0x0d410042, 0x0d410040, 0x0d41003e,
++	0x0d41003c, 0x0d41003b, 0x0d410039, 0x0d410037,
++	0x0c410044, 0x0c410042, 0x0c410040, 0x0c41003e,
++	0x0c41003c, 0x0c41003b, 0x0c410039, 0x0c410037,
++	0x0b410044, 0x0b410042, 0x0b410040, 0x0b41003e,
++	0x0b41003c, 0x0b41003b, 0x0b410039, 0x0b410037,
++	0x0a410044, 0x0a410042, 0x0a410040, 0x0a41003e,
++	0x0a41003c, 0x0a41003b, 0x0a410039, 0x0a410037,
++	0x09410044, 0x09410042, 0x09410040, 0x0941003e,
++	0x0941003c, 0x0941003b, 0x09410039, 0x09410037,
++	0x08410044, 0x08410042, 0x08410040, 0x0841003e,
++	0x0841003c, 0x0841003b, 0x08410039, 0x08410037,
++	0x07410044, 0x07410042, 0x07410040, 0x0741003e,
++	0x0741003c, 0x0741003b, 0x07410039, 0x07410037,
++	0x06410044, 0x06410042, 0x06410040, 0x0641003e,
++	0x0641003c, 0x0641003b, 0x06410039, 0x06410037,
++	0x05410044, 0x05410042, 0x05410040, 0x0541003e,
++	0x0541003c, 0x0541003b, 0x05410039, 0x05410037,
++	0x04410044, 0x04410042, 0x04410040, 0x0441003e,
++	0x0441003c, 0x0441003b, 0x04410039, 0x04410037,
++	0x03410044, 0x03410042, 0x03410040, 0x0341003e,
++	0x0341003c, 0x0341003b, 0x03410039, 0x03410037,
++	0x02410044, 0x02410042, 0x02410040, 0x0241003e,
++	0x0241003c, 0x0241003b, 0x02410039, 0x02410037,
++	0x01410044, 0x01410042, 0x01410040, 0x0141003e,
++	0x0141003c, 0x0141003b, 0x01410039, 0x01410037,
++	0x00410044, 0x00410042, 0x00410040, 0x0041003e,
++	0x0041003c, 0x0041003b, 0x00410039, 0x00410037
 +};
 +
- /* Device (802.11 core) initialization status. */
- enum {
- 	B43_STAT_UNINIT = 0,	/* Uninitialized. */
-diff --git a/drivers/net/wireless/b43/ppr.c b/drivers/net/wireless/b43/ppr.c
-new file mode 100644
-index 0000000..f609cc5
---- /dev/null
-+++ b/drivers/net/wireless/b43/ppr.c
-@@ -0,0 +1,199 @@
-+/*
-+ * Broadcom B43 wireless driver
-+ * PPR (Power Per Rate) management
-+ *
-+ * Copyright (c) 2014 Rafał Miłecki <zajec5@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#include "ppr.h"
-+#include "b43.h"
-+
-+#define ppr_for_each_entry(ppr, i, entry)				\
-+	for (i = 0, entry = &(ppr)->__all_rates[i];			\
-+	     i < B43_PPR_RATES_NUM;					\
-+	     i++, entry++)
-+
-+void b43_ppr_clear(struct b43_wldev *dev, struct b43_ppr *ppr)
-+{
-+	memset(ppr, 0, sizeof(*ppr));
-+
-+	/* Compile-time PPR check */
-+	BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM * sizeof(u8));
-+}
-+
-+void b43_ppr_add(struct b43_wldev *dev, struct b43_ppr *ppr, int diff)
-+{
-+	int i;
-+	u8 *rate;
-+
-+	ppr_for_each_entry(ppr, i, rate) {
-+		*rate = clamp_val(*rate + diff, 0, 127);
-+	}
-+}
-+
-+void b43_ppr_apply_max(struct b43_wldev *dev, struct b43_ppr *ppr, u8 max)
-+{
-+	int i;
-+	u8 *rate;
-+
-+	ppr_for_each_entry(ppr, i, rate) {
-+		*rate = min(*rate, max);
-+	}
-+}
-+
-+void b43_ppr_apply_min(struct b43_wldev *dev, struct b43_ppr *ppr, u8 min)
-+{
-+	int i;
-+	u8 *rate;
-+
-+	ppr_for_each_entry(ppr, i, rate) {
-+		*rate = max(*rate, min);
-+	}
-+}
-+
-+u8 b43_ppr_get_max(struct b43_wldev *dev, struct b43_ppr *ppr)
-+{
-+	u8 res = 0;
-+	int i;
-+	u8 *rate;
-+
-+	ppr_for_each_entry(ppr, i, rate) {
-+		res = max(*rate, res);
-+	}
-+
-+	return res;
-+}
-+
-+bool b43_ppr_load_max_from_sprom(struct b43_wldev *dev, struct b43_ppr *ppr,
-+				 enum b43_band band)
-+{
-+	struct b43_ppr_rates *rates = &ppr->rates;
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-+	struct b43_phy *phy = &dev->phy;
-+	u8 maxpwr, off;
-+	u32 sprom_ofdm_po;
-+	u16 *sprom_mcs_po;
-+	u8 extra_cdd_po, extra_stbc_po;
-+	int i;
-+
-+	switch (band) {
-+	case B43_BAND_2G:
-+		maxpwr = min(sprom->core_pwr_info[0].maxpwr_2g,
-+			     sprom->core_pwr_info[1].maxpwr_2g);
-+		sprom_ofdm_po = sprom->ofdm2gpo;
-+		sprom_mcs_po = sprom->mcs2gpo;
-+		extra_cdd_po = (sprom->cddpo >> 0) & 0xf;
-+		extra_stbc_po = (sprom->stbcpo >> 0) & 0xf;
-+		break;
-+	case B43_BAND_5G_LO:
-+		maxpwr = min(sprom->core_pwr_info[0].maxpwr_5gl,
-+			     sprom->core_pwr_info[1].maxpwr_5gl);
-+		sprom_ofdm_po = sprom->ofdm5glpo;
-+		sprom_mcs_po = sprom->mcs5glpo;
-+		extra_cdd_po = (sprom->cddpo >> 8) & 0xf;
-+		extra_stbc_po = (sprom->stbcpo >> 8) & 0xf;
-+		break;
-+	case B43_BAND_5G_MI:
-+		maxpwr = min(sprom->core_pwr_info[0].maxpwr_5g,
-+			     sprom->core_pwr_info[1].maxpwr_5g);
-+		sprom_ofdm_po = sprom->ofdm5gpo;
-+		sprom_mcs_po = sprom->mcs5gpo;
-+		extra_cdd_po = (sprom->cddpo >> 4) & 0xf;
-+		extra_stbc_po = (sprom->stbcpo >> 4) & 0xf;
-+		break;
-+	case B43_BAND_5G_HI:
-+		maxpwr = min(sprom->core_pwr_info[0].maxpwr_5gh,
-+			     sprom->core_pwr_info[1].maxpwr_5gh);
-+		sprom_ofdm_po = sprom->ofdm5ghpo;
-+		sprom_mcs_po = sprom->mcs5ghpo;
-+		extra_cdd_po = (sprom->cddpo >> 12) & 0xf;
-+		extra_stbc_po = (sprom->stbcpo >> 12) & 0xf;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return false;
-+	}
-+
-+	if (band == B43_BAND_2G) {
-+		for (i = 0; i < 4; i++) {
-+			off = ((sprom->cck2gpo >> (i * 4)) & 0xf) * 2;
-+			rates->cck[i] = maxpwr - off;
-+		}
-+	}
-+
-+	/* OFDM */
-+	for (i = 0; i < 8; i++) {
-+		off = ((sprom_ofdm_po >> (i * 4)) & 0xf) * 2;
-+		rates->ofdm[i] = maxpwr - off;
-+	}
-+
-+	/* MCS 20 SISO */
-+	rates->mcs_20[0] = rates->ofdm[0];
-+	rates->mcs_20[1] = rates->ofdm[2];
-+	rates->mcs_20[2] = rates->ofdm[3];
-+	rates->mcs_20[3] = rates->ofdm[4];
-+	rates->mcs_20[4] = rates->ofdm[5];
-+	rates->mcs_20[5] = rates->ofdm[6];
-+	rates->mcs_20[6] = rates->ofdm[7];
-+	rates->mcs_20[7] = rates->ofdm[7];
-+
-+	/* MCS 20 CDD */
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[0] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_cdd[i] = maxpwr - off;
-+		if (phy->type == B43_PHYTYPE_N && phy->rev >= 3)
-+			rates->mcs_20_cdd[i] -= extra_cdd_po;
-+	}
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[1] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_cdd[4 + i] = maxpwr - off;
-+		if (phy->type == B43_PHYTYPE_N && phy->rev >= 3)
-+			rates->mcs_20_cdd[4 + i] -= extra_cdd_po;
-+	}
-+
-+	/* OFDM 20 CDD */
-+	rates->ofdm_20_cdd[0] = rates->mcs_20_cdd[0];
-+	rates->ofdm_20_cdd[1] = rates->mcs_20_cdd[0];
-+	rates->ofdm_20_cdd[2] = rates->mcs_20_cdd[1];
-+	rates->ofdm_20_cdd[3] = rates->mcs_20_cdd[2];
-+	rates->ofdm_20_cdd[4] = rates->mcs_20_cdd[3];
-+	rates->ofdm_20_cdd[5] = rates->mcs_20_cdd[4];
-+	rates->ofdm_20_cdd[6] = rates->mcs_20_cdd[5];
-+	rates->ofdm_20_cdd[7] = rates->mcs_20_cdd[6];
-+
-+	/* MCS 20 STBC */
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[0] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_stbc[i] = maxpwr - off;
-+		if (phy->type == B43_PHYTYPE_N && phy->rev >= 3)
-+			rates->mcs_20_stbc[i] -= extra_stbc_po;
-+	}
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[1] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_stbc[4 + i] = maxpwr - off;
-+		if (phy->type == B43_PHYTYPE_N && phy->rev >= 3)
-+			rates->mcs_20_stbc[4 + i] -= extra_stbc_po;
-+	}
-+
-+	/* MCS 20 SDM */
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[2] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_sdm[i] = maxpwr - off;
-+	}
-+	for (i = 0; i < 4; i++) {
-+		off = ((sprom_mcs_po[3] >> (i * 4)) & 0xf) * 2;
-+		rates->mcs_20_sdm[4 + i] = maxpwr - off;
-+	}
-+
-+	return true;
-+}
-diff --git a/drivers/net/wireless/b43/ppr.h b/drivers/net/wireless/b43/ppr.h
-new file mode 100644
-index 0000000..24d7447
---- /dev/null
-+++ b/drivers/net/wireless/b43/ppr.h
-@@ -0,0 +1,45 @@
-+#ifndef LINUX_B43_PPR_H_
-+#define LINUX_B43_PPR_H_
-+
-+#include <linux/types.h>
-+
-+#define B43_PPR_CCK_RATES_NUM		4
-+#define B43_PPR_OFDM_RATES_NUM		8
-+#define B43_PPR_MCS_RATES_NUM		8
-+
-+#define B43_PPR_RATES_NUM	(B43_PPR_CCK_RATES_NUM +	\
-+				 B43_PPR_OFDM_RATES_NUM * 2 +	\
-+				 B43_PPR_MCS_RATES_NUM * 4)
-+
-+struct b43_ppr_rates {
-+	u8 cck[B43_PPR_CCK_RATES_NUM];
-+	u8 ofdm[B43_PPR_OFDM_RATES_NUM];
-+	u8 ofdm_20_cdd[B43_PPR_OFDM_RATES_NUM];
-+	u8 mcs_20[B43_PPR_MCS_RATES_NUM]; /* SISO */
-+	u8 mcs_20_cdd[B43_PPR_MCS_RATES_NUM];
-+	u8 mcs_20_stbc[B43_PPR_MCS_RATES_NUM];
-+	u8 mcs_20_sdm[B43_PPR_MCS_RATES_NUM];
+ /* EPA 5 GHz */
+ 
+ static const u32 b43_ntab_tx_gain_epa_rev3_5g[] = {
+@@ -2480,6 +2515,41 @@ static const u32 b43_ntab_tx_gain_epa_rev4_5g[] = {
+ 	0x20d2003a, 0x20d20038, 0x20d20036, 0x20d20034,
+ };
+ 
++static const u32 b43_ntab_tx_gain_epa_rev4_hi_pwr_5g[] = {
++	0x2ff10044, 0x2ff10042, 0x2ff10040, 0x2ff1003e,
++	0x2ff1003c, 0x2ff1003b, 0x2ff10039, 0x2ff10037,
++	0x2ef10044, 0x2ef10042, 0x2ef10040, 0x2ef1003e,
++	0x2ef1003c, 0x2ef1003b, 0x2ef10039, 0x2ef10037,
++	0x2df10044, 0x2df10042, 0x2df10040, 0x2df1003e,
++	0x2df1003c, 0x2df1003b, 0x2df10039, 0x2df10037,
++	0x2cf10044, 0x2cf10042, 0x2cf10040, 0x2cf1003e,
++	0x2cf1003c, 0x2cf1003b, 0x2cf10039, 0x2cf10037,
++	0x2bf10044, 0x2bf10042, 0x2bf10040, 0x2bf1003e,
++	0x2bf1003c, 0x2bf1003b, 0x2bf10039, 0x2bf10037,
++	0x2af10044, 0x2af10042, 0x2af10040, 0x2af1003e,
++	0x2af1003c, 0x2af1003b, 0x2af10039, 0x2af10037,
++	0x29f10044, 0x29f10042, 0x29f10040, 0x29f1003e,
++	0x29f1003c, 0x29f1003b, 0x29f10039, 0x29f10037,
++	0x28f10044, 0x28f10042, 0x28f10040, 0x28f1003e,
++	0x28f1003c, 0x28f1003b, 0x28f10039, 0x28f10037,
++	0x27f10044, 0x27f10042, 0x27f10040, 0x27f1003e,
++	0x27f1003c, 0x27f1003b, 0x27f10039, 0x27f10037,
++	0x26f10044, 0x26f10042, 0x26f10040, 0x26f1003e,
++	0x26f1003c, 0x26f1003b, 0x26f10039, 0x26f10037,
++	0x25f10044, 0x25f10042, 0x25f10040, 0x25f1003e,
++	0x25f1003c, 0x25f1003b, 0x25f10039, 0x25f10037,
++	0x24f10044, 0x24f10042, 0x24f10040, 0x24f1003e,
++	0x24f1003c, 0x24f1003b, 0x24f10039, 0x24f10038,
++	0x23f10041, 0x23f10040, 0x23f1003f, 0x23f1003e,
++	0x23f1003c, 0x23f1003b, 0x23f10039, 0x23f10037,
++	0x22f10044, 0x22f10042, 0x22f10040, 0x22f1003e,
++	0x22f1003c, 0x22f1003b, 0x22f10039, 0x22f10037,
++	0x21f10044, 0x21f10042, 0x21f10040, 0x21f1003e,
++	0x21f1003c, 0x21f1003b, 0x21f10039, 0x21f10037,
++	0x20d10043, 0x20d10041, 0x20d1003e, 0x20d1003c,
++	0x20d1003a, 0x20d10038, 0x20d10036, 0x20d10034
 +};
 +
-+struct b43_ppr {
-+	/* All powers are in qdbm (Q5.2) */
-+	union {
-+		u8 __all_rates[B43_PPR_RATES_NUM];
-+		struct b43_ppr_rates rates;
-+	};
-+};
-+
-+struct b43_wldev;
-+enum b43_band;
-+
-+void b43_ppr_clear(struct b43_wldev *dev, struct b43_ppr *ppr);
-+
-+void b43_ppr_add(struct b43_wldev *dev, struct b43_ppr *ppr, int diff);
-+void b43_ppr_apply_max(struct b43_wldev *dev, struct b43_ppr *ppr, u8 max);
-+void b43_ppr_apply_min(struct b43_wldev *dev, struct b43_ppr *ppr, u8 min);
-+u8 b43_ppr_get_max(struct b43_wldev *dev, struct b43_ppr *ppr);
-+
-+bool b43_ppr_load_max_from_sprom(struct b43_wldev *dev, struct b43_ppr *ppr,
-+				 enum b43_band band);
-+
-+#endif /* LINUX_B43_PPR_H_ */
+ static const u32 b43_ntab_tx_gain_epa_rev5_5g[] = {
+ 	0x0f62004a, 0x0f620048, 0x0f620046, 0x0f620044,
+ 	0x0f620042, 0x0f620040, 0x0f62003e, 0x0f62003c,
+@@ -3530,7 +3600,7 @@ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev)
+ 		case 4:
+ 			return sprom->fem.ghz5.extpa_gain == 3 ?
+ 				b43_ntab_tx_gain_epa_rev4_5g :
+-				b43_ntab_tx_gain_epa_rev4_5g; /* FIXME */
++				b43_ntab_tx_gain_epa_rev4_hi_pwr_5g;
+ 		case 3:
+ 			return b43_ntab_tx_gain_epa_rev3_5g;
+ 		default:
+@@ -3543,7 +3613,7 @@ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev)
+ 		case 6:
+ 		case 5:
+ 			if (sprom->fem.ghz5.extpa_gain == 3)
+-				return b43_ntab_tx_gain_epa_rev3_2g; /* FIXME */
++				return b43_ntab_tx_gain_epa_rev3_hi_pwr_2g;
+ 			/* fall through */
+ 		case 4:
+ 		case 3:
 -- 
 1.8.4.5
 
