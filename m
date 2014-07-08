@@ -1,119 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:39217 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753931AbaGUVl2 (ORCPT
+Received: from smtprelay0041.hostedemail.com ([216.40.44.41]:51036 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752106AbaGHQgD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 17:41:28 -0400
-Received: by mail-we0-f174.google.com with SMTP id x48so8235316wes.5
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 14:41:27 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/6] staging: vt6656: remove static declaration vnt_tx_context_complete
-Date: Mon, 21 Jul 2014 22:40:44 +0100
-Message-Id: <1405978847-2750-3-git-send-email-tvboxspy@gmail.com> (sfid-20140721_234143_117168_4E46A686)
-In-Reply-To: <1405978847-2750-1-git-send-email-tvboxspy@gmail.com>
-References: <1405978847-2750-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 8 Jul 2014 12:36:03 -0400
+Message-ID: <1404837357.932.20.camel@joe-AO725> (sfid-20140708_183626_026747_62F5D9B8)
+Subject: Re: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format
+ specifier
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Tue, 08 Jul 2014 09:35:57 -0700
+In-Reply-To: <1404807878.5102.85.camel@smile.fi.intel.com>
+References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1404751810.27043.90.camel@joe-AO725>
+	 <1404807878.5102.85.camel@smile.fi.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moving vnt_tx_context in visibility of vnt_tx_context_complete
+On Tue, 2014-07-08 at 11:24 +0300, Andy Shevchenko wrote:
+> On Mon, 2014-07-07 at 09:50 -0700, Joe Perches wrote:
+> > Perhaps better if -1 was accepted by string_escape_mem
+> > as a strlen request or just ignored as a 0 length is
+> > above.
+> 
+> Would it be any benefit here?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/usbpipe.c | 67 +++++++++++++++++++---------------------
- 1 file changed, 32 insertions(+), 35 deletions(-)
+Dunno, it was just a thought for you.
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 7444bba..acb0608 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -57,8 +57,6 @@
- #define URB_ASYNC_UNLINK    0
- #endif
- 
--static void vnt_tx_context_complete(struct urb *urb);
--
- int vnt_control_out(struct vnt_private *priv, u8 request, u16 value,
- 		u16 index, u16 length, u8 *buffer)
- {
-@@ -262,39 +260,6 @@ int vnt_submit_rx_urb(struct vnt_private *priv, struct vnt_rcb *rcb)
- 	return status;
- }
- 
--
--int vnt_tx_context(struct vnt_private *priv,
--				struct vnt_usb_send_context *context)
--{
--	int status;
--	struct urb *urb;
--
--	if (!(MP_IS_READY(priv) && priv->Flags & fMP_POST_WRITES)) {
--		context->in_use = false;
--		return STATUS_RESOURCES;
--	}
--
--	urb = context->urb;
--
--	usb_fill_bulk_urb(urb,
--			priv->usb,
--			usb_sndbulkpipe(priv->usb, 3),
--			context->data,
--			context->buf_len,
--			vnt_tx_context_complete,
--			context);
--
--	status = usb_submit_urb(urb, GFP_ATOMIC);
--	if (status != 0) {
--		dev_dbg(&priv->usb->dev, "Submit Tx URB failed %d\n", status);
--
--		context->in_use = false;
--		return STATUS_FAILURE;
--	}
--
--	return STATUS_PENDING;
--}
--
- static void vnt_tx_context_complete(struct urb *urb)
- {
- 	struct vnt_usb_send_context *context = urb->context;
-@@ -327,3 +292,35 @@ static void vnt_tx_context_complete(struct urb *urb)
- 
- 	return;
- }
-+
-+int vnt_tx_context(struct vnt_private *priv,
-+		   struct vnt_usb_send_context *context)
-+{
-+	int status;
-+	struct urb *urb;
-+
-+	if (!(MP_IS_READY(priv) && priv->Flags & fMP_POST_WRITES)) {
-+		context->in_use = false;
-+		return STATUS_RESOURCES;
-+	}
-+
-+	urb = context->urb;
-+
-+	usb_fill_bulk_urb(urb,
-+			  priv->usb,
-+			  usb_sndbulkpipe(priv->usb, 3),
-+			  context->data,
-+			  context->buf_len,
-+			  vnt_tx_context_complete,
-+			  context);
-+
-+	status = usb_submit_urb(urb, GFP_ATOMIC);
-+	if (status != 0) {
-+		dev_dbg(&priv->usb->dev, "Submit Tx URB failed %d\n", status);
-+
-+		context->in_use = false;
-+		return STATUS_FAILURE;
-+	}
-+
-+	return STATUS_PENDING;
-+}
--- 
-2.0.1
+> > fyi: hex_string emits nothing on printk("%ph", buf);
+> 
+> Works just fine. How did you check it?
+
+By not reading the code correctly.
+So what you have is fine.
+
 
