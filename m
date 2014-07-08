@@ -1,197 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54407 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:63618 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753641AbaGGPWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:22:10 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 04/10] lib/vsprintf: add %*pE[achnops] format specifier
-Date: Mon,  7 Jul 2014 18:21:46 +0300
-Message-Id: <1404746512-12749-5-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172301_220788_81A9D97E)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1750927AbaGHGzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2014 02:55:40 -0400
+Message-ID: <53BB95CE.1010502@redhat.com> (sfid-20140708_085601_127355_3909A038)
+Date: Tue, 08 Jul 2014 08:55:10 +0200
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: linux-sunxi@googlegroups.com
+CC: Arend van Spriel <arend@broadcom.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>
+Subject: Re: [linux-sunxi] Re: [PATCH v3 1/4] dt: bindings: add bindings for
+ Broadcom bcm43xx sdio devices
+References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com> <1404051421-24377-2-git-send-email-hdegoede@redhat.com> <20140707182302.GA29650@tuxdriver.com>
+In-Reply-To: <20140707182302.GA29650@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows user to print a given buffer as esaped string. The rules applied
-accordingly to the mix of the flags provided by additional format letters.
+Hi,
 
-For example, if the given buffer:
+On 07/07/2014 08:23 PM, John W. Linville wrote:
+> Any word from the devicetree folks?
 
-	1b 62 20 5c 43 07 22 90 0d 5d
+We changed the compatible string from brcm,bcm43xx-fmac to brcm,bcm4329-fmac
+at their request, that is the only feedback we've gotten from them AFAIK.
 
-The result strings could be:
-	%*pE            "\eb \C\a"\220\r]"
-	%*pEhp          "\x1bb \C\x07"\x90\x0d]"
-	%*pEa           "\e\142\040\\\103\a\042\220\r\135"
+Regards,
 
-Please, read Documentation/printk-formats.txt and lib/string_helpers.c kernel
-documentation to get further information.
+Hans
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Suggested-by: Joe Perches <joe@perches.com>
----
- Documentation/printk-formats.txt | 28 ++++++++++++++++
- lib/vsprintf.c                   | 72 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 100 insertions(+)
-
-diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
-index 3b56a99..e2dc566 100644
---- a/Documentation/printk-formats.txt
-+++ b/Documentation/printk-formats.txt
-@@ -70,6 +70,34 @@ DMA addresses types dma_addr_t:
- 	For printing a dma_addr_t type which can vary based on build options,
- 	regardless of the width of the CPU data path. Passed by reference.
- 
-+Raw buffer as an escaped string:
-+
-+	%*pE[achnops]
-+
-+	For printing raw buffer as an escaped string. For the following buffer
-+
-+		1b 62 20 5c 43 07 22 90 0d 5d
-+
-+	few examples show how the conversion could be done (the result string
-+	without embraced quotes):
-+
-+		%*pE		"\eb \C\a"\220\r]"
-+		%*pEhp		"\x1bb \C\x07"\x90\x0d]"
-+		%*pEa		"\e\142\040\\\103\a\042\220\r\135"
-+
-+	The converion rules are defined by combination of the following flags
-+	(see string_escape_mem() kernel documentation for the details):
-+		a - ESCAPE_ANY
-+		c - ESCAPE_SPECIAL
-+		h - ESCAPE_HEX
-+		n - ESCAPE_NULL
-+		o - ESCAPE_OCTAL
-+		p - ESCAPE_NP
-+		s - ESCAPE_SPACE
-+	By default ESCAPE_ANY_NP is used.
-+
-+	If field width is ommited the 1 byte only will be escaped.
-+
- Raw buffer as a hex string:
- 	%*ph	00 01 02  ...  3f
- 	%*phC	00:01:02: ... :3f
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 0eced40..6913046 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -33,6 +33,7 @@
- #include <asm/page.h>		/* for PAGE_SIZE */
- #include <asm/sections.h>	/* for dereference_function_descriptor() */
- 
-+#include <linux/string_helpers.h>
- #include "kstrtox.h"
- 
- /**
-@@ -1101,6 +1102,63 @@ char *ip4_addr_string_sa(char *buf, char *end, const struct sockaddr_in *sa,
- }
- 
- static noinline_for_stack
-+char *escaped_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-+		     const char *fmt)
-+{
-+	bool found = true;
-+	int count = 1;
-+	unsigned int flags = 0;
-+	int len;
-+
-+	if (spec.field_width == 0)
-+		/* nothing to print */
-+		return buf;
-+
-+	if (ZERO_OR_NULL_PTR(addr))
-+		/* NULL pointer */
-+		return string(buf, end, NULL, spec);
-+
-+	do {
-+		switch (fmt[count++]) {
-+		case 'a':
-+			flags |= ESCAPE_ANY;
-+			break;
-+		case 'c':
-+			flags |= ESCAPE_SPECIAL;
-+			break;
-+		case 'h':
-+			flags |= ESCAPE_HEX;
-+			break;
-+		case 'n':
-+			flags |= ESCAPE_NULL;
-+			break;
-+		case 'o':
-+			flags |= ESCAPE_OCTAL;
-+			break;
-+		case 'p':
-+			flags |= ESCAPE_NP;
-+			break;
-+		case 's':
-+			flags |= ESCAPE_SPACE;
-+			break;
-+		default:
-+			found = false;
-+			break;
-+		}
-+	} while (found);
-+
-+	if (!flags)
-+		flags = ESCAPE_ANY_NP;
-+
-+	len = spec.field_width < 0 ? 1 : spec.field_width;
-+
-+	/* Ignore the error. We print as many characters as we can */
-+	string_escape_mem(addr, len, &buf, end - buf, flags, NULL);
-+
-+	return buf;
-+}
-+
-+static noinline_for_stack
- char *uuid_string(char *buf, char *end, const u8 *addr,
- 		  struct printf_spec spec, const char *fmt)
- {
-@@ -1236,6 +1294,17 @@ int kptr_restrict __read_mostly;
-  * - '[Ii][4S][hnbl]' IPv4 addresses in host, network, big or little endian order
-  * - 'I[6S]c' for IPv6 addresses printed as specified by
-  *       http://tools.ietf.org/html/rfc5952
-+ * - 'E[achnops]' For an escaped buffer, where rules are defined by combination
-+ *                of the following flags (see string_escape_mem() for the
-+ *                details):
-+ *                  a - ESCAPE_ANY
-+ *                  c - ESCAPE_SPECIAL
-+ *                  h - ESCAPE_HEX
-+ *                  n - ESCAPE_NULL
-+ *                  o - ESCAPE_OCTAL
-+ *                  p - ESCAPE_NP
-+ *                  s - ESCAPE_SPACE
-+ *                By default ESCAPE_ANY_NP is used.
-  * - 'U' For a 16 byte UUID/GUID, it prints the UUID/GUID in the form
-  *       "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  *       Options for %pU are:
-@@ -1337,6 +1406,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
- 			}}
- 		}
- 		break;
-+	case 'E':
-+		return escaped_string(buf, end, ptr, spec, fmt);
- 	case 'U':
- 		return uuid_string(buf, end, ptr, spec, fmt);
- 	case 'V':
-@@ -1651,6 +1722,7 @@ qualifier:
-  * %piS depending on sa_family of 'struct sockaddr *' print IPv4/IPv6 address
-  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
-  *   case.
-+ * %*pE[achnops] print an escaped buffer
-  * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
-  *           bytes of the input)
-  * %n is ignored
--- 
-2.0.1
-
+> 
+> On Sun, Jun 29, 2014 at 04:16:58PM +0200, Hans de Goede wrote:
+>> From: Arend van Spriel <arend@broadcom.com>
+>>
+>> The Broadcom bcm43xx sdio devices are fullmac devices that may be
+>> integrated in ARM platforms. Currently, the brcmfmac driver for
+>> these devices support use of platform data. This patch specifies
+>> the bindings that allow this platform data to be expressed in the
+>> devicetree.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
+>>  on how to handle this yet]
+>> [hdegoede@redhat.com: move from bindings/staging to bindings]
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
+>>  1 file changed, 41 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> new file mode 100644
+>> index 0000000..5dbf169
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -0,0 +1,41 @@
+>> +Broadcom BCM43xx Fullmac wireless SDIO devices
+>> +
+>> +This node provides properties for controlling the Broadcom wireless device. The
+>> +node is expected to be specified as a child node to the SDIO controller that
+>> +connects the device to the system.
+>> +
+>> +Required properties:
+>> +
+>> + - compatible : Should be "brcm,bcm4329-fmac".
+>> +
+>> +Optional properties:
+>> + - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+>> +	(default = 6).
+>> + - interrupt-parent : the phandle for the interrupt controller to which the
+>> +	device interrupts are connected.
+>> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+>> +	When not specified the device will use in-band SDIO interrupts.
+>> + - interrupt-names : name of the out-of-band interrupt, which must be set
+>> +	to "host-wake".
+>> +
+>> +Example:
+>> +
+>> +mmc3: mmc@01c12000 {
+>> +	#address-cells = <1>;
+>> +	#size-cells = <0>;
+>> +
+>> +	pinctrl-names = "default";
+>> +	pinctrl-0 = <&mmc3_pins_a>;
+>> +	vmmc-supply = <&reg_vmmc3>;
+>> +	bus-width = <4>;
+>> +	non-removable;
+>> +	status = "okay";
+>> +
+>> +	brcmf: bcrmf@1 {
+>> +		reg = <1>;
+>> +		compatible = "brcm,bcm4329-fmac";
+>> +		interrupt-parent = <&pio>;
+>> +		interrupts = <10 8>; /* PH10 / EINT10 */
+>> +		interrupt-names = "host-wake";
+>> +	};
+>> +};
+>> -- 
+>> 2.0.0
+>>
+>>
+> 
