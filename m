@@ -1,60 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:44570 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbaGXMVT (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:45315 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704AbaGHC5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 08:21:19 -0400
-Received: by mail-we0-f179.google.com with SMTP id u57so2667030wes.24
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 05:21:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1406200256.14675.17.camel@jlt4.sipsolutions.net>
-References: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406198362-4999-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406200256.14675.17.camel@jlt4.sipsolutions.net>
-Date: Thu, 24 Jul 2014 14:21:17 +0200
-Message-ID: <CAA2SeN+zR_CUp4S7Vs0THpaMBKJqkwAPJdrDddhsxL4E1hhV3g@mail.gmail.com> (sfid-20140724_142122_250002_415A66E5)
-Subject: Re: [PATCHv2 1/2] cfg80211: extend coverage_class datatype
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 7 Jul 2014 22:57:24 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so6446333pab.22
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 19:57:23 -0700 (PDT)
+Date: Mon, 7 Jul 2014 19:57:19 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Arik Nemtsov <arik@wizery.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Philippe Duchein <wireless-dev@duchein.net>
-Content-Type: text/plain; charset=UTF-8
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user
+ hints
+Message-ID: <20140708025719.GU1390@garbanzo.do-not-panic.com> (sfid-20140708_045727_769962_EAACF755)
+References: <CA+XVXffrepXAKitqhL4C87Jxy4MiF+iAO_PP6YZkMKtqeckV+Q@mail.gmail.com>
+ <20140623204800.GF1390@garbanzo.do-not-panic.com>
+ <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
+ <20140630222132.GN1390@garbanzo.do-not-panic.com>
+ <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com>
+ <20140702020442.GP1390@garbanzo.do-not-panic.com>
+ <CA+XVXffvG6GagBPMZF+iogaAeYV0kUoi4BX68J0fxOfsHjE70A@mail.gmail.com>
+ <20140703221901.GS1390@garbanzo.do-not-panic.com>
+ <CA+XVXffnDs4oCnyD0NzmyG6=jxqXwUFd+Tj8XAsWGC1bgcMH8A@mail.gmail.com>
+ <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thu, 2014-07-24 at 12:39 +0200, Lorenzo Bianconi wrote:
->
->> @@ -2242,10 +2243,15 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->>               changed |= WIPHY_PARAM_COVERAGE_CLASS;
->>       }
->>
->> +     if (info->attrs[NL80211_ATTR_WIPHY_DYNACK]) {
->> +             coverage_class = -1;
->> +             changed |= WIPHY_PARAM_COVERAGE_CLASS;
->> +     }
->
-> I think you should also reject having both dyn and fixed attributes.
->
+On Mon, Jul 07, 2014 at 12:13:20PM +0300, Arik Nemtsov wrote:
+> On Sun, Jul 6, 2014 at 10:22 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> > Therefore I would be glad if you reconsider a dynamic initial regulatory domain.
+> 
+> Thinking about this a bit more, I guess we can find out the true
+> initial regdomain (e.g. US) on ifup (much after wiphy is registered),
+> and send it as as a real alpha2 in a driver regulatory hint. This will
+> keep orig_flags pristine and allows us to change regdomains at will.
 
-Currently iw does not allow to set both attribute at the same time,
-but I can use "if-else if" statement in order to exclude that
-condition.
+:)
 
-> You should also have a feature flag that drivers set that you test here
-> and refuse dynamic if it's not supported, I guess?
->
+> But we still need the "99" from usermode for the "user removes the SIM
+> during operation" scenario. You're suggesting reg.c will get "99" and
+> somehow know that it needs to restore the alpha2 to US at this point.
 
-I would rely on lower drivers to fail (returning -EOPNOTSUPP to
-set_coverage_class caller) if dynack it is not supported and user is
-trying to enable it. Does it sound good for you?
+No I never made a recommendation to the linking.
 
-> johannes
->
+> Currently there's no functionality to do this. There's some limited
+> code to restore to the latest set user_alpha2, but that's not what we
+> want.
 
-Lorenzo
+I'll highlight you're mentioning the user_alpha2, which is used for
+either users setting regulatory domains via 'iw reg set' or equivalent
+and cellular base station hints, which use the same API but just qualify
+the request to specifiy the source is coming from some form of cell base
+station.
 
+> We want the "US" that was set by the driver.
 
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+But here you say "driver" rather than userspace or cell base station
+hints, so its unclear what you meant here. If the driver set it then
+REGULATORY_STRICT_REG already supports letting the driver keep the
+_orig* parameters.
+
+> I still believe the
+> simplest solution is to give it to the get_regd() callback, which will
+> then return "US". It prevents complexity and more special cases from
+> reg.c..
+
+Let's separate cell base station hints from userspace from firmware
+being loaded and assuming that magical firmware has now regulatory
+data (which obviously I consider silly since we already provide the
+same functionality with CRDA and let you override the db.txt). The
+cellular base station hint infrastructure can certainly be expanded
+to support overriding the *_orig parameters. The FW API looks less
+attractive now as it seems more than anything the hint can actually
+come from userspace and the base station hint mechanism for your
+use case.
+
+A FW API to let FW load regulatory data dynamically is still OK but
+lets be clear that if you are using it for a userspace work around
+for cell base astation hints it seems rather a work around for
+existing APIs and you can likely implement what you want with less
+code. If we don't need this FW API I rather not have it added.
+
+  Luis
