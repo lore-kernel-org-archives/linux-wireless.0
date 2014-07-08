@@ -1,152 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:63891 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933778AbaGQOOQ (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:38525 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753999AbaGHNLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:16 -0400
-Received: by mail-wg0-f42.google.com with SMTP id l18so2032055wgh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:13 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 07/15] mac80211: add QoS IE during TDLS setup start
-Date: Thu, 17 Jul 2014 17:14:23 +0300
-Message-Id: <1405606471-30128-8-git-send-email-arik@wizery.com> (sfid-20140717_161424_857962_2E33C6AA)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+	Tue, 8 Jul 2014 09:11:37 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so954594wib.14
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2014 06:11:35 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 5/7] b43: N-PHY: init and channel switching of radio 0x2057 rev 9
+Date: Tue,  8 Jul 2014 15:11:08 +0200
+Message-Id: <1404825070-5243-5-git-send-email-zajec5@gmail.com> (sfid-20140708_151144_488439_D491C8B1)
+In-Reply-To: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
+References: <1404825070-5243-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If QoS is supported by the card, add an appropriate IE to TDLS setup-
-request and setup-response frames.
-
-Consolidate the setting of the WMM info IE across mac80211.
-
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/ibss.c        | 13 ++-----------
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 11 +----------
- net/mac80211/tdls.c        |  7 +++++++
- net/mac80211/util.c        | 15 +++++++++++++++
- 5 files changed, 26 insertions(+), 21 deletions(-)
+ drivers/net/wireless/b43/phy_n.c      |  47 ++++++++-
+ drivers/net/wireless/b43/radio_2057.c | 188 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 234 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 713485f..9713dc5 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -189,17 +189,8 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
- 						 chandef, 0);
- 	}
- 
--	if (local->hw.queues >= IEEE80211_NUM_ACS) {
--		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
--		*pos++ = 7; /* len */
--		*pos++ = 0x00; /* Microsoft OUI 00:50:F2 */
--		*pos++ = 0x50;
--		*pos++ = 0xf2;
--		*pos++ = 2; /* WME */
--		*pos++ = 0; /* WME info */
--		*pos++ = 1; /* WME ver */
--		*pos++ = 0; /* U-APSD no in use */
--	}
-+	if (local->hw.queues >= IEEE80211_NUM_ACS)
-+		pos = ieee80211_add_wmm_info_ie(pos, 0); /* U-APSD not in use */
- 
- 	presp->head_len = pos - presp->head;
- 	if (WARN_ON(presp->head_len > frame_len))
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9e025e1..cb87476 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1824,6 +1824,7 @@ int ieee80211_add_srates_ie(struct ieee80211_sub_if_data *sdata,
- int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
- 				struct sk_buff *skb, bool need_basic,
- 				enum ieee80211_band band);
-+u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo);
- 
- /* channel management */
- void ieee80211_ht_oper_to_chandef(struct ieee80211_channel *control_chan,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 931330b..d863ff8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -830,16 +830,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 			qos_info = 0;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 44349f5..479cda8 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -746,10 +746,55 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
+ 			b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C2, 0x8);
  		}
- 
--		pos = skb_put(skb, 9);
--		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
--		*pos++ = 7; /* len */
--		*pos++ = 0x00; /* Microsoft OUI 00:50:F2 */
--		*pos++ = 0x50;
--		*pos++ = 0xf2;
--		*pos++ = 2; /* WME */
--		*pos++ = 0; /* WME info */
--		*pos++ = 1; /* WME ver */
--		*pos++ = qos_info;
-+		pos = ieee80211_add_wmm_info_ie(skb_put(skb, 9), qos_info);
+ 		break;
++	case 9: /* e.g. PHY rev 16 */
++		b43_radio_write(dev, R2057_LOGEN_PTAT_RESETS, 0x20);
++		b43_radio_write(dev, R2057_VCOBUF_IDACS, 0x18);
++		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
++			b43_radio_write(dev, R2057_LOGEN_PTAT_RESETS, 0x38);
++			b43_radio_write(dev, R2057_VCOBUF_IDACS, 0x0f);
++
++			if (b43_is_40mhz(dev)) {
++				/* TODO */
++			} else {
++				b43_radio_write(dev,
++						R2057_PAD_BIAS_FILTER_BWS_CORE0,
++						0x3c);
++				b43_radio_write(dev,
++						R2057_PAD_BIAS_FILTER_BWS_CORE1,
++						0x3c);
++			}
++		}
++		break;
+ 	/* TODO */
  	}
  
- 	/* add any remaining custom (i.e. vendor specific here) IEs */
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 398a413..bfd8fc4 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -100,6 +100,7 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 				   const u8 *extra_ies, size_t extra_ies_len)
+-	/* TODO */
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		u16 txmix2g_tune_boost_pu = 0;
++		u16 pad2g_tune_pus = 0;
++
++		if (b43_nphy_ipa(dev)) {
++			switch (phy->radio_rev) {
++			case 9:
++				txmix2g_tune_boost_pu = 0x0041;
++				/* TODO */
++				break;
++			}
++			/* TODO */
++		}
++
++		if (txmix2g_tune_boost_pu)
++			b43_radio_write(dev, R2057_TXMIX2G_TUNE_BOOST_PU_CORE0,
++					txmix2g_tune_boost_pu);
++		if (pad2g_tune_pus)
++			b43_radio_write(dev, R2057_PAD2G_TUNE_PUS_CORE0,
++					pad2g_tune_pus);
++		if (txmix2g_tune_boost_pu)
++			b43_radio_write(dev, R2057_TXMIX2G_TUNE_BOOST_PU_CORE1,
++					txmix2g_tune_boost_pu);
++		if (pad2g_tune_pus)
++			b43_radio_write(dev, R2057_PAD2G_TUNE_PUS_CORE1,
++					pad2g_tune_pus);
++	}
+ 
+ 	usleep_range(50, 100);
+ 
+diff --git a/drivers/net/wireless/b43/radio_2057.c b/drivers/net/wireless/b43/radio_2057.c
+index df35745..941cf3d 100644
+--- a/drivers/net/wireless/b43/radio_2057.c
++++ b/drivers/net/wireless/b43/radio_2057.c
+@@ -105,6 +105,18 @@ static u16 r2057_rev8_init[][2] = {
+ };
+ */
+ 
++/* Extracted from MMIO dump of 6.30.223.141 */
++static u16 r2057_rev9_init[][2] = {
++	{ 0x27, 0x1f }, { 0x28, 0x0a }, { 0x29, 0x2f }, { 0x42, 0x1f },
++	{ 0x48, 0x3f }, { 0x5c, 0x41 }, { 0x63, 0x14 }, { 0x64, 0x12 },
++	{ 0x66, 0xff }, { 0x74, 0xa3 }, { 0x7b, 0x14 }, { 0x7c, 0x14 },
++	{ 0x7d, 0xee }, { 0x86, 0xc0 }, { 0xc4, 0x10 }, { 0xc9, 0x01 },
++	{ 0xe1, 0x41 }, { 0xe8, 0x14 }, { 0xe9, 0x12 }, { 0xeb, 0xff },
++	{ 0xf5, 0x0a }, { 0xf8, 0x09 }, { 0xf9, 0xa3 }, { 0x100, 0x14 },
++	{ 0x101, 0x10 }, { 0x102, 0xee }, { 0x10b, 0xc0 }, { 0x149, 0x10 },
++	{ 0x14e, 0x01 }, { 0x1b7, 0x05 }, { 0x1c2, 0xa0 },
++};
++
+ #define RADIOREGS7(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
+ 		   r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
+ 		   r20, r21, r22, r23, r24, r25, r26, r27) \
+@@ -145,6 +157,170 @@ static u16 r2057_rev8_init[][2] = {
+ 	.phy_regs.phy_bw5	= r4,	\
+ 	.phy_regs.phy_bw6	= r5
+ 
++/* Extracted from MMIO dump of 6.30.223.141 */
++static const struct b43_nphy_chantabent_rev7 b43_nphy_chantab_phy_rev16_radio_rev9[] = {
++	{
++		.freq			= 2412,
++		RADIOREGS7(0x48, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x6c,
++			   0x09, 0x0f, 0x0a, 0x00, 0x0a, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
++	},
++	{
++		.freq			= 2417,
++		RADIOREGS7(0x4b, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x71,
++			   0x09, 0x0f, 0x0a, 0x00, 0x0a, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
++	},
++	{
++		.freq			= 2422,
++		RADIOREGS7(0x4e, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x76,
++			   0x09, 0x0f, 0x09, 0x00, 0x09, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
++	},
++	{
++		.freq			= 2427,
++		RADIOREGS7(0x52, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x7b,
++			   0x09, 0x0f, 0x09, 0x00, 0x09, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
++	},
++	{
++		.freq			= 2432,
++		RADIOREGS7(0x55, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x80,
++			   0x09, 0x0f, 0x08, 0x00, 0x08, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
++	},
++	{
++		.freq			= 2437,
++		RADIOREGS7(0x58, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x85,
++			   0x09, 0x0f, 0x08, 0x00, 0x08, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
++	},
++	{
++		.freq			= 2442,
++		RADIOREGS7(0x5c, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8a,
++			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
++	},
++	{
++		.freq			= 2447,
++		RADIOREGS7(0x5f, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8f,
++			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
++	},
++	{
++		.freq			= 2452,
++		RADIOREGS7(0x62, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x94,
++			   0x09, 0x0f, 0x07, 0x00, 0x07, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
++	},
++	{
++		.freq			= 2457,
++		RADIOREGS7(0x66, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x99,
++			   0x09, 0x0f, 0x06, 0x00, 0x06, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
++	},
++	{
++		.freq			= 2462,
++		RADIOREGS7(0x69, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x9e,
++			   0x09, 0x0f, 0x06, 0x00, 0x06, 0x00, 0x41, 0x63,
++			   0x00, 0x00, 0x00, 0xf0, 0x00, 0x41, 0x63, 0x00,
++			   0x00, 0x00, 0xf0, 0x00),
++		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
++	},
++	{
++		.freq			= 5180,
++		RADIOREGS7(0xbe, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x06,
++			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
++			   0x9f, 0x2f, 0xa3, 0x00, 0xfc, 0x00, 0x00, 0x4f,
++			   0x3a, 0x83, 0x00, 0xfc),
++		PHYREGS(0x081c, 0x0818, 0x0814, 0x01f9, 0x01fa, 0x01fb),
++	},
++	{
++		.freq			= 5200,
++		RADIOREGS7(0xc5, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x08,
++			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
++			   0x7f, 0x2f, 0x83, 0x00, 0xf8, 0x00, 0x00, 0x4c,
++			   0x4a, 0x83, 0x00, 0xf8),
++		PHYREGS(0x0824, 0x0820, 0x081c, 0x01f7, 0x01f8, 0x01f9),
++	},
++	{
++		.freq			= 5220,
++		RADIOREGS7(0xcc, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x0a,
++			   0x02, 0x0e, 0x00, 0x0e, 0x00, 0x9e, 0x00, 0x00,
++			   0x6d, 0x3d, 0x83, 0x00, 0xf8, 0x00, 0x00, 0x2d,
++			   0x2a, 0x73, 0x00, 0xf8),
++		PHYREGS(0x082c, 0x0828, 0x0824, 0x01f5, 0x01f6, 0x01f7),
++	},
++	{
++		.freq			= 5240,
++		RADIOREGS7(0xd2, 0x16, 0x10, 0x1f, 0x08, 0x08, 0x3f, 0x0c,
++			   0x02, 0x0d, 0x00, 0x0d, 0x00, 0x8d, 0x00, 0x00,
++			   0x4d, 0x1c, 0x73, 0x00, 0xf8, 0x00, 0x00, 0x4d,
++			   0x2b, 0x73, 0x00, 0xf8),
++		PHYREGS(0x0834, 0x0830, 0x082c, 0x01f3, 0x01f4, 0x01f5),
++	},
++	{
++		.freq			= 5745,
++		RADIOREGS7(0x7b, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x7d,
++			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
++			   0x08, 0x03, 0x03, 0x00, 0x30, 0x00, 0x00, 0x06,
++			   0x02, 0x03, 0x00, 0x30),
++		PHYREGS(0x08fe, 0x08fa, 0x08f6, 0x01c8, 0x01c8, 0x01c9),
++	},
++	{
++		.freq			= 5765,
++		RADIOREGS7(0x81, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x81,
++			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
++			   0x06, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x05,
++			   0x02, 0x03, 0x00, 0x00),
++		PHYREGS(0x0906, 0x0902, 0x08fe, 0x01c6, 0x01c7, 0x01c8),
++	},
++	{
++		.freq			= 5785,
++		RADIOREGS7(0x88, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x85,
++			   0x04, 0x08, 0x00, 0x06, 0x00, 0x15, 0x00, 0x00,
++			   0x08, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x05,
++			   0x21, 0x03, 0x00, 0x00),
++		PHYREGS(0x090e, 0x090a, 0x0906, 0x01c4, 0x01c5, 0x01c6),
++	},
++	{
++		.freq			= 5805,
++		RADIOREGS7(0x8f, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x89,
++			   0x04, 0x07, 0x00, 0x06, 0x00, 0x04, 0x00, 0x00,
++			   0x06, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x03,
++			   0x00, 0x03, 0x00, 0x00),
++		PHYREGS(0x0916, 0x0912, 0x090e, 0x01c3, 0x01c4, 0x01c4),
++	},
++	{
++		.freq			= 5825,
++		RADIOREGS7(0x95, 0x17, 0x20, 0x1f, 0x08, 0x08, 0x3f, 0x8d,
++			   0x04, 0x07, 0x00, 0x05, 0x00, 0x03, 0x00, 0x00,
++			   0x05, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x03,
++			   0x00, 0x03, 0x00, 0x00),
++		PHYREGS(0x091e, 0x091a, 0x0916, 0x01c1, 0x01c2, 0x01c3),
++	},
++};
++
+ void r2057_upload_inittabs(struct b43_wldev *dev)
  {
- 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
-+	struct ieee80211_local *local = sdata->local;
- 	size_t offset = 0, noffset;
- 	u8 *pos;
+ 	struct b43_phy *phy = &dev->phy;
+@@ -171,6 +347,12 @@ void r2057_upload_inittabs(struct b43_wldev *dev)
+ 			size = ARRAY_SIZE(r2057_rev5a_init);
+ 		}
+ 		break;
++	case 16:
++		if (phy->radio_rev == 9) {
++			table = r2057_rev9_init[0];
++			size = ARRAY_SIZE(r2057_rev9_init);
++		}
++		break;
+ 	}
  
-@@ -126,6 +127,11 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
+ 	B43_WARN_ON(!table);
+@@ -195,6 +377,12 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
  
- 	ieee80211_tdls_add_ext_capab(skb);
- 
-+	/* add the QoS element if we support it */
-+	if (local->hw.queues >= IEEE80211_NUM_ACS &&
-+	    action_code != WLAN_PUB_ACTION_TDLS_DISCOVER_RES)
-+		ieee80211_add_wmm_info_ie(skb_put(skb, 9), 0); /* no U-APSD */
-+
- 	/* add any custom IEs that go before HT capabilities */
- 	if (extra_ies_len) {
- 		static const u8 before_ht_cap[] = {
-@@ -310,6 +316,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 				sizeof(struct ieee80211_tdls_data)) +
- 			    50 + /* supported rates */
- 			    7 + /* ext capab */
-+			    26 + /* max(WMM-info, WMM-param) */
- 			    extra_ies_len +
- 			    sizeof(struct ieee80211_tdls_lnkie));
- 	if (!skb)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index df1bb7e..725af7a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3083,3 +3083,18 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
- 
- 	return max_num_different_channels;
- }
-+
-+u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo)
-+{
-+	*buf++ = WLAN_EID_VENDOR_SPECIFIC;
-+	*buf++ = 7; /* len */
-+	*buf++ = 0x00; /* Microsoft OUI 00:50:F2 */
-+	*buf++ = 0x50;
-+	*buf++ = 0xf2;
-+	*buf++ = 2; /* WME */
-+	*buf++ = 0; /* WME info */
-+	*buf++ = 1; /* WME ver */
-+	*buf++ = qosinfo; /* U-APSD no in use */
-+
-+	return buf;
-+}
+ 	/* TODO */
+ 	switch (phy->rev) {
++	case 16:
++		if (phy->radio_rev == 9) {
++			e_r7 = b43_nphy_chantab_phy_rev16_radio_rev9;
++			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev16_radio_rev9);
++		}
++		break;
+ 	default:
+ 		break;
+ 	}
 -- 
-1.9.1
+1.8.4.5
 
