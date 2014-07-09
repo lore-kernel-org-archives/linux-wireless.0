@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:52980 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760744AbaGRWBv (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:34840 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964879AbaGIP3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 18:01:51 -0400
-Received: by mail-we0-f172.google.com with SMTP id x48so5070303wes.17
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2014 15:01:50 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/5] staging: vt6656: remove unused macros
-Date: Fri, 18 Jul 2014 23:00:56 +0100
-Message-Id: <1405720856-2737-5-git-send-email-tvboxspy@gmail.com> (sfid-20140719_000156_047493_F5395B72)
-In-Reply-To: <1405720856-2737-1-git-send-email-tvboxspy@gmail.com>
-References: <1405720856-2737-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 9 Jul 2014 11:29:37 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21437.22159.76409.186487@gargle.gargle.HOWL> (sfid-20140709_172944_797999_7CADF42B)
+Date: Wed, 9 Jul 2014 20:19:51 +0530
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 03/10] ath9k: add dynamic ack timeout estimation
+In-Reply-To: <1404725506-9571-4-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1404725506-9571-4-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove macros start are unlikely to be reused
+Lorenzo Bianconi wrote:
+> +/*
+> + * Copyright 2014, Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.h | 6 ------
- 1 file changed, 6 deletions(-)
+I have not reviewed the patches, but the ath9k driver is licensed
+under ISC. Introducing a file with GPLv2 license is bound to cause
+complications and I think might require legal clearance from a
+QCA employee maintaining ath9k.
 
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index 92bf428..d53fcef 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -354,12 +354,6 @@
- #define MISCFIFO_KEYETRY0	32
- #define MISCFIFO_KEYENTRYSIZE	22
- 
--// max time out delay time
--#define W_MAX_TIMEOUT       0xFFF0U     //
--
--// wait time within loop
--#define CB_DELAY_LOOP_WAIT  10          // 10ms
--
- #define MAC_REVISION_A0		0x00
- #define MAC_REVISION_A1		0x01
- 
--- 
-2.0.1
+Right now, I am not sure if there is an official maintainer for
+ath9k, but is there any specific reason why you have chosen
+GPLv2 ?
 
+Sujith
