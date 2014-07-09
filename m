@@ -1,115 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:62520 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063AbaGTOey (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:60091 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181AbaGIRrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:34:54 -0400
-Received: by mail-we0-f178.google.com with SMTP id w61so6444550wes.23
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:53 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 19/25] staging: vt6656: dead code remove channel switch.
-Date: Sun, 20 Jul 2014 15:33:29 +0100
-Message-Id: <1405866815-2687-19-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165109_827924_9A3AF38D)
-In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
-References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 9 Jul 2014 13:47:14 -0400
+Received: by mail-we0-f177.google.com with SMTP id u56so7815287wes.22
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2014 10:47:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <21437.22159.76409.186487@gargle.gargle.HOWL>
+References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1404725506-9571-4-git-send-email-lorenzo.bianconi83@gmail.com>
+	<21437.22159.76409.186487@gargle.gargle.HOWL>
+Date: Wed, 9 Jul 2014 19:47:13 +0200
+Message-ID: <CAA2SeNJBXdi8vPa2qe4oHZK=OZ+pbBTd_pmDmyTpCeE21isQ2g@mail.gmail.com> (sfid-20140709_194718_556227_D6777B98)
+Subject: Re: [RFC 03/10] ath9k: add dynamic ack timeout estimation
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver needs to do anything special for channel switch.
+Hi Sujith,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h | 4 ----
- drivers/staging/vt6656/int.c    | 8 --------
- drivers/staging/vt6656/wcmd.c   | 8 --------
- drivers/staging/vt6656/wcmd.h   | 4 +---
- 4 files changed, 1 insertion(+), 23 deletions(-)
+> Lorenzo Bianconi wrote:
+>> +/*
+>> + * Copyright 2014, Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License version 2 as
+>> + * published by the Free Software Foundation.
+>> + */
+>
+> I have not reviewed the patches, but the ath9k driver is licensed
+> under ISC. Introducing a file with GPLv2 license is bound to cause
+> complications and I think might require legal clearance from a
+> QCA employee maintaining ath9k.
+>
+> Right now, I am not sure if there is an official maintainer for
+> ath9k, but is there any specific reason why you have chosen
+> GPLv2 ?
+>
+> Sujith
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 101d0ca..120d325 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -391,10 +391,6 @@ struct vnt_private {
- 	/* command timer */
- 	struct delayed_work run_command_work;
- 
--	int bChannelSwitch;
--	u8 byNewChannel;
--	u8 byChannelSwitchCount;
--
- 	struct ieee80211_low_level_stats low_stats;
- };
- 
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index 9c5fefc..2ef70e4 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -153,14 +153,6 @@ void vnt_int_process_data(struct vnt_private *priv)
- 			if (priv->hw->conf.flags & IEEE80211_CONF_PS)
- 				vnt_schedule_command(priv,
- 							WLAN_CMD_TBTT_WAKEUP);
--#if 0 /* TODO channel switch */
--			if (priv->bChannelSwitch) {
--				priv->byChannelSwitchCount--;
--				if (priv->byChannelSwitchCount == 0)
--					vnt_schedule_command(priv,
--							WLAN_CMD_11H_CHSW);
--			}
--#endif
- 		}
- 		priv->current_tsf = le64_to_cpu(int_data->tsf);
- 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index a63d0fd..e4a5e2b 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -83,10 +83,6 @@ static int vnt_cmd_complete(struct vnt_private *priv)
- 		priv->command_state = WLAN_CMD_CHANGE_ANTENNA_START;
- 		break;
- 
--	case WLAN_CMD_11H_CHSW:
--		priv->command_state = WLAN_CMD_11H_CHSW_START;
--		break;
--
- 	default:
- 		break;
- 	}
-@@ -163,10 +159,6 @@ void vnt_run_command(struct work_struct *work)
- 		}
- 		break;
- 
--	case WLAN_CMD_11H_CHSW_START:
--		vnt_set_channel(priv, priv->hw->conf.chandef.chan->hw_value);
--		break;
--
- 	default:
- 		break;
- 	}
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 0fc2c40..79df04a 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -40,8 +40,7 @@ enum vnt_cmd {
- 	WLAN_CMD_SETPOWER,
- 	WLAN_CMD_TBTT_WAKEUP,
- 	WLAN_CMD_BECON_SEND,
--	WLAN_CMD_CHANGE_ANTENNA,
--	WLAN_CMD_11H_CHSW,
-+	WLAN_CMD_CHANGE_ANTENNA
- };
- 
- #define CMD_Q_SIZE              32
-@@ -53,7 +52,6 @@ enum vnt_cmd_state {
- 	WLAN_CMD_TBTT_WAKEUP_START,
- 	WLAN_CMD_BECON_SEND_START,
- 	WLAN_CMD_CHANGE_ANTENNA_START,
--	WLAN_CMD_11H_CHSW_START,
- 	WLAN_CMD_IDLE
- };
- 
+Nope. I didn't know ath9k is under ISC license. I think I can replace
+GPLv2 license with an ISC one.
+Best regards,
+
+Lorenzo
+
+
 -- 
-2.0.1
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
