@@ -1,165 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:63706 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933807AbaGQOOS (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38367 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbaGIAYG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:18 -0400
-Received: by mail-wg0-f52.google.com with SMTP id a1so2097496wgh.23
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:16 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 09/15] mac80211: move TDLS data to mgd private part
-Date: Thu, 17 Jul 2014 17:14:25 +0300
-Message-Id: <1405606471-30128-10-git-send-email-arik@wizery.com> (sfid-20140717_161428_954002_3870A939)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+	Tue, 8 Jul 2014 20:24:06 -0400
+Date: Tue, 8 Jul 2014 17:24:05 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Takashi Iwai <tiwai@suse.de>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	chunkeey@googlemail.com, leedom@chelsio.com, cocci@systeme.lip6.fr,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-firmware@kernel.org
+Subject: Re: [PATCH 0/3] drivers: expand usage of request_firmware_direct()
+Message-ID: <20140709002405.GA7025@kroah.com> (sfid-20140709_022429_114805_8EA8E117)
+References: <1403649583-12707-1-git-send-email-mcgrof@do-not-panic.com>
+ <s5hmwczve4i.wl%tiwai@suse.de>
+ <20140708222536.GA7745@kroah.com>
+ <20140708235244.GS27687@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140708235244.GS27687@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can only be a station for TDLS connections. Also fix a bug where
-a delayed work could be left scheduled if the station interface was
-brought down during TDLS setup.
+On Wed, Jul 09, 2014 at 01:52:44AM +0200, Luis R. Rodriguez wrote:
+> On Tue, Jul 08, 2014 at 03:25:36PM -0700, Greg KH wrote:
+> > On Thu, Jun 26, 2014 at 06:18:05PM +0200, Takashi Iwai wrote:
+> > > At Tue, 24 Jun 2014 15:39:40 -0700,
+> > > Luis R. Rodriguez wrote:
+> > > > 
+> > > > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > > > 
+> > > > Takashi added request_firmware_direct() via bba3a87e9 through v3.14-rc1
+> > > > which avoids the unnecessary delay introduced by using the udev firmware
+> > > > loader in case the first try failed when loading we know loading "firmware"
+> > > > is optional. The first use case was for microcode update but if drivers are
+> > > > using it for optional configuration updates, custom EEPROMs, and other
+> > > > junk other than firmware that should apply as well as good use cases,
+> > > > specially if the driver already had a first phase in which it loaded
+> > > > the first required firmware. While reviewing one driver I figured it'd
+> > > > be best to try to give formalizing a check with SmPL. This isn't perfect
+> > > > it had 1 false possitive drivers/fmc/fmc-fakedev.c on the entire kernel
+> > > > run but my hope is this can be extended a bit more to build more
+> > > > confidence, and then perhaps stuff it as a coccicheck.
+> > > > 
+> > > > I suppose this will not be required once and if we remove
+> > > > CONFIG_FW_LOADER_USER_HELPER. Is that ever going away for good? I know
+> > > > there was a recent attempt to remove the udev loader support but
+> > > > it was unclear if the special alternative helper support would be
+> > > > removed upstream from the kernel.
+> > > 
+> > > Actually a few weeks ago I sent a patch to make request_firmware()
+> > > with usermode helper explicitly to be used by some drivers (like
+> > > dell-rbu).  I hope Greg took it for 3.17.  Once when this patch is in,
+> > > distros can turn off the usermode helper fallback gracefully, so no
+> > > ugly timeout issue shouldn't happen.
+> > 
+> > That patch is now merged, so this series should not be needed anymore,
+> > right?
+> 
+> Now that it is merged, and another patch I posted which you also merged about
+> printing differences, the main difference between request_firmware() and
+> request_firmware_direct() for distributions that did not enable the fw
+> loader helper is just a printk. That's all. While the difference is minor
+> this series addresses a few drivers that we know have firmware that is
+> optional, so a printk is indeed not really needed as otherwise it can confuse
+> users in terms of expectations. The SmPL grammar for this series could
+> likely be expanded to cover other uses cases but obviously this is not
+> critical and at best best effort. For distributions that stay in the stone age
+> and do not disable the fw loader helper this will speed up boot for a few use
+> cases. This series still applies then.
+> 
+> Whether or not its required or optional for firmware to be loaded for a driver
+> is an example small difference in specifications that I expect drivers /
+> subsystems to be able to make, I suspect the differences might grow in the
+> future so I rather keep these requirements well annonated for now. Another
+> example difference I am looking into is whether or not firmware should be
+> digitally signed. While it may be questionable whether or not this is needed
+> for actual firmware that runs on microprocessors some subsystems might want to
+> use this to abandon other udev helpers which simply throw data over, one of
+> which I am looking into replacing is CRDA for the regulatory database. We
+> recently ran into some snags when the internal regdb is used and we use a
+> parser, having the ability to load it directly using request_firmware_direct()
+> with digital signature support as an option would enable us to simplify how the
+> redb is used/parsed on both embedded and non-embedded systems.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/ieee80211_i.h |  6 +++---
- net/mac80211/iface.c       |  2 --
- net/mac80211/mlme.c        |  3 +++
- net/mac80211/tdls.c        | 28 ++++++++++++++--------------
- 4 files changed, 20 insertions(+), 19 deletions(-)
+I'm confused, do you want me to review your patches or not?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cb87476..0d8539c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -503,6 +503,9 @@ struct ieee80211_if_managed {
- 	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
- 	struct ieee80211_vht_cap vht_capa; /* configured VHT overrides */
- 	struct ieee80211_vht_cap vht_capa_mask; /* Valid parts of vht_capa */
-+
-+	u8 tdls_peer[ETH_ALEN] __aligned(2);
-+	struct delayed_work tdls_peer_del_work;
- };
- 
- struct ieee80211_if_ibss {
-@@ -815,9 +818,6 @@ struct ieee80211_sub_if_data {
- 	bool radar_required;
- 	struct delayed_work dfs_cac_timer_work;
- 
--	u8 tdls_peer[ETH_ALEN] __aligned(2);
--	struct delayed_work tdls_peer_del_work;
--
- 	/*
- 	 * AP this belongs to: self in AP mode and
- 	 * corresponding AP in VLAN mode, NULL for
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index bbf51b2..2a12b8a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1672,8 +1672,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 			  ieee80211_dfs_cac_timer_work);
- 	INIT_DELAYED_WORK(&sdata->dec_tailroom_needed_wk,
- 			  ieee80211_delayed_tailroom_dec);
--	INIT_DELAYED_WORK(&sdata->tdls_peer_del_work,
--			  ieee80211_tdls_peer_del_work);
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
- 		struct ieee80211_supported_band *sband;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d863ff8..fcc0748 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3713,6 +3713,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	INIT_WORK(&ifmgd->csa_connection_drop_work,
- 		  ieee80211_csa_connection_drop_work);
- 	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_mgd_work);
-+	INIT_DELAYED_WORK(&ifmgd->tdls_peer_del_work,
-+			  ieee80211_tdls_peer_del_work);
- 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
- 	setup_timer(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer,
-@@ -4576,6 +4578,7 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- 	cancel_work_sync(&ifmgd->request_smps_work);
- 	cancel_work_sync(&ifmgd->csa_connection_drop_work);
- 	cancel_work_sync(&ifmgd->chswitch_work);
-+	cancel_delayed_work_sync(&ifmgd->tdls_peer_del_work);
- 
- 	sdata_lock(sdata);
- 	if (ifmgd->assoc_data) {
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 72eebea..c59b8f4 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -22,14 +22,14 @@ void ieee80211_tdls_peer_del_work(struct work_struct *wk)
- 	struct ieee80211_local *local;
- 
- 	sdata = container_of(wk, struct ieee80211_sub_if_data,
--			     tdls_peer_del_work.work);
-+			     u.mgd.tdls_peer_del_work.work);
- 	local = sdata->local;
- 
- 	mutex_lock(&local->mtx);
--	if (!is_zero_ether_addr(sdata->tdls_peer)) {
--		tdls_dbg(sdata, "TDLS del peer %pM\n", sdata->tdls_peer);
--		sta_info_destroy_addr(sdata, sdata->tdls_peer);
--		eth_zero_addr(sdata->tdls_peer);
-+	if (!is_zero_ether_addr(sdata->u.mgd.tdls_peer)) {
-+		tdls_dbg(sdata, "TDLS del peer %pM\n", sdata->u.mgd.tdls_peer);
-+		sta_info_destroy_addr(sdata, sdata->u.mgd.tdls_peer);
-+		eth_zero_addr(sdata->u.mgd.tdls_peer);
- 	}
- 	mutex_unlock(&local->mtx);
- }
-@@ -561,8 +561,8 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
- 	mutex_lock(&local->mtx);
- 
- 	/* we don't support concurrent TDLS peer setups */
--	if (!is_zero_ether_addr(sdata->tdls_peer) &&
--	    !ether_addr_equal(sdata->tdls_peer, peer)) {
-+	if (!is_zero_ether_addr(sdata->u.mgd.tdls_peer) &&
-+	    !ether_addr_equal(sdata->u.mgd.tdls_peer, peer)) {
- 		ret = -EBUSY;
- 		goto exit;
- 	}
-@@ -593,9 +593,9 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
- 	if (ret < 0)
- 		goto exit;
- 
--	memcpy(sdata->tdls_peer, peer, ETH_ALEN);
-+	memcpy(sdata->u.mgd.tdls_peer, peer, ETH_ALEN);
- 	ieee80211_queue_delayed_work(&sdata->local->hw,
--				     &sdata->tdls_peer_del_work,
-+				     &sdata->u.mgd.tdls_peer_del_work,
- 				     TDLS_PEER_SETUP_TIMEOUT);
- 
- exit:
-@@ -751,8 +751,8 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
- 		set_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH);
- 		rcu_read_unlock();
- 
--		WARN_ON_ONCE(is_zero_ether_addr(sdata->tdls_peer) ||
--			     !ether_addr_equal(sdata->tdls_peer, peer));
-+		WARN_ON_ONCE(is_zero_ether_addr(sdata->u.mgd.tdls_peer) ||
-+			     !ether_addr_equal(sdata->u.mgd.tdls_peer, peer));
- 		ret = 0;
- 		break;
- 	case NL80211_TDLS_DISABLE_LINK:
-@@ -766,9 +766,9 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 	}
- 
--	if (ret == 0 && ether_addr_equal(sdata->tdls_peer, peer)) {
--		cancel_delayed_work(&sdata->tdls_peer_del_work);
--		eth_zero_addr(sdata->tdls_peer);
-+	if (ret == 0 && ether_addr_equal(sdata->u.mgd.tdls_peer, peer)) {
-+		cancel_delayed_work(&sdata->u.mgd.tdls_peer_del_work);
-+		eth_zero_addr(sdata->u.mgd.tdls_peer);
- 	}
- 
- 	mutex_unlock(&local->mtx);
--- 
-1.9.1
+If so, care to resend them, they are now purged from my patch queue...
 
+thanks,
+
+greg k-h
