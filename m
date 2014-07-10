@@ -1,46 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45143 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754473AbaGUKCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 06:02:21 -0400
-Message-ID: <1405936933.32255.8.camel@jlt4.sipsolutions.net> (sfid-20140721_120224_288950_DD3872A4)
-Subject: Re: [PATCH] regulatory: add NULL to alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Eliad Peller <eliad@wizery.com>
-Date: Mon, 21 Jul 2014 12:02:13 +0200
-In-Reply-To: <20140630222303.GO1390@garbanzo.do-not-panic.com> (sfid-20140701_002311_478050_7925FB16)
-References: <1402471415-22723-1-git-send-email-arik@wizery.com>
-	 <1403516586.4418.13.camel@jlt4.sipsolutions.net>
-	 <20140630222303.GO1390@garbanzo.do-not-panic.com>
-	 (sfid-20140701_002311_478050_7925FB16)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f175.google.com ([74.125.82.175]:45846 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbaGJM15 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2014 08:27:57 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH] mac80211: Parse IEEE80211_RADIOTAP_RATE on TX
+Date: Thu, 10 Jul 2014 14:27:41 +0200
+Message-Id: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140710_142810_564778_F969F29C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-30 at 15:23 -0700, Luis R. Rodriguez wrote:
-> On Mon, Jun 23, 2014 at 11:43:06AM +0200, Johannes Berg wrote:
-> > On Wed, 2014-06-11 at 10:23 +0300, Arik Nemtsov wrote:
-> > > From: Eliad Peller <eliad@wizery.com>
-> > > 
-> > > alpha2 is defined as 2-chars array, but is used in multiple
-> > > places as string (e.g. with nla_put_string calls), which
-> > > might leak kernel data.
-> > > 
-> > > Solve it by simply adding an extra char for the NULL
-> > > terminator, making such operations safe.
-> > 
-> > I'm beginning to think that it would make more sense to just not use
-> > nla_put_string()?
-> 
-> If the reason for adding the check was because of a new use case
-> then yes, but other than that are there other reasons you were
-> considering?
+Add support for parsing radiotap field IEEE80211_RADIOTAP_RATE
+for transmitted frames. Use the provided datarate value in
+info->control.rates[] array so it will be used for transmission.
 
-This was never intended to be a string, only 2 characters ... so why use
-it with string functions?
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+This feature is essential for Transmit Datarate Control (TDC)
+in future implementation of IEEE 802.11-2012 "Wireless Access
+for the Vehicular Environment" support.
 
-johannes
+
+ include/net/mac80211.h |  2 ++
+ net/mac80211/rate.c    |  4 ++++
+ net/mac80211/tx.c      | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 49 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9ce5cb1..7ba8faa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -549,11 +549,13 @@ enum mac80211_tx_info_flags {
+  *
+  * @IEEE80211_TX_CTRL_PORT_CTRL_PROTO: this frame is a port control
+  *	protocol frame (e.g. EAP)
++ * @IEEE80211_TX_CTRL_USERRATE: Fixed datarate set by the user
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
++	IEEE80211_TX_CTRL_USERRATE		= BIT(1),
+ };
+ 
+ /*
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 8fdadfd..1111dee 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -673,6 +673,10 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		priv_sta = sta->rate_ctrl_priv;
+ 	}
+ 
++	if ((info->flags & IEEE80211_TX_CTL_INJECTED) &&
++	    (info->control.flags & IEEE80211_TX_CTRL_USERRATE))
++		return;
++
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		info->control.rates[i].idx = -1;
+ 		info->control.rates[i].flags = 0;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 865bdaf..2099c70 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1541,7 +1541,11 @@ static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len,
+ 						   NULL);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_supported_band *sband;
++	int rate;
+ 	u16 txflags;
++	int i, j;
+ 
+ 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 		       IEEE80211_TX_CTL_DONTFRAG;
+@@ -1592,6 +1596,45 @@ static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
+ 				info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 			break;
+ 
++		case IEEE80211_RADIOTAP_RATE:
++			if (!(*iterator.this_arg))
++				break;
++
++			rate = 0;
++			sdata = vif_to_sdata(info->control.vif);
++			sband = sdata->wdev.wiphy->bands[info->band];
++			for (i = 0; i < sband->n_bitrates; i++) {
++				/* Radiotap datarate: Units of 500 Kbps
++				 * ieee80211_rate.bitrate: Units of 100 Kbps
++				 */
++				if ((sband->bitrates[i].bitrate * 2) ==
++				    ((*iterator.this_arg) * 10)) {
++					rate = i;
++					break;
++				}
++			}
++
++			if (!rate)
++				break;
++
++			info->flags |= IEEE80211_TX_CTRL_USERRATE;
++
++			for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++				if (info->control.rates[i].idx < 0)
++					break;
++
++				/* Rate masking supports only legacy
++				 * rates for now
++				 */
++				if (info->control.rates[i].flags &
++				    IEEE80211_TX_RC_MCS)
++					continue;
++
++				for (j = 0; j < sband->n_bitrates; j++)
++					info->control.rates[i].idx = rate;
++			}
++			break;
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+-- 
+2.0.0.rc4
 
