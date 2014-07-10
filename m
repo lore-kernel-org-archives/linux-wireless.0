@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:47603 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaGGThL convert rfc822-to-8bit (ORCPT
+Received: from mailapp01.imgtec.com ([195.59.15.196]:10255 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbaGJQCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 15:37:11 -0400
-Received: by mail-oa0-f53.google.com with SMTP id l6so5213009oag.40
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 12:37:10 -0700 (PDT)
+	Thu, 10 Jul 2014 12:02:23 -0400
+Message-ID: <53BEB909.3030802@imgtec.com> (sfid-20140710_180226_342129_6180859B)
+Date: Thu, 10 Jul 2014 21:32:17 +0530
+From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwt3vr0cHxRR8XkSg+C9NDN5Oxi8Syus8fGBpGLJVVYPw@mail.gmail.com>
-References: <1404645103-26100-1-git-send-email-zajec5@gmail.com>
-	<53B93EBC.7010107@broadcom.com>
-	<CACna6rwt3vr0cHxRR8XkSg+C9NDN5Oxi8Syus8fGBpGLJVVYPw@mail.gmail.com>
-Date: Mon, 7 Jul 2014 21:37:10 +0200
-Message-ID: <CACna6rwQmW6AX3BwfE5Q_MkcJ1UWMeeJ1VXXqxATH1oX15Zgkg@mail.gmail.com> (sfid-20140707_213722_384556_6ED28003)
-Subject: Re: [PATCH] bcma: support for PCIe Gen 2 as host platform
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Requeue work for all iftypes after scan completion
+References: <82A67CC48AF04D43A69EB66645975134218BA7EE@hbmail01.hb.imgtec.org>
+In-Reply-To: <82A67CC48AF04D43A69EB66645975134218BA7EE@hbmail01.hb.imgtec.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 July 2014 11:38, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 6 July 2014 14:19, Arend van Spriel <arend@broadcom.com> wrote:
->> On 06-07-14 13:11, Rafał Miłecki wrote:
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> ---
->>> I got reply from Bjorn, that we should *not* depend on PCI_EXP_LNKCAP:
->>> http://marc.info/?l=linux-pci&m=140457671930896&w=2
->>>
->>> So the change since RFC is adding a list of PCIe 1.0 and 2.0 devices.
->>> Use PCI_EXP_LNKCAP only as a fallback, in case someone tries sth like:
->>> echo "14e4 4360" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
->>
->> Do you have to know this before or after enumerating the cores? They
->> have a different core id, right?
->
-> Sure, having a list of cores would allow me to determine PCIe revision.
->
-> Unfortunately right now we have only this single bcma_bus_register
-> call that does both: scanning and initialization. I'd need to first
-> scan cores, then determine PCIe revision and finally initialize cores.
->
-> I wonder if I could try to use bcma_bus_scan_early that was developer
-> for SoC needs...
 
-John: please kindly drop this patch for now. All other bcma/b43
-patches are unaffected.
+From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
 
--- 
-Rafał
+During a hw scan ieee80211_iface_work ignores work items for all vifs. However
+after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
+This occasionally results in event processing getting delayed for iftype AP when
+it coexists with a STA, and when the scan durations are very long.
+
+Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+---
+We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
+not connected to anyone while the AP has a station connected to it. The hardware
+we are using currently has scan durations of ~8 sec and a new scan request is
+generated every 10 s. This results in a window of only 2 s when work items can
+be processed by ieee80211_iface_work. We came across scenarios where the AP is
+trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
+event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
+since a hw scan is in progress most of the time. When the scan completes however
+the work item for the AP does not get requeued, and by the time the
+IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
+the TX frames just keep getting queued up, since the tid has not been destroyed.
+This results in disconnections since things like ARP timeouts etc start
+happening.
+---
+  net/mac80211/mlme.c |    5 +++--
+  1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 931330b..49af420 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+  		if (!(flags&  IEEE80211_HW_CONNECTION_MONITOR))
+  			ieee80211_queue_work(&sdata->local->hw,
+  					&sdata->u.mgd.monitor_work);
+-		/* and do all the other regular work too */
+-		ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+  	}
++
++	/* and do all the other regular work too */
++	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+  }
+
+  #ifdef CONFIG_PM
+
+
