@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1lp0017.outbound.protection.outlook.com ([213.199.154.17]:9032
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751143AbaGKLyz convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:56368 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876AbaGJS5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 07:54:55 -0400
-From: Igor Bezukh <Igor@galilsoft.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: A question about Wireless dongle HW and driver support - best
- practice
-Date: Fri, 11 Jul 2014 11:39:20 +0000
-Message-ID: <1405078551691.6483@galilsoft.com> (sfid-20140711_135458_486275_A92F2ADE)
-References: <2bac19ce5f704178b25628b5e9e08344@DBXPR07MB093.eurprd07.prod.outlook.com>
-In-Reply-To: <2bac19ce5f704178b25628b5e9e08344@DBXPR07MB093.eurprd07.prod.outlook.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+	Thu, 10 Jul 2014 14:57:05 -0400
+Received: by mail-wg0-f52.google.com with SMTP id b13so3613wgh.11
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:03 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 12/16] staging: vt6656: s_vGenerateTxParameter remove else from if statements
+Date: Thu, 10 Jul 2014 19:56:13 +0100
+Message-Id: <1405018577-6832-12-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205739_950857_408F7CDB)
+In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+The function returns out at if statements so drop else.
 
-We have an embedded system that consists of Atmel AT91SAM9G20 SoC ( singgle core ARMv5).
-This SoC also has USB 1.1 ( 11Mbps).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-Kernel version is 2.6.32.
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 6113807..0d0a956 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -717,25 +717,20 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
+ 			return vnt_rxtx_rts(tx_context, &tx_buffer->tx_head,
+ 					byPktType, cbFrameSize, bNeedACK,
+ 						wCurrentRate, need_mic);
+-		} else {
+-			if (need_mic)
+-				*mic_hdr = &tx_buffer->
+-						tx_head.tx_cts.tx.mic.hdr;
+-
+-			return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
+-					byPktType, cbFrameSize, bNeedACK,
+-						wCurrentRate, need_mic);
+ 		}
+-	} else {
++
+ 		if (need_mic)
+-			*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
++			*mic_hdr = &tx_buffer->tx_head.tx_cts.tx.mic.hdr;
+ 
+-		return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head,
+-					byPktType, cbFrameSize, bNeedACK,
+-					wCurrentRate, need_rts, need_mic);
++		return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head, byPktType,
++				cbFrameSize, bNeedACK, wCurrentRate, need_mic);
+ 	}
+ 
+-	return 0;
++	if (need_mic)
++		*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
++
++	return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
++		cbFrameSize, bNeedACK, wCurrentRate, need_rts, need_mic);
+ }
+ 
+ static void vnt_fill_txkey(struct vnt_usb_send_context *tx_context,
+-- 
+1.9.1
 
-The solution should have two wireless dongles - one acting as Acess Point and the other acting as WiFi client.
-
-In other words, we need the system to be a wireless repeater bridge.
-
-We had a lot of issues with the Atheros CARL9170 drivers and with Ralink 2870.
-
-Ralink 2870 doesn't have support for AP mode, at least in it's 5572 driver pack for linux from Meidatek website.
-
-We need the driver to support both Master and Managed modes, and working on a single CPU core, no SMP.
-
-Can you please suggest a good chipset for such a solution from driver perspective and from HW performance perspective?
-
-TIA,
-
-Igor Bezukh
