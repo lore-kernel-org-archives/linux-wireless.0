@@ -1,54 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:43288 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751949AbaGPUkl (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:53659 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaGJG75 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 16:40:41 -0400
-Date: Wed, 16 Jul 2014 13:40:04 -0700
-From: Greg KH <greg@kroah.com>
-To: Michalis Pappas <mpappas@fastmail.fm>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, inaky@linux.intel.com
-Subject: Re: How to replace control code in gdm72xx?
-Message-ID: <20140716204004.GA31349@kroah.com> (sfid-20140716_224055_238387_009EC502)
-References: <53C6DF7C.8030109@fastmail.fm>
+	Thu, 10 Jul 2014 02:59:57 -0400
+Message-ID: <53BE39E7.40003@gmail.com> (sfid-20140710_090032_011956_892151BB)
+Date: Thu, 10 Jul 2014 12:29:51 +0530
+From: Anil Shashikumar Belur <askb23@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53C6DF7C.8030109@fastmail.fm>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+CC: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] staging: rtl8723au: core: rtw_ap.c - removed NULL
+ pointer check before kfree()
+References: <1404971737-9737-1-git-send-email-askb23@gmail.com>
+In-Reply-To: <1404971737-9737-1-git-send-email-askb23@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 09:24:28PM +0100, Michalis Pappas wrote:
-> Hi,
-> 
-> I'm currently working on bringing the gdm72xx WiMAX driver out of
-> staging. The driver currently uses two control channels:
-> 
-> 1. The SIOCDEVPRIVATE ioctl to send and receive state messages
-> 
-> 2. A customly defined netlink protocol for passing messages verbatim to
-> the device controller
-> 
-> AFAIK both of the above are deprecated, so I considered switching to
-> the interface defined in wimax.h, which defines a communication protocol
-> over generic netlink that replaces (2) nicely. However it is not
-> compatible with (1), as:
-> 
-> * Except from the device status, the gdm72xx driver uses two more types
-> of messages (connection and OMA status), which is not supported
-> by wimax.h.
-> 
-> * The gdm driver needs to be able to receive status messages from
-> userspace, which is not supported by wimax.h either.
 
-What type of status messages are needed to be sent to the driver?
-
-> I therefore consider using the wimax stack as defined in wimax.h for the
-> netlink part, but replacing the ioctl with a file under /sys/class/net/wm0/
-
-Is anyone still working on wimax to even object to add new functions
-like this?  :)
-
-thanks,
-
-greg k-h
+On Thursday 10 July 2014 11:25 AM, Anil Belur wrote:
+> From: Anil Belur <askb23@gmail.com>
+>
+> - as kfree() internally check for NULL, additional check it not
+>   required.
+>
+Sorry - please ignore this patch set, they are already fixed by someone
+else recently.
