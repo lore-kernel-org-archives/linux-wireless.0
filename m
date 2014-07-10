@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:36213 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbaGKACE (ORCPT
+Received: from arroyo.ext.ti.com ([192.94.94.40]:40067 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750988AbaGJMFv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:02:04 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so288463wgh.26
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:02 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/14] wlcore: add smart config definitions
-Date: Fri, 11 Jul 2014 03:01:30 +0300
-Message-Id: <1405036899-27396-6-git-send-email-eliad@wizery.com> (sfid-20140711_020209_393331_E29E0549)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+	Thu, 10 Jul 2014 08:05:51 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: "ben@decadent.org.uk" <ben@decadent.org.uk>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: linux-firmware: pull-request TI wireless firmware
+Date: Thu, 10 Jul 2014 12:05:36 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com> (sfid-20140710_140554_564873_21937CDD)
+Content-Type: text/plain; charset="windows-1255"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add definitions for the smart config commands.
+Hi Ben,
+Please see below pull request,
+It contains an update to the WiLink8 chip.
+The FW name was changed due to some new API's that was introduced lately.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/cmd.h | 14 ++++++++++++++
- drivers/net/wireless/ti/wlcore/cmd.h |  3 +++
- 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/cmd.h b/drivers/net/wireless/ti/wl18xx/cmd.h
-index 6687d10..03b746b 100644
---- a/drivers/net/wireless/ti/wl18xx/cmd.h
-+++ b/drivers/net/wireless/ti/wl18xx/cmd.h
-@@ -45,6 +45,20 @@ struct wl18xx_cmd_channel_switch {
- 	u8 padding[2];
- } __packed;
+
+The following changes since commit 7f388b4885cf64d6b7833612052d20d4197af96f:
+
+  Move the s5p-mfc firmware out of its subdirectory (2014-06-04 13:14:13 +0100)
+
+are available in the git repository at:
+
+  git://git.ti.com/wilink8-wlan/linux-firmware.git master
+
+for you to fetch changes up to cbf9f8f506ad6a46818fa61af461aa615fdd4e87:
+
+  wl18xx: add version 4 of the wl18xx firmware (2014-07-10 15:01:58 +0300)
+
+----------------------------------------------------------------
+Yaniv Machani (1):
+      wl18xx: add version 4 of the wl18xx firmware
+
+ WHENCE                          |    2 ++
+ ti-connectivity/wl18xx-fw-4.bin |  Bin 0 -> 681704 bytes
+ 2 files changed, 2 insertions(+), 0 deletions(-)
+ create mode 100755 ti-connectivity/wl18xx-fw-4.bin
+
+diff --git a/WHENCE b/WHENCE
+index a172f5f..f8ab2fb 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1867,6 +1867,8 @@ File: ti-connectivity/wl18xx-fw-2.bin
+ Version: 8.5.0.0.55
+ File: ti-connectivity/wl18xx-fw-3.bin
+ Version: 8.8.0.0.13
++File: ti-connectivity/wl18xx-fw-4.bin
++Version: 8.9.0.0.17
+ File: ti-connectivity/wl18xx-conf.bin
+ Version: 6/5
  
-+struct wl18xx_cmd_smart_config_start {
-+	struct wl1271_cmd_header header;
-+
-+	__le32 group_id_bitmask;
-+} __packed;
-+
-+struct wl18xx_cmd_smart_config_set_group_key {
-+	struct wl1271_cmd_header header;
-+
-+	__le32 group_id;
-+
-+	u8 key[16];
-+} __packed;
-+
- int wl18xx_cmd_channel_switch(struct wl1271 *wl,
- 			      struct wl12xx_vif *wlvif,
- 			      struct ieee80211_channel_switch *ch_switch);
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index 6788d73..ca6a28b 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -170,6 +170,9 @@ enum wl1271_commands {
- 
- 	/* start of 18xx specific commands */
- 	CMD_DFS_CHANNEL_CONFIG		= 60,
-+	CMD_SMART_CONFIG_START		= 61,
-+	CMD_SMART_CONFIG_STOP		= 62,
-+	CMD_SMART_CONFIG_SET_GROUP_KEY	= 63,
- 
- 	MAX_COMMAND_ID = 0xFFFF,
- };
--- 
-1.8.5.1.109.g3d252a9
+diff --git a/ti-connectivity/wl18xx-fw-4.bin b/ti-connectivity/wl18xx-fw-4.bin
+new file mode 100755
+index 0000000..8369a9e
+Binary files /dev/null and b/ti-connectivity/wl18xx-fw-4.bin differ
 
