@@ -1,70 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:41750 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754663AbaGULIO (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:54993 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752880AbaGJS5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 07:08:14 -0400
-Message-ID: <53CCF498.8000800@imgtec.com> (sfid-20140721_130818_006767_FBF110C1)
-Date: Mon, 21 Jul 2014 16:38:08 +0530
-From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH-v2] mac80211: Requeue work for all iftypes after scan completion
-References: <53BEB909.3030802@imgtec.com>
-In-Reply-To: <53BEB909.3030802@imgtec.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 10 Jul 2014 14:57:11 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ho1so192407wib.4
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 15/16] staging: vt6656: s_vFillCTSHead remove camel case
+Date: Thu, 10 Jul 2014 19:56:16 +0100
+Message-Id: <1405018577-6832-15-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205728_185282_2F3B4C62)
+In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Camel case changes
+byPktType -> pkt_type
+cbFrameLength -> frame_len
+bNeedAck -> need_ack
+pDevice -> priv
+uCTSFrameLen -> cts_frame_len
 
-From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
-
-During a hw scan ieee80211_iface_work ignores work items for all vifs. However
-after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
-This occasionally results in event processing getting delayed for iftype AP when
-it coexists with a STA, and when the scan durations are very long.
-
-Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-v2: Fix white space after comma
+ drivers/staging/vt6656/rxtx.c | 66 +++++++++++++++++++++----------------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
 
-We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
-not connected to anyone while the AP has a station connected to it. The hardware
-we are using currently has scan durations of ~8 sec and a new scan request is
-generated every 10 s. This results in a window of only 2 s when work items can
-be processed by ieee80211_iface_work. We came across scenarios where the AP is
-trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
-event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
-since a hw scan is in progress most of the time. When the scan completes however
-the work item for the AP does not get requeued, and by the time the
-IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
-the TX frames just keep getting queued up, since the tid has not been destroyed.
-This results in disconnections since things like ARP timeouts etc start
-happening.
----
-  net/mac80211/mlme.c |    5 +++--
-  1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 931330b..49af420 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
-  		if (!(flags&   IEEE80211_HW_CONNECTION_MONITOR))
-  			ieee80211_queue_work(&sdata->local->hw,
-  					&sdata->u.mgd.monitor_work);
--		/* and do all the other regular work too */
--		ieee80211_queue_work(&sdata->local->hw,&sdata->work);
-  	}
-+
-+	/* and do all the other regular work too */
-+	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
-  }
-
-  #ifdef CONFIG_PM
-
-
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index ad1a1b6..dce6cb5 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -520,60 +520,60 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
+ }
+ 
+ static u16 s_vFillCTSHead(struct vnt_usb_send_context *tx_context,
+-	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
+-	int bNeedAck, u16 wCurrentRate)
++	u8 pkt_type, union vnt_tx_data_head *head, u32 frame_len,
++	int need_ack, u16 current_rate)
+ {
+-	struct vnt_private *pDevice = tx_context->priv;
+-	u32 uCTSFrameLen = 14;
++	struct vnt_private *priv = tx_context->priv;
++	u32 cts_frame_len = 14;
+ 
+ 	if (!head)
+ 		return 0;
+ 
+ 	if (tx_context->fb_option) {
+ 		/* Auto Fall back */
+-		struct vnt_cts_fb *pBuf = &head->cts_g_fb;
++		struct vnt_cts_fb *buf = &head->cts_g_fb;
+ 		/* Get SignalField,ServiceField,Length */
+-		vnt_get_phy_field(pDevice, uCTSFrameLen,
+-			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
+-		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
+-			cbFrameLength, byPktType,
+-			wCurrentRate, bNeedAck);
++		vnt_get_phy_field(priv, cts_frame_len,
++			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
++		buf->duration_ba = s_uGetRTSCTSDuration(priv, CTSDUR_BA,
++			frame_len, pkt_type,
++			current_rate, need_ack);
+ 		/* Get CTSDuration_ba_f0 */
+-		pBuf->cts_duration_ba_f0 = s_uGetRTSCTSDuration(pDevice,
+-			CTSDUR_BA_F0, cbFrameLength, byPktType,
+-			pDevice->tx_rate_fb0, bNeedAck);
++		buf->cts_duration_ba_f0 = s_uGetRTSCTSDuration(priv,
++			CTSDUR_BA_F0, frame_len, pkt_type,
++			priv->tx_rate_fb0, need_ack);
+ 		/* Get CTSDuration_ba_f1 */
+-		pBuf->cts_duration_ba_f1 = s_uGetRTSCTSDuration(pDevice,
+-			CTSDUR_BA_F1, cbFrameLength, byPktType,
+-			pDevice->tx_rate_fb1, bNeedAck);
++		buf->cts_duration_ba_f1 = s_uGetRTSCTSDuration(priv,
++			CTSDUR_BA_F1, frame_len, pkt_type,
++			priv->tx_rate_fb1, need_ack);
+ 		/* Get CTS Frame body */
+-		pBuf->data.duration = pBuf->duration_ba;
+-		pBuf->data.frame_control =
++		buf->data.duration = buf->duration_ba;
++		buf->data.frame_control =
+ 			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
+ 
+-		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
++		memcpy(buf->data.ra, priv->abyCurrentNetAddr, ETH_ALEN);
+ 
+-		return vnt_rxtx_datahead_g_fb(tx_context, byPktType,
+-				wCurrentRate, &pBuf->data_head, cbFrameLength,
+-				bNeedAck);
++		return vnt_rxtx_datahead_g_fb(tx_context, pkt_type,
++				current_rate, &buf->data_head, frame_len,
++				need_ack);
+ 	} else {
+-		struct vnt_cts *pBuf = &head->cts_g;
++		struct vnt_cts *buf = &head->cts_g;
+ 		/* Get SignalField,ServiceField,Length */
+-		vnt_get_phy_field(pDevice, uCTSFrameLen,
+-			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
++		vnt_get_phy_field(priv, cts_frame_len,
++			priv->byTopCCKBasicRate, PK_TYPE_11B, &buf->b);
+ 		/* Get CTSDuration_ba */
+-		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice,
+-			CTSDUR_BA, cbFrameLength, byPktType,
+-			wCurrentRate, bNeedAck);
++		buf->duration_ba = s_uGetRTSCTSDuration(priv,
++			CTSDUR_BA, frame_len, pkt_type,
++			current_rate, need_ack);
+ 		/*Get CTS Frame body*/
+-		pBuf->data.duration = pBuf->duration_ba;
+-		pBuf->data.frame_control =
++		buf->data.duration = buf->duration_ba;
++		buf->data.frame_control =
+ 			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
+ 
+-		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
++		memcpy(buf->data.ra, priv->abyCurrentNetAddr, ETH_ALEN);
+ 
+-		return vnt_rxtx_datahead_g(tx_context, byPktType, wCurrentRate,
+-				&pBuf->data_head, cbFrameLength, bNeedAck);
++		return vnt_rxtx_datahead_g(tx_context, pkt_type, current_rate,
++				&buf->data_head, frame_len, need_ack);
+         }
+ 
+ 	return 0;
+-- 
+1.9.1
 
