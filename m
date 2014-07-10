@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26015 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751297AbaGBNU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:20:59 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 5/6] staging: rtl8192e: re-use string_escape_mem()
-Date: Wed,  2 Jul 2014 16:20:28 +0300
-Message-Id: <1404307229-19186-6-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152119_186601_80BD8A99)
-In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:40707 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbaGJUZI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2014 16:25:08 -0400
+Received: by mail-qa0-f51.google.com with SMTP id k15so93512qaq.38
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 13:25:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53BEF2A6.6050103@broadcom.com>
+References: <1404980258-30853-1-git-send-email-teg@jklm.no>
+ <1404980258-30853-30-git-send-email-teg@jklm.no> <53BEF2A6.6050103@broadcom.com>
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 10 Jul 2014 22:24:46 +0200
+Message-ID: <CAG-2HqVnUwPpRwRwNpMXVN4zP4k3zUvJX5E4p-roi6BKpHTgNQ@mail.gmail.com> (sfid-20140710_222512_801707_CCBF0512)
+Subject: Re: [PATCH v7 29/33] net: brcmfmac - set name assign type
+To: Arend van Spriel <arend@broadcom.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Kay Sievers <kay@vrfy.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let's use kernel's library function to escape a buffer.
+On Thu, Jul 10, 2014 at 10:08 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 10-07-14 10:17, Tom Gundersen wrote:
+>> The name is given by the firmware, so we assume it is predictable.
+>
+> How about the scenario where one would have multiple broadcom wifi
+> devices in the system. Both driver instances would alloc_netdev with
+> predictable but also the same ifname. Wondering whether we should ignore
+> the firmware ifname altogether.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/staging/rtl8192e/rtllib.h | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+Hm, that would just fail irrespective of this patch, right? Sounds
+like ignoring the firmware names is the right thing to do.
 
-diff --git a/drivers/staging/rtl8192e/rtllib.h b/drivers/staging/rtl8192e/rtllib.h
-index 83f5f57..cb99160 100644
---- a/drivers/staging/rtl8192e/rtllib.h
-+++ b/drivers/staging/rtl8192e/rtllib.h
-@@ -31,6 +31,7 @@
- #include <linux/timer.h>
- #include <linux/sched.h>
- #include <linux/semaphore.h>
-+#include <linux/string_helpers.h>
- 
- #include <linux/delay.h>
- #include <linux/wireless.h>
-@@ -2956,7 +2957,6 @@ extern inline int rtllib_get_scans(struct rtllib_device *ieee)
- static inline const char *escape_essid(const char *essid, u8 essid_len)
- {
- 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
--	const char *s = essid;
- 	char *d = escaped;
- 
- 	if (rtllib_is_empty_essid(essid, essid_len)) {
-@@ -2965,15 +2965,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len)
- 	}
- 
- 	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
--	while (essid_len--) {
--		if (*s == '\0') {
--			*d++ = '\\';
--			*d++ = '0';
--			s++;
--		} else {
--			*d++ = *s++;
--		}
--	}
-+	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
-+			       ESCAPE_NULL, NULL);
- 	*d = '\0';
- 	return escaped;
- }
--- 
-2.0.0
+Cheers,
 
+Tom
