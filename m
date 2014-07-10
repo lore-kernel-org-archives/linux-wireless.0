@@ -1,118 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43141 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbaGVVaT (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:34690 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbaGJS45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 17:30:19 -0400
-Date: Tue, 22 Jul 2014 17:23:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
-Message-ID: <20140722212327.GF1299@tuxdriver.com> (sfid-20140722_233022_757265_A8674D3C)
-References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
- <1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
- <20140722180254.GE1299@tuxdriver.com>
- <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com>
+	Thu, 10 Jul 2014 14:56:57 -0400
+Received: by mail-we0-f175.google.com with SMTP id k48so6248wev.6
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:56:56 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/16] staging: vt6656: s_vGenerateTxParameter parse out vnt_rrv_time_ab
+Date: Thu, 10 Jul 2014 19:56:09 +0100
+Message-Id: <1405018577-6832-8-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205703_231487_09BA1557)
+In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 09:52:04PM +0200, Lorenzo Bianconi wrote:
-> Hi John,
-> 
-> > On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
-> >> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
-> >> Moreover disable dynack if the coverage class has been configured
-> >>
-> >> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-> >> ---
-> >>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
-> >>  1 file changed, 34 insertions(+)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> >> index e6ac8d2..52ca884 100644
-> >> --- a/drivers/net/wireless/ath/ath9k/main.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> >> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
-> >>       mutex_lock(&sc->mutex);
-> >>       ah->coverage_class = coverage_class;
-> >>
-> >> +     if (ah->dynack.enabled) {
-> >> +             u32 rfilt;
-> >> +
-> >> +             ah->dynack.enabled = false;
-> >> +             rfilt = ath_calcrxfilter(sc);
-> >> +             ath9k_hw_setrxfilter(ah, rfilt);
-> >> +     }
-> >> +
-> >>       ath9k_ps_wakeup(sc);
-> >>       ath9k_hw_init_global_settings(ah);
-> >>       ath9k_ps_restore(sc);
-> >> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
-> >>       mutex_unlock(&sc->mutex);
-> >>  }
-> >>
-> >> +#ifdef CONFIG_ATH9K_DYNACK
-> >> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
-> >> +{
-> >> +     u32 rfilt;
-> >> +     struct ath_softc *sc = hw->priv;
-> >> +     struct ath_hw *ah = sc->sc_ah;
-> >> +
-> >> +     if (config_enabled(CONFIG_ATH9K_TX99))
-> >> +             return -EOPNOTSUPP;
-> >> +
-> >> +     if (!ah->dynack.enabled) {
-> >> +             ath_dynack_reset(ah);
-> >> +
-> >> +             ah->dynack.enabled = true;
-> >> +             rfilt = ath_calcrxfilter(sc);
-> >> +             ath9k_hw_setrxfilter(ah, rfilt);
-> >> +     }
-> >> +
-> >> +     return 0;
-> >> +}
-> >> +#endif
-> >> +
-> >>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
-> >>  {
-> >>       int i, npend = 0;
-> >> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
-> >>  #endif
-> >>       .sw_scan_start      = ath9k_sw_scan_start,
-> >>       .sw_scan_complete   = ath9k_sw_scan_complete,
-> >> +
-> >> +#ifdef CONFIG_ATH9K_DYNACK
-> >> +     .enable_dynack      = ath9k_enable_dynack,
-> >> +#endif
-> >>  };
-> >
-> >   CC      drivers/net/wireless/ath/ath9k/main.o
-> > drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
-> >   .enable_dynack      = ath9k_enable_dynack,
-> >   ^
-> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
-> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
-> > make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
-> > make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
-> > make[1]: *** [drivers/net/wireless/ath] Error 2
-> > make: *** [drivers/net/wireless/] Error 2
-> >
-> > Missing a header file change?
-> >
-> 
-> The function pointer is defined in "configure ack timeout estimation
-> algorithm through mac80211 stack" patchset sent on linux-wireless.
-> Anyway I will send patchset v3 to take Johannes's hint.
+create new function vnt_rxtx_ab which will eventually carry onward
+functions
 
-Perhaps you should post them all together, or keep this series as
-RFC until the other one gets merged?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 59 ++++++++++++++++++++++---------------------
+ 1 file changed, 30 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index bad2fe4..758f69e 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -669,6 +669,28 @@ static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
+ 	return 0;
+ }
+ 
++static u16 vnt_rxtx_ab(struct vnt_usb_send_context *tx_context,
++	union vnt_tx_head *tx_head, u8 pkt_type, u32 frame_size,
++	int need_ack, u16 current_rate, bool need_rts)
++{
++	struct vnt_private *priv = tx_context->priv;
++	struct vnt_rrv_time_ab *buf = &tx_head->tx_ab.ab;
++
++	buf->rrv_time = vnt_rxtx_rsvtime_le16(priv, pkt_type,
++			frame_size, current_rate, need_ack);
++
++	if (need_rts) {
++		if (pkt_type == PK_TYPE_11B)
++			buf->rts_rrv_time = s_uGetRTSCTSRsvTime(priv, 0,
++				pkt_type, frame_size, current_rate);
++		else /* PK_TYPE_11A */
++			buf->rts_rrv_time = s_uGetRTSCTSRsvTime(priv, 2,
++				pkt_type, frame_size, current_rate);
++	}
++
++	return 0;
++}
++
+ /*+
+  *
+  * Description:
+@@ -696,7 +718,6 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
+ 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
+ 	int bNeedACK, bool need_rts)
+ {
+-	struct vnt_private *pDevice = tx_context->priv;
+ 	union vnt_tx_data_head *head = NULL;
+ 
+ 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+@@ -742,26 +763,17 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
+ 		}
+ 
+ 		if (need_rts) {
+-			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+-							tx_head.tx_ab.ab;
+-
+-			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 2,
+-				byPktType, cbFrameSize, wCurrentRate);
++			vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
++				cbFrameSize, bNeedACK, wCurrentRate, need_rts);
+ 
+-			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+-				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
+ 
+ 			/* Fill RTS */
+ 			return s_vFillRTSHead(tx_context, byPktType, head,
+ 						cbFrameSize, bNeedACK,
+ 						wCurrentRate);
+ 		} else {
+-			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+-							tx_head.tx_ab.ab;
+-
+-			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+-				byPktType, cbFrameSize,
+-					wCurrentRate, bNeedACK);
++			vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
++				cbFrameSize, bNeedACK, wCurrentRate, need_rts);
+ 
+ 			return vnt_rxtx_datahead_a_fb(tx_context, byPktType,
+ 				wCurrentRate, &head->data_head_a_fb,
+@@ -776,27 +788,16 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
+ 		}
+ 
+ 		if (need_rts) {
+-			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+-							tx_head.tx_ab.ab;
+-
+-			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 0,
+-				byPktType, cbFrameSize, wCurrentRate);
+-
+-			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+-				byPktType, cbFrameSize, wCurrentRate,
+-								bNeedACK);
++			vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
++				cbFrameSize, bNeedACK, wCurrentRate, need_rts);
+ 
+ 			/* Fill RTS */
+ 			return s_vFillRTSHead(tx_context, byPktType, head,
+ 						cbFrameSize, bNeedACK,
+ 						wCurrentRate);
+ 		} else {
+-			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+-							tx_head.tx_ab.ab;
+-
+-			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+-				byPktType, cbFrameSize,
+-					wCurrentRate, bNeedACK);
++			vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
++				cbFrameSize, bNeedACK, wCurrentRate, need_rts);
+ 
+ 			return vnt_rxtx_datahead_ab(tx_context, byPktType,
+ 				wCurrentRate, &head->data_head_ab,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
