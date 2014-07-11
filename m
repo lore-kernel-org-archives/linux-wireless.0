@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:34484 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbaGFJgz (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:62760 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927AbaGKAJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:36:55 -0400
-Received: by mail-we0-f169.google.com with SMTP id t60so3158948wes.28
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:54 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/40] iwlwifi: mvm: init lmac scan command
-Date: Sun,  6 Jul 2014 12:35:57 +0300
-Message-Id: <1404639376-3792-21-git-send-email-egrumbach@gmail.com> (sfid-20140706_115952_677610_7911496D)
-In-Reply-To: <53B917DC.5050902@gmail.com>
-References: <53B917DC.5050902@gmail.com>
+	Thu, 10 Jul 2014 20:09:37 -0400
+Received: by mail-wg0-f51.google.com with SMTP id y10so290540wgg.10
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/13] staging: vt6656: rxtx replace debug messages DBG_PRT
+Date: Fri, 11 Jul 2014 01:08:31 +0100
+Message-Id: <1405037311-3666-13-git-send-email-tvboxspy@gmail.com> (sfid-20140711_022952_456135_59E76977)
+In-Reply-To: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
+References: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Replace with dev_dbg
 
-Initialize LMAC scan command.
-Fix EBS flag to be dependant on TLV flg and fix other bugs.
-
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/scan.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 919ed0e..14fc6ad 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -1099,6 +1099,7 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
- 				       struct iwl_scan_req_unified_lmac *cmd,
- 				       struct iwl_mvm_scan_params *params)
- {
-+	memset(cmd, 0, ksize(cmd));
- 	cmd->active_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].active;
- 	cmd->passive_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].passive;
- 	/* TODO: Use params; now fragmented isn't used. */
-@@ -1107,14 +1108,19 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
- 	cmd->max_out_time = cpu_to_le32(params->max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params->suspend_time);
- 	cmd->scan_prio = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
--	cmd->channel_opt[0].flags = mvm->last_ebs_successful ?
--				cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS &
--					    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE &
--					    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD) :
--				0;
--	cmd->channel_opt[0].non_ebs_ratio = 0;
- 	cmd->iter_num = cpu_to_le32(1);
--	cmd->delay = 0;
-+
-+	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT &&
-+	    mvm->last_ebs_successful) {
-+		cmd->channel_opt[0].flags =
-+			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
-+				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
-+				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
-+		cmd->channel_opt[1].flags =
-+			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
-+				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
-+				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
-+	}
- }
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 35edf41..3dc6d07 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -43,8 +43,6 @@
+ #include "rf.h"
+ #include "usbpipe.h"
  
- int iwl_mvm_unified_scan_lmac(struct iwl_mvm *mvm,
+-static int          msglevel                = MSG_LEVEL_INFO;
+-
+ static const u16 vnt_time_stampoff[2][MAX_RATE] = {
+ 	{384, 288, 226, 209, 54, 43, 37, 31, 28, 25, 24, 23},/* Long Preamble */
+ 	{384, 192, 130, 113, 54, 43, 37, 31, 28, 25, 24, 23},/* Short Preamble */
+@@ -81,7 +79,7 @@ static struct vnt_usb_send_context
+ 	struct vnt_usb_send_context *context = NULL;
+ 	int ii;
+ 
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
++	dev_dbg(&priv->usb->dev, "%s\n", __func__);
+ 
+ 	for (ii = 0; ii < priv->cbTD; ii++) {
+ 		if (!priv->apTD[ii])
+@@ -100,7 +98,7 @@ static struct vnt_usb_send_context
+ 	}
+ 
+ 	if (ii == priv->cbTD)
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"No Free Tx Context\n");
++		dev_dbg(&priv->usb->dev, "%s No Free Tx Context\n", __func__);
+ 
+ 	return NULL;
+ }
 -- 
-1.8.3.2
+1.9.1
 
