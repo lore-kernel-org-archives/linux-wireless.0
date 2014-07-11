@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:47966 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755689AbaGPIdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 04:33:08 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC 0/2] ath10k spectral scan support
-Date: Wed, 16 Jul 2014 10:25:23 +0200
-Message-ID: <4111404.UJkIUxkzQm@bentobox> (sfid-20140716_103329_825020_31934BBC)
-In-Reply-To: <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com>
-References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:63527 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbaGKTCu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jul 2014 15:02:50 -0400
+Received: by mail-wg0-f46.google.com with SMTP id m15so1523063wgh.17
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 12:02:47 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/2] staging: vt6656: Fix pairwise key for non station modes
+Date: Fri, 11 Jul 2014 20:02:18 +0100
+Message-Id: <1405105338-3073-2-git-send-email-tvboxspy@gmail.com> (sfid-20140711_210253_398698_37B3DEE2)
+In-Reply-To: <1405105338-3073-1-git-send-email-tvboxspy@gmail.com>
+References: <1405105338-3073-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 July 2014 08:24:58 Michal Kazior wrote:
-> >  * So far, we always get 64 bins of fft data in the samples, even if we
-> >  
-> >    are in HT40 or VHT80 mode. That doesn't seem right, as there should
-> >    be more bins for wider channels (e.g. 128 or 256 bins). Is there any
-> >    parameter to change in the configuration to get the output from
-> >    multiple channels / higher bandwidth?
-> 
-> Hmm.. I suspect this may be because you use scan command. Scanning
-> uses channel list which is programmed with legacy modes a and g
-> (implying 20Mhz). Perhaps that's the limiting factor now. Using other
-> (wider) modes breaks scan from what I remember but it might be worth
-> checking out if it impacts fft bin sizes.
+patch 'vnt_set_keymode don't save pairwise key entry' caused
+a slight regression in access point mode
 
-I did the HT80 and HT40 stuff on a single channel in the spectral "background" 
-mode. They reports from the firmware (10.1) still only had 64 bins. The HT80 
-stuff wasn't tested with the "main" firmware because it refused to switch to 
-HT80 mode as AP/Sta.
+Only don't save in station mode.
 
-Kind regards,
-	Sven
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/key.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/vt6656/key.c b/drivers/staging/vt6656/key.c
+index 7275f09..b76ee31 100644
+--- a/drivers/staging/vt6656/key.c
++++ b/drivers/staging/vt6656/key.c
+@@ -98,8 +98,9 @@ static int vnt_set_keymode(struct ieee80211_hw *hw, u8 *mac_addr,
+ 	case  VNT_KEY_PAIRWISE:
+ 		key_mode |= mode;
+ 		key_inx = 4;
+-		/* Don't save entry for pairwise key */
+-		clear_bit(entry, &priv->key_entry_inuse);
++		/* Don't save entry for pairwise key for station mode */
++		if (priv->op_mode == NL80211_IFTYPE_STATION)
++			clear_bit(entry, &priv->key_entry_inuse);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+-- 
+1.9.1
+
