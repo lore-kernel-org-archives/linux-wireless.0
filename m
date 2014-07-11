@@ -1,113 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:53531 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753801AbaGPVXi (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:44294 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561AbaGKACg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:23:38 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so6948993wib.4
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:37 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 18/21] staging: vt6656: remove dead code DEVICE_PARAM
-Date: Wed, 16 Jul 2014 22:22:08 +0100
-Message-Id: <1405545731-6082-18-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232355_070830_FD68D97E)
-In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
-References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 10 Jul 2014 20:02:36 -0400
+Received: by mail-we0-f179.google.com with SMTP id p10so25455wes.10
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:35 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 14/14] wlcore/wl18xx/wl12xx: convert bitmaps to unsigned longs
+Date: Fri, 11 Jul 2014 03:01:39 +0300
+Message-Id: <1405036899-27396-15-git-send-email-eliad@wizery.com> (sfid-20140711_022952_908567_8AFA7459)
+In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All these module parameters are dead
+The *_bit operations expect unsigned longs.
+Instead of casting the pointers, simply define various
+bitmaps as unsigned long (instead of u32).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/vt6656/main_usb.c | 23 -----------------------
- 1 file changed, 23 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c    |  2 +-
+ drivers/net/wireless/ti/wl18xx/main.c    | 16 ++++++++--------
+ drivers/net/wireless/ti/wlcore/debugfs.c |  2 +-
+ drivers/net/wireless/ti/wlcore/main.c    |  8 ++++----
+ drivers/net/wireless/ti/wlcore/tx.c      |  2 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h  |  4 ++--
+ 6 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 46f8491..0e65795 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -72,11 +72,6 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION(DEVICE_FULL_DRV_NAM);
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index d50dfac..0bccf12 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1668,7 +1668,7 @@ static bool wl12xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
+ {
+ 	u8 thold;
  
--#define DEVICE_PARAM(N, D)				\
--	static int N[MAX_UINTS] = OPTION_DEFAULT;	\
--	module_param_array(N, int, NULL, 0);		\
--	MODULE_PARM_DESC(N, D)
--
- #define RX_DESC_DEF0 64
- static int vnt_rx_buffers = RX_DESC_DEF0;
- module_param_named(rx_buffers, vnt_rx_buffers, int, 0644);
-@@ -89,7 +84,6 @@ MODULE_PARM_DESC(tx_buffers, "Number of receive usb tx buffers");
+-	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
++	if (test_bit(hlid, &wl->fw_fast_lnk_map))
+ 		thold = wl->conf.tx.fast_link_thold;
+ 	else
+ 		thold = wl->conf.tx.slow_link_thold;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index edc3e4d..7af1936 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1609,7 +1609,7 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+ 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+-	u32 suspend_bitmap;
++	unsigned long suspend_bitmap;
  
+ 	/* if we don't have the link map yet, assume they all low prio */
+ 	if (!status_priv)
+@@ -1617,12 +1617,12 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
  
- #define CHANNEL_DEF 6
--DEVICE_PARAM(Channel, "Channel number");
+ 	/* suspended links are never high priority */
+ 	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+-	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
++	if (test_bit(hlid, &suspend_bitmap))
+ 		return false;
  
- /* PreambleType[] is the preamble length used for transmit.
-    0: indicate allows long preamble type
-@@ -97,15 +91,8 @@ DEVICE_PARAM(Channel, "Channel number");
- */
+ 	/* the priority thresholds are taken from FW */
+-	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) &&
+-	    !test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
++	if (test_bit(hlid, &wl->fw_fast_lnk_map) &&
++	    !test_bit(hlid, &wl->ap_fw_ps_map))
+ 		thold = status_priv->tx_fast_link_prio_threshold;
+ 	else
+ 		thold = status_priv->tx_slow_link_prio_threshold;
+@@ -1636,17 +1636,17 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+ 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+-	u32 suspend_bitmap;
++	unsigned long suspend_bitmap;
  
- #define PREAMBLE_TYPE_DEF     1
--
--DEVICE_PARAM(PreambleType, "Preamble Type");
--
- #define RTS_THRESH_DEF     2347
--DEVICE_PARAM(RTSThreshold, "RTS threshold");
--
- #define FRAG_THRESH_DEF     2346
--DEVICE_PARAM(FragThreshold, "Fragmentation threshold");
--
- #define DATA_RATE_DEF     13
- /* datarate[] index
-    0: indicate 1 Mbps   0x02
-@@ -123,11 +110,7 @@ DEVICE_PARAM(FragThreshold, "Fragmentation threshold");
-   12: indicate 72 Mbps  0x90
-   13: indicate auto rate
- */
--
--DEVICE_PARAM(ConnectionRate, "Connection data rate");
--
- #define OP_MODE_DEF     0
--DEVICE_PARAM(OPMode, "Infrastruct, adhoc, AP mode ");
+ 	/* if we don't have the link map yet, assume they all low prio */
+ 	if (!status_priv)
+ 		return true;
  
- /* OpMode[] is used for transmit.
-    0: indicate infrastruct mode used
-@@ -141,13 +124,10 @@ DEVICE_PARAM(OPMode, "Infrastruct, adhoc, AP mode ");
- */
+ 	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+-	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
++	if (test_bit(hlid, &suspend_bitmap))
+ 		thold = status_priv->tx_suspend_threshold;
+-	else if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) &&
+-		 !test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
++	else if (test_bit(hlid, &wl->fw_fast_lnk_map) &&
++		 !test_bit(hlid, &wl->ap_fw_ps_map))
+ 		thold = status_priv->tx_fast_stop_threshold;
+ 	else
+ 		thold = status_priv->tx_slow_stop_threshold;
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 89893c7..0be21f6 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -496,7 +496,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	DRIVER_STATE_PRINT_INT(sg_enabled);
+ 	DRIVER_STATE_PRINT_INT(enable_11a);
+ 	DRIVER_STATE_PRINT_INT(noise);
+-	DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
++	DRIVER_STATE_PRINT_LHEX(ap_fw_ps_map);
+ 	DRIVER_STATE_PRINT_LHEX(ap_ps_map);
+ 	DRIVER_STATE_PRINT_HEX(quirks);
+ 	DRIVER_STATE_PRINT_HEX(irq);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index ec21141..575c8f6 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -333,7 +333,7 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
+ {
+ 	bool fw_ps;
  
- #define PS_MODE_DEF     0
--DEVICE_PARAM(PSMode, "Power saving mode");
+-	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
++	fw_ps = test_bit(hlid, &wl->ap_fw_ps_map);
  
- #define SHORT_RETRY_DEF     8
--DEVICE_PARAM(ShortRetryLimit, "Short frame retry limits");
+ 	/*
+ 	 * Wake up from high level PS if the STA is asleep with too little
+@@ -360,13 +360,13 @@ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
+ 					   struct wl12xx_vif *wlvif,
+ 					   struct wl_fw_status *status)
+ {
+-	u32 cur_fw_ps_map;
++	unsigned long cur_fw_ps_map;
+ 	u8 hlid;
  
- #define LONG_RETRY_DEF     4
--DEVICE_PARAM(LongRetryLimit, "long frame retry limits");
+ 	cur_fw_ps_map = status->link_ps_bitmap;
+ 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
+ 		wl1271_debug(DEBUG_PSM,
+-			     "link ps prev 0x%x cur 0x%x changed 0x%x",
++			     "link ps prev 0x%lx cur 0x%lx changed 0x%lx",
+ 			     wl->ap_fw_ps_map, cur_fw_ps_map,
+ 			     wl->ap_fw_ps_map ^ cur_fw_ps_map);
  
- /* BasebandType[] baseband type selected
-    0: indicate 802.11a type
-@@ -156,7 +136,6 @@ DEVICE_PARAM(LongRetryLimit, "long frame retry limits");
- */
+@@ -4754,7 +4754,7 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
  
- #define BBP_TYPE_DEF     2
--DEVICE_PARAM(BasebandType, "baseband type");
+ 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+-	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
++	__clear_bit(hlid, &wl->ap_fw_ps_map);
  
- /* 80211hEnable[]
-    0: indicate disable 802.11h
-@@ -165,8 +144,6 @@ DEVICE_PARAM(BasebandType, "baseband type");
+ 	/*
+ 	 * save the last used PN in the private part of iee80211_sta,
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 40b4311..f0ac361 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -126,7 +126,7 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl,
+ 	if (WARN_ON(!test_bit(hlid, wlvif->links_map)))
+ 		return;
  
- #define X80211h_MODE_DEF     0
+-	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
++	fw_ps = test_bit(hlid, &wl->ap_fw_ps_map);
+ 	tx_pkts = wl->links[hlid].allocated_pkts;
  
--DEVICE_PARAM(b80211hEnable, "802.11h mode");
--
- /*
-  * Static vars definitions
-  */
+ 	/*
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 13459c4..df78cf1 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -388,10 +388,10 @@ struct wl1271 {
+ 	int active_link_count;
+ 
+ 	/* Fast/slow links bitmap according to FW */
+-	u32 fw_fast_lnk_map;
++	unsigned long fw_fast_lnk_map;
+ 
+ 	/* AP-mode - a bitmap of links currently in PS mode according to FW */
+-	u32 ap_fw_ps_map;
++	unsigned long ap_fw_ps_map;
+ 
+ 	/* AP-mode - a bitmap of links currently in PS mode in mac80211 */
+ 	unsigned long ap_ps_map;
 -- 
-2.0.1
+1.8.5.1.109.g3d252a9
 
