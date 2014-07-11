@@ -1,93 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61235 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752201AbaGGPWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:22:01 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 08/10] staging: wlan-ng: use %*pEhp to print SN
-Date: Mon,  7 Jul 2014 18:21:50 +0300
-Message-Id: <1404746512-12749-9-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172506_895352_2FE433CF)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:36213 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbaGKACE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2014 20:02:04 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so288463wgh.26
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:02 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/14] wlcore: add smart config definitions
+Date: Fri, 11 Jul 2014 03:01:30 +0300
+Message-Id: <1405036899-27396-6-git-send-email-eliad@wizery.com> (sfid-20140711_020209_393331_E29E0549)
+In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a generic specifier to print an escaped buffer by given criteria. Let's
-use it instead of custom approach.
+Add definitions for the smart config commands.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/wlan-ng/prism2sta.c | 28 ++--------------------------
- 1 file changed, 2 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ti/wl18xx/cmd.h | 14 ++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.h |  3 +++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/staging/wlan-ng/prism2sta.c b/drivers/staging/wlan-ng/prism2sta.c
-index 209e4db..688e827 100644
---- a/drivers/staging/wlan-ng/prism2sta.c
-+++ b/drivers/staging/wlan-ng/prism2sta.c
-@@ -60,7 +60,6 @@
- #include <linux/netdevice.h>
- #include <linux/workqueue.h>
- #include <linux/byteorder/generic.h>
--#include <linux/ctype.h>
+diff --git a/drivers/net/wireless/ti/wl18xx/cmd.h b/drivers/net/wireless/ti/wl18xx/cmd.h
+index 6687d10..03b746b 100644
+--- a/drivers/net/wireless/ti/wl18xx/cmd.h
++++ b/drivers/net/wireless/ti/wl18xx/cmd.h
+@@ -45,6 +45,20 @@ struct wl18xx_cmd_channel_switch {
+ 	u8 padding[2];
+ } __packed;
  
- #include <linux/io.h>
- #include <linux/delay.h>
-@@ -81,27 +80,6 @@
- #include "hfa384x.h"
- #include "prism2mgmt.h"
++struct wl18xx_cmd_smart_config_start {
++	struct wl1271_cmd_header header;
++
++	__le32 group_id_bitmask;
++} __packed;
++
++struct wl18xx_cmd_smart_config_set_group_key {
++	struct wl1271_cmd_header header;
++
++	__le32 group_id;
++
++	u8 key[16];
++} __packed;
++
+ int wl18xx_cmd_channel_switch(struct wl1271 *wl,
+ 			      struct wl12xx_vif *wlvif,
+ 			      struct ieee80211_channel_switch *ch_switch);
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index 6788d73..ca6a28b 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -170,6 +170,9 @@ enum wl1271_commands {
  
--/* Create a string of printable chars from something that might not be */
--/* It's recommended that the str be 4*len + 1 bytes long */
--#define wlan_mkprintstr(buf, buflen, str, strlen) \
--{ \
--	int i = 0; \
--	int j = 0; \
--	memset(str, 0, (strlen)); \
--	for (i = 0; i < (buflen); i++) { \
--		if (isprint((buf)[i])) { \
--			(str)[j] = (buf)[i]; \
--			j++; \
--		} else { \
--			(str)[j] = '\\'; \
--			(str)[j+1] = 'x'; \
--			(str)[j+2] = hex_asc_hi((buf)[i]); \
--			(str)[j+3] = hex_asc_lo((buf)[i]); \
--			j += 4; \
--		} \
--	} \
--}
--
- static char *dev_info = "prism2_usb";
- static wlandevice_t *create_wlan(void);
+ 	/* start of 18xx specific commands */
+ 	CMD_DFS_CHANNEL_CONFIG		= 60,
++	CMD_SMART_CONFIG_START		= 61,
++	CMD_SMART_CONFIG_STOP		= 62,
++	CMD_SMART_CONFIG_SET_GROUP_KEY	= 63,
  
-@@ -607,7 +585,6 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
- 	hfa384x_t *hw = (hfa384x_t *) wlandev->priv;
- 	u16 temp;
- 	u8 snum[HFA384x_RID_NICSERIALNUMBER_LEN];
--	char pstr[(HFA384x_RID_NICSERIALNUMBER_LEN * 4) + 1];
- 
- 	/* Collect version and compatibility info */
- 	/*  Some are critical, some are not */
-@@ -862,9 +839,8 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
- 	result = hfa384x_drvr_getconfig(hw, HFA384x_RID_NICSERIALNUMBER,
- 					snum, HFA384x_RID_NICSERIALNUMBER_LEN);
- 	if (!result) {
--		wlan_mkprintstr(snum, HFA384x_RID_NICSERIALNUMBER_LEN,
--				pstr, sizeof(pstr));
--		netdev_info(wlandev->netdev, "Prism2 card SN: %s\n", pstr);
-+		netdev_info(wlandev->netdev, "Prism2 card SN: %*pEhp\n",
-+			    HFA384x_RID_NICSERIALNUMBER_LEN, snum);
- 	} else {
- 		netdev_err(wlandev->netdev, "Failed to retrieve Prism2 Card SN\n");
- 		goto failed;
+ 	MAX_COMMAND_ID = 0xFFFF,
+ };
 -- 
-2.0.1
+1.8.5.1.109.g3d252a9
 
