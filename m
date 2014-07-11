@@ -1,76 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38050 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932412AbaGUQgr (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:34545 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbaGKAJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 12:36:47 -0400
-Date: Mon, 21 Jul 2014 09:36:46 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Kees Cook <kees@outflux.net>
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-Message-ID: <20140721163646.GA14431@kroah.com> (sfid-20140721_183706_468767_72C9A725)
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
- <1405373897-31671-7-git-send-email-keescook@chromium.org>
- <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
- <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
- <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
- <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
- <20140721152635.GB6363@kroah.com>
- <20140721154307.GG5412@outflux.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140721154307.GG5412@outflux.net>
+	Thu, 10 Jul 2014 20:09:18 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so293421wgh.26
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:15 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/13] staging: vt6656: s_uGetRTSCTSDuration remove camel case
+Date: Fri, 11 Jul 2014 01:08:19 +0100
+Message-Id: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com> (sfid-20140711_020921_647914_B13AB71B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 08:43:07AM -0700, Kees Cook wrote:
-> On Mon, Jul 21, 2014 at 08:26:35AM -0700, Greg Kroah-Hartman wrote:
-> > On Mon, Jul 21, 2014 at 08:08:16AM -0700, Kees Cook wrote:
-> > > Perhaps it would be easier if I also sent the patch to udev's helper,
-> > > so you could see how I propose handling the userspace change to using
-> > > the new interface?
-> > 
-> > As there is no more "udev firmware helper", I don't know what you would
-> > be patching here.  Firmware should always be loaded by the kernel
-> > directly, udev isn't involved anyore at all.
-> > 
-> > confused,
-> > 
-> > greg k-h
-> 
-> The kernel _can_ load directly (when the paths are configured correctly),
-> but I'm not sure why you say udev isn't involved any more. It's been like
-> this for years, and even the latest systemd shows the udev rule is still in
-> place:
-> http://cgit.freedesktop.org/systemd/systemd/tree/rules/50-firmware.rules
-> and that the firmware loader is still in the source tree:
-> http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-firmware.c
+camel case changes
+pDevice -> priv
+byDurType -> dur_type
+cbFrameLength -> frame_length
+byPktType -> pkt_type
+wRate -> rate
+bNeedAck -> need_ack
+uCTSTime -> cts_time
+uDurTime -> dur_time
 
-Ah, I thought that I had seen patches to delete this code on the systemd
-mailing list in the past, I didn't realize they hadn't been accepted
-yet.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-But, with my current tree, in linux-next, it's really hard to select the
-"external firmware loader" on purpose, as we want people to use the
-in-kernel one if at all possible, and only fall back to the "legacy"
-udev userspace loader if they are running on old userspace systems.
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index f8c2323..0e853c1 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -92,9 +92,9 @@ static __le16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
+ static __le16 s_uGetDataDuration(struct vnt_private *pDevice,
+ 	u8 byPktType, int bNeedAck);
+ 
+-static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
+-	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
+-	int bNeedAck);
++static __le16 s_uGetRTSCTSDuration(struct vnt_private *priv,
++	u8 dur_type, u32 frame_length, u8 pkt_type, u16 rate,
++	int need_ack);
+ 
+ static struct vnt_usb_send_context
+ 	*s_vGetFreeContext(struct vnt_private *priv)
+@@ -229,45 +229,45 @@ static __le16 s_uGetDataDuration(struct vnt_private *pDevice,
+ }
+ 
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+-static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
+-	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck)
++static __le16 s_uGetRTSCTSDuration(struct vnt_private *priv, u8 dur_type,
++	u32 frame_length, u8 pkt_type, u16 rate, int need_ack)
+ {
+-	u32 uCTSTime = 0, uDurTime = 0;
++	u32 cts_time = 0, dur_time = 0;
+ 
+-	switch (byDurType) {
++	switch (dur_type) {
+ 	case RTSDUR_BB:
+ 	case RTSDUR_BA:
+ 	case RTSDUR_BA_F0:
+ 	case RTSDUR_BA_F1:
+-		uCTSTime = vnt_get_frame_time(pDevice->byPreambleType,
+-				byPktType, 14, pDevice->byTopCCKBasicRate);
+-		uDurTime = uCTSTime + 2 * pDevice->uSIFS +
+-			s_uGetTxRsvTime(pDevice, byPktType,
+-						cbFrameLength, wRate, bNeedAck);
++		cts_time = vnt_get_frame_time(priv->byPreambleType,
++				pkt_type, 14, priv->byTopCCKBasicRate);
++		dur_time = cts_time + 2 * priv->uSIFS +
++			s_uGetTxRsvTime(priv, pkt_type,
++						frame_length, rate, need_ack);
+ 		break;
+ 
+ 	case RTSDUR_AA:
+ 	case RTSDUR_AA_F0:
+ 	case RTSDUR_AA_F1:
+-		uCTSTime = vnt_get_frame_time(pDevice->byPreambleType,
+-				byPktType, 14, pDevice->byTopOFDMBasicRate);
+-		uDurTime = uCTSTime + 2 * pDevice->uSIFS +
+-			s_uGetTxRsvTime(pDevice, byPktType,
+-						cbFrameLength, wRate, bNeedAck);
++		cts_time = vnt_get_frame_time(priv->byPreambleType,
++				pkt_type, 14, priv->byTopOFDMBasicRate);
++		dur_time = cts_time + 2 * priv->uSIFS +
++			s_uGetTxRsvTime(priv, pkt_type,
++						frame_length, rate, need_ack);
+ 		break;
+ 
+ 	case CTSDUR_BA:
+ 	case CTSDUR_BA_F0:
+ 	case CTSDUR_BA_F1:
+-		uDurTime = pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+-				byPktType, cbFrameLength, wRate, bNeedAck);
++		dur_time = priv->uSIFS + s_uGetTxRsvTime(priv,
++				pkt_type, frame_length, rate, need_ack);
+ 		break;
+ 
+ 	default:
+ 		break;
+ 	}
+ 
+-	return cpu_to_le16((u16)uDurTime);
++	return cpu_to_le16((u16)dur_time);
+ }
+ 
+ static u16 vnt_mac_hdr_pos(struct vnt_usb_send_context *tx_context,
+-- 
+1.9.1
 
-> Here's the patch for the new interface...
-
-I'd really not like to add a new interface for this model when we are
-trying to delete it entirely.  Why not just rely on the in-kernel loader
-instead for this new feature?
-
-thanks,
-
-greg k-h
