@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48447 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbaG2OaK (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:45509 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527AbaGKACd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 10:30:10 -0400
-Date: Tue, 29 Jul 2014 10:21:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.17] NFC update
-Message-ID: <20140729142117.GB13090@tuxdriver.com> (sfid-20140729_163015_154119_5FA60E24)
-References: <20140723211107.GF455@zurbaran>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140723211107.GF455@zurbaran>
+	Thu, 10 Jul 2014 20:02:33 -0400
+Received: by mail-we0-f178.google.com with SMTP id x48so285837wes.9
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:31 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/14] wl18xx: make sure fw_status->priv exists before deref
+Date: Fri, 11 Jul 2014 03:01:38 +0300
+Message-Id: <1405036899-27396-14-git-send-email-eliad@wizery.com> (sfid-20140711_022953_072945_06F9C098)
+In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 11:11:07PM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the NFC pull request for 3.17.
-> This is a rather quiet one, we have:
-> 
-> - A new driver from ST Microelectronics for their NCI ST21NFCB,
->   including device tree  support.
-> 
-> - p2p support for the ST21NFCA driver
-> 
-> - A few fixes an enhancements for the NFC digital laye
-> 
-> Thanks in advance for pulling those in.
-> 
-> The following changes since commit 1d9e954e8b522ae37c7c0fdd791b5736321684a0:
-> 
->   mwifiex: remove redundant timestamps in debug prints (2014-07-18 13:45:26 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.17-1
-> 
-> for you to fetch changes up to bf30a67c947ed57c1cf7c68a47dc24331458037e:
-> 
->   NFC: digital: Add 'tg_listen_md' and 'tg_get_rf_tech' driver hooks (2014-07-23 01:17:31 +0200)
+In some corner cases with specific timings, we might
+try dequeueing tx before we got information about
+the link status (e.g. due to recovery during tx).
 
-Pulling now...
+Instead of NULL dereference, assume all
+the links in this case have low priorities.
 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 4422ecf..edc3e4d 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1609,9 +1609,14 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+ 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+-	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
++	u32 suspend_bitmap;
++
++	/* if we don't have the link map yet, assume they all low prio */
++	if (!status_priv)
++		return false;
+ 
+ 	/* suspended links are never high priority */
++	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+ 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
+ 		return false;
+ 
+@@ -1631,8 +1636,13 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+ 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+-	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
++	u32 suspend_bitmap;
++
++	/* if we don't have the link map yet, assume they all low prio */
++	if (!status_priv)
++		return true;
+ 
++	suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+ 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
+ 		thold = status_priv->tx_suspend_threshold;
+ 	else if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) &&
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.1.109.g3d252a9
+
