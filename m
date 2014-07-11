@@ -1,125 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49228 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758807AbaGXSaM (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:64351 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaGKAB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 14:30:12 -0400
-Date: Thu, 24 Jul 2014 14:18:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless 2014-07-24
-Message-ID: <20140724181813.GE3256@tuxdriver.com> (sfid-20140724_203024_533385_C4C31991)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
+	Thu, 10 Jul 2014 20:01:57 -0400
+Received: by mail-we0-f178.google.com with SMTP id x48so285386wes.9
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:01:54 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/14] wlcore: user smaller sqn padding for GEM
+Date: Fri, 11 Jul 2014 03:01:27 +0300
+Message-Id: <1405036899-27396-3-git-send-email-eliad@wizery.com> (sfid-20140711_020201_667205_4CC9FE2A)
+In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On recovery, we increase the current seq num by
+WL1271_TX_SQN_POST_RECOVERY_PADDING in order to
+compensate for packets we might have missed during
+recovery.
 
---SUOF0GtieIMvvwua
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It seems that some GEM APs have issues when the
+gap is too big, so use a smaller padding in this case.
 
-Dave,
-
-Please pull this batch of fixes intended for the 3.16 stream...
-
-For the mac80211 fixes, Johannes says:
-
-"I have two fixes: one for tracing that fixes a long-standing NULL
-pointer dereference, and one for a mac80211 issue that causes iwlmvm to
-send invalid frames during authentication/association."
-
-and,
-
-"One more fix - for a bug in the newly introduced code that obtains rate
-control information for stations."
-
-For the iwlwifi fixes, Emmanuel says:
-
-"It includes a merge damage fix. This region has been changed in -next
-and -fixes quite a few times and apparently, I failed to handle it
-properly, so here the fix.  Along with that I have a fix from Eliad
-to properly handle overlapping BSS in AP mode."
-
-On top of that, Felix provides and ath9k fix for Tx stalls that happen
-after an aggregation session failure.
-
-Please let me know if there are problems!  There are some changes
-here that will cause merge conflicts in -next.  Once you merge this
-I can pull it into wireless-next and resolve those issues.
-
-John
-
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ drivers/net/wireless/ti/wlcore/cmd.c      | 7 +++++--
+ drivers/net/wireless/ti/wlcore/main.c     | 7 +++++--
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 3 +++
+ 3 files changed, 13 insertions(+), 4 deletions(-)
 
-The following changes since commit 2c4db12ec469b9fcdad9f6bfd6fa20e65a563ac5:
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index d298ead..05604ee 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -374,6 +374,7 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 
+ 	if (wlvif->bss_type == BSS_TYPE_AP_BSS &&
+ 	    *hlid == wlvif->ap.bcast_hlid) {
++		u32 sqn_padding = WL1271_TX_SQN_POST_RECOVERY_PADDING;
+ 		/*
+ 		 * save the total freed packets in the wlvif, in case this is
+ 		 * recovery or suspend
+@@ -384,9 +385,11 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 		 * increment the initial seq number on recovery to account for
+ 		 * transmitted packets that we haven't yet got in the FW status
+ 		 */
++		if (wlvif->encryption_type == KEY_GEM)
++			sqn_padding = WL1271_TX_SQN_POST_RECOVERY_PADDING_GEM;
++
+ 		if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
+-			wlvif->total_freed_pkts +=
+-					WL1271_TX_SQN_POST_RECOVERY_PADDING;
++			wlvif->total_freed_pkts += sqn_padding;
+ 	}
+ 
+ 	wl->links[*hlid].total_freed_pkts = 0;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 2996cef..1ab6dbd 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -902,6 +902,7 @@ static void wlcore_save_freed_pkts(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 				   u8 hlid, struct ieee80211_sta *sta)
+ {
+ 	struct wl1271_station *wl_sta;
++	u32 sqn_recovery_padding = WL1271_TX_SQN_POST_RECOVERY_PADDING;
+ 
+ 	wl_sta = (void *)sta->drv_priv;
+ 	wl_sta->total_freed_pkts = wl->links[hlid].total_freed_pkts;
+@@ -910,9 +911,11 @@ static void wlcore_save_freed_pkts(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	 * increment the initial seq number on recovery to account for
+ 	 * transmitted packets that we haven't yet got in the FW status
+ 	 */
++	if (wlvif->encryption_type == KEY_GEM)
++		sqn_recovery_padding = WL1271_TX_SQN_POST_RECOVERY_PADDING_GEM;
++
+ 	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
+-		wl_sta->total_freed_pkts +=
+-				WL1271_TX_SQN_POST_RECOVERY_PADDING;
++		wl_sta->total_freed_pkts += sqn_recovery_padding;
+ }
+ 
+ static void wlcore_save_freed_pkts_addr(struct wl1271 *wl,
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 986da43..0e52556 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -45,6 +45,9 @@
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+ #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+ #define WL1271_TX_SQN_POST_RECOVERY_PADDING 0xff
++/* Use smaller padding for GEM, as some  APs have issues when it's too big */
++#define WL1271_TX_SQN_POST_RECOVERY_PADDING_GEM 0x20
++
+ 
+ #define WL1271_CIPHER_SUITE_GEM 0x00147201
+ 
+-- 
+1.8.5.1.109.g3d252a9
 
-  rt2800usb: Don't perform DMA from stack (2014-07-07 15:04:34 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git tags/=
-master-2014-07-23
-
-for you to fetch changes up to c01fac1c77a00227f706a1654317023e3f4ac7f0:
-
-  ath9k: fix aggregation session lockup (2014-07-23 13:03:11 -0400)
-
-----------------------------------------------------------------
-Eliad Peller (2):
-      cfg80211: fix mic_failure tracing
-      iwlwifi: mvm: pass beacons from foreign APs
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: fix merge damage
-
-Felix Fietkau (2):
-      mac80211: fix crash on getting sta info with uninitialized rate contr=
-ol
-      ath9k: fix aggregation session lockup
-
-Johannes Berg (1):
-      Revert "mac80211: move "bufferable MMPDU" check to fix AP mode scan"
-
-John W. Linville (3):
-      Merge git://git.kernel.org/.../jberg/mac80211
-      Merge branch 'master' of git://git.kernel.org/.../iwlwifi/iwlwifi-fix=
-es
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
-
- drivers/net/wireless/ath/ath9k/xmit.c       |  9 +++++++++
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 15 +++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 -------
- net/mac80211/cfg.c                          |  5 ++++-
- net/mac80211/tx.c                           | 20 ++++++++++----------
- net/wireless/trace.h                        |  3 ++-
- 6 files changed, 38 insertions(+), 21 deletions(-)
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---SUOF0GtieIMvvwua
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJT0U3lAAoJEJctW/TcYTgGBv4P/RqLOVkNku36T79sHmXqmr76
-ckP931P75OfMmDu0Ft4k7hdf4b9+zJmcAjEk4pxkcdNeo2X5Nbd20H0izmCd6xI8
-aehkf9iOCybx/TC2A2K5speWF8o4b8KZkyuKqZAsvhNjrPpPH2NqZYq7AZlPcj1B
-Wkiso5WW67tOSreqNIKnVwCnYOODFIn+FzKhtWLdydUz4RSmDoQ48s43lrv/X305
-prpd9LGakFmpK5W085/oUKB4a/K/h1qZA5p/YRIzfAnO5Upq+t2OW5Eblln3etlB
-6LKkEfpnGs7yX5gaU4PP94qe+afN1h7gsL8SgeClsDI0hiMPKgtOPhW9HBsptfHF
-hWqU6V+W8XIQLAaZ3NYrbY1xz+uCGqiHmd2bylsuiY6qFiyWOkbRklnnF/5xOkTf
-fhJgURnQqT+YEiCtRq1+UoI5d5mZY+5qEpWm1/cv1sHDZoaYDFQT+RqwzEVTnhxv
-rU5AGZtG9/uMCJYqKUapbnYLvHVK5PLugUXEKb/tAo/j/zzawJaA19jJR49maP0k
-I2kwNFGNqpDO8QhKa/EsjGLDR1CcHnRl23hTUrSUg1UhduG1IWovLv4+miFNKRHT
-rx3acBVTU5eF3HuM2fH9ULkRquDkKhYMqnTr6BcJonhSUZZDHE+fNNr7R44nYSYO
-8/f0ZVzpve/17eeYvlTn
-=JSQv
------END PGP SIGNATURE-----
-
---SUOF0GtieIMvvwua--
