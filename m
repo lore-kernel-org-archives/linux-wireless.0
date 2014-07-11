@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23855 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225AbaGNMuk (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:34302 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbaGKACD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 08:50:40 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Frederic Danis <frederic.danis@linux.intel.com>
-CC: <ath6kl@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<linville@tuxdriver.com>
-Subject: Re: [PATCH v2] ath6kl: Fix ath6kl_bmi_read_hi32 macro
-References: <87oayi6mei.fsf@kamboji.qca.qualcomm.com>
-	<1401711470-31267-1-git-send-email-frederic.danis@linux.intel.com>
-Date: Mon, 14 Jul 2014 15:50:33 +0300
-In-Reply-To: <1401711470-31267-1-git-send-email-frederic.danis@linux.intel.com>
-	(Frederic Danis's message of "Mon, 2 Jun 2014 14:17:50 +0200")
-Message-ID: <87ha2km7dy.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_145107_185643_095A1FBF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 10 Jul 2014 20:02:03 -0400
+Received: by mail-we0-f176.google.com with SMTP id u56so302694wes.7
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:01:59 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/14] wlcore: use correct LAA bit
+Date: Fri, 11 Jul 2014 03:01:29 +0300
+Message-Id: <1405036899-27396-5-git-send-email-eliad@wizery.com> (sfid-20140711_020206_692602_907C07BB)
+In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Frederic Danis <frederic.danis@linux.intel.com> writes:
+The LAA bit is second bit of the MSB, not of the
+third byte.
 
-> tmp may be used uninitialized if ath6kl_bmi_read() returns an error.
->
-> Signed-off-by: Frederic Danis <frederic.danis@linux.intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1ab6dbd..4c16262 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5661,7 +5661,7 @@ static void wl12xx_derive_mac_addresses(struct wl1271 *wl, u32 oui, u32 nic)
+ 		memcpy(&wl->addresses[idx], &wl->addresses[0],
+ 		       sizeof(wl->addresses[0]));
+ 		/* LAA bit */
+-		wl->addresses[idx].addr[2] |= BIT(1);
++		wl->addresses[idx].addr[0] |= BIT(1);
+ 	}
+ 
+ 	wl->hw->wiphy->n_addresses = WLCORE_NUM_MAC_ADDRESSES;
 -- 
-Kalle Valo
+1.8.5.1.109.g3d252a9
+
