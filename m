@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:36485
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756435AbaGVTAg (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:47199 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbaGKAJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:00:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix crash on getting sta info with uninitialized rate control
-Date: Tue, 22 Jul 2014 21:00:26 +0200
-Message-Id: <1406055626-9419-1-git-send-email-nbd@openwrt.org> (sfid-20140722_210040_664731_FAD3D15E)
+	Thu, 10 Jul 2014 20:09:32 -0400
+Received: by mail-we0-f174.google.com with SMTP id u57so312883wes.5
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/13] staging: vt6656: rxtx remove static declarations
+Date: Fri, 11 Jul 2014 01:08:29 +0100
+Message-Id: <1405037311-3666-11-git-send-email-tvboxspy@gmail.com> (sfid-20140711_020938_310658_6622BBF3)
+In-Reply-To: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
+References: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the expected throughput is queried before rate control has been
-initialized, the minstrel op for it will crash while trying to access
-the rate table.
-Check for WLAN_STA_RATE_CONTROL before attempting to use the rate
-control op.
+all functions are in visibility order.
 
-Reported-by: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/cfg.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d7513a5..592f4b1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -472,12 +472,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index bd96627..733c86e 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -82,21 +82,6 @@ static const u16 vnt_fb_opt1[2][5] = {
+ #define DATADUR_A_F0    12
+ #define DATADUR_A_F1    13
+ 
+-static struct vnt_usb_send_context *vnt_get_free_context(struct vnt_private *);
+-
+-static unsigned int vnt_get_rsvtime(struct vnt_private *pDevice, u8 byPktType,
+-	u32 cbFrameLength, u16 wRate, int bNeedAck);
+-
+-static __le16 vnt_get_rtscts_rsvtime_le(struct vnt_private *priv,
+-	u8 rsv_type, u8 pkt_type, u32 frame_length, u16 current_rate);
+-
+-static __le16 vnt_get_duration_le(struct vnt_private *pDevice,
+-	u8 byPktType, int bNeedAck);
+-
+-static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv,
+-	u8 dur_type, u32 frame_length, u8 pkt_type, u16 rate,
+-	int need_ack);
+-
+ static struct vnt_usb_send_context
+ 	*vnt_get_free_context(struct vnt_private *priv)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct rate_control_ref *ref = NULL;
- 	struct timespec uptime;
- 	u64 packets = 0;
- 	u32 thr = 0;
- 	int i, ac;
- 
-+	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-+		ref = local->rate_ctrl;
-+
- 	sinfo->generation = sdata->local->sta_generation;
- 
- 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
 -- 
-1.8.5.2 (Apple Git-48)
+1.9.1
 
