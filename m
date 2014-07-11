@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:61096 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbaGDSlX (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:55201 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbaGKAJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2014 14:41:23 -0400
-Received: by mail-oa0-f54.google.com with SMTP id eb12so2132006oac.27
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2014 11:41:23 -0700 (PDT)
-Message-ID: <53B6F558.70904@lwfinger.net> (sfid-20140704_204224_984506_EDA238D3)
-Date: Fri, 04 Jul 2014 13:41:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Alex Henrie <alexhenrie24@gmail.com>
-CC: Lorenzo Pistone <blaffablaffa@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arliton Rocha <arliton@gmail.com>
-Subject: Linux driver for RTL8190P
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 10 Jul 2014 20:09:28 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so7636wes.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:25 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/13] staging: vt6656: rename and cleanup wTimeStampOff
+Date: Fri, 11 Jul 2014 01:08:25 +0100
+Message-Id: <1405037311-3666-7-git-send-email-tvboxspy@gmail.com> (sfid-20140711_020932_694612_78FFF9F6)
+In-Reply-To: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
+References: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To all that are concerned:
+Rename to vnt_time_stampoff
 
-Alex Henrie provided me with a PCI card that contains the Realtek RTL8190P chip. 
-I am in the process of converting it to a form that could be submitted for 
-inclusion in the staging tree of the kernel. As that will be a lengthy process, 
-I have placed the current code at http://github.com/lwfinger/rtl8190p.git. Using 
-the "git clone" command with that URL will get you a copy. Use the standard 
-"make" and "sudo make install" to install the driver and the firmware. At 
-present, I am building with kernel 3.11.10. There may be incompatibilities with 
-newer versions. If so, please let me know.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-The current version works on my WPA2 network - it has not been tested with any 
-other encryption. As with most Realtek drivers, it is very chatty and will 
-pollute your logs. My next cleanup will be to correct that, and add a module 
-parameter that allows dynamic debugging, but I have some other things to do.
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 5084434..7faef28 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -52,10 +52,10 @@
+ 
+ static int          msglevel                = MSG_LEVEL_INFO;
+ 
+-static const u16 wTimeStampOff[2][MAX_RATE] = {
+-        {384, 288, 226, 209, 54, 43, 37, 31, 28, 25, 24, 23}, // Long Preamble
+-        {384, 192, 130, 113, 54, 43, 37, 31, 28, 25, 24, 23}, // Short Preamble
+-    };
++static const u16 vnt_time_stampoff[2][MAX_RATE] = {
++	{384, 288, 226, 209, 54, 43, 37, 31, 28, 25, 24, 23},/* Long Preamble */
++	{384, 192, 130, 113, 54, 43, 37, 31, 28, 25, 24, 23},/* Short Preamble */
++};
+ 
+ static const u16 wFB_Opt0[2][5] = {
+         {RATE_12M, RATE_18M, RATE_24M, RATE_36M, RATE_48M}, // fallback_rate0
+@@ -128,7 +128,7 @@ static struct vnt_usb_send_context
+ 
+ static __le16 vnt_time_stamp_off(struct vnt_private *priv, u16 rate)
+ {
+-	return cpu_to_le16(wTimeStampOff[priv->byPreambleType % 2]
++	return cpu_to_le16(vnt_time_stampoff[priv->byPreambleType % 2]
+ 							[rate % MAX_RATE]);
+ }
+ 
+-- 
+1.9.1
 
-Thanks to Alex,
-
-Larry
