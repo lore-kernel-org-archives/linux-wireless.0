@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:52202 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758059AbaGXMpX (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:47955 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbaGLTNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 08:45:23 -0400
-Received: by mail-wi0-f169.google.com with SMTP id n3so9078026wiv.2
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 05:45:21 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Sat, 12 Jul 2014 15:13:18 -0400
+Received: by mail-wg0-f46.google.com with SMTP id m15so2457108wgh.5
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 12:13:17 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix aggregated 4addr Rx
-Date: Thu, 24 Jul 2014 14:36:14 +0200
-Message-Id: <1406205374-24858-1-git-send-email-michal.kazior@tieto.com> (sfid-20140724_144527_875274_20AFF05B)
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/4] staging: vt6656: baseband.c remame abyVT3184_AL2230 to vnt_vt3184_al2230
+Date: Sat, 12 Jul 2014 20:12:44 +0100
+Message-Id: <1405192365-3134-3-git-send-email-tvboxspy@gmail.com> (sfid-20140712_211330_378184_0D596BF7)
+In-Reply-To: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
+References: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A-MSDU 4addr frames weren't reconstructed properly
-and in some cases this resulted in a warning:
-
- br0: received packet on wlan0.sta1 with own address as source address
-
-Since this was only related to A-MSDU it would
-trigger when more intense traffic was generated.
-
-Reported-by: Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/staging/vt6656/baseband.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 318efc3..a8328f9 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -859,7 +859,7 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 	enum rx_msdu_decap_format fmt;
- 	enum htt_rx_mpdu_encrypt_type enctype;
- 	struct ieee80211_hdr *hdr;
--	u8 hdr_buf[64], addr[ETH_ALEN], *qos;
-+	u8 hdr_buf[64], da[ETH_ALEN], sa[ETH_ALEN], *qos;
- 	unsigned int hdr_len;
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index f3640a5..586afe5 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -51,7 +51,7 @@ static u8 vnt_vt3184_agc[] = {
+ 	0x38, 0x38, 0x3a, 0x3a, 0x3c, 0x3c, 0x3e, 0x3e  /* 0x3f */
+ };
  
- 	rxd = (void *)skb->data - sizeof(*rxd);
-@@ -897,10 +897,11 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 			skb_trim(skb, skb->len - FCS_LEN);
- 			break;
- 		case RX_MSDU_DECAP_NATIVE_WIFI:
--			/* pull decapped header and copy DA */
-+			/* pull decapped header and copy SA & DA */
- 			hdr = (struct ieee80211_hdr *)skb->data;
- 			hdr_len = ath10k_htt_rx_nwifi_hdrlen(hdr);
--			memcpy(addr, ieee80211_get_DA(hdr), ETH_ALEN);
-+			memcpy(da, ieee80211_get_DA(hdr), ETH_ALEN);
-+			memcpy(sa, ieee80211_get_SA(hdr), ETH_ALEN);
- 			skb_pull(skb, hdr_len);
+-static u8 abyVT3184_AL2230[] = {
++static u8 vnt_vt3184_al2230[] = {
+ 	0x31, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
+ 	0x70, 0x45, 0x2a, 0x76, 0x00, 0x00, 0x80, 0x00, /* 0x0f */
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+@@ -402,9 +402,9 @@ int BBbVT3184Init(struct vnt_private *priv)
  
- 			/* push original 802.11 header */
-@@ -914,8 +915,11 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 			qos = ieee80211_get_qos_ctl(hdr);
- 			qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 	if ((priv->byRFType == RF_AL2230) ||
+ 				(priv->byRFType == RF_AL2230S)) {
+-		priv->byBBRxConf = abyVT3184_AL2230[10];
+-		length = sizeof(abyVT3184_AL2230);
+-		addr = abyVT3184_AL2230;
++		priv->byBBRxConf = vnt_vt3184_al2230[10];
++		length = sizeof(vnt_vt3184_al2230);
++		addr = vnt_vt3184_al2230;
+ 		agc = vnt_vt3184_agc;
+ 		length_agc = sizeof(vnt_vt3184_agc);
  
--			/* original 802.11 header has a different DA */
--			memcpy(ieee80211_get_DA(hdr), addr, ETH_ALEN);
-+			/* original 802.11 header has a different DA and in
-+			 * case of 4addr it may also have different SA
-+			 */
-+			memcpy(ieee80211_get_DA(hdr), da, ETH_ALEN);
-+			memcpy(ieee80211_get_SA(hdr), sa, ETH_ALEN);
- 			break;
- 		case RX_MSDU_DECAP_ETHERNET2_DIX:
- 			/* strip ethernet header and insert decapped 802.11
+@@ -417,9 +417,9 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 		priv->ldBmThreshold[2] = 0;
+ 		priv->ldBmThreshold[3] = 0;
+ 	} else if (priv->byRFType == RF_AIROHA7230) {
+-		priv->byBBRxConf = abyVT3184_AL2230[10];
+-		length = sizeof(abyVT3184_AL2230);
+-		addr = abyVT3184_AL2230;
++		priv->byBBRxConf = vnt_vt3184_al2230[10];
++		length = sizeof(vnt_vt3184_al2230);
++		addr = vnt_vt3184_al2230;
+ 		agc = vnt_vt3184_agc;
+ 		length_agc = sizeof(vnt_vt3184_agc);
+ 
 -- 
-1.8.5.3
+1.9.1
 
