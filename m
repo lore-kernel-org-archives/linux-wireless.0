@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:55587 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758632AbaGXWe5 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:60034 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870AbaGLGym (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 18:34:57 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so3280494wgh.10
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 15:34:56 -0700 (PDT)
+	Sat, 12 Jul 2014 02:54:42 -0400
+Received: by mail-we0-f172.google.com with SMTP id x48so213461wes.3
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:40 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/5] staging: vt6656: wcmd.h remove dead macros
-Date: Thu, 24 Jul 2014 23:34:18 +0100
-Message-Id: <1406241258-10025-5-git-send-email-tvboxspy@gmail.com> (sfid-20140725_003501_662772_5E9F5456)
-In-Reply-To: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
-References: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 08/10] staging: vt6656: bScheduleCommand remove camel case
+Date: Sat, 12 Jul 2014 07:53:46 +0100
+Message-Id: <1405148028-4053-8-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085447_229327_E32B2AAE)
+In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AUTHENTICATE_TIMEOUT
-ASSOCIATE_TIMEOUT
+Camel case changes
+pDevice -> priv
+eCommand -> command
+pbyItem0 -> item0
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/wcmd.h | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/staging/vt6656/wcmd.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 79df04a..2b0ee28 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -31,9 +31,6 @@
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index cdd828c..76e7f78 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -189,19 +189,19 @@ static int s_bCommandComplete(struct vnt_private *priv)
+ 	return true;
+ }
  
- #include "device.h"
+-int bScheduleCommand(struct vnt_private *pDevice,
+-		CMD_CODE eCommand, u8 *pbyItem0)
++int bScheduleCommand(struct vnt_private *priv, CMD_CODE command, u8 *item0)
+ {
  
--#define AUTHENTICATE_TIMEOUT   1000 //ms
--#define ASSOCIATE_TIMEOUT      1000 //ms
--
- /* Command code */
- enum vnt_cmd {
- 	WLAN_CMD_INIT_MAC80211,
+-	if (pDevice->cbFreeCmdQueue == 0)
++	if (priv->cbFreeCmdQueue == 0)
+ 		return false;
+-	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].eCmd = eCommand;
+ 
+-	ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdEnqueueIdx, CMD_Q_SIZE);
+-	pDevice->cbFreeCmdQueue--;
++	priv->eCmdQueue[priv->uCmdEnqueueIdx].eCmd = command;
+ 
+-	if (pDevice->bCmdRunning == false)
+-		s_bCommandComplete(pDevice);
++	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdEnqueueIdx, CMD_Q_SIZE);
++	priv->cbFreeCmdQueue--;
++
++	if (priv->bCmdRunning == false)
++		s_bCommandComplete(priv);
+ 
+ 	return true;
+ 
 -- 
-2.0.1
+1.9.1
 
