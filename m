@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:54850 "EHLO isis.lip6.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030536AbaGRPcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:32:17 -0400
-From: Benoit Taine <benoit.taine@lip6.fr>
-To: linux-pci@vger.kernel.org
-Cc: benoit.taine@lip6.fr, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
-	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
-	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
-	linux-rdma@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	industrypack-devel@lists.sourceforge.net,
-	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
-	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
-	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
-Subject: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 17:26:47 +0200
-Message-Id: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173245_487408_3DF25EDB)
+Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:30174 "EHLO
+	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753140AbaGLSLq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jul 2014 14:11:46 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, joe@perches.com,
+	Fabian Frederick <fabf@skynet.be>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH V2 8/9] rtlwifi: remove unnecessary break after goto
+Date: Sat, 12 Jul 2014 20:09:47 +0200
+Message-Id: <1405188597-2815-9-git-send-email-fabf@skynet.be> (sfid-20140712_201214_463618_A7634FC9)
+In-Reply-To: <1405188597-2815-1-git-send-email-fabf@skynet.be>
+References: <1405188597-2815-1-git-send-email-fabf@skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should prefer `const struct pci_device_id` over
-`DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-This issue was reported by checkpatch.
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-A simplified version of the semantic patch that makes this change is as
-follows (http://coccinelle.lip6.fr/):
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.c b/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
+index 380e7d4..73fa4a1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
+@@ -438,7 +438,6 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
+ 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 				 "Unexpected Download step!!\n");
+ 			goto fail;
+-			break;
+ 		}
+ 
+ 		/* <2> Download image file */
+-- 
+1.9.1
 
-// <smpl>
-
-@@
-identifier i;
-declarer name DEFINE_PCI_DEVICE_TABLE;
-initializer z;
-@@
-
-- DEFINE_PCI_DEVICE_TABLE(i)
-+ const struct pci_device_id i[]
-= z;
-
-// </smpl>
-
-I have 103 patches ready, and will only send a few for you to judge if
-it is useful enough, and to prevent from spamming too much.
-
-Thanks.
