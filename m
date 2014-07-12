@@ -1,79 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53789 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbaGVVgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 17:36:42 -0400
-Message-ID: <1406064989.32255.39.camel@jlt4.sipsolutions.net> (sfid-20140722_233645_414326_F45F64C7)
-Subject: pull-request: mac80211 2014-07-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 22 Jul 2014 23:36:29 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-BYV6dY/gu/3MaM5BQojv"
-Mime-Version: 1.0
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:44061 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752214AbaGLTNR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jul 2014 15:13:17 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so1705819wgh.2
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 12:13:16 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/4] staging: vt6656: baseband.c rename abyVT3184_AGC to vnt_vt3184_agc
+Date: Sat, 12 Jul 2014 20:12:43 +0100
+Message-Id: <1405192365-3134-2-git-send-email-tvboxspy@gmail.com> (sfid-20140712_211329_773089_63E6247D)
+In-Reply-To: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
+References: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
---=-BYV6dY/gu/3MaM5BQojv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-John,
-
-One more fix - for a bug in the newly introduced code that obtains rate
-control information for stations.
-
-It would be good to get this in, otherwise we'd probably have to send it
-to stable.
-
-johannes
-
-The following changes since commit 8c26d458394be44e135d1c6bd4557e1c4e1a0535=
-:
-
-  cfg80211: fix mic_failure tracing (2014-07-18 09:53:56 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to fa8f136fe9a8fbdcb11a1db94f30146cae6d8777:
-
-  mac80211: fix crash on getting sta info with uninitialized rate control (=
-2014-07-22 22:17:17 +0200)
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mac80211: fix crash on getting sta info with uninitialized rate contr=
-ol
-
- net/mac80211/cfg.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-
---=-BYV6dY/gu/3MaM5BQojv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTztldAAoJEDBSmw7B7bqr4/4P/A+UwMaSTtAtXKWEDc1VQjRT
-EWm6x5jVGsEZzU4KLCSXrFhKPBwnJFJ3v3OHrc6uJlYMFb94WYbsg4yIA5Yl7Yok
-60eR54Q4xYFDUlHNyJsD9KDYwovx2yu0qrhC+Ce6rWXOmX6GgfYwT8Rk+PnAoazY
-PNFOr7X4dixJLXdhQHU9rmlBJNE0DkR8NGcXjbUUnkERU2WKazCGaALRUw+4d+EZ
-/o1w0YUv/QRvGFzvYpf+W3RP3I54WTVvQrBt2lBAioZ8I8FyRmuy1qR+Y01D+y3N
-XpJ1P8Dd/OXfsoZfSq5eNKk99RTbKX8t1y2V+Mq4se0hPWaAqgbY3C095gb2Rtmr
-bxyIZcmydkK8iCUKNpjiGjWAE0tm0V2LDtcPCp6Xw/dc/YOSfoDV29y8SEAuATBt
-kTQIGx9uXpVfYbrL1IRqgJdUJi1v0T0TDEeTe3ZGWOwiX0Ponek4vUvRbDLCM9ws
-7O1Gflih5p5e0GIzStqzKyD9k4USCshp1fJDl+DyX24fYHWaQApZ+qTHIZsTWJOB
-Zp0F4p5BmRvOCBP2G5qeE99JclFscY20pgfENvp/Dbo9muUFpIwHsythn/9lM7uT
-r6Dj2rXHUBJhAM+cgFS52eQW77M+iJ3Mlt0RBvUPtDriXUYe0gtLzNEYr640gC5T
-a6kaWNretbAI199AKTns
-=Jojy
------END PGP SIGNATURE-----
-
---=-BYV6dY/gu/3MaM5BQojv--
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index f066f4c..f3640a5 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -40,7 +40,7 @@
+ #include "rf.h"
+ #include "usbpipe.h"
+ 
+-static u8 abyVT3184_AGC[] = {
++static u8 vnt_vt3184_agc[] = {
+ 	0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06,
+ 	0x08, 0x08, 0x0a, 0x0a, 0x0c, 0x0c, 0x0e, 0x0e, /* 0x0f */
+ 	0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16,
+@@ -405,8 +405,8 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 		priv->byBBRxConf = abyVT3184_AL2230[10];
+ 		length = sizeof(abyVT3184_AL2230);
+ 		addr = abyVT3184_AL2230;
+-		agc = abyVT3184_AGC;
+-		length_agc = sizeof(abyVT3184_AGC);
++		agc = vnt_vt3184_agc;
++		length_agc = sizeof(vnt_vt3184_agc);
+ 
+ 		priv->abyBBVGA[0] = 0x1C;
+ 		priv->abyBBVGA[1] = 0x10;
+@@ -420,8 +420,8 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 		priv->byBBRxConf = abyVT3184_AL2230[10];
+ 		length = sizeof(abyVT3184_AL2230);
+ 		addr = abyVT3184_AL2230;
+-		agc = abyVT3184_AGC;
+-		length_agc = sizeof(abyVT3184_AGC);
++		agc = vnt_vt3184_agc;
++		length_agc = sizeof(vnt_vt3184_agc);
+ 
+ 		addr[0xd7] = 0x06;
+ 
+@@ -438,8 +438,8 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 		priv->byBBRxConf = abyVT3184_VT3226D0[10];
+ 		length = sizeof(abyVT3184_VT3226D0);
+ 		addr = abyVT3184_VT3226D0;
+-		agc = abyVT3184_AGC;
+-		length_agc = sizeof(abyVT3184_AGC);
++		agc = vnt_vt3184_agc;
++		length_agc = sizeof(vnt_vt3184_agc);
+ 
+ 		priv->abyBBVGA[0] = 0x20;
+ 		priv->abyBBVGA[1] = 0x10;
+@@ -455,8 +455,8 @@ int BBbVT3184Init(struct vnt_private *priv)
+ 		priv->byBBRxConf = abyVT3184_VT3226D0[10];
+ 		length = sizeof(abyVT3184_VT3226D0);
+ 		addr = abyVT3184_VT3226D0;
+-		agc = abyVT3184_AGC;
+-		length_agc = sizeof(abyVT3184_AGC);
++		agc = vnt_vt3184_agc;
++		length_agc = sizeof(vnt_vt3184_agc);
+ 
+ 		priv->abyBBVGA[0] = 0x20;
+ 		priv->abyBBVGA[1] = 0x10;
+-- 
+1.9.1
 
