@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56872 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903AbaG1HPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 03:15:51 -0400
-Message-ID: <1406531732.29927.0.camel@jlt4.sipsolutions.net> (sfid-20140728_091555_096821_F8A45A61)
-Subject: Re: [PATCHv3 0/6] configure dynack through mac80211/cfg80211 stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Mon, 28 Jul 2014 09:15:32 +0200
-In-Reply-To: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_233653_349496_DBB0D24B)
-References: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20140727_233653_349496_DBB0D24B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:64165 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbaGLGya (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jul 2014 02:54:30 -0400
+Received: by mail-wg0-f46.google.com with SMTP id m15so1971824wgh.29
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:29 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/10] staging: vt6656: vCommandTimerWait remove camel case.
+Date: Sat, 12 Jul 2014 07:53:39 +0100
+Message-Id: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085434_173574_40CF343E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-07-27 at 23:36 +0200, Lorenzo Bianconi wrote:
-> Extend set_coverage_class API in order to enable ACK timeout estimation
-> algorithm (dynack) passing coverage_class equals to -1 to lower drivers.
-> Currently dynack is supported just by ath9k.
-> Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
+camel case changes
+pDevice -> priv
+MSecond -> msecs
 
-You need to fix that in the same patch that changes the prototype,
-otherwise you break compile in the middle ...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wcmd.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index b62726f..2553cde 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -54,11 +54,9 @@ static int msglevel = MSG_LEVEL_INFO;
+ 
+ static int s_bCommandComplete(struct vnt_private *);
+ 
+-static void
+-vCommandTimerWait(struct vnt_private *pDevice, unsigned long MSecond)
++static void vCommandTimerWait(struct vnt_private *priv, unsigned long msecs)
+ {
+-	schedule_delayed_work(&pDevice->run_command_work,
+-						msecs_to_jiffies(MSecond));
++	schedule_delayed_work(&priv->run_command_work, msecs_to_jiffies(msecs));
+ }
+ 
+ void vRunCommand(struct work_struct *work)
+-- 
+1.9.1
 
