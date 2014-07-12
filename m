@@ -1,79 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:63809 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756808AbaGRRL2 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55894 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbaGLGtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 13:11:28 -0400
-Received: by mail-oa0-f41.google.com with SMTP id j17so3715910oag.14
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2014 10:11:27 -0700 (PDT)
+	Sat, 12 Jul 2014 02:49:46 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/9] brcmfmac: move attach and detach functions in wl_cfg80211.c
+Date: Sat, 12 Jul 2014 08:49:38 +0200
+Message-ID: <1405147782-12768-6-git-send-email-arend@broadcom.com> (sfid-20140712_085007_461617_74718863)
+In-Reply-To: <1405147782-12768-1-git-send-email-arend@broadcom.com>
+References: <1405147782-12768-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.11.1407181339510.15709@namei.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	<1405373897-31671-5-git-send-email-keescook@chromium.org>
-	<alpine.LRH.2.11.1407181339510.15709@namei.org>
-Date: Fri, 18 Jul 2014 10:05:14 -0700
-Message-ID: <CAGXu5jK5np62pR4f7_qa_LU97hBN8e1hu998=C4ah+Xyv3eYtg@mail.gmail.com> (sfid-20140718_191131_498639_C98FA439)
-Subject: Re: [PATCH 4/7] firmware_class: perform new LSM checks
-From: Kees Cook <keescook@chromium.org>
-To: James Morris <jmorris@namei.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2014 at 8:41 PM, James Morris <jmorris@namei.org> wrote:
-> On Mon, 14 Jul 2014, Kees Cook wrote:
->
->> This attaches LSM hooks to the existing firmware loading interfaces:
->> filesystem-found firmware and demand-loaded blobs.
->
->>  static int fw_get_filesystem_firmware(struct device *device,
->> @@ -640,6 +646,12 @@ static ssize_t firmware_loading_store(struct device *dev,
->>               break;
->>       case 0:
->>               if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
->> +                     if (security_kernel_fw_from_file(NULL, fw_buf->data,
->> +                                                      fw_buf->size)) {
->> +                             fw_load_abort(fw_priv);
->> +                             break;
->> +                     }
->> +
->>                       set_bit(FW_STATUS_DONE, &fw_buf->status);
->>                       clear_bit(FW_STATUS_LOADING, &fw_buf->status);
->>
->>
->
-> Can you explain the loading store, and what the semantics are for an LSM
-> when a NULL is passed as the file?
+Preparing for another patch move the functions in separate commit.
 
-I'm not sure what you mean by "loading store"?
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 216 ++++++++++-----------
+ 1 file changed, 108 insertions(+), 108 deletions(-)
 
-When NULL is passed as the file, it means that the firmware was passes
-a blob, and there is no file backing it:
-
-+ * @kernel_fw_from_file:
-+ *     Load firmware from userspace.
-+ *     @file contains the file structure pointing to the file containing
-+ *     the firmware to load. If the module is being loaded from a blob,
-+ *     this argument will be NULL.
-+ *     @buf pointer to buffer containing firmware contents.
-+ *     @size length of the firmware contents.
-+ *     Return 0 if permission is granted.
-
-An LSM that has a policy to require a file to back the firmware would
-reject such loads.
-
--Kees
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 9682cf2..af846d5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4967,114 +4967,6 @@ static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
+ 	return err;
+ }
+ 
+-struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+-						  struct device *busdev)
+-{
+-	struct net_device *ndev = drvr->iflist[0]->ndev;
+-	struct brcmf_cfg80211_info *cfg;
+-	struct wiphy *wiphy;
+-	struct brcmf_cfg80211_vif *vif;
+-	struct brcmf_if *ifp;
+-	s32 err = 0;
+-	s32 io_type;
+-
+-	if (!ndev) {
+-		brcmf_err("ndev is invalid\n");
+-		return NULL;
+-	}
+-
+-	ifp = netdev_priv(ndev);
+-	wiphy = brcmf_setup_wiphy(busdev);
+-	if (IS_ERR(wiphy))
+-		return NULL;
+-
+-	cfg = wiphy_priv(wiphy);
+-	cfg->wiphy = wiphy;
+-	cfg->pub = drvr;
+-	init_vif_event(&cfg->vif_event);
+-	INIT_LIST_HEAD(&cfg->vif_list);
+-
+-	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
+-	if (IS_ERR(vif)) {
+-		wiphy_free(wiphy);
+-		return NULL;
+-	}
+-
+-	vif->ifp = ifp;
+-	vif->wdev.netdev = ndev;
+-	ndev->ieee80211_ptr = &vif->wdev;
+-	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
+-
+-	err = wl_init_priv(cfg);
+-	if (err) {
+-		brcmf_err("Failed to init iwm_priv (%d)\n", err);
+-		goto cfg80211_attach_out;
+-	}
+-	ifp->vif = vif;
+-
+-	err = brcmf_p2p_attach(cfg);
+-	if (err) {
+-		brcmf_err("P2P initilisation failed (%d)\n", err);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-	err = brcmf_btcoex_attach(cfg);
+-	if (err) {
+-		brcmf_err("BT-coex initialisation failed (%d)\n", err);
+-		brcmf_p2p_detach(&cfg->p2p);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-
+-	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
+-	 * setup 40MHz in 2GHz band and enable OBSS scanning.
+-	 */
+-	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
+-	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
+-		err = brcmf_enable_bw40_2g(ifp);
+-		if (!err)
+-			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
+-						      BRCMF_OBSS_COEX_AUTO);
+-	}
+-	/* clear for now and rely on update later */
+-	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
+-	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
+-
+-	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
+-	if (err) {
+-		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
+-		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
+-	}
+-
+-	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
+-				    &io_type);
+-	if (err) {
+-		brcmf_err("Failed to get D11 version (%d)\n", err);
+-		goto cfg80211_p2p_attach_out;
+-	}
+-	cfg->d11inf.io_type = (u8)io_type;
+-	brcmu_d11_attach(&cfg->d11inf);
+-
+-	return cfg;
+-
+-cfg80211_p2p_attach_out:
+-	wl_deinit_priv(cfg);
+-
+-cfg80211_attach_out:
+-	brcmf_free_vif(vif);
+-	return NULL;
+-}
+-
+-void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+-{
+-	if (!cfg)
+-		return;
+-
+-	WARN_ON(!list_empty(&cfg->vif_list));
+-	wiphy_unregister(cfg->wiphy);
+-	brcmf_btcoex_detach(cfg);
+-	wl_deinit_priv(cfg);
+-	wiphy_free(cfg->wiphy);
+-}
+-
+ static s32
+ brcmf_dongle_roam(struct brcmf_if *ifp, u32 bcn_timeout)
+ {
+@@ -5658,3 +5550,111 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
+ 				  vif_event_equals(event, action), timeout);
+ }
+ 
++struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
++						  struct device *busdev)
++{
++	struct net_device *ndev = drvr->iflist[0]->ndev;
++	struct brcmf_cfg80211_info *cfg;
++	struct wiphy *wiphy;
++	struct brcmf_cfg80211_vif *vif;
++	struct brcmf_if *ifp;
++	s32 err = 0;
++	s32 io_type;
++
++	if (!ndev) {
++		brcmf_err("ndev is invalid\n");
++		return NULL;
++	}
++
++	ifp = netdev_priv(ndev);
++	wiphy = brcmf_setup_wiphy(busdev);
++	if (IS_ERR(wiphy))
++		return NULL;
++
++	cfg = wiphy_priv(wiphy);
++	cfg->wiphy = wiphy;
++	cfg->pub = drvr;
++	init_vif_event(&cfg->vif_event);
++	INIT_LIST_HEAD(&cfg->vif_list);
++
++	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
++	if (IS_ERR(vif)) {
++		wiphy_free(wiphy);
++		return NULL;
++	}
++
++	vif->ifp = ifp;
++	vif->wdev.netdev = ndev;
++	ndev->ieee80211_ptr = &vif->wdev;
++	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
++
++	err = wl_init_priv(cfg);
++	if (err) {
++		brcmf_err("Failed to init iwm_priv (%d)\n", err);
++		goto cfg80211_attach_out;
++	}
++	ifp->vif = vif;
++
++	err = brcmf_p2p_attach(cfg);
++	if (err) {
++		brcmf_err("P2P initilisation failed (%d)\n", err);
++		goto cfg80211_p2p_attach_out;
++	}
++	err = brcmf_btcoex_attach(cfg);
++	if (err) {
++		brcmf_err("BT-coex initialisation failed (%d)\n", err);
++		brcmf_p2p_detach(&cfg->p2p);
++		goto cfg80211_p2p_attach_out;
++	}
++
++	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
++	 * setup 40MHz in 2GHz band and enable OBSS scanning.
++	 */
++	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
++	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++		err = brcmf_enable_bw40_2g(ifp);
++		if (!err)
++			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
++						      BRCMF_OBSS_COEX_AUTO);
++	}
++	/* clear for now and rely on update later */
++	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
++	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
++
++	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
++	if (err) {
++		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
++		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
++	}
++
++	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
++				    &io_type);
++	if (err) {
++		brcmf_err("Failed to get D11 version (%d)\n", err);
++		goto cfg80211_p2p_attach_out;
++	}
++	cfg->d11inf.io_type = (u8)io_type;
++	brcmu_d11_attach(&cfg->d11inf);
++
++	return cfg;
++
++cfg80211_p2p_attach_out:
++	wl_deinit_priv(cfg);
++
++cfg80211_attach_out:
++	brcmf_free_vif(vif);
++	return NULL;
++}
++
++void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
++{
++	if (!cfg)
++		return;
++
++	WARN_ON(!list_empty(&cfg->vif_list));
++	wiphy_unregister(cfg->wiphy);
++	brcmf_btcoex_detach(cfg);
++	wl_deinit_priv(cfg);
++	wiphy_free(cfg->wiphy);
++}
++
 -- 
-Kees Cook
-Chrome OS Security
+1.9.1
+
