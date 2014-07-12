@@ -1,96 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:34589 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759713AbaGRFhb (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:41195 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbaGLOmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 01:37:31 -0400
-Received: by mail-we0-f178.google.com with SMTP id w61so4094548wes.9
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 22:37:30 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 9/9] staging: vt6656: struct vnt_private rename apTD to tx_context
-Date: Fri, 18 Jul 2014 06:36:16 +0100
-Message-Id: <1405661776-3345-9-git-send-email-tvboxspy@gmail.com> (sfid-20140718_073738_292707_A1079D7D)
-In-Reply-To: <1405661776-3345-1-git-send-email-tvboxspy@gmail.com>
-References: <1405661776-3345-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 12 Jul 2014 10:42:24 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so588441wib.4
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 07:42:23 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] ssb: extract antenna gains from SPROMs revs 4+ properly
+Date: Sat, 12 Jul 2014 16:42:10 +0200
+Message-Id: <1405176130-15908-2-git-send-email-zajec5@gmail.com> (sfid-20140712_164245_871885_9447EC7F)
+In-Reply-To: <1405176130-15908-1-git-send-email-zajec5@gmail.com>
+References: <1405176130-15908-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 2 +-
- drivers/staging/vt6656/int.c      | 2 +-
- drivers/staging/vt6656/main_usb.c | 4 ++--
- drivers/staging/vt6656/rxtx.c     | 4 ++--
- 4 files changed, 6 insertions(+), 6 deletions(-)
+They are encoded the same way as in older SPROMs.
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index a5a6c39..757d500 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -292,7 +292,7 @@ struct vnt_private {
- 	u32 cbRD;
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/pci.c | 48 ++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 32 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index ca973d1..0b3c966 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -526,14 +526,22 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ 	}
  
- 	/* Variables to track resources for the BULK Out Pipe */
--	struct vnt_usb_send_context *apTD[CB_MAX_TX_DESC];
-+	struct vnt_usb_send_context *tx_context[CB_MAX_TX_DESC];
- 	u32 cbTD;
+ 	/* Extract the antenna gain values. */
+-	SPEX(antenna_gain.a0, SSB_SPROM4_AGAIN01,
+-	     SSB_SPROM4_AGAIN0, SSB_SPROM4_AGAIN0_SHIFT);
+-	SPEX(antenna_gain.a1, SSB_SPROM4_AGAIN01,
+-	     SSB_SPROM4_AGAIN1, SSB_SPROM4_AGAIN1_SHIFT);
+-	SPEX(antenna_gain.a2, SSB_SPROM4_AGAIN23,
+-	     SSB_SPROM4_AGAIN2, SSB_SPROM4_AGAIN2_SHIFT);
+-	SPEX(antenna_gain.a3, SSB_SPROM4_AGAIN23,
+-	     SSB_SPROM4_AGAIN3, SSB_SPROM4_AGAIN3_SHIFT);
++	out->antenna_gain.a0 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM4_AGAIN01,
++						     SSB_SPROM4_AGAIN0,
++						     SSB_SPROM4_AGAIN0_SHIFT);
++	out->antenna_gain.a1 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM4_AGAIN01,
++						     SSB_SPROM4_AGAIN1,
++						     SSB_SPROM4_AGAIN1_SHIFT);
++	out->antenna_gain.a2 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM4_AGAIN23,
++						     SSB_SPROM4_AGAIN2,
++						     SSB_SPROM4_AGAIN2_SHIFT);
++	out->antenna_gain.a3 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM4_AGAIN23,
++						     SSB_SPROM4_AGAIN3,
++						     SSB_SPROM4_AGAIN3_SHIFT);
  
- 	/* Variables to track resources for the Interrupt In Pipe */
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index 87ac6a1..e404d9e 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -78,7 +78,7 @@ static int vnt_int_report_rate(struct vnt_private *priv, u8 pkt_no, u8 tsr)
- 	if (pkt_no >= priv->cbTD)
- 		return -EINVAL;
+ 	sprom_extract_r458(out, in);
  
--	context = priv->apTD[pkt_no];
-+	context = priv->tx_context[pkt_no];
+@@ -623,14 +631,22 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+ 	SPEX32(ofdm5ghpo, SSB_SPROM8_OFDM5GHPO, 0xFFFFFFFF, 0);
  
- 	if (!context->skb)
- 		return -EINVAL;
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 5c8ff98..ff4e18d 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -399,7 +399,7 @@ static void device_free_tx_bufs(struct vnt_private *priv)
- 	int ii;
+ 	/* Extract the antenna gain values. */
+-	SPEX(antenna_gain.a0, SSB_SPROM8_AGAIN01,
+-	     SSB_SPROM8_AGAIN0, SSB_SPROM8_AGAIN0_SHIFT);
+-	SPEX(antenna_gain.a1, SSB_SPROM8_AGAIN01,
+-	     SSB_SPROM8_AGAIN1, SSB_SPROM8_AGAIN1_SHIFT);
+-	SPEX(antenna_gain.a2, SSB_SPROM8_AGAIN23,
+-	     SSB_SPROM8_AGAIN2, SSB_SPROM8_AGAIN2_SHIFT);
+-	SPEX(antenna_gain.a3, SSB_SPROM8_AGAIN23,
+-	     SSB_SPROM8_AGAIN3, SSB_SPROM8_AGAIN3_SHIFT);
++	out->antenna_gain.a0 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM8_AGAIN01,
++						     SSB_SPROM8_AGAIN0,
++						     SSB_SPROM8_AGAIN0_SHIFT);
++	out->antenna_gain.a1 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM8_AGAIN01,
++						     SSB_SPROM8_AGAIN1,
++						     SSB_SPROM8_AGAIN1_SHIFT);
++	out->antenna_gain.a2 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM8_AGAIN23,
++						     SSB_SPROM8_AGAIN2,
++						     SSB_SPROM8_AGAIN2_SHIFT);
++	out->antenna_gain.a3 = sprom_extract_antgain(out->revision, in,
++						     SSB_SPROM8_AGAIN23,
++						     SSB_SPROM8_AGAIN3,
++						     SSB_SPROM8_AGAIN3_SHIFT);
  
- 	for (ii = 0; ii < priv->cbTD; ii++) {
--		tx_context = priv->apTD[ii];
-+		tx_context = priv->tx_context[ii];
- 		/* deallocate URBs */
- 		if (tx_context->urb) {
- 			usb_kill_urb(tx_context->urb);
-@@ -471,7 +471,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
- 			goto free_tx;
- 		}
- 
--		priv->apTD[ii] = tx_context;
-+		priv->tx_context[ii] = tx_context;
- 		tx_context->priv = priv;
- 		tx_context->pkt_no = ii;
- 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 76b7f17..f3bbfba 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -82,10 +82,10 @@ static struct vnt_usb_send_context
- 	dev_dbg(&priv->usb->dev, "%s\n", __func__);
- 
- 	for (ii = 0; ii < priv->cbTD; ii++) {
--		if (!priv->apTD[ii])
-+		if (!priv->tx_context[ii])
- 			return NULL;
- 
--		context = priv->apTD[ii];
-+		context = priv->tx_context[ii];
- 		if (context->in_use == false) {
- 			context->in_use = true;
- 			memset(context->data, 0,
+ 	/* Extract cores power info info */
+ 	for (i = 0; i < ARRAY_SIZE(pwr_info_offset); i++) {
 -- 
-2.0.1
+1.8.4.5
 
