@@ -1,34 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59618 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179AbaGWXMB (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:39836 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbaGLGyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 19:12:01 -0400
-Date: Wed, 23 Jul 2014 16:12:00 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: vt6655: Fix Warning on boot
- handle_irq_event_percpu.
-Message-ID: <20140723231200.GB31075@kroah.com> (sfid-20140724_011208_155608_77860D24)
-References: <1406147712-3152-1-git-send-email-tvboxspy@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406147712-3152-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 12 Jul 2014 02:54:37 -0400
+Received: by mail-wi0-f181.google.com with SMTP id bs8so256291wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:36 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/10] staging: vt6656: remove unused variables from struct tagCMD_ITEM
+Date: Sat, 12 Jul 2014 07:53:43 +0100
+Message-Id: <1405148028-4053-5-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085441_452475_AF7F554F)
+In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 09:35:11PM +0100, Malcolm Priestley wrote:
-> WARNING: CPU: 0 PID: 929 at /home/apw/COD/linux/kernel/irq/handle.c:147 handle_irq_event_percpu+0x1d1/0x1e0()
-> irq 17 handler device_intr+0x0/0xa80 [vt6655_stage] enabled interrupts
-> 
-> Using spin_lock_irqsave appears to fix this.
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> Cc: <stable@vger.kernel.org>
+Also remove local variables
 
-So should both of these go into the 3.16-final kernel release?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wcmd.c | 6 +-----
+ drivers/staging/vt6656/wcmd.h | 4 ----
+ 2 files changed, 1 insertion(+), 9 deletions(-)
 
-thanks,
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 5621c14..1987d5c 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -141,8 +141,6 @@ void vRunCommand(struct work_struct *work)
+ 
+ static int s_bCommandComplete(struct vnt_private *pDevice)
+ {
+-	int bRadioCmd = false;
+-	int bForceSCAN = true;
+ 
+ 	pDevice->eCommandState = WLAN_CMD_IDLE;
+ 	if (pDevice->cbFreeCmdQueue == CMD_Q_SIZE) {
+@@ -151,8 +149,7 @@ static int s_bCommandComplete(struct vnt_private *pDevice)
+ 		return true;
+ 	} else {
+ 		pDevice->eCommand = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].eCmd;
+-		bRadioCmd = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].bRadioCmd;
+-		bForceSCAN = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].bForceSCAN;
++
+ 		ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdDequeueIdx, CMD_Q_SIZE);
+ 		pDevice->cbFreeCmdQueue++;
+ 		pDevice->bCmdRunning = true;
+@@ -197,7 +194,6 @@ int bScheduleCommand(struct vnt_private *pDevice,
+ 	if (pDevice->cbFreeCmdQueue == 0)
+ 		return false;
+ 	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].eCmd = eCommand;
+-	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].bForceSCAN = true;
+ 
+ 	ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdEnqueueIdx, CMD_Q_SIZE);
+ 	pDevice->cbFreeCmdQueue--;
+diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
+index 4fe34b5..98387f3 100644
+--- a/drivers/staging/vt6656/wcmd.h
++++ b/drivers/staging/vt6656/wcmd.h
+@@ -58,10 +58,6 @@ typedef enum tagCMD_STATUS {
+ 
+ typedef struct tagCMD_ITEM {
+     CMD_CODE eCmd;
+-    bool     bNeedRadioOFF;
+-    bool     bRadioCmd;
+-    bool     bForceSCAN;
+-    u16     wDeAuthenReason;
+ } CMD_ITEM, *PCMD_ITEM;
+ 
+ // Command state
+-- 
+1.9.1
 
-greg k-h
