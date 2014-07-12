@@ -1,168 +1,350 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58180 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbaGXJ0B (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:27722 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbaGLGtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 05:26:01 -0400
-Received: by mail-we0-f174.google.com with SMTP id x48so2452307wes.5
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 02:25:59 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2] ath10k: handle attention flags correctly when using A-MSDU
-Date: Thu, 24 Jul 2014 11:25:31 +0200
-Message-Id: <1406193931-5478-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140724_112613_353609_6E922CC1)
+	Sat, 12 Jul 2014 02:49:47 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 7/9] brcmfmac: moving some functions around
+Date: Sat, 12 Jul 2014 08:49:40 +0200
+Message-ID: <1405147782-12768-8-git-send-email-arend@broadcom.com> (sfid-20140712_085005_033342_D1A37D11)
+In-Reply-To: <1405147782-12768-1-git-send-email-arend@broadcom.com>
+References: <1405147782-12768-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of A-MSDU RX we should check attention flags
-correctly to be sure we report correct FCS status for
-A-MSDU subframes. Without a patch we could report A-MSDU
-subframes with wrong FCS as a correct to the stack, next
-get a lot of DUP ACK TCP packets. Finally TP drop is seen
-and this drop depends on FCS errors ratio for A-MSDU frame.
+Just reordering the functions in preparation of subsequent changes.
 
-Example test case when TP drop is seen:
-- ath10k configured as an AP
-- used ath10k station
-- forced A-MSDU (7 frames) on STA
-- other traffic on channel (often FCS errors)
-- monitor iface added on AP
-- TCP STA -> AP traffic (iperf)
-
-a) Iperf logs for case without the patch:
-
-echo "1 64" > htt_max_amsdu_ampdu // disable A-MSDU
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 5.0 sec  56.6 MBytes  95.0 Mbits/sec
-[  3]  5.0-10.0 sec  60.4 MBytes   101 Mbits/sec
-[  3] 10.0-15.0 sec  60.2 MBytes   101 Mbits/sec
-[  3] 15.0-20.0 sec  60.2 MBytes   101 Mbits/sec
-[  3] 20.0-25.0 sec  63.8 MBytes   107 Mbits/sec
-[  3] 25.0-30.0 sec  64.9 MBytes   109 Mbits/sec
-
-echo "7 64" > htt_max_amsdu_ampdu  // set 7 A-MSDU subframes
-[  3] 30.0-35.0 sec  40.0 MBytes  67.1 Mbits/sec
-[  3] 35.0-40.0 sec  35.9 MBytes  60.2 Mbits/sec
-[  3] 40.0-45.0 sec  36.9 MBytes  61.9 Mbits/sec
-[  3] 45.0-50.0 sec  37.9 MBytes  63.5 Mbits/sec
-[  3] 50.0-55.0 sec  34.5 MBytes  57.9 Mbits/sec
-[  3] 55.0-60.0 sec  25.4 MBytes  42.6 Mbits/sec
-[  3] 60.0-65.0 sec  48.2 MBytes  81.0 Mbits/sec
-[  3] 65.0-70.0 sec  28.8 MBytes  48.2 Mbits/sec
-[  3] 70.0-75.0 sec  29.2 MBytes  49.1 Mbits/sec
-[  3] 75.0-80.0 sec  22.9 MBytes  38.4 Mbits/sec
-[  3] 80.0-85.0 sec  26.4 MBytes  44.2 Mbits/sec
-[  3] 85.0-90.0 sec  31.5 MBytes  52.8 Mbits/sec
-
-b) Iperf logs for case with patch:
-
-echo "1 64" > htt_max_amsdu_ampdu // disable A-MSDU
-[  3] local 192.168.12.2 port 57512 connected with 192.168.12.1 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 5.0 sec  60.8 MBytes   102 Mbits/sec
-[  3]  5.0-10.0 sec  62.2 MBytes   104 Mbits/sec
-[  3] 10.0-15.0 sec  60.9 MBytes   102 Mbits/sec
-
-echo "7 64" > htt_max_amsdu_ampdu  // set 7 A-MSDU subframes
-[  3] 15.0-20.0 sec  68.1 MBytes   114 Mbits/sec
-[  3] 20.0-25.0 sec  80.5 MBytes   135 Mbits/sec
-[  3] 25.0-30.0 sec  83.0 MBytes   139 Mbits/sec
-[  3] 30.0-35.0 sec  79.1 MBytes   133 Mbits/sec
-[  3] 35.0-40.0 sec  77.1 MBytes   129 Mbits/sec
-[  3] 40.0-45.0 sec  77.4 MBytes   130 Mbits/sec
-
-Reported-by: Denton Gentry <denton.gentry@gmail.com>
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-*v2 - changed commit message
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 288 ++++++++++-----------
+ 1 file changed, 144 insertions(+), 144 deletions(-)
 
- drivers/net/wireless/ath/ath10k/htt_rx.c |   23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 8e14c58..4767d22 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -307,7 +307,8 @@ static void ath10k_htt_rx_free_msdu_chain(struct sk_buff *skb)
- static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 				   u8 **fw_desc, int *fw_desc_len,
- 				   struct sk_buff **head_msdu,
--				   struct sk_buff **tail_msdu)
-+				   struct sk_buff **tail_msdu,
-+				   u32 *attention)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index c1695cf..f1501a2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4278,126 +4278,6 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.tdls_oper = brcmf_cfg80211_tdls_oper,
+ };
+ 
+-static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+-{
+-	/* scheduled scan settings */
+-	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
+-	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
+-}
+-
+-static const struct ieee80211_iface_limit brcmf_iface_limits[] = {
+-	{
+-		.max = 2,
+-		.types = BIT(NL80211_IFTYPE_STATION) |
+-			 BIT(NL80211_IFTYPE_ADHOC) |
+-			 BIT(NL80211_IFTYPE_AP)
+-	},
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-			 BIT(NL80211_IFTYPE_P2P_GO)
+-	},
+-	{
+-		.max = 1,
+-		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
+-	}
+-};
+-static struct ieee80211_iface_combination brcmf_iface_combos[] = {
+-	{
+-		 .max_interfaces = BRCMF_IFACE_MAX_CNT,
+-		 .num_different_channels = 1,
+-		 .n_limits = ARRAY_SIZE(brcmf_iface_limits),
+-		 .limits = brcmf_iface_limits
+-	}
+-};
+-
+-static const struct ieee80211_txrx_stypes
+-brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
+-	[NL80211_IFTYPE_STATION] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+-	},
+-	[NL80211_IFTYPE_P2P_CLIENT] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+-	},
+-	[NL80211_IFTYPE_P2P_GO] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
+-		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
+-		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
+-		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
+-		      BIT(IEEE80211_STYPE_AUTH >> 4) |
+-		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
+-		      BIT(IEEE80211_STYPE_ACTION >> 4)
+-	},
+-	[NL80211_IFTYPE_P2P_DEVICE] = {
+-		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+-	}
+-};
+-
+-static
+-struct wiphy *brcmf_setup_wiphy(struct brcmf_if *ifp, struct device *phydev)
+-{
+-	struct wiphy *wiphy;
+-	s32 err = 0;
+-
+-	wiphy = wiphy_new(&wl_cfg80211_ops, sizeof(struct brcmf_cfg80211_info));
+-	if (!wiphy) {
+-		brcmf_err("Could not allocate wiphy device\n");
+-		return ERR_PTR(-ENOMEM);
+-	}
+-	set_wiphy_dev(wiphy, phydev);
+-	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
+-	wiphy->max_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
+-	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
+-	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-				 BIT(NL80211_IFTYPE_ADHOC) |
+-				 BIT(NL80211_IFTYPE_AP) |
+-				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-				 BIT(NL80211_IFTYPE_P2P_GO) |
+-				 BIT(NL80211_IFTYPE_P2P_DEVICE);
+-	/* need VSDB firmware feature for concurrent channels */
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
+-		brcmf_iface_combos[0].num_different_channels = 2;
+-	wiphy->iface_combinations = brcmf_iface_combos;
+-	wiphy->n_iface_combinations = ARRAY_SIZE(brcmf_iface_combos);
+-	wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
+-	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+-	wiphy->cipher_suites = __wl_cipher_suites;
+-	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
+-	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+-			WIPHY_FLAG_OFFCHAN_TX |
+-			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+-			WIPHY_FLAG_SUPPORTS_TDLS;
+-	if (!brcmf_roamoff)
+-		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+-	wiphy->mgmt_stypes = brcmf_txrx_stypes;
+-	wiphy->max_remain_on_channel_duration = 5000;
+-	brcmf_wiphy_pno_params(wiphy);
+-	brcmf_dbg(INFO, "Registering custom regulatory\n");
+-	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
+-	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
+-
+-	/* vendor commands/events support */
+-	wiphy->vendor_commands = brcmf_vendor_cmds;
+-	wiphy->n_vendor_commands = BRCMF_VNDR_CMDS_LAST - 1;
+-
+-	err = wiphy_register(wiphy);
+-	if (err < 0) {
+-		brcmf_err("Could not register wiphy device (%d)\n", err);
+-		wiphy_free(wiphy);
+-		return ERR_PTR(err);
+-	}
+-	return wiphy;
+-}
+-
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+ 					   enum nl80211_iftype type,
+ 					   bool pm_block)
+@@ -4941,30 +4821,6 @@ static void init_vif_event(struct brcmf_cfg80211_vif_event *event)
+ 	mutex_init(&event->vif_event_lock);
+ }
+ 
+-static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
+-{
+-	struct brcmf_fil_bwcap_le band_bwcap;
+-	u32 val;
+-	int err;
+-
+-	/* verify support for bw_cap command */
+-	val = WLC_BAND_5G;
+-	err = brcmf_fil_iovar_int_get(ifp, "bw_cap", &val);
+-
+-	if (!err) {
+-		/* only set 2G bandwidth using bw_cap command */
+-		band_bwcap.band = cpu_to_le32(WLC_BAND_2G);
+-		band_bwcap.bw_cap = cpu_to_le32(WLC_BW_CAP_40MHZ);
+-		err = brcmf_fil_iovar_data_set(ifp, "bw_cap", &band_bwcap,
+-					       sizeof(band_bwcap));
+-	} else {
+-		brcmf_dbg(INFO, "fallback to mimo_bw_cap\n");
+-		val = WLC_N_BW_40ALL;
+-		err = brcmf_fil_iovar_int_set(ifp, "mimo_bw_cap", val);
+-	}
+-	return err;
+-}
+-
+ static s32
+ brcmf_dongle_roam(struct brcmf_if *ifp, u32 bcn_timeout)
  {
- 	int msdu_len, msdu_chaining = 0;
- 	struct sk_buff *msdu;
-@@ -357,6 +358,11 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 			break;
- 		}
+@@ -5194,6 +5050,30 @@ exit:
+ 	return err;
+ }
  
-+		*attention |= __le32_to_cpu(rx_desc->attention.flags) &
-+					    (RX_ATTENTION_FLAGS_TKIP_MIC_ERR |
-+					     RX_ATTENTION_FLAGS_DECRYPT_ERR |
-+					     RX_ATTENTION_FLAGS_FCS_ERR |
-+					     RX_ATTENTION_FLAGS_MGMT_TYPE);
- 		/*
- 		 * Copy the FW rx descriptor for this MSDU from the rx
- 		 * indication message into the MSDU's netbuf. HL uses the
-@@ -1256,13 +1262,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
- 			struct sk_buff *msdu_head, *msdu_tail;
++static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
++{
++	struct brcmf_fil_bwcap_le band_bwcap;
++	u32 val;
++	int err;
++
++	/* verify support for bw_cap command */
++	val = WLC_BAND_5G;
++	err = brcmf_fil_iovar_int_get(ifp, "bw_cap", &val);
++
++	if (!err) {
++		/* only set 2G bandwidth using bw_cap command */
++		band_bwcap.band = cpu_to_le32(WLC_BAND_2G);
++		band_bwcap.bw_cap = cpu_to_le32(WLC_BW_CAP_40MHZ);
++		err = brcmf_fil_iovar_data_set(ifp, "bw_cap", &band_bwcap,
++					       sizeof(band_bwcap));
++	} else {
++		brcmf_dbg(INFO, "fallback to mimo_bw_cap\n");
++		val = WLC_N_BW_40ALL;
++		err = brcmf_fil_iovar_int_set(ifp, "mimo_bw_cap", val);
++	}
++	return err;
++}
++
+ static void brcmf_get_bwcap(struct brcmf_if *ifp, u32 bw_cap[])
+ {
+ 	u32 band, mimo_bwcap;
+@@ -5377,6 +5257,126 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
+ 	return err;
+ }
  
-+			attention = 0;
- 			msdu_head = NULL;
- 			msdu_tail = NULL;
- 			ret = ath10k_htt_rx_amsdu_pop(htt,
- 						      &fw_desc,
- 						      &fw_desc_len,
- 						      &msdu_head,
--						      &msdu_tail);
-+						      &msdu_tail,
-+						      &attention);
++static const struct ieee80211_iface_limit brcmf_iface_limits[] = {
++	{
++		.max = 2,
++		.types = BIT(NL80211_IFTYPE_STATION) |
++			 BIT(NL80211_IFTYPE_ADHOC) |
++			 BIT(NL80211_IFTYPE_AP)
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
++			 BIT(NL80211_IFTYPE_P2P_GO)
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
++	}
++};
++static struct ieee80211_iface_combination brcmf_iface_combos[] = {
++	{
++		 .max_interfaces = BRCMF_IFACE_MAX_CNT,
++		 .num_different_channels = 1,
++		 .n_limits = ARRAY_SIZE(brcmf_iface_limits),
++		 .limits = brcmf_iface_limits
++	}
++};
++
++static const struct ieee80211_txrx_stypes
++brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_STATION] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_CLIENT] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_GO] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
++		      BIT(IEEE80211_STYPE_AUTH >> 4) |
++		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
++		      BIT(IEEE80211_STYPE_ACTION >> 4)
++	},
++	[NL80211_IFTYPE_P2P_DEVICE] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	}
++};
++
++static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
++{
++	/* scheduled scan settings */
++	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
++	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
++}
++
++static struct wiphy *brcmf_setup_wiphy(struct brcmf_if *ifp,
++				       struct device *phydev)
++{
++	struct wiphy *wiphy;
++	s32 err = 0;
++
++	wiphy = wiphy_new(&wl_cfg80211_ops, sizeof(struct brcmf_cfg80211_info));
++	if (!wiphy) {
++		brcmf_err("Could not allocate wiphy device\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	set_wiphy_dev(wiphy, phydev);
++	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
++	wiphy->max_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
++	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_ADHOC) |
++				 BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
++				 BIT(NL80211_IFTYPE_P2P_GO) |
++				 BIT(NL80211_IFTYPE_P2P_DEVICE);
++	/* need VSDB firmware feature for concurrent channels */
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
++		brcmf_iface_combos[0].num_different_channels = 2;
++	wiphy->iface_combinations = brcmf_iface_combos;
++	wiphy->n_iface_combinations = ARRAY_SIZE(brcmf_iface_combos);
++	wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
++	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	wiphy->cipher_suites = __wl_cipher_suites;
++	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
++	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
++			WIPHY_FLAG_OFFCHAN_TX |
++			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
++			WIPHY_FLAG_SUPPORTS_TDLS;
++	if (!brcmf_roamoff)
++		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
++	wiphy->mgmt_stypes = brcmf_txrx_stypes;
++	wiphy->max_remain_on_channel_duration = 5000;
++	brcmf_wiphy_pno_params(wiphy);
++	brcmf_dbg(INFO, "Registering custom regulatory\n");
++	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
++	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
++
++	/* vendor commands/events support */
++	wiphy->vendor_commands = brcmf_vendor_cmds;
++	wiphy->n_vendor_commands = BRCMF_VNDR_CMDS_LAST - 1;
++
++	err = wiphy_register(wiphy);
++	if (err < 0) {
++		brcmf_err("Could not register wiphy device (%d)\n", err);
++		wiphy_free(wiphy);
++		return ERR_PTR(err);
++	}
++	return wiphy;
++}
++
  
- 			if (ret < 0) {
- 				ath10k_warn("failed to pop amsdu from htt rx ring %d\n",
-@@ -1274,7 +1282,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			rxd = container_of((void *)msdu_head->data,
- 					   struct htt_rx_desc,
- 					   msdu_payload);
--			attention = __le32_to_cpu(rxd->attention.flags);
- 
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
- 							 status,
-@@ -1327,6 +1334,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	u8 *fw_desc;
- 	int fw_desc_len, hdrlen, paramlen;
- 	int trim;
-+	u32 attention = 0;
- 
- 	fw_desc_len = __le16_to_cpu(frag->fw_rx_desc_bytes);
- 	fw_desc = (u8 *)frag->fw_msdu_rx_desc;
-@@ -1336,7 +1344,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	spin_lock_bh(&htt->rx_ring.lock);
- 	ret = ath10k_htt_rx_amsdu_pop(htt, &fw_desc, &fw_desc_len,
--				      &msdu_head, &msdu_tail);
-+				      &msdu_head, &msdu_tail,
-+				      &attention);
- 	spin_unlock_bh(&htt->rx_ring.lock);
- 
- 	ath10k_dbg(ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
-@@ -1353,10 +1362,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	hdr = (struct ieee80211_hdr *)msdu_head->data;
- 	rxd = (void *)msdu_head->data - sizeof(*rxd);
--	tkip_mic_err = !!(__le32_to_cpu(rxd->attention.flags) &
--				RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
--	decrypt_err = !!(__le32_to_cpu(rxd->attention.flags) &
--				RX_ATTENTION_FLAGS_DECRYPT_ERR);
-+	tkip_mic_err = !!(attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
-+	decrypt_err = !!(attention & RX_ATTENTION_FLAGS_DECRYPT_ERR);
- 	fmt = MS(__le32_to_cpu(rxd->msdu_start.info1),
- 			RX_MSDU_START_INFO1_DECAP_FORMAT);
- 
+ static s32 brcmf_dongle_probecap(struct brcmf_cfg80211_info *cfg)
+ {
 -- 
-1.7.9.5
+1.9.1
 
