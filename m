@@ -1,48 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56322 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850AbaG1Na0 (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:63404 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762AbaGLGyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 09:30:26 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so7338181wgh.27
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 06:30:25 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] cfg80211: re-enable CSA for drivers that support it
-Date: Mon, 28 Jul 2014 15:21:05 +0200
-Message-Id: <1406553665-16355-1-git-send-email-michal.kazior@tieto.com> (sfid-20140728_153033_387747_D4EF6E65)
+	Sat, 12 Jul 2014 02:54:40 -0400
+Received: by mail-we0-f169.google.com with SMTP id t60so1988335wes.28
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/10] staging: vt6656: s_bCommandComplete clean up and remove camel case
+Date: Sat, 12 Jul 2014 07:53:45 +0100
+Message-Id: <1405148028-4053-7-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085445_299257_755BD106)
+In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit dda444d52496aa8ddc501561bca580f1374a96a9.
+pDevice -> priv
 
-Channel switching code has been reworked and
-improved significantly since the time original
-locking issues were found.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/wireless/core.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/staging/vt6656/wcmd.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index afee5e0..a207eb1 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -492,12 +492,6 @@ int wiphy_register(struct wiphy *wiphy)
- 	int i;
- 	u16 ifmodes = wiphy->interface_modes;
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index cc9d50a..cdd828c 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -139,52 +139,52 @@ void vRunCommand(struct work_struct *work)
+ 	return;
+ }
  
--	/*
--	 * There are major locking problems in nl80211/mac80211 for CSA,
--	 * disable for all drivers until this has been reworked.
--	 */
--	wiphy->flags &= ~WIPHY_FLAG_HAS_CHANNEL_SWITCH;
--
- #ifdef CONFIG_PM
- 	if (WARN_ON(wiphy->wowlan &&
- 		    (wiphy->wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
+-static int s_bCommandComplete(struct vnt_private *pDevice)
++static int s_bCommandComplete(struct vnt_private *priv)
+ {
+ 
+-	pDevice->eCommandState = WLAN_CMD_IDLE;
+-	if (pDevice->cbFreeCmdQueue == CMD_Q_SIZE) {
+-		//Command Queue Empty
+-		pDevice->bCmdRunning = false;
++	priv->eCommandState = WLAN_CMD_IDLE;
++	if (priv->cbFreeCmdQueue == CMD_Q_SIZE) {
++		/* Command Queue Empty */
++		priv->bCmdRunning = false;
+ 		return true;
+ 	}
+ 
+-	pDevice->eCommand = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].eCmd;
++	priv->eCommand = priv->eCmdQueue[priv->uCmdDequeueIdx].eCmd;
+ 
+-	ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdDequeueIdx, CMD_Q_SIZE);
+-	pDevice->cbFreeCmdQueue++;
+-	pDevice->bCmdRunning = true;
++	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdDequeueIdx, CMD_Q_SIZE);
++	priv->cbFreeCmdQueue++;
++	priv->bCmdRunning = true;
+ 
+-	switch (pDevice->eCommand) {
++	switch (priv->eCommand) {
+ 	case WLAN_CMD_INIT_MAC80211:
+-		pDevice->eCommandState = WLAN_CMD_INIT_MAC80211_START;
++		priv->eCommandState = WLAN_CMD_INIT_MAC80211_START;
+ 		break;
+ 
+ 	case WLAN_CMD_TBTT_WAKEUP:
+-		pDevice->eCommandState = WLAN_CMD_TBTT_WAKEUP_START;
++		priv->eCommandState = WLAN_CMD_TBTT_WAKEUP_START;
+ 		break;
+ 
+ 	case WLAN_CMD_BECON_SEND:
+-		pDevice->eCommandState = WLAN_CMD_BECON_SEND_START;
++		priv->eCommandState = WLAN_CMD_BECON_SEND_START;
+ 		break;
+ 
+ 	case WLAN_CMD_SETPOWER:
+-		pDevice->eCommandState = WLAN_CMD_SETPOWER_START;
++		priv->eCommandState = WLAN_CMD_SETPOWER_START;
+ 		break;
+ 
+ 	case WLAN_CMD_CHANGE_ANTENNA:
+-		pDevice->eCommandState = WLAN_CMD_CHANGE_ANTENNA_START;
++		priv->eCommandState = WLAN_CMD_CHANGE_ANTENNA_START;
+ 		break;
+ 
+ 	case WLAN_CMD_11H_CHSW:
+-		pDevice->eCommandState = WLAN_CMD_11H_CHSW_START;
++		priv->eCommandState = WLAN_CMD_11H_CHSW_START;
+ 		break;
+ 
+ 	default:
+ 		break;
+ 	}
+ 
+-	vCommandTimerWait(pDevice, 0);
++	vCommandTimerWait(priv, 0);
+ 
+ 	return true;
+ }
 -- 
-1.8.5.3
+1.9.1
 
