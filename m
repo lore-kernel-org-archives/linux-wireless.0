@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46873 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932428AbaGUO0m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 10:26:42 -0400
-Message-ID: <1405952795.32255.26.camel@jlt4.sipsolutions.net> (sfid-20140721_162645_830418_153AE588)
-Subject: Re: [PATCH v2] mac80211: add support for Rx reordering offloading
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 21 Jul 2014 16:26:35 +0200
-In-Reply-To: <1405505535-13126-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_122055_514454_0F5D3891)
-References: <1405505535-13126-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140716_122055_514454_0F5D3891)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:30174 "EHLO
+	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753031AbaGLSLm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jul 2014 14:11:42 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, joe@perches.com,
+	Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH V2 6/9] orinoco_usb: remove unnecessary break after goto
+Date: Sat, 12 Jul 2014 20:09:45 +0200
+Message-Id: <1405188597-2815-7-git-send-email-fabf@skynet.be> (sfid-20140712_201243_016718_77E912A7)
+In-Reply-To: <1405188597-2815-1-git-send-email-fabf@skynet.be>
+References: <1405188597-2815-1-git-send-email-fabf@skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-16 at 12:12 +0200, Michal Kazior wrote:
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/net/wireless/orinoco/orinoco_usb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> +struct ieee80211_rx_agg {
-> +	u8 addr[ETH_ALEN];
-> +	u16 tid;
-> +};
-> +
->  enum sdata_queue_type {
->  	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
->  	IEEE80211_SDATA_QUEUE_AGG_START		= 1,
->  	IEEE80211_SDATA_QUEUE_AGG_STOP		= 2,
-> +	IEEE80211_SDATA_QUEUE_RX_AGG_START	= 3,
-> +	IEEE80211_SDATA_QUEUE_RX_AGG_STOP	= 4,
->  };
-
-I'm not a big fan of allocating skbs for these auxiliary messages, but I
-guess I'll merge this and then fix it up later.
-
-Applied.
-
-johannes
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index c90939c..d3cf7c3 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -921,7 +921,6 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
+ 			retval = -EFAULT;
+ 		}
+ 		goto exit;
+-		break;
+ 	}
+ 	if (ctx->in_rid) {
+ 		struct ezusb_packet *ans = ctx->buf;
+-- 
+1.9.1
 
