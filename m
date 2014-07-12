@@ -1,72 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:34702 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbaGTLuk convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:36522 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762AbaGLGye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 07:50:40 -0400
-Received: by mail-oa0-f43.google.com with SMTP id i7so6013294oag.16
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 04:50:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140720132634.2cb9e916@wiggum>
-References: <1405854022-11833-1-git-send-email-zajec5@gmail.com>
-	<1405854022-11833-2-git-send-email-zajec5@gmail.com>
-	<20140720132634.2cb9e916@wiggum>
-Date: Sun, 20 Jul 2014 13:50:39 +0200
-Message-ID: <CACna6rx-LFvQZrLmuQTm7B9wME9OmFBAf_qJPRio1D_hVzA1BQ@mail.gmail.com> (sfid-20140720_135042_668253_756A8761)
-Subject: Re: [PATCH 2/2] b43: N-PHY: support setting custom TX power
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 12 Jul 2014 02:54:34 -0400
+Received: by mail-we0-f178.google.com with SMTP id w61so1124982wes.9
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:32 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/10] staging: vt6656: wcmd remove unused commands
+Date: Sat, 12 Jul 2014 07:53:41 +0100
+Message-Id: <1405148028-4053-3-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085437_631755_80E03162)
+In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 July 2014 13:26, Michael Büsch <m@bues.ch> wrote:
-> On Sun, 20 Jul 2014 13:00:22 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->> @@ -6656,5 +6721,4 @@ const struct b43_phy_operations b43_phyops_n = {
->>       .switch_channel         = b43_nphy_op_switch_channel,
->>       .get_default_chan       = b43_nphy_op_get_default_chan,
->>       .recalc_txpower         = b43_nphy_op_recalc_txpower,
->> -     .adjust_txpower         = b43_nphy_op_adjust_txpower,
->
-> recalc_txpower once was designed to just recalculate the txpower and not write it
-> to hardware. adjust_txpower was supposed to write it to hardware afterwards.
-> That had to do with some locking foo and stuff I forgot (AFAIR these callbacks are called
-> in different contexts, but I may be wrong).
-> But I don't think it really matters. Just as a general hint here.
+WLAN_CMD_CHANGE_BBSENSITIVITY and WLAN_CMD_MAC_DISPOWERSAVING
+are already implemented and don't need the command timer.
 
-Yeah, I noticed that and was starring at it for a long time.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wcmd.c | 34 ----------------------------------
+ drivers/staging/vt6656/wcmd.h | 24 ------------------------
+ 2 files changed, 58 deletions(-)
 
-First of all I verified if @config is allowed to sleep. It is, so our
-"recalc_txpower" can sleep as well if it needs to.
-
-I think that using adjust_txpower on G-PHY could have something to do
-with the way TX power is controlled on these devices. They don't have
-hardware (firmware?) power control, so much more has to be done in the
-driver. It's probably what Broadcom calls a "software" TX power
-recalc. If you take a look at
-[PATCH] Staging: Add initial release of brcm80211 - Broadcom 802.11n
-wireless LAN driver.
-you will see there was a wlc_phy_txpower_target_set with following calls:
-wlc_phy_txpower_recalc_target(pi);
-wlc_phy_cal_txpower_recalc_sw(pi);
-
-The second was an empty function, most probably because Broadcom
-stripped it our of G-PHY code before releasing.
-
-In N-PHY world there are two registers for setting TX power: 0x1E7 and
-0x222 (one per core) and two for reading current state: 0x1ED and
-0x1EE. However you don't really touch them unless you're doing some
-initialization/calibration. For most of the time hardware is supposed
-to adjust TX power, you simply tell the firmware what should it be
-(this is what 0x1EA register is for).
-
-In G-PHY you were setting that manually, so you could indeed need some
-hacks to avoid some conflict or sth. This should not be needed for
-N-PHY.
-
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 0b87486..5001193 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -63,7 +63,6 @@ void vRunCommand(struct work_struct *work)
+ {
+ 	struct vnt_private *pDevice =
+ 		container_of(work, struct vnt_private, run_command_work.work);
+-	u8 byData;
+ 
+ 	if (pDevice->Flags & fMP_DISCONNECTED)
+ 		return;
+@@ -87,15 +86,6 @@ void vRunCommand(struct work_struct *work)
+ 
+ 		break;
+ 
+-	case WLAN_CMD_CHANGE_BBSENSITIVITY_START:
+-
+-		pDevice->bStopDataPkt = true;
+-		pDevice->byBBVGACurrent = pDevice->byBBVGANew;
+-		BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Change sensitivity pDevice->byBBVGACurrent = %x\n", pDevice->byBBVGACurrent);
+-		pDevice->bStopDataPkt = false;
+-		break;
+-
+ 	case WLAN_CMD_TBTT_WAKEUP_START:
+ 		vnt_next_tbtt_wakeup(pDevice);
+ 		break;
+@@ -134,26 +124,10 @@ void vRunCommand(struct work_struct *work)
+ 		}
+ 		break;
+ 
+-	case WLAN_CMD_MAC_DISPOWERSAVING_START:
+-		vnt_control_in_u8(pDevice, MESSAGE_REQUEST_MACREG, MAC_REG_PSCTL, &byData);
+-		if ((byData & PSCTL_PS) != 0) {
+-			// disable power saving hw function
+-			vnt_control_out(pDevice,
+-					MESSAGE_TYPE_DISABLE_PS,
+-					0,
+-					0,
+-					0,
+-					NULL
+-					);
+-		}
+-		break;
+-
+ 	case WLAN_CMD_11H_CHSW_START:
+ 		vnt_set_channel(pDevice, pDevice->hw->conf.chandef.chan->hw_value);
+ 		break;
+ 
+-	case WLAN_CMD_CONFIGURE_FILTER_START:
+-		break;
+ 	default:
+ 		break;
+ 	} //switch
+@@ -185,10 +159,6 @@ static int s_bCommandComplete(struct vnt_private *pDevice)
+ 			pDevice->eCommandState = WLAN_CMD_INIT_MAC80211_START;
+ 			break;
+ 
+-		case WLAN_CMD_CHANGE_BBSENSITIVITY:
+-			pDevice->eCommandState = WLAN_CMD_CHANGE_BBSENSITIVITY_START;
+-			break;
+-
+ 		case WLAN_CMD_TBTT_WAKEUP:
+ 			pDevice->eCommandState = WLAN_CMD_TBTT_WAKEUP_START;
+ 			break;
+@@ -205,10 +175,6 @@ static int s_bCommandComplete(struct vnt_private *pDevice)
+ 			pDevice->eCommandState = WLAN_CMD_CHANGE_ANTENNA_START;
+ 			break;
+ 
+-		case WLAN_CMD_MAC_DISPOWERSAVING:
+-			pDevice->eCommandState = WLAN_CMD_MAC_DISPOWERSAVING_START;
+-			break;
+-
+ 		case WLAN_CMD_11H_CHSW:
+ 			pDevice->eCommandState = WLAN_CMD_11H_CHSW_START;
+ 			break;
+diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
+index eb2e972..4fe34b5 100644
+--- a/drivers/staging/vt6656/wcmd.h
++++ b/drivers/staging/vt6656/wcmd.h
+@@ -37,21 +37,11 @@
+ // Command code
+ typedef enum tagCMD_CODE {
+     WLAN_CMD_INIT_MAC80211,
+-    WLAN_CMD_BSSID_SCAN,
+-    WLAN_CMD_SSID,
+-    WLAN_CMD_DISASSOCIATE,
+-    WLAN_CMD_DEAUTH,
+-    WLAN_CMD_RX_PSPOLL,
+-    WLAN_CMD_CHANGE_BBSENSITIVITY,
+     WLAN_CMD_SETPOWER,
+     WLAN_CMD_TBTT_WAKEUP,
+     WLAN_CMD_BECON_SEND,
+     WLAN_CMD_CHANGE_ANTENNA,
+-    WLAN_CMD_REMOVE_ALLKEY,
+-    WLAN_CMD_MAC_DISPOWERSAVING,
+     WLAN_CMD_11H_CHSW,
+-    WLAN_CMD_RUN_AP,
+-    WLAN_CMD_CONFIGURE_FILTER
+ } CMD_CODE, *PCMD_CODE;
+ 
+ #define CMD_Q_SIZE              32
+@@ -77,25 +67,11 @@ typedef struct tagCMD_ITEM {
+ // Command state
+ typedef enum tagCMD_STATE {
+     WLAN_CMD_INIT_MAC80211_START,
+-    WLAN_CMD_SCAN_START,
+-    WLAN_CMD_SCAN_END,
+-    WLAN_CMD_DISASSOCIATE_START,
+-    WLAN_CMD_DEAUTHEN_START,
+-    WLAN_CMD_SSID_START,
+-    WLAN_AUTHENTICATE_WAIT,
+-    WLAN_ASSOCIATE_WAIT,
+-    WLAN_DISASSOCIATE_WAIT,
+-    WLAN_CMD_TX_PSPACKET_START,
+-    WLAN_CMD_CHANGE_BBSENSITIVITY_START,
+     WLAN_CMD_SETPOWER_START,
+-    WLAN_CMD_AP_MODE_START,
+     WLAN_CMD_TBTT_WAKEUP_START,
+     WLAN_CMD_BECON_SEND_START,
+     WLAN_CMD_CHANGE_ANTENNA_START,
+-    WLAN_CMD_REMOVE_ALLKEY_START,
+-    WLAN_CMD_MAC_DISPOWERSAVING_START,
+     WLAN_CMD_11H_CHSW_START,
+-    WLAN_CMD_CONFIGURE_FILTER_START,
+     WLAN_CMD_IDLE
+ } CMD_STATE, *PCMD_STATE;
+ 
 -- 
-Rafał
+1.9.1
+
