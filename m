@@ -1,34 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10096 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256AbaGUIRZ (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:53840 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbaGMJno (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 04:17:25 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Fabian Frederick <fabf@skynet.be>
-CC: <linux-kernel@vger.kernel.org>, <davem@davemloft.net>,
-	<joe@perches.com>, "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 14/30] ath6kl: remove unnecessary break after return
-References: <1405866332-24652-1-git-send-email-fabf@skynet.be>
-	<1405866332-24652-5-git-send-email-fabf@skynet.be>
-Date: Mon, 21 Jul 2014 11:17:18 +0300
-In-Reply-To: <1405866332-24652-5-git-send-email-fabf@skynet.be> (Fabian
-	Frederick's message of "Sun, 20 Jul 2014 16:25:15 +0200")
-Message-ID: <87d2cz15yp.fsf@kamboji.qca.qualcomm.com> (sfid-20140721_101935_147822_82968DF8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 13 Jul 2014 05:43:44 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so774756wgh.10
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:42 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/13] staging: vt6656: rename vRunCommand to vnt_run_command
+Date: Sun, 13 Jul 2014 10:42:49 +0100
+Message-Id: <1405244573-10978-9-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114356_108869_C907EEDC)
+In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fabian Frederick <fabf@skynet.be> writes:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ drivers/staging/vt6656/wcmd.c     | 2 +-
+ drivers/staging/vt6656/wcmd.h     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Who is taking this patch? Please let me know if I should apply it to my
-tree.
-
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 34b6148..d9b5210 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1111,7 +1111,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	spin_lock_init(&priv->lock);
+ 	mutex_init(&priv->usb_lock);
+ 
+-	INIT_DELAYED_WORK(&priv->run_command_work, vRunCommand);
++	INIT_DELAYED_WORK(&priv->run_command_work, vnt_run_command);
+ 
+ 	usb_set_intfdata(intf, priv);
+ 
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 87e682d..864d5e5 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -104,7 +104,7 @@ static int vnt_cmd_complete(struct vnt_private *priv)
+ 	return true;
+ }
+ 
+-void vRunCommand(struct work_struct *work)
++void vnt_run_command(struct work_struct *work)
+ {
+ 	struct vnt_private *priv =
+ 		container_of(work, struct vnt_private, run_command_work.work);
+diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
+index a2943ab..783d6c9 100644
+--- a/drivers/staging/vt6656/wcmd.h
++++ b/drivers/staging/vt6656/wcmd.h
+@@ -63,6 +63,6 @@ void vResetCommandTimer(struct vnt_private *);
+ 
+ int bScheduleCommand(struct vnt_private *, enum vnt_cmd, u8 *);
+ 
+-void vRunCommand(struct work_struct *work);
++void vnt_run_command(struct work_struct *work);
+ 
+ #endif /* __WCMD_H__ */
 -- 
-Kalle Valo
+1.9.1
+
