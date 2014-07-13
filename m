@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47049 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752157AbaGBOMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 10:12:12 -0400
-Message-ID: <1404310302.5102.41.camel@smile.fi.intel.com> (sfid-20140702_161230_019101_F1E956DD)
-Subject: Re: [PATCH 5/6] staging: rtl8192e: re-use string_escape_mem()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Date: Wed, 02 Jul 2014 17:11:42 +0300
-In-Reply-To: <1404308150.14624.73.camel@joe-AO725>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404307229-19186-6-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404308150.14624.73.camel@joe-AO725>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:50077 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbaGMJnm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jul 2014 05:43:42 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so1188578wib.16
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:41 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/13] staging: vt6656: rename vCommandTimerWait to vnt_cmd_timer_wait
+Date: Sun, 13 Jul 2014 10:42:48 +0100
+Message-Id: <1405244573-10978-8-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114406_884419_B70C058D)
+In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-02 at 06:35 -0700, Joe Perches wrote:
-> On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
-> > Let's use kernel's library function to escape a buffer.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wcmd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-[]
-
-> > @@ -2965,15 +2965,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len)
-> >  	}
-> >  
-> >  	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
-> > -	while (essid_len--) {
-> > -		if (*s == '\0') {
-> > -			*d++ = '\\';
-> > -			*d++ = '0';
-> > -			s++;
-> > -		} else {
-> > -			*d++ = *s++;
-> > -		}
-> > -	}
-> > +	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
-> > +			       ESCAPE_NULL, NULL);
-> 
-> I'd've probably used
-> 
-> 	d += string_escape_mem(essid, essid_len, d, ...
-> or
-> 	d = escaped + string_escap_mem(essid, essid_len, escaped, ...
-> 
-> so there's some relation between the thing being added to
-> 
-> >  	*d = '\0';
-> 
-> or maybe not used d at all with
-> 
-> 	escaped[1 + string_escape_mem(etc...)] = 0;
-
-Perhaps without '1 + ' part. I could update this as well if someone
-insists.
-
-> 
-> >  	return escaped;
-> >  }
-> 
-> Unrelated but this isn't a thread safe or multiple instance
-> safe function.
-
-Do you mean escape_ssid() or string_escape_mem() or both?
-
-For the string_escape_mem() I think caller should take care of.
-
-> It seems it's used only in debugging message output though.
-
-
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 8c5a0e8..87e682d 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -31,7 +31,7 @@
+  *	vnt_cmd_complete - Command Complete function
+  *      bScheduleCommand - Push Command and wait Command Scheduler to do
+  *      vCommandTimer- Command call back functions
+- *      vCommandTimerWait- Call back timer
++ *	vnt_cmd_timer_wait- Call back timer
+  *      s_bClearBSSID_SCAN- Clear BSSID_SCAN cmd in CMD Queue
+  *
+  * Revision History:
+@@ -49,7 +49,7 @@
+ #include "rf.h"
+ #include "channel.h"
+ 
+-static void vCommandTimerWait(struct vnt_private *priv, unsigned long msecs)
++static void vnt_cmd_timer_wait(struct vnt_private *priv, unsigned long msecs)
+ {
+ 	schedule_delayed_work(&priv->run_command_work, msecs_to_jiffies(msecs));
+ }
+@@ -99,7 +99,7 @@ static int vnt_cmd_complete(struct vnt_private *priv)
+ 		break;
+ 	}
+ 
+-	vCommandTimerWait(priv, 0);
++	vnt_cmd_timer_wait(priv, 0);
+ 
+ 	return true;
+ }
 -- 
-Andy Shevchenko <andriy.shevchenko@intel.com>
-Intel Finland Oy
+1.9.1
 
