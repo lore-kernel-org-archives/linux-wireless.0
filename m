@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay006.isp.belgacom.be ([195.238.6.172]:31180 "EHLO
-	mailrelay006.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756487AbaGNQab (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:48373 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbaGMKS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 12:30:31 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	v9fs-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-zigbee-devel@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-	linux-s390@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, linux-sctp@vger.kernel.org,
-	tipc-discussion@lists.sourceforge.net
-Subject: [PATCH 00/16] net: remove unnecessary break after goto/return
-Date: Mon, 14 Jul 2014 18:30:50 +0200
-Message-Id: <1405355467-7350-1-git-send-email-fabf@skynet.be> (sfid-20140714_183356_617556_1861634E)
+	Sun, 13 Jul 2014 06:18:27 -0400
+Received: by mail-we0-f176.google.com with SMTP id u56so2899258wes.7
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 03:18:26 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [RFCv2 00/10] add support for ack timeout estimation in ath9k driver
+Date: Sun, 13 Jul 2014 12:18:14 +0200
+Message-Id: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140713_121834_857945_37690DE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Small patchset addressing break redundancy on net branch
-(suggested by Joe Perches).
+This patchset adds support for estimation of the ack timeout (dynack) in ath9k
+driver. Ath9k dynack computes the ack timeout based on ack frame RX timestamp,
+TX frame timestamp and frame duration.
 
-Fabian Frederick (16):
-  packet: remove unnecessary break after return
-  tipc: remove unnecessary break after return
-  9P: remove unnecessary break after return
-  af_iucv: remove unnecessary break after goto
-  netlabel: remove unnecessary break after goto
-  pktgen: remove unnecessary break after goto
-  drop_monitor: remove unnecessary break after return
-  mac80211: remove unnecessary break after return
-  af_key: remove unnecessary break after return
-  netfilter: remove unnecessary break after return
-  ipv6: remove unnecessary break after return
-  NFC: remove unnecessary break after goto
-  caif: remove unnecessary break after goto
-  irda: remove unnecessary break after return
-  ieee802154: remove unnecessary break after goto
-  net: sctp: remove unnecessary break after return/goto
+Ath9k dynack has been tested in indoor environment using AR9223/AR9280 chipset
+(running 3.16.0-rc4 kernel) and on 9Km PtoP link using AR9280 chipset
+(running OpenWRT trunk, compat-wireless-2014-05-22)
 
- net/9p/client.c                      | 1 -
- net/caif/cfctrl.c                    | 1 -
- net/core/drop_monitor.c              | 2 --
- net/core/pktgen.c                    | 1 -
- net/ieee802154/6lowpan_iphc.c        | 1 -
- net/ipv6/ipv6_sockglue.c             | 1 -
- net/ipv6/netfilter/ip6t_ipv6header.c | 1 -
- net/irda/af_irda.c                   | 1 -
- net/irda/irlan/irlan_common.c        | 1 -
- net/iucv/af_iucv.c                   | 1 -
- net/key/af_key.c                     | 3 ---
- net/mac80211/mesh_hwmp.c             | 1 -
- net/netlabel/netlabel_kapi.c         | 1 -
- net/nfc/digital_dep.c                | 2 --
- net/packet/af_packet.c               | 2 --
- net/sctp/outqueue.c                  | 1 -
- net/sctp/sm_statefuns.c              | 4 ----
- net/tipc/socket.c                    | 1 -
- 18 files changed, 26 deletions(-)
+Changes since RFCv1:
+- use ISC license instead of GPLv2 one
+- use an inline method instead of a macro for EWMA calculation
+- use powers of two weights in EWMA calculation
+- fix typos
+- add ath_dynack_node_init/ath_dynack_node_deinit methods
+- use different logic to enable/disable dynack processing
+
+Lorenzo Bianconi (10):
+  ath9k: export methods related to ack timeout estimation
+  ath9k: add duration field to ath_tx_status
+  ath9k: add dynamic ack timeout estimation
+  ath9k: add config for (en|dis)abling ack timeout estimation
+  ath9k: do not overwrite ack timeout estimation
+  ath9k: add sampling methods for (tx|rx) timestamp
+  ath9k: enable control frame reception
+  ath9k: add debugfs support for dynack
+  ath9k: disable dynack algorithm when coverage class is set
+  ath9k: initialize ath_node linked list
+
+ drivers/net/wireless/ath/ath.h              |   2 +
+ drivers/net/wireless/ath/ath9k/Kconfig      |   7 +
+ drivers/net/wireless/ath/ath9k/Makefile     |   3 +
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |   7 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   9 +
+ drivers/net/wireless/ath/ath9k/ath9k.h      |   3 +
+ drivers/net/wireless/ath/ath9k/debug.c      |  82 +++++++
+ drivers/net/wireless/ath/ath9k/dynack.c     | 348 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/dynack.h     |  96 ++++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |  16 +-
+ drivers/net/wireless/ath/ath9k/hw.h         |   7 +
+ drivers/net/wireless/ath/ath9k/mac.h        |   1 +
+ drivers/net/wireless/ath/ath9k/main.c       |   5 +
+ drivers/net/wireless/ath/ath9k/recv.c       |   7 +-
+ drivers/net/wireless/ath/ath9k/xmit.c       |   5 +
+ 15 files changed, 594 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/dynack.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/dynack.h
 
 -- 
-1.8.4.5
+1.9.1
 
