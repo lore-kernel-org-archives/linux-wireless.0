@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52906 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754004AbaGLDy6 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:48685 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbaGMKSi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 23:54:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	David Binderman <dcb314@hotmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/7] mwifiex: fix a cut-n-paste error in adhoc-start
-Date: Fri, 11 Jul 2014 20:54:32 -0700
-Message-ID: <1405137272-13872-1-git-send-email-bzhao@marvell.com> (sfid-20140712_055506_872411_C42AD13F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 13 Jul 2014 06:18:38 -0400
+Received: by mail-we0-f172.google.com with SMTP id x48so1124477wes.3
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 03:18:33 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [RFCv2 09/10] ath9k: disable dynack algorithm when coverage class is set
+Date: Sun, 13 Jul 2014 12:18:23 +0200
+Message-Id: <1405246704-7489-10-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140713_121849_173578_CE69B6E7)
+In-Reply-To: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'else if' branch never gets the chance as its condition
-matches 'if' branch's.
+Disable ack timeout estimation algorithm if the coverage class has been
+configured
 
-Reported-by: David Binderman <dcb314@hotmail.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/mwifiex/join.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index fc13564..0b977ea 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -949,7 +949,7 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
- 				chan_tlv->chan_scan_param[0].radio_type |=
- 					(IEEE80211_HT_PARAM_CHA_SEC_ABOVE << 4);
- 			else if (adapter->sec_chan_offset ==
--					    IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
-+					    IEEE80211_HT_PARAM_CHA_SEC_BELOW)
- 				chan_tlv->chan_scan_param[0].radio_type |=
- 					(IEEE80211_HT_PARAM_CHA_SEC_BELOW << 4);
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e6ac8d2..689db57 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1969,6 +1969,7 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 
+ 	mutex_lock(&sc->mutex);
+ 	ah->coverage_class = coverage_class;
++	ah->dynack.enabled = false;
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_init_global_settings(ah);
 -- 
-1.8.2.3
+1.9.1
 
