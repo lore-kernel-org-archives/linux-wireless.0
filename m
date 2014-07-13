@@ -1,49 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41350 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753916AbaGAHCe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 03:02:34 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: Daniel Mack <daniel@zonque.org>, Tony Lindgren <tony@atomide.com>,
-	Andreas Fenkart <afenkart@gmail.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Tue, 1 Jul 2014 00:02:25 -0700
-Subject: RE: mwifiex card reset
-Message-ID: <477F20668A386D41ADCC57781B1F70430FE5F3754E@SC-VEXCH1.marvell.com> (sfid-20140701_090247_133209_90E89AA5)
-References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
- <20140628052220.GG10407@us.netrek.org> <20140628072322.GC7410@atomide.com>
- <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com>
- <20140630061912.GA2461@atomide.com> <53B1BAC1.3090902@zonque.org>
- <477F20668A386D41ADCC57781B1F70430FE5F37540@SC-VEXCH1.marvell.com>
- <20140701065721.GM24891@us.netrek.org>
-In-Reply-To: <20140701065721.GM24891@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:33737 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752603AbaGMJnd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jul 2014 05:43:33 -0400
+Received: by mail-wg0-f49.google.com with SMTP id k14so2175313wgh.20
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:32 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/13] staging: vt6656: remove typedef struct tagCMD_ITEM
+Date: Sun, 13 Jul 2014 10:42:43 +0100
+Message-Id: <1405244573-10978-3-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114338_185861_D4BA5E2E)
+In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+Since enum vnt_cmd is only member replace with array
+enum vnt_cmd cmd_queue with size of CMD_Q_SIZE
 
-> On Mon, Jun 30, 2014 at 11:44:29PM -0700, Bing Zhao wrote:
-> > I may have missed something, but doesn't the MMC_POWER_OFF and
-> > MMC_POWER_ON|UP handling in controller driver help?
-> > Anyway the clocks/GPIOs/regulators are sort of platform dependent.
-> > Would it be better putting it in /arch/arm/mach-xxxxx/?
-> 
-> Wouldn't device tree for mmc be better?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h | 2 +-
+ drivers/staging/vt6656/wcmd.c   | 4 ++--
+ drivers/staging/vt6656/wcmd.h   | 4 ----
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-Yes, device tree is better for defining clocks/GPIO/regulators, etc.
-But I guess the reset logic (making use of these definitions) cannot be device tree?
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 0c9166e..a6eeebc 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -406,7 +406,7 @@ struct vnt_private {
+ 
+ 	/* 802.11 counter */
+ 
+-	CMD_ITEM eCmdQueue[CMD_Q_SIZE];
++	enum vnt_cmd cmd_queue[CMD_Q_SIZE];
+ 	u32 uCmdDequeueIdx;
+ 	u32 uCmdEnqueueIdx;
+ 	u32 cbFreeCmdQueue;
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index e0ad20a..c2da8cc 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -146,7 +146,7 @@ static int s_bCommandComplete(struct vnt_private *priv)
+ 		return true;
+ 	}
+ 
+-	priv->command = priv->eCmdQueue[priv->uCmdDequeueIdx].cmd;
++	priv->command = priv->cmd_queue[priv->uCmdDequeueIdx];
+ 
+ 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdDequeueIdx, CMD_Q_SIZE);
+ 	priv->cbFreeCmdQueue++;
+@@ -192,7 +192,7 @@ int bScheduleCommand(struct vnt_private *priv, enum vnt_cmd command, u8 *item0)
+ 	if (priv->cbFreeCmdQueue == 0)
+ 		return false;
+ 
+-	priv->eCmdQueue[priv->uCmdEnqueueIdx].cmd = command;
++	priv->cmd_queue[priv->uCmdEnqueueIdx] = command;
+ 
+ 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdEnqueueIdx, CMD_Q_SIZE);
+ 	priv->cbFreeCmdQueue--;
+diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
+index 283df61..f42270b 100644
+--- a/drivers/staging/vt6656/wcmd.h
++++ b/drivers/staging/vt6656/wcmd.h
+@@ -56,10 +56,6 @@ typedef enum tagCMD_STATUS {
+ 
+ } CMD_STATUS, *PCMD_STATUS;
+ 
+-typedef struct tagCMD_ITEM {
+-	enum vnt_cmd cmd;
+-} CMD_ITEM, *PCMD_ITEM;
+-
+ /* Command state */
+ enum vnt_cmd_state {
+ 	WLAN_CMD_INIT_MAC80211_START,
+-- 
+1.9.1
 
-Regards,
-Bing
-
-> 
-> --
-> James Cameron
-> http://quozl.linux.org.au/
