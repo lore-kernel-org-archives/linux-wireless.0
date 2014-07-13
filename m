@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37409 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767AbaGAOpO (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:53985 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752322AbaGMOQZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 10:45:14 -0400
-Date: Tue, 1 Jul 2014 10:41:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Felix Fietkau <nbd@openwrt.org>, John Walker <john@x109.net>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	netfilter-devel@vger.kernel.org,
-	Richard Fontana <fontana@sharpeleven.org>
-Subject: Re: Parser stable fix question for CFG80211_INTERNAL_REGDB
-Message-ID: <20140701144149.GB6358@tuxdriver.com> (sfid-20140701_164519_089297_8980C196)
-References: <CAB=NE6WfTXiScyXHReEWcpQ9EKpu1YCVQypa-B5BBO6aYXh3fA@mail.gmail.com>
- <CAB=NE6VTN==Ewvf4HhTcadWLzjZnYkF1xSM1Yej6QfotWHKY0A@mail.gmail.com>
+	Sun, 13 Jul 2014 10:16:25 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: "ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: linux-firmware: pull-request TI wireless firmware
+Date: Sun, 13 Jul 2014 14:16:14 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101263A3980@DFRE01.ent.ti.com> (sfid-20140713_161629_332351_12B92A38)
+References: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com>
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com>
+Content-Type: text/plain; charset="windows-1255"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6VTN==Ewvf4HhTcadWLzjZnYkF1xSM1Yej6QfotWHKY0A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 12:19:08PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Jun 30, 2014 at 11:55 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
-> > For the current kernel we
-> > could intake the patch below, and I can port the change to no use
-> > dfs_cac, that would enable older kernels to use new and older versions
-> > of the ASCII database file.
-> 
-> Personally I actually rather avoid us accept a patch upstream for a
-> userspace change. The problem here is that we failed to realize the
-> impact of CFG80211_INTERNAL_REGDB at build time with a userspace tool,
-> in this case the db.txt file wireless-regdb provides and its format.
-> 
-> If we wanted to avoid a stable patch we could require a match between
-> wireless-regdb input file used for a kernel when
-> CFG80211_INTERNAL_REGDB is used at build time. That would require
-> different ASCII files on wireless-regdb or having the users of
-> CFG80211_INTERNAL_REGDB do the conversion themselves. Upstream would
-> just follow the wireless-regdb latest format. This then would just
-> require upstream a Kconfig update to clarify the requirements.
-> 
-> This seems like a rather lazy option but also one that would be rather
-> more fair and honest for upstream, we could deal with a proper fix by
-> reconsidering the implementation of CFG80211_INTERNAL_REGDB completely
-> for future kernels.
+Hi,
+Please see below pull request,
+It contains an update to the WiLink8 chip.
+The FW name was changed due to some new API's that was introduced lately.
 
-I'm shocked that anyone actually uses CFG80211_INTERNAL_REGDB...
+Best Regards,
+Yaniv
 
-Anyway, I don't see the big deal.  We should keep
-CFG80211_INTERNAL_REGDB (whether implemented in awk or C) up-to-date
-with current kernels.  Anyone wanting to use an old kernel with an
-updated wireless-regdb file is responsible for ensuring compatibility.
-If they can't do that, then they should seek support from a vendor.
-How is this any different from any other kernel support issue?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The following changes since commit 7f388b4885cf64d6b7833612052d20d4197af96f:
+
+  Move the s5p-mfc firmware out of its subdirectory (2014-06-04 13:14:13 +0100)
+
+are available in the git repository at:
+
+  git://git.ti.com/wilink8-wlan/linux-firmware.git master
+
+for you to fetch changes up to cbf9f8f506ad6a46818fa61af461aa615fdd4e87:
+
+  wl18xx: add version 4 of the wl18xx firmware (2014-07-10 15:01:58 +0300)
+
+----------------------------------------------------------------
+Yaniv Machani (1):
+      wl18xx: add version 4 of the wl18xx firmware
+
+ WHENCE                          |    2 ++
+ ti-connectivity/wl18xx-fw-4.bin |  Bin 0 -> 681704 bytes
+ 2 files changed, 2 insertions(+), 0 deletions(-)  create mode 100755 ti-connectivity/wl18xx-fw-4.bin
+
+diff --git a/WHENCE b/WHENCE
+index a172f5f..f8ab2fb 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1867,6 +1867,8 @@ File: ti-connectivity/wl18xx-fw-2.bin
+ Version: 8.5.0.0.55
+ File: ti-connectivity/wl18xx-fw-3.bin
+ Version: 8.8.0.0.13
++File: ti-connectivity/wl18xx-fw-4.bin
++Version: 8.9.0.0.17
+ File: ti-connectivity/wl18xx-conf.bin
+ Version: 6/5
+ 
+diff --git a/ti-connectivity/wl18xx-fw-4.bin b/ti-connectivity/wl18xx-fw-4.bin new file mode 100755 index 0000000..8369a9e Binary files /dev/null and b/ti-connectivity/wl18xx-fw-4.bin differ
+ 
