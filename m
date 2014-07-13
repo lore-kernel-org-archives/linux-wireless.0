@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53268 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbaGUEbD (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:59643 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbaGMJnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 00:31:03 -0400
-Date: Sun, 20 Jul 2014 21:31:02 -0700 (PDT)
-Message-Id: <20140720.213102.1007291311502673484.davem@davemloft.net> (sfid-20140721_063129_567613_4014A904)
-To: fabf@skynet.be
-Cc: linux-kernel@vger.kernel.org, joe@perches.com,
-	netdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	e1000-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 00/30] drivers/net: remove unnecessary break after
- return
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1405865801-18806-1-git-send-email-fabf@skynet.be>
-References: <1405865801-18806-1-git-send-email-fabf@skynet.be>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 13 Jul 2014 05:43:37 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so2848760wgh.33
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:34 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/13] staging: vt6656: remove unused variables bCmdClear and bNeedRadioOFF
+Date: Sun, 13 Jul 2014 10:42:44 +0100
+Message-Id: <1405244573-10978-4-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114351_502164_61800A98)
+In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabian Frederick <fabf@skynet.be>
-Date: Sun, 20 Jul 2014 16:16:08 +0200
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h | 2 --
+ drivers/staging/vt6656/wcmd.c   | 1 -
+ 2 files changed, 3 deletions(-)
 
-> Second patchset after "remove unnecessary break after goto" addressing break redundancy on drivers/net branch
-> (suggested by Joe Perches)
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index a6eeebc..a1ed376 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -411,8 +411,6 @@ struct vnt_private {
+ 	u32 uCmdEnqueueIdx;
+ 	u32 cbFreeCmdQueue;
+ 	int bCmdRunning;
+-	int bCmdClear;
+-	int bNeedRadioOFF;
+ 
+ 	unsigned long key_entry_inuse;
+ 
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index c2da8cc..fa7c7b6 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -211,5 +211,4 @@ void vResetCommandTimer(struct vnt_private *priv)
+ 	priv->uCmdEnqueueIdx = 0;
+ 	priv->command_state = WLAN_CMD_IDLE;
+ 	priv->bCmdRunning = false;
+-	priv->bCmdClear = false;
+ }
+-- 
+1.9.1
 
-All applied except the i40e patch, which did not apply to net-next at all.
