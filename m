@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:51633 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758305AbaGOLHa (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37635 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbaGMKSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 07:07:30 -0400
-Received: by mail-vc0-f170.google.com with SMTP id lf12so6093942vcb.29
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 04:07:29 -0700 (PDT)
-MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 15 Jul 2014 16:37:09 +0530
-Message-ID: <CABPxzYLwBEkGN7p6J8wC+m2LP6sy+QTFyaGHq5+2UyJODH6pSg@mail.gmail.com> (sfid-20140715_130733_355245_1EEF36CB)
-Subject: cfg80211 regdb 802.11d design queries
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Jul 2014 06:18:30 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so2876128wgh.27
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 03:18:29 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [RFCv2 04/10] ath9k: add config for (en|dis)abling ack timeout estimation
+Date: Sun, 13 Jul 2014 12:18:18 +0200
+Message-Id: <1405246704-7489-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140713_121845_241969_17E88EBA)
+In-Reply-To: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add ack timeout estimation to ath9k Makefile
 
-while testing the 802.11d implementation of cfg80211 i have below queries?
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig  | 7 +++++++
+ drivers/net/wireless/ath/ath9k/Makefile | 3 +++
+ 2 files changed, 10 insertions(+)
 
-1) cfg80211 marks the channel as active after it receives a beacon on
-that channel.
-
- But shouldn't it check for the presence of country/TPC IE in the
-beacon, update the info based on that and then mark the channel as
-active? without the country/TPC IE how the DUT will know the txpower
-rules allowed in that regulatory domain.
-
-2) cfg80211 updates the regulatory domain only on connection. Till
-that time it just marks the specific channel on which it found beacon
-as active. But as per 802.11-2012 and generic use case the purpose of
-passive scanning is to know the regulatory domain information and we
-can always update it based on the first beacon received. (Practically
-all beacons in the vicinity should advertise same RD, unless we are on
-border :-)).
-
-This should make fixing the #1 easy.
-
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 8fcc029..ee61a4c 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -151,3 +151,10 @@ config ATH9K_HTC_DEBUGFS
+ 	depends on ATH9K_HTC && DEBUG_FS
+ 	---help---
+ 	  Say Y, if you need access to ath9k_htc's statistics.
++
++config ATH9K_DYNACK
++	bool "Atheros ath9k ack timeout estimation algorithm (EXPERIMENTAL)"
++	depends on ATH9K
++	default n
++	---help---
++	  This option enables ath9k dynamic ack timeout estimation algorithm
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 6b4020a..73704c1 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -49,6 +49,9 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
+ 
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
+ 					   ar9003_mci.o
++
++ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
++
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ 
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.9.1
+
