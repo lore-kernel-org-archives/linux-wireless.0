@@ -1,209 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:47198 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752415AbaGTRny (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:49384 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbaGMM3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 13:43:54 -0400
-Received: by mail-oa0-f47.google.com with SMTP id g18so6190402oah.6
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 10:43:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	<1405373897-31671-7-git-send-email-keescook@chromium.org>
-	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
-Date: Sun, 20 Jul 2014 10:43:53 -0700
-Message-ID: <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com> (sfid-20140720_194400_823415_A4352D43)
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-From: Kees Cook <keescook@chromium.org>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Jul 2014 08:29:16 -0400
+Received: by mail-vc0-f177.google.com with SMTP id ij19so5222462vcb.22
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 05:29:15 -0700 (PDT)
+From: Raphael Silva <rapphil@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Raphael Silva <rapphil@gmail.com>
+Subject: [PATCH] rtl8723au: Corrections in the coding style
+Date: Sun, 13 Jul 2014 09:28:38 -0300
+Message-Id: <1405254518-2744-1-git-send-email-rapphil@gmail.com> (sfid-20140713_143029_244763_892E16F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 19, 2014 at 8:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
-> On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
->> As an alternative to loading bytes from the "data" blob when reading
->> firmware, let kernel read from an fd, so that the LSM can reason about
->> the origin of firmware contents during userspace on-demand loading.
->
-> From user space view, maybe it is better to keep previous usage and just
-> check if loading is from 'data' blob or fd in 'echo 0 > loading' of
-> firmware_loading_store(), then the 'fd' usage becomes very similar with
-> before.
+Some corrections were made to the code in order to conform to the
+Kernel Coding Style.
 
-I don't think this is a good idea because otherwise there isn't a good
-way to have an "atomic" check of the firmware contents. What does it
-means to write to "fd" several times, then write "data" a little,
-before writing "loading", etc? I originally wrote the patch series
-requiring the "loading" piece, and it ended up being very complicated
-due to needing to switch the memory buffer logic back and forth.
-Everything is much much cleaner if "fd" is single-shot, and not part
-of the loading/data interface semantics.
+Signed-off-by: Raphael Silva <rapphil@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 42 ++++++++++++++++++----------
+ 1 file changed, 27 insertions(+), 15 deletions(-)
 
-And, as it turns out, the userspace changes are much simpler if
-"loading" isn't part of the picture for the "fd" interface, too.
-
--Kees
-
->
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> ---
->>  Documentation/firmware_class/README |   10 +++++
->>  drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
->>  2 files changed, 86 insertions(+), 1 deletion(-)
->>
->> diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
->> index 71f86859d7d8..d899bdacba1e 100644
->> --- a/Documentation/firmware_class/README
->> +++ b/Documentation/firmware_class/README
->> @@ -59,6 +59,16 @@
->>   8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
->>                  the firmware image and any related resource.
->>
->> + Alternative loading (via file descriptor):
->> + ==========================================
->> + Instead of "loading", and "data" above, firmware can be loaded through
->> + an open file descriptor as well, via the "fd" file:
->> +
->> + Replacing steps 2 thorugh 6 above with the following userspace actions,
->> + performs the same loading:
->> +       - open firmware image file (e.g. as fd 3).
->> +       - write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
->
-> Then as above, here should be just to replace step 4, 5 as
->           - open image in user space
->           - echo fd > /sys/class/firmware/xxx/fd
->
->> +
->>   High level behavior (driver code):
->>   ==================================
->>
->> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
->> index b38cbcd6ebb1..eac996447d28 100644
->> --- a/drivers/base/firmware_class.c
->> +++ b/drivers/base/firmware_class.c
->> @@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
->>         .write = firmware_data_write,
->>  };
->>
->> +/**
->> + * fd_store - set value in the 'fd' control file
->> + * @dev: device pointer
->> + * @attr: device attribute pointer
->> + * @buf: buffer to scan for loading fd value
->> + * @count: number of bytes in @buf
->> + *
->> + * Parses an fd number from buf, and then loads firmware bytes from
->> + * the current process's matching open fd.
->> + *
->> + **/
->> +static ssize_t fd_store(struct device *dev,
->> +                                struct device_attribute *attr,
->> +                                const char *buf, size_t count)
->> +{
->> +       struct firmware_priv *fw_priv = to_firmware_priv(dev);
->> +       struct firmware_buf *fw_buf = fw_priv->buf;
->> +       ssize_t retval;
->> +       int fd;
->> +       struct fd f;
->> +
->> +       if (!capable(CAP_SYS_RAWIO))
->> +               return -EPERM;
->> +
->> +       retval = kstrtoint(buf, 10, &fd);
->> +       if (retval)
->> +               return retval;
->> +
->> +       f = fdget(fd);
->> +       if (!f.file)
->> +               return -EBADF;
->> +
->> +       mutex_lock(&fw_lock);
->> +       /* If we raced another loader, we must fail. */
->> +       if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
->> +               retval = -EINVAL;
->> +               goto unlock;
->> +       }
->> +
->> +       fw_load_start(fw_buf);
->> +       /* fw_read_file_contents uses vmalloc, not pages. */
->> +       fw_buf->is_paged_buf = false;
->> +       retval = fw_read_file_contents(f.file, fw_buf);
->> +       if (retval) {
->> +               /* If we called fw_load_start, we must abort on fail. */
->> +               fw_load_abort(fw_priv);
->> +               goto unlock;
->> +       }
->> +
->> +       /* Success. */
->> +       set_bit(FW_STATUS_DONE, &fw_buf->status);
->> +       list_del_init(&fw_buf->pending_list);
->> +       complete_all(&fw_buf->completion);
->> +
->> +unlock:
->> +       mutex_unlock(&fw_lock);
->> +       fdput(f);
->> +
->> +       if (retval)
->> +               return retval;
->> +       return count;
->> +}
->> +static DEVICE_ATTR_WO(fd);
->> +
->>  static void firmware_class_timeout_work(struct work_struct *work)
->>  {
->>         struct firmware_priv *fw_priv = container_of(work,
->> @@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->>                 mutex_lock(&fw_lock);
->>                 list_del_init(&buf->pending_list);
->>                 mutex_unlock(&fw_lock);
->> -               dev_err(f_dev, "%s: device_create_file failed\n", __func__);
->> +               dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
->>                 goto err_del_bin_attr;
->>         }
->>
->> +       retval = device_create_file(f_dev, &dev_attr_fd);
->> +       if (retval) {
->> +               mutex_lock(&fw_lock);
->> +               list_del_init(&buf->pending_list);
->> +               mutex_unlock(&fw_lock);
->> +               dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
->> +               goto err_del_loading;
->> +       }
->> +
->>         if (opt_flags & FW_OPT_UEVENT) {
->>                 buf->need_uevent = true;
->>                 dev_set_uevent_suppress(f_dev, false);
->> @@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->>         if (!buf->data)
->>                 retval = -ENOMEM;
->>
->> +       device_remove_file(f_dev, &dev_attr_fd);
->> +err_del_loading:
->>         device_remove_file(f_dev, &dev_attr_loading);
->>  err_del_bin_attr:
->>         device_remove_bin_file(f_dev, &firmware_attr_data);
->> --
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
-
-
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
+index 8db844b..0290a9e 100644
+--- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
++++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
+@@ -26,7 +26,7 @@ static const u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+ 
+ static void _rtw_init_stainfo(struct sta_info *psta)
+ {
+-	memset((u8 *)psta, 0, sizeof (struct sta_info));
++	memset((u8 *)psta, 0, sizeof(struct sta_info));
+ 	spin_lock_init(&psta->lock);
+ 	INIT_LIST_HEAD(&psta->list);
+ 	INIT_LIST_HEAD(&psta->hash_list);
+@@ -71,8 +71,10 @@ int _rtw_init_sta_priv23a(struct sta_priv *pstapriv)
+ 	pstapriv->auth_list_cnt = 0;
+ 	pstapriv->auth_to = 3; /*  3*2 = 6 sec */
+ 	pstapriv->assoc_to = 3;
+-	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min, expire after no any traffic. */
+-	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min, expire after no any traffic. */
++	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min,
++	    expire after no any traffic. */
++	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min,
++	    expire after no any traffic. */
+ 	pstapriv->expire_to = 3; /*  3*2 = 6 sec */
+ 	pstapriv->max_num_sta = NUM_STA;
+ #endif
+@@ -94,6 +96,7 @@ int _rtw_free_sta_priv23a(struct sta_priv *pstapriv)
+ 
+ 			list_for_each_safe(plist, ptmp, phead) {
+ 				int i;
++
+ 				psta = container_of(plist, struct sta_info,
+ 						    hash_list);
+ 				for (i = 0; i < 16 ; i++) {
+@@ -144,14 +147,17 @@ rtw_alloc_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr, gfp_t gfp)
+ 
+ 	list_add_tail(&psta->hash_list, phash_list);
+ 
+-	pstapriv->asoc_sta_count ++ ;
++	pstapriv->asoc_sta_count++;
+ 
+-/*  For the SMC router, the sequence number of first packet of WPS handshake will be 0. */
+-/*  In this case, this packet will be dropped by recv_decache function if we use the 0x00 as the default value for tid_rxseq variable. */
++/*  For the SMC router, the sequence number of first packet of WPS
++     handshake will be 0. */
++/*  In this case, this packet will be dropped by recv_decache function
++    if we use the 0x00 as the default value for tid_rxseq variable. */
+ /*  So, we initialize the tid_rxseq variable as the 0xffff. */
+ 
+ 	for (i = 0; i < 16; i++)
+-		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i], &wRxSeqInitialValue, 2);
++		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i],
++			&wRxSeqInitialValue, 2);
+ 
+ 	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_info_,
+ 		 ("alloc number_%d stainfo  with hwaddr = %pM\n",
+@@ -242,8 +248,12 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
+ 	spin_unlock_bh(&pxmitpriv->lock);
+ 
+ 	list_del_init(&psta->hash_list);
+-	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_, ("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", pstapriv->asoc_sta_count, psta->hwaddr[0], psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3], psta->hwaddr[4], psta->hwaddr[5]));
+-	pstapriv->asoc_sta_count --;
++	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_,
++		("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x\n",
++			pstapriv->asoc_sta_count, psta->hwaddr[0],
++			psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3],
++			psta->hwaddr[4], psta->hwaddr[5]));
++	pstapriv->asoc_sta_count-;
+ 
+ 	/*  re-init sta_info; 20061114  will be init in alloc_stainfo */
+ 	/* _rtw_init_sta_xmit_priv23a(&psta->sta_xmitpriv); */
+@@ -251,7 +261,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
+ 
+ 	del_timer_sync(&psta->addba_retry_timer);
+ 
+-	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
++	/* for A-MPDU Rx reordering buffer control,
++	   cancel reordering_ctrl_timer */
+ 	for (i = 0; i < 16; i++) {
+ 		struct list_head	*phead, *plist;
+ 		struct recv_frame *prframe;
+@@ -261,7 +272,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
+ 
+ 		del_timer_sync(&preorder_ctrl->reordering_ctrl_timer);
+ 
+-		ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
++		ppending_recvframe_queue =
++			&preorder_ctrl->pending_recvframe_queue;
+ 
+ 		spin_lock_bh(&ppending_recvframe_queue->lock);
+ 		phead =		get_list_head(ppending_recvframe_queue);
+@@ -301,7 +313,7 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
+ 	pstapriv->sta_dz_bitmap &= ~CHKBIT(psta->aid);
+ 	pstapriv->tim_bitmap &= ~CHKBIT(psta->aid);
+ 
+-	if ((psta->aid >0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
++	if ((psta->aid > 0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
+ 		pstapriv->sta_aid[psta->aid - 1] = NULL;
+ 		psta->aid = 0;
+ 	}
+@@ -318,7 +330,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
+ 	struct list_head *plist, *phead, *ptmp;
+ 	struct sta_info *psta;
+ 	struct sta_priv *pstapriv = &padapter->stapriv;
+-	struct sta_info* pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
++	struct sta_info *pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
+ 	s32 index;
+ 
+ 	if (pstapriv->asoc_sta_count == 1)
+@@ -332,7 +344,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
+ 		list_for_each_safe(plist, ptmp, phead) {
+ 			psta = container_of(plist, struct sta_info, hash_list);
+ 
+-			if (pbcmc_stainfo!= psta)
++			if (pbcmc_stainfo != psta)
+ 				rtw_free_stainfo23a(padapter, psta);
+ 		}
+ 	}
+@@ -374,7 +386,7 @@ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
+ 	return psta;
+ }
+ 
+-int rtw_init_bcmc_stainfo23a(struct rtw_adapter* padapter)
++int rtw_init_bcmc_stainfo23a(struct rtw_adapter *padapter)
+ {
+ 	struct	sta_priv *pstapriv = &padapter->stapriv;
+ 	struct sta_info		*psta;
 -- 
-Kees Cook
-Chrome OS Security
+1.9.1
+
