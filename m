@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45405 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754243AbaGUKeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 06:34:21 -0400
-Message-ID: <1405938856.32255.22.camel@jlt4.sipsolutions.net> (sfid-20140721_123425_020086_AD186C03)
-Subject: Re: [PATCH] mac80211: fix a potential NULL access in
- ieee80211_crypto_hw_decrypt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:57310 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365AbaGMJnv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jul 2014 05:43:51 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so2098827wgh.26
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:49 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Max Stepanov <Max.Stepanov@intel.com>
-Date: Mon, 21 Jul 2014 12:34:16 +0200
-In-Reply-To: <1404914132-13614-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1404914132-13614-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/13] staging: vt6656: wcnd.c clean up comments
+Date: Sun, 13 Jul 2014 10:42:53 +0100
+Message-Id: <1405244573-10978-13-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114408_499337_D7380C0C)
+In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-09 at 16:55 +0300, Emmanuel Grumbach wrote:
-> From: Max Stepanov <Max.Stepanov@intel.com>
-> 
-> The NULL pointer access could happen when ieee80211_crypto_hw_decrypt
-> is called from ieee80211_rx_h_decrypt with the following condition:
-> 1. rx->key->conf.cipher is not WEP, CCMP, TKIP or AES_CMAC
-> 2. rx->sta is NULL
-> 
-> When ieee80211_crypto_hw_decrypt is called, it verifies
-> rx->sta->cipher_scheme and it will cause Oops if rx->sta is NULL.
-> 
-> This path adds an addirional rx->sta == NULL verification in
-> ieee80211_crypto_hw_decrypt for this case.
+Removing old functions and comments.
 
-Applied.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wcmd.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-johannes
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 3c65228..bf41e67 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -25,14 +25,9 @@
+  * Date: May 8, 2003
+  *
+  * Functions:
+- *      s_vProbeChannel - Active scan channel
+- *      s_MgrMakeProbeRequest - Make ProbeRequest packet
+- *      CommandTimer - Timer function to handle command
+  *	vnt_cmd_complete - Command Complete function
+- *      vnt_schedule_command - Push Command and wait Command Scheduler to do
+- *      vCommandTimer- Command call back functions
++ *	vnt_schedule_command - Push Command and wait Command Scheduler to do
+  *	vnt_cmd_timer_wait- Call back timer
+- *      s_bClearBSSID_SCAN- Clear BSSID_SCAN cmd in CMD Queue
+  *
+  * Revision History:
+  *
+@@ -174,7 +169,7 @@ void vnt_run_command(struct work_struct *work)
+ 
+ 	default:
+ 		break;
+-	} //switch
++	}
+ 
+ 	vnt_cmd_complete(priv);
+ 
+-- 
+1.9.1
 
