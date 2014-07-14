@@ -1,149 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33278 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934527AbaGXUOB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42156 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbaGNGvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 16:14:01 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so3343270wgg.16
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 13:13:59 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/8] staging: vt6656: struct vnt_private merge flag and macros
-Date: Thu, 24 Jul 2014 21:13:16 +0100
-Message-Id: <1406232800-3694-4-git-send-email-tvboxspy@gmail.com> (sfid-20140724_221407_243243_EA370CCF)
-In-Reply-To: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
-References: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 14 Jul 2014 02:51:09 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 2/7] wil6210: export FW/HW versions through debugfs
+Date: Mon, 14 Jul 2014 09:49:38 +0300
+Message-ID: <1405320583-5775-3-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140714_085114_911252_77D260CC)
+In-Reply-To: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-merge u32 flag into unsigned long Flags
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Replacing fMP_DISCONNECTED with DEVICE_FLAGS_DISCONNECTED
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/device.h   | 14 ++++++--------
- drivers/staging/vt6656/main_usb.c |  6 +++---
- drivers/staging/vt6656/usbpipe.c  |  6 +++---
- drivers/staging/vt6656/wcmd.c     |  2 +-
- 4 files changed, 13 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index ac4c748..fd7105e 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -262,7 +262,8 @@ enum {
- };
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a868c5e..7435b5a 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -986,6 +986,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 			   &wil->secure_pcp);
+ 	wil_debugfs_create_ulong("status", S_IRUGO | S_IWUSR, dbg,
+ 				 &wil->status);
++	debugfs_create_u32("fw_version", S_IRUGO, dbg, &wil->fw_version);
++	debugfs_create_x32("hw_version", S_IRUGO, dbg, &wil->hw_version);
  
- /* flags for options */
--#define     DEVICE_FLAGS_UNPLUG          0x00000001UL
-+#define DEVICE_FLAGS_UNPLUG		BIT(0)
-+#define DEVICE_FLAGS_DISCONNECTED	BIT(1)
- 
- struct vnt_private {
- 	/* mac80211 */
-@@ -281,8 +282,7 @@ struct vnt_private {
- 	spinlock_t lock;
- 	struct mutex usb_lock;
- 
--	u32 flags;
--	unsigned long Flags;
-+	unsigned long flags;
- 
- 	/* USB */
- 	struct urb *interrupt_urb;
-@@ -402,11 +402,9 @@ struct vnt_private {
- 		(uVar)++;				\
- }
- 
--#define fMP_DISCONNECTED                    0x00000002
--
--#define MP_SET_FLAG(_M, _F)             ((_M)->Flags |= (_F))
--#define MP_CLEAR_FLAG(_M, _F)            ((_M)->Flags &= ~(_F))
--#define MP_TEST_FLAGS(_M, _F)            (((_M)->Flags & (_F)) == (_F))
-+#define MP_SET_FLAG(_M, _F)             ((_M)->flags |= (_F))
-+#define MP_CLEAR_FLAG(_M, _F)            ((_M)->flags &= ~(_F))
-+#define MP_TEST_FLAGS(_M, _F)            (((_M)->flags & (_F)) == (_F))
- 
- int vnt_init(struct vnt_private *priv);
- 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 3cfbd31..87feba5 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -551,7 +551,7 @@ static int vnt_start(struct ieee80211_hw *hw)
- 		return -ENOMEM;
- 	}
- 
--	MP_CLEAR_FLAG(priv, fMP_DISCONNECTED);
-+	MP_CLEAR_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
- 
- 	if (device_init_registers(priv) == false) {
- 		dev_dbg(&priv->usb->dev, " init register fail\n");
-@@ -596,7 +596,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 
- 	ieee80211_stop_queues(hw);
- 
--	MP_SET_FLAG(priv, fMP_DISCONNECTED);
-+	MP_SET_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
- 
- 	cancel_delayed_work_sync(&priv->run_command_work);
- 
-@@ -1025,7 +1025,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 
- 	usb_device_reset(priv);
- 
--	MP_CLEAR_FLAG(priv, fMP_DISCONNECTED);
-+	MP_CLEAR_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
- 	vnt_reset_command_timer(priv);
- 
- 	vnt_schedule_command(priv, WLAN_CMD_INIT_MAC80211);
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index ab95a07..b2722b9 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -52,7 +52,7 @@ int vnt_control_out(struct vnt_private *priv, u8 request, u16 value,
- {
- 	int status = 0;
- 
--	if (priv->Flags & fMP_DISCONNECTED)
-+	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
- 		return STATUS_FAILURE;
- 
- 	mutex_lock(&priv->usb_lock);
-@@ -80,7 +80,7 @@ int vnt_control_in(struct vnt_private *priv, u8 request, u16 value,
- {
- 	int status;
- 
--	if (priv->Flags & fMP_DISCONNECTED)
-+	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
- 		return STATUS_FAILURE;
- 
- 	mutex_lock(&priv->usb_lock);
-@@ -289,7 +289,7 @@ int vnt_tx_context(struct vnt_private *priv,
- 	int status;
- 	struct urb *urb;
- 
--	if (priv->Flags & fMP_DISCONNECTED) {
-+	if (priv->flags & DEVICE_FLAGS_DISCONNECTED) {
- 		context->in_use = false;
- 		return STATUS_RESOURCES;
- 	}
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index e4a5e2b..e5330e3 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -97,7 +97,7 @@ void vnt_run_command(struct work_struct *work)
- 	struct vnt_private *priv =
- 		container_of(work, struct vnt_private, run_command_work.work);
- 
--	if (priv->Flags & fMP_DISCONNECTED)
-+	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
- 		return;
- 
- 	if (priv->cmd_running != true)
+ 	wil6210_debugfs_create_ISR(wil, "USER_ICR", dbg,
+ 				   HOSTADDR(RGF_USER_USER_ICR));
 -- 
-2.0.1
+1.7.6
 
