@@ -1,85 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:37741 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933807AbaGQOON (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:45047 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756124AbaGNVIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:13 -0400
-Received: by mail-we0-f182.google.com with SMTP id k48so1956551wev.13
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:11 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/15] mac80211: set TDLS capab to zero on failure frames
-Date: Thu, 17 Jul 2014 17:14:22 +0300
-Message-Id: <1405606471-30128-7-git-send-email-arik@wizery.com> (sfid-20140717_161422_788019_1A47CE9A)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+	Mon, 14 Jul 2014 17:08:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140702143003.GA13564@tuxdriver.com>
+References: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
+ <20140702001936.GQ27687@wotan.suse.de> <20140702143003.GA13564@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Mon, 14 Jul 2014 14:08:02 -0700
+Message-ID: <CAB=NE6U3PMsatwcczO6hrfe+2z3mN9n9zcX0tgy5iTbCRNRcmw@mail.gmail.com> (sfid-20140714_230843_459072_ABE2729E)
+Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain
+ from wireless-regdb
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Kees Cook <keescook@chromium.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>, linux-firmware@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending setup-failure frames, set the capability field to zero, as
-mandated by the specification (IEEE802.11-2012 8.5.13).
+On Wed, Jul 2, 2014 at 7:30 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Jul 02, 2014 at 02:19:36AM +0200, Luis R. Rodriguez wrote:
+>> On Tue, Jul 01, 2014 at 04:17:54PM -0400, John W. Linville wrote:
+>> > Since "wireless-regdb: remove antenna gain" was merged in the
+>> > wireless-regdb tree, this script has been incompatible with the
+>> > 'official' regulatory database.  Let's fix it up.
+>> >
+>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> > ---
+>> > I think the dfs_cac stuff is still broken, since it does not account
+>> > for the starting offset of the flags.
+>>
+>> Indeed, but that also breaks other stuff too, because the DFS CAC stuff
+>> is optional it means the flags can now start at different locations, it
+>> also means that we need to distinguish a flag from a CAC.
+>>
+>> Here's a complex example we should test for as an example now:
+>>
+>> country US: DFS-FCC
+>>       (2400 - 2450 @ 40), (100 mW)
+>>       (2450 - 2500 @ 0), (100 mW), DFS, AUTO-BW
+>>       (5170 - 5250 @ 80), (100 mW), DFS, AUTO-BW, NO-OUTDOOR
+>>       (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+>>       (5735 - 5835 @ 80), (30)
+>>       (57240 - 63720 @ 2160), (40)
+>>
+>> The changes below seem to address it. I think awk is too fragile to
+>
+> Your patch looks almost exactly like what I was thinkg to do.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tdls.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+OK I'll resend and update the Kconfig entry to ensure folks are aware
+of the issues discussed and our resolution on requiring folks deal
+with issue on the awk parser.
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 99d5ed3..398a413 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -46,11 +46,16 @@ static void ieee80211_tdls_add_ext_capab(struct sk_buff *skb)
- 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
- }
- 
--static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata)
-+static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata,
-+					u16 status_code)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	u16 capab;
- 
-+	/* The capability will be 0 when sending a failure code */
-+	if (status_code != 0)
-+		return 0;
-+
- 	capab = 0;
- 	if (ieee80211_get_sdata_band(sdata) != IEEE80211_BAND_2GHZ)
- 		return capab;
-@@ -207,7 +212,8 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
- 		skb_put(skb, sizeof(tf->u.setup_req));
- 		tf->u.setup_req.dialog_token = dialog_token;
- 		tf->u.setup_req.capability =
--			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
-+			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata,
-+								 status_code));
- 		break;
- 	case WLAN_TDLS_SETUP_RESPONSE:
- 		tf->category = WLAN_CATEGORY_TDLS;
-@@ -217,7 +223,8 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
- 		tf->u.setup_resp.status_code = cpu_to_le16(status_code);
- 		tf->u.setup_resp.dialog_token = dialog_token;
- 		tf->u.setup_resp.capability =
--			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
-+			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata,
-+								 status_code));
- 		break;
- 	case WLAN_TDLS_SETUP_CONFIRM:
- 		tf->category = WLAN_CATEGORY_TDLS;
-@@ -274,7 +281,8 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
- 		mgmt->u.action.u.tdls_discover_resp.dialog_token =
- 			dialog_token;
- 		mgmt->u.action.u.tdls_discover_resp.capability =
--			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
-+			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata,
-+								 status_code));
- 		break;
- 	default:
- 		return -EINVAL;
--- 
-1.9.1
+>> scale well and keep us sane. A C parser exists but right now it
+>> ignores the DFS CAC. Having a parser is nice as it allows us to
+>> modify the db.txt on the fly, however parser still requires a bit
+>> of an update in code. If we wanted to avoid the parser all together
+>> we could just merge a CRDA reader at build time and require a
+>> a regulatory.bin file for reading instead of the db.txt. If we
+>> had support for that then its really only one step further from
+>> having full CRDA functionality upstream on the kernel, ie letting
+>> us read the file at run time rather than just build time. If we
+>> are to follow the steps from udev with its firmware loader helper
+>> we might as well merge CRDA upstream, in fact we could just use
+>> request_firmware_direct() for the reader, what remains questionable
+>> to me is the signing stuff, but if we already have support module
+>> signing checks it doesn't seem far fetched to be able to have
+>> request firmware verify a signature on a file, which probably
+>> ain't such a bad idea anyway. If we did this we'd have two options:
+>>
+>> 1) regulatory.bin reader at build time to build the static regulatory domains
+>> 2) the same reader code can use request the file at run time via
+>>    request_firmware_direct() and if we added signature verification
+>>    it can replace CRDA
+>>
+>> We'd eliminate the ASCII representation completely from the build picture
+>> and peg a regulatory.bin firmware to each kernel then. Thoughts?
+>
+> I'll have to digest this -- needs some more discussion, for sure.
 
+Some more on this. I stumbled upon Takashi Iwai's November 2012
+firmware_class Takashi Iwai's signature check series [0] [1]. His
+second iteration didn't get merged but there weren't any particular
+NACKs on the threads -- upon following up with him it would seem the
+way to move this forward though is to integrate this somehow with Kees
+Cook's work on LSM. I have yet to do that but at least by looking at
+Takashi's patches it would seem moving CRDA functionality upstream is
+certainly doable, this would remove both the requirement of CRDA on
+userspace and remove any requirement for any build-time parsers on the
+kernel. The regulatory format then would move along with the kernel.
+
+The way I'd envision this is we'd enable drivers to pass a
+specification of requirements for the firmware, one of which could be
+the digital signature check. Another option would be whether or not
+the firmware is required or not -- right now we use two different APIs
+for this: request_firmware() and request_firmware_direct(), having a
+specification could let us unify this into one a bit more cleanly. The
+digital signature options then simply become an option for drivers,
+and if some distributions do want to force require digital signatures
+for all request_firmware() requests it can do so as well through a
+Kconfig option.
+
+[0] https://lkml.org/lkml/2012/11/5/467
+[1] https://lkml.org/lkml/2012/11/8/343
+
+  Luis
