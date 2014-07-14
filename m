@@ -1,137 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:53136 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757224AbaGVWRP convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:52992 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756559AbaGNVNp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 18:17:15 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so6814696wiv.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 15:17:14 -0700 (PDT)
+	Mon, 14 Jul 2014 17:13:45 -0400
+Received: by mail-oa0-f53.google.com with SMTP id j17so2123471oag.40
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 14:13:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140722212327.GF1299@tuxdriver.com>
-References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
-	<20140722180254.GE1299@tuxdriver.com>
-	<CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com>
-	<20140722212327.GF1299@tuxdriver.com>
-Date: Wed, 23 Jul 2014 00:17:14 +0200
-Message-ID: <CAA2SeNKX9C96C_tfJdR8h3h-fi8jo=OziTEAXLY6iD5mVHkXmA@mail.gmail.com> (sfid-20140723_001727_089480_9DDBBFFA)
-Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net,
-	Philippe Duchein <wireless-dev@duchein.net>
+In-Reply-To: <CAB=NE6U3PMsatwcczO6hrfe+2z3mN9n9zcX0tgy5iTbCRNRcmw@mail.gmail.com>
+References: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
+	<20140702001936.GQ27687@wotan.suse.de>
+	<20140702143003.GA13564@tuxdriver.com>
+	<CAB=NE6U3PMsatwcczO6hrfe+2z3mN9n9zcX0tgy5iTbCRNRcmw@mail.gmail.com>
+Date: Mon, 14 Jul 2014 14:13:44 -0700
+Message-ID: <CAGXu5j+or7=2a2sb93Y=z65gFQNKu1G8eQnNQOf1qgUhnyWR8A@mail.gmail.com> (sfid-20140714_231359_199297_619058C0)
+Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain
+ from wireless-regdb
+From: Kees Cook <keescook@chromium.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>, linux-firmware@kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, Jul 22, 2014 at 09:52:04PM +0200, Lorenzo Bianconi wrote:
->> Hi John,
+On Mon, Jul 14, 2014 at 2:08 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Jul 2, 2014 at 7:30 AM, John W. Linville <linville@tuxdriver.com> wrote:
+>> On Wed, Jul 02, 2014 at 02:19:36AM +0200, Luis R. Rodriguez wrote:
+>>> On Tue, Jul 01, 2014 at 04:17:54PM -0400, John W. Linville wrote:
+>>> > Since "wireless-regdb: remove antenna gain" was merged in the
+>>> > wireless-regdb tree, this script has been incompatible with the
+>>> > 'official' regulatory database.  Let's fix it up.
+>>> >
+>>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> > ---
+>>> > I think the dfs_cac stuff is still broken, since it does not account
+>>> > for the starting offset of the flags.
+>>>
+>>> Indeed, but that also breaks other stuff too, because the DFS CAC stuff
+>>> is optional it means the flags can now start at different locations, it
+>>> also means that we need to distinguish a flag from a CAC.
+>>>
+>>> Here's a complex example we should test for as an example now:
+>>>
+>>> country US: DFS-FCC
+>>>       (2400 - 2450 @ 40), (100 mW)
+>>>       (2450 - 2500 @ 0), (100 mW), DFS, AUTO-BW
+>>>       (5170 - 5250 @ 80), (100 mW), DFS, AUTO-BW, NO-OUTDOOR
+>>>       (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+>>>       (5735 - 5835 @ 80), (30)
+>>>       (57240 - 63720 @ 2160), (40)
+>>>
+>>> The changes below seem to address it. I think awk is too fragile to
 >>
->> > On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
->> >> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
->> >> Moreover disable dynack if the coverage class has been configured
->> >>
->> >> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->> >> ---
->> >>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
->> >>  1 file changed, 34 insertions(+)
->> >>
->> >> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> >> index e6ac8d2..52ca884 100644
->> >> --- a/drivers/net/wireless/ath/ath9k/main.c
->> >> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> >> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
->> >>       mutex_lock(&sc->mutex);
->> >>       ah->coverage_class = coverage_class;
->> >>
->> >> +     if (ah->dynack.enabled) {
->> >> +             u32 rfilt;
->> >> +
->> >> +             ah->dynack.enabled = false;
->> >> +             rfilt = ath_calcrxfilter(sc);
->> >> +             ath9k_hw_setrxfilter(ah, rfilt);
->> >> +     }
->> >> +
->> >>       ath9k_ps_wakeup(sc);
->> >>       ath9k_hw_init_global_settings(ah);
->> >>       ath9k_ps_restore(sc);
->> >> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
->> >>       mutex_unlock(&sc->mutex);
->> >>  }
->> >>
->> >> +#ifdef CONFIG_ATH9K_DYNACK
->> >> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
->> >> +{
->> >> +     u32 rfilt;
->> >> +     struct ath_softc *sc = hw->priv;
->> >> +     struct ath_hw *ah = sc->sc_ah;
->> >> +
->> >> +     if (config_enabled(CONFIG_ATH9K_TX99))
->> >> +             return -EOPNOTSUPP;
->> >> +
->> >> +     if (!ah->dynack.enabled) {
->> >> +             ath_dynack_reset(ah);
->> >> +
->> >> +             ah->dynack.enabled = true;
->> >> +             rfilt = ath_calcrxfilter(sc);
->> >> +             ath9k_hw_setrxfilter(ah, rfilt);
->> >> +     }
->> >> +
->> >> +     return 0;
->> >> +}
->> >> +#endif
->> >> +
->> >>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
->> >>  {
->> >>       int i, npend = 0;
->> >> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
->> >>  #endif
->> >>       .sw_scan_start      = ath9k_sw_scan_start,
->> >>       .sw_scan_complete   = ath9k_sw_scan_complete,
->> >> +
->> >> +#ifdef CONFIG_ATH9K_DYNACK
->> >> +     .enable_dynack      = ath9k_enable_dynack,
->> >> +#endif
->> >>  };
->> >
->> >   CC      drivers/net/wireless/ath/ath9k/main.o
->> > drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
->> >   .enable_dynack      = ath9k_enable_dynack,
->> >   ^
->> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
->> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
->> > make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
->> > make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
->> > make[1]: *** [drivers/net/wireless/ath] Error 2
->> > make: *** [drivers/net/wireless/] Error 2
->> >
->> > Missing a header file change?
->> >
+>> Your patch looks almost exactly like what I was thinkg to do.
+>
+> OK I'll resend and update the Kconfig entry to ensure folks are aware
+> of the issues discussed and our resolution on requiring folks deal
+> with issue on the awk parser.
+>
+>>> scale well and keep us sane. A C parser exists but right now it
+>>> ignores the DFS CAC. Having a parser is nice as it allows us to
+>>> modify the db.txt on the fly, however parser still requires a bit
+>>> of an update in code. If we wanted to avoid the parser all together
+>>> we could just merge a CRDA reader at build time and require a
+>>> a regulatory.bin file for reading instead of the db.txt. If we
+>>> had support for that then its really only one step further from
+>>> having full CRDA functionality upstream on the kernel, ie letting
+>>> us read the file at run time rather than just build time. If we
+>>> are to follow the steps from udev with its firmware loader helper
+>>> we might as well merge CRDA upstream, in fact we could just use
+>>> request_firmware_direct() for the reader, what remains questionable
+>>> to me is the signing stuff, but if we already have support module
+>>> signing checks it doesn't seem far fetched to be able to have
+>>> request firmware verify a signature on a file, which probably
+>>> ain't such a bad idea anyway. If we did this we'd have two options:
+>>>
+>>> 1) regulatory.bin reader at build time to build the static regulatory domains
+>>> 2) the same reader code can use request the file at run time via
+>>>    request_firmware_direct() and if we added signature verification
+>>>    it can replace CRDA
+>>>
+>>> We'd eliminate the ASCII representation completely from the build picture
+>>> and peg a regulatory.bin firmware to each kernel then. Thoughts?
 >>
->> The function pointer is defined in "configure ack timeout estimation
->> algorithm through mac80211 stack" patchset sent on linux-wireless.
->> Anyway I will send patchset v3 to take Johannes's hint.
+>> I'll have to digest this -- needs some more discussion, for sure.
 >
-> Perhaps you should post them all together, or keep this series as
-> RFC until the other one gets merged?
+> Some more on this. I stumbled upon Takashi Iwai's November 2012
+> firmware_class Takashi Iwai's signature check series [0] [1]. His
+> second iteration didn't get merged but there weren't any particular
+> NACKs on the threads -- upon following up with him it would seem the
+> way to move this forward though is to integrate this somehow with Kees
+> Cook's work on LSM. I have yet to do that but at least by looking at
+
+I've got LSM hooks built to check incoming firmware. It should be
+trivial to add signature checks to that. For Chrome OS, that would be
+redundant since we use dm-verity to check file contents. All Chrome OS
+needs to know is where the firmware came from. Here's the current
+tree:
+
+https://git.kernel.org/cgit/linux/kernel/git/kees/linux.git/log/?h=fw-restrict
+
+> Takashi's patches it would seem moving CRDA functionality upstream is
+> certainly doable, this would remove both the requirement of CRDA on
+> userspace and remove any requirement for any build-time parsers on the
+> kernel. The regulatory format then would move along with the kernel.
 >
+> The way I'd envision this is we'd enable drivers to pass a
+> specification of requirements for the firmware, one of which could be
+> the digital signature check. Another option would be whether or not
+> the firmware is required or not -- right now we use two different APIs
+> for this: request_firmware() and request_firmware_direct(), having a
+> specification could let us unify this into one a bit more cleanly. The
+> digital signature options then simply become an option for drivers,
+> and if some distributions do want to force require digital signatures
+> for all request_firmware() requests it can do so as well through a
+> Kconfig option.
+>
+> [0] https://lkml.org/lkml/2012/11/5/467
+> [1] https://lkml.org/lkml/2012/11/8/343
+>
+>   Luis
 
-Ack. First of all I will include Johannes's hints in "configure ack
-timeout estimation algorithm through mac80211 stack" in such a way the
-function pointer is merged and then I will send a new patchset for
-dynack.
-
-Best regards,
-Lorenzo
-
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-
-
+-Kees
 
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Kees Cook
+Chrome OS Security
