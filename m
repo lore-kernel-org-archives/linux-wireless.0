@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:60324 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932854AbaGOSz4 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34316 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756631AbaGNRwx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 14:55:56 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so4889075wiv.11
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:55:55 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/12] staging: vt6656: int.c remove irrelevant function description
-Date: Tue, 15 Jul 2014 19:54:36 +0100
-Message-Id: <1405450483-2875-5-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205559_795773_DBC62027)
-In-Reply-To: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
-References: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 14 Jul 2014 13:52:53 -0400
+Received: by mail-wi0-f174.google.com with SMTP id d1so3046192wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 10:52:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxEtfWya4h2nBB4vEpheDLdAjDo40qid6OLar3dW+==Kg@mail.gmail.com>
+References: <CACna6rxEtfWya4h2nBB4vEpheDLdAjDo40qid6OLar3dW+==Kg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 14 Jul 2014 23:22:30 +0530
+Message-ID: <CABPxzY+otOYY4Uwr_Sr-C3egcsrAZRmpysmHK-=C+5N0_nb1jA@mail.gmail.com> (sfid-20140714_195256_581145_D10F2B9D)
+Subject: Re: Setting TX power with nl80211 while being *not* connected
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function does not directly poll from here
+On Mon, Jul 14, 2014 at 10:45 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+> I've noticed that setting TX power, e.g with:
+> iw dev wlp2s0 set txpower fixed 1200
+> has no effect if I'm disconnected.
+>
+> As soon as I connect to some network .config gets called, it has
+> IEEE80211_CONF_CHANGE_POWER set and power_level is set to "12".
+>
+> I've quickly tested this and it seems that __ieee80211_recalc_txpower
+> returns false if I'm not connected
+> (rcu_dereference(sdata->vif.chanctx_conf) returns NULL).
+>
+> Is that expected? Is there any way to limit TX power for scanning purposes?
+>
+Not that i know of, we use a chipset specific way to control the ceiling.
+I guess the rationale for not having this is because we use the regulatory
+max values coming from crda./nvram for scanning which are good enough.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/int.c | 22 ----------------------
- 1 file changed, 22 deletions(-)
-
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index 363e464..e78720c 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -53,28 +53,6 @@ static const u8 fallback_rate1[5][5] = {
- 	{RATE_54M, RATE_54M, RATE_36M, RATE_18M, RATE_18M}
- };
- 
--/*+
-- *
-- *  Function:   InterruptPollingThread
-- *
-- *  Synopsis:   Thread running at IRQL PASSIVE_LEVEL.
-- *
-- *  Arguments: Device Extension
-- *
-- *  Returns:
-- *
-- *  Algorithm:  Call USBD for input data;
-- *
-- *  History:    dd-mm-yyyy   Author    Comment
-- *
-- *
-- *  Notes:
-- *
-- *  USB reads are by nature 'Blocking', and when in a read, the device looks
-- *  like it's in a 'stall' condition, so we deliberately time out every second
-- *  if we've gotten no data
-- *
---*/
- void vnt_int_start_interrupt(struct vnt_private *priv)
- {
- 	unsigned long flags;
--- 
-2.0.1
-
+But it would be good to have this feature, to improve the scan if the things are
+not working well with the max reg power.
