@@ -1,53 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52823 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbaG1VRp (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:47154 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754250AbaGNMrg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 17:17:45 -0400
-Message-ID: <53D6BDF8.7080005@candelatech.com> (sfid-20140728_232425_773491_08074372)
-Date: Mon, 28 Jul 2014 14:17:44 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	antonio@open-mesh.com
-Subject: Re: [PATCH] ath9k: fix aggregation session lockup
-References: <1406122854-60239-1-git-send-email-nbd@openwrt.org> <53D6B87D.6080007@candelatech.com> <53D6BC7F.2020002@openwrt.org>
-In-Reply-To: <53D6BC7F.2020002@openwrt.org>
-Content-Type: text/plain; charset=windows-1252
+	Mon, 14 Jul 2014 08:47:36 -0400
+Received: by mail-wi0-f170.google.com with SMTP id f8so1490644wiw.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 05:47:34 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: handle attention flags correctly when A-MSDU
+Date: Mon, 14 Jul 2014 14:47:21 +0200
+Message-Id: <1405342041-7114-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140714_144740_343022_E36D5619)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2014 02:11 PM, Felix Fietkau wrote:
-> On 2014-07-28 22:54, Ben Greear wrote:
->> On 07/23/2014 06:40 AM, Felix Fietkau wrote:
->>> If an aggregation session fails, frames still end up in the driver queue
->>> with IEEE80211_TX_CTL_AMPDU set.
->>> This causes tx for the affected station/tid to stall, since
->>> ath_tx_get_tid_subframe returning packets to send.
->>>
->>> Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
->>> session is running.
->>
->> Did this and your previous patch about 'pending tx frames accounting'
->> fix the issues reported?
-> Yes.
-> 
->> They at least do not fix the problems I see where tx appears to hang,
->> but my setup is pretty 'special'....
-> Interesting. Maybe you should ask Antonio for an updated version of the
-> patch that he used to debug this issue. If you give me the output of it
-> while it's locked up, I might be able to figure out what's going on in
-> your setup.
+In case of A-MSDU RX we should check flags for all
+MSDU subframes to be sure we have correct FCS status.
 
-Let me first try to reproduce with a recent, un-hacked-upon kernel...
+Before we check attention flags only for first frame
+where we didn't have correct info about FCS status in
+case of A-MSDU. Next didn't mark RX_FLAG_FAILED_FCS_CRC
+for skb. As a side efect we see big TP drop when TCP used.
+This was easy to reproduce when AP interface was used
+and added monitor interface run in promiscuous mode.
 
-I would welcome the debug patch in the meantime.
+Reported-by: Denton Gentry <denton.gentry@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6c102b1..9f704fe 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -307,7 +307,8 @@ static void ath10k_htt_rx_free_msdu_chain(struct sk_buff *skb)
+ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 				   u8 **fw_desc, int *fw_desc_len,
+ 				   struct sk_buff **head_msdu,
+-				   struct sk_buff **tail_msdu)
++				   struct sk_buff **tail_msdu,
++				   u32 *attention)
+ {
+ 	int msdu_len, msdu_chaining = 0;
+ 	struct sk_buff *msdu;
+@@ -358,6 +359,11 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 			break;
+ 		}
+ 
++		*attention |= __le32_to_cpu(rx_desc->attention.flags) &
++					    (RX_ATTENTION_FLAGS_TKIP_MIC_ERR |
++					     RX_ATTENTION_FLAGS_DECRYPT_ERR |
++					     RX_ATTENTION_FLAGS_FCS_ERR |
++					     RX_ATTENTION_FLAGS_MGMT_TYPE);
+ 		/*
+ 		 * Copy the FW rx descriptor for this MSDU from the rx
+ 		 * indication message into the MSDU's netbuf. HL uses the
+@@ -1233,13 +1239,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
+ 			struct sk_buff *msdu_head, *msdu_tail;
+ 
++			attention = 0;
+ 			msdu_head = NULL;
+ 			msdu_tail = NULL;
+ 			ret = ath10k_htt_rx_amsdu_pop(htt,
+ 						      &fw_desc,
+ 						      &fw_desc_len,
+ 						      &msdu_head,
+-						      &msdu_tail);
++						      &msdu_tail,
++						      &attention);
+ 
+ 			if (ret < 0) {
+ 				ath10k_warn("failed to pop amsdu from htt rx ring %d\n",
+@@ -1251,7 +1259,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			rxd = container_of((void *)msdu_head->data,
+ 					   struct htt_rx_desc,
+ 					   msdu_payload);
+-			attention = __le32_to_cpu(rxd->attention.flags);
+ 
+ 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
+ 							 status,
+@@ -1304,6 +1311,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 	u8 *fw_desc;
+ 	int fw_desc_len, hdrlen, paramlen;
+ 	int trim;
++	u32 attention = 0;
+ 
+ 	fw_desc_len = __le16_to_cpu(frag->fw_rx_desc_bytes);
+ 	fw_desc = (u8 *)frag->fw_msdu_rx_desc;
+@@ -1313,7 +1321,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 
+ 	spin_lock_bh(&htt->rx_ring.lock);
+ 	ret = ath10k_htt_rx_amsdu_pop(htt, &fw_desc, &fw_desc_len,
+-				      &msdu_head, &msdu_tail);
++				      &msdu_head, &msdu_tail,
++				      &attention);
+ 	spin_unlock_bh(&htt->rx_ring.lock);
+ 
+ 	ath10k_dbg(ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
+@@ -1330,10 +1339,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 
+ 	hdr = (struct ieee80211_hdr *)msdu_head->data;
+ 	rxd = (void *)msdu_head->data - sizeof(*rxd);
+-	tkip_mic_err = !!(__le32_to_cpu(rxd->attention.flags) &
+-				RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
+-	decrypt_err = !!(__le32_to_cpu(rxd->attention.flags) &
+-				RX_ATTENTION_FLAGS_DECRYPT_ERR);
++	tkip_mic_err = !!(attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
++	decrypt_err = !!(attention & RX_ATTENTION_FLAGS_DECRYPT_ERR);
+ 	fmt = MS(__le32_to_cpu(rxd->msdu_start.info1),
+ 			RX_MSDU_START_INFO1_DECAP_FORMAT);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
