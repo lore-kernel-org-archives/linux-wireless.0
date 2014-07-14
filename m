@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33955 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932257AbaGETd7 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10390 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754683AbaGNNK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2014 15:33:59 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 3/3] iwlwifi: mvm: disable CTS to Self
-Date: Sat,  5 Jul 2014 22:33:49 +0300
-Message-Id: <1404588829-14168-3-git-send-email-egrumbach@gmail.com> (sfid-20140705_213406_918518_DF29CA74)
-In-Reply-To: <53B852D4.5060109@gmail.com>
-References: <53B852D4.5060109@gmail.com>
+	Mon, 14 Jul 2014 09:10:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath6kl@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/6] ath6kl: properly null terminate the firmware string
+References: <20140617093836.22040.99081.stgit@potku.adurom.net>
+	<20140617094121.22040.35356.stgit@potku.adurom.net>
+Date: Mon, 14 Jul 2014 16:02:24 +0300
+In-Reply-To: <20140617094121.22040.35356.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Tue, 17 Jun 2014 12:41:21 +0300")
+Message-ID: <874mykm6u7.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_151030_943741_52417AC3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Firmware folks seem say that this flag can make trouble.
-Drop it. The advantage of CTS to self is that it slightly
-reduces the cost of the protection, but make the protection
-less reliable.
+> The firmware version read from the firmware image is not null terminated and
+> because of that there were few bytes of garbage after the firmware string:
+>
+> [10420.164632] ath6kl: ar6004 hw 3.0 usb fw 3.5.0.300-1^A api 4
+>
+> Add proper null termination to ath6kl_fetch_fw_apin() clean the firmware
+> version string.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Cc: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+This one introduces a new warning and I need to drop it:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 8b53027..725ba49 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -667,10 +667,9 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 	if (vif->bss_conf.qos)
- 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
- 
--	if (vif->bss_conf.use_cts_prot) {
-+	if (vif->bss_conf.use_cts_prot)
- 		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT);
--		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_SELF_CTS_EN);
--	}
-+
- 	IWL_DEBUG_RATE(mvm, "use_cts_prot %d, ht_operation_mode %d\n",
- 		       vif->bss_conf.use_cts_prot,
- 		       vif->bss_conf.ht_operation_mode);
+drivers/net/wireless/ath/ath10k/debug.c:671:2: warning: right shift count >= width of type [enabled by default]
+drivers/net/wireless/ath/ath6kl/init.c:999 ath6kl_fetch_fw_apin() error: buffer overflow 'ar->wiphy->fw_version' 32 <= 32
+wmi.c:(.text+0xd96373): undefined reference to `ath10k_dbg_save_fw_dbg_buffer'
+
 -- 
-1.8.3.2
-
+Kalle Valo
