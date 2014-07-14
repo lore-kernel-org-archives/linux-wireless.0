@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10390 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754683AbaGNNK2 (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:60284 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755920AbaGNRPa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 09:10:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath6kl@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/6] ath6kl: properly null terminate the firmware string
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
-	<20140617094121.22040.35356.stgit@potku.adurom.net>
-Date: Mon, 14 Jul 2014 16:02:24 +0300
-In-Reply-To: <20140617094121.22040.35356.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Tue, 17 Jun 2014 12:41:21 +0300")
-Message-ID: <874mykm6u7.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_151030_943741_52417AC3)
+	Mon, 14 Jul 2014 13:15:30 -0400
+Received: by mail-oa0-f53.google.com with SMTP id j17so1726331oag.26
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 10:15:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 14 Jul 2014 19:15:29 +0200
+Message-ID: <CACna6rxEtfWya4h2nBB4vEpheDLdAjDo40qid6OLar3dW+==Kg@mail.gmail.com> (sfid-20140714_191538_486517_7AA0F196)
+Subject: Setting TX power with nl80211 while being *not* connected
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+I've noticed that setting TX power, e.g with:
+iw dev wlp2s0 set txpower fixed 1200
+has no effect if I'm disconnected.
 
-> The firmware version read from the firmware image is not null terminated and
-> because of that there were few bytes of garbage after the firmware string:
->
-> [10420.164632] ath6kl: ar6004 hw 3.0 usb fw 3.5.0.300-1^A api 4
->
-> Add proper null termination to ath6kl_fetch_fw_apin() clean the firmware
-> version string.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+As soon as I connect to some network .config gets called, it has
+IEEE80211_CONF_CHANGE_POWER set and power_level is set to "12".
 
-This one introduces a new warning and I need to drop it:
+I've quickly tested this and it seems that __ieee80211_recalc_txpower
+returns false if I'm not connected
+(rcu_dereference(sdata->vif.chanctx_conf) returns NULL).
 
-drivers/net/wireless/ath/ath10k/debug.c:671:2: warning: right shift count >= width of type [enabled by default]
-drivers/net/wireless/ath/ath6kl/init.c:999 ath6kl_fetch_fw_apin() error: buffer overflow 'ar->wiphy->fw_version' 32 <= 32
-wmi.c:(.text+0xd96373): undefined reference to `ath10k_dbg_save_fw_dbg_buffer'
+Is that expected? Is there any way to limit TX power for scanning purposes?
 
 -- 
-Kalle Valo
+Rafał
