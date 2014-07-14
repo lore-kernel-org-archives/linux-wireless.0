@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:42886 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932674AbaGWQzB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42280 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755018AbaGNNUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 12:55:01 -0400
-Received: by mail-wg0-f47.google.com with SMTP id b13so1482633wgh.30
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 09:55:00 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] b43: enable 5 GHz support for N-PHY devices
-Date: Wed, 23 Jul 2014 18:54:50 +0200
-Message-Id: <1406134490-6880-3-git-send-email-zajec5@gmail.com> (sfid-20140723_185510_566973_3238E411)
-In-Reply-To: <1406134490-6880-1-git-send-email-zajec5@gmail.com>
-References: <1406134490-6880-1-git-send-email-zajec5@gmail.com>
+	Mon, 14 Jul 2014 09:20:31 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: sanitize tx ring index access properly
+References: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
+	<1401954520-3365-3-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 14 Jul 2014 16:20:08 +0300
+In-Reply-To: <1401954520-3365-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 5 Jun 2014 09:48:40 +0200")
+Message-ID: <87vbr0krg7.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_152035_426967_2BA53613)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has been tested on 14e4:4328 (BCM4321), 14e4:432b (BCM4322),
-14e4:4353 (BCM43224) and 14e4:4359 (BCM43228) which is an almost
-complete list of 5 GHz capable device (only BCM43222 is missing).
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c | 1 -
- 1 file changed, 1 deletion(-)
+> The tx ring index was immediately trimmed with a
+> bitmask. This discarded the 0xFFFFFFFF error case
+> (which theoretically can happen when a device is
+> abruptly disconnected) and led to using an invalid
+> tx ring index. This could lead to memory
+> corruption.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/ce.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+> index d185dc0..7c6c7d5 100644
+> --- a/drivers/net/wireless/ath/ath10k/ce.c
+> +++ b/drivers/net/wireless/ath/ath10k/ce.c
+> @@ -603,16 +603,19 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+>  		if (ret)
+>  			return ret;
+>  
+> -		src_ring->hw_index =
+> -			ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
+> -		src_ring->hw_index &= nentries_mask;
+> +		read_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
+> +		if (read_index == 0xFFFFFFFF)
+> +			return -ENODEV;
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 3b4b192..d7055fe 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5338,7 +5338,6 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 		switch (dev->phy.type) {
- 		case B43_PHYTYPE_A:
- 		case B43_PHYTYPE_G:
--		case B43_PHYTYPE_N:
- 		case B43_PHYTYPE_LP:
- 		case B43_PHYTYPE_HT:
- 			b43warn(wl, "5 GHz band is unsupported on this PHY\n");
+I changed this to lower case, as it was before. Let's use lower case hex
+values in ath10k.
+
 -- 
-1.8.4.5
-
+Kalle Valo
