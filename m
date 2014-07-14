@@ -1,93 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [199.83.51.51] ([199.83.51.51]:52543 "EHLO mantis.wzyboy.im"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751555AbaGMHWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 03:22:35 -0400
-Received: from mail-ob0-f173.google.com (mail-ob0-f173.google.com [209.85.214.173])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 0E73D88048
-	for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 15:21:59 +0800 (CST)
-Received: by mail-ob0-f173.google.com with SMTP id vb8so2681311obc.4
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 00:21:57 -0700 (PDT)
+Received: from mail-la0-f42.google.com ([209.85.215.42]:52570 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757207AbaGNVd4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2014 17:33:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P0uf66J_k9FNV6AaJedq9PE==dHaOBsNXqc58T1L+qv1A@mail.gmail.com>
-References: <CALkVjQbNMNs__LsNG450fCpTNmAR3kfDFn2o7xxrdLjSi1wu=w@mail.gmail.com>
- <CALkVjQbmrypdzG9B2nQ1oCPGuzO2Va0_vcpvkQmdtOsWP2HHZA@mail.gmail.com> <CANUX_P0uf66J_k9FNV6AaJedq9PE==dHaOBsNXqc58T1L+qv1A@mail.gmail.com>
-From: Sascha Weaver <wzyboy@wzyboy.org>
-Date: Sun, 13 Jul 2014 15:21:42 +0800
-Message-ID: <CALkVjQbGr2b6xzMM9ES6H+7eTVyPVp=ZH3ct0tF7RO2asqf9=w@mail.gmail.com> (sfid-20140713_092241_287125_5D66B297)
-Subject: Re: [iwlwifi] Wireless-AC 7260 disconnects every half and hour
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAGXu5j+or7=2a2sb93Y=z65gFQNKu1G8eQnNQOf1qgUhnyWR8A@mail.gmail.com>
+References: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
+ <20140702001936.GQ27687@wotan.suse.de> <20140702143003.GA13564@tuxdriver.com>
+ <CAB=NE6U3PMsatwcczO6hrfe+2z3mN9n9zcX0tgy5iTbCRNRcmw@mail.gmail.com> <CAGXu5j+or7=2a2sb93Y=z65gFQNKu1G8eQnNQOf1qgUhnyWR8A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Mon, 14 Jul 2014 14:33:33 -0700
+Message-ID: <CAB=NE6VUXd7LUPLoWAG_YObDE-LC5BijUm9jnhiOoft2x7cWZQ@mail.gmail.com> (sfid-20140714_233402_025587_CEDE582B)
+Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain
+ from wireless-regdb
+To: Kees Cook <keescook@chromium.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>, linux-firmware@kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-07-13 12:58 GMT+08:00 Emmanuel Grumbach <egrumbach@gmail.com>:
-> Please try the patch attached.
-> Thanks
+On Mon, Jul 14, 2014 at 2:13 PM, Kees Cook <keescook@chromium.org> wrote:
+> On Mon, Jul 14, 2014 at 2:08 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>> On Wed, Jul 2, 2014 at 7:30 AM, John W. Linville <linville@tuxdriver.com> wrote:
+>>> On Wed, Jul 02, 2014 at 02:19:36AM +0200, Luis R. Rodriguez wrote:
+>>>> On Tue, Jul 01, 2014 at 04:17:54PM -0400, John W. Linville wrote:
+>>>> > Since "wireless-regdb: remove antenna gain" was merged in the
+>>>> > wireless-regdb tree, this script has been incompatible with the
+>>>> > 'official' regulatory database.  Let's fix it up.
+>>>> >
+>>>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>>> > ---
+>>>> > I think the dfs_cac stuff is still broken, since it does not account
+>>>> > for the starting offset of the flags.
+>>>>
+>>>> Indeed, but that also breaks other stuff too, because the DFS CAC stuff
+>>>> is optional it means the flags can now start at different locations, it
+>>>> also means that we need to distinguish a flag from a CAC.
+>>>>
+>>>> Here's a complex example we should test for as an example now:
+>>>>
+>>>> country US: DFS-FCC
+>>>>       (2400 - 2450 @ 40), (100 mW)
+>>>>       (2450 - 2500 @ 0), (100 mW), DFS, AUTO-BW
+>>>>       (5170 - 5250 @ 80), (100 mW), DFS, AUTO-BW, NO-OUTDOOR
+>>>>       (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
+>>>>       (5735 - 5835 @ 80), (30)
+>>>>       (57240 - 63720 @ 2160), (40)
+>>>>
+>>>> The changes below seem to address it. I think awk is too fragile to
+>>>
+>>> Your patch looks almost exactly like what I was thinkg to do.
+>>
+>> OK I'll resend and update the Kconfig entry to ensure folks are aware
+>> of the issues discussed and our resolution on requiring folks deal
+>> with issue on the awk parser.
+>>
+>>>> scale well and keep us sane. A C parser exists but right now it
+>>>> ignores the DFS CAC. Having a parser is nice as it allows us to
+>>>> modify the db.txt on the fly, however parser still requires a bit
+>>>> of an update in code. If we wanted to avoid the parser all together
+>>>> we could just merge a CRDA reader at build time and require a
+>>>> a regulatory.bin file for reading instead of the db.txt. If we
+>>>> had support for that then its really only one step further from
+>>>> having full CRDA functionality upstream on the kernel, ie letting
+>>>> us read the file at run time rather than just build time. If we
+>>>> are to follow the steps from udev with its firmware loader helper
+>>>> we might as well merge CRDA upstream, in fact we could just use
+>>>> request_firmware_direct() for the reader, what remains questionable
+>>>> to me is the signing stuff, but if we already have support module
+>>>> signing checks it doesn't seem far fetched to be able to have
+>>>> request firmware verify a signature on a file, which probably
+>>>> ain't such a bad idea anyway. If we did this we'd have two options:
+>>>>
+>>>> 1) regulatory.bin reader at build time to build the static regulatory domains
+>>>> 2) the same reader code can use request the file at run time via
+>>>>    request_firmware_direct() and if we added signature verification
+>>>>    it can replace CRDA
+>>>>
+>>>> We'd eliminate the ASCII representation completely from the build picture
+>>>> and peg a regulatory.bin firmware to each kernel then. Thoughts?
+>>>
+>>> I'll have to digest this -- needs some more discussion, for sure.
+>>
+>> Some more on this. I stumbled upon Takashi Iwai's November 2012
+>> firmware_class Takashi Iwai's signature check series [0] [1]. His
+>> second iteration didn't get merged but there weren't any particular
+>> NACKs on the threads -- upon following up with him it would seem the
+>> way to move this forward though is to integrate this somehow with Kees
+>> Cook's work on LSM. I have yet to do that but at least by looking at
+>
+> I've got LSM hooks built to check incoming firmware. It should be
+> trivial to add signature checks to that. For Chrome OS, that would be
+> redundant since we use dm-verity to check file contents. All Chrome OS
+> needs to know is where the firmware came from. Here's the current
+> tree:
+>
+> https://git.kernel.org/cgit/linux/kernel/git/kees/linux.git/log/?h=fw-restrict
 
+Awesome! Base do a quick glance it seems Android also uses this,
+dm-verity [0] uses public keys as well so it would indeed also provide
+authenticity / integrity checks which would indeed make firmware
+signature checks redundant, the only requirement however is you'd
+require the checks on the partition, and I do suspect not all
+distributions will want to go down this path. If we can extend the LSM
+hooks to give the option for signatures on firmware we'd enable
+distributions to pick and choose a strategy. Can we let LSM hooks then
+figure out if a digital signature is superfluous if dm-verity is being
+used ? I suspect there may be some cases where a module / part of the
+kernel may want to *force* the presence of a signature check but I
+don't think that this is a requirement for all use cases.
 
-Thanks Emmanuel. I tried this patch but it seems that this patch does not work.
+[0] https://source.android.com/devices/tech/security/dm-verity.html
 
-I applied the patch, installed the kernel and rebooted my laptop.
-After conencting to the AP and I wait for 25 minutes, then I start to
-ping my gateway. At exactly 30 minutes, it re-associates, and the
-network connection is lost for about 9 seconds:
-
-64 bytes from 192.168.108.254: icmp_seq=116 ttl=255 time=1.84 ms
-64 bytes from 192.168.108.254: icmp_seq=117 ttl=255 time=2.45 ms
-64 bytes from 192.168.108.254: icmp_seq=118 ttl=255 time=8.38 ms
-64 bytes from 192.168.108.254: icmp_seq=119 ttl=255 time=3.92 ms
-64 bytes from 192.168.108.254: icmp_seq=120 ttl=255 time=5.33 ms
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
-64 bytes from 192.168.108.254: icmp_seq=131 ttl=255 time=4.90 ms
-64 bytes from 192.168.108.254: icmp_seq=132 ttl=255 time=5.42 ms
-64 bytes from 192.168.108.254: icmp_seq=133 ttl=255 time=2.38 ms
-64 bytes from 192.168.108.254: icmp_seq=134 ttl=255 time=16.4 ms
-64 bytes from 192.168.108.254: icmp_seq=135 ttl=255 time=29.7 ms
-
-
-You can see there is nine pings which produce "Network is unreachable"
-error. That's about nine seconds I suppose.
-
-
-The dmesg seems the same:
-
-Jul 13 14:46:47 xenien kernel: wlan0: authenticate with c0:7b:bc:1a:85:ff
-Jul 13 14:46:47 xenien kernel: wlan0: send auth to c0:7b:bc:1a:85:ff (try 1/3)
-Jul 13 14:46:47 xenien kernel: wlan0: authenticated
-Jul 13 14:46:47 xenien kernel: wlan0: associate with c0:7b:bc:1a:85:ff (try 1/3)
-Jul 13 14:46:47 xenien kernel: wlan0: RX AssocResp from
-c0:7b:bc:1a:85:ff (capab=0x11 status=0 aid=2)
-Jul 13 14:46:47 xenien kernel: wlan0: associated
-Jul 13 14:46:47 xenien kernel: IPv6: ADDRCONF(NETDEV_CHANGE): wlan0:
-link becomes ready
-Jul 13 14:46:48 xenien kernel: psmouse serio2: trackpoint: IBM
-TrackPoint firmware: 0x0e, buttons: 3/3
-Jul 13 14:46:48 xenien kernel: input: TPPS/2 IBM TrackPoint as
-/devices/platform/i8042/serio1/serio2/input/input16
-Jul 13 14:46:52 xenien kernel: fuse init (API version 7.23)
-Jul 13 14:47:28 xenien kernel: snd_hda_intel 0000:00:1b.0: IRQ timing
-workaround is activated for card #1. Suggest a bigger bdl_pos_adj.
-Jul 13 15:16:57 xenien kernel: wlan0: deauthenticated from
-c0:7b:bc:1a:85:ff (Reason: 2=PREV_AUTH_NOT_VALID)
-Jul 13 15:16:57 xenien kernel: cfg80211: Calling CRDA for country: CN
-Jul 13 15:17:00 xenien kernel: wlan0: authenticate with 18:9c:5d:97:76:1f
-Jul 13 15:17:00 xenien kernel: wlan0: send auth to 18:9c:5d:97:76:1f (try 1/3)
-Jul 13 15:17:00 xenien kernel: wlan0: authenticated
-Jul 13 15:17:00 xenien kernel: wlan0: associate with 18:9c:5d:97:76:1f (try 1/3)
-Jul 13 15:17:00 xenien kernel: wlan0: RX AssocResp from
-18:9c:5d:97:76:1f (capab=0x11 status=0 aid=11)
-Jul 13 15:17:00 xenien kernel: wlan0: associated
-
-
--- 
-Sascha Weaver
+  Luis
