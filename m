@@ -1,89 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:38606 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754356AbaGASb3 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42050 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbaGNGvN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 14:31:29 -0400
-Received: by mail-ob0-f177.google.com with SMTP id uy5so10656371obc.36
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2014 11:31:28 -0700 (PDT)
+	Mon, 14 Jul 2014 02:51:13 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 4/7] wil6210: fix memory leak on error path in wil_write_file_rxon()
+Date: Mon, 14 Jul 2014 09:49:40 +0300
+Message-ID: <1405320583-5775-5-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140714_085119_846585_81A9F726)
+In-Reply-To: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20140701182908.GD6358@tuxdriver.com>
-References: <20140630203849.GA4787@www.outflux.net>
-	<20140701182908.GD6358@tuxdriver.com>
-Date: Tue, 1 Jul 2014 11:31:28 -0700
-Message-ID: <CAGXu5jKKav6Nq3AL=oup9SWrgHTvLM9L8f2-AYo6vQr3hFyXtA@mail.gmail.com> (sfid-20140701_203149_795662_5BFFCCA9)
-Subject: Re: [RESEND][PATCH] rtlwifi: btcoexist: avoid format string in printk
-From: Kees Cook <keescook@chromium.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 1, 2014 at 11:29 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Please look in the git trees before reposting patches...
->
-> commit 6437f51ec36af8ef1e3e2659439b35c37e5498e2
-> Author: Kees Cook <keescook@chromium.org>
-> Date:   Tue Jun 10 10:37:24 2014 -0700
->
->     rtlwifi: btcoexist: avoid format string in printk
->
->     Since CL_PRINTF only ever takes a single argument, make sure a format
->     string cannot leak into printk.
->
->     Signed-off-by: Kees Cook <keescook@chromium.org>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Ah! Thanks very much. I hadn't gotten any email about it getting
-applied, so I incorrectly assumed it hadn't been. :)
+If copy_from_user() fails, buffer allocated for parameters would leak
 
--Kees
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
->
-> On Mon, Jun 30, 2014 at 01:38:49PM -0700, Kees Cook wrote:
->> Since CL_PRINTF only ever takes a single argument, make sure a format
->> string cannot leak into printk.
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> ---
->>  .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
->> index 871fc3c6d559..049f4c8d98a8 100644
->> --- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
->> +++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
->> @@ -114,7 +114,7 @@ extern u32 btc_dbg_type[];
->>
->>
->>  #define      CL_SPRINTF      snprintf
->> -#define      CL_PRINTF       printk
->> +#define      CL_PRINTF(buf)  printk("%s", buf)
->>
->>  #define      BTC_PRINT(dbgtype, dbgflag, printstr, ...)              \
->>       do {                                                    \
->> --
->> 1.7.9.5
->>
->>
->> --
->> Kees Cook
->> Chrome OS Security
->>
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-
-
-
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 7435b5a..b640068 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -448,8 +448,10 @@ static ssize_t wil_write_file_rxon(struct file *file, const char __user *buf,
+ 	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
+ 	if (!kbuf)
+ 		return -ENOMEM;
+-	if (copy_from_user(kbuf, buf, len))
++	if (copy_from_user(kbuf, buf, len)) {
++		kfree(kbuf);
+ 		return -EIO;
++	}
+ 
+ 	kbuf[len] = '\0';
+ 	rc = kstrtol(kbuf, 0, &channel);
 -- 
-Kees Cook
-Chrome OS Security
+1.7.6
+
