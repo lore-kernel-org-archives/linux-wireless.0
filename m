@@ -1,48 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:45097 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933851AbaGQOOX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:23 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so6806748wiw.6
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:22 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 13/15] cfg80211: fix TDLS setup with VHT peers
-Date: Thu, 17 Jul 2014 17:14:29 +0300
-Message-Id: <1405606471-30128-14-git-send-email-arik@wizery.com> (sfid-20140717_161443_733352_2ABA05FA)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+Received: from smtp.outflux.net ([198.145.64.163]:57227 "EHLO smtp.outflux.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757249AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2014 17:38:37 -0400
+From: Kees Cook <keescook@chromium.org>
+To: linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/7] firmware_class: extract start loading logic
+Date: Mon, 14 Jul 2014 14:38:15 -0700
+Message-Id: <1405373897-31671-6-git-send-email-keescook@chromium.org> (sfid-20140714_233936_690526_3E59869A)
+In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some VHT TDLS peers (Google Nexus 5) include the VHT-AID IE in their
-TDLS setup request/response. Usermode passes this aid as the station
-aid, causing it to fail verifiction, since this happens in the
-"set_station" stage. Make an exception for the TDLS use-case.
+Extract the logic performed when starting a new firmware load.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/wireless/nl80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/base/firmware_class.c |   29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 082f5c6..df7b133 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3814,7 +3814,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- {
- 	if (params->listen_interval != -1)
- 		return -EINVAL;
--	if (params->aid)
-+	if (params->aid &&
-+	    !(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
- 		return -EINVAL;
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 7399bab71ced..b38cbcd6ebb1 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -604,6 +604,23 @@ static int fw_map_pages_buf(struct firmware_buf *buf)
+ 	return 0;
+ }
  
- 	/* When you run into this, adjust the code below for the new flag */
++/* fw_lock must be held */
++static void fw_load_start(struct firmware_buf *fw_buf)
++{
++	/* discarding any previous partial load */
++	if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
++		int i;
++
++		for (i = 0; i < fw_buf->nr_pages; i++)
++			__free_page(fw_buf->pages[i]);
++		kfree(fw_buf->pages);
++		fw_buf->pages = NULL;
++		fw_buf->page_array_size = 0;
++		fw_buf->nr_pages = 0;
++		set_bit(FW_STATUS_LOADING, &fw_buf->status);
++	}
++}
++
+ /**
+  * firmware_loading_store - set value in the 'loading' control file
+  * @dev: device pointer
+@@ -624,7 +641,6 @@ static ssize_t firmware_loading_store(struct device *dev,
+ 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+ 	struct firmware_buf *fw_buf;
+ 	int loading = simple_strtol(buf, NULL, 10);
+-	int i;
+ 
+ 	mutex_lock(&fw_lock);
+ 	fw_buf = fw_priv->buf;
+@@ -633,16 +649,7 @@ static ssize_t firmware_loading_store(struct device *dev,
+ 
+ 	switch (loading) {
+ 	case 1:
+-		/* discarding any previous partial load */
+-		if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
+-			for (i = 0; i < fw_buf->nr_pages; i++)
+-				__free_page(fw_buf->pages[i]);
+-			kfree(fw_buf->pages);
+-			fw_buf->pages = NULL;
+-			fw_buf->page_array_size = 0;
+-			fw_buf->nr_pages = 0;
+-			set_bit(FW_STATUS_LOADING, &fw_buf->status);
+-		}
++		fw_load_start(fw_buf);
+ 		break;
+ 	case 0:
+ 		if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
 -- 
-1.9.1
+1.7.9.5
 
