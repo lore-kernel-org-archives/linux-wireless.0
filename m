@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:43893 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934528AbaGXUOD (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42717 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbaGOIcr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 16:14:03 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so4575492wib.2
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 13:14:00 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/8] staging: vt6656: use set_bit to set flags
-Date: Thu, 24 Jul 2014 21:13:17 +0100
-Message-Id: <1406232800-3694-5-git-send-email-tvboxspy@gmail.com> (sfid-20140724_221414_925985_16269291)
-In-Reply-To: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
-References: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 15 Jul 2014 04:32:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath10k: pci fixes 2014-06-05
+References: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 15 Jul 2014 11:22:41 +0300
+In-Reply-To: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 5 Jun 2014 09:48:38 +0200")
+Message-ID: <87d2d7ghf2.fsf@kamboji.qca.qualcomm.com> (sfid-20140715_103251_893069_09A5E254)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing MP_SET_FLAG
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 1 -
- drivers/staging/vt6656/main_usb.c | 4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+> I've found a few issues while I was testing ath10k
+> in QEMU/KVM with PCI passthrough. The second patch
+> is something that I've found while analysing the
+> bmi race and I don't think anyone experienced
+> problems associated with it.
+>
+> There's still a weird synchronization issue with
+> (what I think is) iomap write propagation. The
+> initial fw bootup interrupt doesn't come in and
+> it seems CE interrupts are unmasked with a lag
+> because explicit polling after ctl_resp timeout
+> seems to be sufficient to work around it. I
+> suspect this might be a virtualization problem
+> rather than ath10k. Ideas, anyone?
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index fd7105e..5ac80d8 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -402,7 +402,6 @@ struct vnt_private {
- 		(uVar)++;				\
- }
- 
--#define MP_SET_FLAG(_M, _F)             ((_M)->flags |= (_F))
- #define MP_CLEAR_FLAG(_M, _F)            ((_M)->flags &= ~(_F))
- #define MP_TEST_FLAGS(_M, _F)            (((_M)->flags & (_F)) == (_F))
- 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 87feba5..7798221 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -596,7 +596,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 
- 	ieee80211_stop_queues(hw);
- 
--	MP_SET_FLAG(priv, DEVICE_FLAGS_DISCONNECTED);
-+	set_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags);
- 
- 	cancel_delayed_work_sync(&priv->run_command_work);
- 
-@@ -1051,7 +1051,7 @@ static void vt6656_disconnect(struct usb_interface *intf)
- 	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(interface_to_usbdev(intf));
- 
--	priv->flags |= DEVICE_FLAGS_UNPLUG;
-+	set_bit(DEVICE_FLAGS_UNPLUG, &priv->flags);
- 
- 	ieee80211_free_hw(priv->hw);
- }
+No ideas, but it would be great to get ath10k working in KVM. If we
+cannot find a better solution, could we add the explicit polling anyway?
+(With an approriate comment why such a hack is needed, of course)
+
+> Michal Kazior (2):
+>   ath10k: fix bmi exchange tx/rx race
+>   ath10k: sanitize tx ring index access properly
+
+Thanks, both patches applied.
+
 -- 
-2.0.1
-
+Kalle Valo
