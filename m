@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:34302 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbaGKACD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51043 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933396AbaGOTpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:02:03 -0400
-Received: by mail-we0-f176.google.com with SMTP id u56so302694wes.7
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:01:59 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/14] wlcore: use correct LAA bit
-Date: Fri, 11 Jul 2014 03:01:29 +0300
-Message-Id: <1405036899-27396-5-git-send-email-eliad@wizery.com> (sfid-20140711_020206_692602_907C07BB)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+	Tue, 15 Jul 2014 15:45:10 -0400
+Date: Tue, 15 Jul 2014 15:30:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH][3.16 MAYBE?] b43: don't warn about no 5 GHz support on
+ 2.4 GHz devices
+Message-ID: <20140715193011.GE26012@tuxdriver.com> (sfid-20140715_214907_061642_7E4EED0E)
+References: <1404846019-11079-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1404846019-11079-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The LAA bit is second bit of the MSB, not of the
-third byte.
+On Tue, Jul 08, 2014 at 09:00:19PM +0200, Rafał Miłecki wrote:
+> This could be a bit confusing to see warning about lacking support for
+> 5 GHz band if your device supports 2.4 GHz only.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> John: even I was quite confused to see this warning on my BCM5357. I
+> suspected b43 incorrectly detected my WiFi as 5 GHz capable. I think
+> that proposed behavior makes more sense.
+> Do you think it's OK/worth to take it for 3.16?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't really think it merits prommotion to 3.16.  I am happy to
+merge it for -next.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 1ab6dbd..4c16262 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5661,7 +5661,7 @@ static void wl12xx_derive_mac_addresses(struct wl1271 *wl, u32 oui, u32 nic)
- 		memcpy(&wl->addresses[idx], &wl->addresses[0],
- 		       sizeof(wl->addresses[0]));
- 		/* LAA bit */
--		wl->addresses[idx].addr[2] |= BIT(1);
-+		wl->addresses[idx].addr[0] |= BIT(1);
- 	}
- 
- 	wl->hw->wiphy->n_addresses = WLCORE_NUM_MAC_ADDRESSES;
+John
 -- 
-1.8.5.1.109.g3d252a9
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
