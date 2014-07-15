@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54370 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751198AbaGGPV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:21:58 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 00/10] lib: introduce string_escape_mem an %*pE specifier
-Date: Mon,  7 Jul 2014 18:21:42 +0300
-Message-Id: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172627_575223_5DCF87F4)
+Received: from mail-we0-f170.google.com ([74.125.82.170]:35893 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932854AbaGOS4A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2014 14:56:00 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so5785196wes.29
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:55:58 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/12] staging: vt6656: rename s_nsInterruptUsbIoCompleteRead to vnt_start_interrupt_urb_complete
+Date: Tue, 15 Jul 2014 19:54:38 +0100
+Message-Id: <1405450483-2875-7-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205607_896737_F88EFE8F)
+In-Reply-To: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
+References: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The introduced function is a kind of opposite to string_unescape. We have
-several users of such functionality each of them created custom implementation.
-The series contains clean up of test suite, adding new call, and switching few
-users to use it via %*pE specifier.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Test suite covers all of existing and most of potential use cases.
-
-Changelog v2:
-- addressed Joe's comments:
-  - added patch 4/10
-  - moving patches 5/10-10/10 to %*pE instead of direct string_escape_mem call,
-    as a result the series and code looks cleaner 
-- address few of Andrew's comments:
-  - added patch 1/10
-  - kernel documentation moved to c-file
-  - when test case fails the necessary messages are printed on KERN_WARNING
-    level
-
-Andy Shevchenko (10):
-  lib / string_helpers: move documentation to c-file
-  lib / string_helpers: refactoring the test suite
-  lib / string_helpers: introduce string_escape_mem()
-  lib/vsprintf: add %*pE[achnops] format specifier
-  wireless: libertas: print esaped string via %*pE
-  wireless: ipw2x00: print SSID via %*pE
-  lib80211: remove unused print_ssid()
-  staging: wlan-ng: use %*pEhp to print SN
-  staging: rtl8192e: use %*pEn to escape buffer
-  staging: rtl8192u: use %*pEn to escape buffer
-
- Documentation/printk-formats.txt               |  28 +++
- drivers/net/wireless/ipw2x00/ipw2100.c         |  22 +-
- drivers/net/wireless/ipw2x00/ipw2200.c         | 270 +++++++--------------
- drivers/net/wireless/ipw2x00/libipw_rx.c       |  65 +++---
- drivers/net/wireless/ipw2x00/libipw_wx.c       |  16 +-
- drivers/net/wireless/libertas/cfg.c            |   8 +-
- drivers/net/wireless/libertas/mesh.c           |   7 +-
- drivers/staging/rtl8192e/rtllib.h              |  14 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211.h |  14 +-
- drivers/staging/wlan-ng/prism2sta.c            |  28 +--
- include/linux/string_helpers.h                 |  65 +++---
- include/net/lib80211.h                         |   5 -
- lib/string_helpers.c                           | 312 +++++++++++++++++++++++++
- lib/test-string_helpers.c                      | 250 +++++++++++++++++++-
- lib/vsprintf.c                                 |  72 ++++++
- net/wireless/lib80211.c                        |  32 ---
- 16 files changed, 817 insertions(+), 391 deletions(-)
-
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index a5c55f7..e7239d6 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -57,7 +57,7 @@
+ #define URB_ASYNC_UNLINK    0
+ #endif
+ 
+-static void s_nsInterruptUsbIoCompleteRead(struct urb *urb);
++static void vnt_start_interrupt_urb_complete(struct urb *urb);
+ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb);
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb);
+ 
+@@ -145,7 +145,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
+ 		usb_rcvintpipe(priv->usb, 1),
+ 		priv->int_buf.data_buf,
+ 		MAX_INTERRUPT_SIZE,
+-		s_nsInterruptUsbIoCompleteRead,
++		vnt_start_interrupt_urb_complete,
+ 		priv,
+ 		priv->int_interval);
+ 
+@@ -173,7 +173,7 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
+  *
+  */
+ 
+-static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
++static void vnt_start_interrupt_urb_complete(struct urb *urb)
+ {
+ 	struct vnt_private *priv = urb->context;
+ 	int status;
 -- 
 2.0.1
 
