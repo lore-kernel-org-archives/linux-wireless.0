@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:37514 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754575AbaGULUL (ORCPT
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:51633 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758305AbaGOLHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 07:20:11 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so6216369wgh.26
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 04:20:08 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>, sw@simonwunderlich.de,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/2] ath10k: scan fixes 2014-07-21
-Date: Mon, 21 Jul 2014 13:11:19 +0200
-Message-Id: <1405941081-17359-1-git-send-email-michal.kazior@tieto.com> (sfid-20140721_132016_374817_1689AD48)
+	Tue, 15 Jul 2014 07:07:30 -0400
+Received: by mail-vc0-f170.google.com with SMTP id lf12so6093942vcb.29
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 04:07:29 -0700 (PDT)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 15 Jul 2014 16:37:09 +0530
+Message-ID: <CABPxzYLwBEkGN7p6J8wC+m2LP6sy+QTFyaGHq5+2UyJODH6pSg@mail.gmail.com> (sfid-20140715_130733_355245_1EEF36CB)
+Subject: cfg80211 regdb 802.11d design queries
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-This addresses an issue found by Janusz with
-current spectral scan patches from Simon.
+while testing the 802.11d implementation of cfg80211 i have below queries?
 
-This goes along patch `ath10k: prevent endless pci rx
-loop` I've posted a few days ago.
+1) cfg80211 marks the channel as active after it receives a beacon on
+that channel.
 
-There seems to be a condition in firmware which
-causes some WMI events to be not delivered by
-firmware to host most likely due to CE/PCI pipe
-being full (that's a guess judging by the huge
-amount of phyerrs reported and their behaviour
-while spectral scan is enabled). This also
-suggests some SWBA events may be dropped by
-firmware when spectral scan is running (same goes
-for management rx).
+ But shouldn't it check for the presence of country/TPC IE in the
+beacon, update the info based on that and then mark the channel as
+active? without the country/TPC IE how the DUT will know the txpower
+rules allowed in that regulatory domain.
 
-@Simon: you may be interested in applying these
-patches if you run into trouble while testing
-spectral scan + hw_scan/hw_roc.
+2) cfg80211 updates the regulatory domain only on connection. Till
+that time it just marks the specific channel on which it found beacon
+as active. But as per 802.11-2012 and generic use case the purpose of
+passive scanning is to know the regulatory domain information and we
+can always update it based on the first beacon received. (Practically
+all beacons in the vicinity should advertise same RD, unless we are on
+border :-)).
 
-@Ben: since you reported some scan issues in the
-past you may be interested in this as well.
-
-
-Michal Kazior (2):
-  ath10k: introduce a stricter scan state machine
-  ath10k: simplify scan debug prints
-
- drivers/net/wireless/ath/ath10k/core.c |   4 +-
- drivers/net/wireless/ath/ath10k/core.h |  10 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 219 +++++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/mac.h  |   3 +-
- drivers/net/wireless/ath/ath10k/wmi.c  | 210 ++++++++++++++++++++++---------
- 5 files changed, 290 insertions(+), 156 deletions(-)
+This should make fixing the #1 easy.
 
 -- 
-1.8.5.3
-
+Thanks,
+Regards,
+Chaitanya T K.
