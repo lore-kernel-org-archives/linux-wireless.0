@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14344 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751709AbaGXJp3 (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:40284 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932826AbaGOSzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 05:45:29 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Simon Wunderlich <sw@simonwunderlich.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	Sven Eckelmann <sven@narfation.org>
-Subject: Re: [PATCHv3-ath-resend 2/2] ath10k: add spectral scan feature
-References: <87mwc0ro8i.fsf@kamboji.qca.qualcomm.com>
-	<1406136773-19957-1-git-send-email-sw@simonwunderlich.de>
-	<871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQkmEoJ4TTDvBE9cagUGRFPKWVBFjGcyXfMsHHD9-bdDJA@mail.gmail.com>
-Date: Thu, 24 Jul 2014 12:45:21 +0300
-In-Reply-To: <CA+BoTQkmEoJ4TTDvBE9cagUGRFPKWVBFjGcyXfMsHHD9-bdDJA@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 24 Jul 2014 11:34:12 +0200")
-Message-ID: <87wqb3qedq.fsf@kamboji.qca.qualcomm.com> (sfid-20140724_114532_362729_1ABF92EF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 15 Jul 2014 14:55:38 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so5997204wes.41
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:55:37 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/12] staging: vt6656: INTvWorkItem remove camel case
+Date: Tue, 15 Jul 2014 19:54:32 +0100
+Message-Id: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205542_335260_DD7CBB19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Camel case changes
+pDevice -> priv
+ntStatus -> status
 
-> On 24 July 2014 11:29, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Simon Wunderlich <sw@simonwunderlich.de> writes:
->>
->>> Adds the spectral scan feature for ath10k. The spectral scan is triggered by
->>> configuring a mode through a debugfs control file. Samples can be gathered via
->>> another relay debugfs file.
->>>
-> [...]
->>> @@ -800,8 +800,6 @@ int ath10k_core_start(struct ath10k *ar)
->>>       else
->>>               ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
->>>
->>> -     INIT_LIST_HEAD(&ar->arvifs);
->>> -
->>>       if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
->>>               ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
->>>                           ar->hw_params.name,
->>> @@ -1084,6 +1082,12 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
->>>       INIT_WORK(&ar->register_work, ath10k_core_register_work);
->>>       INIT_WORK(&ar->restart_work, ath10k_core_restart);
->>>
->>> +     INIT_LIST_HEAD(&ar->arvifs);
->>
->> I'm a bit suspicious about this, why is it needed?
->
-> Good hunch. ar->arvifs must be re-initialized in core_start for
-> recovery to work correctly.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/int.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks for the confirmation. I think I found a way to rework the
-spectral initialisation which also fixes this issue, I'll send a new
-version later today. Need to run some tests first.
-
+diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
+index dad1543..54016f9 100644
+--- a/drivers/staging/vt6656/int.c
++++ b/drivers/staging/vt6656/int.c
+@@ -77,18 +77,18 @@ static const u8 fallback_rate1[5][5] = {
+  *  if we've gotten no data
+  *
+ -*/
+-void INTvWorkItem(struct vnt_private *pDevice)
++void INTvWorkItem(struct vnt_private *priv)
+ {
+ 	unsigned long flags;
+-	int ntStatus;
++	int status;
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Interrupt Polling Thread\n");
+ 
+-	spin_lock_irqsave(&pDevice->lock, flags);
++	spin_lock_irqsave(&priv->lock, flags);
+ 
+-	ntStatus = PIPEnsInterruptRead(pDevice);
++	status = PIPEnsInterruptRead(priv);
+ 
+-	spin_unlock_irqrestore(&pDevice->lock, flags);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+ static int vnt_int_report_rate(struct vnt_private *priv, u8 pkt_no, u8 tsr)
 -- 
-Kalle Valo
+2.0.1
+
