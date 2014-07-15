@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:64635 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbaGMKSb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51045 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933367AbaGOTpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 06:18:31 -0400
-Received: by mail-wi0-f175.google.com with SMTP id ho1so1212378wib.8
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 03:18:30 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [RFCv2 05/10] ath9k: do not overwrite ack timeout estimation
-Date: Sun, 13 Jul 2014 12:18:19 +0200
-Message-Id: <1405246704-7489-6-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140713_121846_662057_7C3B1389)
-In-Reply-To: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Tue, 15 Jul 2014 15:45:12 -0400
+Date: Tue, 15 Jul 2014 15:39:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tom Gundersen <teg@jklm.no>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Miller <davem@davemloft.net>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Kay Sievers <kay@vrfy.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v7 29/33] net: brcmfmac - set name assign type
+Message-ID: <20140715193926.GF26012@tuxdriver.com> (sfid-20140715_214855_198740_F15213F4)
+References: <1404980258-30853-1-git-send-email-teg@jklm.no>
+ <1404980258-30853-30-git-send-email-teg@jklm.no>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404980258-30853-30-git-send-email-teg@jklm.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not overwrite ack timeout estimation in ath9k_hw_init_global_settings() if
-dynack processing is enabled
+I don't seem to have a line with "NET_NAME_UNKNOWN" in this driver
+in any of my kernel trees.  What tree are you using for development?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+On Thu, Jul 10, 2014 at 10:17:34AM +0200, Tom Gundersen wrote:
+> The name is given by the firmware, so we assume it is predictable.
+> 
+> Signed-off-by: Tom Gundersen <teg@jklm.no>
+> Cc: Brett Rudley <brudley@broadcom.com>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+> Cc: Hante Meuleman <meuleman@broadcom.com>
+> Cc: John Linville <linville@tuxdriver.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: brcm80211-dev-list@broadcom.com
+> ---
+>  drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> index f6990f2..8d32721 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+> @@ -201,7 +201,8 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+>  		brcmf_dbg(EVENT, "adding %s (%pM)\n", emsg->ifname,
+>  			  emsg->addr);
+>  		ifp = brcmf_add_if(drvr, ifevent->bssidx, ifevent->ifidx,
+> -				   emsg->ifname, NET_NAME_UNKNOWN, emsg->addr);
+> +				   emsg->ifname, NET_NAME_PREDICTABLE,
+> +				   emsg->addr);
+>  		if (IS_ERR(ifp))
+>  			return;
+>  		brcmf_fws_add_interface(ifp);
+> -- 
+> 1.9.3
+> 
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9a6b113..b2ca47a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1055,6 +1055,14 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		ctstimeout += 48 - sifstime - ah->slottime;
- 	}
- 
-+	if (ah->dynack.enabled) {
-+		acktimeout = ah->dynack.ackto;
-+		ctstimeout = acktimeout;
-+		slottime = (acktimeout - 3) / 2;
-+	} else {
-+		ah->dynack.ackto = acktimeout;
-+	}
-+
- 	ath9k_hw_set_sifs_time(ah, sifstime);
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
