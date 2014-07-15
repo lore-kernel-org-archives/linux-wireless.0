@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:60876 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754889AbaF3WXJ (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45566 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965065AbaGOX1e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 18:23:09 -0400
-Received: by mail-pa0-f41.google.com with SMTP id fb1so9413153pad.28
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 15:23:09 -0700 (PDT)
-Date: Mon, 30 Jun 2014 15:23:03 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Eliad Peller <eliad@wizery.com>
-Subject: Re: [PATCH] regulatory: add NULL to alpha2
-Message-ID: <20140630222303.GO1390@garbanzo.do-not-panic.com> (sfid-20140701_002329_250280_2CB217C0)
-References: <1402471415-22723-1-git-send-email-arik@wizery.com>
- <1403516586.4418.13.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403516586.4418.13.camel@jlt4.sipsolutions.net>
+	Tue, 15 Jul 2014 19:27:34 -0400
+Date: Tue, 15 Jul 2014 16:27:31 -0700 (PDT)
+Message-Id: <20140715.162731.976775911116907392.davem@davemloft.net> (sfid-20140716_012750_706506_A0F5DED6)
+To: fabf@skynet.be
+Cc: linux-kernel@vger.kernel.org, joe@perches.com,
+	v9fs-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-zigbee-devel@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+	linux-s390@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, linux-sctp@vger.kernel.org,
+	tipc-discussion@lists.sourceforge.net
+Subject: Re: [PATCH 00/16] net: remove unnecessary break after goto/return
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1405355467-7350-1-git-send-email-fabf@skynet.be>
+References: <1405355467-7350-1-git-send-email-fabf@skynet.be>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 11:43:06AM +0200, Johannes Berg wrote:
-> On Wed, 2014-06-11 at 10:23 +0300, Arik Nemtsov wrote:
-> > From: Eliad Peller <eliad@wizery.com>
-> > 
-> > alpha2 is defined as 2-chars array, but is used in multiple
-> > places as string (e.g. with nla_put_string calls), which
-> > might leak kernel data.
-> > 
-> > Solve it by simply adding an extra char for the NULL
-> > terminator, making such operations safe.
-> 
-> I'm beginning to think that it would make more sense to just not use
-> nla_put_string()?
+From: Fabian Frederick <fabf@skynet.be>
+Date: Mon, 14 Jul 2014 18:30:50 +0200
 
-If the reason for adding the check was because of a new use case
-then yes, but other than that are there other reasons you were
-considering?
+> Small patchset addressing break redundancy on net branch
+> (suggested by Joe Perches).
 
- Luis
+Series applied, thanks Fabian.
