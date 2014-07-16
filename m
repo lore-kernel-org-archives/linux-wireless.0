@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51334 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbaGMKSc (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:43275 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760814AbaGPIiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 06:18:32 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so2850335wgh.3
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 03:18:31 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [RFCv2 07/10] ath9k: enable control frame reception
-Date: Sun, 13 Jul 2014 12:18:21 +0200
-Message-Id: <1405246704-7489-8-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140713_121847_302076_C3A438C4)
-In-Reply-To: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Wed, 16 Jul 2014 04:38:13 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Sven Eckelmann <sven@narfation.org>
+Subject: Re: [RFC 0/2] ath10k spectral scan support
+Date: Wed, 16 Jul 2014 10:38:09 +0200
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com> <4111404.UJkIUxkzQm@bentobox>
+In-Reply-To: <4111404.UJkIUxkzQm@bentobox>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201407161038.10130.sw@simonwunderlich.de> (sfid-20140716_103819_760373_7660271C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable control frame reception if dynamic ack processing is enabled
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Wednesday 16 July 2014 08:24:58 Michal Kazior wrote:
+> > >  * So far, we always get 64 bins of fft data in the samples, even if we
+> > >  
+> > >    are in HT40 or VHT80 mode. That doesn't seem right, as there should
+> > >    be more bins for wider channels (e.g. 128 or 256 bins). Is there any
+> > >    parameter to change in the configuration to get the output from
+> > >    multiple channels / higher bandwidth?
+> > 
+> > Hmm.. I suspect this may be because you use scan command. Scanning
+> > uses channel list which is programmed with legacy modes a and g
+> > (implying 20Mhz). Perhaps that's the limiting factor now. Using other
+> > (wider) modes breaks scan from what I remember but it might be worth
+> > checking out if it impacts fft bin sizes.
+> 
+> I did the HT80 and HT40 stuff on a single channel in the spectral
+> "background" mode. They reports from the firmware (10.1) still only had 64
+> bins. The HT80 stuff wasn't tested with the "main" firmware because it
+> refused to switch to HT80 mode as AP/Sta.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ad317a4..cc5ba4a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -398,7 +398,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->sc_ah->is_monitoring)
- 		rfilt |= ATH9K_RX_FILTER_PROM;
- 
--	if (sc->rx.rxfilter & FIF_CONTROL)
-+	if ((sc->rx.rxfilter & FIF_CONTROL) || sc->sc_ah->dynack.enabled)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
--- 
-1.9.1
+Just to clarify this a little more, we tried AP (running hostapd) as well a 
+STA in 40 and 80 MHz modes. We always got 64 bins returned.
 
+Cheers,
+    Simon
