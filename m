@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35881 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaGBVyM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 17:54:12 -0400
-Date: Wed, 2 Jul 2014 14:54:10 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/6] lib / string_helpers: clean up test suite
-Message-Id: <20140702145410.e1885ad85c25a6f4b6cef2c4@linux-foundation.org> (sfid-20140702_235439_654540_F757DBE6)
-In-Reply-To: <1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from narfation.org ([79.140.41.39]:47966 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755689AbaGPIdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 04:33:08 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [RFC 0/2] ath10k spectral scan support
+Date: Wed, 16 Jul 2014 10:25:23 +0200
+Message-ID: <4111404.UJkIUxkzQm@bentobox> (sfid-20140716_103329_825020_31934BBC)
+In-Reply-To: <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com>
+References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed,  2 Jul 2014 16:20:24 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-
-> This patch prepares test suite for a following update. It introduces
-> test_string_check_buf() helper which checks the result and dumps an error.
+On Wednesday 16 July 2014 08:24:58 Michal Kazior wrote:
+> >  * So far, we always get 64 bins of fft data in the samples, even if we
+> >  
+> >    are in HT40 or VHT80 mode. That doesn't seem right, as there should
+> >    be more bins for wider channels (e.g. 128 or 256 bins). Is there any
+> >    parameter to change in the configuration to get the output from
+> >    multiple channels / higher bandwidth?
 > 
-> ...
->
-> --- a/lib/test-string_helpers.c
-> +++ b/lib/test-string_helpers.c
-> @@ -10,6 +10,26 @@
->  #include <linux/string.h>
->  #include <linux/string_helpers.h>
->  
-> +static __init bool test_string_check_buf(const char *name, unsigned int flags,
-> +					 char *in, size_t p,
-> +					 char *out_real, size_t q_real,
-> +					 char *out_test, size_t q_test)
-> +{
-> +	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
-> +		return true;
-> +
-> +	pr_err("Test '%s' failed: flags = %u\n", name, flags);
-> +
-> +	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
-> +		       in, p, true);
-> +	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
-> +		       out_test, q_test, true);
-> +	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
-> +		       out_real, q_real, true);
+> Hmm.. I suspect this may be because you use scan command. Scanning
+> uses channel list which is programmed with legacy modes a and g
+> (implying 20Mhz). Perhaps that's the limiting factor now. Using other
+> (wider) modes breaks scan from what I remember but it might be worth
+> checking out if it impacts fft bin sizes.
 
-Seems strange to mix KERN_ERR and KERN_WARNING.  The code's always been
-that way, but maybe it can be improved.
+I did the HT80 and HT40 stuff on a single channel in the spectral "background" 
+mode. They reports from the firmware (10.1) still only had 64 bins. The HT80 
+stuff wasn't tested with the "main" firmware because it refused to switch to 
+HT80 mode as AP/Sta.
 
-
+Kind regards,
+	Sven
