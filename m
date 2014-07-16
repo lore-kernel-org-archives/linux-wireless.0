@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:34232 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760509AbaGSLbK (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:33871 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753344AbaGPVXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 07:31:10 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so4452756wgg.12
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:09 -0700 (PDT)
+	Wed, 16 Jul 2014 17:23:30 -0400
+Received: by mail-wi0-f173.google.com with SMTP id f8so6037655wiw.12
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:29 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/16] staging: vt6656: rename abyPermanentNetAddr to permanent_net_addr
-Date: Sat, 19 Jul 2014 12:30:11 +0100
-Message-Id: <1405769418-2815-9-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133125_296908_1B8A0865)
-In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
-References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 13/21] staging: vt6656: replace DBG_PRT error messages
+Date: Wed, 16 Jul 2014 22:22:03 +0100
+Message-Id: <1405545731-6082-13-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232334_934699_19ACBB09)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing prefix and camel case
+replace with dev_err
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/device.h   | 2 +-
- drivers/staging/vt6656/main_usb.c | 7 +++----
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/vt6656/main_usb.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 9287948..0c18e26 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -307,7 +307,7 @@ struct vnt_private {
- 	struct vnt_cmd_card_init init_command;
- 	struct vnt_rsp_card_init init_response;
- 	u8 current_net_addr[ETH_ALEN];
--	u8 abyPermanentNetAddr[ETH_ALEN];
-+	u8 permanent_net_addr[ETH_ALEN];
- 
- 	int bExistSWNetAddr;
- 
 diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index e8e4de5..0bf207c 100644
+index 021e892..ed56b60 100644
 --- a/drivers/staging/vt6656/main_usb.c
 +++ b/drivers/staging/vt6656/main_usb.c
-@@ -334,9 +334,8 @@ static int device_init_registers(struct vnt_private *priv)
+@@ -61,9 +61,6 @@
+ #include "channel.h"
+ #include "int.h"
+ 
+-/* static int msglevel = MSG_LEVEL_DEBUG; */
+-static int msglevel = MSG_LEVEL_INFO;
+-
+ /*
+  * define module options
+  */
+@@ -567,8 +564,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
+ 		/* allocate URBs */
+ 		tx_context->urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 		if (!tx_context->urb) {
+-			DBG_PRT(MSG_LEVEL_ERR,
+-				KERN_ERR "alloc tx urb failed\n");
++			dev_err(&priv->usb->dev, "alloc tx urb failed\n");
+ 			goto free_tx;
+ 		}
+ 
+@@ -590,15 +586,13 @@ static bool device_alloc_bufs(struct vnt_private *priv)
+ 		/* allocate URBs */
+ 		rcb->pUrb = usb_alloc_urb(0, GFP_ATOMIC);
+ 		if (rcb->pUrb == NULL) {
+-			DBG_PRT(MSG_LEVEL_ERR, KERN_ERR
+-				" Failed to alloc rx urb\n");
++			dev_err(&priv->usb->dev, "Failed to alloc rx urb\n");
+ 			goto free_rx_tx;
+ 		}
+ 
+ 		rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
+ 		if (rcb->skb == NULL) {
+-			DBG_PRT(MSG_LEVEL_ERR, KERN_ERR
+-						" Failed to alloc rx skb\n");
++			dev_err(&priv->usb->dev, "Failed to alloc rx skb\n");
+ 			goto free_rx_tx;
+ 		}
+ 
+@@ -611,13 +605,13 @@ static bool device_alloc_bufs(struct vnt_private *priv)
+ 
+ 	priv->pInterruptURB = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (priv->pInterruptURB == NULL) {
+-		DBG_PRT(MSG_LEVEL_ERR, KERN_ERR"Failed to alloc int urb\n");
++		dev_err(&priv->usb->dev, "Failed to alloc int urb\n");
+ 		goto free_rx_tx;
  	}
  
- 	/* get permanent network address */
--	memcpy(priv->abyPermanentNetAddr, init_rsp->net_addr, 6);
--	memcpy(priv->current_net_addr,
--				priv->abyPermanentNetAddr, ETH_ALEN);
-+	memcpy(priv->permanent_net_addr, init_rsp->net_addr, 6);
-+	memcpy(priv->current_net_addr, priv->permanent_net_addr, ETH_ALEN);
- 
- 	/* if exist SW network address, use it */
- 	dev_dbg(&priv->usb->dev, "Network address = %pM\n",
-@@ -970,7 +969,7 @@ int vnt_init(struct vnt_private *priv)
- 	if (!(device_init_registers(priv)))
- 		return -EAGAIN;
- 
--	SET_IEEE80211_PERM_ADDR(priv->hw, priv->abyPermanentNetAddr);
-+	SET_IEEE80211_PERM_ADDR(priv->hw, priv->permanent_net_addr);
- 
- 	vnt_init_bands(priv);
- 
+ 	priv->int_buf.data_buf = kmalloc(MAX_INTERRUPT_SIZE, GFP_KERNEL);
+ 	if (priv->int_buf.data_buf == NULL) {
+-		DBG_PRT(MSG_LEVEL_ERR, KERN_ERR"Failed to alloc int buf\n");
++		dev_err(&priv->usb->dev, "Failed to alloc int buf\n");
+ 		usb_free_urb(priv->pInterruptURB);
+ 		goto free_rx_tx;
+ 	}
 -- 
 2.0.1
 
