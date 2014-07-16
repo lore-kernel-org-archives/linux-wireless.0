@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:44419 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965154AbaGESZA (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:43681 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753734AbaGPVXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2014 14:25:00 -0400
-Received: by mail-wg0-f42.google.com with SMTP id n12so963436wgh.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:59 -0700 (PDT)
+	Wed, 16 Jul 2014 17:23:42 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so1553673wgg.16
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:41 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6656: Include re_alloc_skb within lock.
-Date: Sat,  5 Jul 2014 19:24:26 +0100
-Message-Id: <1404584667-3582-7-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202507_601978_09772D63)
-In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
-References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 20/21] staging: vt6656: main_usb remove static function declarations.
+Date: Wed, 16 Jul 2014 22:22:10 +0100
+Message-Id: <1405545731-6082-20-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232353_631259_769D88AE)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove variable re_alloc_skb and merge code within urb->actual_length.
+All these functions are in visibility order.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ drivers/staging/vt6656/main_usb.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index c5d4047..a7af4f58 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -276,7 +276,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 	struct vnt_rcb *rcb = urb->context;
- 	struct vnt_private *priv = rcb->pDevice;
- 	unsigned long flags;
--	int re_alloc_skb = false;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 4bcdf8e..932382f 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -115,24 +115,6 @@ static const long frequency_list[] = {
+ };
+ */
  
- 	switch (urb->status) {
- 	case 0:
-@@ -294,24 +293,22 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 	if (urb->actual_length) {
- 		spin_lock_irqsave(&priv->lock, flags);
- 
--		if (vnt_rx_data(priv, rcb, urb->actual_length))
--			re_alloc_skb = true;
-+		if (vnt_rx_data(priv, rcb, urb->actual_length)) {
-+			rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
-+			if (!rcb->skb) {
-+				dev_dbg(&priv->usb->dev,
-+					"Failed to re-alloc rx skb\n");
- 
--		spin_unlock_irqrestore(&priv->lock, flags);
--	}
+-static int vt6656_probe(struct usb_interface *intf,
+-			const struct usb_device_id *id);
+-static void vt6656_disconnect(struct usb_interface *intf);
 -
--	if (re_alloc_skb) {
--		rcb->skb = dev_alloc_skb(priv->rx_buf_sz);
--		if (!rcb->skb) {
--			dev_dbg(&priv->usb->dev, "Failed to re-alloc rx skb\n");
+-#ifdef CONFIG_PM	/* Minimal support for suspend and resume */
+-static int vt6656_suspend(struct usb_interface *intf, pm_message_t message);
+-static int vt6656_resume(struct usb_interface *intf);
+-#endif /* CONFIG_PM */
 -
--			rcb->bBoolInUse = false;
+-static int device_init_registers(struct vnt_private *pDevice);
 -
--			return;
-+				rcb->bBoolInUse = false;
-+				spin_unlock_irqrestore(&priv->lock, flags);
-+				return;
-+			}
- 		}
- 
- 		urb->transfer_buffer = skb_put(rcb->skb,
- 						skb_tailroom(rcb->skb));
-+
-+		spin_unlock_irqrestore(&priv->lock, flags);
- 	}
- 
- 	if (usb_submit_urb(urb, GFP_ATOMIC)) {
+-static void device_free_tx_bufs(struct vnt_private *pDevice);
+-static void device_free_rx_bufs(struct vnt_private *pDevice);
+-static void device_free_int_bufs(struct vnt_private *pDevice);
+-static bool device_alloc_bufs(struct vnt_private *pDevice);
+-
+-static void usb_device_reset(struct vnt_private *pDevice);
+-
+ static void device_set_options(struct vnt_private *priv)
+ {
+ 	/* Set number of TX buffers */
 -- 
-1.9.1
+2.0.1
 
