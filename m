@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53134 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbaGUESP (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:48146 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933056AbaGPGZB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 00:18:15 -0400
-Date: Sun, 20 Jul 2014 21:18:13 -0700 (PDT)
-Message-Id: <20140720.211813.942862864883062133.davem@davemloft.net> (sfid-20140721_061837_835506_73CF0BF8)
-To: benoit.taine@lip6.fr
-Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
-	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
-	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
-	linux-rdma@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	industrypack-devel@lists.sourceforge.net,
-	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
-	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
-	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 16 Jul 2014 02:25:01 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so377337wes.26
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 23:24:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de>
+References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de>
+Date: Wed, 16 Jul 2014 08:24:58 +0200
+Message-ID: <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com> (sfid-20140716_082505_650240_79F8FBD8)
+Subject: Re: [RFC 0/2] ath10k spectral scan support
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>, sven@narfation.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benoit Taine <benoit.taine@lip6.fr>
-Date: Fri, 18 Jul 2014 17:26:47 +0200
+On 15 July 2014 18:32, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> This is the first patchset iteration for review to implement the ath10k
+> spectral scan feature. The patchset is still experimental, but we were
+> able to detect our analogue 5.8 GHz TV repeater in the sample data. :)
 
-> We should prefer `const struct pci_device_id` over
-> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-> This issue was reported by checkpatch.
-> 
-> A simplified version of the semantic patch that makes this change is as
-> follows (http://coccinelle.lip6.fr/):
-> 
-> // <smpl>
-> 
-> @@
-> identifier i;
-> declarer name DEFINE_PCI_DEVICE_TABLE;
-> initializer z;
-> @@
-> 
-> - DEFINE_PCI_DEVICE_TABLE(i)
-> + const struct pci_device_id i[]
-> = z;
-> 
-> // </smpl>
-> 
-> I have 103 patches ready, and will only send a few for you to judge if
-> it is useful enough, and to prevent from spamming too much.
+Awesome!
 
-I'm fine with this wrt. the networking changes, but I don't think this should
-be merged via my tree.
+
+[...]
+>  * So far, we always get 64 bins of fft data in the samples, even if we
+>    are in HT40 or VHT80 mode. That doesn't seem right, as there should
+>    be more bins for wider channels (e.g. 128 or 256 bins). Is there any
+>    parameter to change in the configuration to get the output from
+>    multiple channels / higher bandwidth?
+
+Hmm.. I suspect this may be because you use scan command. Scanning
+uses channel list which is programmed with legacy modes a and g
+(implying 20Mhz). Perhaps that's the limiting factor now. Using other
+(wider) modes breaks scan from what I remember but it might be worth
+checking out if it impacts fft bin sizes.
+
+
+Michał
