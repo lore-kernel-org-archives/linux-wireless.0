@@ -1,88 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:55075 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752406AbaGJS5E (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:33650 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934406AbaGPNuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:57:04 -0400
-Received: by mail-wi0-f173.google.com with SMTP id cc10so5112325wib.12
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:00 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 16 Jul 2014 09:50:03 -0400
+Received: by mail-wg0-f49.google.com with SMTP id k14so907261wgh.20
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 06:49:55 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/16] staging: vt6656: move s_vFillCTSHead to vnt_rxtx_cts
-Date: Thu, 10 Jul 2014 19:56:11 +0100
-Message-Id: <1405018577-6832-10-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205741_807760_25976D8F)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Ben Greear <greearb@candelatech.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: prevent some tx flushing failures
+Date: Wed, 16 Jul 2014 15:41:13 +0200
+Message-Id: <1405518073-14513-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_155152_259712_FE427AA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add need_mic and union vnt_tx_data_head head positions from s_vGenerateTxParameter.
+Firmware could request inspection of some
+submitted tx requests. Since the callback wasn't
+implemented it was possible to bleed tx msdu_ids
+which could translate to tx flushing timeouts.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+There's nothing ath10k can do to help firmware
+with tx processing now so just report all tx
+frames as already inspected to prevent firmware
+from sending up inspection events and force it to
+report regular tx completion indications with
+discard status.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/rxtx.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 7 +++++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 0ff8b50..c8a38c5 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -651,10 +651,12 @@ static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index eebc860..318efc3 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1516,6 +1516,13 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		trace_ath10k_htt_stats(skb->data, skb->len);
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
++		/* Firmware can return tx frames if it's unable to fully
++		 * process them and suspects host may be able to fix it. ath10k
++		 * sends all tx frames as already inspected so this shouldn't
++		 * happen unless fw has a bug.
++		 */
++		ath10k_warn("received an unexpected htt tx inspect event\n");
++		break;
+ 	case HTT_T2H_MSG_TYPE_RX_ADDBA:
+ 	case HTT_T2H_MSG_TYPE_RX_DELBA:
+ 	case HTT_T2H_MSG_TYPE_RX_FLUSH:
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index accb6b4..8b27bfc 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -531,6 +531,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
+ 	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
  
- static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
- 	union vnt_tx_head *tx_head, u8 pkt_type, u32 frame_size,
--	int need_ack, u16 current_rate)
-+	int need_ack, u16 current_rate, bool need_mic)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	struct vnt_rrv_time_cts *buf = &tx_head->tx_cts.cts;
-+	union vnt_tx_data_head *head = &tx_head->tx_cts.tx.head;
++	/* Prevent firmware from sending up tx inspection requests. There's
++	 * nothing ath10k can do with frames requested for inspection so force
++	 * it to simply rely a regular tx completion with discard status.
++	 */
++	flags1 |= HTT_DATA_TX_DESC_FLAGS1_POSTPONED;
 +
- 
- 	buf->rrv_time_a = vnt_rxtx_rsvtime_le16(priv, pkt_type,
- 					frame_size, current_rate, need_ack);
-@@ -664,7 +666,12 @@ static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
- 	buf->cts_rrv_time_ba = s_uGetRTSCTSRsvTime(priv, 3,
- 			pkt_type, frame_size, current_rate);
- 
--	return 0;
-+	if (need_mic)
-+		head = &tx_head->tx_cts.tx.mic.head;
-+
-+	/* Fill CTS */
-+	return s_vFillCTSHead(tx_context, pkt_type, head, frame_size,
-+							need_ack, current_rate);
- }
- 
- static u16 vnt_rxtx_ab(struct vnt_usb_send_context *tx_context,
-@@ -728,20 +735,13 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 					byPktType, cbFrameSize, bNeedACK,
- 						wCurrentRate, need_mic);
- 		} else {
--			vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
--				byPktType, cbFrameSize, bNeedACK, wCurrentRate);
--
--			if (need_mic) {
-+			if (need_mic)
- 				*mic_hdr = &tx_buffer->
- 						tx_head.tx_cts.tx.mic.hdr;
--				head = &tx_buffer->tx_head.tx_cts.tx.mic.head;
--			} else {
--				head = &tx_buffer->tx_head.tx_cts.tx.head;
--			}
--
--			/* Fill CTS */
--			return s_vFillCTSHead(tx_context, byPktType,
--				head, cbFrameSize, bNeedACK, wCurrentRate);
-+
-+			return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
-+					byPktType, cbFrameSize, bNeedACK,
-+						wCurrentRate, need_mic);
- 		}
- 	} else if (byPktType == PK_TYPE_11A) {
- 		if (need_mic) {
+ 	skb_cb->htt.txbuf->cmd_hdr.msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
+ 	skb_cb->htt.txbuf->cmd_tx.flags0 = flags0;
+ 	skb_cb->htt.txbuf->cmd_tx.flags1 = __cpu_to_le16(flags1);
 -- 
-1.9.1
+1.8.5.3
 
