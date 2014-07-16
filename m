@@ -1,83 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:42984 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514AbaGWTPa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 15:15:30 -0400
-Received: by mail-pd0-f170.google.com with SMTP id g10so2151325pdj.15
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 12:15:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
-References: <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
- <20140630222132.GN1390@garbanzo.do-not-panic.com> <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com>
- <20140702020442.GP1390@garbanzo.do-not-panic.com> <CA+XVXffvG6GagBPMZF+iogaAeYV0kUoi4BX68J0fxOfsHjE70A@mail.gmail.com>
- <20140703221901.GS1390@garbanzo.do-not-panic.com> <CA+XVXffnDs4oCnyD0NzmyG6=jxqXwUFd+Tj8XAsWGC1bgcMH8A@mail.gmail.com>
- <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
- <20140708025719.GU1390@garbanzo.do-not-panic.com> <CA+XVXffMM9W76ysqgs=pyAHubavefgjqW5u8bNSZxTX69j7nzg@mail.gmail.com>
- <20140723004132.GX1390@garbanzo.do-not-panic.com> <CA+XVXfd-4jYUy3oz4cOqBprG358X2D9m7Pgq_JrkZKHERm6f3A@mail.gmail.com>
- <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 23 Jul 2014 22:15:13 +0300
-Message-ID: <CA+XVXfcHwOAndEfUo3YtZxbgHtC12qC22QcpVXZFM41WKn0LiQ@mail.gmail.com> (sfid-20140723_211536_812299_45CA8701)
-Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:37621 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752757AbaGPVwC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 17:52:02 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [ath9k-devel] [PATCH] ath9k: set up tx power into the MRR
+From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1405545610-17285-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Date: Wed, 16 Jul 2014 23:51:20 +0200
+Cc: linville@tuxdriver.com, ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <1CE47156-DE51-46C6-AE39-C895AF9489EB@net.t-labs.tu-berlin.de> (sfid-20140716_235249_112396_C7D0ADAD)
+References: <1405545610-17285-1-git-send-email-lorenzo.bianconi83@gmail.com>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2014 at 9:06 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
->> I also suggest adding another argument to regulatory_hint_regd() to
->> allow the driver to specify the intersection policy. It seems that
->> currently the code (__reg_process_hint_driver()) only allows to
->> intersect, which is not appropriate to us.
->> So the final form can look like:
->>
->> regulatory_hint_regd(struct wiphy,
->>                               const struct ieee80211_regdomain *regd,
->>                               enum nl80211_driver_reg_hint_type,
->>                               enum nl80211_reg_intersect_policy policy);
->>
->> enum nl80211_reg_intersect_policy {
->>          REG_INTERSECT_POLICY_DEFAULT,
->>          REG_INTERSECT_POLICY_OVERRIDE,
->>          REG_INTERSECT_POLICY_INTERSECT,
->> };
->
-> We don't want to use the driver regulatory data to help the regulatory
-> core at all because I noted it would get things messy fast. That would
-> mean you never have to deal with any intersection or the cfg80211
-> regulatory domain at all. So none of this would be needed. The hint
-> would just be for the driver. Its sad that driver regulatory data
-> can't contribute to the regulatory core but I think its best this way
-> to keep things clean and simple. If the driver does want to help the
-> best way is to contribute to wireless-regdb and move to that.
+Hi Lozenro,
 
-I guess I didn't get that one.
+As I am shaping up my TPC code and might comment as well  :)
 
-Isn't that problematic for cell-base hints coming from usermode? I
-mean, what wiphy are they from?
-It's also problematic because currently usermode uses the
-cfg80211_regdomain for its regulatory data (NL80211_CMD_GET_REG).
+What about defining just:
 
-Granted, all of this can be changed, but I think it's easier to update
-the global regdomain.
+#define AR_XmitPower        0x003f0000
+#define AR_XmitPower_S      16
+#define AR_XmitPower2          0x3f000000
+#define AR_XmitPower2_S                24
 
-The cell-base hints from usermode with the regdomain data coming from
-the FW was the original reason to introduce the get_regd() callback.
-For driver originating hints I agree regulatory_hint_regd() is a
-cleaner solution.
+.. as AR_XmitPower1 == AR_XmitPower2 == AR_XmitPower3 (with its shift as well) and AR_XmitPower == AR_XmitPower0
 
-I feel the case of two different cards, one of which uses get_regd()
-and the other wireless-regdb is a non-existent corner-case. And we're
-throwing out the baby with the bathwater.
-Why write extra code for a case that doesn't happen? How about adding
-appropriate regulatory_flags to ensure this can't happen?
+Or do you have someting in mind to have the same value seperated ?
 
-Overall it seems to be the API you've suggested in the previous email
-with the addition of get_regd() for usermode hints can work well,
-updating the global cfg80211_regdomain.
+Greetings from Berlin
+Thomas
 
-Regards,
-Arik
+> Set up tx power for each MRR segment in the tx descriptor
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> ---
+> drivers/net/wireless/ath/ath9k/ar9002_mac.c |  6 +++++-
+> drivers/net/wireless/ath/ath9k/ar9003_mac.c |  6 +++++-
+> drivers/net/wireless/ath/ath9k/mac.h        | 10 ++++++++--
+> 3 files changed, 18 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+> index 741b38d..59af9f9 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+> @@ -281,7 +281,7 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+> 
+> 	ACCESS_ONCE(ads->ds_ctl0) = (i->pkt_len & AR_FrameLen)
+> 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+> -		| SM(i->txpower, AR_XmitPower)
+> +		| SM(i->txpower, AR_XmitPower0)
+> 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+> 		| (i->flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
+> 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
+> @@ -306,6 +306,10 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+> 		| set11nRateFlags(i->rates, 2)
+> 		| set11nRateFlags(i->rates, 3)
+> 		| SM(i->rtscts_rate, AR_RTSCTSRate);
+> +
+> +	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower, AR_XmitPower1);
+> +	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower, AR_XmitPower2);
+> +	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower, AR_XmitPower3);
+> }
+> 
+> static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> index 729ffbf..71e38e8 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> @@ -101,7 +101,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+> 
+> 	ACCESS_ONCE(ads->ctl11) = (i->pkt_len & AR_FrameLen)
+> 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+> -		| SM(i->txpower, AR_XmitPower)
+> +		| SM(i->txpower, AR_XmitPower0)
+> 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+> 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
+> 		| (i->flags & ATH9K_TXDESC_LOWRXCHAIN ? AR_LowRxChain : 0)
+> @@ -151,6 +151,10 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+> 		| SM(i->rtscts_rate, AR_RTSCTSRate);
+> 
+> 	ACCESS_ONCE(ads->ctl19) = AR_Not_Sounding;
+> +
+> +	ACCESS_ONCE(ads->ctl20) = SM(i->txpower, AR_XmitPower1);
+> +	ACCESS_ONCE(ads->ctl21) = SM(i->txpower, AR_XmitPower2);
+> +	ACCESS_ONCE(ads->ctl22) = SM(i->txpower, AR_XmitPower3);
+> }
+> 
+> static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
+> diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+> index da76867..6c56caf 100644
+> --- a/drivers/net/wireless/ath/ath9k/mac.h
+> +++ b/drivers/net/wireless/ath/ath9k/mac.h
+> @@ -346,8 +346,14 @@ struct ar5416_desc {
+> #define AR_FrameLen         0x00000fff
+> #define AR_VirtMoreFrag     0x00001000
+> #define AR_TxCtlRsvd00      0x0000e000
+> -#define AR_XmitPower        0x003f0000
+> -#define AR_XmitPower_S      16
+> +#define AR_XmitPower0       0x003f0000
+> +#define AR_XmitPower0_S     16
+> +#define AR_XmitPower1	    0x3f000000
+> +#define AR_XmitPower1_S     24
+> +#define AR_XmitPower2	    0x3f000000
+> +#define AR_XmitPower2_S     24
+> +#define AR_XmitPower3	    0x3f000000
+> +#define AR_XmitPower3_S     24
+> #define AR_RTSEnable        0x00400000
+> #define AR_VEOL             0x00800000
+> #define AR_ClrDestMask      0x01000000
+> -- 
+> 1.9.1
+> 
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+
