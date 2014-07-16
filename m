@@ -1,36 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932207AbaGXQAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 12:00:23 -0400
-Message-ID: <1406217620.5015.2.camel@dcbw.local> (sfid-20140724_180030_130896_D3150D34)
-Subject: Re: How to get RSSI periodically
-From: Dan Williams <dcbw@redhat.com>
-To: Jean-Marie Lemetayer <jeanmarie.lemetayer@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 24 Jul 2014 11:00:20 -0500
-In-Reply-To: <CAAdc0hyDepy7zn+1TQsjcZpkSkQrwFhbkPBJoH0vYKqbqkktAg@mail.gmail.com>
-References: <CAAdc0hyDepy7zn+1TQsjcZpkSkQrwFhbkPBJoH0vYKqbqkktAg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:56037 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857AbaGPVXk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 17:23:40 -0400
+Received: by mail-wi0-f174.google.com with SMTP id d1so6912877wiv.13
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 19/21] staging: vt6656: main_usb remove dead module params macros
+Date: Wed, 16 Jul 2014 22:22:09 +0100
+Message-Id: <1405545731-6082-19-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232348_254667_CB84A2D4)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-07-24 at 17:25 +0200, Jean-Marie Lemetayer wrote:
-> Hi,
-> 
-> I am looking for a way to get the RSSI of the SELECTED network with
-> the wpa_supplicant (2.1). To update periodically the status connection
-> icon of my app.
-> 
-> I known that I can get it with the command: 'bss <bssid>' but it seems
-> that this information is updated only when perform a scan.
-> 
-> Have I miss something simpler than doing a background scan on the freq
-> of the SELECTED network ?
+All these macros relate to module parameters already removed
 
-Try the SIGNAL_POLL control interface command (called "signal_poll" for
-wpa_cli).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 49 ---------------------------------------
+ 1 file changed, 49 deletions(-)
 
-Dan
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 0e65795..4bcdf8e 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -82,51 +82,9 @@ static int vnt_tx_buffers = TX_DESC_DEF0;
+ module_param_named(tx_buffers, vnt_rx_buffers, int, 0644);
+ MODULE_PARM_DESC(tx_buffers, "Number of receive usb tx buffers");
+ 
+-
+-#define CHANNEL_DEF 6
+-
+-/* PreambleType[] is the preamble length used for transmit.
+-   0: indicate allows long preamble type
+-   1: indicate allows short preamble type
+-*/
+-
+-#define PREAMBLE_TYPE_DEF     1
+ #define RTS_THRESH_DEF     2347
+ #define FRAG_THRESH_DEF     2346
+-#define DATA_RATE_DEF     13
+-/* datarate[] index
+-   0: indicate 1 Mbps   0x02
+-   1: indicate 2 Mbps   0x04
+-   2: indicate 5.5 Mbps 0x0B
+-   3: indicate 11 Mbps  0x16
+-   4: indicate 6 Mbps   0x0c
+-   5: indicate 9 Mbps   0x12
+-   6: indicate 12 Mbps  0x18
+-   7: indicate 18 Mbps  0x24
+-   8: indicate 24 Mbps  0x30
+-   9: indicate 36 Mbps  0x48
+-  10: indicate 48 Mbps  0x60
+-  11: indicate 54 Mbps  0x6c
+-  12: indicate 72 Mbps  0x90
+-  13: indicate auto rate
+-*/
+-#define OP_MODE_DEF     0
+-
+-/* OpMode[] is used for transmit.
+-   0: indicate infrastruct mode used
+-   1: indicate adhoc mode used
+-   2: indicate AP mode used
+-*/
+-
+-/* PSMode[]
+-   0: indicate disable power saving mode
+-   1: indicate enable power saving mode
+-*/
+-
+-#define PS_MODE_DEF     0
+-
+ #define SHORT_RETRY_DEF     8
+-
+ #define LONG_RETRY_DEF     4
+ 
+ /* BasebandType[] baseband type selected
+@@ -137,13 +95,6 @@ MODULE_PARM_DESC(tx_buffers, "Number of receive usb tx buffers");
+ 
+ #define BBP_TYPE_DEF     2
+ 
+-/* 80211hEnable[]
+-   0: indicate disable 802.11h
+-   1: indicate enable 802.11h
+-*/
+-
+-#define X80211h_MODE_DEF     0
+-
+ /*
+  * Static vars definitions
+  */
+-- 
+2.0.1
 
