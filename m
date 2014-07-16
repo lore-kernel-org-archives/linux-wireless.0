@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61621 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871AbaGCKtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 06:49:17 -0400
-Message-ID: <1404384546.5102.71.camel@smile.fi.intel.com> (sfid-20140703_124934_472883_223CD4E4)
-Subject: Re: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Date: Thu, 03 Jul 2014 13:49:06 +0300
-In-Reply-To: <1404318611.14624.80.camel@joe-AO725>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404308611.14624.78.camel@joe-AO725>
-	 <1404309961.5102.35.camel@smile.fi.intel.com>
-	 <1404318611.14624.80.camel@joe-AO725>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f179.google.com ([74.125.82.179]:39192 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857AbaGPVXp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 17:23:45 -0400
+Received: by mail-we0-f179.google.com with SMTP id u57so1527148wes.24
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:44 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 21/21] staging: vt6656: Remove commented out long frequency_list
+Date: Wed, 16 Jul 2014 22:22:11 +0100
+Message-Id: <1405545731-6082-21-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232357_393520_1DAC447D)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-02 at 09:30 -0700, Joe Perches wrote:
-> On Wed, 2014-07-02 at 17:06 +0300, Andy Shevchenko wrote:
-> > On Wed, 2014-07-02 at 06:43 -0700, Joe Perches wrote:
-> > > On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
-> > > > In kernel we have function to escape a given string. Let's use it instead of
-> > > > custom approach.
-> > > > 
-> > > > This fixes a bug. The current implementation wrongly prints octal numbers: only
-> > > > two first digits are used in case when 3 are required and the rest of the
-> > > > string ends up cut off.
-> > 
-> > []
-> > 
-> > > This code looks like it was adapted from the old print_mac
-> > > ethernet code that was eventually replaced by a vsprintf
-> > > pointer extension %pM
-> > > 
-> > > So a better way to do this might be to add and use yet
-> > > another vsprintf %p<foo> extension for ssids.
-> > 
-> > Might be, but it
-> >  - doesn't reduce necessity of string_escape_mem (not only ssid are
-> > escaped in kernel)
-> >  - prevents user to choose a rule what exactly their would like to
-> > escape (look at the other patches against ssid escaping)
-> > 
-> 
-> %pE<FLAGS> would allow the same arbitrary combinations
-> of your flags.
+These frequencies are already defined in new tables channel.c
 
-Makes sense. 
-Can do this as a separate patch.
-Though I would have a sane default for escaping SSIDs. I hope that one
-from print_ssid() could be the one.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 932382f..6a46203 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -104,17 +104,6 @@ static struct usb_device_id vt6656_table[] = {
+ 	{}
+ };
+ 
+-/* frequency list (map channels to frequencies) */
+-/*
+-static const long frequency_list[] = {
+-	2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467,
+-	2472, 2484, 4915, 4920, 4925, 4935, 4940, 4945, 4960, 4980, 5035, 5040,
+-	5045, 5055, 5060, 5080, 5170, 5180, 5190, 5200, 5210, 5220, 5230, 5240,
+-	5260, 5280, 5300, 5320, 5500, 5520, 5540, 5560, 5580, 5600, 5620, 5640,
+-	5660, 5680, 5700, 5745, 5765, 5785, 5805, 5825
+-};
+-*/
+-
+ static void device_set_options(struct vnt_private *priv)
+ {
+ 	/* Set number of TX buffers */
 -- 
-Andy Shevchenko <andriy.shevchenko@intel.com>
-Intel Finland Oy
+2.0.1
 
