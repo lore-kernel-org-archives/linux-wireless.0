@@ -1,72 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:56949 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070AbaGVIHG convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:65157 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbaGPLjZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 04:07:06 -0400
-Received: by mail-we0-f171.google.com with SMTP id p10so8814654wes.16
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 01:07:05 -0700 (PDT)
+	Wed, 16 Jul 2014 07:39:25 -0400
+Received: by mail-pd0-f179.google.com with SMTP id ft15so1094475pdb.38
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 04:39:25 -0700 (PDT)
+Message-ID: <53C66422.10702@gmail.com> (sfid-20140716_133929_396779_8AF32EB0)
+Date: Wed, 16 Jul 2014 17:08:10 +0530
+From: Varka Bhadram <varkabhadram@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1405945943-8303-3-git-send-email-sw@simonwunderlich.de>
-References: <1405945943-8303-1-git-send-email-sw@simonwunderlich.de>
-	<1405945943-8303-3-git-send-email-sw@simonwunderlich.de>
-Date: Tue, 22 Jul 2014 10:07:05 +0200
-Message-ID: <CA+BoTQ=ef+NsTK4q_A6oEw19TLXMANBmBeu7-1peERZ7Fmw0ww@mail.gmail.com> (sfid-20140722_100712_642289_8CD33529)
-Subject: Re: [PATCHv2 2/2] ath10k: add spectral scan feature
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	Sven Eckelmann <sven@narfation.org>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Content-Type: text/plain; charset=UTF-8
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org,
+	Denton Gentry <denton.gentry@gmail.com>
+Subject: Re: [PATCH v3] ath10k: fix Rx aggregation reordering
+References: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com> <1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 July 2014 14:32, Simon Wunderlich <sw@simonwunderlich.de> wrote:
-> Adds the spectral scan feature for ath10k. The spectral scan is triggered by
-> configuring a mode through a debugfs control file. Samples can be gathered via
-> another relay debugfs file.
-[...]
->  #endif /* CONFIG_ATH10K_DEBUGFS */
+On 07/16/2014 04:49 PM, Michal Kazior wrote:
+
+(...)
+
+> +static void ath10k_htt_rx_addba(struct ath10k *ar, struct htt_resp *resp)
+> +{
+> +	struct htt_rx_addba *ev = &resp->rx_addba;
+> +	struct ath10k_peer *peer;
+> +	struct ath10k_vif *arvif;
+> +	u16 info0, tid, peer_id;
+> +
+> +	info0 = __le32_to_cpu(ev->info0);
+> +	tid = MS(info0, HTT_RX_BA_INFO0_TID);
+> +	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
+> +
+> +	ath10k_dbg(ATH10K_DBG_HTT,
+> +		   "htt rx addba tid %hu peer_id %hu size %hhu\n",
+> +		   tid, peer_id, ev->window_size);
+> +
+> +	spin_lock_bh(&ar->data_lock);
+> +	peer = ath10k_peer_find_by_id(ar, peer_id);
+> +	if (!peer) {
+> +		ath10k_warn("received addba event for invalid peer_id: %hu\n",
+> +			    peer_id);
+> +		spin_unlock_bh(&ar->data_lock);
+> +		return;
+> +	}
+
+Here my concern in amount of time holding the lock...
+
+spin_lock_bh(&ar->data_lock);
+peer = ath10k_peer_find_by_id(ar, peer_id);
+if (!peer) {
+	spin_unlock_bh(&ar->data_lock);
+	ath10k_warn("received addba event for invalid peer_id: %hu\n",
+		    peer_id);
+	return;
+}
+
+No need to of putting the debug message inside the critical region...  :-)
+
+> +
+> +	arvif = ath10k_get_arvif(ar, peer->vdev_id);
+> +	if (!arvif) {
+> +		ath10k_warn("received addba event for invalid vdev_id: %u\n",
+> +			    peer->vdev_id);
+> +		spin_unlock_bh(&ar->data_lock);
+
+Ditto
+
+> +		return;
+> +	}
+> +
+> +	ath10k_dbg(ATH10K_DBG_HTT,
+> +		   "htt rx start rx ba session sta %pM tid %hu size %hhu\n",
+> +		   peer->addr, tid, ev->window_size);
+> +
+> +	ieee80211_start_rx_ba_session_offl(arvif->vif, peer->addr, tid);
+> +	spin_unlock_bh(&ar->data_lock);
+> +}
+> +
+> +static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
+> +{
+> +	struct htt_rx_addba *ev = &resp->rx_addba;
+> +	struct ath10k_peer *peer;
+> +	struct ath10k_vif *arvif;
+> +	u16 info0, tid, peer_id;
+> +
+> +	info0 = __le32_to_cpu(ev->info0);
+> +	tid = MS(info0, HTT_RX_BA_INFO0_TID);
+> +	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
+> +
+> +	ath10k_dbg(ATH10K_DBG_HTT,
+> +		   "htt rx delba tid %hu peer_id %hu\n",
+> +		   tid, peer_id);
+> +
+> +	spin_lock_bh(&ar->data_lock);
+> +	peer = ath10k_peer_find_by_id(ar, peer_id);
+> +	if (!peer) {
+> +		ath10k_warn("received addba event for invalid peer_id: %hu\n",
+> +			    peer_id);
+> +		spin_unlock_bh(&ar->data_lock);
+> +		return;
+
+Ditto..
+
+> +	}
+> +
+> +	arvif = ath10k_get_arvif(ar, peer->vdev_id);
+> +	if (!arvif) {
+> +		ath10k_warn("received addba event for invalid vdev_id: %u\n",
+> +			    peer->vdev_id);
+> +		spin_unlock_bh(&ar->data_lock);
+> +		return;
+> +	}
+> +
+> +	ath10k_dbg(ATH10K_DBG_HTT,
+> +		   "htt rx stop rx ba session sta %pM tid %hu\n",
+> +		   peer->addr, tid);
+> +
+> +	ieee80211_stop_rx_ba_session_offl(arvif->vif, peer->addr, tid);
+> +	spin_unlock_bh(&ar->data_lock);
+> +}
+> +
+>   void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+>   {
+>   	struct ath10k_htt *htt = &ar->htt;
+> @@ -1515,10 +1596,19 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+>   	case HTT_T2H_MSG_TYPE_STATS_CONF:
+>   		trace_ath10k_htt_stats(skb->data, skb->len);
+>   		break;
+> -	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
+>   	case HTT_T2H_MSG_TYPE_RX_ADDBA:
+> +		ath10k_htt_rx_addba(ar, resp);
+> +		break;
+>   	case HTT_T2H_MSG_TYPE_RX_DELBA:
+> -	case HTT_T2H_MSG_TYPE_RX_FLUSH:
+> +		ath10k_htt_rx_delba(ar, resp);
+> +		break;
+> +	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
+> +		/* Ignore this event because mac80211 takes care of Rx
+> +		 * aggregation reordering.
+> +		 */
+> +		break;
+> +	}
+> +	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
+>   	default:
+>   		ath10k_dbg(ATH10K_DBG_HTT, "htt event (%d) not handled\n",
+>   			   resp->hdr.msg_type);
 > diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 348a639..14d6234 100644
+> index b8314a5..67bf8ed 100644
 > --- a/drivers/net/wireless/ath/ath10k/mac.c
 > +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2201,6 +2201,7 @@ void ath10k_halt(struct ath10k *ar)
->         ath10k_peer_cleanup_all(ar);
->         ath10k_core_stop(ar);
->         ath10k_hif_power_down(ar);
-> +       ath10k_disable_spectral(ar);
-
-It makes little sense to call it after powering off the chip, no?
-ath10k_disable_spectral() calls ath10k_wmi_vdev_spectral_enable()
-which requires WMI (and thus firmware as a whole) to be running,
-otherwise you'll fail to submit the command. Anyway, if you try to
-send a WMI command when hw is restarting firmware won't respond
-properly anyway and it'll print a warning.
-
-
->
->         spin_lock_bh(&ar->data_lock);
->         if (ar->scan.in_progress) {
-> @@ -2671,8 +2672,16 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
->                 dev_kfree_skb_any(arvif->beacon);
->                 arvif->beacon = NULL;
->         }
+> @@ -4331,6 +4331,38 @@ static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+>   	return 0;
+>   }
+>   
+> +static int ath10k_ampdu_action(struct ieee80211_hw *hw,
+> +			       struct ieee80211_vif *vif,
+> +			       enum ieee80211_ampdu_mlme_action action,
+> +			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+> +			       u8 buf_size)
+> +{
+> +	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
 > +
->         spin_unlock_bh(&ar->data_lock);
->
-> +       if (arvif->spectral_enabled) {
-> +               ret = ath10k_disable_spectral(ar);
-> +               if (ret)
-> +                       ath10k_warn("Failed to disable spectral for vdev %i: %d\n",
-> +                                   arvif->vdev_id, ret);
+> +	ath10k_dbg(ATH10K_DBG_MAC, "mac ampdu vdev_id %i sta %pM tid %hu action %d\n",
+> +		   arvif->vdev_id, sta->addr, tid, action);
+> +
+> +	switch (action) {
+> +	case IEEE80211_AMPDU_RX_START:
+> +	case IEEE80211_AMPDU_RX_STOP:
+> +		/* HTT AddBa/DelBa events trigger mac80211 Rx BA session
+> +		 * creation/removal. Do we need to verify this?
+> +		 */
+> +		return 0;
+> +	case IEEE80211_AMPDU_TX_START:
+> +	case IEEE80211_AMPDU_TX_STOP_CONT:
+> +	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+> +	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+> +	case IEEE80211_AMPDU_TX_OPERATIONAL:
+> +		/* Firmware offloads Tx aggregation entirely so deny mac80211
+> +		 * Tx aggregation requests.
+> +		 */
+> +		break;
 
-I'm aware ath10k still has some capitalized warnings but it'd be nice
-to have this lower case (this is something that has been agreed upon
-some time ago but still not all prints have been updated since then).
+Instead of break here we can directly do: return -EOPNOTSUPP;
 
+> +	}
+> +
+> +	return -EOPNOTSUPP;
+> +}
+> +
 
-Michał
+-- 
+Regards,
+Varka Bhadram.
+
