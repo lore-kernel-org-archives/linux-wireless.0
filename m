@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:37302 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933791AbaGQOOF (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59597 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934406AbaGPP26 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:05 -0400
-Received: by mail-wg0-f47.google.com with SMTP id b13so2029148wgh.18
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:03 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 00/15] mac80211 TDLS QoS/HT support
-Date: Thu, 17 Jul 2014 17:14:16 +0300
-Message-Id: <1405606471-30128-1-git-send-email-arik@wizery.com> (sfid-20140717_161415_899585_FDB883AC)
+	Wed, 16 Jul 2014 11:28:58 -0400
+Message-ID: <53C69A32.3090305@candelatech.com> (sfid-20140716_172901_469820_2317F3C6)
+Date: Wed, 16 Jul 2014 08:28:50 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org, svens@stackframe.org,
+	vh.nguyen@actiasodielec.fr
+Subject: Re: [RFC/RFT 2/2] ath10k: don't start monitor vdev for promisc
+References: <1405516873-26411-1-git-send-email-michal.kazior@tieto.com> <1405516873-26411-2-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1405516873-26411-2-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds HT and QoS support for mac80211 drivers implementing TDLS.
+On 07/16/2014 06:21 AM, Michal Kazior wrote:
+> ath10k doesn't apply any extra rx filters so
+> there's no need to start monitor vdev for
+> promiscuous mode.
+>
+> This fixes crashes with 4addr station interface
+> bridging and some very rare crashes of AP
+> interfaces with bridging as well.
 
-It also includes some error path fixes, as well as a compatibility fix for
-older usermode (as requested by Jouni Malinen).
+Ahh, I was just working on some related hack-arounds to make sure
+I left a vdev slot open for the monitor interface in case some poor
+person started a sniffer on an interface and made it go promisc...
 
-A couple of wpa_supplicant patches are also required to properly propagate
-WMM capability to kernel and fix a recently introduced issue into the hwsim
-TDLS tests. These will be sent soon.
+With this patch, I can be sure monitor interfaces will not
+be automatically created without explicit user request?
 
-Arik Nemtsov (14):
-  mac80211: track TDLS initiator internally
-  mac80211: fix error path for TDLS setup
-  mac80211: consolidate TDLS IE treatment
-  mac80211: split extra TDLS IEs in setup frames
-  mac80211: avoid adding some IEs on TDLS setup failure packets
-  mac80211: set TDLS capab to zero on failure frames
-  mac80211: add QoS IE during TDLS setup start
-  mac80211: add TDLS QoS param IE on setup-confirm
-  mac80211: move TDLS data to mgd private part
-  mac80211: support HT for TDLS stations
-  mac80211: set Rx highest rate in ht_cap
-  mac80211: disable VHT for TDLS
-  cfg80211: fix TDLS setup with VHT peers
-  mac80211: ignore frames between TDLS peers when operating as AP
+Any idea if it will be a problem to apply this to what is
+effectively a 3.15 kernel?
 
-Liad Kaufman (1):
-  mac80211: make sure TDLS teardown packet is sent on time
-
- include/linux/ieee80211.h  |  20 ++
- net/mac80211/ht.c          |  10 +-
- net/mac80211/ibss.c        |  13 +-
- net/mac80211/ieee80211_i.h |   7 +-
- net/mac80211/iface.c       |   2 -
- net/mac80211/mlme.c        |  14 +-
- net/mac80211/rx.c          |   8 +
- net/mac80211/sta_info.h    |   3 +
- net/mac80211/tdls.c        | 459 ++++++++++++++++++++++++++++++++++++++-------
- net/mac80211/util.c        |  15 ++
- net/mac80211/vht.c         |   4 +
- net/wireless/nl80211.c     |   3 +-
- 12 files changed, 462 insertions(+), 96 deletions(-)
+Thanks,
+Ben
 
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
