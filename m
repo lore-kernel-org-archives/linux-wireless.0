@@ -1,86 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15960 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753606AbaGBNVU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:21:20 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 4/6] staging: wlan-ng: re-use string_escape_mem()
-Date: Wed,  2 Jul 2014 16:20:27 +0300
-Message-Id: <1404307229-19186-5-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152139_369707_74EA0F96)
-In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:47575 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932622AbaGPNaJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 09:30:09 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so939859wes.34
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 06:30:07 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, svens@stackframe.org,
+	vh.nguyen@actiasodielec.fr, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT 1/2] ath10k: fix monitor start/stop sequences
+Date: Wed, 16 Jul 2014 15:21:12 +0200
+Message-Id: <1405516873-26411-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_153018_837169_E04F5B92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a generic function to escape strings by given criteria. Let's use it
-instead of custom approach.
+Fix some cases where monitor start failure left
+the driver in a confused state.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This also makes the monitor code simpler.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wlan-ng/prism2sta.c | 29 ++++++-----------------------
- 1 file changed, 6 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 117 +++++++++++++---------------------
+ 1 file changed, 45 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/staging/wlan-ng/prism2sta.c b/drivers/staging/wlan-ng/prism2sta.c
-index 209e4db..1e44c09 100644
---- a/drivers/staging/wlan-ng/prism2sta.c
-+++ b/drivers/staging/wlan-ng/prism2sta.c
-@@ -61,6 +61,7 @@
- #include <linux/workqueue.h>
- #include <linux/byteorder/generic.h>
- #include <linux/ctype.h>
-+#include <linux/string_helpers.h>
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b8314a5..2a1c710 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -492,19 +492,6 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
+ 	return 0;
+ }
  
- #include <linux/io.h>
- #include <linux/delay.h>
-@@ -81,27 +82,6 @@
- #include "hfa384x.h"
- #include "prism2mgmt.h"
- 
--/* Create a string of printable chars from something that might not be */
--/* It's recommended that the str be 4*len + 1 bytes long */
--#define wlan_mkprintstr(buf, buflen, str, strlen) \
--{ \
--	int i = 0; \
--	int j = 0; \
--	memset(str, 0, (strlen)); \
--	for (i = 0; i < (buflen); i++) { \
--		if (isprint((buf)[i])) { \
--			(str)[j] = (buf)[i]; \
--			j++; \
--		} else { \
--			(str)[j] = '\\'; \
--			(str)[j+1] = 'x'; \
--			(str)[j+2] = hex_asc_hi((buf)[i]); \
--			(str)[j+3] = hex_asc_lo((buf)[i]); \
--			j += 4; \
--		} \
--	} \
+-static bool ath10k_monitor_is_enabled(struct ath10k *ar)
+-{
+-	lockdep_assert_held(&ar->conf_mutex);
+-
+-	ath10k_dbg(ATH10K_DBG_MAC,
+-		   "mac monitor refs: promisc %d monitor %d cac %d\n",
+-		   ar->promisc, ar->monitor,
+-		   test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags));
+-
+-	return ar->promisc || ar->monitor ||
+-	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
 -}
 -
- static char *dev_info = "prism2_usb";
- static wlandevice_t *create_wlan(void);
+ static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+ {
+ 	struct cfg80211_chan_def *chandef = &ar->chandef;
+@@ -654,16 +641,6 @@ static int ath10k_monitor_start(struct ath10k *ar)
  
-@@ -862,8 +842,11 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
- 	result = hfa384x_drvr_getconfig(hw, HFA384x_RID_NICSERIALNUMBER,
- 					snum, HFA384x_RID_NICSERIALNUMBER_LEN);
- 	if (!result) {
--		wlan_mkprintstr(snum, HFA384x_RID_NICSERIALNUMBER_LEN,
--				pstr, sizeof(pstr));
-+		result = string_escape_mem(snum,
-+				HFA384x_RID_NICSERIALNUMBER_LEN,
-+				pstr, sizeof(pstr), ESCAPE_HEX | ESCAPE_NP,
-+				NULL);
-+		pstr[result] = '\0';
- 		netdev_info(wlandev->netdev, "Prism2 card SN: %s\n", pstr);
- 	} else {
- 		netdev_err(wlandev->netdev, "Failed to retrieve Prism2 Card SN\n");
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	if (!ath10k_monitor_is_enabled(ar)) {
+-		ath10k_warn("trying to start monitor with no references\n");
+-		return 0;
+-	}
+-
+-	if (ar->monitor_started) {
+-		ath10k_dbg(ATH10K_DBG_MAC, "mac monitor already started\n");
+-		return 0;
+-	}
+-
+ 	ret = ath10k_monitor_vdev_create(ar);
+ 	if (ret) {
+ 		ath10k_warn("failed to create monitor vdev: %d\n", ret);
+@@ -683,34 +660,48 @@ static int ath10k_monitor_start(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static void ath10k_monitor_stop(struct ath10k *ar)
++static int ath10k_monitor_stop(struct ath10k *ar)
+ {
+ 	int ret;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	if (ath10k_monitor_is_enabled(ar)) {
+-		ath10k_dbg(ATH10K_DBG_MAC,
+-			   "mac monitor will be stopped later\n");
+-		return;
+-	}
+-
+-	if (!ar->monitor_started) {
+-		ath10k_dbg(ATH10K_DBG_MAC,
+-			   "mac monitor probably failed to start earlier\n");
+-		return;
+-	}
+-
+ 	ret = ath10k_monitor_vdev_stop(ar);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to stop monitor vdev: %d\n", ret);
++		return ret;
++	}
+ 
+ 	ret = ath10k_monitor_vdev_delete(ar);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to delete monitor vdev: %d\n", ret);
++		return ret;
++	}
+ 
+ 	ar->monitor_started = false;
+ 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor stopped\n");
++
++	return 0;
++}
++
++static int ath10k_monitor_recalc(struct ath10k *ar)
++{
++	bool should_start;
++
++	should_start = ar->promisc || ar->monitor ||
++		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
++
++	ath10k_dbg(ATH10K_DBG_MAC,
++		   "mac monitor recalc started? %d should? %d\n",
++		   ar->monitor_started, should_start);
++
++	if (should_start == ar->monitor_started)
++		return 0;
++
++	if (should_start)
++		return ath10k_monitor_start(ar);
++	else
++		return ath10k_monitor_stop(ar);
+ }
+ 
+ static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
+@@ -741,7 +732,7 @@ static int ath10k_start_cac(struct ath10k *ar)
+ 
+ 	set_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+ 
+-	ret = ath10k_monitor_start(ar);
++	ret = ath10k_monitor_recalc(ar);
+ 	if (ret) {
+ 		ath10k_warn("failed to start monitor (cac): %d\n", ret);
+ 		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+@@ -2316,12 +2307,12 @@ void ath10k_halt(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	if (ath10k_monitor_is_enabled(ar)) {
+-		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+-		ar->promisc = false;
+-		ar->monitor = false;
++	clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
++	ar->promisc = false;
++	ar->monitor = false;
++
++	if (ar->monitor_started)
+ 		ath10k_monitor_stop(ar);
+-	}
+ 
+ 	del_timer_sync(&ar->scan.timeout);
+ 	ath10k_reset_scan((unsigned long)ar);
+@@ -2574,7 +2565,7 @@ static void ath10k_config_chan(struct ath10k *ar)
+ 	/* First stop monitor interface. Some FW versions crash if there's a
+ 	 * lone monitor interface. */
+ 	if (ar->monitor_started)
+-		ath10k_monitor_vdev_stop(ar);
++		ath10k_monitor_stop(ar);
+ 
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		if (!arvif->is_started)
+@@ -2619,8 +2610,7 @@ static void ath10k_config_chan(struct ath10k *ar)
+ 		}
+ 	}
+ 
+-	if (ath10k_monitor_is_enabled(ar))
+-		ath10k_monitor_vdev_start(ar, ar->monitor_vdev_id);
++	ath10k_monitor_recalc(ar);
+ }
+ 
+ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+@@ -2675,19 +2665,10 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 		ath10k_config_ps(ar);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
+-		if (conf->flags & IEEE80211_CONF_MONITOR && !ar->monitor) {
+-			ar->monitor = true;
+-			ret = ath10k_monitor_start(ar);
+-			if (ret) {
+-				ath10k_warn("failed to start monitor (config): %d\n",
+-					    ret);
+-				ar->monitor = false;
+-			}
+-		} else if (!(conf->flags & IEEE80211_CONF_MONITOR) &&
+-			   ar->monitor) {
+-			ar->monitor = false;
+-			ath10k_monitor_stop(ar);
+-		}
++		ar->monitor = conf->flags & IEEE80211_CONF_MONITOR;
++		ret = ath10k_monitor_recalc(ar);
++		if (ret)
++			ath10k_warn("failed to recalc monitor: %d\n", ret);
+ 	}
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+@@ -2944,18 +2925,10 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
+ 	*total_flags &= SUPPORTED_FILTERS;
+ 	ar->filter_flags = *total_flags;
+ 
+-	if (ar->filter_flags & FIF_PROMISC_IN_BSS && !ar->promisc) {
+-		ar->promisc = true;
+-		ret = ath10k_monitor_start(ar);
+-		if (ret) {
+-			ath10k_warn("failed to start monitor (promisc): %d\n",
+-				    ret);
+-			ar->promisc = false;
+-		}
+-	} else if (!(ar->filter_flags & FIF_PROMISC_IN_BSS) && ar->promisc) {
+-		ar->promisc = false;
+-		ath10k_monitor_stop(ar);
+-	}
++	ar->promisc = !!(ar->filter_flags & FIF_PROMISC_IN_BSS);
++	ret = ath10k_monitor_recalc(ar);
++	if (ret)
++		ath10k_warn("failed to recalc montior: %d\n", ret);
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+ }
 -- 
-2.0.0
+1.8.5.3
 
