@@ -1,29 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:57791 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760348AbaGEAue convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:60359 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723AbaGPVXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2014 20:50:34 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n16so2367469oag.9
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2014 17:50:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1404521310-502-1-git-send-email-zajec5@gmail.com>
-References: <1404521310-502-1-git-send-email-zajec5@gmail.com>
-Date: Sat, 5 Jul 2014 02:50:33 +0200
-Message-ID: <CACna6ryUq6f-V3tUtXs+LUK6V7kdBrzEOtYvuH5M56tuEg5f6Q@mail.gmail.com> (sfid-20140705_025037_482170_A1C069F7)
-Subject: Re: [RFC][PATCH] bcma: support for PCIe Gen 2 as host platform
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Jul 2014 17:23:37 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so2049176wiw.12
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:36 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 17/21] staging: vt6656: main_usb.c Replace DEVICE_PARAM TxDescriptors0
+Date: Wed, 16 Jul 2014 22:22:07 +0100
+Message-Id: <1405545731-6082-17-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232348_874929_88BD303A)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 July 2014 02:48, Rafał Miłecki <zajec5@gmail.com> wrote:
-> I dumped LNKCAP on most of my devices and it seems we can use
-> PCI_EXP_LNKCAP_SLS_5_0GB to determine if device is PCIe 2.0.
+Replace with vnt_tx_buffers using module_param_named and
+MODULE_PARM_DESC
 
-I accidentally dropped beginning of the message:
+Check user doe not set tx_buffer beyond the define limits of driver
 
-I couldn't find any nice way to check if device is PCIe 2.0 or not. I
-tried asking on linux-pci@, but without any answer so far:
-http://marc.info/?t=140441806600004&r=1&w=2
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 6e79c4c..46f8491 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -83,7 +83,10 @@ module_param_named(rx_buffers, vnt_rx_buffers, int, 0644);
+ MODULE_PARM_DESC(rx_buffers, "Number of receive usb rx buffers");
+ 
+ #define TX_DESC_DEF0 64
+-DEVICE_PARAM(TxDescriptors0, "Number of transmit usb desc buffer");
++static int vnt_tx_buffers = TX_DESC_DEF0;
++module_param_named(tx_buffers, vnt_rx_buffers, int, 0644);
++MODULE_PARM_DESC(tx_buffers, "Number of receive usb tx buffers");
++
+ 
+ #define CHANNEL_DEF 6
+ DEVICE_PARAM(Channel, "Channel number");
+@@ -204,7 +207,11 @@ static void usb_device_reset(struct vnt_private *pDevice);
+ 
+ static void device_set_options(struct vnt_private *priv)
+ {
+-	priv->cbTD = TX_DESC_DEF0;
++	/* Set number of TX buffers */
++	if (vnt_tx_buffers < CB_MIN_TX_DESC || vnt_tx_buffers > CB_MAX_TX_DESC)
++		priv->cbTD = TX_DESC_DEF0;
++	else
++		priv->cbTD = vnt_tx_buffers;
+ 
+ 	/* Set number of RX buffers */
+ 	if (vnt_rx_buffers < CB_MIN_RX_DESC || vnt_rx_buffers > CB_MAX_RX_DESC)
+-- 
+2.0.1
+
