@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:46999 "EHLO
-	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415AbaGTOVn (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:52584 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbaGPVXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:21:43 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 09/30] rtlwifi: rtl8723be: remove unnecessary break after return
-Date: Sun, 20 Jul 2014 16:16:17 +0200
-Message-Id: <1405865801-18806-10-git-send-email-fabf@skynet.be> (sfid-20140720_162201_801892_3A5E37C0)
-In-Reply-To: <1405865801-18806-1-git-send-email-fabf@skynet.be>
-References: <1405865801-18806-1-git-send-email-fabf@skynet.be>
+	Wed, 16 Jul 2014 17:23:23 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so1551168wes.20
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:22 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/21] staging: vt6656: device_set_options fix opening function bracket
+Date: Wed, 16 Jul 2014 22:21:59 +0100
+Message-Id: <1405545731-6082-9-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232334_099926_7C7A46BF)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c b/drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c
-index e4a507a..4573310 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c
-@@ -124,7 +124,6 @@ bool rtlbe_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
- 					 "rtlbe_hal_pwrseqcmdparsing(): "
- 					 "PWR_CMD_END\n");
- 				return true;
--				break;
- 			default:
- 				RT_ASSERT(false,
- 					  "rtlbe_hal_pwrseqcmdparsing(): "
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index e822572..40594a1 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -203,8 +203,8 @@ static bool device_alloc_bufs(struct vnt_private *pDevice);
+ 
+ static void usb_device_reset(struct vnt_private *pDevice);
+ 
+-static void
+-device_set_options(struct vnt_private *pDevice) {
++static void device_set_options(struct vnt_private *pDevice)
++{
+ 	pDevice->cbTD = TX_DESC_DEF0;
+ 	pDevice->cbRD = RX_DESC_DEF0;
+ 	pDevice->byShortRetryLimit = SHORT_RETRY_DEF;
 -- 
-1.9.1
+2.0.1
 
