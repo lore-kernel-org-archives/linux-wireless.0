@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:39836 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbaGLGyh (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:64299 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbaGPVXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 02:54:37 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so256291wib.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:36 -0700 (PDT)
+	Wed, 16 Jul 2014 17:23:32 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ho1so2056318wib.4
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:30 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/10] staging: vt6656: remove unused variables from struct tagCMD_ITEM
-Date: Sat, 12 Jul 2014 07:53:43 +0100
-Message-Id: <1405148028-4053-5-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085441_452475_AF7F554F)
-In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
-References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 14/21] staging: vt6656: power.c replace DBG_PRT debug messages
+Date: Wed, 16 Jul 2014 22:22:04 +0100
+Message-Id: <1405545731-6082-14-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232408_251682_44CF266F)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also remove local variables
+Replace with dev_dbg
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/wcmd.c | 6 +-----
- drivers/staging/vt6656/wcmd.h | 4 ----
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ drivers/staging/vt6656/power.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 5621c14..1987d5c 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -141,8 +141,6 @@ void vRunCommand(struct work_struct *work)
+diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
+index dbda303..0ffbaed 100644
+--- a/drivers/staging/vt6656/power.c
++++ b/drivers/staging/vt6656/power.c
+@@ -42,8 +42,6 @@
+ #include "card.h"
+ #include "usbpipe.h"
  
- static int s_bCommandComplete(struct vnt_private *pDevice)
- {
--	int bRadioCmd = false;
--	int bForceSCAN = true;
+-static int msglevel = MSG_LEVEL_INFO;
+-
+ /*
+  *
+  * Routine Description:
+@@ -93,7 +91,7 @@ void vnt_enable_power_saving(struct vnt_private *priv, u16 listen_interval)
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_PSCTL, PSCTL_ALBCN);
+ 	}
  
- 	pDevice->eCommandState = WLAN_CMD_IDLE;
- 	if (pDevice->cbFreeCmdQueue == CMD_Q_SIZE) {
-@@ -151,8 +149,7 @@ static int s_bCommandComplete(struct vnt_private *pDevice)
- 		return true;
- 	} else {
- 		pDevice->eCommand = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].eCmd;
--		bRadioCmd = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].bRadioCmd;
--		bForceSCAN = pDevice->eCmdQueue[pDevice->uCmdDequeueIdx].bForceSCAN;
-+
- 		ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdDequeueIdx, CMD_Q_SIZE);
- 		pDevice->cbFreeCmdQueue++;
- 		pDevice->bCmdRunning = true;
-@@ -197,7 +194,6 @@ int bScheduleCommand(struct vnt_private *pDevice,
- 	if (pDevice->cbFreeCmdQueue == 0)
- 		return false;
- 	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].eCmd = eCommand;
--	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].bForceSCAN = true;
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "PS:Power Saving Mode Enable...\n");
++	dev_dbg(&priv->usb->dev,  "PS:Power Saving Mode Enable...\n");
+ }
  
- 	ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdEnqueueIdx, CMD_Q_SIZE);
- 	pDevice->cbFreeCmdQueue--;
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 4fe34b5..98387f3 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -58,10 +58,6 @@ typedef enum tagCMD_STATUS {
- 
- typedef struct tagCMD_ITEM {
-     CMD_CODE eCmd;
--    bool     bNeedRadioOFF;
--    bool     bRadioCmd;
--    bool     bForceSCAN;
--    u16     wDeAuthenReason;
- } CMD_ITEM, *PCMD_ITEM;
- 
- // Command state
+ /*
 -- 
-1.9.1
+2.0.1
 
