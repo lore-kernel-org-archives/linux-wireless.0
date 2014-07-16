@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34738 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757461AbaGODy6 (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:61420 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933044AbaGPNKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 23:54:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/7 v2] mwifiex: remove redundant TDLS setup action frame check and avoid leaks
-Date: Mon, 14 Jul 2014 20:53:34 -0700
-Message-ID: <1405396414-19493-1-git-send-email-bzhao@marvell.com> (sfid-20140715_055514_567290_B2DE39C6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Jul 2014 09:10:21 -0400
+Received: by mail-wg0-f52.google.com with SMTP id a1so894697wgh.35
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 06:10:20 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: workaround boot issues with KVM/PCI-passthrough
+Date: Wed, 16 Jul 2014 15:01:39 +0200
+Message-Id: <1405515699-32452-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_151027_490827_24E0B19B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The unwanted frame types are already handled in 'default' case
-of the switch/case below.
-The str_ptr is allocated but it can be leaked if the length check
-fails in the REQUEST/RESP cases. Fix it by allocating sta_ptr
-after the length checks.
+Apparently iomap writes that unmask CE irqs aren't
+propagated properly sometimes. Before failing try
+to poll for the control response message as it may
+have been delivered without an interrupt.
 
-Reported-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v2: fix possible leak of sta_ptr
+ drivers/net/wireless/ath/ath10k/htc.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/mwifiex/tdls.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
-index a414161..4c5fd95 100644
---- a/drivers/net/wireless/mwifiex/tdls.c
-+++ b/drivers/net/wireless/mwifiex/tdls.c
-@@ -781,6 +781,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 	struct mwifiex_sta_node *sta_ptr;
- 	u8 *peer, *pos, *end;
- 	u8 i, action, basic;
-+	__le16 cap = 0;
- 	int ie_len = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index e493db4..5fdc40d 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -546,7 +546,7 @@ static u8 ath10k_htc_get_credit_allocation(struct ath10k_htc *htc,
  
- 	if (len < (sizeof(struct ethhdr) + 3))
-@@ -792,18 +793,9 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
+ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ {
+-	int status = 0;
++	int i, status = 0;
+ 	struct ath10k_htc_svc_conn_req conn_req;
+ 	struct ath10k_htc_svc_conn_resp conn_resp;
+ 	struct ath10k_htc_msg *msg;
+@@ -556,10 +556,26 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
  
- 	peer = buf + ETH_ALEN;
- 	action = *(buf + sizeof(struct ethhdr) + 2);
--
--	/* just handle TDLS setup request/response/confirm */
--	if (action > WLAN_TDLS_SETUP_CONFIRM)
--		return;
--
- 	dev_dbg(priv->adapter->dev,
- 		"rx:tdls action: peer=%pM, action=%d\n", peer, action);
+ 	status = wait_for_completion_timeout(&htc->ctl_resp,
+ 					     ATH10K_HTC_WAIT_TIMEOUT_HZ);
+-	if (status <= 0) {
++	if (status == 0) {
++		/* Workaround: In some cases the PCI HIF doesn't
++		 * receive interrupt for the control response message
++		 * even if the buffer was completed. It is suspected
++		 * iomap writes unmasking PCI CE irqs aren't propagated
++		 * properly in KVM PCI-passthrough sometimes.
++		 */
++		ath10k_warn("failed to receive control response completion, polling..\n");
++
++		for (i = 0; i < CE_COUNT; i++)
++			ath10k_hif_send_complete_check(htc->ar, i, 1);
++
++		status = wait_for_completion_timeout(&htc->ctl_resp,
++					ATH10K_HTC_WAIT_TIMEOUT_HZ);
++
+ 		if (status == 0)
+ 			status = -ETIMEDOUT;
++	}
  
--	sta_ptr = mwifiex_add_sta_entry(priv, peer);
--	if (!sta_ptr)
--		return;
--
- 	switch (action) {
- 	case WLAN_TDLS_SETUP_REQUEST:
- 		if (len < (sizeof(struct ethhdr) + TDLS_REQ_FIX_LEN))
-@@ -811,7 +803,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 
- 		pos = buf + sizeof(struct ethhdr) + 4;
- 		/* payload 1+ category 1 + action 1 + dialog 1 */
--		sta_ptr->tdls_cap.capab = cpu_to_le16(*(u16 *)pos);
-+		cap = cpu_to_le16(*(u16 *)pos);
- 		ie_len = len - sizeof(struct ethhdr) - TDLS_REQ_FIX_LEN;
- 		pos += 2;
- 		break;
-@@ -821,7 +813,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 			return;
- 		/* payload 1+ category 1 + action 1 + dialog 1 + status code 2*/
- 		pos = buf + sizeof(struct ethhdr) + 6;
--		sta_ptr->tdls_cap.capab = cpu_to_le16(*(u16 *)pos);
-+		cap = cpu_to_le16(*(u16 *)pos);
- 		ie_len = len - sizeof(struct ethhdr) - TDLS_RESP_FIX_LEN;
- 		pos += 2;
- 		break;
-@@ -833,10 +825,16 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 		ie_len = len - sizeof(struct ethhdr) - TDLS_CONFIRM_FIX_LEN;
- 		break;
- 	default:
--		dev_warn(priv->adapter->dev, "Unknown TDLS frame type.\n");
-+		dev_dbg(priv->adapter->dev, "Unknown TDLS frame type.\n");
- 		return;
++	if (status < 0) {
+ 		ath10k_err("ctl_resp never came in (%d)\n", status);
+ 		return status;
  	}
- 
-+	sta_ptr = mwifiex_add_sta_entry(priv, peer);
-+	if (!sta_ptr)
-+		return;
-+
-+	sta_ptr->tdls_cap.capab = cap;
-+
- 	for (end = pos + ie_len; pos + 1 < end; pos += 2 + pos[1]) {
- 		if (pos + 2 + pos[1] > end)
- 			break;
 -- 
-1.8.2.3
+1.8.5.3
 
