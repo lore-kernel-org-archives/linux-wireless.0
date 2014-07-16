@@ -1,42 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tomasu.net ([192.241.222.217]:39826 "EHLO mail.tomasu.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751607AbaGBCvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 22:51:11 -0400
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-To: Peter Wu <peter@lekensteyn.nl>
-Reply-To: thomas@fjellstrom.ca
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Linux iwlwifi 801.11n speeds
-Date: Tue, 01 Jul 2014 20:51:08 -0600
-Message-ID: <1670596.rIHpxMZ2dp@balsa> (sfid-20140702_045114_904089_173B6807)
-In-Reply-To: <2751617.yrMEdml3a5@al>
-References: <2766921.O7z3bAoKY3@balsa> <2751617.yrMEdml3a5@al>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:40652 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932770AbaGPMl3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 08:41:29 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so1251891wiw.6
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 05:41:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+BoTQn8TYX4vDx=K4P5rE+LBXrrUL2q1E7GsiOpBj82QgRKsw@mail.gmail.com>
+References: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com>
+	<1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
+	<53C66422.10702@gmail.com>
+	<CA+BoTQn8TYX4vDx=K4P5rE+LBXrrUL2q1E7GsiOpBj82QgRKsw@mail.gmail.com>
+Date: Wed, 16 Jul 2014 14:41:27 +0200
+Message-ID: <CA+BoTQkk5oYS4JZ5a6W02rZ62AgxcHE76knS7QA2VfZDxYi2Jg@mail.gmail.com> (sfid-20140716_144133_189682_65BEE4CE)
+Subject: Re: [PATCH v3] ath10k: fix Rx aggregation reordering
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Varka Bhadram <varkabhadram@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Denton Gentry <denton.gentry@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 01 Jul 2014 10:23:43 AM Peter Wu wrote:
-> # Enable AMPDU (otherwise there is a performance regression from 80
-> # Mbit/s to 20 Mbit/s). Introduced with v3.13-10103-g205e221 ("iwlwifi:
-> # disable TX AMPDU by default for iwldvm").
+On 16 July 2014 14:35, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 16 July 2014 13:38, Varka Bhadram <varkabhadram@gmail.com> wrote:
+>> On 07/16/2014 04:49 PM, Michal Kazior wrote:
+>>
+>> (...)
+>>
+>>
+>>> +static void ath10k_htt_rx_addba(struct ath10k *ar, struct htt_resp *resp)
+>>> +{
+>>> +       struct htt_rx_addba *ev = &resp->rx_addba;
+>>> +       struct ath10k_peer *peer;
+>>> +       struct ath10k_vif *arvif;
+>>> +       u16 info0, tid, peer_id;
+>>> +
+>>> +       info0 = __le32_to_cpu(ev->info0);
+>>> +       tid = MS(info0, HTT_RX_BA_INFO0_TID);
+>>> +       peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
+>>> +
+>>> +       ath10k_dbg(ATH10K_DBG_HTT,
+>>> +                  "htt rx addba tid %hu peer_id %hu size %hhu\n",
+>>> +                  tid, peer_id, ev->window_size);
+>>> +
+>>> +       spin_lock_bh(&ar->data_lock);
+>>> +       peer = ath10k_peer_find_by_id(ar, peer_id);
+>>> +       if (!peer) {
+>>> +               ath10k_warn("received addba event for invalid peer_id:
+>>> %hu\n",
+>>> +                           peer_id);
+>>> +               spin_unlock_bh(&ar->data_lock);
+>>> +               return;
+>>> +       }
+>>
+>>
+>> Here my concern in amount of time holding the lock...
+>>
+>> spin_lock_bh(&ar->data_lock);
+>> peer = ath10k_peer_find_by_id(ar, peer_id);
+>> if (!peer) {
+>>         spin_unlock_bh(&ar->data_lock);
+>>
+>>         ath10k_warn("received addba event for invalid peer_id: %hu\n",
+>>                     peer_id);
+>>         return;
+>> }
+>>
+>> No need to of putting the debug message inside the critical region...  :-)
+>
+> Sounds reasonable in this case as I'm not printing spinlock-protected values.
 
-Ah, that did it. Thank you! I didn't see that option (8) in my search. Lots of 
-people disabling 802.11n completely, but that's kind of the opposite of what I 
-want :)
+..and I realized this isn't true upon hitting the send button.
 
-Do you, or anyone else here know what the actual issue is with some cards that 
-caused this change to be made? I saw one reference to a device reset happening 
-occasionally. I can say I have not seen such crashes or resets. If I do, I'll 
-report asap. Maybe it's related to various other settings hitting some odd 
-corner case in the wifi firmware.
+The other print uses peer->vdev_id. The peer was acquired under a lock
+and must not be used after the lock is released. It'll just look
+confusing if I mix ordering of unlock/print in some cases so I'll
+leave it as is.
 
-Question is, why is it enabled in windows if it causes so many problems that 
-linux has to disable it by default? Do the windows drivers include fixed 
-firmware? Or maybe a more complex quirks list? It'd be interesting to see what 
-the two drivers do differently.
+(sorry for the noise)
 
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+
+Michał
