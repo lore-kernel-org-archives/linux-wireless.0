@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:60957 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932991AbaGXQUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 12:20:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1XALkS-0007Wl-7F
-	for linux-wireless@vger.kernel.org; Thu, 24 Jul 2014 18:20:04 +0200
-Received: from static-105-15-235-87.ipcom.comunitel.net ([static-105-15-235-87.ipcom.comunitel.net])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 18:20:04 +0200
-Received: from carlos.villavieja by static-105-15-235-87.ipcom.comunitel.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 18:20:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Carlos Villavieja <carlos.villavieja@gmail.com>
-Subject: Re: WL1271 + recent compat/backports + calibrator?
-Date: Thu, 24 Jul 2014 16:16:23 +0000 (UTC)
-Message-ID: <loom.20140724T181408-362@post.gmane.org> (sfid-20140724_182011_900043_CE027DA2)
-References: <CAM9fjH52HZ=quNrzTeqkzNuCQTSxMs5DmAJAk+2Xnv+2m2aPZQ@mail.gmail.com> <CAM9fjH5vXGOsoQaJrU_Ezx9L0iHYYAqD=jMB050-=uwnPMVLMw@mail.gmail.com> <CAM9fjH4CzsCMbAyJ8qucUc1+fFFMeSA87JWWPiqD7L6-1Cg7aw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:37999 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbaGPKFo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2014 06:05:44 -0400
+Received: by mail-vc0-f176.google.com with SMTP id ik5so1151862vcb.21
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 03:05:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <wrfj38e1pusb.fsf@redhat.com>
+References: <1405254518-2744-1-git-send-email-rapphil@gmail.com>
+	<wrfj38e1pusb.fsf@redhat.com>
+Date: Wed, 16 Jul 2014 07:05:43 -0300
+Message-ID: <CAENGNhekXs9+uCEQjJaDWqU9u-_GYmpb3XfZ-w2ogQd-qbjfnQ@mail.gmail.com> (sfid-20140716_120548_605374_22E4CF77)
+Subject: Re: [PATCH] rtl8723au: Corrections in the coding style
+From: Raphael Philipe <rapphil@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Lesson Learned.
+Thank you.
+Raphael
 
-Hi Kyle,
-
- I'm aware your message was posted some time ago. However, do you have a 
-patch available for kernel 3.12.1 from all the patches you have used to 
-succeed with wl12XX?
-
-Thanks
-
-Carlos Villavieja
-
-
+On Wed, Jul 16, 2014 at 5:33 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Raphael Silva <rapphil@gmail.com> writes:
+>> Some corrections were made to the code in order to conform to the
+>> Kernel Coding Style.
+>>
+>> Signed-off-by: Raphael Silva <rapphil@gmail.com>
+>> ---
+>>  drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 42 ++++++++++++++++++----------
+>>  1 file changed, 27 insertions(+), 15 deletions(-)
+>
+> [jes@yoga jes.git]$ make drivers/staging/rtl8723au/r8723au.ko
+>   CHK     include/config/kernel.release
+>   CHK     include/generated/uapi/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CC [M]  drivers/staging/rtl8723au/core/rtw_sta_mgt.o
+> drivers/staging/rtl8723au/core/rtw_sta_mgt.c: In function 'rtw_free_stainfo23a':
+> drivers/staging/rtl8723au/core/rtw_sta_mgt.c:256:27: error: expected expression before ';' token
+>   pstapriv->asoc_sta_count-;
+>                            ^
+> I fixed this up this time - next time, compile your patches before you
+> post them.
+>
+> Thank you,
+> Jes
