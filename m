@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f202.google.com ([209.85.223.202]:45184 "EHLO
-	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756923AbaGVVon (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:64655 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707AbaGPVXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 17:44:43 -0400
-Received: by mail-ie0-f202.google.com with SMTP id rl12so101575iec.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 14:44:42 -0700 (PDT)
-From: Andrew Bresticker <abrestic@chromium.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Andrew Bresticker <abrestic@chromium.org>
-Subject: [PATCH] mac80211_hwsim: fix compiler warning on MIPS
-Date: Tue, 22 Jul 2014 14:43:51 -0700
-Message-Id: <1406065431-20813-1-git-send-email-abrestic@chromium.org> (sfid-20140722_234503_746857_0630E11C)
+	Wed, 16 Jul 2014 17:23:37 -0400
+Received: by mail-wg0-f52.google.com with SMTP id a1so1504665wgh.11
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:36 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 16/21] staging: vt6656: main_usb.c Replace DEVICE_PARAM RxDescriptors0
+Date: Wed, 16 Jul 2014 22:22:06 +0100
+Message-Id: <1405545731-6082-16-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232347_642058_89CAC0F8)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dividend in do_div() is expected to be an unsigned 64-bit integer,
-which leads to the following warning when building for 32-bit MIPS:
+Replace with vnt_rx_buffers using module_param_named and
+MODULE_PARM_DESC
 
-  drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_set_tsf':
-  drivers/net/wireless/mac80211_hwsim.c:664:98: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-    data->bcn_delta = do_div(delta, bcn_int);
+Check user doe not set rx_buffer beyond the define limits of driver
 
-Since we care about the signedness of delta when adjusting tsf_offset
-and bcm_delta, use the absolute value for the division and compare
-the two timestamps to determine the sign.
-
-Signed-off-by: Andrew Bresticker <abrestic@chromium.org>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/main_usb.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 5ea65fc..1326f61 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -685,11 +685,16 @@ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	u64 now = mac80211_hwsim_get_tsf(hw, vif);
- 	u32 bcn_int = data->beacon_int;
--	s64 delta = tsf - now;
-+	u64 delta = abs64(tsf - now);
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index ed56b60..6e79c4c 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -78,7 +78,9 @@ MODULE_DESCRIPTION(DEVICE_FULL_DRV_NAM);
+ 	MODULE_PARM_DESC(N, D)
  
--	data->tsf_offset += delta;
- 	/* adjust after beaconing with new timestamp at old TBTT */
--	data->bcn_delta = do_div(delta, bcn_int);
-+	if (tsf > now) {
-+		data->tsf_offset += delta;
-+		data->bcn_delta = do_div(delta, bcn_int);
-+	} else {
-+		data->tsf_offset -= delta;
-+		data->bcn_delta = -do_div(delta, bcn_int);
-+	}
- }
+ #define RX_DESC_DEF0 64
+-DEVICE_PARAM(RxDescriptors0, "Number of receive usb desc buffer");
++static int vnt_rx_buffers = RX_DESC_DEF0;
++module_param_named(rx_buffers, vnt_rx_buffers, int, 0644);
++MODULE_PARM_DESC(rx_buffers, "Number of receive usb rx buffers");
  
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ #define TX_DESC_DEF0 64
+ DEVICE_PARAM(TxDescriptors0, "Number of transmit usb desc buffer");
+@@ -203,7 +205,13 @@ static void usb_device_reset(struct vnt_private *pDevice);
+ static void device_set_options(struct vnt_private *priv)
+ {
+ 	priv->cbTD = TX_DESC_DEF0;
+-	priv->cbRD = RX_DESC_DEF0;
++
++	/* Set number of RX buffers */
++	if (vnt_rx_buffers < CB_MIN_RX_DESC || vnt_rx_buffers > CB_MAX_RX_DESC)
++		priv->cbRD = RX_DESC_DEF0;
++	else
++		priv->cbRD = vnt_rx_buffers;
++
+ 	priv->byShortRetryLimit = SHORT_RETRY_DEF;
+ 	priv->byLongRetryLimit = LONG_RETRY_DEF;
+ 	priv->op_mode = NL80211_IFTYPE_UNSPECIFIED;
 -- 
-2.0.0.526.g5318336
+2.0.1
 
