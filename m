@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:42499 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758780AbaGXN3i (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36861 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753467AbaGPVXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 09:29:38 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so9692270wiv.7
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 06:29:36 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] bcma: add support for BCM43131 that was found in Tenda W311E
-Date: Thu, 24 Jul 2014 15:29:19 +0200
-Message-Id: <1406208559-19057-2-git-send-email-zajec5@gmail.com> (sfid-20140724_152940_804207_74FB4A42)
-In-Reply-To: <1406208559-19057-1-git-send-email-zajec5@gmail.com>
-References: <1406208559-19057-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Jul 2014 17:23:33 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so6948875wib.4
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:32 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 15/21] staging: vt6656: remove DBG_PRT kernel messages macro and enums
+Date: Wed, 16 Jul 2014 22:22:05 +0100
+Message-Id: <1405545731-6082-15-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232400_792487_8A34CECC)
+In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/driver_chipcommon_pmu.c | 1 +
- drivers/bcma/host_pci.c              | 1 +
- drivers/bcma/sprom.c                 | 1 +
- 3 files changed, 3 insertions(+)
+All dead code and nolonger used by driver.
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index bb694e2..fe0d48c 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -603,6 +603,7 @@ void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid)
- 		tmp = BCMA_CC_PMU_CTL_PLL_UPD | BCMA_CC_PMU_CTL_NOILPONW;
- 		break;
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index dbd5810..f08f7de 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -185,16 +185,6 @@
+ /* USB registers */
+ #define USB_REG4			0x604
  
-+	case BCMA_CHIP_ID_BCM43131:
- 	case BCMA_CHIP_ID_BCM43217:
- 	case BCMA_CHIP_ID_BCM43227:
- 	case BCMA_CHIP_ID_BCM43228:
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 3cf725a..294a7dd 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -280,6 +280,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ 0, },
- };
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 97bb38e..efb037f 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -534,6 +534,7 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
- 		/* for these chips OTP is always available */
- 		present = true;
- 		break;
-+	case BCMA_CHIP_ID_BCM43131:
- 	case BCMA_CHIP_ID_BCM43217:
- 	case BCMA_CHIP_ID_BCM43227:
- 	case BCMA_CHIP_ID_BCM43228:
+-#define DBG_PRT(l, p, args...) { if (l <= msglevel) printk(p, ##args); }
+-
+-enum {
+-	MSG_LEVEL_ERR = 0,            /* Errors causing abnormal operation */
+-	MSG_LEVEL_NOTICE = 1,         /* Errors needing user notification */
+-	MSG_LEVEL_INFO = 2,           /* Normal message. */
+-	MSG_LEVEL_VERBOSE = 3,        /* Will report all trival errors. */
+-	MSG_LEVEL_DEBUG = 4           /* Only for debug purpose. */
+-};
+-
+ #define DEVICE_INIT_COLD	0x0 /* cold init */
+ #define DEVICE_INIT_RESET	0x1 /* reset init or Dx to D0 power remain */
+ #define DEVICE_INIT_DXPL	0x2 /* Dx to D0 power lost init */
 -- 
-1.8.4.5
+2.0.1
 
