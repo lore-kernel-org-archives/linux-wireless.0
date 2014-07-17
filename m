@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:51082 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbaGTMbd (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:37302 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933791AbaGQOOF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 08:31:33 -0400
-Received: by mail-we0-f178.google.com with SMTP id w61so6370983wes.37
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:31:32 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [PATCH 04/10] ath9k: add config for (en|dis)abling ack timeout estimation
-Date: Sun, 20 Jul 2014 14:31:20 +0200
-Message-Id: <1405859486-31414-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_145108_318644_2F1EC486)
-In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Thu, 17 Jul 2014 10:14:05 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so2029148wgh.18
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:03 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 00/15] mac80211 TDLS QoS/HT support
+Date: Thu, 17 Jul 2014 17:14:16 +0300
+Message-Id: <1405606471-30128-1-git-send-email-arik@wizery.com> (sfid-20140717_161415_899585_FDB883AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ack timeout estimation to ath9k Makefile
+This series adds HT and QoS support for mac80211 drivers implementing TDLS.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/Kconfig  | 7 +++++++
- drivers/net/wireless/ath/ath9k/Makefile | 3 +++
- 2 files changed, 10 insertions(+)
+It also includes some error path fixes, as well as a compatibility fix for
+older usermode (as requested by Jouni Malinen).
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 8fcc029..ee61a4c 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -151,3 +151,10 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_DYNACK
-+	bool "Atheros ath9k ack timeout estimation algorithm (EXPERIMENTAL)"
-+	depends on ATH9K
-+	default n
-+	---help---
-+	  This option enables ath9k dynamic ack timeout estimation algorithm
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 6b4020a..73704c1 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -49,6 +49,9 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
- 
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- 					   ar9003_mci.o
-+
-+ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
-+
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
- 
- obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+A couple of wpa_supplicant patches are also required to properly propagate
+WMM capability to kernel and fix a recently introduced issue into the hwsim
+TDLS tests. These will be sent soon.
+
+Arik Nemtsov (14):
+  mac80211: track TDLS initiator internally
+  mac80211: fix error path for TDLS setup
+  mac80211: consolidate TDLS IE treatment
+  mac80211: split extra TDLS IEs in setup frames
+  mac80211: avoid adding some IEs on TDLS setup failure packets
+  mac80211: set TDLS capab to zero on failure frames
+  mac80211: add QoS IE during TDLS setup start
+  mac80211: add TDLS QoS param IE on setup-confirm
+  mac80211: move TDLS data to mgd private part
+  mac80211: support HT for TDLS stations
+  mac80211: set Rx highest rate in ht_cap
+  mac80211: disable VHT for TDLS
+  cfg80211: fix TDLS setup with VHT peers
+  mac80211: ignore frames between TDLS peers when operating as AP
+
+Liad Kaufman (1):
+  mac80211: make sure TDLS teardown packet is sent on time
+
+ include/linux/ieee80211.h  |  20 ++
+ net/mac80211/ht.c          |  10 +-
+ net/mac80211/ibss.c        |  13 +-
+ net/mac80211/ieee80211_i.h |   7 +-
+ net/mac80211/iface.c       |   2 -
+ net/mac80211/mlme.c        |  14 +-
+ net/mac80211/rx.c          |   8 +
+ net/mac80211/sta_info.h    |   3 +
+ net/mac80211/tdls.c        | 459 ++++++++++++++++++++++++++++++++++++++-------
+ net/mac80211/util.c        |  15 ++
+ net/mac80211/vht.c         |   4 +
+ net/wireless/nl80211.c     |   3 +-
+ 12 files changed, 462 insertions(+), 96 deletions(-)
+
 -- 
 1.9.1
 
