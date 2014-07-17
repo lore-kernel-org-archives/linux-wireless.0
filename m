@@ -1,68 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tundra.namei.org ([65.99.196.166]:33999 "EHLO namei.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755895AbaGSHWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 03:22:39 -0400
-Date: Sat, 19 Jul 2014 17:22:15 +1000 (EST)
-From: James Morris <jmorris@namei.org>
-To: Kees Cook <keescook@chromium.org>
-cc: LKML <linux-kernel@vger.kernel.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/7] firmware_class: perform new LSM checks
-In-Reply-To: <CAGXu5jK5np62pR4f7_qa_LU97hBN8e1hu998=C4ah+Xyv3eYtg@mail.gmail.com>
-Message-ID: <alpine.LRH.2.11.1407191720160.26264@namei.org> (sfid-20140719_092256_998338_3412CC20)
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org> <1405373897-31671-5-git-send-email-keescook@chromium.org> <alpine.LRH.2.11.1407181339510.15709@namei.org> <CAGXu5jK5np62pR4f7_qa_LU97hBN8e1hu998=C4ah+Xyv3eYtg@mail.gmail.com>
+Received: from mail-we0-f180.google.com ([74.125.82.180]:50552 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048AbaGQRdB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2014 13:33:01 -0400
+Received: by mail-we0-f180.google.com with SMTP id w61so3447875wes.25
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:33:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 6/6] b43: N-PHY: update spur avoidance to support newer devices
+Date: Thu, 17 Jul 2014 19:31:06 +0200
+Message-Id: <1405618266-20200-6-git-send-email-zajec5@gmail.com> (sfid-20140717_193306_801723_059BDA81)
+In-Reply-To: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
+References: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Jul 2014, Kees Cook wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c | 43 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
 
-> On Thu, Jul 17, 2014 at 8:41 PM, James Morris <jmorris@namei.org> wrote:
-> > On Mon, 14 Jul 2014, Kees Cook wrote:
-> >
-> >> This attaches LSM hooks to the existing firmware loading interfaces:
-> >> filesystem-found firmware and demand-loaded blobs.
-> >
-> >>  static int fw_get_filesystem_firmware(struct device *device,
-> >> @@ -640,6 +646,12 @@ static ssize_t firmware_loading_store(struct device *dev,
-> >>               break;
-> >>       case 0:
-> >>               if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
-> >> +                     if (security_kernel_fw_from_file(NULL, fw_buf->data,
-> >> +                                                      fw_buf->size)) {
-> >> +                             fw_load_abort(fw_priv);
-> >> +                             break;
-> >> +                     }
-> >> +
-> >>                       set_bit(FW_STATUS_DONE, &fw_buf->status);
-> >>                       clear_bit(FW_STATUS_LOADING, &fw_buf->status);
-> >>
-> >>
-> >
-> > Can you explain the loading store, and what the semantics are for an LSM
-> > when a NULL is passed as the file?
-> 
-> I'm not sure what you mean by "loading store"?
-
-The caller: firmware_loading_store()
-
-> When NULL is passed as the file, it means that the firmware was passes
-> a blob, and there is no file backing it:
-
-Where does this blob come from, is cached, built into the kernel, or what?
-
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 0f0c130..92bfe35 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -6099,26 +6099,45 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 
+ 	if (dev->phy.rev >= 3 &&
+ 	    dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
+-		bool avoid = false;
++		u8 spuravoid = 0;
++
+ 		if (dev->phy.n->spur_avoid == B43_SPUR_AVOID_FORCE) {
+-			avoid = true;
+-		} else if (!b43_is_40mhz(dev)) {
+-			if ((ch >= 5 && ch <= 8) || ch == 13 || ch == 14)
+-				avoid = true;
+-		} else { /* 40MHz */
+-			if (nphy->aband_spurwar_en &&
+-			    (ch == 38 || ch == 102 || ch == 118))
+-				avoid = dev->dev->chip_id == 0x4716;
++			spuravoid = 1;
++		} else if (phy->rev >= 19) {
++			/* TODO */
++		} else if (phy->rev >= 18) {
++			/* TODO */
++		} else if (phy->rev >= 17) {
++			/* TODO: Off for channels 1-11, but check 12-14! */
++		} else if (phy->rev >= 16) {
++			/* TODO: Off for 2 GHz, but check 5 GHz! */
++		} else if (phy->rev >= 7) {
++			if (!b43_is_40mhz(dev)) { /* 20MHz */
++				if (ch == 13 || ch == 14 || ch == 153)
++					spuravoid = 1;
++			} else { /* 40 MHz */
++				if (ch == 54)
++					spuravoid = 1;
++			}
++		} else {
++			if (!b43_is_40mhz(dev)) { /* 20MHz */
++				if ((ch >= 5 && ch <= 8) || ch == 13 || ch == 14)
++					spuravoid = 1;
++			} else { /* 40MHz */
++				if (nphy->aband_spurwar_en &&
++				    (ch == 38 || ch == 102 || ch == 118))
++					spuravoid = dev->dev->chip_id == 0x4716;
++			}
+ 		}
+ 
+-		b43_nphy_pmu_spur_avoid(dev, avoid);
++		b43_nphy_pmu_spur_avoid(dev, spuravoid);
+ 
+-		b43_mac_switch_freq(dev, avoid);
++		b43_mac_switch_freq(dev, spuravoid);
+ 
+ 		if (dev->phy.rev == 3 || dev->phy.rev == 4)
+ 			; /* TODO: reset PLL */
+ 
+-		if (avoid)
++		if (spuravoid)
+ 			b43_phy_set(dev, B43_NPHY_BBCFG, B43_NPHY_BBCFG_RSTRX);
+ 		else
+ 			b43_phy_mask(dev, B43_NPHY_BBCFG,
 -- 
-James Morris
-<jmorris@namei.org>
+1.8.4.5
 
