@@ -1,41 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-hk1lp0123.outbound.protection.outlook.com ([207.46.51.123]:32496
-	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756844AbaGaGKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2014 02:10:05 -0400
-From: Krishnankutty Plachikkattle
-	<Krishnankutty_Plachikkattle@mindtree.com>
-To: Bing Zhao <bzhao@marvell.com>,
-	Avinash Patil <avinashapatil@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: 80211ac support in 88W8897
-Date: Thu, 31 Jul 2014 05:54:12 +0000
-Message-ID: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com> (sfid-20140731_081019_712723_B36E887C)
-Content-Type: text/plain; charset="utf-8"
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42726 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534AbaGQPyj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2014 11:54:39 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	<ath6kl@lists.infradead.org>
+Subject: Pull request: ath 20140717
+Date: Thu, 17 Jul 2014 18:54:33 +0300
+Message-ID: <87k37c6kw6.fsf@kamboji.qca.qualcomm.com> (sfid-20140717_175443_198664_7CA6302E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8gQmluZywNCg0KSSBhbSB0cnlpbmcgdG8gZW5hYmxlIEhUIHN1cHBvcnQgZm9yIDg4Vzg4
-OTcgIHVzaW5nIGhvc3RhcGQgMi4yLg0KODAyMTFuIG1vZGUgd29ya3Mgd2VsbCAuIE5vdyBJIHdh
-bnQgdG8gZW5hYmxlIEFDIG1vZGUgdG8gaW1wcm92ZSB0aHJvdWdocHV0IC4NCg0KQ2FuIHlvdSBz
-aGFyZSBhIHNhbXBsZSBob3N0YXBkLmNvbmYgIHdpdGggIDgwMjExYWMgY29uZmlndXJhdGlvbi4N
-Cg0KVGhhbmtzIGluIGFkdmFuY2UsDQoNClJlZ2FyZHMsDQpLcmlzaG5hbi4NCg0KLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJpbmcgWmhhbyBbbWFpbHRvOmJ6aGFvQG1hcnZlbGwu
-Y29tXQ0KU2VudDogRnJpZGF5LCBNYXkgMzAsIDIwMTQgNjoxNiBBTQ0KVG86IEF2aW5hc2ggUGF0
-aWw7IEtyaXNobmFua3V0dHkgUGxhY2hpa2thdHRsZTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnDQpTdWJqZWN0OiBSRTogU3VwcG9ydCBmb3IgODhXODg5NyBpbiAzLjEwLjE3IGtlcm5l
-bA0KDQoNCj4+SXMgdGhlcmUgYW55IG9wZW4gc291cmNlIGRyaXZlciB0aGF0IHN1cHBvcnRzICBO
-RkMgYW5kIEJsdWV0b290aCBpbiB0aGlzIFNvQz8NCj4gWWVzOyBidG1ydmwua28gYW5kIGJ0dXNi
-LmtvIHdvdWxkIHN1cHBvcnQgUENJZS1VU0I4ODk3IEJUIGZ1bmN0aW9uYWxpdHkuDQo+IFBsZWFz
-ZSBjaGVjayBDT05GSUdfQlRfTVJWTCBrZXJuZWwgY29uZmlndXJhdGlvbiBwYXJhbWV0ZXIuDQoN
-CkNsYXJpZmljYXRpb246DQpidG1ydmwgZHJpdmVyIG9ubHkgc3VwcG9ydHMgQmx1ZXRvb3RoIG92
-ZXIgU0RJTyAoYnRtcnZsX3NkaW8pLiBTbyBpdCdzIGZvciBTRDg4OTcgY2FyZHMgb25seS4NClRo
-ZSBnZW5lcmljIGJ0dXNiIGRyaXZlciB3b3JrcyBmb3IgUENJZS1VU0IgODg5NyBjYXJkcyAoQmx1
-ZXRvb3RoIGlzIG92ZXIgVVNCKS4NCg0KUmVnYXJkcywNCkJpbmcNCg0KPiBGb3IgTkZDLCAgbmZj
-bXJ2bC5rbyAmIG5mY21ydmxfdXNiLmtvIHdvdWxkIHN1cHBvcnQgODg5NyBORkMgZnVuY3Rpb25h
-bGl0eS4NCj4gUGxlYXNlIGNoZWNrIGZvciBDT05GSUdfTkZDX01SVkwga2VybmVsIGNvbmZpZ3Vy
-YXRpb24gcGFyYW1ldGVyLg0KPg0KPiBUaGFua3MsDQo+IEF2aW5hc2gNCg0KDQpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXw0KDQpodHRwOi8vd3d3Lm1pbmR0cmVlLmNvbS9lbWFpbC9k
-aXNjbGFpbWVyLmh0bWwNCg==
+Hi John,
+
+here's new pull request for 3.17. Major changes are:
+
+For ath6kl me and Jessica added support for ar6004 hw3.0, our latest
+version of ar6004.
+
+For ath10k Janusz added a printout so that it's easier to check what
+ath10k kconfig options are enabled. He also added a debugfs file to
+configure maximum amsdu and ampdu values. Also we had few fixes as
+usual.
+
+Please let me know if there are any problems.
+
+Kalle
+
+The following changes since commit a715c7ddd65a1a3b2839b8ebd759bb2d361f7675:
+
+  wil6210: improve debug for WMI receive (2014-05-30 13:49:34 -0400)
+
+are available in the git repository at:
+
+  git://github.com/kvalo/ath.git tags/for-linville-20140717
+
+for you to fetch changes up to 993619443774f7ef4df3b98655df4c3bf298548c:
+
+  ath10k: sanitize tx ring index access properly (2014-07-15 11:19:45 +0300)
+
+----------------------------------------------------------------
+Frederic Danis (1):
+      ath6kl: Fix ath6kl_bmi_read_hi32 macro
+
+Janusz Dziedzic (2):
+      ath10k: print Kconfig options
+      ath10k: add implementation for configure max amsdu, ampdu
+
+Jessica Wu (3):
+      ath6kl: implement rx flush for htc pipe
+      ath6kl: add support wmi rate tables with mcs15
+      ath6kl: add support for ar6004 hw3.0
+
+Kalle Valo (3):
+      ath10k: remove unused len variables from wmi process rx functions
+      ath6kl: convert ar6004 hardware flags to firmware feature flags
+      ath6kl: don't set hi_refclk_hz if hardware version doesn't need it
+
+Michal Kazior (3):
+      ath10k: fix unregister deadlock when fw probe fails
+      ath10k: fix bmi exchange tx/rx race
+      ath10k: sanitize tx ring index access properly
+
+ drivers/net/wireless/ath/ath10k/ce.c       |   11 ++--
+ drivers/net/wireless/ath/ath10k/core.c     |   12 +++-
+ drivers/net/wireless/ath/ath10k/core.h     |    3 +
+ drivers/net/wireless/ath/ath10k/debug.c    |   73 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt.h      |   13 ++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c   |   46 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c      |   11 +---
+ drivers/net/wireless/ath/ath10k/pci.h      |    3 +-
+ drivers/net/wireless/ath/ath10k/wmi.c      |    6 --
+ drivers/net/wireless/ath/ath6kl/bmi.h      |    3 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +-
+ drivers/net/wireless/ath/ath6kl/core.c     |   16 +++++
+ drivers/net/wireless/ath/ath6kl/core.h     |   36 +++++++++--
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   32 +++++++++-
+ drivers/net/wireless/ath/ath6kl/init.c     |   90 ++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath6kl/main.c     |   17 ++++--
+ drivers/net/wireless/ath/ath6kl/usb.c      |    7 ++-
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   72 ++++++++++++++++++++--
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    2 +-
+ 19 files changed, 388 insertions(+), 71 deletions(-)
+
+-- 
+Kalle Valo
