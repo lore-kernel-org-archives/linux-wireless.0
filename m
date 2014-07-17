@@ -1,296 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:54471 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbaF3WDW (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:42914 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbaGQRcu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 18:03:22 -0400
-Received: by mail-pd0-f175.google.com with SMTP id v10so8918299pde.34
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 15:03:21 -0700 (PDT)
-Date: Mon, 30 Jun 2014 15:03:16 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/5] cfg80211: allow drivers to provide regulatory
- settings
-Message-ID: <20140630220316.GL1390@garbanzo.do-not-panic.com> (sfid-20140701_000327_373365_E62D0825)
-References: <1402469724-22358-1-git-send-email-arik@wizery.com>
- <1402469724-22358-2-git-send-email-arik@wizery.com>
- <CAB=NE6Wburfgomm81BL-MPsqZSSCSMNyim29OWw3Twj8q2AOUQ@mail.gmail.com>
- <CA+XVXff1SLHvP3PABdV1U2xw8CQW660xJR1QMUkW0QaaEpThYQ@mail.gmail.com>
+	Thu, 17 Jul 2014 13:32:50 -0400
+Received: by mail-wi0-f181.google.com with SMTP id bs8so3172143wib.14
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:32:48 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/6] b43: N-PHY: add tables for radio 0x2057 rev 14
+Date: Thu, 17 Jul 2014 19:31:02 +0200
+Message-Id: <1405618266-20200-2-git-send-email-zajec5@gmail.com> (sfid-20140717_193301_774126_41146949)
+In-Reply-To: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
+References: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+XVXff1SLHvP3PABdV1U2xw8CQW660xJR1QMUkW0QaaEpThYQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 09:37:29AM +0300, Arik Nemtsov wrote:
-> On Thu, Jun 19, 2014 at 2:32 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
-> > On Tue, Jun 10, 2014 at 11:55 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> >> Define a new wiphy callback allowing drivers to provide regulatory
-> >> settings.
-> >>
-> >> Only The first wiphy registered with this callback will be able to provide
-> >> regulatory domain info. If such a wiphy exists, it takes precedence over
-> >> other data sources.
-> >>
-> >> Change-Id: If8f8faf1d127120ae464b45098c5edbc5aee3dc0
-> >> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> >> Reviewed-on: https://gerrit.rds.intel.com/32858
-> >> Tested-by: IWL Jenkins
-> >> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> >> ---
-> >>  include/net/cfg80211.h | 16 +++++++++++++
-> >>  net/wireless/reg.c     | 65 +++++++++++++++++++++++++++++++++++++++++++++-----
-> >>  2 files changed, 75 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> >> index 5c17b1f..b8f0269 100644
-> >> --- a/include/net/cfg80211.h
-> >> +++ b/include/net/cfg80211.h
-> >> @@ -2950,6 +2950,19 @@ struct wiphy_vendor_command {
-> >>   *     low rssi when a frame is heard on different channel, then it should set
-> >>   *     this variable to the maximal offset for which it can compensate.
-> >>   *     This value should be set in MHz.
-> >> + * @get_regd: a driver callback to for publishing regulatory information.
-> >> + *     By implementing this callback, a wiphy indicates it will provide
-> >> + *     regulatory information. The callback must be set before the wiphy is
-> >> + *     is registered. Only the first wiphy with this callback will be called
-> >> + *     to provide a regdomain on country-code changes.
-> >
-> > The way this is implemented is a bit more exclusive than this kdoc
-> > explains -- the way its implemented below allows only a single wiphy
-> > *ever* to be registered with this capability. This means that external
-> > attachments such as USB 802.11 devices that have this API requirement
-> > cannot ensure that they will get this callback issued. What do we want
-> > to do about that?
-> 
-> Well Intel regulatory constraints require us to be the "dictator".
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+Channel tables were fetched using this lovely set of commands:
+egrep -A 60 'read32 0x.....160 -> 0x00010028' 43217-wl.txt.b43 > 43217-channels-1.txt
+vim 43217-channels-1.txt
+:%s/radio_write(0x0016) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\tRADIOREGS7_2G(\1, \2, \3, \4, \5, \6, \7, \8,/
+:%s/radio_write(0x002d) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\t\t      \1, \2, \3, \4, \5, \6, \7, \8,/
+:%s/radio_write(0x00e3) <- \(.*\)\n.* <- \(.*\)/\t\t\t      \1, \2),/
+:%s/phy_write(0x01ce) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\tPHYREGS(\1, \2, \3, \4, \5, \6),/
+:%s/ read32 0x.....160 -> 0x00010028\nwrite16 0x.....164 <- \(.*\)/\t\t.freq\t\t\t= \1/
+:wq
+grep -P "\t" 43217-channels-1.txt > 43217-channels-2.txt
+vim 43217-channels-2.txt
+:%s/\(.*freq\)/\t{\r\1/
+:%s/\(PHYREGS.*\)/\1\r\t},/
+:wq
 
-That requirement is in no way in conflict with addressing support
-for the get_regd() callback on multiple drivers. Let's separate
-a requirement from not having done the required work for a full
-patch.
+Inittable was extracted from the following part of dump:
+>>> b43_radio_init2057_pre end
+radio_write(0x0011) <- 0x00fc
+radio_write(0x0030) <- 0x0024
+radio_write(0x0040) <- 0x001c
+radio_write(0x0082) <- 0x0008
+radio_write(0x00b4) <- 0x0044
+radio_write(0x00c8) <- 0x0001
+radio_write(0x00c9) <- 0x0001
+radio_write(0x0107) <- 0x0008
+radio_write(0x014d) <- 0x0001
+radio_write(0x014e) <- 0x0001
+radio_write(0x01af) <- 0x0040
+radio_write(0x01b0) <- 0x0040
+radio_write(0x01cc) <- 0x0001
+radio_write(0x01cf) <- 0x0010
+radio_write(0x01d0) <- 0x000f
+radio_write(0x01d3) <- 0x0010
+radio_write(0x01d4) <- 0x000f
+---
+ drivers/net/wireless/b43/phy_n.c       |  12 +++-
+ drivers/net/wireless/b43/radio_2057.c  | 103 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/b43/tables_nphy.c |  40 +++++++++++++
+ 3 files changed, 152 insertions(+), 3 deletions(-)
 
-> This feature is also primarily designed for systems which are not
-> extensible, so you can't really add another device.
-> I guess we'll have to solve this when the need arises.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 479cda8..3da02ff 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -765,7 +765,12 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
+ 			}
+ 		}
+ 		break;
+-	/* TODO */
++	case 14: /* 2 GHz only */
++		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_R1, 0x1b);
++		b43_radio_write(dev, R2057_CP_KPD_IDAC, 0x3f);
++		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C1, 0x1f);
++		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C2, 0x1f);
++		break;
+ 	}
+ 
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+@@ -778,8 +783,11 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
+ 				txmix2g_tune_boost_pu = 0x0041;
+ 				/* TODO */
+ 				break;
++			case 14:
++				txmix2g_tune_boost_pu = 0x21;
++				pad2g_tune_pus = 0x23;
++				break;
+ 			}
+-			/* TODO */
+ 		}
+ 
+ 		if (txmix2g_tune_boost_pu)
+diff --git a/drivers/net/wireless/b43/radio_2057.c b/drivers/net/wireless/b43/radio_2057.c
+index c9c24b6..ff1e026 100644
+--- a/drivers/net/wireless/b43/radio_2057.c
++++ b/drivers/net/wireless/b43/radio_2057.c
+@@ -117,6 +117,15 @@ static u16 r2057_rev9_init[][2] = {
+ 	{ 0x14e, 0x01 }, { 0x1b7, 0x05 }, { 0x1c2, 0xa0 },
+ };
+ 
++/* Extracted from MMIO dump of 6.30.223.248 */
++static u16 r2057_rev14_init[][2] = {
++	{ 0x011, 0xfc }, { 0x030, 0x24 }, { 0x040, 0x1c }, { 0x082, 0x08 },
++	{ 0x0b4, 0x44 }, { 0x0c8, 0x01 }, { 0x0c9, 0x01 }, { 0x107, 0x08 },
++	{ 0x14d, 0x01 }, { 0x14e, 0x01 }, { 0x1af, 0x40 }, { 0x1b0, 0x40 },
++	{ 0x1cc, 0x01 }, { 0x1cf, 0x10 }, { 0x1d0, 0x0f }, { 0x1d3, 0x10 },
++	{ 0x1d4, 0x0f },
++};
++
+ #define RADIOREGS7(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
+ 		   r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
+ 		   r20, r21, r22, r23, r24, r25, r26, r27) \
+@@ -280,6 +289,87 @@ static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev8_radio_
+ 	}
+ };
+ 
++/* Extracted from MMIO dump of 6.30.223.248 */
++static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev17_radio_rev14[] = {
++	{
++		.freq			= 2412,
++		RADIOREGS7_2G(0x48, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x6c,
++			      0x09, 0x0d, 0x09, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
++	},
++	{
++		.freq			= 2417,
++		RADIOREGS7_2G(0x4b, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x71,
++			      0x09, 0x0d, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
++	},
++	{
++		.freq			= 2422,
++		RADIOREGS7_2G(0x4e, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x76,
++			      0x09, 0x0d, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
++	},
++	{
++		.freq			= 2427,
++		RADIOREGS7_2G(0x52, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x7b,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
++	},
++	{
++		.freq			= 2432,
++		RADIOREGS7_2G(0x55, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x80,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
++	},
++	{
++		.freq			= 2437,
++		RADIOREGS7_2G(0x58, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x85,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
++			      0x53, 0xff),
++		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
++	},
++	{
++		.freq			= 2442,
++		RADIOREGS7_2G(0x5c, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x8a,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
++			      0x43, 0xff),
++		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
++	},
++	{
++		.freq			= 2447,
++		RADIOREGS7_2G(0x5f, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x8f,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
++			      0x43, 0xff),
++		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
++	},
++	{
++		.freq			= 2452,
++		RADIOREGS7_2G(0x62, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x94,
++			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
++			      0x43, 0xff),
++		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
++	},
++	{
++		.freq			= 2457,
++		RADIOREGS7_2G(0x66, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x99,
++			      0x09, 0x0b, 0x07, 0x03, 0x21, 0x43, 0xff, 0x21,
++			      0x43, 0xff),
++		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
++	},
++	{
++		.freq			= 2462,
++		RADIOREGS7_2G(0x69, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x9e,
++			      0x09, 0x0b, 0x07, 0x03, 0x01, 0x43, 0xff, 0x01,
++			      0x43, 0xff),
++		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
++	},
++};
++
+ /* Extracted from MMIO dump of 6.30.223.141 */
+ static const struct b43_nphy_chantabent_rev7 b43_nphy_chantab_phy_rev16_radio_rev9[] = {
+ 	{
+@@ -476,6 +566,12 @@ void r2057_upload_inittabs(struct b43_wldev *dev)
+ 			size = ARRAY_SIZE(r2057_rev9_init);
+ 		}
+ 		break;
++	case 17:
++		if (phy->radio_rev == 14) {
++			table = r2057_rev14_init[0];
++			size = ARRAY_SIZE(r2057_rev14_init);
++		}
++		break;
+ 	}
+ 
+ 	B43_WARN_ON(!table);
+@@ -498,7 +594,6 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
+ 	*tabent_r7 = NULL;
+ 	*tabent_r7_2g = NULL;
+ 
+-	/* TODO */
+ 	switch (phy->rev) {
+ 	case 8:
+ 		if (phy->radio_rev == 5) {
+@@ -512,6 +607,12 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
+ 			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev16_radio_rev9);
+ 		}
+ 		break;
++	case 17:
++		if (phy->radio_rev == 14) {
++			e_r7_2g = b43_nphy_chantab_phy_rev17_radio_rev14;
++			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev17_radio_rev14);
++		}
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index b39a8dd..ab27c2d 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2764,6 +2764,42 @@ static const u32 b43_ntab_tx_gain_ipa_2057_rev9_2g[] = {
+ 	0x600f0715, 0x600f0715, 0x600f0715, 0x600f0715,
+ };
+ 
++/* Extracted from MMIO dump of 6.30.223.248 */
++static const u32 b43_ntab_tx_gain_ipa_2057_rev14_2g[] = {
++	0x50df002e, 0x50cf002d, 0x50bf002c, 0x50b7002b,
++	0x50af002a, 0x50a70029, 0x509f0029, 0x50970028,
++	0x508f0027, 0x50870027, 0x507f0027, 0x50770027,
++	0x506f0027, 0x50670027, 0x505f0028, 0x50570029,
++	0x504f002b, 0x5047002e, 0x5047002b, 0x50470029,
++	0x503f002c, 0x503f0029, 0x5037002c, 0x5037002a,
++	0x50370028, 0x502f002d, 0x502f002b, 0x502f0028,
++	0x502f0026, 0x5027002d, 0x5027002a, 0x50270028,
++	0x50270026, 0x50270024, 0x501f002e, 0x501f002b,
++	0x501f0029, 0x501f0027, 0x501f0024, 0x501f0022,
++	0x501f0020, 0x501f001f, 0x5017002c, 0x50170029,
++	0x50170027, 0x50170024, 0x50170022, 0x50170021,
++	0x5017001f, 0x5017001d, 0x5017001b, 0x5017001a,
++	0x50170018, 0x50170017, 0x50170015, 0x500f002c,
++	0x500f002a, 0x500f0027, 0x500f0025, 0x500f0023,
++	0x500f0022, 0x500f001f, 0x500f001e, 0x500f001c,
++	0x500f001a, 0x500f0019, 0x500f0018, 0x500f0016,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
++};
++
+ /* IPA 2 5Hz */
+ 
+ static const u32 b43_ntab_tx_gain_ipa_rev3_5g[] = {
+@@ -3583,6 +3619,10 @@ static const u32 *b43_nphy_get_ipa_gain_table(struct b43_wldev *dev)
+ 
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+ 		switch (phy->rev) {
++		case 17:
++			if (phy->radio_rev == 14)
++				return b43_ntab_tx_gain_ipa_2057_rev14_2g;
++			break;
+ 		case 16:
+ 			if (phy->radio_rev == 9)
+ 				return b43_ntab_tx_gain_ipa_2057_rev9_2g;
+-- 
+1.8.4.5
 
-The patch in question does not address denying wiphy registration
-if two drivers have get_regd() implemented, that's essentially what
-this *should* be trying to do but:
-
-1) Its not documented above
-2) The limitation of the patch in no way is part of matching the
-   requirement you mention. That is, the requirement to have Intel's
-   driver as "dictator" has nothing to do with allowing or not
-   multiple similar drivers that can help with compliance by providing
-   their own regulatory dynamically.
-3) You are putting the requirement of implmenting support for
-   multiple drivers with get_regd() on the next user of get_regd()
-   which wants to integrate support for an intel card with theirs,
-   that's unfair and far sighted for an implementation.
-
-The requirement you have has nothing to do with the limitation
-you have so this patch is unacceptable. I also provided recommendations
-on how you can lift this limitation, so it shouldn't be hard.
-
-> > Lets be upfront -- how many regulatory domains will you guys return
-> > right now in which the same alpha2 will be kept? I don't like this for
-> > one bit at all, if you are going to return a 99 for a specific alpha2
-> > it must mean firmware / driver has the ability to search for an alpha2
-> > for a set of custom regulatory domains, which should also mean you
-> > should be able to return a set of alpha2s that can be used for the
-> > custom regulatory domain, so I'd like to see that added as a possible
-> > return set. This should set expectations for users, build a better
-> > understanding of how all this works, and most importantly enable easy
-> > and shorter scraping of the firmware for our own research and
-> > development and advancement of wireless-regdb as otherwise we'd have
-> > to loop over every alpha2 and then deduce grouping. This is the only
-> > way I see this being reasonable to accept upstream.
-> 
-> I think you're misunderstanding things here. We only give back real
-> regulatory domains. The "99" is only used as a means the get the
-> currently NVRAM flashed regdomain from FW.
-
-If its real regulatory domains then why is the alpha2 not set?
-
-> We discussed this on the other patch.. Perhaps I should tweak the
-> explanation a bit here.
-
-Yes please.
-
-> > We also should be clear now in the documentation about the differences
-> > and purpose behind this API and the custom regulatory which tons of
-> > folks already use. In this case the requirement was dynamic changes
-> > and to ensure these changes get back to userspace permissively as
-> > otherwise they could not. The way I see it the custom stuff should be
-> > used for custom world regulatory domains -- this new API is for
-> > specific alpha2s. This should also mean then that this API should
-> > *not* be used to query the firmware for the world regulatory domain.
-> 
-> Why not? What's problematic here?
-> I would much prefer to keep a single API for everything.
-
-Because APIs already exist for some of what you want already. In
-particular it seems to me you can implement the alpha2 hint with
-the callback by using a capability flag and having the core deal
-the callback and then applying the regulatory domain.
-Please check but I think you might want alpha2 cases to have handle_channel()
-apply the rules on the orig_* parameters which which happens when
-REGULATORY_STRICT_REG is set, ie, you may want to require having
-set the callback to have REGULATORY_STRICT_REG set. This allows
-drivers to enforce the orig_ values reflecting the regulatory
-domain data structure. regulatory_hint() also propagates to other drivers
-as well and the code also considers the regulatory state for older
-types of requests to decide what it should do for each driver and
-each case given that we have very different drivers with different
-regulatory requirements.
-
-The wiphy_apply_custom_regulatory() is only for custom regulatory
-domains, the difference is that wiphy_apply_custom_regulatory() doesn't
-take into consideration the regulatory state machine and changes that
-have happened over time, it is also specific to only one wiphy. Lastly
-it doesn't update orig_* parameters.
-
-For the non alpha2 cases it seems you want a post registration
-wiphy_apply_custom_regulatory() type of call which would only apply
-to that wiphy, never update orig_* parameters, and consider then also
-the regulatory state machine. If you don't care about the regulatory
-state machine that makes you special and you must deal with both.
-
-We can't blend the two types of calls because they are very different
-in terms of purpose and also the implications on other drivers.
-Adding a new API to let custom world regulatory domains or specific
-alpha2s would make the other two APIs kind of pointless, we want to
-be specific.
-
-> > It also means that the custom flag has to be looked at carefully as
-> > well now since the custom flag may need to be lifted dynamically. You
-> > may want to look at the Atheros ath module for the different use cases
-> > as they ship tons of different types of devices: world roaming, and
-> > also cards with a specific alpha2 set. There's a bit of boiler place
-> > code there that I saw tons of drivers share / copy so perhaps some
-> > boiler plate code might be in order to help here.
-> 
-> It is already lifted dynamically if a driver regulatory hint arrives.
-
-That indeed that was my point and it seems this was reviewed and considered.
-Great.
-
-> > This new API makes only sense for dynamic changes and as such I do
-> > expect this to be used for direct alpha2 mappings, not some region
-> > stuff. Grouping regulatory domains to groups makes sense to save size
-> > -- we've seen this before by other vendors but we should be easily
-> > able to get the group alpha2 mapping as well. If Intel is *not* going
-> > to contribute to wireless-regdb this at the very least should help us
-> > move forward with the public regdb by providing back mapping of all
-> > the alpha2s that a regulatory domain passed also applies to.
-> 
-> The API currently doesn't work this way. I'll ask the regulatory folks
-> for a table, but I can't promise anything.
-
-OK.
-
-> >> + *     If an ERR_PTR is returned the regulatory core will consult other
-> >> + *     sources for the regdomain info (internal regdb and CRDA).
-> >
-> > That's nice.
-> >
-> >> +                                                                                           Returning
-> >> + *     NULL will cause the regdomain to remain the same.
-> >
-> >
-> > What do you mean by this? Can you please elaborate exactly what this means?
-> 
-> It means we will ignore the request. Not sure what's to elaborate.
-
-Why would you do that? Explain why a regulatory hint would be issued
-and then the driver could decide to ignore it. Seems kind of pointless
-if the driver was the one originally issuing the request!
-
-> >>  static struct regulatory_request core_request_world = {
-> >> @@ -129,6 +132,15 @@ static int reg_num_devs_support_basehint;
-> >>   */
-> >>  static bool reg_is_indoor;
-> >>
-> >> +/*
-> >> + * Wiphy with a get_regd() callback that can provide regulatory information
-> >> + * when the country code changes. Only the first wiphy registered with the
-> >> + * get_regd callback will be called to provide a regdomain on country-code
-> >> + * changes.
-> >> + * (protected by RTNL)
-> >> + */
-> >> +static struct wiphy *regd_info_wiphy;
-> >
-> > Note all my feedback on the kdoc comment about this. This obviously
-> > doesn't scale well but more importantly given that devices bus
-> > configuration can change (regardless of what systemd folks think) it
-> > means that we can get different results on a system with 2 internal
-> > cards. Systems with multiple built in 802.11 cards were something of a
-> > theoretical myth back in the day when we started with 802.11 but not
-> > anymore. For example I'm very aware of some Freebox 802.11 APs with
-> > multiple built in 802.11 cards and from different vendors!  No only
-> > can this lead to issues with cards on different buses and races
-> > therein, but it could also produce different results on different
-> > architectures.
-> 
-> Agree it's a hairy issue, but I think we should get to this in a later
-> patch. It's not a simple issue or "fix".
-> Might need different policies, intersections, etc.
-
-Exactly, no address this, otheriwse having an intel driver present would
-mean not being able to register other similar type of drivers loaded
-on a system. This is unacceptable.
-
-> >>  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
-> >>  {
-> >>         return rtnl_dereference(cfg80211_regdomain);
-> >> @@ -538,9 +550,39 @@ static int call_crda(const char *alpha2)
-> >>         return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
-> >>  }
-> >>
-> >> +static int call_wiphy_regd_info(const char *alpha2)
-> >> +{
-> >> +       struct ieee80211_regdomain *regd;
-> >> +
-> >> +       if (!regd_info_wiphy)
-> >> +               return -ENOENT;
-> >> +
-> >> +       /* can happen if the driver removes the callback at runtime */
-> >> +       if (WARN_ON(!regd_info_wiphy->get_regd))
-> >> +               return -EINVAL;
-> >
-> > I'd rather see a capability flag for this, that way we can also tell
-> > userspace of this ridiculous incarnation of crap on firmware, and when
-> > set we'd expect this to be set. If we want to address the dynamic
-> > removal / addition of the callback that can be dealt with when the
-> > time comes, but that doesn't seem to be required givenou'refe that you
-> > added API to let the firmware let cfg80211 pass through and use the
-> > wireless-regdb data.
-> 
-> Sure I'll add a capability flag.
-
-OK.
-
-> >> +
-> >> +       regd = regd_info_wiphy->get_regd(regd_info_wiphy, alpha2);
-> >> +       if (IS_ERR(regd))
-> >> +               return -EIO;
-> >> +
-> >
-> > You're not feeding the firmware information on availability of the
-> > userspace regulatory domain, in the case of it was allowed, it seems
-> > to me that firmware might make a better decision in the case that
-> > userspace lacks information. Userspace can also be upgraded at runtime
-> > dynamically so whether or not userspace has a regulatory domain can
-> > change at run time. Please consider this.
-> 
-> The Intel use case doesn't use userspace regulatory information at
-> all. This can be extended later I guess.
-
-The "Intel use case" is different than "I'm adding a general API" case.
-You can easily extend the API to pass the regulatory domain for
-inspection even if you don't use it on the driver.
-
-  Luis
