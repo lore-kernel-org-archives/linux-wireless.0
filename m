@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:53452 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761152AbaGYTwi (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:59372 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932725AbaGQN4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 15:52:38 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so1572255wiw.6
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:37 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/12] staging: vt6656: rename device_free_int_bufs to vnt_free_int_bufs
-Date: Fri, 25 Jul 2014 20:51:49 +0100
-Message-Id: <1406317916-21884-5-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215242_647089_4A7833C7)
-In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
-References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 17 Jul 2014 09:56:49 -0400
+From: Andrey Utkin <andrey.krieger.utkin@gmail.com>
+To: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	netdev@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: linville@tuxdriver.com,
+	Andrey Utkin <andrey.krieger.utkin@gmail.com>
+Subject: [PATCH 4/4] ath9k: drop negativity checks for unsigned values coming from kstrtoul()
+Date: Thu, 17 Jul 2014 16:56:37 +0300
+Message-Id: <1405605397-13749-1-git-send-email-andrey.krieger.utkin@gmail.com> (sfid-20140717_155716_409929_8D80A8D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-changing device to vnt
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=80471
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=80481
+Reported-by: David Binderman <dcb314@hotmail.com>
+Signed-off-by: Andrey Utkin <andrey.krieger.utkin@gmail.com>
 ---
- drivers/staging/vt6656/main_usb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c    | 2 +-
+ drivers/net/wireless/ath/ath9k/spectral.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 76678c8..50955d2 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -434,7 +434,7 @@ static void usb_device_reset(struct vnt_private *priv)
- 	return ;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index ce073e9..d227936 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -202,7 +202,7 @@ static ssize_t write_file_ani(struct file *file,
+ 	if (kstrtoul(buf, 0, &ani))
+ 		return -EINVAL;
  
--static void device_free_int_bufs(struct vnt_private *priv)
-+static void vnt_free_int_bufs(struct vnt_private *priv)
- {
- 	kfree(priv->int_buf.data_buf);
+-	if (ani < 0 || ani > 1)
++	if (ani > 1)
+ 		return -EINVAL;
  
-@@ -569,7 +569,7 @@ static int vnt_start(struct ieee80211_hw *hw)
- free_all:
- 	vnt_free_rx_bufs(priv);
- 	vnt_free_tx_bufs(priv);
--	device_free_int_bufs(priv);
-+	vnt_free_int_bufs(priv);
+ 	common->disable_ani = !ani;
+diff --git a/drivers/net/wireless/ath/ath9k/spectral.c b/drivers/net/wireless/ath/ath9k/spectral.c
+index 99f4de9..5fe29b9 100644
+--- a/drivers/net/wireless/ath/ath9k/spectral.c
++++ b/drivers/net/wireless/ath/ath9k/spectral.c
+@@ -313,7 +313,7 @@ static ssize_t write_file_spectral_short_repeat(struct file *file,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
  
- 	usb_kill_urb(priv->interrupt_urb);
- 	usb_free_urb(priv->interrupt_urb);
-@@ -604,7 +604,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
+-	if (val < 0 || val > 1)
++	if (val > 1)
+ 		return -EINVAL;
  
- 	vnt_free_tx_bufs(priv);
- 	vnt_free_rx_bufs(priv);
--	device_free_int_bufs(priv);
-+	vnt_free_int_bufs(priv);
+ 	sc->spec_config.short_repeat = val;
+@@ -361,7 +361,7 @@ static ssize_t write_file_spectral_count(struct file *file,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
  
- 	usb_kill_urb(priv->interrupt_urb);
- 	usb_free_urb(priv->interrupt_urb);
+-	if (val < 0 || val > 255)
++	if (val > 255)
+ 		return -EINVAL;
+ 
+ 	sc->spec_config.count = val;
+@@ -409,7 +409,7 @@ static ssize_t write_file_spectral_period(struct file *file,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
+ 
+-	if (val < 0 || val > 255)
++	if (val > 255)
+ 		return -EINVAL;
+ 
+ 	sc->spec_config.period = val;
+@@ -457,7 +457,7 @@ static ssize_t write_file_spectral_fft_period(struct file *file,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
+ 
+-	if (val < 0 || val > 15)
++	if (val > 15)
+ 		return -EINVAL;
+ 
+ 	sc->spec_config.fft_period = val;
 -- 
-2.0.1
+1.8.5.5
 
