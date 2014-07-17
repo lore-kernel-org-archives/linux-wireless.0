@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:41935 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862AbaGOQjX (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:62796 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbaGQRcy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 12:39:23 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	sven@narfation.org, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [RFC 0/2] ath10k spectral scan support
-Date: Tue, 15 Jul 2014 18:32:44 +0200
-Message-Id: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> (sfid-20140715_183932_188357_A1032381)
+	Thu, 17 Jul 2014 13:32:54 -0400
+Received: by mail-wi0-f176.google.com with SMTP id bs8so8180166wib.9
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:32:52 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/6] b43: N-PHY: set band on every channel switch
+Date: Thu, 17 Jul 2014 19:31:04 +0200
+Message-Id: <1405618266-20200-4-git-send-email-zajec5@gmail.com> (sfid-20140717_193302_417676_CF51EE25)
+In-Reply-To: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
+References: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the first patchset iteration for review to implement the ath10k
-spectral scan feature. The patchset is still experimental, but we were
-able to detect our analogue 5.8 GHz TV repeater in the sample data. :)
+Seems to be required by some hardware, wl does it every time.
 
-As for ath9k, a proof of concept data plotter has been implemented, and
-is currently available for ath10k in its own branch of FFT_eval [1].
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c | 16 ++++++++--------
+ drivers/net/wireless/b43/phy_n.h |  2 ++
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-There are a few open questions, and any help or pointers would be
-appreciated:
-
- * so far, we could only enable endless mode (samples are sent
-   endlessly). To prevent relayfs buffers overflowing because they are
-   not read from userspace, it would be great to set a "count" to limit
-   the number of samples sent after a trigger. That was possible in
-   ath9k as well. However, if we set the "scan_count" parameter in the
-   WMI command to something else than 0 (default), we don't get any
-   samples at all. Is there any other configuration which needs to be
-   done to get a limited number of samples?
- * So far, we always get 64 bins of fft data in the samples, even if we
-   are in HT40 or VHT80 mode. That doesn't seem right, as there should
-   be more bins for wider channels (e.g. 128 or 256 bins). Is there any
-   parameter to change in the configuration to get the output from
-   multiple channels / higher bandwidth?
-
-Kudos to Kalle and Michal for their help to get this started. :)
-
-Cheers,
-     Simon
-
-[1] https://github.com/simonwunderlich/FFT_eval/tree/ath10k_wip
-
-Sven Eckelmann (2):
-  ath: Move spectral debugfs structs to shared header
-  ath10k: add spectral scan feature
-
- drivers/net/wireless/ath/ath10k/Kconfig    |   1 +
- drivers/net/wireless/ath/ath10k/Makefile   |   3 +-
- drivers/net/wireless/ath/ath10k/core.h     |   6 +
- drivers/net/wireless/ath/ath10k/debug.c    |   3 +
- drivers/net/wireless/ath/ath10k/spectral.c | 368 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/spectral.h |  66 ++++++
- drivers/net/wireless/ath/ath10k/wmi.c      |  98 +++++++-
- drivers/net/wireless/ath/ath10k/wmi.h      |  80 +++++++
- drivers/net/wireless/ath/ath9k/spectral.h  |  71 +-----
- drivers/net/wireless/ath/spectral_common.h | 108 +++++++++
- 10 files changed, 733 insertions(+), 71 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/spectral.c
- create mode 100644 drivers/net/wireless/ath/ath10k/spectral.h
- create mode 100644 drivers/net/wireless/ath/spectral_common.h
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 2c55832..ef1acae 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -6058,23 +6058,23 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_n *nphy = dev->phy.n;
+ 	int ch = new_channel->hw_value;
+-
+-	u16 old_band_5ghz;
+ 	u16 tmp16;
+ 
+-	old_band_5ghz =
+-		b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
+-	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
++	if (new_channel->band == IEEE80211_BAND_5GHZ) {
+ 		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
+ 		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
+-		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
++		/* Put BPHY in the reset */
++		b43_phy_set(dev, B43_PHY_B_BBCFG,
++			    B43_PHY_B_BBCFG_RSTCCA | B43_PHY_B_BBCFG_RSTRX);
+ 		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
+ 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
+-	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
++	} else if (new_channel->band == IEEE80211_BAND_2GHZ) {
+ 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
+ 		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
+ 		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
+-		b43_phy_mask(dev, B43_PHY_B_BBCFG, 0x3FFF);
++		/* Take BPHY out of the reset */
++		b43_phy_mask(dev, B43_PHY_B_BBCFG,
++			     (u16)~(B43_PHY_B_BBCFG_RSTCCA | B43_PHY_B_BBCFG_RSTRX));
+ 		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
+ 	}
+ 
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 474bf75..30bec81 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -869,6 +869,8 @@
+ #define B43_NPHY_REV7_RF_CTL_OVER6		B43_PHY_N(0x347)
+ 
+ #define B43_PHY_B_BBCFG				B43_PHY_N_BMODE(0x001) /* BB config */
++#define  B43_PHY_B_BBCFG_RSTCCA			0x4000 /* Reset CCA */
++#define  B43_PHY_B_BBCFG_RSTRX			0x8000 /* Reset RX */
+ #define B43_PHY_B_TEST				B43_PHY_N_BMODE(0x00A)
+ 
+ struct b43_wldev;
 -- 
-1.9.1
+1.8.4.5
 
