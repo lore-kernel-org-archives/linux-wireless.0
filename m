@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:38555 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754562AbaGILAa (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:64397 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933849AbaGQOOW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2014 07:00:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <1404898305-15588-1-git-send-email-eliad@wizery.com>
-References: <1404898305-15588-1-git-send-email-eliad@wizery.com>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Wed, 9 Jul 2014 13:00:10 +0200
-Message-ID: <CAGm1_kvTYiDZDuFrB9X1ZOCxrhPC_NE_UzzY8PoBpdZHrQgv_A@mail.gmail.com> (sfid-20140709_130037_150135_721BE05E)
-Subject: Re: [PATCH] wlcore: add basic device-tree support
-To: Eliad Peller <eliad@wizery.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Jul 2014 10:14:22 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so3136676wes.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:21 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 12/15] mac80211: disable VHT for TDLS
+Date: Thu, 17 Jul 2014 17:14:28 +0300
+Message-Id: <1405606471-30128-13-git-send-email-arik@wizery.com> (sfid-20140717_161446_016306_6AF0E4DD)
+In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
+References: <1405606471-30128-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 9, 2014 at 11:31 AM, Eliad Peller <eliad@wizery.com> wrote:
-> When running with device-tree, we no longer have a board file
-> that can set up the platform data for wlcore.
-> Allow this data to be passed from DT.
->
-> For now, parse only the irq used. Other (optional) properties
-> can be added later on.
+TDLS VHT support requires some more information elements during setup.
+While these are not there, mask out the peer's VHT capabilities so that
+VHT rates are not mistakenly used.
 
-What about adding support for "mac-address"
-(Documentation/devicetree/bindings/net/ethernet.txt) node or will it
-be automatically available?
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/vht.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Yegor
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 9265adf..671ce0d 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -129,6 +129,10 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 		return;
+ 
++	/* don't support VHT for TDLS peers for now */
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++		return;
++
+ 	/*
+ 	 * A VHT STA must support 40 MHz, but if we verify that here
+ 	 * then we break a few things - some APs (e.g. Netgear R6300v2
+-- 
+1.9.1
+
