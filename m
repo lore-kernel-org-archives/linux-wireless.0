@@ -1,267 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:55919 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757613AbaGPKSw (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36369 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbaGQE2w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 06:18:52 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so5911212wiv.5
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 03:18:48 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Thu, 17 Jul 2014 00:28:52 -0400
+Received: by mail-pa0-f43.google.com with SMTP id lf10so2563879pab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 21:28:52 -0700 (PDT)
+Message-ID: <1405571303.11940.3.camel@spark> (sfid-20140717_062856_062899_20D36774)
+Subject: Re: About WSMP (Wave Short Message Protocol)
+From: spark <saurabh6321@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: fix Rx reordering with RX_FLAG_AMSDU_MORE
-Date: Wed, 16 Jul 2014 12:09:31 +0200
-Message-Id: <1405505371-13064-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_121901_774609_C52517AD)
+Cc: davem@redhat.com, linville@lvl7.com, siva@aradasystems.com,
+	bugzilla-daemon@wireshark.org, vamsi07450@gmail.com
+Date: Thu, 17 Jul 2014 09:58:23 +0530
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (e.g. ath10k) report A-MSDU subframes
-individually with identical seqno. The A-MPDU Rx
-reorder code did not account for that which made
-it practically unusable with drivers using
-RX_FLAG_AMSDU_MORE because it would end up
-dropping a lot of frames resulting in confusion in
-upper network transport layers.
+On Fri, 2014-07-11 at 14:45 +0530, vamsi wrote:
+> Hi,
+>  
+> I am planing developing WSMP (Wave Short Message Protocol) protocol in
+> transport layer for this give me any suggestions how to start adding
+> protocol? 
+> 
+> Thanks 
+> vamsi
+> 
+> --
+I would like to add to this. WSMP(Wave Short Message Protocol ie. 1609.3
+published by the IEEE Vehicular Society) is a part of the DSRC(Dedicated
+Short Range Communications) standards suite which include 802.11p,
+1609.x series. Which are used for "intervehicular communication" and
+also for "vehicle to infrastructure communication".
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/agg-rx.c      |  9 +++++---
- net/mac80211/ieee80211_i.h | 15 ++++++++++++
- net/mac80211/rx.c          | 57 ++++++++++++++++++++++++++++++----------------
- net/mac80211/sta_info.h    |  5 ++--
- 4 files changed, 62 insertions(+), 24 deletions(-)
+The DSRC/WAVE stack:
+        
+         Application Layer (SAE J2735 Message set dictionary)
+A
+                ^
+                |
+         Transport Layer -| 
+                ^         |
+                |         |--(WSMP IEEE 1609.3) Both combined
+         Network Layer    |
+                ^         |
+                |         |
+         LLC(existing)   -|
+                ^        
+                |        
+         Datalink Layer  -|
+                ^         |
+                |         |--(1609.4 and IEEE802.11p)
+         Physical Layer  -|
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 31bf258..d38c49b 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -52,7 +52,7 @@ static void ieee80211_free_tid_rx(struct rcu_head *h)
- 	del_timer_sync(&tid_rx->reorder_timer);
- 
- 	for (i = 0; i < tid_rx->buf_size; i++)
--		dev_kfree_skb(tid_rx->reorder_buf[i]);
-+		__skb_queue_purge(&tid_rx->reorder_buf[i]);
- 	kfree(tid_rx->reorder_buf);
- 	kfree(tid_rx->reorder_time);
- 	kfree(tid_rx);
-@@ -232,7 +232,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 	struct tid_ampdu_rx *tid_agg_rx;
- 	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num, status;
- 	u8 dialog_token;
--	int ret = -EOPNOTSUPP;
-+	int i, ret = -EOPNOTSUPP;
- 
- 	/* extract session parameters from addba request frame */
- 	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
-@@ -308,7 +308,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
--		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_KERNEL);
-+		kcalloc(buf_size, sizeof(struct sk_buff_head), GFP_KERNEL);
- 	tid_agg_rx->reorder_time =
- 		kcalloc(buf_size, sizeof(unsigned long), GFP_KERNEL);
- 	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
-@@ -318,6 +318,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 		goto end;
- 	}
- 
-+	for (i = 0; i < buf_size; i++)
-+		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
-+
- 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
- 			       &sta->sta, tid, &start_seq_num, 0);
- 	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9e025e1..ad5d8e4 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1730,6 +1730,21 @@ static inline void ieee802_11_parse_elems(const u8 *start, size_t len,
- 	ieee802_11_parse_elems_crc(start, len, action, elems, 0, 0);
- }
- 
-+static inline bool ieee80211_rx_reorder_ready(struct sk_buff_head *frames)
-+{
-+	struct sk_buff *tail = skb_peek_tail(frames);
-+	struct ieee80211_rx_status *status;
-+
-+	if (!tail)
-+		return false;
-+
-+	status = IEEE80211_SKB_RXCB(tail);
-+	if (status->flag & RX_FLAG_AMSDU_MORE)
-+		return false;
-+
-+	return true;
-+}
-+
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
- void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
- void ieee80211_dynamic_ps_timer(unsigned long data);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5f572be..0b868db 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -688,20 +688,27 @@ static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
- 					    int index,
- 					    struct sk_buff_head *frames)
- {
--	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
-+	struct sk_buff_head *skb_list = &tid_agg_rx->reorder_buf[index];
-+	struct sk_buff *skb;
- 	struct ieee80211_rx_status *status;
- 
- 	lockdep_assert_held(&tid_agg_rx->reorder_lock);
- 
--	if (!skb)
-+	if (skb_queue_empty(skb_list))
- 		goto no_frame;
- 
--	/* release the frame from the reorder ring buffer */
-+	if (!ieee80211_rx_reorder_ready(skb_list)) {
-+		__skb_queue_purge(skb_list);
-+		goto no_frame;
-+	}
-+
-+	/* release frames from the reorder ring buffer */
- 	tid_agg_rx->stored_mpdu_num--;
--	tid_agg_rx->reorder_buf[index] = NULL;
--	status = IEEE80211_SKB_RXCB(skb);
--	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
--	__skb_queue_tail(frames, skb);
-+	while ((skb = __skb_dequeue(skb_list))) {
-+		status = IEEE80211_SKB_RXCB(skb);
-+		status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
-+		__skb_queue_tail(frames, skb);
-+	}
- 
- no_frame:
- 	tid_agg_rx->head_seq_num = ieee80211_sn_inc(tid_agg_rx->head_seq_num);
-@@ -738,13 +745,13 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 					  struct tid_ampdu_rx *tid_agg_rx,
- 					  struct sk_buff_head *frames)
- {
--	int index, j;
-+	int index, i, j;
- 
- 	lockdep_assert_held(&tid_agg_rx->reorder_lock);
- 
- 	/* release the buffer until next missing frame */
- 	index = tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
--	if (!tid_agg_rx->reorder_buf[index] &&
-+	if (!ieee80211_rx_reorder_ready(&tid_agg_rx->reorder_buf[index]) &&
- 	    tid_agg_rx->stored_mpdu_num) {
- 		/*
- 		 * No buffers ready to be released, but check whether any
-@@ -753,7 +760,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 		int skipped = 1;
- 		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
- 		     j = (j + 1) % tid_agg_rx->buf_size) {
--			if (!tid_agg_rx->reorder_buf[j]) {
-+			if (!ieee80211_rx_reorder_ready(
-+					&tid_agg_rx->reorder_buf[j])) {
- 				skipped++;
- 				continue;
- 			}
-@@ -762,6 +770,11 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 					HT_RX_REORDER_BUF_TIMEOUT))
- 				goto set_release_timer;
- 
-+			/* don't leave incomplete A-MSDUs around */
-+			for (i = (index + 1) % tid_agg_rx->buf_size; i != j;
-+			     i = (i + 1) % tid_agg_rx->buf_size)
-+				__skb_queue_purge(&tid_agg_rx->reorder_buf[i]);
-+
- 			ht_dbg_ratelimited(sdata,
- 					   "release an RX reorder frame due to timeout on earlier frames\n");
- 			ieee80211_release_reorder_frame(sdata, tid_agg_rx, j,
-@@ -775,7 +788,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 				 skipped) & IEEE80211_SN_MASK;
- 			skipped = 0;
- 		}
--	} else while (tid_agg_rx->reorder_buf[index]) {
-+	} else while (ieee80211_rx_reorder_ready(
-+				&tid_agg_rx->reorder_buf[index])) {
- 		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index,
- 						frames);
- 		index =	tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
-@@ -786,7 +800,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 
- 		for (; j != (index - 1) % tid_agg_rx->buf_size;
- 		     j = (j + 1) % tid_agg_rx->buf_size) {
--			if (tid_agg_rx->reorder_buf[j])
-+			if (ieee80211_rx_reorder_ready(
-+					&tid_agg_rx->reorder_buf[j]))
- 				break;
- 		}
- 
-@@ -811,6 +826,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
- 					     struct sk_buff_head *frames)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	u16 sc = le16_to_cpu(hdr->seq_ctrl);
- 	u16 mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
- 	u16 head_seq_num, buf_size;
-@@ -845,7 +861,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
- 	index = mpdu_seq_num % tid_agg_rx->buf_size;
- 
- 	/* check if we already stored this frame */
--	if (tid_agg_rx->reorder_buf[index]) {
-+	if (ieee80211_rx_reorder_ready(&tid_agg_rx->reorder_buf[index])) {
- 		dev_kfree_skb(skb);
- 		goto out;
- 	}
-@@ -858,17 +874,20 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
- 	 */
- 	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
- 	    tid_agg_rx->stored_mpdu_num == 0) {
--		tid_agg_rx->head_seq_num =
--			ieee80211_sn_inc(tid_agg_rx->head_seq_num);
-+		if (!(status->flag & RX_FLAG_AMSDU_MORE))
-+			tid_agg_rx->head_seq_num =
-+				ieee80211_sn_inc(tid_agg_rx->head_seq_num);
- 		ret = false;
- 		goto out;
- 	}
- 
- 	/* put the frame in the reordering buffer */
--	tid_agg_rx->reorder_buf[index] = skb;
--	tid_agg_rx->reorder_time[index] = jiffies;
--	tid_agg_rx->stored_mpdu_num++;
--	ieee80211_sta_reorder_release(sdata, tid_agg_rx, frames);
-+	__skb_queue_tail(&tid_agg_rx->reorder_buf[index], skb);
-+	if (!(status->flag & RX_FLAG_AMSDU_MORE)) {
-+		tid_agg_rx->reorder_time[index] = jiffies;
-+		tid_agg_rx->stored_mpdu_num++;
-+		ieee80211_sta_reorder_release(sdata, tid_agg_rx, frames);
-+	}
- 
-  out:
- 	spin_unlock(&tid_agg_rx->reorder_lock);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 2a04361..5a023c4 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -152,7 +152,8 @@ struct tid_ampdu_tx {
- /**
-  * struct tid_ampdu_rx - TID aggregation information (Rx).
-  *
-- * @reorder_buf: buffer to reorder incoming aggregated MPDUs
-+ * @reorder_buf: buffer to reorder incoming aggregated MPDUs. An MPDU may be an
-+ *	A-MSDU with individually reported subframes.
-  * @reorder_time: jiffies when skb was added
-  * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
-  * @reorder_timer: releases expired frames from the reorder buffer.
-@@ -177,7 +178,7 @@ struct tid_ampdu_tx {
- struct tid_ampdu_rx {
- 	struct rcu_head rcu_head;
- 	spinlock_t reorder_lock;
--	struct sk_buff **reorder_buf;
-+	struct sk_buff_head *reorder_buf;
- 	unsigned long *reorder_time;
- 	struct timer_list session_timer;
- 	struct timer_list reorder_timer;
--- 
-1.8.5.3
+
+Currently as IEEE 802.11-2012 has released,it is having 802.11p also
+merged in it.
+We may have WSMP acting as both transport layer and network layer.We
+have some proprietry 
+implementations of all these standards but no open source implementation
+has been done.
+
+We propose to develop this in a way so that it has a socket interface to
+the user.
+Please give your suggestions. 
+For more info regarding the stack one may refer to the Document
+IEEE1609.0 or John Kenney's 
+paper on this subject "Dedicated Short-Range
+Communications (DSRC) Standards in the United States"
+link  "http://secs.oakland.edu/~gpcorser/vanet-kenny-DSRC.pdf"
+
+> To unsubscribe from this list: send the line "unsubscribe
+linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 
