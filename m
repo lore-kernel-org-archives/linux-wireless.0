@@ -1,113 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53264 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754350AbaG3R2s (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:41828 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752604AbaGQFeI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 13:28:48 -0400
-Message-ID: <53D92B47.3000305@broadcom.com> (sfid-20140730_192851_722440_5EB174F0)
-Date: Wed, 30 Jul 2014 19:28:39 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 17 Jul 2014 01:34:08 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so7256027wib.14
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 22:34:06 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?ANDR=C9_SI?= <andre_cte2010@hotmail.com>
-CC: brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bug Driver Broadcom
-References: <BLU180-W14370D921EDB121FE8EC149DF90@phx.gbl> <BLU180-W146AAC9DB0BDA5C16DED8B9DF90@phx.gbl>,<53D90FCA.9030603@broadcom.com> <BLU180-W3796F15428964196877C529DF90@phx.gbl>
-In-Reply-To: <BLU180-W3796F15428964196877C529DF90@phx.gbl>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <3551054.tVFpeBPdYt@bentobox>
+References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de>
+	<1405441966-32681-3-git-send-email-sw@simonwunderlich.de>
+	<CA+BoTQm1i2UoTtPBf7Z3QLQDBs_1uXwdG8gYOkP556+a7AqcpQ@mail.gmail.com>
+	<3551054.tVFpeBPdYt@bentobox>
+Date: Thu, 17 Jul 2014 07:34:05 +0200
+Message-ID: <CA+BoTQkmG2t1HkF=C6BZC18XjJzuwF3EpxEh-tiNct_BnyP62A@mail.gmail.com> (sfid-20140717_073413_513029_964E7561)
+Subject: Re: [RFC 2/2] ath10k: add spectral scan feature
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Sven Eckelmann <sven@narfation.org>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/14 19:15, ANDRÉ SI wrote:
+On 16 July 2014 16:35, Sven Eckelmann <sven@narfation.org> wrote:
+> On Wednesday 16 July 2014 11:30:12 Michal Kazior wrote:
+[...]
+>>
+>> What happens when an interface is removed without spectral scan being
+>> stopped?
 >
->  > Date: Wed, 30 Jul 2014 17:31:22 +0200
->  > From: arend@broadcom.com
->  > To: andre_cte2010@hotmail.com
->  > CC: brcm80211-dev-list@broadcom.com; linux-wireless@vger.kernel.org
->  > Subject: Re: Bug Driver Broadcom
->  >
->  > On 07/30/14 16:59, ANDRÉ SI wrote:
->  > >
->  > > Good Day,
->  > > I have a laptop with a Broadcom wireless card:
->  > > 02:00.0 Network controller: Broadcom Corporation BCM43225 802.11b/g/n
->  > > (rev 01)
->  > > and PCI ID 14e4:4357.
->  > > I have Linux installed and the chipset just don't identifies wireless
->  > > network in channel 12 and 13,
->  > > I live in Brazil, wireless networks at channel 12 and 13 are permitted
->  > > here, how can i solve this problem ?
->  > > I have searched solutions on the internet but none work.
->  >
->  > As far as I know the brcmsmac driver has a custom regulatory domain,
->  > which allows those channels although it is not allowed to initiate
->  > radiation on them. Without any kernel log I can only guess. Can you
->  > provide a kernel log and output of 'iw list' command?
->  >
->  > Regards,
+> This is a question for the QCA firmware guys.
+
+Not really. My problems is this:
+ - have 2 interfaces (vdev 0 and vdev 1)
+ - start spectral (using vdev 0 which happens to be the first one)
+ - remove 1 interface (vdev 0)
+
+Now spectral scan on vdev 0 is not stopped and if you request to stop
+it you effectively call spectral commands with vdev 1 (the other
+interface which is the only one left). Yuck. I don't even want to know
+how firmware (or different versions and branches of it) handle this
+clumsiness.
+
+
+>> > +int ath10k_spectral_scan_config(struct ath10k *ar, enum spectral_mode
+>> > mode) +{
+>> > +       int count, ret;
+>>
+>> We tend to use `res` in ath10k.
 >
-> Follow attached the kernel log and output of 'iw list'
-> Regards
+> Thanks, will be changed. But actually, I found a lot of ret stuff in the
+> ath10k code.
 
-Looking at the kernel long I see you are using the hybrid wl driver. 
-This driver is not what we (brcm80211-dev-list) are supporting. Despite 
-that and the surprising fact that Brazil is part of the EU, it seems 
-channels 12 and 13 are enabled.
+Ah, sorry. You're right. I had a brain fart. `ret` is good.
 
-Could you try the brcmsmac driver instead?
 
-Regards,
-Arend
+[...]
+>> > +       __be16 freq1;
+>> > +       __be16 freq2;
+>> > +       __be16 noise;
+>> > +       __be16 max_magnitude;
+>> > +       __be16 total_gain_db;
+>> > +       __be16 base_pwr_db;
+>> > +       __be64 tsf;
+>> > +       s8 max_index;
+>> > +       u8 rssi;
+>> > +       u8 relpwr_db;
+>> > +       u8 avgpwr_db;
+>> > +
+>> > +       u8 data[SPECTRAL_ATH10K_HT20_NUM_BINS];
+>>
+>> And as pointed out the size/count of bins is most likely not
+>> bandwidth-dependant. It's just a matter of resolution configured with
+>> fft_size + bin_scale. Maybe this should be a variable-sized array?
+>
+> Ok, bin_scale didn't make a difference in my tests (I've just repeated them).
+> But 2 ** (fft_size - 1) seems to be relevant. We have to change the format
+> accordingly.
+>
+> But currently we don't see any change in the bandwidth (20MHz/40MHz) for the
+> different bin numbers. This has to be checked later in detail.
 
---8<----------------------------------------------------------------------
+Yes. Apparently number of bins does *not* change with bandwidth but in
+that case I'm guessing bin data does refer to the given bandwidth
+which implies different bandwidths end up with different bin data
+*resolution*.
 
-[   19.411278] cfg80211: Calling CRDA to update world regulatory domain
-[   19.423164] lib80211: common routines for IEEE802.11 drivers
-[   19.423169] lib80211_crypt: registered algorithm 'NULL'
-[   19.426873] wl: module license 'MIXED/Proprietary' taints kernel.
-[   19.426881] Disabling lock debugging due to kernel taint
-[   19.429979] wl: module verification failed: signature and/or 
-required key missing - tainting kernel
-[   19.435174] i915 0000:00:02.0: irq 42 for MSI/MSI-X
-[   19.435190] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
-[   19.435192] [drm] Driver supports precise vblank timestamp query.
-[   19.436069] vgaarb: device changed decodes: 
-PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
-[   19.470386] INFO @wl_cfg80211_attach : Registered CFG80211 phy
-[   19.475463] lib80211_crypt: registered algorithm 'TKIP'
-[   19.520515] kvm: VM_EXIT_LOAD_IA32_PERF_GLOBAL_CTRL does not work 
-properly. Using workaround
-[   19.523578] wlan0: Broadcom BCM4357 802.11 Hybrid Wireless Controller 
-6.30.223.141 (r415941)
-[   19.539730] fbcon: inteldrmfb (fb0) is primary device
-[   19.624382] acer_wmi: Acer Laptop ACPI-WMI Extras
-[   19.624395] acer_wmi: Function bitmap for Communication Button: 0x1
-[   19.624517] acer_wmi: Brightness must be controlled by acpi video driver
-[   19.625147] input: Acer WMI hotkeys as /devices/virtual/input/input15
-[   19.625425] input: Acer BMA150 accelerometer as 
-/devices/virtual/input/input16
-[   19.881256] cfg80211: World regulatory domain updated:
-[   19.881257] cfg80211:   (start_freq - end_freq @ bandwidth), 
-(max_antenna_gain, max_eirp)
-[   19.881258] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 
-mBi, 2000 mBm)
-[   19.881259] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 
-mBi, 2000 mBm)
-[   19.881260] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 
-mBi, 2000 mBm)
-[   19.881261] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 
-mBi, 2000 mBm)
-[   19.881262] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 
-mBi, 2000 mBm)
-[   19.881275] cfg80211: Calling CRDA for country: EU
-[   19.884189] cfg80211: Regulatory domain changed to country: EU
-[   19.884190] cfg80211:   (start_freq - end_freq @ bandwidth), 
-(max_antenna_gain, max_eirp)
-[   19.884192] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   19.884193] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   19.884194] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   19.884194] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), 
-(N/A, 2700 mBm)
+
+MichaÅ‚
