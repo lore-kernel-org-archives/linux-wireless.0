@@ -1,102 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:47829 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbaGLGyc (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57104 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760689AbaGRMlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 02:54:32 -0400
-Received: by mail-we0-f177.google.com with SMTP id u56so1961051wes.8
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 23:54:31 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/10] staging: vt6656: wcmd Remove command WLAN_CMD_RADIO
-Date: Sat, 12 Jul 2014 07:53:40 +0100
-Message-Id: <1405148028-4053-2-git-send-email-tvboxspy@gmail.com> (sfid-20140712_085435_815864_E6C516D9)
-In-Reply-To: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
-References: <1405148028-4053-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 18 Jul 2014 08:41:14 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Varka Bhadram <varkabhadram@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Denton Gentry <denton.gentry@gmail.com>
+Subject: Re: [PATCH v3] ath10k: fix Rx aggregation reordering
+References: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com>
+	<1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
+	<53C66422.10702@gmail.com>
+	<CA+BoTQn8TYX4vDx=K4P5rE+LBXrrUL2q1E7GsiOpBj82QgRKsw@mail.gmail.com>
+	<CA+BoTQkk5oYS4JZ5a6W02rZ62AgxcHE76knS7QA2VfZDxYi2Jg@mail.gmail.com>
+Date: Fri, 18 Jul 2014 15:41:07 +0300
+In-Reply-To: <CA+BoTQkk5oYS4JZ5a6W02rZ62AgxcHE76knS7QA2VfZDxYi2Jg@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 16 Jul 2014 14:41:27 +0200")
+Message-ID: <87tx6e261o.fsf@kamboji.qca.qualcomm.com> (sfid-20140718_144137_840797_04A2EB26)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of it has already been removed.  checking isr1 & ISR_GPIO3
-serves no purpose.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/int.c  |  6 ------
- drivers/staging/vt6656/wcmd.c | 14 --------------
- drivers/staging/vt6656/wcmd.h |  2 --
- 3 files changed, 22 deletions(-)
+>>> Here my concern in amount of time holding the lock...
+>>>
+>>> spin_lock_bh(&ar->data_lock);
+>>> peer = ath10k_peer_find_by_id(ar, peer_id);
+>>> if (!peer) {
+>>>         spin_unlock_bh(&ar->data_lock);
+>>>
+>>>         ath10k_warn("received addba event for invalid peer_id: %hu\n",
+>>>                     peer_id);
+>>>         return;
+>>> }
+>>>
+>>> No need to of putting the debug message inside the critical region...  :-)
+>>
+>> Sounds reasonable in this case as I'm not printing spinlock-protected values.
+>
+> ..and I realized this isn't true upon hitting the send button.
+>
+> The other print uses peer->vdev_id. The peer was acquired under a lock
+> and must not be used after the lock is released. It'll just look
+> confusing if I mix ordering of unlock/print in some cases so I'll
+> leave it as is.
 
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index 1cc9364..77bd9dd 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -197,12 +197,6 @@ void INTnsProcessData(struct vnt_private *priv)
- 		low_stats->dot11FCSErrorCount += int_data->fcs_err;
- 	}
- 
--	if (int_data->isr1 != 0)
--		if (int_data->isr1 & ISR_GPIO3)
--			bScheduleCommand((void *) priv,
--					WLAN_CMD_RADIO,
--					NULL);
--
- 	priv->int_buf.in_use = false;
- 
- 	stats->tx_errors = priv->wstats.discard.retries;
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 2553cde..0b87486 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -185,10 +185,6 @@ static int s_bCommandComplete(struct vnt_private *pDevice)
- 			pDevice->eCommandState = WLAN_CMD_INIT_MAC80211_START;
- 			break;
- 
--		case WLAN_CMD_RADIO:
--			pDevice->eCommandState = WLAN_CMD_RADIO_START;
--			pDevice->bRadioCmd = bRadioCmd;
--			break;
- 		case WLAN_CMD_CHANGE_BBSENSITIVITY:
- 			pDevice->eCommandState = WLAN_CMD_CHANGE_BBSENSITIVITY_START;
- 			break;
-@@ -234,16 +230,6 @@ int bScheduleCommand(struct vnt_private *pDevice,
- 		return false;
- 	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].eCmd = eCommand;
- 	pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].bForceSCAN = true;
--	if (pbyItem0 != NULL) {
--		switch (eCommand) {
--		case WLAN_CMD_RADIO:
--			pDevice->eCmdQueue[pDevice->uCmdEnqueueIdx].bRadioCmd = *((int *)pbyItem0);
--			break;
--
--		default:
--			break;
--		}
--	}
- 
- 	ADD_ONE_WITH_WRAP_AROUND(pDevice->uCmdEnqueueIdx, CMD_Q_SIZE);
- 	pDevice->cbFreeCmdQueue--;
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 1e5b739..eb2e972 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -42,7 +42,6 @@ typedef enum tagCMD_CODE {
-     WLAN_CMD_DISASSOCIATE,
-     WLAN_CMD_DEAUTH,
-     WLAN_CMD_RX_PSPOLL,
--    WLAN_CMD_RADIO,
-     WLAN_CMD_CHANGE_BBSENSITIVITY,
-     WLAN_CMD_SETPOWER,
-     WLAN_CMD_TBTT_WAKEUP,
-@@ -87,7 +86,6 @@ typedef enum tagCMD_STATE {
-     WLAN_ASSOCIATE_WAIT,
-     WLAN_DISASSOCIATE_WAIT,
-     WLAN_CMD_TX_PSPACKET_START,
--    WLAN_CMD_RADIO_START,
-     WLAN_CMD_CHANGE_BBSENSITIVITY_START,
-     WLAN_CMD_SETPOWER_START,
-     WLAN_CMD_AP_MODE_START,
+I actually prefer also the original form of "warn(); unlock(); return;",
+somehow it feels more natural for me. And this is on error path where
+efficiency is not really a priority.
+
 -- 
-1.9.1
-
+Kalle Valo
