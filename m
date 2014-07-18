@@ -1,110 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:47400 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933134AbaGUPpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 11:45:41 -0400
-Date: Mon, 21 Jul 2014 08:43:07 -0700
-From: Kees Cook <kees@outflux.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-Message-ID: <20140721154307.GG5412@outflux.net> (sfid-20140721_174603_864234_EB5C795A)
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
- <1405373897-31671-7-git-send-email-keescook@chromium.org>
- <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
- <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
- <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
- <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
- <20140721152635.GB6363@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140721152635.GB6363@kroah.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46660 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1422758AbaGRSuZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2014 14:50:25 -0400
+Message-ID: <1405709421.30262.8.camel@dabdike.int.hansenpartnership.com> (sfid-20140718_205037_148629_AAB86A3D)
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Greg KH <greg@kroah.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Date: Fri, 18 Jul 2014 11:50:21 -0700
+In-Reply-To: <20140718181759.GB2193@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+	 <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
+	 <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com>
+	 <20140718181759.GB2193@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 08:26:35AM -0700, Greg Kroah-Hartman wrote:
-> On Mon, Jul 21, 2014 at 08:08:16AM -0700, Kees Cook wrote:
-> > Perhaps it would be easier if I also sent the patch to udev's helper,
-> > so you could see how I propose handling the userspace change to using
-> > the new interface?
+On Fri, 2014-07-18 at 11:17 -0700, Greg KH wrote:
+> On Fri, Jul 18, 2014 at 09:54:32AM -0700, James Bottomley wrote:
+> > On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> > > On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > > > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > > > We should prefer `const struct pci_device_id` over
+> > > > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > > > This issue was reported by checkpatch.
+> > > > 
+> > > > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > > > guidelines and/or checkpatch should change instead?
+> > > 
+> > > The macro is horrid, no other bus has this type of thing just to save a
+> > > few characters in typing
+> > 
+> > OK, so this is the macro:
+> > 
+> > #define DEFINE_PCI_DEVICE_TABLE(_table) \
+> > 	const struct pci_device_id _table[]
+> > 
+> > Could you explain what's so horrible?
+> > 
+> > The reason it's useful today is that people forget the const (and
+> > sometimes the [] making it a true table instead of a pointer).  If you
+> > use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+> > wrongly (good) and you automatically get the correct annotations.
 > 
-> As there is no more "udev firmware helper", I don't know what you would
-> be patching here.  Firmware should always be loaded by the kernel
-> directly, udev isn't involved anyore at all.
+> We have almost 1000 more uses of the non-macro version than the "macro"
+> version in the kernel today:
+> $ git grep -w DEFINE_PCI_DEVICE_TABLE | wc -l
+> 262
+> $ git grep "const struct pci_device_id" | wc -l
+> 1254
 > 
-> confused,
+> My big complaint is that we need to be consistant, either pick one or
+> the other and stick to it.  As the macro is the least used, it's easiest
+> to fix up, and it also is more consistant with all other kernel
+> subsystems which do not have such a macro.
+
+I've a weak preference for consistency, but not at the expense of
+hundreds of patches churning the kernel to remove an innocuous macro.
+Churn costs time and effort.
+
+> As there is no need for the __init macro mess anymore, there's no real
+> need for the DEFINE_PCI_DEVICE_TABLE macro either.  I think checkpatch
+> will catch the use of non-const users for the id table already today, it
+> catches lots of other uses like this already.
 > 
-> greg k-h
+> > > , so why should PCI be "special" in this regard
+> > > anymore?
+> > 
+> > I think the PCI usage dwarfs most other bus types now, so you could turn
+> > the question around.  However, I don't think majority voting is a good
+> > guide to best practise; lets debate the merits for their own sake.
+> 
+> Not really "dwarf", USB is close with over 700 such structures:
+> $ git grep "const struct usb_device_id" | wc -l
+> 725
+> 
+> And i2c is almost just as big as PCI:
+> $ git grep "const struct i2c_device_id" | wc -l
+> 1223
+> 
+> So again, this macro is not consistent with the majority of PCI drivers,
+> nor with any other type of "device id" declaration in the kernel, which
+> is why I feel it should be removed.
+> 
+> And finally, the PCI documentation itself says to not use this macro, so
+> this isn't a "new" thing.  From Documentation/PCI/pci.txt:
+> 
+> 	The ID table is an array of struct pci_device_id entries ending with an
+> 	all-zero entry.  Definitions with static const are generally preferred.
+> 	Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
+> 
+> That wording went into the file last December, when we last talked about
+> this and everyone in that discussion agreed to remove the macro for the
+> above reasons.
+> 
+> Consistency matters.
 
-The kernel _can_ load directly (when the paths are configured correctly),
-but I'm not sure why you say udev isn't involved any more. It's been like
-this for years, and even the latest systemd shows the udev rule is still in
-place:
-http://cgit.freedesktop.org/systemd/systemd/tree/rules/50-firmware.rules
-and that the firmware loader is still in the source tree:
-http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-firmware.c
+In this case, I don't think it does that much ... a cut and paste either
+way (from a macro or non-macro based driver) yields correct code.  Since
+there's no bug here and no apparent way to misuse the macro, why bother?
 
-Here's the patch for the new interface...
+Anyway, it's PCI code ... let the PCI maintainer decide.  However, if he
+does want this do it as one big bang patch via either the PCI or Trivial
+tree (latter because Jiří has experience doing this, but the former
+might be useful so the decider feels the pain ...)
 
--Kees
-
----
-From: Kees Cook <keescook@chromium.org>
-Date: Sun, 23 Mar 2014 07:46:07 -0700
-Subject: [PATCH] firmware: use fd-based interface if available
-
-The new kernel firmware_class interface file "fd" performs the firmware
-loading in a single step, allowing the kernel to validate the firmware
-origin and contents.
-
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- src/udev/udev-builtin-firmware.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/src/udev/udev-builtin-firmware.c b/src/udev/udev-builtin-firmware.c
-index 8cfeed6..893ec13 100644
---- a/src/udev/udev-builtin-firmware.c
-+++ b/src/udev/udev-builtin-firmware.c
-@@ -80,6 +80,7 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
-         static const char *searchpath[] = { FIRMWARE_PATH };
-         char loadpath[UTIL_PATH_SIZE];
-         char datapath[UTIL_PATH_SIZE];
-+        char fdpath[UTIL_PATH_SIZE];
-         char fwpath[UTIL_PATH_SIZE];
-         const char *firmware;
-         FILE *fwfile = NULL;
-@@ -131,6 +132,16 @@ static int builtin_firmware(struct udev_device *dev, int argc, char *argv[], boo
-                 goto exit;
-         }
- 
-+        /* Use fd-based firmware loading interface. */
-+        strscpyl(fdpath, sizeof(fdpath), udev_device_get_syspath(dev), "/fd", NULL);
-+        if (stat(fdpath, &statbuf) == 0) {
-+                snprintf(datapath, sizeof(datapath), "%d", fileno(fwfile));
-+                /* We're done if the we gave the kernel our fw fd. */
-+                if (set_loading(udev, fdpath, (const char *)datapath))
-+                        goto exit;
-+        }
-+
-+        /* Fallback to legacy blob loading. */
-         if (!set_loading(udev, loadpath, "1"))
-                 goto exit;
- 
--- 
-1.7.9.5
+James
 
 
-
--- 
-Kees Cook
-Chrome OS Security
