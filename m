@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33428 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755312AbaG3ScS convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:43432 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980AbaGRIA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 14:32:18 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within function and fix return values.
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20140730182738.GA21664@omega>
-Date: Wed, 30 Jul 2014 11:32:16 -0700
-Cc: Martin Townsend <mtownsend1973@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-zigbee-devel@lists.sourceforge.net,
-	BlueZ development <linux-bluetooth@vger.kernel.org>,
-	Martin Townsend <martin.townsend@xsilon.com>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>
-Message-Id: <362B23B3-72BB-4E0E-9E06-ABD19C1F2BEF@holtmann.org> (sfid-20140730_203227_801515_CA630A93)
-References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com> <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org> <20140730182738.GA21664@omega>
-To: Alexander Aring <alex.aring@gmail.com>
+	Fri, 18 Jul 2014 04:00:56 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so4226813wes.34
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2014 01:00:54 -0700 (PDT)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: bzhao@marvell.com, daniel@zonque.org,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH] mwifiex: card reset: enable rescan of non-removable card
+Date: Fri, 18 Jul 2014 10:00:37 +0200
+Message-Id: <1405670437-18723-1-git-send-email-afenkart@gmail.com> (sfid-20140718_100059_732115_F3546AEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alex,
+mmc_rescan will scan for non-removable cards only once, hence the card
+will not be rediscovered.
 
->>> Currently it is up to the functions below lowpan_rcv to free the skb on error
->>>   conditions.  This patch now removes all the UAPI error codes and process data
->>>   now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
->>>   the skb and return NET_RX_DROP.  This also fixes the problem where
->>>   NET_RX_SUCCESS is returned on error
->>> 
->>> Martin Townsend (2):
->>> Remove dev parameter from skb_delivery_cb in 6lowpan.
->>> Change lowpan_rcv so skb is freed within function and fix return
->>>   values.
->>> 
->>> include/net/6lowpan.h         |  4 ++--
->>> net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
->>> net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
->>> net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
->>> 4 files changed, 52 insertions(+), 54 deletions(-)
->> 
->> I can not take these patches at this point.
->> 
->> checking file net/ieee802154/6lowpan_rtnl.c
->> Hunk #1 FAILED at 143.
->> Hunk #2 succeeded at 480 (offset -4 lines).
->> 1 out of 2 hunks FAILED
->> 
->> We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
->> 
-> 
-> I already told Martin that these patches should be based on bluetooth
-> (better bluetooth-next, 802.15.4 hasn't a real stable strategie and there
-> are also some known other issues in the current implementation). I don't
-> think that the current implementation is used in a real environment.
-> 
-> I get this patch-series in a resend of this series, after Martin
-> subscribed the linux-zigbee-devel mailinglist, then I told Martin that I
-> need some time for review and he want to resend them tomorrow or friday.
-> The resend should based on bluetooth-next then, if this is okay for you.
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-if patches are based on bluetooth-next, then we have no problem here. I can easily merge them.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 4ce3d7b..eff3d6e 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1931,6 +1931,7 @@ static void sdio_card_reset_worker(struct work_struct *work)
+ 	mmc_remove_host(target);
+ 	/* 20ms delay is based on experiment with sdhci controller */
+ 	mdelay(20);
++	reset_host->rescan_entered = 0; /* rescan non-removable cards */
+ 	mmc_add_host(target);
+ }
+ static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
+-- 
+2.0.1
 
