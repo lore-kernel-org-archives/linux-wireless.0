@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33779 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbaG2GeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 02:34:19 -0400
-Message-ID: <1406615652.7611.0.camel@jlt4.sipsolutions.net> (sfid-20140729_083422_570672_79C5DB04)
-Subject: Re: [PATCH] regulatory: add NULL to alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Date: Tue, 29 Jul 2014 08:34:12 +0200
-In-Reply-To: <CAB=NE6URWePHjBhKcWE_Jy06YbTsSWF3+xsrw9KcFYZJuv2Gsw@mail.gmail.com> (sfid-20140729_032717_589381_77A5D52B)
-References: <1402471415-22723-1-git-send-email-arik@wizery.com>
-	 <1403516586.4418.13.camel@jlt4.sipsolutions.net>
-	 <20140630222303.GO1390@garbanzo.do-not-panic.com>
-	 <1405936933.32255.8.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6URWePHjBhKcWE_Jy06YbTsSWF3+xsrw9KcFYZJuv2Gsw@mail.gmail.com>
-	 (sfid-20140729_032717_589381_77A5D52B)
-Content-Type: text/plain; charset="UTF-8"
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46140 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755885AbaGRQyf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2014 12:54:35 -0400
+Message-ID: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com> (sfid-20140718_185449_663855_1F071F2A)
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Greg KH <greg@kroah.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Date: Fri, 18 Jul 2014 09:54:32 -0700
+In-Reply-To: <20140718164340.GA24960@kroah.com>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+	 <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-15"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-07-28 at 18:26 -0700, Luis R. Rodriguez wrote:
-> On Mon, Jul 21, 2014 at 3:02 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > This was never intended to be a string, only 2 characters ... so why use
-> > it with string functions?
+On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
+> On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > > We should prefer `const struct pci_device_id` over
+> > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > > This issue was reported by checkpatch.
+> > 
+> > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> > guidelines and/or checkpatch should change instead?
 > 
-> Sure makes sense, the report was not clear so indeed, if userspace can
-> be fixed that's better to enable consistent use.
+> The macro is horrid, no other bus has this type of thing just to save a
+> few characters in typing
 
-Sadly, it looks like userspace *is* relying on a NUL-byte (e.g. iw using
-nla_get_string()) which would always be there due to padding, but it's
-probably better to make it explicit.
+OK, so this is the macro:
 
-johannes
+#define DEFINE_PCI_DEVICE_TABLE(_table) \
+	const struct pci_device_id _table[]
+
+Could you explain what's so horrible?
+
+The reason it's useful today is that people forget the const (and
+sometimes the [] making it a true table instead of a pointer).  If you
+use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
+wrongly (good) and you automatically get the correct annotations.
+
+> , so why should PCI be "special" in this regard
+> anymore?
+
+I think the PCI usage dwarfs most other bus types now, so you could turn
+the question around.  However, I don't think majority voting is a good
+guide to best practise; lets debate the merits for their own sake.
+
+James
+
 
