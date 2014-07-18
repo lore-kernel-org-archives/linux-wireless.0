@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42280 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755018AbaGNNUb (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46007 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756009AbaGRQ3G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 09:20:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: sanitize tx ring index access properly
-References: <1401954520-3365-1-git-send-email-michal.kazior@tieto.com>
-	<1401954520-3365-3-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 14 Jul 2014 16:20:08 +0300
-In-Reply-To: <1401954520-3365-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 5 Jun 2014 09:48:40 +0200")
-Message-ID: <87vbr0krg7.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_152035_426967_2BA53613)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 18 Jul 2014 12:29:06 -0400
+Message-ID: <1405700934.605.31.camel@jarvis.lan> (sfid-20140718_182921_389106_DF359910)
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
+	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
+	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
+	linux-rdma@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	industrypack-devel@lists.sourceforge.net,
+	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
+	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
+Date: Fri, 18 Jul 2014 09:28:54 -0700
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, 2014-07-18 at 17:26 +0200, Benoit Taine wrote:
+> We should prefer `const struct pci_device_id` over
+> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> This issue was reported by checkpatch.
 
-> The tx ring index was immediately trimmed with a
-> bitmask. This discarded the 0xFFFFFFFF error case
-> (which theoretically can happen when a device is
-> abruptly disconnected) and led to using an invalid
-> tx ring index. This could lead to memory
-> corruption.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/ce.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-> index d185dc0..7c6c7d5 100644
-> --- a/drivers/net/wireless/ath/ath10k/ce.c
-> +++ b/drivers/net/wireless/ath/ath10k/ce.c
-> @@ -603,16 +603,19 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
->  		if (ret)
->  			return ret;
->  
-> -		src_ring->hw_index =
-> -			ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
-> -		src_ring->hw_index &= nentries_mask;
-> +		read_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
-> +		if (read_index == 0xFFFFFFFF)
-> +			return -ENODEV;
+What kernel coding style?  checkpatch isn't the arbiter of style, if
+that's the only problem.
 
-I changed this to lower case, as it was before. Let's use lower case hex
-values in ath10k.
+The DEFINE_PCI macro was a well reasoned addition when it was added in
+2008.  The problem was most people were getting the definition wrong.
+When we converted away from CONFIG_HOTPLUG, having this DEFINE_ meant
+that only one place needed changing instead of hundreds for PCI tables.
 
--- 
-Kalle Valo
+The reason people were getting the PCI table wrong was mostly the init
+section specifiers which are now gone, but it has enough underlying
+utility (mostly constification) that I don't think we'd want to churn
+the kernel hugely to make a change to struct pci_table and then have to
+start detecting and fixing misuses.
+
+James
+
+
