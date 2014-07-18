@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:53198 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932114AbaGWQy5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934509AbaGRQar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 12:54:57 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so1464660wgh.34
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 09:54:56 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: N-PHY: don't calculate values for TSSI if we can't transmit
-Date: Wed, 23 Jul 2014 18:54:48 +0200
-Message-Id: <1406134490-6880-1-git-send-email-zajec5@gmail.com> (sfid-20140723_185500_816201_69672AA0)
+	Fri, 18 Jul 2014 12:30:47 -0400
+Date: Fri, 18 Jul 2014 12:22:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Benoit Taine <benoit.taine@lip6.fr>
+Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
+	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
+	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
+	linux-rdma@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	industrypack-devel@lists.sourceforge.net,
+	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
+	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Message-ID: <20140718162213.GC31114@tuxdriver.com> (sfid-20140718_183110_859375_88A6C324)
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This process requires sending some sample tone, so make sure we're
-allowed to transmit first.
+On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> We should prefer `const struct pci_device_id` over
+> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> This issue was reported by checkpatch.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+guidelines and/or checkpatch should change instead?
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 44bb58b..d269fbb 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3957,7 +3957,8 @@ static void b43_nphy_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
- 	u32 tmp;
- 	s32 rssi[4] = { };
- 
--	/* TODO: check if we can transmit */
-+	if (phy->chandef->chan->flags & IEEE80211_CHAN_NO_IR)
-+		return;
- 
- 	if (b43_nphy_ipa(dev))
- 		b43_nphy_ipa_internal_tssi_setup(dev);
+John
 -- 
-1.8.4.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
