@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:39904 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbaGBHda (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 03:33:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140701144149.GB6358@tuxdriver.com>
-References: <CAB=NE6WfTXiScyXHReEWcpQ9EKpu1YCVQypa-B5BBO6aYXh3fA@mail.gmail.com>
- <CAB=NE6VTN==Ewvf4HhTcadWLzjZnYkF1xSM1Yej6QfotWHKY0A@mail.gmail.com> <20140701144149.GB6358@tuxdriver.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 2 Jul 2014 13:03:09 +0530
-Message-ID: <CABPxzYL28zyu5D5iYDZy3wcJ-BMa8RfaFCe88HC5867NhpvPnQ@mail.gmail.com> (sfid-20140702_093336_046370_500FB56C)
-Subject: Re: Parser stable fix question for CFG80211_INTERNAL_REGDB
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Felix Fietkau <nbd@openwrt.org>, John Walker <john@x109.net>,
-	netfilter-devel@vger.kernel.org,
-	Richard Fontana <fontana@sharpeleven.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from isis.lip6.fr ([132.227.60.2]:54977 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762467AbaGRPf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2014 11:35:27 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: benoit.taine@lip6.fr, "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/25] iwlegacy: Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 17:26:50 +0200
+Message-Id: <1405697232-11785-4-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173536_832067_2E0BEDF7)
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 1, 2014 at 8:11 PM, John W. Linville <linville@tuxdriver.com> wrote:
->
-> On Mon, Jun 30, 2014 at 12:19:08PM -0700, Luis R. Rodriguez wrote:
-> > On Mon, Jun 30, 2014 at 11:55 AM, Luis R. Rodriguez
-> > <mcgrof@do-not-panic.com> wrote:
-> > > For the current kernel we
-> > > could intake the patch below, and I can port the change to no use
-> > > dfs_cac, that would enable older kernels to use new and older versions
-> > > of the ASCII database file.
-> >
-> > Personally I actually rather avoid us accept a patch upstream for a
-> > userspace change. The problem here is that we failed to realize the
-> > impact of CFG80211_INTERNAL_REGDB at build time with a userspace tool,
-> > in this case the db.txt file wireless-regdb provides and its format.
-> >
-> > If we wanted to avoid a stable patch we could require a match between
-> > wireless-regdb input file used for a kernel when
-> > CFG80211_INTERNAL_REGDB is used at build time. That would require
-> > different ASCII files on wireless-regdb or having the users of
-> > CFG80211_INTERNAL_REGDB do the conversion themselves. Upstream would
-> > just follow the wireless-regdb latest format. This then would just
-> > require upstream a Kconfig update to clarify the requirements.
-> >
-> > This seems like a rather lazy option but also one that would be rather
-> > more fair and honest for upstream, we could deal with a proper fix by
-> > reconsidering the implementation of CFG80211_INTERNAL_REGDB completely
-> > for future kernels.
->
-> I'm shocked that anyone actually uses CFG80211_INTERNAL_REGDB...
->
+We should prefer `struct pci_device_id` over `DEFINE_PCI_DEVICE_TABLE` to meet
+kernel coding style guidelines. This issue was reported by checkpatch.
 
-Lot of embedded devices like ours avoid the pain of cross compiling
-crda, udev...
-and resort to internal_regdb as a easy way to get things done.
+Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
 
+---
+Not tested.
 
-> Anyway, I don't see the big deal.  We should keep
-> CFG80211_INTERNAL_REGDB (whether implemented in awk or C) up-to-date
-> with current kernels.  Anyone wanting to use an old kernel with an
-> updated wireless-regdb file is responsible for ensuring compatibility.
-> If they can't do that, then they should seek support from a vendor.
-> How is this any different from any other kernel support issue?
+ drivers/net/wireless/iwlegacy/3945.c     |    2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Sounds good to me.
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index b598e28..93bdf68 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -2728,7 +2728,7 @@ static struct il_cfg il3945_abg_cfg = {
+ 	},
+ };
+ 
+-DEFINE_PCI_DEVICE_TABLE(il3945_hw_card_ids) = {
++const struct pci_device_id il3945_hw_card_ids[] = {
+ 	{IL_PCI_DEVICE(0x4222, 0x1005, il3945_bg_cfg)},
+ 	{IL_PCI_DEVICE(0x4222, 0x1034, il3945_bg_cfg)},
+ 	{IL_PCI_DEVICE(0x4222, 0x1044, il3945_bg_cfg)},
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index c159c05..3dcbe2c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6800,7 +6800,7 @@ il4965_txq_set_sched(struct il_priv *il, u32 mask)
+  *****************************************************************************/
+ 
+ /* Hardware specific file defines the PCI IDs table for that hardware module */
+-static DEFINE_PCI_DEVICE_TABLE(il4965_hw_card_ids) = {
++static const struct pci_device_id il4965_hw_card_ids[] = {
+ 	{IL_PCI_DEVICE(0x4229, PCI_ANY_ID, il4965_cfg)},
+ 	{IL_PCI_DEVICE(0x4230, PCI_ANY_ID, il4965_cfg)},
+ 	{0}
+
