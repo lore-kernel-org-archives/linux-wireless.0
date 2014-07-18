@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:45931 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759039AbaGCPKi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49544 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756009AbaGRRAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:10:38 -0400
-Received: by mail-ie0-f173.google.com with SMTP id at20so298863iec.32
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 08:10:37 -0700 (PDT)
-Date: Thu, 3 Jul 2014 11:10:34 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with new
- plid
-Message-ID: <20140703151034.GA10238@localhost> (sfid-20140703_171043_768398_1B5C089E)
-References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
- <20140628205414.GA17825@localhost>
- <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
- <20140703142837.GA11380@localhost>
+	Fri, 18 Jul 2014 13:00:10 -0400
+Date: Fri, 18 Jul 2014 12:56:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-07-18
+Message-ID: <20140718165632.GD31114@tuxdriver.com> (sfid-20140718_190014_881634_6A84972B)
+References: <1405670268.19195.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140703142837.GA11380@localhost>
+In-Reply-To: <1405670268.19195.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 03, 2014 at 10:28:37AM -0400, Bob Copeland wrote:
-> > What is the consequence if we don't handle this case? Is the peer
-> > going to do the re-auth again?
-> > 
-> > Regards,
-> > Chun-Yeow
+On Fri, Jul 18, 2014 at 09:57:48AM +0200, Johannes Berg wrote:
+> John,
 > 
-> It shouldn't be a big problem -- looking at 802.11-2012 figure 13-2:
+> This is late - maybe it won't come in time. I was busy moving to our new
+> house.
+> 
+> I have two fixes: one for tracing that fixes a long-standing NULL
+> pointer dereference, and one for a mac80211 issue that causes iwlmvm to
+> send invalid frames during authentication/association.
+> 
+> Let me know if there any problems.
+> 
+> johannes
+> 
+> 
+> The following changes since commit 02df00eb0019e7d15a1fcddebe4d020226c1ccda:
+> 
+>   nl80211: move set_qos_map command into split state (2014-06-24 16:13:10 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git HEAD
+> 
+> for you to fetch changes up to 8c26d458394be44e135d1c6bd4557e1c4e1a0535:
+> 
+>   cfg80211: fix mic_failure tracing (2014-07-18 09:53:56 +0200)
 
-Actually, thinking about it more, a worse case is if B reaches
-ESTAB and then A reboots.  Now, A sends an Open, gets back
-a Confirm that A will ignore (due to no plid).  A will still
-timeout and send a Close frame to restart everything, but we
-would have to wait quite a while to re-establish the peering.
+Pulling now...
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
