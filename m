@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:45428 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320AbaGUSPG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50548 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885AbaGRSAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 14:15:06 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so6907833wgh.22
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 11:15:05 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/2] iwlwifi: mvm: fix merge damage
-Date: Mon, 21 Jul 2014 21:14:57 +0300
-Message-Id: <1405966498-4936-1-git-send-email-egrumbach@gmail.com> (sfid-20140721_201511_130060_FF40413D)
-In-Reply-To: <53CD5785.80408@gmail.com>
-References: <53CD5785.80408@gmail.com>
+	Fri, 18 Jul 2014 14:00:12 -0400
+Date: Fri, 18 Jul 2014 13:59:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bzhao@marvell.com,
+	daniel@zonque.org
+Subject: Re: [PATCH] mwifiex: card reset: enable rescan of non-removable card
+Message-ID: <20140718175915.GG31114@tuxdriver.com> (sfid-20140718_200018_803080_8093E084)
+References: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Jul 18, 2014 at 10:00:37AM +0200, Andreas Fenkart wrote:
+> mmc_rescan will scan for non-removable cards only once, hence the card
+> will not be rediscovered.
+> 
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> ---
+>  drivers/net/wireless/mwifiex/sdio.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+> index 4ce3d7b..eff3d6e 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
+> @@ -1931,6 +1931,7 @@ static void sdio_card_reset_worker(struct work_struct *work)
+>  	mmc_remove_host(target);
+>  	/* 20ms delay is based on experiment with sdhci controller */
+>  	mdelay(20);
+> +	reset_host->rescan_entered = 0; /* rescan non-removable cards */
+>  	mmc_add_host(target);
+>  }
+>  static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 7 -------
- 1 file changed, 7 deletions(-)
+Building wireless-next:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 9bfb906..98556d0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -303,13 +303,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
- 	}
- 
--	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT &&
--	    !iwlwifi_mod_params.uapsd_disable) {
--		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
--		hw->uapsd_queues = IWL_UAPSD_AC_INFO;
--		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
--	}
--
- 	hw->sta_data_size = sizeof(struct iwl_mvm_sta);
- 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
- 	hw->chanctx_data_size = sizeof(u16);
+  CC      drivers/net/wireless/mwifiex/sdio.o
+drivers/net/wireless/mwifiex/sdio.c: In function ‘mwifiex_sdio_card_reset_work’:
+drivers/net/wireless/mwifiex/sdio.c:1957:2: error: ‘reset_host’ undeclared (first use in this function)
+  reset_host->rescan_entered = 0; /* rescan non-removable cards */
+  ^
+drivers/net/wireless/mwifiex/sdio.c:1957:2: note: each undeclared identifier is reported only once for each function it appears in
+
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
