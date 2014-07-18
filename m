@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:37955 "EHLO
-	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751122AbaGTO0d (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50393 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030575AbaGRRpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:26:33 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 10/30] rtlwifi: rtl8188ee: remove unnecessary break after return
-Date: Sun, 20 Jul 2014 16:25:11 +0200
-Message-Id: <1405866332-24652-1-git-send-email-fabf@skynet.be> (sfid-20140720_163355_771919_9FB0F483)
+	Fri, 18 Jul 2014 13:45:13 -0400
+Date: Fri, 18 Jul 2014 13:42:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-07-14
+Message-ID: <20140718174203.GE31114@tuxdriver.com> (sfid-20140718_194547_007872_C7C2FCE6)
+References: <20140714214944.GA4374@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140714214944.GA4374@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c | 1 -
- 1 file changed, 1 deletion(-)
+On Mon, Jul 14, 2014 at 06:49:44PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> Some more patches for 3.17. The most important change here is the move of
+> the 6lowpan code to net/6lowpan. It has been agreed with Davem that this
+> change will go through the bluetooth tree. The rest are mostly clean up and
+> fixes.
+> 
+> Please pull! or let me know of any issues. Thanks!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 6fea7ad1d338dba592d65423427a997f1b7ff485:
+> 
+>   Bluetooth: Don't send ERTM configuration option when disabled (2014-07-09 13:53:36 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to 4d042654afb342386cb5c33e29843b76d598ab61:
+> 
+>   Bluetooth: cmtp: Remove unnecessary null test (2014-07-14 23:00:13 +0200)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c
-index a9cfa13..0f93142 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c
-@@ -125,7 +125,6 @@ bool rtl88_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
- 				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 					 "rtl88_hal_pwrseqcmdparsing(): PWR_CMD_END\n");
- 				return true;
--				break;
- 			default:
- 				RT_ASSERT(false,
- 					  "rtl88_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
+Pulling now...
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
