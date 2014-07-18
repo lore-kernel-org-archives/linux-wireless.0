@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:45163 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbaGKTCs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 15:02:48 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so162690wiv.7
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2014 12:02:45 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/2] staging: vt6656: vnt_init_bands fix missing default.
-Date: Fri, 11 Jul 2014 20:02:17 +0100
-Message-Id: <1405105338-3073-1-git-send-email-tvboxspy@gmail.com> (sfid-20140711_210251_790376_8B81BA08)
+Received: from isis.lip6.fr ([132.227.60.2]:54850 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030536AbaGRPcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2014 11:32:17 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: linux-pci@vger.kernel.org
+Cc: benoit.taine@lip6.fr, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
+	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
+	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
+	linux-rdma@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	industrypack-devel@lists.sourceforge.net,
+	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
+	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
+Subject: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 17:26:47 +0200
+Message-Id: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173245_487408_3DF25EDB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default is that all the channels are enabled for rf types
-not mentioned here.
+We should prefer `const struct pci_device_id` over
+`DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+This issue was reported by checkpatch.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/channel.c | 1 +
- 1 file changed, 1 insertion(+)
+A simplified version of the semantic patch that makes this change is as
+follows (http://coccinelle.lip6.fr/):
 
-diff --git a/drivers/staging/vt6656/channel.c b/drivers/staging/vt6656/channel.c
-index 5202633..fb1838e 100644
---- a/drivers/staging/vt6656/channel.c
-+++ b/drivers/staging/vt6656/channel.c
-@@ -148,6 +148,7 @@ void vnt_init_bands(struct vnt_private *priv)
- 	switch (priv->byRFType) {
- 	case RF_AIROHA7230:
- 	case RF_VT3342A0:
-+	default:
- 		ch = vnt_channels_5ghz;
- 
- 		for (i = 0; i < ARRAY_SIZE(vnt_channels_5ghz); i++) {
--- 
-1.9.1
+// <smpl>
 
+@@
+identifier i;
+declarer name DEFINE_PCI_DEVICE_TABLE;
+initializer z;
+@@
+
+- DEFINE_PCI_DEVICE_TABLE(i)
++ const struct pci_device_id i[]
+= z;
+
+// </smpl>
+
+I have 103 patches ready, and will only send a few for you to judge if
+it is useful enough, and to prevent from spamming too much.
+
+Thanks.
