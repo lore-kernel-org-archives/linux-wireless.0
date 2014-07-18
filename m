@@ -1,80 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:36542 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752406AbaGJS44 (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:43745 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755456AbaGRMxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:56:56 -0400
-Received: by mail-wi0-f171.google.com with SMTP id f8so4617984wiw.16
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:56:52 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Fri, 18 Jul 2014 08:53:47 -0400
+Received: by mail-we0-f171.google.com with SMTP id p10so4604402wes.16
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2014 05:53:45 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/16] staging: vt6656: s_vGenerateTxParameter Parse out struct vnt_rrv_time_cts
-Date: Thu, 10 Jul 2014 19:56:07 +0100
-Message-Id: <1405018577-6832-6-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205703_837532_9D15BEBA)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: prevent endless pci rx loop
+Date: Fri, 18 Jul 2014 14:45:01 +0200
+Message-Id: <1405687501-25917-1-git-send-email-michal.kazior@tieto.com> (sfid-20140718_145356_380763_B4A22A67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create new function vnt_rxtx_cts that will eventually carry onward
-function.
+It was possible to enter an endless loop while
+processing a single pci copy engine pipe. This
+could effectively render ath10k incapable of
+responding to any requests.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+An example case when this could happen is when
+firmware generates a lot of events, e.g. spectral
+scan phyerr via WMI.
+
+Reported-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/rxtx.c | 31 ++++++++++++++++++++-----------
- 1 file changed, 20 insertions(+), 11 deletions(-)
+Janusz was testing spectral scan when he found
+ath10k would sometimes stop responding while
+flooding dmesg with phyerr prints.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7d0b74c..49bda3c 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -651,6 +651,24 @@ static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
- 	return 0;
+There's another bug he found related to scan code
+but we still need to test some stuff before I can
+post the fix.
+
+ drivers/net/wireless/ath/ath10k/pci.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 06840d1..0ffff20 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -726,18 +726,12 @@ static void ath10k_pci_ce_recv_data(struct ath10k_ce_pipe *ce_state)
+ 	unsigned int nbytes, max_nbytes;
+ 	unsigned int transfer_id;
+ 	unsigned int flags;
+-	int err;
++	int err, num_replenish = 0;
+ 
+ 	while (ath10k_ce_completed_recv_next(ce_state, &transfer_context,
+ 					     &ce_data, &nbytes, &transfer_id,
+ 					     &flags) == 0) {
+-		err = ath10k_pci_post_rx_pipe(pipe_info, 1);
+-		if (unlikely(err)) {
+-			/* FIXME: retry */
+-			ath10k_warn("failed to replenish CE rx ring %d: %d\n",
+-				    pipe_info->pipe_num, err);
+-		}
+-
++		num_replenish++;
+ 		skb = transfer_context;
+ 		max_nbytes = skb->len + skb_tailroom(skb);
+ 		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
+@@ -753,6 +747,13 @@ static void ath10k_pci_ce_recv_data(struct ath10k_ce_pipe *ce_state)
+ 		skb_put(skb, nbytes);
+ 		cb->rx_completion(ar, skb, pipe_info->pipe_num);
+ 	}
++
++	err = ath10k_pci_post_rx_pipe(pipe_info, num_replenish);
++	if (unlikely(err)) {
++		/* FIXME: retry */
++		ath10k_warn("failed to replenish CE rx ring %d (%d bufs): %d\n",
++			    pipe_info->pipe_num, num_replenish, err);
++	}
  }
  
-+static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
-+	union vnt_tx_head *tx_head, u8 pkt_type, u32 frame_size,
-+	int need_ack, u16 current_rate)
-+{
-+	struct vnt_private *priv = tx_context->priv;
-+	struct vnt_rrv_time_cts *buf = &tx_head->tx_cts.cts;
-+
-+	buf->rrv_time_a = vnt_rxtx_rsvtime_le16(priv, pkt_type,
-+					frame_size, current_rate, need_ack);
-+	buf->rrv_time_b = vnt_rxtx_rsvtime_le16(priv, PK_TYPE_11B,
-+				frame_size, priv->byTopCCKBasicRate, need_ack);
-+
-+	buf->cts_rrv_time_ba = s_uGetRTSCTSRsvTime(priv, 3,
-+			pkt_type, frame_size, current_rate);
-+
-+	return 0;
-+}
-+
- /*+
-  *
-  * Description:
-@@ -700,17 +718,8 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 						wCurrentRate);
- 
- 		} else {
--			struct vnt_rrv_time_cts *pBuf = &tx_buffer->
--							tx_head.tx_cts.cts;
--
--			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
--				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
--			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
--				PK_TYPE_11B, cbFrameSize,
--					pDevice->byTopCCKBasicRate, bNeedACK);
--
--			pBuf->cts_rrv_time_ba = s_uGetRTSCTSRsvTime(pDevice, 3,
--					byPktType, cbFrameSize, wCurrentRate);
-+			vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
-+				byPktType, cbFrameSize, bNeedACK, wCurrentRate);
- 
- 			if (need_mic) {
- 				*mic_hdr = &tx_buffer->
+ static int ath10k_pci_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
 -- 
-1.9.1
+1.8.5.3
 
