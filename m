@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35903 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753566AbaGBWBv (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:50774 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756865AbaGRQoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 18:01:51 -0400
-Date: Wed, 2 Jul 2014 15:01:50 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/6] lib / string_helpers: introduce string_escape_mem()
-Message-Id: <20140702150150.b87702934d47fd481646f6ff@linux-foundation.org> (sfid-20140703_000210_128261_506DEF12)
-In-Reply-To: <1404307229-19186-3-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1404307229-19186-3-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 18 Jul 2014 12:44:07 -0400
+Date: Fri, 18 Jul 2014 09:43:40 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
+	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
+	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
+	industrypack-devel@lists.sourceforge.net,
+	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	virtualization@lists.linux-foundation.org,
+	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
+	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
+	devel@linuxdriverproject.org
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+Message-ID: <20140718164340.GA24960@kroah.com> (sfid-20140718_184437_814932_C65BC801)
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+ <20140718162213.GC31114@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140718162213.GC31114@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed,  2 Jul 2014 16:20:25 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-
-> This is almost the opposite function to string_unescape(). Nevertheless it
-> handles \0 and could be used for any byte buffer.
+On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
+> On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
+> > We should prefer `const struct pci_device_id` over
+> > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> > This issue was reported by checkpatch.
 > 
-> The documentation is supplied together with the function prototype.
-> 
-> The test cases covers most of the scenarios and would be expanded later on.
-> 
-> ...
->
-> --- a/include/linux/string_helpers.h
-> +++ b/include/linux/string_helpers.h
-> @@ -71,4 +71,87 @@ static inline int string_unescape_any_inplace(char *buf)
->  	return string_unescape_any(buf, buf, 0);
->  }
->  
-> +#define ESCAPE_SPACE		0x01
-> +#define ESCAPE_SPECIAL		0x02
-> +#define ESCAPE_NULL		0x04
-> +#define ESCAPE_OCTAL		0x08
-> +#define ESCAPE_ANY		\
-> +	(ESCAPE_SPACE | ESCAPE_OCTAL | ESCAPE_SPECIAL | ESCAPE_NULL)
-> +#define ESCAPE_NP		0x10
-> +#define ESCAPE_ANY_NP		(ESCAPE_ANY | ESCAPE_NP)
-> +#define ESCAPE_HEX		0x20
-> +
-> +/**
-> + * string_escape_mem - quote characters in the given memory buffer
+> Honestly, I prefer the macro -- it stands-out more.  Maybe the style
+> guidelines and/or checkpatch should change instead?
 
-It drive me nuts when the kerneldoc is in the .h file.  Who thinks of
-looking there?  I realise that string_unescape() already did that, but
-I'd prefer that we fix string_unescape() rather than imitate it.
+The macro is horrid, no other bus has this type of thing just to save a
+few characters in typing, so why should PCI be "special" in this regard
+anymore?
 
-> --- a/lib/string_helpers.c
-> +++ b/lib/string_helpers.c
+thanks,
 
-This is a lot of code!  Adds nearly a kbyte.  I'm surprised that
-escaping a string is so verbose.
-
-I wonder if the implementation really needs to be so comprehensive?
-
-Would a table-driven approach be more compact?
-
->  static int __init test_string_helpers_init(void)
->  {
->  	unsigned int i;
-> @@ -112,6 +315,16 @@ static int __init test_string_helpers_init(void)
->  	test_string_unescape("unescape inplace",
->  			     get_random_int() % (UNESCAPE_ANY + 1), true);
->  
-> +	/* Without dictionary */
-> +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
-> +		test_string_escape("escape 0", escape0, i, TEST_STRING_2_DICT_0);
-> +
-> +	/* With dictionary */
-> +	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
-> +		test_string_escape("escape 1", escape1, i, TEST_STRING_2_DICT_1);
-> +
-> +	test_string_escape_nomem();
-> +
->  	return -EINVAL;
->  }
-
-I wonder why this returns -EINVAL.
+greg k-h
