@@ -1,131 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:35606 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555AbaGVT1e (ORCPT
+Received: from e33.co.us.ibm.com ([32.97.110.151]:51178 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030450AbaGRRMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:34 -0400
-Received: by mail-wg0-f47.google.com with SMTP id b13so114506wgh.6
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:33 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/20] iwlwifi: mvm: BT Coex - don't change AP SMPS mode
-Date: Tue, 22 Jul 2014 22:26:42 +0300
-Message-Id: <1406057211-31752-11-git-send-email-egrumbach@gmail.com> (sfid-20140722_212740_216520_2888AE84)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+	Fri, 18 Jul 2014 13:12:02 -0400
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Fri, 18 Jul 2014 11:12:01 -0600
+Message-ID: <1405703514.11182.6.camel@dhcp-9-2-203-236.watson.ibm.com> (sfid-20140718_191232_346234_72E61E56)
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>, zohar@us.ibm.com
+Date: Fri, 18 Jul 2014 13:11:54 -0400
+In-Reply-To: <1405373897-31671-7-git-send-email-keescook@chromium.org>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	 <1405373897-31671-7-git-send-email-keescook@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, 2014-07-14 at 14:38 -0700, Kees Cook wrote: 
+> As an alternative to loading bytes from the "data" blob when reading
+> firmware, let kernel read from an fd, so that the LSM can reason about
+> the origin of firmware contents during userspace on-demand loading.
+> 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  Documentation/firmware_class/README |   10 +++++
+>  drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
+>  2 files changed, 86 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
+> index 71f86859d7d8..d899bdacba1e 100644
+> --- a/Documentation/firmware_class/README
+> +++ b/Documentation/firmware_class/README
+> @@ -59,6 +59,16 @@
+>   8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
+>  		 the firmware image and any related resource.
+> 
+> + Alternative loading (via file descriptor):
+> + ==========================================
+> + Instead of "loading", and "data" above, firmware can be loaded through
+> + an open file descriptor as well, via the "fd" file:
+> +
+> + Replacing steps 2 thorugh 6 above with the following userspace actions,
+> + performs the same loading:
+> +	- open firmware image file (e.g. as fd 3).
+> +	- write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
+> +
+>   High level behavior (driver code):
+>   ==================================
+> 
+> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> index b38cbcd6ebb1..eac996447d28 100644
+> --- a/drivers/base/firmware_class.c
+> +++ b/drivers/base/firmware_class.c
+> @@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
+>  	.write = firmware_data_write,
+>  };
+> 
+> +/**
+> + * fd_store - set value in the 'fd' control file
+> + * @dev: device pointer
+> + * @attr: device attribute pointer
+> + * @buf: buffer to scan for loading fd value
+> + * @count: number of bytes in @buf
+> + *
+> + * Parses an fd number from buf, and then loads firmware bytes from
+> + * the current process's matching open fd.
+> + *
+> + **/
+> +static ssize_t fd_store(struct device *dev,
+> +				 struct device_attribute *attr,
+> +				 const char *buf, size_t count)
+> +{
 
-Leave it to default instead - regardless of the BT activity.
+I must be missing something.  Here's a static definition, where's the
+call to fd_store()?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c        | 21 ++++++++-------------
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 17 +++++++----------
- 2 files changed, 15 insertions(+), 23 deletions(-)
+Mimi
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index a65b1bb..2291bbc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -768,13 +768,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		/* default smps_mode for AP / GO is OFF */
--		smps_mode = IEEE80211_SMPS_OFF;
--		if (!mvmvif->ap_ibss_active) {
--			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
--					    smps_mode);
-+		if (!mvmvif->ap_ibss_active)
- 			return;
--		}
- 		break;
- 	default:
- 		return;
-@@ -785,10 +780,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	/* If channel context is invalid or not on 2.4GHz .. */
- 	if ((!chanctx_conf ||
- 	     chanctx_conf->def.chan->band != IEEE80211_BAND_2GHZ)) {
--		/* ... relax constraints and disable rssi events */
--		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
--				    smps_mode);
- 		if (vif->type == NL80211_IFTYPE_STATION) {
-+			/* ... relax constraints and disable rssi events */
-+			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
-+					    smps_mode);
- 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
- 						    false);
- 			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
-@@ -800,9 +795,7 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (bt_activity_grading >= BT_HIGH_TRAFFIC)
- 		smps_mode = IEEE80211_SMPS_STATIC;
- 	else if (bt_activity_grading >= BT_LOW_TRAFFIC)
--		smps_mode = vif->type == NL80211_IFTYPE_AP ?
--				IEEE80211_SMPS_OFF :
--				IEEE80211_SMPS_DYNAMIC;
-+		smps_mode = IEEE80211_SMPS_DYNAMIC;
- 
- 	/* relax SMPS contraints for next association */
- 	if (!vif->bss_conf.assoc)
-@@ -816,7 +809,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		       "mac %d: bt_activity_grading %d smps_req %d\n",
- 		       mvmvif->id, bt_activity_grading, smps_mode);
- 
--	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
-+	if (vif->type == NL80211_IFTYPE_STATION)
-+		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
-+				    smps_mode);
- 
- 	/* low latency is always primary */
- 	if (iwl_mvm_vif_low_latency(mvmvif)) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index 9e3ba5a..a3be333 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -793,13 +793,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		/* default smps_mode for AP / GO is OFF */
--		smps_mode = IEEE80211_SMPS_OFF;
--		if (!mvmvif->ap_ibss_active) {
--			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
--					    smps_mode);
-+		if (!mvmvif->ap_ibss_active)
- 			return;
--		}
- 		break;
- 	default:
- 		return;
-@@ -810,10 +805,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	/* If channel context is invalid or not on 2.4GHz .. */
- 	if ((!chanctx_conf ||
- 	     chanctx_conf->def.chan->band != IEEE80211_BAND_2GHZ)) {
--		/* ... relax constraints and disable rssi events */
--		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
--				    smps_mode);
- 		if (vif->type == NL80211_IFTYPE_STATION) {
-+			/* ... relax constraints and disable rssi events */
-+			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
-+					    smps_mode);
- 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
- 						    false);
- 			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
-@@ -838,7 +833,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
- 		       smps_mode);
- 
--	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
-+	if (vif->type == NL80211_IFTYPE_STATION)
-+		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
-+				    smps_mode);
- 
- 	/* low latency is always primary */
- 	if (iwl_mvm_vif_low_latency(mvmvif)) {
--- 
-1.8.3.2
+> +	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+> +	struct firmware_buf *fw_buf = fw_priv->buf;
+> +	ssize_t retval;
+> +	int fd;
+> +	struct fd f;
+> +
+> +	if (!capable(CAP_SYS_RAWIO))
+> +		return -EPERM;
+> +
+> +	retval = kstrtoint(buf, 10, &fd);
+> +	if (retval)
+> +		return retval;
+> +
+> +	f = fdget(fd);
+> +	if (!f.file)
+> +		return -EBADF;
+> +
+> +	mutex_lock(&fw_lock);
+> +	/* If we raced another loader, we must fail. */
+> +	if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
+> +		retval = -EINVAL;
+> +		goto unlock;
+> +	}
+> +
+> +	fw_load_start(fw_buf);
+> +	/* fw_read_file_contents uses vmalloc, not pages. */
+> +	fw_buf->is_paged_buf = false;
+> +	retval = fw_read_file_contents(f.file, fw_buf);
+> +	if (retval) {
+> +		/* If we called fw_load_start, we must abort on fail. */
+> +		fw_load_abort(fw_priv);
+> +		goto unlock;
+> +	}
+> +
+> +	/* Success. */
+> +	set_bit(FW_STATUS_DONE, &fw_buf->status);
+> +	list_del_init(&fw_buf->pending_list);
+> +	complete_all(&fw_buf->completion);
+> +
+> +unlock:
+> +	mutex_unlock(&fw_lock);
+> +	fdput(f);
+> +
+> +	if (retval)
+> +		return retval;
+> +	return count;
+> +}
+> +static DEVICE_ATTR_WO(fd);
+> +
+>  static void firmware_class_timeout_work(struct work_struct *work)
+>  {
+>  	struct firmware_priv *fw_priv = container_of(work,
+> @@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
+>  		mutex_lock(&fw_lock);
+>  		list_del_init(&buf->pending_list);
+>  		mutex_unlock(&fw_lock);
+> -		dev_err(f_dev, "%s: device_create_file failed\n", __func__);
+> +		dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
+>  		goto err_del_bin_attr;
+>  	}
+> 
+> +	retval = device_create_file(f_dev, &dev_attr_fd);
+> +	if (retval) {
+> +		mutex_lock(&fw_lock);
+> +		list_del_init(&buf->pending_list);
+> +		mutex_unlock(&fw_lock);
+> +		dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
+> +		goto err_del_loading;
+> +	}
+> +
+>  	if (opt_flags & FW_OPT_UEVENT) {
+>  		buf->need_uevent = true;
+>  		dev_set_uevent_suppress(f_dev, false);
+> @@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
+>  	if (!buf->data)
+>  		retval = -ENOMEM;
+> 
+> +	device_remove_file(f_dev, &dev_attr_fd);
+> +err_del_loading:
+>  	device_remove_file(f_dev, &dev_attr_loading);
+>  err_del_bin_attr:
+>  	device_remove_bin_file(f_dev, &firmware_attr_data);
+
 
