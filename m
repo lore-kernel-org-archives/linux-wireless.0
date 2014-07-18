@@ -1,125 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:59334 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaGFJgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:36:32 -0400
-Received: by mail-we0-f179.google.com with SMTP id w62so3125632wes.24
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:31 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/40] iwlwifi: mvm: read the mac address in family 8000
-Date: Sun,  6 Jul 2014 12:35:43 +0300
-Message-Id: <1404639376-3792-7-git-send-email-egrumbach@gmail.com> (sfid-20140706_113638_362157_C0DC8E11)
-In-Reply-To: <53B917DC.5050902@gmail.com>
-References: <53B917DC.5050902@gmail.com>
+Received: from isis.lip6.fr ([132.227.60.2]:54977 "EHLO isis.lip6.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762090AbaGRPfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2014 11:35:34 -0400
+From: Benoit Taine <benoit.taine@lip6.fr>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: benoit.taine@lip6.fr, Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/25] rt2x00: Replace DEFINE_PCI_DEVICE_TABLE macro use
+Date: Fri, 18 Jul 2014 17:26:54 +0200
+Message-Id: <1405697232-11785-8-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173608_516942_47EC0F6D)
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+We should prefer `struct pci_device_id` over `DEFINE_PCI_DEVICE_TABLE` to meet
+kernel coding style guidelines. This issue was reported by checkpatch.
 
-In family 8000 products the MAC address in the OTP could be in either:
-- WFPM address
-- PCIE address
-In sdio product we should read it from the WFPM, in pcie product we
-should read it from the PCIe location.
-This is relevant only from otp version 0xE08 and above.
-While at it, fix the bytes order in version 0xE08.
+Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 60 ++++++++++++++++++++++------
- 1 file changed, 48 insertions(+), 12 deletions(-)
+Tested by compilation without errors.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index f0ae038..dd76ed2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -63,6 +63,7 @@
- #include <linux/slab.h>
- #include <linux/export.h>
- #include <linux/etherdevice.h>
-+#include <linux/pci.h>
- #include "iwl-drv.h"
- #include "iwl-modparams.h"
- #include "iwl-nvm-parse.h"
-@@ -87,8 +88,10 @@ enum wkp_nvm_offsets {
- 
- enum family_8000_nvm_offsets {
- 	/* NVM HW-Section offset (in words) definitions */
--	HW_ADDR0_FAMILY_8000 = 0x12,
--	HW_ADDR1_FAMILY_8000 = 0x16,
-+	HW_ADDR0_WFPM_FAMILY_8000 = 0x12,
-+	HW_ADDR1_WFPM_FAMILY_8000 = 0x16,
-+	HW_ADDR0_PCIE_FAMILY_8000 = 0x8A,
-+	HW_ADDR1_PCIE_FAMILY_8000 = 0x8E,
- 	MAC_ADDRESS_OVERRIDE_FAMILY_8000 = 1,
- 
- 	/* NVM SW-Section offset (in words) definitions */
-@@ -504,16 +507,49 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 	}
- 
- 	if (nvm_hw) {
--		/* take the MAC address from the OTP */
--		hw_addr = (const u8 *)(nvm_hw + HW_ADDR0_FAMILY_8000);
--		data->hw_addr[0] = hw_addr[3];
--		data->hw_addr[1] = hw_addr[2];
--		data->hw_addr[2] = hw_addr[1];
--		data->hw_addr[3] = hw_addr[0];
--
--		hw_addr = (const u8 *)(nvm_hw + HW_ADDR1_FAMILY_8000);
--		data->hw_addr[4] = hw_addr[1];
--		data->hw_addr[5] = hw_addr[0];
-+		/* read the MAC address from OTP */
-+		if (!dev_is_pci(dev) || (data->nvm_version < 0xE08)) {
-+			/* read the mac address from the WFPM location */
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR0_WFPM_FAMILY_8000);
-+			data->hw_addr[0] = hw_addr[3];
-+			data->hw_addr[1] = hw_addr[2];
-+			data->hw_addr[2] = hw_addr[1];
-+			data->hw_addr[3] = hw_addr[0];
-+
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR1_WFPM_FAMILY_8000);
-+			data->hw_addr[4] = hw_addr[1];
-+			data->hw_addr[5] = hw_addr[0];
-+		} else if ((data->nvm_version >= 0xE08) &&
-+			   (data->nvm_version < 0xE0B)) {
-+			/* read "reverse order"  from the PCIe location */
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR0_PCIE_FAMILY_8000);
-+			data->hw_addr[5] = hw_addr[2];
-+			data->hw_addr[4] = hw_addr[1];
-+			data->hw_addr[3] = hw_addr[0];
-+
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR1_PCIE_FAMILY_8000);
-+			data->hw_addr[2] = hw_addr[3];
-+			data->hw_addr[1] = hw_addr[2];
-+			data->hw_addr[0] = hw_addr[1];
-+		} else {
-+			/* read from the PCIe location */
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR0_PCIE_FAMILY_8000);
-+			data->hw_addr[5] = hw_addr[0];
-+			data->hw_addr[4] = hw_addr[1];
-+			data->hw_addr[3] = hw_addr[2];
-+
-+			hw_addr = (const u8 *)(nvm_hw +
-+					       HW_ADDR1_PCIE_FAMILY_8000);
-+			data->hw_addr[2] = hw_addr[1];
-+			data->hw_addr[1] = hw_addr[2];
-+			data->hw_addr[0] = hw_addr[3];
-+		}
-+
- 		return;
- 	}
- 
--- 
-1.8.3.2
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 4ccfef5..bdf5590 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1821,7 +1821,7 @@ static const struct rt2x00_ops rt2400pci_ops = {
+ /*
+  * RT2400pci module information.
+  */
+-static DEFINE_PCI_DEVICE_TABLE(rt2400pci_device_table) = {
++static const struct pci_device_id rt2400pci_device_table[] = {
+ 	{ PCI_DEVICE(0x1814, 0x0101) },
+ 	{ 0, }
+ };
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index a511ccc..79f4fe6 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -2120,7 +2120,7 @@ static const struct rt2x00_ops rt2500pci_ops = {
+ /*
+  * RT2500pci module information.
+  */
+-static DEFINE_PCI_DEVICE_TABLE(rt2500pci_device_table) = {
++static const struct pci_device_id rt2500pci_device_table[] = {
+ 	{ PCI_DEVICE(0x1814, 0x0201) },
+ 	{ 0, }
+ };
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index a5b32ca..cc1b3cc 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -400,7 +400,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+ /*
+  * RT2800pci module information.
+  */
+-static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
++static const struct pci_device_id rt2800pci_device_table[] = {
+ 	{ PCI_DEVICE(0x1814, 0x0601) },
+ 	{ PCI_DEVICE(0x1814, 0x0681) },
+ 	{ PCI_DEVICE(0x1814, 0x0701) },
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 9048a9c..8194550 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3075,7 +3075,7 @@ static const struct rt2x00_ops rt61pci_ops = {
+ /*
+  * RT61pci module information.
+  */
+-static DEFINE_PCI_DEVICE_TABLE(rt61pci_device_table) = {
++static const struct pci_device_id rt61pci_device_table[] = {
+ 	/* RT2561s */
+ 	{ PCI_DEVICE(0x1814, 0x0301) },
+ 	/* RT2561 v2 */
 
