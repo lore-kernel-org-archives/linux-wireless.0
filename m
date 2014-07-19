@@ -1,118 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:59253 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756915AbaGVVu1 (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:36412 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761229AbaGSKxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 17:50:27 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so1169686wib.14
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 14:50:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/7] staging: vt6656: vnt_tx_fifo_head rename wFIFOCtl to fifo_ctl
-Date: Tue, 22 Jul 2014 22:49:43 +0100
-Message-Id: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com> (sfid-20140722_235030_368455_EF363BF2)
+	Sat, 19 Jul 2014 06:53:16 -0400
+Received: by mail-we0-f180.google.com with SMTP id w61so5568822wes.25
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 03:53:15 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 5/7] b43: N-PHY: add rev7+ workarounds for radio revs 9 and 14
+Date: Sat, 19 Jul 2014 12:52:45 +0200
+Message-Id: <1405767167-30315-5-git-send-email-zajec5@gmail.com> (sfid-20140719_125320_131530_AA8C5574)
+In-Reply-To: <1405767167-30315-1-git-send-email-zajec5@gmail.com>
+References: <1405767167-30315-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing prefix and camel case.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/vt6656/rxtx.c | 24 ++++++++++++------------
- drivers/staging/vt6656/rxtx.h |  2 +-
- 2 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/b43/phy_n.c | 79 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 77 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 4fc93f0..7a7b6cbf 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -828,18 +828,18 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 376dcf9..1052540 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -2722,9 +2722,9 @@ static void b43_nphy_workarounds_rev7plus(struct b43_wldev *dev)
  
- 	/*Set fifo controls */
- 	if (pkt_type == PK_TYPE_11A)
--		tx_buffer_head->wFIFOCtl = 0;
-+		tx_buffer_head->fifo_ctl = 0;
- 	else if (pkt_type == PK_TYPE_11B)
--		tx_buffer_head->wFIFOCtl = FIFOCTL_11B;
-+		tx_buffer_head->fifo_ctl = FIFOCTL_11B;
- 	else if (pkt_type == PK_TYPE_11GB)
--		tx_buffer_head->wFIFOCtl = FIFOCTL_11GB;
-+		tx_buffer_head->fifo_ctl = FIFOCTL_11GB;
- 	else if (pkt_type == PK_TYPE_11GA)
--		tx_buffer_head->wFIFOCtl = FIFOCTL_11GA;
-+		tx_buffer_head->fifo_ctl = FIFOCTL_11GA;
+ 	u16 lpf_ofdm_20mhz[2], lpf_ofdm_40mhz[2], lpf_11b[2];
+ 	u16 bcap_val;
+-	u16 bcap_val_11b[2], bcap_val_11n_20[2], bcap_val_11n_40[2];
++	s16 bcap_val_11b[2], bcap_val_11n_20[2], bcap_val_11n_40[2];
+ 	u16 scap_val;
+-	u16 scap_val_11b[2], scap_val_11n_20[2], scap_val_11n_40[2];
++	s16 scap_val_11b[2], scap_val_11n_20[2], scap_val_11n_40[2];
+ 	bool rccal_ovrd = false;
  
- 	if (!ieee80211_is_data(hdr->frame_control)) {
--		tx_buffer_head->wFIFOCtl |= (FIFOCTL_GENINT |
-+		tx_buffer_head->fifo_ctl |= (FIFOCTL_GENINT |
- 			FIFOCTL_ISDMA0);
--		tx_buffer_head->wFIFOCtl |= FIFOCTL_TMOEN;
-+		tx_buffer_head->fifo_ctl |= FIFOCTL_TMOEN;
+ 	u16 bias, conv, filt;
+@@ -2799,6 +2799,8 @@ static void b43_nphy_workarounds_rev7plus(struct b43_wldev *dev)
+ 	scap_val = b43_radio_read(dev, R2057_RCCAL_SCAP_VAL);
  
- 		tx_buffer_head->time_stamp =
- 			cpu_to_le16(DEFAULT_MGN_LIFETIME_RES_64us);
-@@ -849,12 +849,12 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	}
+ 	if (b43_nphy_ipa(dev)) {
++		bool ghz2 = b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ;
++
+ 		switch (phy->radio_rev) {
+ 		case 5:
+ 			/* Check radio version (to be 0) by PHY rev for now */
+@@ -2840,6 +2842,58 @@ static void b43_nphy_workarounds_rev7plus(struct b43_wldev *dev)
  
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
--		tx_buffer_head->wFIFOCtl |= FIFOCTL_NEEDACK;
-+		tx_buffer_head->fifo_ctl |= FIFOCTL_NEEDACK;
- 		tx_context->need_ack = true;
- 	}
+ 			rccal_ovrd = true;
+ 			break;
++		case 9:
++			for (core = 0; core < 2; core++) {
++				bcap_val_11b[core] = bcap_val;
++				scap_val_11b[core] = scap_val;
++				lpf_11b[core] = 1;
++
++				if (ghz2) {
++					bcap_val_11n_20[core] = bcap_val + 13;
++					scap_val_11n_20[core] = scap_val + 15;
++				} else {
++					bcap_val_11n_20[core] = bcap_val + 14;
++					scap_val_11n_20[core] = scap_val + 15;
++				}
++				lpf_ofdm_20mhz[core] = 4;
++
++				if (ghz2) {
++					bcap_val_11n_40[core] = bcap_val - 7;
++					scap_val_11n_40[core] = scap_val - 5;
++				} else {
++					bcap_val_11n_40[core] = bcap_val + 2;
++					scap_val_11n_40[core] = scap_val + 4;
++				}
++				lpf_ofdm_40mhz[core] = 4;
++			}
++
++			rccal_ovrd = true;
++			break;
++		case 14:
++			for (core = 0; core < 2; core++) {
++				bcap_val_11b[core] = bcap_val;
++				scap_val_11b[core] = scap_val;
++				lpf_11b[core] = 1;
++			}
++
++			bcap_val_11n_20[0] = bcap_val + 20;
++			scap_val_11n_20[0] = scap_val + 20;
++			lpf_ofdm_20mhz[0] = 3;
++
++			bcap_val_11n_20[1] = bcap_val + 16;
++			scap_val_11n_20[1] = scap_val + 16;
++			lpf_ofdm_20mhz[1] = 3;
++
++			bcap_val_11n_40[0] = bcap_val + 20;
++			scap_val_11n_40[0] = scap_val + 20;
++			lpf_ofdm_40mhz[0] = 4;
++
++			bcap_val_11n_40[1] = bcap_val + 10;
++			scap_val_11n_40[1] = scap_val + 10;
++			lpf_ofdm_40mhz[1] = 4;
++
++			rccal_ovrd = true;
++			break;
+ 		}
+ 	} else {
+ 		if (phy->radio_rev == 5) {
+@@ -2862,6 +2916,13 @@ static void b43_nphy_workarounds_rev7plus(struct b43_wldev *dev)
+ 		u8 rx2tx_lut_extra = 1;
  
- 	if (ieee80211_has_retry(hdr->frame_control))
--		tx_buffer_head->wFIFOCtl |= FIFOCTL_LRETRY;
-+		tx_buffer_head->fifo_ctl |= FIFOCTL_LRETRY;
- 
- 	if (tx_rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
- 		priv->preamble_type = PREAMBLE_SHORT;
-@@ -863,11 +863,11 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	if (tx_rate->flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		need_rts = true;
--		tx_buffer_head->wFIFOCtl |= FIFOCTL_RTS;
-+		tx_buffer_head->fifo_ctl |= FIFOCTL_RTS;
- 	}
- 
- 	if (ieee80211_has_a4(hdr->frame_control))
--		tx_buffer_head->wFIFOCtl |= FIFOCTL_LHEAD;
-+		tx_buffer_head->fifo_ctl |= FIFOCTL_LHEAD;
- 
- 	if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)
- 		is_pspoll = true;
-@@ -899,7 +899,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	/* legacy rates TODO use ieee80211_tx_rate */
- 	if (current_rate >= RATE_18M && ieee80211_is_data(hdr->frame_control)) {
- 		if (priv->auto_fb_ctrl == AUTO_FB_0) {
--			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_0;
-+			tx_buffer_head->fifo_ctl |= FIFOCTL_AUTO_FB_0;
- 
- 			priv->tx_rate_fb0 =
- 				vnt_fb_opt0[FB_RATE0][current_rate - RATE_18M];
-@@ -908,7 +908,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 			fb_option = AUTO_FB_0;
- 		} else if (priv->auto_fb_ctrl == AUTO_FB_1) {
--			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_1;
-+			tx_buffer_head->fifo_ctl |= FIFOCTL_AUTO_FB_1;
- 
- 			priv->tx_rate_fb0 =
- 				vnt_fb_opt1[FB_RATE0][current_rate - RATE_18M];
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 1cfa5ae..62a9ed3 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -222,7 +222,7 @@ union vnt_tx_head {
- 
- struct vnt_tx_fifo_head {
- 	u8 tx_key[WLAN_KEY_LEN_CCMP];
--	u16 wFIFOCtl;
-+	u16 fifo_ctl;
- 	__le16 time_stamp;
- 	__le16 frag_ctl;
- 	__le16 current_rate;
+ 		for (core = 0; core < 2; core++) {
++			bcap_val_11b[core] = clamp_val(bcap_val_11b[core], 0, 0x1f);
++			scap_val_11b[core] = clamp_val(scap_val_11b[core], 0, 0x1f);
++			bcap_val_11n_20[core] = clamp_val(bcap_val_11n_20[core], 0, 0x1f);
++			scap_val_11n_20[core] = clamp_val(scap_val_11n_20[core], 0, 0x1f);
++			bcap_val_11n_40[core] = clamp_val(bcap_val_11n_40[core], 0, 0x1f);
++			scap_val_11n_40[core] = clamp_val(scap_val_11n_40[core], 0, 0x1f);
++
+ 			rx2tx_lut_20_11b[core] = (rx2tx_lut_extra << 13) |
+ 						 (bcap_val_11b[core] << 8) |
+ 						 (scap_val_11b[core] << 3) |
+@@ -2982,6 +3043,20 @@ static void b43_nphy_workarounds_rev7plus(struct b43_wldev *dev)
+ 					b43_radio_write(dev, 0xE8, 0x16);
+ 				}
+ 				break;
++			case 14:
++				for (core = 0; core < 2; core++) {
++					int o = core ? 0x85 : 0;
++
++					b43_radio_write(dev, o + R2057_IPA2G_CASCONV_CORE0, 0x13);
++					b43_radio_write(dev, o + R2057_TXMIX2G_TUNE_BOOST_PU_CORE0, 0x21);
++					b43_radio_write(dev, o + R2057_IPA2G_BIAS_FILTER_CORE0, 0xff);
++					b43_radio_write(dev, o + R2057_PAD2G_IDACS_CORE0, 0x88);
++					b43_radio_write(dev, o + R2057_PAD2G_TUNE_PUS_CORE0, 0x23);
++					b43_radio_write(dev, o + R2057_IPA2G_IMAIN_CORE0, 0x16);
++					b43_radio_write(dev, o + R2057_PAD_BIAS_FILTER_BWS_CORE0, 0x3e);
++					b43_radio_write(dev, o + R2057_BACKUP1_CORE0, 0x10);
++				}
++				break;
+ 			}
+ 		} else {
+ 			u16 freq = phy->chandef->chan->center_freq;
 -- 
-2.0.1
+1.8.4.5
 
