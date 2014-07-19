@@ -1,578 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:56902 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaGGSgr (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:51058 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611AbaGSLbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 14:36:47 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hi2so15184307wib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 11:36:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <0D7AC98D-7356-44BC-8DBC-2916DF58F41F@net.t-labs.tu-berlin.de>
-References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1404725506-9571-4-git-send-email-lorenzo.bianconi83@gmail.com>
-	<0D7AC98D-7356-44BC-8DBC-2916DF58F41F@net.t-labs.tu-berlin.de>
-Date: Mon, 7 Jul 2014 20:36:45 +0200
-Message-ID: <CAA2SeN+YHFxOgeU14Rh7vM8ds4k9c0OsP3usFmyCR-SPa2Hzqg@mail.gmail.com> (sfid-20140707_203651_717861_D9F1641E)
-Subject: Re: [ath9k-devel] [RFC 03/10] ath9k: add dynamic ack timeout estimation
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: =?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 19 Jul 2014 07:31:04 -0400
+Received: by mail-we0-f171.google.com with SMTP id p10so5601930wes.30
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:03 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/16] staging: vt6656: struct vnt_private replace byRFType with rf_type
+Date: Sat, 19 Jul 2014 12:30:07 +0100
+Message-Id: <1405769418-2815-5-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133117_255385_D9150284)
+In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi Lorenzo,
->
+Remove camel case
 
-Hi Thomas,
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/baseband.c | 24 ++++++++++++------------
+ drivers/staging/vt6656/card.c     | 12 ++++++------
+ drivers/staging/vt6656/channel.c  |  2 +-
+ drivers/staging/vt6656/device.h   |  2 +-
+ drivers/staging/vt6656/main_usb.c |  4 ++--
+ drivers/staging/vt6656/rf.c       | 10 +++++-----
+ 6 files changed, 27 insertions(+), 27 deletions(-)
 
-> My comments are inline.
->
->
->> Add dynamic ack timeout estimation algorithm based on ack frame RX timestamp,
->> TX frame timestamp and frame duration.
->>
->> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->> ---
->> drivers/net/wireless/ath/ath.h          |   2 +
->> drivers/net/wireless/ath/ath9k/ath9k.h  |   3 +
->> drivers/net/wireless/ath/ath9k/dynack.c | 293 ++++++++++++++++++++++++++++++++
->> drivers/net/wireless/ath/ath9k/dynack.h |  81 +++++++++
->> drivers/net/wireless/ath/ath9k/hw.c     |   2 +
->> drivers/net/wireless/ath/ath9k/hw.h     |   3 +
->> 6 files changed, 384 insertions(+)
->> create mode 100644 drivers/net/wireless/ath/ath9k/dynack.c
->> create mode 100644 drivers/net/wireless/ath/ath9k/dynack.h
->>
->> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
->> index fd9e530..4e51072 100644
->> --- a/drivers/net/wireless/ath/ath.h
->> +++ b/drivers/net/wireless/ath/ath.h
->> @@ -234,6 +234,7 @@ void ath_printk(const char *level, const struct ath_common *common,
->>  *    AR9462.
->>  * @ATH_DBG_DFS: radar datection
->>  * @ATH_DBG_WOW: Wake on Wireless
->> + * @ATH_DBG_DYNACK: dynack handling
->>  * @ATH_DBG_ANY: enable all debugging
->>  *
->>  * The debug level is used to control the amount and type of debugging output
->> @@ -261,6 +262,7 @@ enum ATH_DEBUG {
->>       ATH_DBG_MCI             = 0x00008000,
->>       ATH_DBG_DFS             = 0x00010000,
->>       ATH_DBG_WOW             = 0x00020000,
->> +     ATH_DBG_DYNACK          = 0x00040000,
->>       ATH_DBG_ANY             = 0xffffffff
->> };
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
->> index 11b5e4d..65a2587 100644
->> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->> @@ -272,6 +272,9 @@ struct ath_node {
->>       struct ath_rx_rate_stats rx_rate_stats;
->> #endif
->>       u8 key_idx[4];
->> +
->> +     u32 ackto;
->> +     struct list_head list;
->> };
->>
->> struct ath_tx_control {
->> diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
->> new file mode 100644
->> index 0000000..50297e7
->> --- /dev/null
->> +++ b/drivers/net/wireless/ath/ath9k/dynack.c
->> @@ -0,0 +1,293 @@
->> +/*
->> + * Copyright 2014, Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + */
->> +#include "ath9k.h"
->> +#include "hw.h"
->> +#include "dynack.h"
->> +
->> +#define COMPUTE_TO           (5 * HZ)
->> +#define LATEACK_DELAY                (10 * HZ)
->> +#define LATEACK_TO           256
->> +#define MAX_DELAY            300
->> +#define EWMA_LEVEL           75
->> +#define DYNACK_EWMA(old, new)        \
->> +     (((new) * (100 - EWMA_LEVEL) + (old) * EWMA_LEVEL) / 100)
->> +
->
-> You could change this EWMA calculation as we did it in Minstrel to use powers of two as the calculation speed increased.
-> This would change :
-> - EWMA_DIV   from 100 to 2^7
-> - EWMA_LEVEL from 75 (/EWMA_DIV=100) to 2^6 + 2^5 (/EWMA_DIV=128)
->
-> Note that this changes EWMA_DIV - EWMA_LEVEL from 25 to 2^5 and keeps
-> EWMA_LEVEL / EWMA_DIV == 0.75.
->
-> Something like this:
->
-> +#define EWMA_LEVEL     96      /* ewma weighting factor [/EWMA_DIV] */
-> +#define EWMA_DIV       128
->
-> static inline int
-> dynack_ewma(int old, int new, int weight)
-> {
-> +       return (new * (EWMA_DIV - weight) + old * weight) / EWMA_DIV;
-> }
->
-
-Ack
-
->
->> +/**
->> + * ath_dynack_get_sifs - get sifs time based on phy used
->> + * @ah: ath hw
->> + * @phy: phy used
->> + */
->> +static inline u32 ath_dynack_get_sifs(struct ath_hw *ah, int phy)
->> +{
->> +     u32 sifs = CCK_SIFS_TIME;
->> +
->> +     if (phy == WLAN_RC_PHY_OFDM) {
->> +             if (IS_CHAN_QUARTER_RATE(ah->curchan))
->> +                     sifs = OFDM_SIFS_TIME_QUARTER;
->> +             else if (IS_CHAN_HALF_RATE(ah->curchan))
->> +                     sifs = OFDM_SIFS_TIME_HALF;
->> +             else
->> +                     sifs = OFDM_SIFS_TIME;
->> +     }
->> +     return sifs;
->> +}
->> +
->> +static inline bool ath_dynack_bssidmask(struct ath_hw *ah, const u8 *mac)
->> +{
->> +     int i;
->> +     struct ath_common *common = ath9k_hw_common(ah);
->> +
->> +     for (i = 0; i < ETH_ALEN; i++) {
->> +             if ((common->macaddr[i] & common->bssidmask[i]) !=
->> +                 (mac[i] & common->bssidmask[i]))
->> +                     return false;
->> +     }
->> +
->> +     return true;
->> +}
->> +
->> +/**
->> + * ath_dynack_set_ackto - compute ack timeout based on sta timeout
->> + * @ah: ath hw
->> + *
->> + * should be called while holding qlock
->> + */
->> +static void ath_dynack_compute_ackto(struct ath_hw *ah)
->
-> The function name does not match the name in the comment above (ath_dynack_set_ackto != ath_dynack_compute_ackto).
->
-
-Sorry, just a typo
-
->> +{
->> +     struct ath_node *an;
->> +     u32 to = 0;
->> +     struct ath_dynack *da = &ah->dynack;
->> +     struct ath_common *common = ath9k_hw_common(ah);
->> +
->
->> +     list_for_each_entry(an, &da->nodes, list)
->> +             if (an->ackto > to)
->> +                     to = an->ackto;
->> +
->
-> This list parsing would probably need rcu protection like:
->
->         rcu_read_lock();
->         list_for_each_entry(an, &da->nodes, list)
->                 if (an->ackto > to)
->                         to = an->ackto;
->         rcu_read_unlock();
->
-> I am not sure that you need to call the entire function with spin_lock as you do it now.
->
-
-ath_dynack_compute_ackto() is called while holding qlock, so need to
-use RCU locking
-
->> +     if (to && da->ackto != to) {
->> +             u32 slottime;
->> +
->> +             slottime = (to - 3) / 2;
->
-> Should the case to < 3 be covered or is it safe to have potentially slottime = 0 ?
-
-slottime should be at least 9us, it cannot be 0
-
->
->> +             da->ackto = to;
->> +             ath_dbg(common, DYNACK, "ack timeout %u slottime %u\n",
->> +                     da->ackto, slottime);
->> +             ath9k_hw_setslottime(ah, slottime);
->> +             ath9k_hw_set_ack_timeout(ah, da->ackto);
->> +             ath9k_hw_set_cts_timeout(ah, da->ackto);
->> +     }
->> +}
->> +
->> +/**
->> + * ath_dynack_compute_to - compute ack timeout
->> + * @ah: ath hw
->> + *
->> + * should be called while holding qlock
->> + */
->> +static void ath_dynack_compute_to(struct ath_hw *ah)
->> +{
->> +     u32 ackto, ack_ts;
->> +     u8 *dst, *src;
->> +     struct ieee80211_sta *sta;
->> +     struct ath_node *an;
->> +     struct ts_info *st_ts;
->> +     struct ath_dynack *da = &ah->dynack;
->> +
->> +     rcu_read_lock();
->> +
->> +     while (da->st_rbf.h_rb != da->st_rbf.t_rb &&
->> +            da->ack_rbf.h_rb != da->ack_rbf.t_rb) {
->> +             ack_ts = da->ack_rbf.tstamp[da->ack_rbf.h_rb];
->> +             st_ts = &da->st_rbf.ts[da->st_rbf.h_rb];
->> +             dst = da->st_rbf.addr[da->st_rbf.h_rb].h_dest;
->> +             src = da->st_rbf.addr[da->st_rbf.h_rb].h_src;
->> +
->> +             ath_dbg(ath9k_hw_common(ah), DYNACK,
->> +                     "ack_ts %u st_ts %u st_dur %u [%u-%u]\n",
->> +                     ack_ts, st_ts->tstamp, st_ts->dur,
->> +                     da->ack_rbf.h_rb, da->st_rbf.h_rb);
->> +
->> +             if (ack_ts > st_ts->tstamp + st_ts->dur) {
->> +                     ackto = ack_ts - st_ts->tstamp - st_ts->dur;
->> +
->> +                     if (ackto < MAX_DELAY) {
->> +                             sta = ieee80211_find_sta_by_ifaddr(ah->hw, dst,
->> +                                                                src);
->> +                             if (sta) {
->> +                                     an = (struct ath_node *)sta->drv_priv;
->> +                                     an->ackto = DYNACK_EWMA((u32)ackto,
->> +                                                             an->ackto);
->> +                                     ath_dbg(ath9k_hw_common(ah), DYNACK,
->> +                                             "%pM to %u\n", dst, an->ackto);
->> +                                     if (time_is_before_jiffies(da->lto)) {
->> +                                             ath_dynack_compute_ackto(ah);
->> +                                             da->lto = jiffies + COMPUTE_TO;
->> +                                     }
->> +                             }
->> +                             INCR(da->ack_rbf.h_rb, ATH_DYN_BUF);
->> +                     }
->> +                     INCR(da->st_rbf.h_rb, ATH_DYN_BUF);
->> +             } else {
->> +                     INCR(da->ack_rbf.h_rb, ATH_DYN_BUF);
->> +             }
->> +     }
->> +
->> +     rcu_read_unlock();
->
-> I think it is sufficient to have the rcu_read_unlock just around  ieee80211_find_sta_by_ifaddr(). So the lock does not need to
-> include the whole while loop under lock.
->
->
-> Greetings Thomas
->
->> +}
->> +
->> +/**
->> + * ath_dynack_sample_tx_ts - status ts sampling method
->> + * @ah: ath hw
->> + * @skb: socket buffer
->> + * @ts: tx status info
->> + *
->> + */
->> +void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
->> +                          struct ath_tx_status *ts)
->> +{
->> +     u8 ridx;
->> +     struct ieee80211_hdr *hdr;
->> +     struct ath_dynack *da = &ah->dynack;
->> +     struct ath_common *common = ath9k_hw_common(ah);
->> +     struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->> +
->> +     if ((info->flags & IEEE80211_TX_CTL_NO_ACK) || da->fix_to)
->> +             return;
->> +
->> +     spin_lock_bh(&da->qlock);
->> +
->> +     hdr = (struct ieee80211_hdr *)skb->data;
->> +
->> +     /* late ack */
->> +     if (ts->ts_status & ATH9K_TXERR_XRETRY) {
->> +             if (ieee80211_is_assoc_req(hdr->frame_control) ||
->> +                 ieee80211_is_assoc_resp(hdr->frame_control)) {
->> +                     ath_dbg(common, DYNACK, "late ack\n");
->> +                     ath9k_hw_setslottime(ah, (LATEACK_TO - 3) / 2);
->> +                     ath9k_hw_set_ack_timeout(ah, LATEACK_TO);
->> +                     ath9k_hw_set_cts_timeout(ah, LATEACK_TO);
->> +                     da->lto = jiffies + LATEACK_DELAY;
->> +             }
->> +
->> +             spin_unlock_bh(&da->qlock);
->> +             return;
->> +     }
->> +
->> +     ridx = ts->ts_rateindex;
->> +
->> +     da->st_rbf.ts[da->st_rbf.t_rb].tstamp = ts->ts_tstamp;
->> +     da->st_rbf.ts[da->st_rbf.t_rb].dur = ts->duration[ts->ts_rateindex];
->> +     ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_dest, hdr->addr1);
->> +     ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_src, hdr->addr2);
->> +
->> +     if (!(info->status.rates[ridx].flags & IEEE80211_TX_RC_MCS)) {
->> +             u32 phy, sifs;
->> +             const struct ieee80211_rate *rate;
->> +             struct ieee80211_tx_rate *rates = info->status.rates;
->> +
->> +             rate = &common->sbands[info->band].bitrates[rates[ridx].idx];
->> +             if (info->band == IEEE80211_BAND_2GHZ &&
->> +                 !(rate->flags & IEEE80211_RATE_ERP_G))
->> +                     phy = WLAN_RC_PHY_CCK;
->> +             else
->> +                     phy = WLAN_RC_PHY_OFDM;
->> +
->> +             sifs = ath_dynack_get_sifs(ah, phy);
->> +             da->st_rbf.ts[da->st_rbf.t_rb].dur -= sifs;
->> +     }
->> +
->> +     ath_dbg(common, DYNACK, "{%pM} tx sample %u [dur %u][h %u-t %u]\n",
->> +             hdr->addr1, da->st_rbf.ts[da->st_rbf.t_rb].tstamp,
->> +             da->st_rbf.ts[da->st_rbf.t_rb].dur, da->st_rbf.h_rb,
->> +             (da->st_rbf.t_rb + 1) % ATH_DYN_BUF);
->> +
->> +     INCR(da->st_rbf.t_rb, ATH_DYN_BUF);
->> +     if (da->st_rbf.t_rb == da->st_rbf.h_rb)
->> +             INCR(da->st_rbf.h_rb, ATH_DYN_BUF);
->> +
->> +     ath_dynack_compute_to(ah);
->> +
->> +     spin_unlock_bh(&da->qlock);
->> +}
->> +EXPORT_SYMBOL(ath_dynack_sample_tx_ts);
->> +
->> +/**
->> + * ath_dynack_sample_ack_ts - ack ts sampling method
->> + * @ah: ath hw
->> + * @skb: socket buffer
->> + * @ts: rx timestamp
->> + *
->> + */
->> +void ath_dynack_sample_ack_ts(struct ath_hw *ah, struct sk_buff *skb,
->> +                           u32 ts)
->> +{
->> +     struct ath_dynack *da = &ah->dynack;
->> +     struct ath_common *common = ath9k_hw_common(ah);
->> +     struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->> +
->> +     if (!ath_dynack_bssidmask(ah, hdr->addr1) || da->fix_to)
->> +             return;
->> +
->> +     spin_lock_bh(&da->qlock);
->> +     da->ack_rbf.tstamp[da->ack_rbf.t_rb] = ts;
->> +
->> +     ath_dbg(common, DYNACK, "rx sample %u [h %u-t %u]\n",
->> +             da->ack_rbf.tstamp[da->ack_rbf.t_rb],
->> +             da->ack_rbf.h_rb, (da->ack_rbf.t_rb + 1) % ATH_DYN_BUF);
->> +
->> +     INCR(da->ack_rbf.t_rb, ATH_DYN_BUF);
->> +     if (da->ack_rbf.t_rb == da->ack_rbf.h_rb)
->> +             INCR(da->ack_rbf.h_rb, ATH_DYN_BUF);
->> +
->> +     ath_dynack_compute_to(ah);
->> +
->> +     spin_unlock_bh(&da->qlock);
->> +}
->> +EXPORT_SYMBOL(ath_dynack_sample_ack_ts);
->> +
->> +/**
->> + * ath_dynack_reset - reset dynack processing
->> + * @ah: ath hw
->> + *
->> + */
->> +void ath_dynack_reset(struct ath_hw *ah)
->> +{
->> +     /* ackto = slottime + sifs + air delay */
->> +     u32 ackto = ATH9K_SLOT_TIME_9 + 16 + 64;
->> +     struct ath_dynack *da = &ah->dynack;
->> +
->> +     da->lto = jiffies;
->> +     da->ackto = ackto;
->> +
->> +     da->st_rbf.t_rb = 0;
->> +     da->st_rbf.h_rb = 0;
->> +     da->ack_rbf.t_rb = 0;
->> +     da->ack_rbf.h_rb = 0;
->> +
->> +     /* init acktimeout */
->> +     ath9k_hw_setslottime(ah, (ackto - 3) / 2);
->> +     ath9k_hw_set_ack_timeout(ah, ackto);
->> +     ath9k_hw_set_cts_timeout(ah, ackto);
->> +}
->> +EXPORT_SYMBOL(ath_dynack_reset);
->> +
->> +/**
->> + * ath_dynack_init - init dynack data structure
->> + * @ah: ath hw
->> + *
->> + */
->> +void ath_dynack_init(struct ath_hw *ah)
->> +{
->> +     struct ath_dynack *da = &ah->dynack;
->> +
->> +     memset(da, 0, sizeof(struct ath_dynack));
->> +
->> +     spin_lock_init(&da->qlock);
->> +     INIT_LIST_HEAD(&da->nodes);
->> +
->> +     ath_dynack_reset(ah);
->> +}
->> +
->> diff --git a/drivers/net/wireless/ath/ath9k/dynack.h b/drivers/net/wireless/ath/ath9k/dynack.h
->> new file mode 100644
->> index 0000000..386f176
->> --- /dev/null
->> +++ b/drivers/net/wireless/ath/ath9k/dynack.h
->> @@ -0,0 +1,81 @@
->> +/*
->> + * Copyright 2014, Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + */
->> +
->> +#ifndef DYNACK_H
->> +#define DYNACK_H
->> +
->> +#define ATH_DYN_BUF  64
->> +
->> +struct ath_hw;
->> +
->> +/**
->> + * ath_dyn_rxbuf - ack frame ring buffer
->> + */
->> +struct ath_dyn_rxbuf {
->> +     u16 h_rb, t_rb;
->> +     u32 tstamp[ATH_DYN_BUF];
->> +};
->> +
->> +struct ts_info {
->> +     u32 tstamp;
->> +     u32 dur;
->> +};
->> +
->> +struct haddr_pair {
->> +     u8 h_dest[ETH_ALEN];
->> +     u8 h_src[ETH_ALEN];
->> +};
->> +/**
->> + * ath_dyn_txbuf - tx frame ring buffer
->> + */
->> +struct ath_dyn_txbuf {
->> +     u16 h_rb, t_rb;
->> +     struct haddr_pair addr[ATH_DYN_BUF];
->> +     struct ts_info ts[ATH_DYN_BUF];
->> +};
->> +
->> +/**
->> + * ath_dynack - dyn ack processing info
->> + * @fix_to: use static ack timeout
->> + * @ackto: current ack timeout
->> + * @lto: last ack timeout computation
->> + * @nodes: ath_node linked list
->> + * @qlock: ts queue spinlock
->> + * @ack_rbf: ack ts ring buffer
->> + * @st_rbf: status ts ring buffer
->> + */
->> +struct ath_dynack {
->> +     bool fix_to;
->> +     int ackto;
->> +     unsigned long lto;
->> +
->> +     struct list_head nodes;
->> +
->> +     /* protect timestamp queue access */
->> +     spinlock_t qlock;
->> +     struct ath_dyn_rxbuf ack_rbf;
->> +     struct ath_dyn_txbuf st_rbf;
->> +};
->> +
->> +#if defined(CONFIG_ATH9K_DYNACK)
->> +void ath_dynack_reset(struct ath_hw *ah);
->> +void ath_dynack_init(struct ath_hw *ah);
->> +void ath_dynack_sample_ack_ts(struct ath_hw *ah, struct sk_buff *skb, u32 ts);
->> +void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
->> +                          struct ath_tx_status *ts);
->> +#else
->> +static inline void ath_dynack_reset(struct ath_hw *ah) {}
->> +static inline void ath_dynack_init(struct ath_hw *ah) {}
->> +static inline void ath_dynack_sample_ack_ts(struct ath_hw *ah,
->> +                                         struct sk_buff *skb, u32 ts) {}
->> +static inline void ath_dynack_sample_tx_ts(struct ath_hw *ah,
->> +                                        struct sk_buff *skb,
->> +                                        struct ath_tx_status *ts) {}
->> +#endif
->> +
->> +#endif /* DYNACK_H */
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->> index e88896c..9a6b113 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->> @@ -647,6 +647,8 @@ int ath9k_hw_init(struct ath_hw *ah)
->>               return ret;
->>       }
->>
->> +     ath_dynack_init(ah);
->> +
->>       return 0;
->> }
->> EXPORT_SYMBOL(ath9k_hw_init);
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
->> index f36d971..b9eef33 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.h
->> +++ b/drivers/net/wireless/ath/ath9k/hw.h
->> @@ -29,6 +29,7 @@
->> #include "reg.h"
->> #include "phy.h"
->> #include "btcoex.h"
->> +#include "dynack.h"
->>
->> #include "../regd.h"
->>
->> @@ -924,6 +925,8 @@ struct ath_hw {
->>       int (*external_reset)(void);
->>
->>       const struct firmware *eeprom_blob;
->> +
->> +     struct ath_dynack dynack;
->> };
->>
->> struct ath_bus_ops {
->> --
->> 1.9.1
->>
->> _______________________________________________
->> ath9k-devel mailing list
->> ath9k-devel@lists.ath9k.org
->> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
-
-Best regards,
-
-Lorenzo
-
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 91c24a3..b08d1ea 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -396,14 +396,14 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 
+ 	priv->byZoneType = priv->abyEEPROM[EEP_OFS_ZONETYPE];
+ 
+-	priv->byRFType = priv->abyEEPROM[EEP_OFS_RFTYPE];
++	priv->rf_type = priv->abyEEPROM[EEP_OFS_RFTYPE];
+ 
+ 	dev_dbg(&priv->usb->dev, "Zone Type %x\n", priv->byZoneType);
+ 
+-	dev_dbg(&priv->usb->dev, "RF Type %d\n", priv->byRFType);
++	dev_dbg(&priv->usb->dev, "RF Type %d\n", priv->rf_type);
+ 
+-	if ((priv->byRFType == RF_AL2230) ||
+-				(priv->byRFType == RF_AL2230S)) {
++	if ((priv->rf_type == RF_AL2230) ||
++				(priv->rf_type == RF_AL2230S)) {
+ 		priv->byBBRxConf = vnt_vt3184_al2230[10];
+ 		length = sizeof(vnt_vt3184_al2230);
+ 		addr = vnt_vt3184_al2230;
+@@ -418,7 +418,7 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 		priv->ldBmThreshold[1] = -48;
+ 		priv->ldBmThreshold[2] = 0;
+ 		priv->ldBmThreshold[3] = 0;
+-	} else if (priv->byRFType == RF_AIROHA7230) {
++	} else if (priv->rf_type == RF_AIROHA7230) {
+ 		priv->byBBRxConf = vnt_vt3184_al2230[10];
+ 		length = sizeof(vnt_vt3184_al2230);
+ 		addr = vnt_vt3184_al2230;
+@@ -435,8 +435,8 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 		priv->ldBmThreshold[1] = -48;
+ 		priv->ldBmThreshold[2] = 0;
+ 		priv->ldBmThreshold[3] = 0;
+-	} else if ((priv->byRFType == RF_VT3226) ||
+-			(priv->byRFType == RF_VT3226D0)) {
++	} else if ((priv->rf_type == RF_VT3226) ||
++			(priv->rf_type == RF_VT3226D0)) {
+ 		priv->byBBRxConf = vnt_vt3184_vt3226d0[10];
+ 		length = sizeof(vnt_vt3184_vt3226d0);
+ 		addr = vnt_vt3184_vt3226d0;
+@@ -454,7 +454,7 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 		/* Fix VT3226 DFC system timing issue */
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_SOFTPWRCTL2,
+ 				    SOFTPWRCTL_RFLEOPT);
+-	} else if (priv->byRFType == RF_VT3342A0) {
++	} else if (priv->rf_type == RF_VT3342A0) {
+ 		priv->byBBRxConf = vnt_vt3184_vt3226d0[10];
+ 		length = sizeof(vnt_vt3184_vt3226d0);
+ 		addr = vnt_vt3184_vt3226d0;
+@@ -486,12 +486,12 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 	vnt_control_out(priv, MESSAGE_TYPE_WRITE, 0,
+ 		MESSAGE_REQUEST_BBAGC, length_agc, array);
+ 
+-	if ((priv->byRFType == RF_VT3226) ||
+-		(priv->byRFType == RF_VT3342A0)) {
++	if ((priv->rf_type == RF_VT3226) ||
++		(priv->rf_type == RF_VT3342A0)) {
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_MACREG,
+ 						MAC_REG_ITRTMSET, 0x23);
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_PAPEDELAY, 0x01);
+-	} else if (priv->byRFType == RF_VT3226D0) {
++	} else if (priv->rf_type == RF_VT3226D0) {
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_MACREG,
+ 						MAC_REG_ITRTMSET, 0x11);
+ 		vnt_mac_reg_bits_on(priv, MAC_REG_PAPEDELAY, 0x01);
+@@ -586,7 +586,7 @@ void vnt_update_pre_ed_threshold(struct vnt_private *priv, int scanning)
+ 	u8 cr_201 = 0x0, cr_206 = 0x0;
+ 	u8 ed_inx = priv->byBBPreEDIndex;
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+ 	case RF_AIROHA7230:
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 19a7931..3b49ee9 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -409,7 +409,7 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	priv->uCwMax = C_CWMAX;
+ 	priv->uEIFS = C_EIFS;
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_VT3226D0:
+ 		if (priv->byBBType != BB_TYPE_11B) {
+ 			priv->uSIFS -= 1;
+@@ -734,7 +734,7 @@ int vnt_radio_power_off(struct vnt_private *priv)
+ {
+ 	int ret = true;
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+ 	case RF_AIROHA7230:
+@@ -775,7 +775,7 @@ int vnt_radio_power_on(struct vnt_private *priv)
+ 
+ 	vnt_mac_reg_bits_on(priv, MAC_REG_HOSTCR, HOSTCR_RXON);
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+ 	case RF_AIROHA7230:
+@@ -794,7 +794,7 @@ int vnt_radio_power_on(struct vnt_private *priv)
+ 
+ void vnt_set_bss_mode(struct vnt_private *priv)
+ {
+-	if (priv->byRFType == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
++	if (priv->rf_type == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
+ 		vnt_mac_set_bb_type(priv, BB_TYPE_11G);
+ 	else
+ 		vnt_mac_set_bb_type(priv, priv->byBBType);
+@@ -812,7 +812,7 @@ void vnt_set_bss_mode(struct vnt_private *priv)
+ 	vnt_set_rspinf(priv, (u8)priv->byBBType);
+ 
+ 	if (priv->byBBType == BB_TYPE_11A) {
+-		if (priv->byRFType == RF_AIROHA7230) {
++		if (priv->rf_type == RF_AIROHA7230) {
+ 			priv->abyBBVGA[0] = 0x20;
+ 
+ 			vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG,
+@@ -822,7 +822,7 @@ void vnt_set_bss_mode(struct vnt_private *priv)
+ 		priv->abyBBVGA[2] = 0x10;
+ 		priv->abyBBVGA[3] = 0x10;
+ 	} else {
+-		if (priv->byRFType == RF_AIROHA7230) {
++		if (priv->rf_type == RF_AIROHA7230) {
+ 			priv->abyBBVGA[0] = 0x1c;
+ 
+ 			vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG,
+diff --git a/drivers/staging/vt6656/channel.c b/drivers/staging/vt6656/channel.c
+index 4a53f1a..8412d05 100644
+--- a/drivers/staging/vt6656/channel.c
++++ b/drivers/staging/vt6656/channel.c
+@@ -146,7 +146,7 @@ void vnt_init_bands(struct vnt_private *priv)
+ 	struct ieee80211_channel *ch;
+ 	int i;
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AIROHA7230:
+ 	case RF_VT3342A0:
+ 	default:
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index c1d0551..8b5793b 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -301,7 +301,7 @@ struct vnt_private {
+ 	/* Version control */
+ 	u16 firmware_version;
+ 	u8 local_id;
+-	u8 byRFType;
++	u8 rf_type;
+ 	u8 byBBRxConf;
+ 
+ 	u8 byZoneType;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 9974bab..c8b4914 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -290,10 +290,10 @@ static int device_init_registers(struct vnt_private *priv)
+ 	priv->byBBType = BB_TYPE_11G;
+ 
+ 	/* get RFType */
+-	priv->byRFType = init_rsp->rf_type;
++	priv->rf_type = init_rsp->rf_type;
+ 
+ 	/* load vt3266 calibration parameters in EEPROM */
+-	if (priv->byRFType == RF_VT3226D0) {
++	if (priv->rf_type == RF_VT3226D0) {
+ 		if ((priv->abyEEPROM[EEP_OFS_MAJOR_VER] == 0x1) &&
+ 		    (priv->abyEEPROM[EEP_OFS_MINOR_VER] >= 0x4)) {
+ 
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 28e64b4..c98cf60 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -665,7 +665,7 @@ static u8 vnt_rf_addpower(struct vnt_private *priv)
+ 	if (!rssi)
+ 		return 7;
+ 
+-	if (priv->byRFType == RF_VT3226D0) {
++	if (priv->rf_type == RF_VT3226D0) {
+ 		if (rssi < -70)
+ 			return 9;
+ 		else if (rssi < -65)
+@@ -699,7 +699,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
+ 
+ 	priv->byCurPwr = power;
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 		if (power >= AL2230_PWR_IDX_LEN)
+ 			return false;
+@@ -811,7 +811,7 @@ void vnt_rf_rssi_to_dbm(struct vnt_private *priv, u8 rssi, long *dbm)
+ 	long a = 0;
+ 	u8 airoharf[4] = {0, 18, 0, 40};
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+ 	case RF_AIROHA7230:
+@@ -834,7 +834,7 @@ void vnt_rf_table_download(struct vnt_private *priv)
+ 	u16 length, value;
+ 	u8 array[256];
+ 
+-	switch (priv->byRFType) {
++	switch (priv->rf_type) {
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+ 		length1 = CB_AL2230_INIT_SEQ * 3;
+@@ -920,7 +920,7 @@ void vnt_rf_table_download(struct vnt_private *priv)
+ 		addr3 += length;
+ 	}
+ 
+-	if (priv->byRFType == RF_AIROHA7230) {
++	if (priv->rf_type == RF_AIROHA7230) {
+ 		length1 = CB_AL7230_INIT_SEQ * 3;
+ 		length2 = CB_MAX_CHANNEL * 3;
+ 		addr1 = &(al7230_init_table_amode[0][0]);
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+2.0.1
+
