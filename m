@@ -1,110 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63618 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927AbaGHGzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 02:55:40 -0400
-Message-ID: <53BB95CE.1010502@redhat.com> (sfid-20140708_085601_127355_3909A038)
-Date: Tue, 08 Jul 2014 08:55:10 +0200
-From: Hans de Goede <hdegoede@redhat.com>
-MIME-Version: 1.0
-To: linux-sunxi@googlegroups.com
-CC: Arend van Spriel <arend@broadcom.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>
-Subject: Re: [linux-sunxi] Re: [PATCH v3 1/4] dt: bindings: add bindings for
- Broadcom bcm43xx sdio devices
-References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com> <1404051421-24377-2-git-send-email-hdegoede@redhat.com> <20140707182302.GA29650@tuxdriver.com>
-In-Reply-To: <20140707182302.GA29650@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:56632 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760710AbaGSLbN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2014 07:31:13 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so4526954wgh.15
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:12 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/16] staging: vt6656: replace bExistSWNetAddr with exist_sw_net_addr
+Date: Sat, 19 Jul 2014 12:30:12 +0100
+Message-Id: <1405769418-2815-10-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133119_484584_9ACDFF84)
+In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Always needed as u8 type.
 
-On 07/07/2014 08:23 PM, John W. Linville wrote:
-> Any word from the devicetree folks?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   | 2 +-
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-We changed the compatible string from brcm,bcm43xx-fmac to brcm,bcm4329-fmac
-at their request, that is the only feedback we've gotten from them AFAIK.
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 0c18e26..9f1216d 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -309,7 +309,7 @@ struct vnt_private {
+ 	u8 current_net_addr[ETH_ALEN];
+ 	u8 permanent_net_addr[ETH_ALEN];
+ 
+-	int bExistSWNetAddr;
++	u8 exist_sw_net_addr;
+ 
+ 	u64 qwCurrTSF;
+ 
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 0bf207c..9aaa816 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -125,7 +125,7 @@ static void device_set_options(struct vnt_private *priv)
+ 	priv->byPacketType = priv->byBBType;
+ 	priv->byAutoFBCtrl = AUTO_FB_0;
+ 	priv->byPreambleType = 0;
+-	priv->bExistSWNetAddr = false;
++	priv->exist_sw_net_addr = false;
+ }
+ 
+ /*
+@@ -163,7 +163,7 @@ static int device_init_registers(struct vnt_private *priv)
+ 	}
+ 
+ 	init_cmd->init_class = DEVICE_INIT_COLD;
+-	init_cmd->exist_sw_net_addr = (u8) priv->bExistSWNetAddr;
++	init_cmd->exist_sw_net_addr = priv->exist_sw_net_addr;
+ 	for (ii = 0; ii < 6; ii++)
+ 		init_cmd->sw_net_addr[ii] = priv->current_net_addr[ii];
+ 	init_cmd->short_retry_limit = priv->byShortRetryLimit;
+-- 
+2.0.1
 
-Regards,
-
-Hans
-
-> 
-> On Sun, Jun 29, 2014 at 04:16:58PM +0200, Hans de Goede wrote:
->> From: Arend van Spriel <arend@broadcom.com>
->>
->> The Broadcom bcm43xx sdio devices are fullmac devices that may be
->> integrated in ARM platforms. Currently, the brcmfmac driver for
->> these devices support use of platform data. This patch specifies
->> the bindings that allow this platform data to be expressed in the
->> devicetree.
->>
->> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
->> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
->>  on how to handle this yet]
->> [hdegoede@redhat.com: move from bindings/staging to bindings]
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->> ---
->>  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
->>  1 file changed, 41 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>
->> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> new file mode 100644
->> index 0000000..5dbf169
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> @@ -0,0 +1,41 @@
->> +Broadcom BCM43xx Fullmac wireless SDIO devices
->> +
->> +This node provides properties for controlling the Broadcom wireless device. The
->> +node is expected to be specified as a child node to the SDIO controller that
->> +connects the device to the system.
->> +
->> +Required properties:
->> +
->> + - compatible : Should be "brcm,bcm4329-fmac".
->> +
->> +Optional properties:
->> + - brcm,drive-strength : drive strength used for SDIO pins on device in mA
->> +	(default = 6).
->> + - interrupt-parent : the phandle for the interrupt controller to which the
->> +	device interrupts are connected.
->> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
->> +	When not specified the device will use in-band SDIO interrupts.
->> + - interrupt-names : name of the out-of-band interrupt, which must be set
->> +	to "host-wake".
->> +
->> +Example:
->> +
->> +mmc3: mmc@01c12000 {
->> +	#address-cells = <1>;
->> +	#size-cells = <0>;
->> +
->> +	pinctrl-names = "default";
->> +	pinctrl-0 = <&mmc3_pins_a>;
->> +	vmmc-supply = <&reg_vmmc3>;
->> +	bus-width = <4>;
->> +	non-removable;
->> +	status = "okay";
->> +
->> +	brcmf: bcrmf@1 {
->> +		reg = <1>;
->> +		compatible = "brcm,bcm4329-fmac";
->> +		interrupt-parent = <&pio>;
->> +		interrupts = <10 8>; /* PH10 / EINT10 */
->> +		interrupt-names = "host-wake";
->> +	};
->> +};
->> -- 
->> 2.0.0
->>
->>
-> 
