@@ -1,123 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:51552 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932131AbaGVT1r (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:53054 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761227AbaGSLb1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:47 -0400
-Received: by mail-we0-f177.google.com with SMTP id w62so107438wes.36
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:45 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/20] iwlwifi: dump CSRs to fw-error-dump
-Date: Tue, 22 Jul 2014 22:26:48 +0300
-Message-Id: <1406057211-31752-17-git-send-email-egrumbach@gmail.com> (sfid-20140722_212801_138351_974AAAD6)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+	Sat, 19 Jul 2014 07:31:27 -0400
+Received: by mail-we0-f182.google.com with SMTP id k48so4365613wev.41
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:25 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 16/16] staging: vt6656: struct vnt_private remove camel case IFS names
+Date: Sat, 19 Jul 2014 12:30:18 +0100
+Message-Id: <1405769418-2815-16-git-send-email-tvboxspy@gmail.com> (sfid-20140719_135108_981682_D74F92E9)
+In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Camel case changes
+uSIFS -> sifs
+uDIFS -> difs
+uEIFS -> eifs
+uSlot -> slot
 
-Add the Control Status Registers to the firmware error dump
-infrastructure.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  4 +--
- drivers/net/wireless/iwlwifi/pcie/trans.c        | 33 +++++++++++++++++++++++-
- 2 files changed, 34 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/card.c   | 46 ++++++++++++++++++++---------------------
+ drivers/staging/vt6656/device.h |  8 +++----
+ drivers/staging/vt6656/rxtx.c   | 14 ++++++-------
+ 3 files changed, 34 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index 5121479..de5994a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -70,7 +70,7 @@
- /**
-  * enum iwl_fw_error_dump_type - types of data in the dump file
-  * @IWL_FW_ERROR_DUMP_SRAM:
-- * @IWL_FW_ERROR_DUMP_REG:
-+ * @IWL_FW_ERROR_DUMP_CSR: Control Status Registers - from offset 0
-  * @IWL_FW_ERROR_DUMP_RXF:
-  * @IWL_FW_ERROR_DUMP_TXCMD: last TX command data, structured as
-  *	&struct iwl_fw_error_dump_txcmd packets
-@@ -82,7 +82,7 @@
-  */
- enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_SRAM = 0,
--	IWL_FW_ERROR_DUMP_REG = 1,
-+	IWL_FW_ERROR_DUMP_CSR = 1,
- 	IWL_FW_ERROR_DUMP_RXF = 2,
- 	IWL_FW_ERROR_DUMP_TXCMD = 3,
- 	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 153c3dd..06e04aa 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1912,6 +1912,27 @@ static u32 iwl_trans_pcie_dump_prph(struct iwl_trans *trans,
- 	return prph_len;
- }
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index f3fd7d6..5ce26fa 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -366,27 +366,27 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	u8 data[4];
  
-+#define IWL_CSR_TO_DUMP (0x250)
-+
-+static u32 iwl_trans_pcie_dump_csr(struct iwl_trans *trans,
-+				   struct iwl_fw_error_dump_data **data)
-+{
-+	u32 csr_len = sizeof(**data) + IWL_CSR_TO_DUMP;
-+	__le32 *val;
-+	int i;
-+
-+	(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_CSR);
-+	(*data)->len = cpu_to_le32(IWL_CSR_TO_DUMP);
-+	val = (void *)(*data)->data;
-+
-+	for (i = 0; i < IWL_CSR_TO_DUMP; i += 4)
-+		*val++ = cpu_to_le32(iwl_trans_pcie_read32(trans, i));
-+
-+	*data = iwl_fw_error_next_data(*data);
-+
-+	return csr_len;
-+}
-+
- static
- struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- {
-@@ -1923,9 +1944,17 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- 	u32 len;
- 	int i, ptr;
+ 	if (priv->byPacketType == PK_TYPE_11A) {
+-		priv->uSlot = C_SLOT_SHORT;
+-		priv->uSIFS = C_SIFS_A;
+-		priv->uDIFS = C_SIFS_A + 2 * C_SLOT_SHORT;
++		priv->slot = C_SLOT_SHORT;
++		priv->sifs = C_SIFS_A;
++		priv->difs = C_SIFS_A + 2 * C_SLOT_SHORT;
+ 		max_min = 4;
+ 	} else if (priv->byPacketType == PK_TYPE_11B) {
+-		priv->uSlot = C_SLOT_LONG;
+-		priv->uSIFS = C_SIFS_BG;
+-		priv->uDIFS = C_SIFS_BG + 2 * C_SLOT_LONG;
++		priv->slot = C_SLOT_LONG;
++		priv->sifs = C_SIFS_BG;
++		priv->difs = C_SIFS_BG + 2 * C_SLOT_LONG;
+ 		max_min = 5;
+ 	} else {/* PK_TYPE_11GA & PK_TYPE_11GB */
+ 		bool ofdm_rate = false;
+ 		unsigned int ii = 0;
  
--	len = sizeof(*dump_data) + sizeof(*data) +
-+	/* transport dump header */
-+	len = sizeof(*dump_data);
-+
-+	/* host commands */
-+	len += sizeof(*data) +
- 		cmdq->q.n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
+-		priv->uSIFS = C_SIFS_BG;
++		priv->sifs = C_SIFS_BG;
  
-+	/* CSR registers */
-+	len += sizeof(*data) + IWL_CSR_TO_DUMP;
-+
-+	/* PRPH registers */
- 	for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr); i++) {
- 		/* The range includes both boundaries */
- 		int num_bytes_in_chunk = iwl_prph_dump_addr[i].end -
-@@ -1935,6 +1964,7 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- 			num_bytes_in_chunk;
+ 		if (priv->bShortSlotTime)
+-			priv->uSlot = C_SLOT_SHORT;
++			priv->slot = C_SLOT_SHORT;
+ 		else
+-			priv->uSlot = C_SLOT_LONG;
++			priv->slot = C_SLOT_LONG;
+ 
+-		priv->uDIFS = C_SIFS_BG + 2 * priv->uSlot;
++		priv->difs = C_SIFS_BG + 2 * priv->slot;
+ 
+ 		for (ii = RATE_54M; ii >= RATE_6M; ii--) {
+ 			if (priv->wBasicRate & ((u32)(0x1 << ii))) {
+@@ -401,13 +401,13 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 			max_min = 5;
  	}
  
-+	/* FW monitor */
- 	if (trans_pcie->fw_mon_page)
- 		len += sizeof(*data) + sizeof(struct iwl_fw_error_dump_fw_mon) +
- 			trans_pcie->fw_mon_size;
-@@ -1973,6 +2003,7 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- 	data = iwl_fw_error_next_data(data);
+-	priv->uEIFS = C_EIFS;
++	priv->eifs = C_EIFS;
  
- 	len += iwl_trans_pcie_dump_prph(trans, &data);
-+	len += iwl_trans_pcie_dump_csr(trans, &data);
- 	/* data is already pointing to the next section */
+ 	switch (priv->rf_type) {
+ 	case RF_VT3226D0:
+ 		if (priv->byBBType != BB_TYPE_11B) {
+-			priv->uSIFS -= 1;
+-			priv->uDIFS -= 1;
++			priv->sifs -= 1;
++			priv->difs -= 1;
+ 			break;
+ 		}
+ 	case RF_AIROHA7230:
+@@ -418,25 +418,25 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	case RF_RFMD2959:
+ 	case RF_VT3226:
+ 	case RF_VT3342A0:
+-		priv->uSIFS -= 3;
+-		priv->uDIFS -= 3;
++		priv->sifs -= 3;
++		priv->difs -= 3;
+ 		break;
+ 	case RF_MAXIM2829:
+ 		if (priv->byBBType == BB_TYPE_11A) {
+-			priv->uSIFS -= 5;
+-			priv->uDIFS -= 5;
++			priv->sifs -= 5;
++			priv->difs -= 5;
+ 		} else {
+-			priv->uSIFS -= 2;
+-			priv->uDIFS -= 2;
++			priv->sifs -= 2;
++			priv->difs -= 2;
+ 		}
  
- 	if (trans_pcie->fw_mon_page) {
+ 		break;
+ 	}
+ 
+-	data[0] = (u8)priv->uSIFS;
+-	data[1] = (u8)priv->uDIFS;
+-	data[2] = (u8)priv->uEIFS;
+-	data[3] = (u8)priv->uSlot;
++	data[0] = (u8)priv->sifs;
++	data[1] = (u8)priv->difs;
++	data[2] = (u8)priv->eifs;
++	data[3] = (u8)priv->slot;
+ 
+ 	vnt_control_out(priv, MESSAGE_TYPE_WRITE, MAC_REG_SIFS,
+ 		MESSAGE_REQUEST_MACREG, 4, &data[0]);
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index f67173b..b9753c1 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -324,10 +324,10 @@ struct vnt_private {
+ 	u8 radio_ctl;
+ 
+ 	/* IFS & Cw */
+-	u32 uSIFS;  /* Current SIFS */
+-	u32 uDIFS;  /* Current DIFS */
+-	u32 uEIFS;  /* Current EIFS */
+-	u32 uSlot;  /* Current SlotTime */
++	u32 sifs;  /* Current SIFS */
++	u32 difs;  /* Current DIFS */
++	u32 eifs;  /* Current EIFS */
++	u32 slot;  /* Current SlotTime */
+ 
+ 	/* Rate */
+ 	u8 byBBType; /* 0: 11A, 1:11B, 2:11G */
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 25a87b0..aa382e7 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -125,7 +125,7 @@ static u32 vnt_get_rsvtime(struct vnt_private *priv, u8 pkt_type,
+ 					14, (u16)priv->byTopOFDMBasicRate);
+ 
+ 	if (need_ack)
+-		return data_time + priv->uSIFS + ack_time;
++		return data_time + priv->sifs + ack_time;
+ 
+ 	return data_time;
+ }
+@@ -170,12 +170,12 @@ static __le16 vnt_get_rtscts_rsvtime_le(struct vnt_private *priv,
+ 		ack_time = vnt_get_frame_time(priv->byPreambleType, pkt_type,
+ 			14, priv->byTopOFDMBasicRate);
+ 
+-		rrv_time = cts_time + ack_time + data_time + 2 * priv->uSIFS;
++		rrv_time = cts_time + ack_time + data_time + 2 * priv->sifs;
+ 
+ 		return cpu_to_le16((u16)rrv_time);
+ 	}
+ 
+-	rrv_time = rts_time + cts_time + ack_time + data_time + 3 * priv->uSIFS;
++	rrv_time = rts_time + cts_time + ack_time + data_time + 3 * priv->sifs;
+ 
+ 	return cpu_to_le16((u16)rrv_time);
+ }
+@@ -193,7 +193,7 @@ static __le16 vnt_get_duration_le(struct vnt_private *piv,
+ 			ack_time = vnt_get_frame_time(piv->byPreambleType,
+ 				pkt_type, 14, piv->byTopOFDMBasicRate);
+ 
+-		return cpu_to_le16((u16)(piv->uSIFS + ack_time));
++		return cpu_to_le16((u16)(piv->sifs + ack_time));
+ 	}
+ 
+ 	return 0;
+@@ -211,7 +211,7 @@ static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv, u8 dur_type,
+ 	case RTSDUR_BA_F1:
+ 		cts_time = vnt_get_frame_time(priv->byPreambleType,
+ 				pkt_type, 14, priv->byTopCCKBasicRate);
+-		dur_time = cts_time + 2 * priv->uSIFS +
++		dur_time = cts_time + 2 * priv->sifs +
+ 			vnt_get_rsvtime(priv, pkt_type,
+ 						frame_length, rate, need_ack);
+ 		break;
+@@ -221,7 +221,7 @@ static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv, u8 dur_type,
+ 	case RTSDUR_AA_F1:
+ 		cts_time = vnt_get_frame_time(priv->byPreambleType,
+ 				pkt_type, 14, priv->byTopOFDMBasicRate);
+-		dur_time = cts_time + 2 * priv->uSIFS +
++		dur_time = cts_time + 2 * priv->sifs +
+ 			vnt_get_rsvtime(priv, pkt_type,
+ 						frame_length, rate, need_ack);
+ 		break;
+@@ -229,7 +229,7 @@ static __le16 vnt_get_rtscts_duration_le(struct vnt_private *priv, u8 dur_type,
+ 	case CTSDUR_BA:
+ 	case CTSDUR_BA_F0:
+ 	case CTSDUR_BA_F1:
+-		dur_time = priv->uSIFS + vnt_get_rsvtime(priv,
++		dur_time = priv->sifs + vnt_get_rsvtime(priv,
+ 				pkt_type, frame_length, rate, need_ack);
+ 		break;
+ 
 -- 
-1.8.3.2
+2.0.1
 
