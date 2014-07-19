@@ -1,125 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:51935 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbaGTMdz (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:32862 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512AbaGSLbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 08:33:55 -0400
-Received: by mail-we0-f171.google.com with SMTP id p10so6476788wes.16
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:33:53 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 19 Jul 2014 07:31:07 -0400
+Received: by mail-wi0-f172.google.com with SMTP id n3so1991555wiv.17
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [PATCH 2/2] iw: add auto parameter to set distance command
-Date: Sun, 20 Jul 2014 14:33:49 +0200
-Message-Id: <1405859629-32326-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143359_614367_0E2AA9BD)
-In-Reply-To: <1405859629-32326-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1405859629-32326-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/16] staging: vt6656: remove variable byZoneType
+Date: Sat, 19 Jul 2014 12:30:09 +0100
+Message-Id: <1405769418-2815-7-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133122_731314_DE623A14)
+In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add auto parameter to set distance command in order to enable ack timeout
-estimation algorithm (dynack). Currently dynack is supported just by ath9k
+Zone types are nolonger handled by driver.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- nl80211.h |  5 +++++
- phy.c     | 44 +++++++++++++++++++++++++-------------------
- 2 files changed, 30 insertions(+), 19 deletions(-)
+ drivers/staging/vt6656/baseband.c | 4 ----
+ drivers/staging/vt6656/device.h   | 2 --
+ 2 files changed, 6 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index f1db15b..7cc5ecd 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -1594,6 +1594,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-  *
-+ * @NL80211_ATTR_WIPHY_DYNACK: whether dynamic ack timeout estimation algorithm
-+ *	is enabled
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1936,6 +1939,8 @@ enum nl80211_attrs {
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 71226c7..6af9fcb 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -394,12 +394,8 @@ int vnt_vt3184_init(struct vnt_private *priv)
+ 	if (status != STATUS_SUCCESS)
+ 		return false;
  
- 	NL80211_ATTR_TDLS_INITIATOR,
- 
-+	NL80211_ATTR_WIPHY_DYNACK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/phy.c b/phy.c
-index 517d203..068f9fc 100644
---- a/phy.c
-+++ b/phy.c
-@@ -362,40 +362,46 @@ static int handle_distance(struct nl80211_state *state,
- 			int argc, char **argv,
- 			enum id_input id)
- {
--	char *end;
--	unsigned int distance, coverage;
+-	priv->byZoneType = priv->abyEEPROM[EEP_OFS_ZONETYPE];
 -
- 	if (argc != 1)
- 		return 1;
+ 	priv->rf_type = priv->abyEEPROM[EEP_OFS_RFTYPE];
  
- 	if (!*argv[0])
- 		return 1;
+-	dev_dbg(&priv->usb->dev, "Zone Type %x\n", priv->byZoneType);
+-
+ 	dev_dbg(&priv->usb->dev, "RF Type %d\n", priv->rf_type);
  
--	distance = strtoul(argv[0], &end, 10);
-+	if (strcmp("auto", argv[0]) == 0) {
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_WIPHY_DYNACK);
-+	} else {
-+		char *end;
-+		unsigned int distance, coverage;
+ 	if ((priv->rf_type == RF_AL2230) ||
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 3152f93..183d9c9 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -304,8 +304,6 @@ struct vnt_private {
+ 	u8 rf_type;
+ 	u8 bb_rx_conf;
  
--	if (*end)
--		return 1;
-+		distance = strtoul(argv[0], &end, 10);
- 
--	/*
--	 * Divide double the distance by the speed of light in m/usec (300) to
--	 * get round-trip time in microseconds and then divide the result by
--	 * three to get coverage class as specified in IEEE 802.11-2007 table
--	 * 7-27. Values are rounded upwards.
--	 */
--	coverage = (distance + 449) / 450;
--	if (coverage > 255)
--		return 1;
-+		if (*end)
-+			return 1;
- 
--	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
-+		/*
-+		 * Divide double the distance by the speed of light
-+		 * in m/usec (300) to get round-trip time in microseconds
-+		 * and then divide the result by three to get coverage class
-+		 * as specified in IEEE 802.11-2007 table 7-27.
-+		 * Values are rounded upwards.
-+		 */
-+		coverage = (distance + 449) / 450;
-+		if (coverage > 255)
-+			return 1;
-+
-+		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
-+	}
- 
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(set, distance, "<distance>",
-+COMMAND(set, distance, "<auto|distance>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_distance,
--	"Set appropriate coverage class for given link distance in meters.\n"
--	"Valid values: 0 - 114750");
-+	"Enable ack timeout estimation algorithm or set appropriate\n"
-+	"coverage class for given link distance in meters.\n"
-+	"Valid values for coverage class: 0 - 114750");
- 
- static int handle_txpower(struct nl80211_state *state,
- 			  struct nl_cb *cb,
+-	u8 byZoneType;
+-
+ 	struct vnt_cmd_card_init init_command;
+ 	struct vnt_rsp_card_init init_response;
+ 	u8 abyCurrentNetAddr[ETH_ALEN];
 -- 
-1.9.1
+2.0.1
 
