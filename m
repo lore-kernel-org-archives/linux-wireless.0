@@ -1,128 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:63097 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbaG0Vgz (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:34232 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760509AbaGSLbK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2014 17:36:55 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so6423469wgh.34
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 14:36:54 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCHv3 1/6] cfg80211: enable dynack through nl80211
-Date: Sun, 27 Jul 2014 23:36:47 +0200
-Message-Id: <1406497008-25383-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_233659_459426_5F33C3B8)
-In-Reply-To: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Sat, 19 Jul 2014 07:31:10 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so4452756wgg.12
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:31:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/16] staging: vt6656: rename abyPermanentNetAddr to permanent_net_addr
+Date: Sat, 19 Jul 2014 12:30:11 +0100
+Message-Id: <1405769418-2815-9-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133125_296908_1B8A0865)
+In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Define NL80211_ATTR_WIPHY_DYN_ACK attribute in order to enable ack timeout
-estimation algorithm (dynack) using set_coverage_class codepath.
-Define NL80211_FEATURE_ACKTO_ESTIMATION flag, which is set by lower drivers to
-show dynack capability
+Removing prefix and camel case
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  8 ++++++++
- net/wireless/nl80211.c       | 11 +++++++++++
- 3 files changed, 21 insertions(+)
+ drivers/staging/vt6656/device.h   | 2 +-
+ drivers/staging/vt6656/main_usb.c | 7 +++----
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0a080c4..ef7f250 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1800,6 +1800,7 @@ struct cfg80211_connect_params {
-  * @WIPHY_PARAM_FRAG_THRESHOLD: wiphy->frag_threshold has changed
-  * @WIPHY_PARAM_RTS_THRESHOLD: wiphy->rts_threshold has changed
-  * @WIPHY_PARAM_COVERAGE_CLASS: coverage class changed
-+ * @WIPHY_PARAM_DYN_ACK: dynack has been enabled
-  */
- enum wiphy_params_flags {
- 	WIPHY_PARAM_RETRY_SHORT		= 1 << 0,
-@@ -1807,6 +1808,7 @@ enum wiphy_params_flags {
- 	WIPHY_PARAM_FRAG_THRESHOLD	= 1 << 2,
- 	WIPHY_PARAM_RTS_THRESHOLD	= 1 << 3,
- 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
-+	WIPHY_PARAM_DYN_ACK		= 1 << 5,
- };
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 9287948..0c18e26 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -307,7 +307,7 @@ struct vnt_private {
+ 	struct vnt_cmd_card_init init_command;
+ 	struct vnt_rsp_card_init init_response;
+ 	u8 current_net_addr[ETH_ALEN];
+-	u8 abyPermanentNetAddr[ETH_ALEN];
++	u8 permanent_net_addr[ETH_ALEN];
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f1db15b..0b2d55d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1594,6 +1594,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-  *
-+ * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
-+ *	algorithm is enabled
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1936,6 +1939,8 @@ enum nl80211_attrs {
+ 	int bExistSWNetAddr;
  
- 	NL80211_ATTR_TDLS_INITIATOR,
- 
-+	NL80211_ATTR_WIPHY_DYN_ACK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3956,6 +3961,8 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE: This driver supports dynamic
-  *	channel bandwidth change (e.g., HT 20 <-> 40 MHz channel) during the
-  *	lifetime of a BSS.
-+ * @NL80211_FEATURE_ACKTO_ESTIMATION: This driver supports dynamic ACK timeout
-+ *	estimation.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3977,6 +3984,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
- 	NL80211_FEATURE_ACTIVE_MONITOR			= 1 << 17,
- 	NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE	= 1 << 18,
-+	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 19,
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df7b133..b00cd11 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -225,6 +225,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WIPHY_FRAG_THRESHOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_RTS_THRESHOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_COVERAGE_CLASS] = { .type = NLA_U8 },
-+	[NL80211_ATTR_WIPHY_DYN_ACK] = { .type = NLA_FLAG },
- 
- 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
-@@ -2237,11 +2238,21 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index e8e4de5..0bf207c 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -334,9 +334,8 @@ static int device_init_registers(struct vnt_private *priv)
  	}
  
- 	if (info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
-+		if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK])
-+			return -EINVAL;
-+
- 		coverage_class = nla_get_u8(
- 			info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
- 		changed |= WIPHY_PARAM_COVERAGE_CLASS;
- 	}
+ 	/* get permanent network address */
+-	memcpy(priv->abyPermanentNetAddr, init_rsp->net_addr, 6);
+-	memcpy(priv->current_net_addr,
+-				priv->abyPermanentNetAddr, ETH_ALEN);
++	memcpy(priv->permanent_net_addr, init_rsp->net_addr, 6);
++	memcpy(priv->current_net_addr, priv->permanent_net_addr, ETH_ALEN);
  
-+	if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_ACKTO_ESTIMATION))
-+			return -EOPNOTSUPP;
-+
-+		changed |= WIPHY_PARAM_DYN_ACK;
-+	}
-+
- 	if (changed) {
- 		u8 old_retry_short, old_retry_long;
- 		u32 old_frag_threshold, old_rts_threshold;
+ 	/* if exist SW network address, use it */
+ 	dev_dbg(&priv->usb->dev, "Network address = %pM\n",
+@@ -970,7 +969,7 @@ int vnt_init(struct vnt_private *priv)
+ 	if (!(device_init_registers(priv)))
+ 		return -EAGAIN;
+ 
+-	SET_IEEE80211_PERM_ADDR(priv->hw, priv->abyPermanentNetAddr);
++	SET_IEEE80211_PERM_ADDR(priv->hw, priv->permanent_net_addr);
+ 
+ 	vnt_init_bands(priv);
+ 
 -- 
-1.9.1
+2.0.1
 
