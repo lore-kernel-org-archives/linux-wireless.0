@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59548 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510AbaG2QFy (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46978 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbaGTMba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 12:05:54 -0400
-Message-ID: <53D7C661.2040107@candelatech.com> (sfid-20140729_180559_769193_1A17001E)
-Date: Tue, 29 Jul 2014 09:05:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	antonio@open-mesh.com
-Subject: Re: [PATCH] ath9k: fix aggregation session lockup
-References: <1406122854-60239-1-git-send-email-nbd@openwrt.org> <53D6B87D.6080007@candelatech.com> <53D6BC7F.2020002@openwrt.org>
-In-Reply-To: <53D6BC7F.2020002@openwrt.org>
-Content-Type: text/plain; charset=windows-1252
+	Sun, 20 Jul 2014 08:31:30 -0400
+Received: by mail-wi0-f172.google.com with SMTP id n3so2843919wiv.11
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:31:29 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 01/10] ath9k: export methods related to ack timeout estimation
+Date: Sun, 20 Jul 2014 14:31:17 +0200
+Message-Id: <1405859486-31414-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143135_213409_CD9D18D5)
+In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2014 02:11 PM, Felix Fietkau wrote:
-> On 2014-07-28 22:54, Ben Greear wrote:
->> On 07/23/2014 06:40 AM, Felix Fietkau wrote:
->>> If an aggregation session fails, frames still end up in the driver queue
->>> with IEEE80211_TX_CTL_AMPDU set.
->>> This causes tx for the affected station/tid to stall, since
->>> ath_tx_get_tid_subframe returning packets to send.
->>>
->>> Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
->>> session is running.
->>
->> Did this and your previous patch about 'pending tx frames accounting'
->> fix the issues reported?
-> Yes.
-> 
->> They at least do not fix the problems I see where tx appears to hang,
->> but my setup is pretty 'special'....
-> Interesting. Maybe you should ask Antonio for an updated version of the
-> patch that he used to debug this issue. If you give me the output of it
-> while it's locked up, I might be able to figure out what's going on in
-> your setup.
+Remove static keyword and export ath9k_hw_setslottime(),
+ath9k_hw_set_ack_timeout() and ath9k_hw_set_cts_timeout() in hw.h. These
+methods will be used in dynamic ack timeout estimation
 
-What is the easiest upstream tree for you to debug?
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 6 +++---
+ drivers/net/wireless/ath/ath9k/hw.h | 4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-Thanks,
-Ben
-
-> 
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index fd0158f..e88896c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -935,21 +935,21 @@ static void ath9k_hw_set_sifs_time(struct ath_hw *ah, u32 us)
+ 	REG_WRITE(ah, AR_D_GBL_IFS_SIFS, val);
+ }
+ 
+-static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
++void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) 0xFFFF);
+ 	REG_WRITE(ah, AR_D_GBL_IFS_SLOT, val);
+ }
+ 
+-static void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
++void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_ACK));
+ 	REG_RMW_FIELD(ah, AR_TIME_OUT, AR_TIME_OUT_ACK, val);
+ }
+ 
+-static void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
++void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_CTS));
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 51b4ebe..f36d971 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
++void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
++void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
++void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
++
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
+ {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
