@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:56771 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbaGDHWN (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:65156 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaGTMbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2014 03:22:13 -0400
-Received: by mail-we0-f178.google.com with SMTP id x48so1228070wes.37
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2014 00:22:12 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: fix reading info about radio for new devices (cores 40 & 42)
-Date: Fri,  4 Jul 2014 09:21:56 +0200
-Message-Id: <1404458516-2074-1-git-send-email-zajec5@gmail.com> (sfid-20140704_092223_489403_70906C50)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 20 Jul 2014 08:31:35 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so6325702wes.8
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:31:34 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 06/10] ath9k: add sampling methods for (tx|rx) timestamp
+Date: Sun, 20 Jul 2014 14:31:22 +0200
+Message-Id: <1405859486-31414-7-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143140_973326_8B630807)
+In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This changes
-b43-phy0: Found Radio: Manuf 0x17F, Version 0x7769, Revision 4
-to the
-b43-phy0: Found Radio: Manuf 0x17F, Version 0x2069, Revision 4
-which matches what closed source driver reports:
-$ wl revinfo
-radiorev 0x42069000
+Add sampling methods for ack RX timestamp in ath_rx_tasklet() and for TX frame
+timestamp in ath_tx_complete_aggr() and in ath_tx_process_buffer()
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/b43/main.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 5 +++++
+ drivers/net/wireless/ath/ath9k/xmit.c | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1b02016..83b2d56 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4329,6 +4329,7 @@ static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
- static int b43_phy_versioning(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-+	const u8 core_rev = dev->dev->core_rev;
- 	u32 tmp;
- 	u8 analog_type;
- 	u8 phy_type;
-@@ -4394,7 +4395,15 @@ static int b43_phy_versioning(struct b43_wldev *dev)
- 		analog_type, phy_type, b43_phy_name(dev, phy_type), phy_rev);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 74ab1d0..ad317a4 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -991,6 +991,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	unsigned long flags;
+ 	dma_addr_t new_buf_addr;
+ 	unsigned int budget = 512;
++	struct ieee80211_hdr *hdr;
  
- 	/* Get RADIO versioning */
--	if (dev->dev->core_rev >= 24) {
-+	if (core_rev == 40 || core_rev == 42) {
-+		radio_manuf = 0x17F;
-+
-+		b43_write16(dev, B43_MMIO_RADIO24_CONTROL, 0);
-+		radio_rev = b43_read16(dev, B43_MMIO_RADIO24_DATA);
-+
-+		b43_write16(dev, B43_MMIO_RADIO24_CONTROL, 1);
-+		radio_ver = b43_read16(dev, B43_MMIO_RADIO24_DATA);
-+	} else if (core_rev >= 24) {
- 		u16 radio24[3];
+ 	if (edma)
+ 		dma_type = DMA_BIDIRECTIONAL;
+@@ -1120,6 +1121,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		ath9k_apply_ampdu_details(sc, &rs, rxs);
+ 		ath_debug_rate_stats(sc, &rs, skb);
  
- 		for (tmp = 0; tmp < 3; tmp++) {
++		hdr = (struct ieee80211_hdr *)skb->data;
++		if (ieee80211_is_ack(hdr->frame_control))
++			ath_dynack_sample_ack_ts(sc->sc_ah, skb, rs.rs_tstamp);
++
+ 		ieee80211_rx(hw, skb);
+ 
+ requeue_drop_frag:
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3611529..122ec25 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -587,6 +587,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+ 				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok);
+ 				rc_update = false;
++				if (bf == bf->bf_lastbf)
++					ath_dynack_sample_tx_ts(sc->sc_ah,
++								bf->bf_mpdu,
++								ts);
+ 			}
+ 
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+@@ -687,6 +691,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 			memcpy(info->control.rates, bf->rates,
+ 			       sizeof(info->control.rates));
+ 			ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
++			ath_dynack_sample_tx_ts(sc->sc_ah, bf->bf_mpdu, ts);
+ 		}
+ 		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok);
+ 	} else
 -- 
-1.8.4.5
+1.9.1
 
