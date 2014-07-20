@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:61600 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759038AbaGRWBo (ORCPT
+Received: from arrakis.dune.hu ([78.24.191.176]:39502 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752208AbaGTLuB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 18:01:44 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so1507310wiw.6
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2014 15:01:43 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/5] staging: vt6656: struct vnt_private remove unused variable bRadioControlOff
-Date: Fri, 18 Jul 2014 23:00:52 +0100
-Message-Id: <1405720856-2737-1-git-send-email-tvboxspy@gmail.com> (sfid-20140719_000147_864304_D91A07C9)
+	Sun, 20 Jul 2014 07:50:01 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by arrakis.dune.hu (Postfix) with ESMTP id 5B7FC284244
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 13:47:45 +0200 (CEST)
+Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com [209.85.192.43])
+	by arrakis.dune.hu (Postfix) with ESMTPSA id 6D800280787
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 13:47:35 +0200 (CEST)
+Received: by mail-qg0-f43.google.com with SMTP id a108so4519095qge.2
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 04:49:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1405854022-11833-2-git-send-email-zajec5@gmail.com>
+References: <1405854022-11833-1-git-send-email-zajec5@gmail.com> <1405854022-11833-2-git-send-email-zajec5@gmail.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Sun, 20 Jul 2014 13:49:29 +0200
+Message-ID: <CAOiHx=mi0jJQycjJSNjJ3rXrjQEB2N6JP3yg6vqcDN82tZHjzg@mail.gmail.com> (sfid-20140720_135006_439713_BB76BADE)
+Subject: Re: [PATCH 2/2] b43: N-PHY: support setting custom TX power
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This variable is never set.
+On Sun, Jul 20, 2014 at 1:00 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> This is based on top of
+> [PATCH 7/7] b43: enable radio 0x2057 rev 14 support (AKA BCM43217)
+> (not sure if applies cleanly otherwise)
+> ---
+>  drivers/net/wireless/b43/b43.h   |  1 +
+>  drivers/net/wireless/b43/phy_n.c | 88 ++++++++++++++++++++++++++++++++++------
+>  drivers/net/wireless/b43/phy_n.h |  3 ++
+>  3 files changed, 80 insertions(+), 12 deletions(-)
+>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c     | 2 +-
- drivers/staging/vt6656/device.h   | 1 -
- drivers/staging/vt6656/main_usb.c | 3 +--
- 3 files changed, 2 insertions(+), 4 deletions(-)
+(snip)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 34ca2a6..ddf7385 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -771,7 +771,7 @@ int vnt_radio_power_on(struct vnt_private *priv)
- {
- 	int ret = true;
- 
--	if (priv->bHWRadioOff == true || priv->bRadioControlOff == true)
-+	if (priv->bHWRadioOff == true)
- 		return false;
- 
- 	priv->bRadioOff = false;
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 757d500..358c620 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -368,7 +368,6 @@ struct vnt_private {
- 	int bShortSlotTime;
- 	int bBarkerPreambleMd;
- 
--	int bRadioControlOff;
- 	int bRadioOff;
- 
- 	/* Power save */
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index ff4e18d..68367414 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -381,8 +381,7 @@ static int device_init_registers(struct vnt_private *priv)
- 
- 	vnt_mac_reg_bits_on(priv, MAC_REG_GPIOCTL0, 0x01);
- 
--	if ((priv->bHWRadioOff == true) ||
--				(priv->bRadioControlOff == true)) {
-+	if (priv->bHWRadioOff == true) {
- 		vnt_radio_power_off(priv);
- 	} else {
- 		vnt_radio_power_on(priv);
--- 
-2.0.1
+> diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+> index 30bec81..252d843 100644
+> --- a/drivers/net/wireless/b43/phy_n.h
+> +++ b/drivers/net/wireless/b43/phy_n.h
+> @@ -967,6 +967,9 @@ struct b43_phy_n {
+>         struct b43_phy_n_txpwrindex txpwrindex[2];
+>         struct b43_phy_n_pwr_ctl_info pwr_ctl_info[2];
+>         struct b43_chanspec txiqlocal_chanspec;
+> +       struct b43_ppr *tx_pwr_max_ppr;
 
+Why not just make this a struct member? As far as I can tell, it will
+always be allocated, and you would lose one alloc/free call, and
+probably one pointer dereference.
+
+> +       u16 tx_pwr_last_recalc_freq;
+> +       int tx_pwr_last_recalc_limit;
+>
+>         u8 txrx_chain;
+>         u16 tx_rx_cal_phy_saveregs[11];
+> --
+> 1.8.4.5
+
+
+Jonas
