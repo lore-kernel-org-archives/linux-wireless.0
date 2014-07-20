@@ -1,126 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:64177 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752603AbaGMJn3 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:39559 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbaGTOee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 05:43:29 -0400
-Received: by mail-we0-f177.google.com with SMTP id u56so2864975wes.36
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:28 -0700 (PDT)
+	Sun, 20 Jul 2014 10:34:34 -0400
+Received: by mail-we0-f174.google.com with SMTP id x48so6625737wes.33
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:33 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/13] staging: vt6656: replace typedef enum tagCMD_CODE with enum vnt_cmd
-Date: Sun, 13 Jul 2014 10:42:41 +0100
-Message-Id: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114336_858352_B97ACE6A)
+Subject: [PATCH 09/25] staging: vt6656: struct vnt_private replace wCurrentRate with current_rate
+Date: Sun, 20 Jul 2014 15:33:19 +0100
+Message-Id: <1405866815-2687-9-git-send-email-tvboxspy@gmail.com> (sfid-20140720_163441_061541_ED9A3093)
+In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing the variables.
+Removing type prefix and camel case.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/device.h |  2 +-
- drivers/staging/vt6656/wcmd.c   |  8 ++++----
- drivers/staging/vt6656/wcmd.h   | 22 +++++++++++-----------
- 3 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/staging/vt6656/device.h   | 2 +-
+ drivers/staging/vt6656/main_usb.c | 8 ++++----
+ drivers/staging/vt6656/rxtx.c     | 4 ++--
+ drivers/staging/vt6656/wcmd.c     | 2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 789c55d..4630206 100644
+index 4424d75..9e095eb 100644
 --- a/drivers/staging/vt6656/device.h
 +++ b/drivers/staging/vt6656/device.h
-@@ -400,7 +400,7 @@ struct vnt_private {
+@@ -349,7 +349,7 @@ struct vnt_private {
+ 	u8 ofdm_pwr_tbl[14];
+ 	u8 ofdm_a_pwr_tbl[42];
  
- 	CMD_STATE eCommandState;
+-	u16 wCurrentRate;
++	u16 current_rate;
+ 	u16 tx_rate_fb0;
+ 	u16 tx_rate_fb1;
  
--	CMD_CODE eCommand;
-+	enum vnt_cmd command;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 8fb602a..5939f9a 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -718,11 +718,11 @@ static int vnt_config(struct ieee80211_hw *hw, u32 changed)
  
- 	int bStopDataPkt;
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		if (priv->bb_type == BB_TYPE_11B)
+-			priv->wCurrentRate = RATE_1M;
++			priv->current_rate = RATE_1M;
+ 		else
+-			priv->wCurrentRate = RATE_54M;
++			priv->current_rate = RATE_54M;
  
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index ade0f81..3d9ace2 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -146,13 +146,13 @@ static int s_bCommandComplete(struct vnt_private *priv)
- 		return true;
+-		vnt_rf_setpower(priv, priv->wCurrentRate,
++		vnt_rf_setpower(priv, priv->current_rate,
+ 				conf->chandef.chan->hw_value);
  	}
  
--	priv->eCommand = priv->eCmdQueue[priv->uCmdDequeueIdx].eCmd;
-+	priv->command = priv->eCmdQueue[priv->uCmdDequeueIdx].cmd;
+@@ -778,7 +778,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
  
- 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdDequeueIdx, CMD_Q_SIZE);
- 	priv->cbFreeCmdQueue++;
- 	priv->bCmdRunning = true;
+ 	if (changed & BSS_CHANGED_TXPOWER)
+-		vnt_rf_setpower(priv, priv->wCurrentRate,
++		vnt_rf_setpower(priv, priv->current_rate,
+ 					conf->chandef.chan->hw_value);
  
--	switch (priv->eCommand) {
-+	switch (priv->command) {
- 	case WLAN_CMD_INIT_MAC80211:
- 		priv->eCommandState = WLAN_CMD_INIT_MAC80211_START;
+ 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 68e479a..0e4b773 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -764,9 +764,9 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 	rate = ieee80211_get_tx_rate(priv->hw, info);
+ 
+ 	current_rate = rate->hw_value;
+-	if (priv->wCurrentRate != current_rate &&
++	if (priv->current_rate != current_rate &&
+ 			!(priv->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
+-		priv->wCurrentRate = current_rate;
++		priv->current_rate = current_rate;
+ 		vnt_schedule_command(priv, WLAN_CMD_SETPOWER);
+ 	}
+ 
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index 304f6d6..a63d0fd 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -139,7 +139,7 @@ void vnt_run_command(struct work_struct *work)
+ 
+ 	case WLAN_CMD_SETPOWER_START:
+ 
+-		vnt_rf_setpower(priv, priv->wCurrentRate,
++		vnt_rf_setpower(priv, priv->current_rate,
+ 				priv->hw->conf.chandef.chan->hw_value);
+ 
  		break;
-@@ -186,13 +186,13 @@ static int s_bCommandComplete(struct vnt_private *priv)
- 	return true;
- }
- 
--int bScheduleCommand(struct vnt_private *priv, CMD_CODE command, u8 *item0)
-+int bScheduleCommand(struct vnt_private *priv, enum vnt_cmd command, u8 *item0)
- {
- 
- 	if (priv->cbFreeCmdQueue == 0)
- 		return false;
- 
--	priv->eCmdQueue[priv->uCmdEnqueueIdx].eCmd = command;
-+	priv->eCmdQueue[priv->uCmdEnqueueIdx].cmd = command;
- 
- 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdEnqueueIdx, CMD_Q_SIZE);
- 	priv->cbFreeCmdQueue--;
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 98387f3..1d0201a 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -34,15 +34,15 @@
- #define AUTHENTICATE_TIMEOUT   1000 //ms
- #define ASSOCIATE_TIMEOUT      1000 //ms
- 
--// Command code
--typedef enum tagCMD_CODE {
--    WLAN_CMD_INIT_MAC80211,
--    WLAN_CMD_SETPOWER,
--    WLAN_CMD_TBTT_WAKEUP,
--    WLAN_CMD_BECON_SEND,
--    WLAN_CMD_CHANGE_ANTENNA,
--    WLAN_CMD_11H_CHSW,
--} CMD_CODE, *PCMD_CODE;
-+/* Command code */
-+enum vnt_cmd {
-+	WLAN_CMD_INIT_MAC80211,
-+	WLAN_CMD_SETPOWER,
-+	WLAN_CMD_TBTT_WAKEUP,
-+	WLAN_CMD_BECON_SEND,
-+	WLAN_CMD_CHANGE_ANTENNA,
-+	WLAN_CMD_11H_CHSW,
-+};
- 
- #define CMD_Q_SIZE              32
- 
-@@ -57,7 +57,7 @@ typedef enum tagCMD_STATUS {
- } CMD_STATUS, *PCMD_STATUS;
- 
- typedef struct tagCMD_ITEM {
--    CMD_CODE eCmd;
-+	enum vnt_cmd cmd;
- } CMD_ITEM, *PCMD_ITEM;
- 
- // Command state
-@@ -75,7 +75,7 @@ struct vnt_private;
- 
- void vResetCommandTimer(struct vnt_private *);
- 
--int bScheduleCommand(struct vnt_private *, CMD_CODE eCommand, u8 *pbyItem0);
-+int bScheduleCommand(struct vnt_private *, enum vnt_cmd, u8 *);
- 
- void vRunCommand(struct work_struct *work);
- 
 -- 
-1.9.1
+2.0.1
 
