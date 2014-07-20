@@ -1,96 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2003 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753510AbaGLDxk (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:38831 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbaGTOeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 23:53:40 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/7] mwifiex: fix corner case system hang issue
-Date: Fri, 11 Jul 2014 20:53:14 -0700
-Message-ID: <1405137194-13794-2-git-send-email-bzhao@marvell.com> (sfid-20140712_055404_154683_826B571F)
-In-Reply-To: <1405137194-13794-1-git-send-email-bzhao@marvell.com>
-References: <1405137194-13794-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 20 Jul 2014 10:34:22 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so2868058wiw.12
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:20 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 02/25] staging: vt6656: struct vnt_private replace byPacketType with packet_type
+Date: Sun, 20 Jul 2014 15:33:12 +0100
+Message-Id: <1405866815-2687-2-git-send-email-tvboxspy@gmail.com> (sfid-20140720_163425_880648_08E1A825)
+In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Removing type prefix and camel case.
 
-Sometimes pending internal scan commands are delayed to give
-preference to Tx traffic. 'scan_processing' flag has been
-checked at the beginning of delay timer routine to know if in the
-meantime scan operation has been cancelled.
-
-There is a corner case where pending scan commands are emptied
-after scan_processing flag check is passed. In this case
-wrong pointer returned by list_first_entry() is passed to
-list_del() which causes system hang.
-
-This patch fixes the issue by adding list_empty() check.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ drivers/staging/vt6656/card.c     | 6 +++---
+ drivers/staging/vt6656/device.h   | 2 +-
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ drivers/staging/vt6656/rxtx.c     | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 3e5194f..dfa37ea 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -33,6 +33,7 @@ static void scan_delay_timer_fn(unsigned long data)
- 	struct mwifiex_private *priv = (struct mwifiex_private *)data;
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct cmd_ctrl_node *cmd_node, *tmp_node;
-+	spinlock_t *scan_q_lock = &adapter->scan_pending_q_lock;
- 	unsigned long flags;
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 94b933f..80b2ff8 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -365,12 +365,12 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	u8 max_min = 0;
+ 	u8 data[4];
  
- 	if (adapter->surprise_removed)
-@@ -44,13 +45,13 @@ static void scan_delay_timer_fn(unsigned long data)
- 		 * Abort scan operation by cancelling all pending scan
- 		 * commands
- 		 */
--		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-+		spin_lock_irqsave(scan_q_lock, flags);
- 		list_for_each_entry_safe(cmd_node, tmp_node,
- 					 &adapter->scan_pending_q, list) {
- 			list_del(&cmd_node->list);
- 			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
- 		}
--		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
-+		spin_unlock_irqrestore(scan_q_lock, flags);
+-	if (priv->byPacketType == PK_TYPE_11A) {
++	if (priv->packet_type == PK_TYPE_11A) {
+ 		priv->slot = C_SLOT_SHORT;
+ 		priv->sifs = C_SIFS_A;
+ 		priv->difs = C_SIFS_A + 2 * C_SLOT_SHORT;
+ 		max_min = 4;
+-	} else if (priv->byPacketType == PK_TYPE_11B) {
++	} else if (priv->packet_type == PK_TYPE_11B) {
+ 		priv->slot = C_SLOT_LONG;
+ 		priv->sifs = C_SIFS_BG;
+ 		priv->difs = C_SIFS_BG + 2 * C_SLOT_LONG;
+@@ -793,7 +793,7 @@ void vnt_set_bss_mode(struct vnt_private *priv)
+ 	else
+ 		vnt_mac_set_bb_type(priv, priv->bb_type);
  
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->scan_processing = false;
-@@ -79,12 +80,17 @@ static void scan_delay_timer_fn(unsigned long data)
- 			 */
- 			adapter->scan_delay_cnt = 0;
- 			adapter->empty_tx_q_cnt = 0;
--			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-+			spin_lock_irqsave(scan_q_lock, flags);
-+
-+			if (list_empty(&adapter->scan_pending_q)) {
-+				spin_unlock_irqrestore(scan_q_lock, flags);
-+				goto done;
-+			}
-+
- 			cmd_node = list_first_entry(&adapter->scan_pending_q,
- 						    struct cmd_ctrl_node, list);
- 			list_del(&cmd_node->list);
--			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
--					       flags);
-+			spin_unlock_irqrestore(scan_q_lock, flags);
+-	priv->byPacketType = vnt_get_pkt_type(priv);
++	priv->packet_type = vnt_get_pkt_type(priv);
  
- 			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
- 							true);
+ 	if (priv->bb_type == BB_TYPE_11A)
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x03);
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 7b5779a..1f9ea51 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -331,7 +331,7 @@ struct vnt_private {
+ 
+ 	/* Rate */
+ 	u8 bb_type; /* 0: 11A, 1:11B, 2:11G */
+-	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
++	u8 packet_type; /* 0:11a 1:11b 2:11gb 3:11ga */
+ 	u32 wBasicRate;
+ 	u8 byTopOFDMBasicRate;
+ 	u8 byTopCCKBasicRate;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 5ca28c2..85142b7 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -122,7 +122,7 @@ static void device_set_options(struct vnt_private *priv)
+ 	priv->byLongRetryLimit = LONG_RETRY_DEF;
+ 	priv->op_mode = NL80211_IFTYPE_UNSPECIFIED;
+ 	priv->bb_type = BBP_TYPE_DEF;
+-	priv->byPacketType = priv->bb_type;
++	priv->packet_type = priv->bb_type;
+ 	priv->byAutoFBCtrl = AUTO_FB_0;
+ 	priv->byPreambleType = 0;
+ 	priv->exist_sw_net_addr = false;
+@@ -142,7 +142,7 @@ static int device_init_registers(struct vnt_private *priv)
+ 	u8 calib_tx_iq = 0, calib_tx_dc = 0, calib_rx_iq = 0;
+ 
+ 	dev_dbg(&priv->usb->dev, "---->INIbInitAdapter. [%d][%d]\n",
+-				DEVICE_INIT_COLD, priv->byPacketType);
++				DEVICE_INIT_COLD, priv->packet_type);
+ 
+ 	if (!vnt_check_firmware_version(priv)) {
+ 		if (vnt_download_firmware(priv) == true) {
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 3347a72..03f299d 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -771,7 +771,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 	}
+ 
+ 	if (current_rate > RATE_11M)
+-		pkt_type = priv->byPacketType;
++		pkt_type = priv->packet_type;
+ 	else
+ 		pkt_type = PK_TYPE_11B;
+ 
 -- 
-1.8.2.3
+2.0.1
 
