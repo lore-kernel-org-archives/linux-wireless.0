@@ -1,74 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:58949 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965128AbaGESY5 (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:39576 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaGTMbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2014 14:24:57 -0400
-Received: by mail-wi0-f175.google.com with SMTP id r20so14069664wiv.14
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:56 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/8] staging: vt6656: vnt_rx_data add track rsr and new_rsr errors
-Date: Sat,  5 Jul 2014 19:24:24 +0100
-Message-Id: <1404584667-3582-5-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202501_474714_A454633B)
-In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
-References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 20 Jul 2014 08:31:38 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so6398266wes.20
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:31:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
+Date: Sun, 20 Jul 2014 14:31:25 +0200
+Message-Id: <1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143142_706007_C1C1BA2C)
+In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add rsr and new_rsr error packet error drop.
+Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
+Moreover disable dynack if the coverage class has been configured
 
-if NEWRSR_DECRYPTOK fails drop packet altogether.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/staging/vt6656/dpc.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index ca55554..f3da0db 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -143,7 +143,10 @@ int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e6ac8d2..52ca884 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	mutex_lock(&sc->mutex);
+ 	ah->coverage_class = coverage_class;
  
- 	new_rsr = skb_data + 8 + pay_load_with_padding + 9;
- 	rssi = skb_data + 8 + pay_load_with_padding + 10;
++	if (ah->dynack.enabled) {
++		u32 rfilt;
 +
- 	rsr = skb_data + 8 + pay_load_with_padding + 11;
-+	if (*rsr & (RSR_IVLDTYP | RSR_IVLDLEN))
-+		return false;
- 
- 	frame_size = *pay_load_len;
- 
-@@ -163,14 +166,24 @@ int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
- 	rx_status.flag = 0;
- 	rx_status.freq = hw->conf.chandef.chan->center_freq;
- 
-+	if (!(*rsr & RSR_CRCOK))
-+		rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
++		ah->dynack.enabled = false;
++		rfilt = ath_calcrxfilter(sc);
++		ath9k_hw_setrxfilter(ah, rfilt);
++	}
 +
- 	hdr = (struct ieee80211_hdr *)(skb->data);
- 	fc = hdr->frame_control;
+ 	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_init_global_settings(ah);
+ 	ath9k_ps_restore(sc);
+@@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	mutex_unlock(&sc->mutex);
+ }
  
- 	rx_status.rate_idx = rate_idx;
- 
- 	if (ieee80211_has_protected(fc)) {
--		if (priv->byLocalID > REV_ID_VT3253_A1)
--			rx_status.flag = RX_FLAG_DECRYPTED;
-+		if (priv->byLocalID > REV_ID_VT3253_A1) {
-+			rx_status.flag |= RX_FLAG_DECRYPTED;
++#ifdef CONFIG_ATH9K_DYNACK
++static int ath9k_enable_dynack(struct ieee80211_hw *hw)
++{
++	u32 rfilt;
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
 +
-+			/* Drop packet */
-+			if (!(*new_rsr & NEWRSR_DECRYPTOK)) {
-+				dev_kfree_skb(skb);
-+				return true;
-+			}
-+		}
- 	}
- 
- 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
++	if (config_enabled(CONFIG_ATH9K_TX99))
++		return -EOPNOTSUPP;
++
++	if (!ah->dynack.enabled) {
++		ath_dynack_reset(ah);
++
++		ah->dynack.enabled = true;
++		rfilt = ath_calcrxfilter(sc);
++		ath9k_hw_setrxfilter(ah, rfilt);
++	}
++
++	return 0;
++}
++#endif
++
+ static bool ath9k_has_tx_pending(struct ath_softc *sc)
+ {
+ 	int i, npend = 0;
+@@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
++
++#ifdef CONFIG_ATH9K_DYNACK
++	.enable_dynack      = ath9k_enable_dynack,
++#endif
+ };
 -- 
 1.9.1
 
