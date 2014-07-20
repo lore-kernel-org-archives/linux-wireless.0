@@ -1,60 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:33175 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751049AbaGXJgK (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:53207 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754050AbaGTOem (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 05:36:10 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCHv3-ath-resend 2/2] ath10k: add spectral scan feature
-Date: Thu, 24 Jul 2014 11:36:07 +0200
-Cc: ath10k@lists.infradead.org, mathias.kretschmer@fokus.fraunhofer.de,
-	kgiori@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	sven@narfation.org
-References: <87mwc0ro8i.fsf@kamboji.qca.qualcomm.com> <1406136773-19957-1-git-send-email-sw@simonwunderlich.de> <871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201407241136.08090.sw@simonwunderlich.de> (sfid-20140724_113614_901636_C200CCA9)
+	Sun, 20 Jul 2014 10:34:42 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so5346445wgh.33
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:41 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/25] staging: vt6656: struct vnt_private replace byAutoFBCtrl with auto_fb_ctrl
+Date: Sun, 20 Jul 2014 15:33:24 +0100
+Message-Id: <1405866815-2687-14-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165109_370917_FF293C35)
+In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +ath10k_core-$(CPTCFG_ATH10K_DEBUGFS) += spectral.o
-> 
-> This one still uses CPTCFG_ prefix, I'll fix those.
-> 
+Removing type prefix and camel case.
 
-Argh, OK, thanks!
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   | 2 +-
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ drivers/staging/vt6656/rxtx.c     | 4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-> > @@ -800,8 +800,6 @@ int ath10k_core_start(struct ath10k *ar)
-> > 
-> >  	else
-> >  	
-> >  		ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-> > 
-> > -	INIT_LIST_HEAD(&ar->arvifs);
-> > -
-> > 
-> >  	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
-> >  	
-> >  		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
-> >  		
-> >  			    ar->hw_params.name,
-> > 
-> > @@ -1084,6 +1082,12 @@ struct ath10k *ath10k_core_create(void *hif_priv,
-> > struct device *dev,
-> > 
-> >  	INIT_WORK(&ar->register_work, ath10k_core_register_work);
-> >  	INIT_WORK(&ar->restart_work, ath10k_core_restart);
-> > 
-> > +	INIT_LIST_HEAD(&ar->arvifs);
-> 
-> I'm a bit suspicious about this, why is it needed?
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 6647b2b..ef9b505 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -380,7 +380,7 @@ struct vnt_private {
+ 
+ 	unsigned long key_entry_inuse;
+ 
+-	u8 byAutoFBCtrl;
++	u8 auto_fb_ctrl;
+ 
+ 	/* For Update BaseBand VGA Gain Offset */
+ 	u8 abyBBVGA[BB_VGA_LEVEL];
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index f7f4dcc..fac13b1 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -123,7 +123,7 @@ static void device_set_options(struct vnt_private *priv)
+ 	priv->op_mode = NL80211_IFTYPE_UNSPECIFIED;
+ 	priv->bb_type = BBP_TYPE_DEF;
+ 	priv->packet_type = priv->bb_type;
+-	priv->byAutoFBCtrl = AUTO_FB_0;
++	priv->auto_fb_ctrl = AUTO_FB_0;
+ 	priv->preamble_type = 0;
+ 	priv->exist_sw_net_addr = false;
+ }
+@@ -280,7 +280,7 @@ static int device_init_registers(struct vnt_private *priv)
+ 	vnt_set_antenna_mode(priv, priv->rx_antenna_mode);
+ 
+ 	/* get Auto Fall Back type */
+-	priv->byAutoFBCtrl = AUTO_FB_0;
++	priv->auto_fb_ctrl = AUTO_FB_0;
+ 
+ 	/* default Auto Mode */
+ 	priv->bb_type = BB_TYPE_11G;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 8d745af..0febd03 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -866,7 +866,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	/* legacy rates TODO use ieee80211_tx_rate */
+ 	if (current_rate >= RATE_18M && ieee80211_is_data(hdr->frame_control)) {
+-		if (priv->byAutoFBCtrl == AUTO_FB_0) {
++		if (priv->auto_fb_ctrl == AUTO_FB_0) {
+ 			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_0;
+ 
+ 			priv->tx_rate_fb0 =
+@@ -875,7 +875,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 				vnt_fb_opt0[FB_RATE1][current_rate - RATE_18M];
+ 
+ 			fb_option = AUTO_FB_0;
+-		} else if (priv->byAutoFBCtrl == AUTO_FB_1) {
++		} else if (priv->auto_fb_ctrl == AUTO_FB_1) {
+ 			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_1;
+ 
+ 			priv->tx_rate_fb0 =
+-- 
+2.0.1
 
-ath10k_spectral_init() clears the spectral_enabled bit for each vif, and 
-therefore needs the list to be initialized ... it is also called on firmware 
-crash by ath10k_halt, where checking the list is more useful.
-
-Thanks,
-    Simon
