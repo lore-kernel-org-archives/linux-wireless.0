@@ -1,131 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:30255 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752345AbaG3LUP (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:36587 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701AbaGTLAx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2014 07:20:15 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 6/8] brcmfmac: Update pcie reset device routine.
-Date: Wed, 30 Jul 2014 13:20:05 +0200
-Message-ID: <1406719207-5126-7-git-send-email-arend@broadcom.com> (sfid-20140730_132024_535527_085F71F6)
-In-Reply-To: <1406719207-5126-1-git-send-email-arend@broadcom.com>
-References: <1406719207-5126-1-git-send-email-arend@broadcom.com>
+	Sun, 20 Jul 2014 07:00:53 -0400
+Received: by mail-wg0-f49.google.com with SMTP id k14so5351031wgh.32
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 04:00:51 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: N-PHY: support setting custom TX power
+Date: Sun, 20 Jul 2014 13:00:22 +0200
+Message-Id: <1405854022-11833-2-git-send-email-zajec5@gmail.com> (sfid-20140720_130056_228906_6D0F01B8)
+In-Reply-To: <1405854022-11833-1-git-send-email-zajec5@gmail.com>
+References: <1405854022-11833-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-When a pcie device gets reset then the low power modes l1 and l2
-should be temporarily disabled.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 49 ++++++++++++++++++++++----
- 1 file changed, 42 insertions(+), 7 deletions(-)
+This is based on top of
+[PATCH 7/7] b43: enable radio 0x2057 rev 14 support (AKA BCM43217)
+(not sure if applies cleanly otherwise)
+---
+ drivers/net/wireless/b43/b43.h   |  1 +
+ drivers/net/wireless/b43/phy_n.c | 88 ++++++++++++++++++++++++++++++++++------
+ drivers/net/wireless/b43/phy_n.h |  3 ++
+ 3 files changed, 80 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 89be96d..bc972c0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -168,6 +168,20 @@ enum brcmf_pcie_state {
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 6cfd86d..9b8feb9 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -457,6 +457,7 @@ enum {
+ #define B43_MACCTL_RADIOLOCK		0x00080000	/* Radio lock */
+ #define B43_MACCTL_BEACPROMISC		0x00100000	/* Beacon Promiscuous */
+ #define B43_MACCTL_KEEP_BADPLCP		0x00200000	/* Keep frames with bad PLCP */
++#define B43_MACCTL_PHY_LOCK		0x00200000
+ #define B43_MACCTL_KEEP_CTL		0x00400000	/* Keep control frames */
+ #define B43_MACCTL_KEEP_BAD		0x00800000	/* Keep bad frames (FCS) */
+ #define B43_MACCTL_PROMISC		0x01000000	/* Promiscuous mode */
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 11d7543..e984516 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -34,6 +34,7 @@
+ #include "radio_2056.h"
+ #include "radio_2057.h"
+ #include "main.h"
++#include "ppr.h"
  
- #define BRCMF_PCIE_MBDATA_TIMEOUT		2000
+ struct nphy_txgains {
+ 	u16 tx_lpf[2];
+@@ -3605,16 +3606,6 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
+  * Tx and Rx
+  **************************************************/
  
-+#define BRCMF_PCIE_CFGREG_STATUS_CMD		0x4
-+#define BRCMF_PCIE_CFGREG_PM_CSR		0x4C
-+#define BRCMF_PCIE_CFGREG_MSI_CAP		0x58
-+#define BRCMF_PCIE_CFGREG_MSI_ADDR_L		0x5C
-+#define BRCMF_PCIE_CFGREG_MSI_ADDR_H		0x60
-+#define BRCMF_PCIE_CFGREG_MSI_DATA		0x64
-+#define BRCMF_PCIE_CFGREG_LINK_STATUS_CTRL	0xBC
-+#define BRCMF_PCIE_CFGREG_LINK_STATUS_CTRL2	0xDC
-+#define BRCMF_PCIE_CFGREG_RBAR_CTRL		0x228
-+#define BRCMF_PCIE_CFGREG_PML1_SUB_CTRL1	0x248
-+#define BRCMF_PCIE_CFGREG_REG_BAR2_CONFIG	0x4E0
-+#define BRCMF_PCIE_CFGREG_REG_BAR3_CONFIG	0x4F4
-+#define BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB	3
+-static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
+-{//TODO
+-}
+-
+-static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+-							bool ignore_tssi)
+-{//TODO
+-	return B43_TXPWR_RES_DONE;
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxPwrCtrlEnable */
+ static void b43_nphy_tx_power_ctrl(struct b43_wldev *dev, bool enable)
+ {
+@@ -4145,7 +4136,11 @@ static void b43_nphy_tx_power_ctl_setup(struct b43_wldev *dev)
+ 			b1[0] = b1[1] = -1393;
+ 		}
+ 	}
+-	/* target[0] = target[1] = nphy->tx_power_max; */
 +
++	if (nphy->tx_pwr_max_ppr) {
++		target[0] = b43_ppr_get_max(dev, nphy->tx_pwr_max_ppr);
++		target[1] = target[0];
++	}
  
- MODULE_FIRMWARE(BRCMF_PCIE_43602_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43602_NVRAM_NAME);
-@@ -423,22 +437,43 @@ brcmf_pcie_select_core(struct brcmf_pciedev_info *devinfo, u16 coreid)
+ 	if (dev->phy.rev >= 3) {
+ 		if (sprom->fem.ghz2.tssipos)
+@@ -5871,6 +5866,74 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ 	b43_mac_enable(dev);
  }
  
- 
--static void brcmf_pcie_detach(struct brcmf_pciedev_info *devinfo)
-+static void brcmf_pcie_reset_device(struct brcmf_pciedev_info *devinfo)
- {
--	u16 cfg_offset[] = { 0x4,  0x4C, 0x58, 0x5C, 0x60, 0x64, 0xDC, 0x228,
--			     0x248,  0x4e0, 0x4f4 };
-+	u16 cfg_offset[] = { BRCMF_PCIE_CFGREG_STATUS_CMD,
-+			     BRCMF_PCIE_CFGREG_PM_CSR,
-+			     BRCMF_PCIE_CFGREG_MSI_CAP,
-+			     BRCMF_PCIE_CFGREG_MSI_ADDR_L,
-+			     BRCMF_PCIE_CFGREG_MSI_ADDR_H,
-+			     BRCMF_PCIE_CFGREG_MSI_DATA,
-+			     BRCMF_PCIE_CFGREG_LINK_STATUS_CTRL2,
-+			     BRCMF_PCIE_CFGREG_RBAR_CTRL,
-+			     BRCMF_PCIE_CFGREG_PML1_SUB_CTRL1,
-+			     BRCMF_PCIE_CFGREG_REG_BAR2_CONFIG,
-+			     BRCMF_PCIE_CFGREG_REG_BAR3_CONFIG };
- 	u32 i;
- 	u32 val;
-+	u32 lsc;
- 
- 	if (!devinfo->ci)
- 		return;
- 
--	brcmf_pcie_select_core(devinfo, BCMA_CORE_CHIPCOMMON);
--	WRITECC32(devinfo, watchdog, 0x4e0);
-+	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
-+	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGADDR,
-+			       BRCMF_PCIE_CFGREG_LINK_STATUS_CTRL);
-+	lsc = brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGDATA);
-+	val = lsc & (~BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB);
-+	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGDATA, val);
- 
-+	brcmf_pcie_select_core(devinfo, BCMA_CORE_CHIPCOMMON);
-+	WRITECC32(devinfo, watchdog, 4);
- 	msleep(100);
- 
- 	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
-+	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGADDR,
-+			       BRCMF_PCIE_CFGREG_LINK_STATUS_CTRL);
-+	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGDATA, lsc);
++static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
++							bool ignore_tssi)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_n *nphy = dev->phy.n;
++	struct ieee80211_channel *channel = dev->wl->hw->conf.chandef.chan;
++	u8 max; /* qdBm */
++	bool tx_pwr_state;
 +
-+	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
- 	for (i = 0; i < ARRAY_SIZE(cfg_offset); i++) {
- 		brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGADDR,
- 				       cfg_offset[i]);
-@@ -458,7 +493,7 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
++	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
++	    nphy->tx_pwr_last_recalc_limit == phy->desired_txpower)
++		return B43_TXPWR_RES_DONE;
++
++	/* Make sure we have a clean PPR */
++	if (!nphy->tx_pwr_max_ppr) {
++		nphy->tx_pwr_max_ppr = b43_ppr_alloc(dev);
++		if (WARN_ON(!nphy->tx_pwr_max_ppr))
++			return B43_TXPWR_RES_DONE;
++	} else {
++		b43_ppr_clear(dev, nphy->tx_pwr_max_ppr);
++	}
++
++	/* HW limitations */
++	b43_ppr_load_max_from_sprom(dev, nphy->tx_pwr_max_ppr, B43_BAND_2G);
++
++	/* Regulatory & user settings */
++	max = INT_TO_Q52(phy->chandef->chan->max_power);
++	if (phy->desired_txpower)
++		max = min_t(u8, max, INT_TO_Q52(phy->desired_txpower));
++	b43_ppr_apply_max(dev, nphy->tx_pwr_max_ppr, max);
++	if (b43_debug(dev, B43_DBG_XMITPOWER))
++		b43dbg(dev->wl, "Calculated TX power: " Q52_FMT "\n",
++		       Q52_ARG(b43_ppr_get_max(dev, nphy->tx_pwr_max_ppr)));
++
++	/* TODO: Enable this once we get gains working */
++#if 0
++	/* Some extra gains */
++	hw_gain = 6; /* N-PHY specific */
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
++		hw_gain += sprom->antenna_gain.a0;
++	else
++		hw_gain += sprom->antenna_gain.a1;
++	b43_ppr_add(dev, nphy->tx_pwr_max_ppr, -hw_gain);
++#endif
++
++	/* Make sure we didn't go too low */
++	b43_ppr_apply_min(dev, nphy->tx_pwr_max_ppr, INT_TO_Q52(8));
++
++	/* Apply */
++	tx_pwr_state = nphy->txpwrctrl;
++	b43_mac_suspend(dev);
++	b43_nphy_tx_power_ctl_setup(dev);
++	if (dev->dev->core_rev == 11 || dev->dev->core_rev == 12) {
++		b43_maskset32(dev, B43_MMIO_MACCTL, ~0, B43_MACCTL_PHY_LOCK);
++		b43_read32(dev, B43_MMIO_MACCTL);
++		udelay(1);
++	}
++	b43_nphy_tx_power_ctrl(dev, nphy->txpwrctrl);
++	if (dev->dev->core_rev == 11 || dev->dev->core_rev == 12)
++		b43_maskset32(dev, B43_MMIO_MACCTL, ~B43_MACCTL_PHY_LOCK, 0);
++	b43_mac_enable(dev);
++
++	nphy->tx_pwr_last_recalc_freq = channel->center_freq;
++	nphy->tx_pwr_last_recalc_limit = phy->desired_txpower;
++
++	return B43_TXPWR_RES_DONE;
++}
++
+ /**************************************************
+  * N-PHY init
+  **************************************************/
+@@ -6401,6 +6464,7 @@ static int b43_nphy_op_allocate(struct b43_wldev *dev)
+ 	nphy = kzalloc(sizeof(*nphy), GFP_KERNEL);
+ 	if (!nphy)
+ 		return -ENOMEM;
++
+ 	dev->phy.n = nphy;
  
- 	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
- 	if (brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_INTMASK) != 0)
--		brcmf_pcie_detach(devinfo);
-+		brcmf_pcie_reset_device(devinfo);
- 	/* BAR1 window may not be sized properly */
- 	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
- 	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGADDR, 0x4e0);
-@@ -1686,7 +1721,7 @@ brcmf_pcie_remove(struct pci_dev *pdev)
- 	brcmf_pcie_release_irq(devinfo);
- 	brcmf_pcie_release_scratchbuffers(devinfo);
- 	brcmf_pcie_release_ringbuffers(devinfo);
--	brcmf_pcie_detach(devinfo);
-+	brcmf_pcie_reset_device(devinfo);
- 	brcmf_pcie_release_resource(devinfo);
+ 	return 0;
+@@ -6464,6 +6528,7 @@ static void b43_nphy_op_free(struct b43_wldev *dev)
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_n *nphy = phy->n;
  
- 	if (devinfo->ci)
++	kfree(nphy->tx_pwr_max_ppr);
+ 	kfree(nphy);
+ 	phy->n = NULL;
+ }
+@@ -6656,5 +6721,4 @@ const struct b43_phy_operations b43_phyops_n = {
+ 	.switch_channel		= b43_nphy_op_switch_channel,
+ 	.get_default_chan	= b43_nphy_op_get_default_chan,
+ 	.recalc_txpower		= b43_nphy_op_recalc_txpower,
+-	.adjust_txpower		= b43_nphy_op_adjust_txpower,
+ };
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 30bec81..252d843 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -967,6 +967,9 @@ struct b43_phy_n {
+ 	struct b43_phy_n_txpwrindex txpwrindex[2];
+ 	struct b43_phy_n_pwr_ctl_info pwr_ctl_info[2];
+ 	struct b43_chanspec txiqlocal_chanspec;
++	struct b43_ppr *tx_pwr_max_ppr;
++	u16 tx_pwr_last_recalc_freq;
++	int tx_pwr_last_recalc_limit;
+ 
+ 	u8 txrx_chain;
+ 	u16 tx_rx_cal_phy_saveregs[11];
 -- 
-1.9.1
+1.8.4.5
 
