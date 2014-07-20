@@ -1,191 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42594 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759076AbaGXPWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 11:22:45 -0400
-Message-ID: <53D124B3.7030807@linux.intel.com> (sfid-20140724_172309_142748_450EE831)
-Date: Thu, 24 Jul 2014 23:22:27 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
-	mcgrof@do-not-panic.com, antonio@open-mesh.com,
-	johannes.berg@intel.com
-CC: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mmc@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
- and connecting
-References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com>
-In-Reply-To: <53CCC44C.2070507@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-we0-f175.google.com ([74.125.82.175]:63965 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995AbaGTOeU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2014 10:34:20 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so6467961wes.20
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:19 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/25] staging: vt6656: struct vnt_private replace byBBType with bb_type
+Date: Sun, 20 Jul 2014 15:33:11 +0100
+Message-Id: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com> (sfid-20140720_163423_791040_1D733424)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removing type prefix and camel case.
 
-On 2014/7/21 15:42, Fu, Zhonghui wrote:
-> On 2014/6/20 0:37, Arend van Spriel wrote:
->> On 19-06-14 18:28, Fu, Zhonghui wrote:
->>> On 2014/6/16 16:15, Arend van Spriel wrote:
->>>> On 16-06-14 07:49, Fu, Zhonghui wrote:
->>>>>   From 14485894add32aedacb3e486ebb2cc2b73861abf Mon Sep 17 00:00:00 2001
->>>>> From: Fu zhonghui <zhonghui.fu@linux.intel.com>
->>>>> Date: Wed, 11 Jun 2014 11:06:55 +0800
->>>>> Subject: [PATCH] brcmfmac: prevent watchdog from interfering with scanning and connecting
->>>>>
->>>>> Watchdog in brcmfmac driver may make WiFi chip enter sleep mode
->>>>> before completion of scanning or connecting.
->>>>>
->>>>> This will lead to scanning or connecting failure.
->>>>>
->>>>> Increasing temporarily idle-time threshold during scanning or
->>>>> connecting can ensure scanning or connecting success without
->>>>> watchdog interference.
->>>> Are you sure you are not having runtime PM enabled. That could be your problem as the host controller code disables sdio irqs. Please see this thread [1]. For our device runtime pm should not be enabled, but I am not sure if that is taken into account in mmc_attach_sdio() (see code below).
->>> I have tried brcmfmac driver with "CONFIG_PM_RUNTIME is not set", and scanning and connecting  always succeeded. This means that CONFIG_PM_RUNTIME should not be set if we use SDIO WiFi device driven by brcmfmac driver, right?
->> Depends which kernel you are using. In 3.16-rc1 the sdio interrupt issue has been fixed so you should be fine to use CONFIG_PM_RUNTIME. Here is the commit
-Any clues or comments to the following issue?
-> I run 3.16-rc4 and 3.16-rc5 kernel with CONFIG_PM_RUNTIME set, the issue still exists as follows:
->
-> 1 step: modprobe brcmfmac
-> 2 step: iwlist wlan1 scan         get scanning result successfully.
-> 3 step: wait a while, no any operation
-> 4 step: iwlist wlan1 scan         scanning timeout, can't get scanning result.
->
->
-> Thanks,
-> Zhonghui
->
->> commit be138554a7923658ded799b0e8794d9c1d08a6e5
->> Author: Russell King <rmk+kernel@arm.linux.org.uk>
->> Date:   Fri Apr 25 12:55:56 2014 +0100
->>
->>     mmc: sdhci: allow sdio interrupts while sdhci runtime suspended
->>
->> Regards,
->> Arend
->>
->>> Thanks,
->>> Zhonghui
->>>> Gr. AvS
->>>>
->>>> [1] http://www.spinics.net/lists/linux-mmc/msg25978.html
->>>>
->>>> --8<----------------------------------------------------------------
->>>>
->>>>      /*
->>>>       * Enable runtime PM only if supported by host+card+board
->>>>       */
->>>>      if (host->caps & MMC_CAP_POWER_OFF_CARD) {
->>>>          /*
->>>>           * Let runtime PM core know our card is active
->>>>           */
->>>>          err = pm_runtime_set_active(&card->dev);
->>>>          if (err)
->>>>              goto remove;
->>>>
->>>>          /*
->>>>           * Enable runtime PM for this card
->>>>           */
->>>>          pm_runtime_enable(&card->dev);
->>>>      }
->>>>
->>>>> Signed-off-by: Fu zhonghui <zhonghui.fu@linux.intel.com>
->>>>> ---
->>>>>    drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 ++++++++++++++++--
->>>>>    .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
->>>>>    2 files changed, 18 insertions(+), 3 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>> index 13c89a0..729deab 100644
->>>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>> @@ -34,6 +34,7 @@
->>>>>    #include <linux/vmalloc.h>
->>>>>    #include <linux/platform_data/brcmfmac-sdio.h>
->>>>>    #include <linux/moduleparam.h>
->>>>> +#include <net/cfg80211.h>
->>>>>    #include <asm/unaligned.h>
->>>>>    #include <defs.h>
->>>>>    #include <brcmu_wifi.h>
->>>>> @@ -43,6 +44,10 @@
->>>>>    #include "sdio_host.h"
->>>>>    #include "chip.h"
->>>>>    #include "nvram.h"
->>>>> +#include "dhd.h"
->>>>> +#include "fwil_types.h"
->>>>> +#include "p2p.h"
->>>>> +#include "wl_cfg80211.h"
->>>>>
->>>>>    #define DCMD_RESP_TIMEOUT  2000    /* In milli second */
->>>>>
->>>>> @@ -307,6 +312,7 @@ struct rte_console {
->>>>>                         * when idle
->>>>>                         */
->>>>>    #define BRCMF_IDLE_INTERVAL    1
->>>>> +#define BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING    100
->>>>>
->>>>>    #define KSO_WAIT_US 50
->>>>>    #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
->>>>> @@ -3613,9 +3619,9 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
->>>>>
->>>>>    static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
->>>>>    {
->>>>> -#ifdef DEBUG
->>>>>        struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
->>>>> -#endif    /* DEBUG */
->>>>> +    struct brcmf_cfg80211_info *cfg = bus_if->drvr->config;
->>>>> +    struct brcmf_if *ifp = cfg->pub->iflist[0];
->>>>>
->>>>>        brcmf_dbg(TIMER, "Enter\n");
->>>>>
->>>>> @@ -3678,6 +3684,14 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
->>>>>
->>>>>        /* On idle timeout clear activity flag and/or turn off clock */
->>>>>        if ((bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
->>>>> +
->>>>> +        if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status) ||
->>>>> +            test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
->>>>> +            bus->idletime = BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING;
->>>>> +        } else {
->>>>> +            bus->idletime = BRCMF_IDLE_INTERVAL;
->>>>> +        }
->>>>> +
->>>>>            if (++bus->idlecount >= bus->idletime) {
->>>>>                bus->idlecount = 0;
->>>>>                if (bus->activity) {
->>>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>> index be19852..e76517e 100644
->>>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>> @@ -913,6 +913,8 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
->>>>>            return -EAGAIN;
->>>>>        }
->>>>>
->>>>> +    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
->>>>> +
->>>>>        /* If scan req comes for p2p0, send it over primary I/F */
->>>>>        if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
->>>>>            vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
->>>>> @@ -933,7 +935,6 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
->>>>>        }
->>>>>
->>>>>        cfg->scan_request = request;
->>>>> -    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
->>>>>        if (escan_req) {
->>>>>            cfg->escan_info.run = brcmf_run_escan;
->>>>>            err = brcmf_p2p_scan_prep(wiphy, request, vif);
->>>>> -- 1.7.1
->>>>>
->>>> -- 
->>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>> Please read the FAQ at  http://www.tux.org/lkml/
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c     | 24 ++++++++++++------------
+ drivers/staging/vt6656/device.h   |  2 +-
+ drivers/staging/vt6656/dpc.c      |  2 +-
+ drivers/staging/vt6656/main_usb.c | 14 +++++++-------
+ drivers/staging/vt6656/rxtx.c     |  2 +-
+ 5 files changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 5ce26fa..94b933f 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -405,7 +405,7 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 
+ 	switch (priv->rf_type) {
+ 	case RF_VT3226D0:
+-		if (priv->byBBType != BB_TYPE_11B) {
++		if (priv->bb_type != BB_TYPE_11B) {
+ 			priv->sifs -= 1;
+ 			priv->difs -= 1;
+ 			break;
+@@ -413,7 +413,7 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 	case RF_AIROHA7230:
+ 	case RF_AL2230:
+ 	case RF_AL2230S:
+-		if (priv->byBBType != BB_TYPE_11B)
++		if (priv->bb_type != BB_TYPE_11B)
+ 			break;
+ 	case RF_RFMD2959:
+ 	case RF_VT3226:
+@@ -422,7 +422,7 @@ void vnt_update_ifs(struct vnt_private *priv)
+ 		priv->difs -= 3;
+ 		break;
+ 	case RF_MAXIM2829:
+-		if (priv->byBBType == BB_TYPE_11A) {
++		if (priv->bb_type == BB_TYPE_11A) {
+ 			priv->sifs -= 5;
+ 			priv->difs -= 5;
+ 		} else {
+@@ -489,8 +489,8 @@ int vnt_ofdm_min_rate(struct vnt_private *priv)
+ u8 vnt_get_pkt_type(struct vnt_private *priv)
+ {
+ 
+-	if (priv->byBBType == BB_TYPE_11A || priv->byBBType == BB_TYPE_11B)
+-		return (u8)priv->byBBType;
++	if (priv->bb_type == BB_TYPE_11A || priv->bb_type == BB_TYPE_11B)
++		return (u8)priv->bb_type;
+ 	else if (vnt_ofdm_min_rate(priv))
+ 		return PK_TYPE_11GA;
+ 	else
+@@ -788,24 +788,24 @@ int vnt_radio_power_on(struct vnt_private *priv)
+ 
+ void vnt_set_bss_mode(struct vnt_private *priv)
+ {
+-	if (priv->rf_type == RF_AIROHA7230 && priv->byBBType == BB_TYPE_11A)
++	if (priv->rf_type == RF_AIROHA7230 && priv->bb_type == BB_TYPE_11A)
+ 		vnt_mac_set_bb_type(priv, BB_TYPE_11G);
+ 	else
+-		vnt_mac_set_bb_type(priv, priv->byBBType);
++		vnt_mac_set_bb_type(priv, priv->bb_type);
+ 
+ 	priv->byPacketType = vnt_get_pkt_type(priv);
+ 
+-	if (priv->byBBType == BB_TYPE_11A)
++	if (priv->bb_type == BB_TYPE_11A)
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x03);
+-	else if (priv->byBBType == BB_TYPE_11B)
++	else if (priv->bb_type == BB_TYPE_11B)
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x02);
+-	else if (priv->byBBType == BB_TYPE_11G)
++	else if (priv->bb_type == BB_TYPE_11G)
+ 		vnt_control_out_u8(priv, MESSAGE_REQUEST_BBREG, 0x88, 0x08);
+ 
+ 	vnt_update_ifs(priv);
+-	vnt_set_rspinf(priv, (u8)priv->byBBType);
++	vnt_set_rspinf(priv, (u8)priv->bb_type);
+ 
+-	if (priv->byBBType == BB_TYPE_11A) {
++	if (priv->bb_type == BB_TYPE_11A) {
+ 		if (priv->rf_type == RF_AIROHA7230) {
+ 			priv->abyBBVGA[0] = 0x20;
+ 
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index b9753c1..7b5779a 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -330,7 +330,7 @@ struct vnt_private {
+ 	u32 slot;  /* Current SlotTime */
+ 
+ 	/* Rate */
+-	u8 byBBType; /* 0: 11A, 1:11B, 2:11G */
++	u8 bb_type; /* 0: 11A, 1:11B, 2:11G */
+ 	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
+ 	u32 wBasicRate;
+ 	u8 byTopOFDMBasicRate;
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index f8410ce1..3bf2782 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -133,7 +133,7 @@ int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
+ 
+ 	priv->tsf_time = le64_to_cpu(*tsf_time);
+ 
+-	if (priv->byBBType == BB_TYPE_11G) {
++	if (priv->bb_type == BB_TYPE_11G) {
+ 		sq_3 = skb_data + 8 + pay_load_with_padding + 12;
+ 		sq = sq_3;
+ 	} else {
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 1137a19..5ca28c2 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -121,8 +121,8 @@ static void device_set_options(struct vnt_private *priv)
+ 	priv->byShortRetryLimit = SHORT_RETRY_DEF;
+ 	priv->byLongRetryLimit = LONG_RETRY_DEF;
+ 	priv->op_mode = NL80211_IFTYPE_UNSPECIFIED;
+-	priv->byBBType = BBP_TYPE_DEF;
+-	priv->byPacketType = priv->byBBType;
++	priv->bb_type = BBP_TYPE_DEF;
++	priv->byPacketType = priv->bb_type;
+ 	priv->byAutoFBCtrl = AUTO_FB_0;
+ 	priv->byPreambleType = 0;
+ 	priv->exist_sw_net_addr = false;
+@@ -283,7 +283,7 @@ static int device_init_registers(struct vnt_private *priv)
+ 	priv->byAutoFBCtrl = AUTO_FB_0;
+ 
+ 	/* default Auto Mode */
+-	priv->byBBType = BB_TYPE_11G;
++	priv->bb_type = BB_TYPE_11G;
+ 
+ 	/* get RFType */
+ 	priv->rf_type = init_rsp->rf_type;
+@@ -341,7 +341,7 @@ static int device_init_registers(struct vnt_private *priv)
+ 	* set BB and packet type at the same time
+ 	* set Short Slot Time, xIFS, and RSPINF
+ 	*/
+-	if (priv->byBBType == BB_TYPE_11A)
++	if (priv->bb_type == BB_TYPE_11A)
+ 		priv->bShortSlotTime = true;
+ 	else
+ 		priv->bShortSlotTime = false;
+@@ -709,15 +709,15 @@ static int vnt_config(struct ieee80211_hw *hw, u32 changed)
+ 		else
+ 			bb_type = BB_TYPE_11G;
+ 
+-		if (priv->byBBType != bb_type) {
+-			priv->byBBType = bb_type;
++		if (priv->bb_type != bb_type) {
++			priv->bb_type = bb_type;
+ 
+ 			vnt_set_bss_mode(priv);
+ 		}
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+-		if (priv->byBBType == BB_TYPE_11B)
++		if (priv->bb_type == BB_TYPE_11B)
+ 			priv->wCurrentRate = RATE_1M;
+ 		else
+ 			priv->wCurrentRate = RATE_54M;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index aa382e7..3347a72 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -966,7 +966,7 @@ static int vnt_beacon_xmit(struct vnt_private *priv,
+ 	beacon_buffer = (struct vnt_beacon_buffer *)&context->data[0];
+ 	short_head = &beacon_buffer->short_head;
+ 
+-	if (priv->byBBType == BB_TYPE_11A) {
++	if (priv->bb_type == BB_TYPE_11A) {
+ 		current_rate = RATE_6M;
+ 
+ 		/* Get SignalField,ServiceField,Length */
+-- 
+2.0.1
 
