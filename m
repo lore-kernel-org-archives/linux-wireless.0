@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46576 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752671AbaGVNrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 09:47:31 -0400
-Message-ID: <53CE6B6F.3090503@openwrt.org> (sfid-20140722_154734_740938_6B78252B)
-Date: Tue, 22 Jul 2014 15:47:27 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>,
-	linux-wireless@vger.kernel.org
-Subject: Re: get_expected_throughput introduces a kernel oops on sta_set_sinfo
- calls
-References: <004101cfa58c$e0ccb3f0$a2661bd0$@acksys.fr>
-In-Reply-To: <004101cfa58c$e0ccb3f0$a2661bd0$@acksys.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:50234 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbaGTMci (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2014 08:32:38 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so5277541wgh.33
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:32:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 0/2] configure ack timeout estimation algorithm through
+Date: Sun, 20 Jul 2014 14:32:33 +0200
+Message-Id: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_145108_025994_FBC1F2D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-07-22 11:11, Jean-Pierre Tosoni wrote:
-> Hi list,
-> 
-> I am using compat-wireless-20132-04-16 with kernel 3.3.8.
-> I experienced a kernel oops after applying the "get_expected_throughput"
-> patches series from Antonio Quartulli.
-> It happens when a station_dump is issued from userspace while an association
-> has begun but does not complete immediately due to bad channel.
-> After some debugging I made this patch which solves the issue:
-Please try this patch:
----
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -472,12 +472,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct rate_control_ref *ref = NULL;
- 	struct timespec uptime;
- 	u64 packets = 0;
- 	u32 thr = 0;
- 	int i, ac;
- 
-+	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-+		ref = local->rate_ctrl;
-+
- 	sinfo->generation = sdata->local->sta_generation;
- 
- 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
+Define enable_dynack API to enable ack timeout estimation algorithm (dynack)
+through nl80211. Currently dynack is supported just by ath9k
+
+Lorenzo Bianconi (2):
+  cfg80211: add enable_dynack API
+  mac80211: add enable_dynack API
+
+ include/net/cfg80211.h       |  4 ++++
+ include/net/mac80211.h       |  4 ++++
+ include/uapi/linux/nl80211.h |  5 +++++
+ net/mac80211/cfg.c           |  8 ++++++++
+ net/mac80211/driver-ops.h    | 14 ++++++++++++++
+ net/mac80211/trace.h         |  5 +++++
+ net/wireless/nl80211.c       |  7 +++++++
+ net/wireless/rdev-ops.h      | 11 +++++++++++
+ net/wireless/trace.h         |  5 +++++
+ 9 files changed, 63 insertions(+)
+
+-- 
+1.9.1
+
