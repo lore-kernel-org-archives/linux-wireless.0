@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:35404 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757184AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:38:37 -0400
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/7] firmware_class: perform new LSM checks
-Date: Mon, 14 Jul 2014 14:38:14 -0700
-Message-Id: <1405373897-31671-5-git-send-email-keescook@chromium.org> (sfid-20140714_233846_652397_EF506798)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51730 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbaGTMdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2014 08:33:53 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so5251942wgh.3
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:33:52 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 0/2] add auto parameter to set distance command
+Date: Sun, 20 Jul 2014 14:33:47 +0200
+Message-Id: <1405859629-32326-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143356_883226_D1083E6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This attaches LSM hooks to the existing firmware loading interfaces:
-filesystem-found firmware and demand-loaded blobs.
+Add auto parameter to set distance command in order to enable ack timeout
+estimation algorithm (dynack). Currently dynack is supported just by ath9k
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/base/firmware_class.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+This patchset is based on "configure ack timeout estimation algorithm through
+mac80211 stack" one sent on linux-wireless
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index d276e33880be..7399bab71ced 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -28,6 +28,7 @@
- #include <linux/suspend.h>
- #include <linux/syscore_ops.h>
- #include <linux/reboot.h>
-+#include <linux/security.h>
- 
- #include <generated/utsrelease.h>
- 
-@@ -308,12 +309,17 @@ static int fw_read_file_contents(struct file *file, struct firmware_buf *fw_buf)
- 	if (rc != size) {
- 		if (rc > 0)
- 			rc = -EIO;
--		vfree(buf);
--		return rc;
-+		goto fail;
- 	}
-+	rc = security_kernel_fw_from_file(file, buf, size);
-+	if (rc)
-+		goto fail;
- 	fw_buf->data = buf;
- 	fw_buf->size = size;
- 	return 0;
-+fail:
-+	vfree(buf);
-+	return rc;
- }
- 
- static int fw_get_filesystem_firmware(struct device *device,
-@@ -640,6 +646,12 @@ static ssize_t firmware_loading_store(struct device *dev,
- 		break;
- 	case 0:
- 		if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
-+			if (security_kernel_fw_from_file(NULL, fw_buf->data,
-+							 fw_buf->size)) {
-+				fw_load_abort(fw_priv);
-+				break;
-+			}
-+
- 			set_bit(FW_STATUS_DONE, &fw_buf->status);
- 			clear_bit(FW_STATUS_LOADING, &fw_buf->status);
- 
+Lorenzo Bianconi (2):
+  iw: sync nl80211_attrs
+  iw: add auto parameter to set distance command
+
+ nl80211.h | 10 ++++++++++
+ phy.c     | 44 +++++++++++++++++++++++++-------------------
+ 2 files changed, 35 insertions(+), 19 deletions(-)
+
 -- 
-1.7.9.5
+1.9.1
 
