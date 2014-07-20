@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:35772 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751114AbaGKRSa (ORCPT
+Received: from 246.111.88.91.rev.sfr.net ([91.88.111.246]:38088 "EHLO
+	zimbra.duchein.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191AbaGTOGu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 13:18:30 -0400
-Message-ID: <1405099089.26540.77.camel@deadeye.wl.decadent.org.uk> (sfid-20140711_191833_555915_2C9F3146)
-Subject: Re: linux-firmware: pull-request TI wireless firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: "Machani, Yaniv" <yanivma@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 11 Jul 2014 18:18:09 +0100
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com>
-References: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-xiMViwkN1l7kiL+bECVX"
-Mime-Version: 1.0
+	Sun, 20 Jul 2014 10:06:50 -0400
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH 00/10] add support for ack timeout estimation in ath9k driver
+From: Philippe DUCHEIN <wireless-dev@duchein.net>
+In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Date: Sun, 20 Jul 2014 16:05:43 +0200
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com
+Message-Id: <67728BC0-FBDC-43F9-B7A0-A876FE27EC4B@duchein.net> (sfid-20140720_160748_148233_3D5B3532)
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Lorenzo,
+Since friday I enable dynack on an AP who serve 35 sta (on 2 MIMO 2x2 5ghz wireless cards 12&23) in outdoor (up to 8 kms)
+results are good. latency is good for all sta
+I’ll take your new patches and make one for openwrt and, recompile 
+Thanks;
+Philippe
 
---=-xiMViwkN1l7kiL+bECVX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2014-07-10 at 12:05 +0000, Machani, Yaniv wrote:
-> Hi Ben,
-> Please see below pull request,
-> It contains an update to the WiLink8 chip.
-> The FW name was changed due to some new API's that was introduced lately.
-[...]
 
-Please send pull requests to linux-firmware@kernel.org
 
-Ben.
+Le 20 juil. 2014 à 14:31, Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> a écrit :
 
---=20
-Ben Hutchings
-To err is human; to really foul things up requires a computer.
+> This patchset adds support for estimation of the ack timeout (dynack) in ath9k
+> driver. Ath9k dynack computes the ack timeout based on ack frame RX timestamp,
+> TX frame timestamp and frame duration.
+> 
+> Ath9k dynack has been tested in indoor environment using AR9223/AR9280 chipset
+> (running 3.16.0-rc5 kernel) and on 9Km PtoP link using AR9280 chipset
+> (running OpenWRT trunk, compat-wireless-2014-05-22)
+> 
+> Changes since RFCv2:
+> - disable dynack by default
+> - add ath9k_enable_dynack() method to enable ack timeout estimation algorithm
+> - remove dynack entry from ath9k debugfs
+> 
+> Changes since RFCv1:
+> - use ISC license instead of GPLv2 one
+> - use an inline method instead of a macro for EWMA calculation
+> - use powers of two weights in EWMA calculation
+> - fix typos
+> - add ath_dynack_node_init/ath_dynack_node_deinit methods
+> - use different logic to enable/disable dynack processing
+> 
+> Lorenzo Bianconi (10):
+>  ath9k: export methods related to ack timeout estimation
+>  ath9k: add duration field to ath_tx_status
+>  ath9k: add dynamic ack timeout estimation
+>  ath9k: add config for (en|dis)abling ack timeout estimation
+>  ath9k: do not overwrite ack timeout estimation
+>  ath9k: add sampling methods for (tx|rx) timestamp
+>  ath9k: enable control frame reception
+>  ath9k: add debugfs support for dynack
+>  ath9k: add ath9k_enable_dynack() method
+>  ath9k: initialize ath_node linked list
+> 
+> drivers/net/wireless/ath/ath.h              |   2 +
+> drivers/net/wireless/ath/ath9k/Kconfig      |   7 +
+> drivers/net/wireless/ath/ath9k/Makefile     |   3 +
+> drivers/net/wireless/ath/ath9k/ar9002_mac.c |   7 +
+> drivers/net/wireless/ath/ath9k/ar9003_mac.c |   9 +
+> drivers/net/wireless/ath/ath9k/ath9k.h      |   3 +
+> drivers/net/wireless/ath/ath9k/debug.c      |  28 +++
+> drivers/net/wireless/ath/ath9k/dynack.c     | 345 ++++++++++++++++++++++++++++
+> drivers/net/wireless/ath/ath9k/dynack.h     |  96 ++++++++
+> drivers/net/wireless/ath/ath9k/hw.c         |  16 +-
+> drivers/net/wireless/ath/ath9k/hw.h         |   7 +
+> drivers/net/wireless/ath/ath9k/mac.h        |   1 +
+> drivers/net/wireless/ath/ath9k/main.c       |  38 +++
+> drivers/net/wireless/ath/ath9k/recv.c       |   7 +-
+> drivers/net/wireless/ath/ath9k/xmit.c       |   5 +
+> 15 files changed, 570 insertions(+), 4 deletions(-)
+> create mode 100644 drivers/net/wireless/ath/ath9k/dynack.c
+> create mode 100644 drivers/net/wireless/ath/ath9k/dynack.h
+> 
+> -- 
+> 1.9.1
+> 
 
---=-xiMViwkN1l7kiL+bECVX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAU8AcW+e/yOyVhhEJAQoUExAAzQTzGpmbn0CV7VTi9RKF4ZiPiyF8H9ME
-u3tDzXerdcBYsBpx13+j4PW5OSlgtLxExPDLX2gixIpkx0roBBdoHVIt0Zbdz0ub
-H+EG07A02/cVIo1rqtJIIgaoD0ov+jFtrjRJvJaWmqD8JkvLmh1Izb8SJy9Vfx60
-6wJo0Z1DcqMEKNk/g4oqbRMFCI1oznOVmLQqI/6XCrZC6A2i/PDx9eFaFU0RhH74
-OTHX9ve4GNhKQwBMGKxTxURH2qcNdSwGBEL4WVEfBTbUqnJU1llCP7yU1nFBYfVc
-t6clDwx5qtZzUlkxVnuwAv/ljbyBoebmi2W4h91MkSWPCWb8z/IZSbE2w3sKL1jq
-Wg7cJC6MF2FuzsebaprOgYGqfumZ6OeBuQ+SpDGFjlLkLWvlSKDZtJGxzJczBiUM
-0B9c0XREWTUpezfGS3VnYi6PMmHOkg9IaWVLAOXF3MQe3sDX6hrkmHu2R1mNJd+O
-JzklBlL8c/CvKHkVhTtcybJ85EZ4qVMHbDEeSV5aPdMIPNHzdT34PXQWQovU1YEm
-rDtt5PadHOEbuKULF6UhWnTxdzq21SCNWHju18rJQMkB7dgo8trL4SNL7FicUMwt
-pcYmQUBUNB19b8PjyGTpgyYmpjTTrNGqFJoq72TGBjTRqjZ/Y/foPc3H5EeYZcoz
-QByCJvyqv2g=
-=e98M
------END PGP SIGNATURE-----
-
---=-xiMViwkN1l7kiL+bECVX--
