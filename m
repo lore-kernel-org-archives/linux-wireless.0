@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42156 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694AbaGNGvJ (ORCPT
+Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:41906 "EHLO
+	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751147AbaGTOUQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 02:51:09 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 2/7] wil6210: export FW/HW versions through debugfs
-Date: Mon, 14 Jul 2014 09:49:38 +0300
-Message-ID: <1405320583-5775-3-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140714_085114_911252_77D260CC)
-In-Reply-To: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1405320583-5775-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 20 Jul 2014 10:20:16 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, joe@perches.com,
+	Fabian Frederick <fabf@skynet.be>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 04/30] mwl8k: remove unnecessary break after return
+Date: Sun, 20 Jul 2014 16:16:12 +0200
+Message-Id: <1405865801-18806-5-git-send-email-fabf@skynet.be> (sfid-20140720_162034_899477_6AE6C42E)
+In-Reply-To: <1405865801-18806-1-git-send-email-fabf@skynet.be>
+References: <1405865801-18806-1-git-send-email-fabf@skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mwl8k.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index a868c5e..7435b5a 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -986,6 +986,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 			   &wil->secure_pcp);
- 	wil_debugfs_create_ulong("status", S_IRUGO | S_IWUSR, dbg,
- 				 &wil->status);
-+	debugfs_create_u32("fw_version", S_IRUGO, dbg, &wil->fw_version);
-+	debugfs_create_x32("hw_version", S_IRUGO, dbg, &wil->hw_version);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 3c0a0a8..9a3d4d6 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1633,22 +1633,17 @@ static int mwl8k_tid_queue_mapping(u8 tid)
+ 	case 0:
+ 	case 3:
+ 		return IEEE80211_AC_BE;
+-		break;
+ 	case 1:
+ 	case 2:
+ 		return IEEE80211_AC_BK;
+-		break;
+ 	case 4:
+ 	case 5:
+ 		return IEEE80211_AC_VI;
+-		break;
+ 	case 6:
+ 	case 7:
+ 		return IEEE80211_AC_VO;
+-		break;
+ 	default:
+ 		return -1;
+-		break;
+ 	}
+ }
  
- 	wil6210_debugfs_create_ISR(wil, "USER_ICR", dbg,
- 				   HOSTADDR(RGF_USER_USER_ICR));
 -- 
-1.7.6
+1.9.1
 
