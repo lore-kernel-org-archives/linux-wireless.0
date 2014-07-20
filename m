@@ -1,35 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mdfmta009.mxout.tbr.inty.net ([91.221.168.50]:46589 "EHLO
-	smtp.demon.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751420AbaGJJfJ (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:41647 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbaGTOek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 05:35:09 -0400
-Message-ID: <53BE5E49.6040603@dpets.co.uk> (sfid-20140710_113515_557420_CFFCF3A7)
-Date: Thu, 10 Jul 2014 10:35:05 +0100
-From: John Talbut <jt@dpets.co.uk>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: rtl8192se static driver in 3.14 kernel not working
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 20 Jul 2014 10:34:40 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so6520140wes.29
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/25] staging: vt6656: struct vnt_private replace wSeqCounter with seq_counter
+Date: Sun, 20 Jul 2014 15:33:23 +0100
+Message-Id: <1405866815-2687-13-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165109_717737_F7F0DDCD)
+In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems that we have a different problem with this driver from others I 
-mentioned in a recent thread.
+Removing type prefix and camel case
 
-I have compiled a kernel from the 3.14.7 from linux-source-3.14 from 
-Debian for use on a Samsung N120 netbook.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h |  2 +-
+ drivers/staging/vt6656/rxtx.c   | 10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Included in the .config are:
-
-CONFIG_WLAN=y
-CONFIG_RTL_CARDS=y
-CONFIG_RTL8192SE=y
-
-There are no LKMs or initramfs.
-
-The wireless does not work at all.  dmesg shows the pci device but there 
-is no sign of the wireless driver.
-
-With a 2.6 kernel set up similarly the wireless works.
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 905e90b..6647b2b 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -364,7 +364,7 @@ struct vnt_private {
+ 	u16 current_aid;
+ 
+ 	/* Beacon releated */
+-	u16 wSeqCounter;
++	u16 seq_counter;
+ 
+ 	enum vnt_cmd_state command_state;
+ 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 0e4b773..8d745af 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -914,7 +914,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 				tx_key, skb, tx_body_size, mic_hdr);
+ 	}
+ 
+-	priv->wSeqCounter = (le16_to_cpu(hdr->seq_ctrl) &
++	priv->seq_counter = (le16_to_cpu(hdr->seq_ctrl) &
+ 						IEEE80211_SCTL_SEQ) >> 4;
+ 
+ 	tx_buffer->tx_byte_count = cpu_to_le16(tx_bytes);
+@@ -1004,12 +1004,12 @@ static int vnt_beacon_xmit(struct vnt_private *priv,
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+ 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)mgmt_hdr;
+ 		hdr->duration_id = 0;
+-		hdr->seq_ctrl = cpu_to_le16(priv->wSeqCounter << 4);
++		hdr->seq_ctrl = cpu_to_le16(priv->seq_counter << 4);
+ 	}
+ 
+-	priv->wSeqCounter++;
+-	if (priv->wSeqCounter > 0x0fff)
+-		priv->wSeqCounter = 0;
++	priv->seq_counter++;
++	if (priv->seq_counter > 0x0fff)
++		priv->seq_counter = 0;
+ 
+ 	count = sizeof(struct vnt_tx_short_buf_head) + skb->len;
+ 
+-- 
+2.0.1
 
