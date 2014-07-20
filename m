@@ -1,232 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33019 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978AbaGYS0w (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:40470 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbaGTMck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 14:26:52 -0400
-Subject: [PATCH v4 1/2] ath: Move spectral debugfs structs to shared header
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 25 Jul 2014 21:19:12 +0300
-Message-ID: <20140725181912.10809.4781.stgit@potku.adurom.net> (sfid-20140725_202657_870604_3430881A)
-In-Reply-To: <20140725181753.10809.84231.stgit@potku.adurom.net>
-References: <20140725181753.10809.84231.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 20 Jul 2014 08:32:40 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so3011382wiv.2
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:32:39 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCH 2/2] mac80211: add enable_dynack API
+Date: Sun, 20 Jul 2014 14:32:35 +0200
+Message-Id: <1405859555-31806-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_145108_413413_B3F61FC2)
+In-Reply-To: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sven Eckelmann <sven@narfation.org>
+Add enable_dynack API to mac80211 in order to enable the estimation
+of ack timeout (dynack). Currently dynack is supported just by ath9k
 
-The ath9k and ath10k will share the definitions of the debugfs spectral
-structures and enums. Having them in the same place helps to avoid conflicts.
-
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/spectral.h  |   71 +----------------------
- drivers/net/wireless/ath/spectral_common.h |   88 ++++++++++++++++++++++++++++
- 2 files changed, 90 insertions(+), 69 deletions(-)
- create mode 100644 drivers/net/wireless/ath/spectral_common.h
+ include/net/mac80211.h    |  4 ++++
+ net/mac80211/cfg.c        |  8 ++++++++
+ net/mac80211/driver-ops.h | 14 ++++++++++++++
+ net/mac80211/trace.h      |  5 +++++
+ 4 files changed, 31 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index ead63412ee1a..7b410c6858b0 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -17,6 +17,8 @@
- #ifndef SPECTRAL_H
- #define SPECTRAL_H
- 
-+#include "../spectral_common.h"
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9ce5cb1..723db9b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2840,6 +2840,8 @@ enum ieee80211_roc_type {
+  * @get_expected_throughput: extract the expected throughput towards the
+  *	specified station. The returned value is expressed in Kbps. It returns 0
+  *	if the RC algorithm does not have proper data to provide.
++ *
++ * @enable_dynack: Enable ack timeout estimation algorithm
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3041,6 +3043,8 @@ struct ieee80211_ops {
+ 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
 +
- /* enum spectral_mode:
-  *
-  * @SPECTRAL_DISABLED: spectral mode is disabled
-@@ -54,8 +56,6 @@ struct ath_ht20_mag_info {
- 	u8 max_exp;
- } __packed;
++	int (*enable_dynack)(struct ieee80211_hw *hw);
+ };
  
--#define SPECTRAL_HT20_NUM_BINS		56
--
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data by -1/+2. This struct is for reference only.
-  */
-@@ -83,8 +83,6 @@ struct ath_ht20_40_mag_info {
- 	u8 max_exp;
- } __packed;
- 
--#define SPECTRAL_HT20_40_NUM_BINS		128
--
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data. This struct is for reference only.
-  */
-@@ -125,71 +123,6 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- 	return bins[0] & 0x3f;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 927b4ea..cb7c514 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3481,6 +3481,13 @@ static int ieee80211_set_ap_chanwidth(struct wiphy *wiphy,
+ 	return ret;
  }
  
--/* FFT sample format given to userspace via debugfs.
-- *
-- * Please keep the type/length at the front position and change
-- * other fields after adding another sample type
-- *
-- * TODO: this might need rework when switching to nl80211-based
-- * interface.
-- */
--enum ath_fft_sample_type {
--	ATH_FFT_SAMPLE_HT20 = 1,
--	ATH_FFT_SAMPLE_HT20_40,
--};
--
--struct fft_sample_tlv {
--	u8 type;	/* see ath_fft_sample */
--	__be16 length;
--	/* type dependent data follows */
--} __packed;
--
--struct fft_sample_ht20 {
--	struct fft_sample_tlv tlv;
--
--	u8 max_exp;
--
--	__be16 freq;
--	s8 rssi;
--	s8 noise;
--
--	__be16 max_magnitude;
--	u8 max_index;
--	u8 bitmap_weight;
--
--	__be64 tsf;
--
--	u8 data[SPECTRAL_HT20_NUM_BINS];
--} __packed;
--
--struct fft_sample_ht20_40 {
--	struct fft_sample_tlv tlv;
--
--	u8 channel_type;
--	__be16 freq;
--
--	s8 lower_rssi;
--	s8 upper_rssi;
--
--	__be64 tsf;
--
--	s8 lower_noise;
--	s8 upper_noise;
--
--	__be16 lower_max_magnitude;
--	__be16 upper_max_magnitude;
--
--	u8 lower_max_index;
--	u8 upper_max_index;
--
--	u8 lower_bitmap_weight;
--	u8 upper_bitmap_weight;
--
--	u8 max_exp;
--
--	u8 data[SPECTRAL_HT20_40_NUM_BINS];
--} __packed;
--
- void ath9k_spectral_init_debug(struct ath_softc *sc);
- void ath9k_spectral_deinit_debug(struct ath_softc *sc);
++static int ieee80211_enable_dynack(struct wiphy *wiphy)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_enable_dynack(local);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3557,4 +3564,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.channel_switch = ieee80211_channel_switch,
+ 	.set_qos_map = ieee80211_set_qos_map,
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
++	.enable_dynack = ieee80211_enable_dynack,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1142395..5968c00 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1238,4 +1238,18 @@ static inline u32 drv_get_expected_throughput(struct ieee80211_local *local,
+ 	return ret;
+ }
  
-diff --git a/drivers/net/wireless/ath/spectral_common.h b/drivers/net/wireless/ath/spectral_common.h
-new file mode 100644
-index 000000000000..b9ab722747bd
---- /dev/null
-+++ b/drivers/net/wireless/ath/spectral_common.h
-@@ -0,0 +1,88 @@
-+/*
-+ * Copyright (c) 2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
++static inline int drv_enable_dynack(struct ieee80211_local *local)
++{
++	int ret = -EOPNOTSUPP;
 +
-+#ifndef SPECTRAL_COMMON_H
-+#define SPECTRAL_COMMON_H
++	might_sleep();
 +
-+#define SPECTRAL_HT20_NUM_BINS		56
-+#define SPECTRAL_HT20_40_NUM_BINS		128
++	trace_drv_enable_dynack(local);
++	if (local->ops->enable_dynack)
++		ret = local->ops->enable_dynack(&local->hw);
++	trace_drv_return_int(local, ret);
 +
-+/* FFT sample format given to userspace via debugfs.
-+ *
-+ * Please keep the type/length at the front position and change
-+ * other fields after adding another sample type
-+ *
-+ * TODO: this might need rework when switching to nl80211-based
-+ * interface.
-+ */
-+enum ath_fft_sample_type {
-+	ATH_FFT_SAMPLE_HT20 = 1,
-+	ATH_FFT_SAMPLE_HT20_40,
-+};
++	return ret;
++}
 +
-+struct fft_sample_tlv {
-+	u8 type;	/* see ath_fft_sample */
-+	__be16 length;
-+	/* type dependent data follows */
-+} __packed;
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 02ac535..7523eee 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1623,6 +1623,11 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_only_evt, drv_enable_dynack,
++	TP_PROTO(struct ieee80211_local *local),
++	TP_ARGS(local)
++);
 +
-+struct fft_sample_ht20 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 max_exp;
-+
-+	__be16 freq;
-+	s8 rssi;
-+	s8 noise;
-+
-+	__be16 max_magnitude;
-+	u8 max_index;
-+	u8 bitmap_weight;
-+
-+	__be64 tsf;
-+
-+	u8 data[SPECTRAL_HT20_NUM_BINS];
-+} __packed;
-+
-+struct fft_sample_ht20_40 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 channel_type;
-+	__be16 freq;
-+
-+	s8 lower_rssi;
-+	s8 upper_rssi;
-+
-+	__be64 tsf;
-+
-+	s8 lower_noise;
-+	s8 upper_noise;
-+
-+	__be16 lower_max_magnitude;
-+	__be16 upper_max_magnitude;
-+
-+	u8 lower_max_index;
-+	u8 upper_max_index;
-+
-+	u8 lower_bitmap_weight;
-+	u8 upper_bitmap_weight;
-+
-+	u8 max_exp;
-+
-+	u8 data[SPECTRAL_HT20_40_NUM_BINS];
-+} __packed;
-+
-+#endif /* SPECTRAL_COMMON_H */
+ /*
+  * Tracing for API calls that drivers call.
+  */
+-- 
+1.9.1
 
