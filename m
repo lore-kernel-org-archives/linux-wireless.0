@@ -1,114 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:47024 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbaG1UQV (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:50235 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753877AbaGTOex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:16:21 -0400
-Date: Mon, 28 Jul 2014 23:16:10 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gustavo@padovan.org
-Subject: pull request: bluetooth-next 2014-07-28
-Message-ID: <20140728201610.GA29494@t440s.P-661HNU-F1> (sfid-20140728_221639_016026_AEFB4AE0)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="AhhlLboLdkugWU4S"
+	Sun, 20 Jul 2014 10:34:53 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so6344603wes.6
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 18/25] staging: vt6656: struct vnt_private rename byBBPreEDIndex with bb_pre_ed_index
+Date: Sun, 20 Jul 2014 15:33:28 +0100
+Message-Id: <1405866815-2687-18-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165109_143693_1EBD6AED)
+In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removing type prefix and camel case.
 
---AhhlLboLdkugWU4S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi John,
-
-This pull request should replace the previous one that Gustavo made
-(bluetooth-next 2014-07-23).
-
-To quote Gustavo from his previous request:
-
-"Some last minute fixes for -next. We have a fix for a use after free in
-RFCOMM, another fix to an issue with ADV_DIRECT_IND and one for ADV_IND with
-auto-connection handling.  Last, we added support for reading the codec and
-MWS setting for controllers that support these features."
-
-Additionally there are fixes to LE scanning, an update to conform to the 4.1
-core specification as well as fixes for tracking the page scan state. All
-of these fixes are important for 3.17.
-
-Let me know if there are any issues. Thanks.
-
-Johan
-
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-The following changes since commit c2aef6e8cbebd60f79555baeb9266e220f135a44:
+ drivers/staging/vt6656/baseband.c | 6 +++---
+ drivers/staging/vt6656/device.h   | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-  Bluetooth: Add support for Broadcom device of Asus Z97-DELUXE motherboard (2014-07-21 15:07:08 +0300)
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index e15e842..e6c7b60 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -568,7 +568,7 @@ void vnt_exit_deep_sleep(struct vnt_private *priv)
+ void vnt_update_pre_ed_threshold(struct vnt_private *priv, int scanning)
+ {
+ 	u8 cr_201 = 0x0, cr_206 = 0x0;
+-	u8 ed_inx = priv->byBBPreEDIndex;
++	u8 ed_inx = priv->bb_pre_ed_index;
+ 
+ 	switch (priv->rf_type) {
+ 	case RF_AL2230:
+@@ -816,10 +816,10 @@ void vnt_update_pre_ed_threshold(struct vnt_private *priv, int scanning)
+ 
+ 	}
+ 
+-	if (ed_inx == priv->byBBPreEDIndex && !scanning)
++	if (ed_inx == priv->bb_pre_ed_index && !scanning)
+ 		return;
+ 
+-	priv->byBBPreEDIndex = ed_inx;
++	priv->bb_pre_ed_index = ed_inx;
+ 
+ 	dev_dbg(&priv->usb->dev, "%s bb_pre_ed_rssi %d\n",
+ 					__func__, priv->bb_pre_ed_rssi);
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index e97283b..101d0ca 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -386,7 +386,7 @@ struct vnt_private {
+ 	u8 bb_vga[BB_VGA_LEVEL];
+ 
+ 	u8 bb_pre_ed_rssi;
+-	u8 byBBPreEDIndex;
++	u8 bb_pre_ed_index;
+ 
+ 	/* command timer */
+ 	struct delayed_work run_command_work;
+-- 
+2.0.1
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to 3bd2724010a51d5d15afa8065ac3c5fab3725499:
-
-  Bluetooth: Fix incorrectly disabling page scan when toggling connectable (2014-07-28 20:13:32 +0200)
-
-----------------------------------------------------------------
-Alexander Aring (1):
-      MAINTAINERS: add 6lowpan header file
-
-Georg Lukas (2):
-      Bluetooth: Provide defaults for LE advertising interval
-      Bluetooth: Expose default LE advertising interval via debugfs
-
-Johan Hedberg (2):
-      Bluetooth: Fix clearing HCI_PSCAN flag
-      Bluetooth: Fix incorrectly disabling page scan when toggling connectable
-
-Marcel Holtmann (7):
-      Bluetooth: Read list of local codecs supported by the controller
-      Bluetooth: Get MWS transport configuration of the controller
-      Bluetooth: Ignore ADV_DIRECT_IND attempts from unknown devices
-      Bluetooth: Fix issue with ADV_IND reports and auto-connection handling
-      Bluetooth: Add support for using controller white list filtering
-      Bluetooth: Fix white list handling with resolvable private addresses
-      Bluetooth: Set Simultaneous LE and BR/EDR controller option to zero
-
-Vignesh Raman (1):
-      Bluetooth: Avoid use of session socket after the session gets freed
-
- MAINTAINERS                      |   1 +
- include/net/bluetooth/hci.h      |   4 +
- include/net/bluetooth/hci_core.h |   3 +
- net/bluetooth/hci_core.c         | 181 ++++++++++++++++++++++++++++++++++-
- net/bluetooth/hci_event.c        |  35 +++++--
- net/bluetooth/mgmt.c             |  33 +++++--
- net/bluetooth/rfcomm/core.c      |   7 +-
- net/bluetooth/smp.c              |  16 ++++
- 8 files changed, 260 insertions(+), 20 deletions(-)
-
-
---AhhlLboLdkugWU4S
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJT1q+KAAoJECQj9vv5qNQSDVkP/01iGLQLN0QCodBet7dGMRgu
-sQxhNjqzjOkfgfTTIfl2BBBa4h10nHp+h9Qm65zp8oWNJc/rSVjZfC6Vq2CU/iNO
-oxZ5Wt3n3WDr3wT3Tsccc1EglJc6Bgd9vso5GG97VSD0j1PDDVLITeJxtfH6J7Ry
-VHzaRsqsAOsLt+UqWe1Rb++nTChI6zJkv8WTP7+gJTQEAghePHSFGvHdq8ylnXE8
-Hrtwh6E1ktBTiIwjDMTgizi8rfxkWR/uwv8zxxv/v+O/FeO+43BA6lotaj98/qVq
-lqKbBnwqMc2Rl4FL5s3IRt9MJNasTACv4MYHVbtiMYw8mQa2XOETfDJZoWHRBKrT
-3+wBme6uShQH87y0xB5gaZTl6KERcR9QeqKy9/peUiHb7cmpHDJWEAP2wlJ0QLNJ
-bLy4zv++w9kuIyBcq4EJjek5de5HUXjSEyq0JewFYFfzlrpBdUhBrBbAPar4wo1n
-DcTsy15p6gvl8xnsjrOqjEb58gcN+dd6c4rC0ycMoKKBSWJAEu7hc+4VI95TJpp6
-HOQS81Mg4Whzy5rnrIUgI0tVI4vV9E0Q19wKQNOgIcovUngt1hOE1hiL9QSI4pbf
-pwW6u2rFpYPKhU1UG6Uq3fckJ723jInHytVPyd6piqSoTMNENXo/uoKyl2Nulg4v
-AnD3L1RK5cV+vXo4Rk0m
-=Hlxn
------END PGP SIGNATURE-----
-
---AhhlLboLdkugWU4S--
