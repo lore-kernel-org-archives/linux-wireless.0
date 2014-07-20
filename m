@@ -1,78 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:33162 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754512AbaGSLbA (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54488 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701AbaGTDG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 07:31:00 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so1996311wiw.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 04:30:59 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/16] staging: vt6656: struct vnt_private rename wFirmwareVersion to firmware_version
-Date: Sat, 19 Jul 2014 12:30:05 +0100
-Message-Id: <1405769418-2815-3-git-send-email-tvboxspy@gmail.com> (sfid-20140719_133109_067878_81A2DCBD)
-In-Reply-To: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
-References: <1405769418-2815-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 19 Jul 2014 23:06:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <1405373897-31671-6-git-send-email-keescook@chromium.org>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-6-git-send-email-keescook@chromium.org>
+Date: Sun, 20 Jul 2014 11:06:55 +0800
+Message-ID: <CACVXFVOwG8ekCdrKuCndsqaJS1H7uVwJuEP-B6hxNsu9yM-g9w@mail.gmail.com> (sfid-20140720_050724_849699_B100CC07)
+Subject: Re: [PATCH 5/7] firmware_class: extract start loading logic
+From: Ming Lei <ming.lei@canonical.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case
+On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
+> Extract the logic performed when starting a new firmware load.
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   |  2 +-
- drivers/staging/vt6656/firmware.c | 10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Acked-by: Ming Lei <ming.lei@canonical.com>
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 416a55d..b9f4841 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -299,7 +299,7 @@ struct vnt_private {
- 	struct vnt_interrupt_buffer int_buf;
- 
- 	/* Version control */
--	u16 wFirmwareVersion;
-+	u16 firmware_version;
- 	u8 byLocalID;
- 	u8 byRFType;
- 	u8 byBBRxConf;
-diff --git a/drivers/staging/vt6656/firmware.c b/drivers/staging/vt6656/firmware.c
-index f2250ee..eae4f32d 100644
---- a/drivers/staging/vt6656/firmware.c
-+++ b/drivers/staging/vt6656/firmware.c
-@@ -118,24 +118,24 @@ int vnt_check_firmware_version(struct vnt_private *priv)
- 					0,
- 					MESSAGE_REQUEST_VERSION,
- 					2,
--					(u8 *) &(priv->wFirmwareVersion));
-+					(u8 *)&priv->firmware_version);
- 
- 	dev_dbg(&priv->usb->dev, "Firmware Version [%04x]\n",
--						priv->wFirmwareVersion);
-+						priv->firmware_version);
- 
- 	if (status != STATUS_SUCCESS) {
- 		dev_dbg(&priv->usb->dev, "Firmware Invalid.\n");
- 		return false;
- 	}
--	if (priv->wFirmwareVersion == 0xFFFF) {
-+	if (priv->firmware_version == 0xFFFF) {
- 		dev_dbg(&priv->usb->dev, "In Loader.\n");
- 		return false;
- 	}
- 
- 	dev_dbg(&priv->usb->dev, "Firmware Version [%04x]\n",
--						priv->wFirmwareVersion);
-+						priv->firmware_version);
- 
--	if (priv->wFirmwareVersion < FIRMWARE_VERSION) {
-+	if (priv->firmware_version < FIRMWARE_VERSION) {
- 		/* branch to loader for download new firmware */
- 		vnt_firmware_branch_to_sram(priv);
- 		return false;
--- 
-2.0.1
-
+> ---
+>  drivers/base/firmware_class.c |   29 ++++++++++++++++++-----------
+>  1 file changed, 18 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> index 7399bab71ced..b38cbcd6ebb1 100644
+> --- a/drivers/base/firmware_class.c
+> +++ b/drivers/base/firmware_class.c
+> @@ -604,6 +604,23 @@ static int fw_map_pages_buf(struct firmware_buf *buf)
+>         return 0;
+>  }
+>
+> +/* fw_lock must be held */
+> +static void fw_load_start(struct firmware_buf *fw_buf)
+> +{
+> +       /* discarding any previous partial load */
+> +       if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
+> +               int i;
+> +
+> +               for (i = 0; i < fw_buf->nr_pages; i++)
+> +                       __free_page(fw_buf->pages[i]);
+> +               kfree(fw_buf->pages);
+> +               fw_buf->pages = NULL;
+> +               fw_buf->page_array_size = 0;
+> +               fw_buf->nr_pages = 0;
+> +               set_bit(FW_STATUS_LOADING, &fw_buf->status);
+> +       }
+> +}
+> +
+>  /**
+>   * firmware_loading_store - set value in the 'loading' control file
+>   * @dev: device pointer
+> @@ -624,7 +641,6 @@ static ssize_t firmware_loading_store(struct device *dev,
+>         struct firmware_priv *fw_priv = to_firmware_priv(dev);
+>         struct firmware_buf *fw_buf;
+>         int loading = simple_strtol(buf, NULL, 10);
+> -       int i;
+>
+>         mutex_lock(&fw_lock);
+>         fw_buf = fw_priv->buf;
+> @@ -633,16 +649,7 @@ static ssize_t firmware_loading_store(struct device *dev,
+>
+>         switch (loading) {
+>         case 1:
+> -               /* discarding any previous partial load */
+> -               if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
+> -                       for (i = 0; i < fw_buf->nr_pages; i++)
+> -                               __free_page(fw_buf->pages[i]);
+> -                       kfree(fw_buf->pages);
+> -                       fw_buf->pages = NULL;
+> -                       fw_buf->page_array_size = 0;
+> -                       fw_buf->nr_pages = 0;
+> -                       set_bit(FW_STATUS_LOADING, &fw_buf->status);
+> -               }
+> +               fw_load_start(fw_buf);
+>                 break;
+>         case 0:
+>                 if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
