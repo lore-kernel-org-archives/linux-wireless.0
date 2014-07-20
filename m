@@ -1,96 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:54679 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbaGPVaY (ORCPT
+Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:37955 "EHLO
+	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752955AbaGTO0m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:30:24 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so1985219wiv.13
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:30:19 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/21] staging: vt6656: rename BBvSetAntennaMode to vnt_set_antenna_mode
-Date: Wed, 16 Jul 2014 22:21:52 +0100
-Message-Id: <1405545731-6082-2-git-send-email-tvboxspy@gmail.com> (sfid-20140716_233027_507376_8F04CD9E)
-In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
-References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 20 Jul 2014 10:26:42 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, joe@perches.com,
+	Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 13/30] airo: remove unnecessary break after return
+Date: Sun, 20 Jul 2014 16:25:14 +0200
+Message-Id: <1405866332-24652-4-git-send-email-fabf@skynet.be> (sfid-20140720_163243_893811_34064F33)
+In-Reply-To: <1405866332-24652-1-git-send-email-fabf@skynet.be>
+References: <1405866332-24652-1-git-send-email-fabf@skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dropping BB
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
 ---
- drivers/staging/vt6656/baseband.c | 2 +-
- drivers/staging/vt6656/baseband.h | 2 +-
- drivers/staging/vt6656/main_usb.c | 2 +-
- drivers/staging/vt6656/wcmd.c     | 8 ++++----
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/airo.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index e56defa..6586614 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -345,7 +345,7 @@ void vnt_get_phy_field(struct vnt_private *priv, u32 frame_length,
-  * Return Value: none
-  *
-  */
--void BBvSetAntennaMode(struct vnt_private *priv, u8 antenna_mode)
-+void vnt_set_antenna_mode(struct vnt_private *priv, u8 antenna_mode)
- {
- 	switch (antenna_mode) {
- 	case ANT_TXA:
-diff --git a/drivers/staging/vt6656/baseband.h b/drivers/staging/vt6656/baseband.h
-index c73244b..a612690 100644
---- a/drivers/staging/vt6656/baseband.h
-+++ b/drivers/staging/vt6656/baseband.h
-@@ -95,7 +95,7 @@ void vnt_get_phy_field(struct vnt_private *, u32 frame_length,
- 
- void BBvSetShortSlotTime(struct vnt_private *);
- void BBvSetVGAGainOffset(struct vnt_private *, u8 byData);
--void BBvSetAntennaMode(struct vnt_private *, u8 byAntennaMode);
-+void vnt_set_antenna_mode(struct vnt_private *, u8);
- int BBbVT3184Init(struct vnt_private *);
- void BBvSetDeepSleep(struct vnt_private *);
- void BBvExitDeepSleep(struct vnt_private *);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index c595a15..7cd4c2b 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -371,7 +371,7 @@ static int device_init_registers(struct vnt_private *pDevice)
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 64747d4..c26359d 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -7817,7 +7817,6 @@ static int readrids(struct net_device *dev, aironet_ioctl *comp) {
+ 	case AIRORRID:      ridcode = comp->ridnum;     break;
+ 	default:
+ 		return -EINVAL;
+-		break;
  	}
  
- 	/* Set initial antenna mode */
--	BBvSetAntennaMode(pDevice, pDevice->byRxAntennaMode);
-+	vnt_set_antenna_mode(pDevice, pDevice->byRxAntennaMode);
- 
- 	/* get Auto Fall Back type */
- 	pDevice->byAutoFBCtrl = AUTO_FB_0;
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index bf41e67..c56b7b3 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -151,15 +151,15 @@ void vnt_run_command(struct work_struct *work)
- 		if (priv->dwRxAntennaSel == 0) {
- 			priv->dwRxAntennaSel = 1;
- 			if (priv->bTxRxAntInv == true)
--				BBvSetAntennaMode(priv, ANT_RXA);
-+				vnt_set_antenna_mode(priv, ANT_RXA);
- 			else
--				BBvSetAntennaMode(priv, ANT_RXB);
-+				vnt_set_antenna_mode(priv, ANT_RXB);
- 		} else {
- 			priv->dwRxAntennaSel = 0;
- 			if (priv->bTxRxAntInv == true)
--				BBvSetAntennaMode(priv, ANT_RXB);
-+				vnt_set_antenna_mode(priv, ANT_RXB);
- 			else
--				BBvSetAntennaMode(priv, ANT_RXA);
-+				vnt_set_antenna_mode(priv, ANT_RXA);
- 		}
- 		break;
- 
+ 	if ((iobuf = kmalloc(RIDSIZE, GFP_KERNEL)) == NULL)
 -- 
-2.0.1
+1.9.1
 
