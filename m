@@ -1,182 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:36360 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbaGQRc4 (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:47198 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752415AbaGTRny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 13:32:56 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so2393993wgh.14
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:32:55 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 5/6] b43: use one shared function for setting MAC frequency
-Date: Thu, 17 Jul 2014 19:31:05 +0200
-Message-Id: <1405618266-20200-5-git-send-email-zajec5@gmail.com> (sfid-20140717_193304_625695_6E14A7E5)
-In-Reply-To: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
-References: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
+	Sun, 20 Jul 2014 13:43:54 -0400
+Received: by mail-oa0-f47.google.com with SMTP id g18so6190402oah.6
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 10:43:53 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-7-git-send-email-keescook@chromium.org>
+	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+Date: Sun, 20 Jul 2014 10:43:53 -0700
+Message-ID: <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com> (sfid-20140720_194400_823415_A4352D43)
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+From: Kees Cook <keescook@chromium.org>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By the way add few chipsets that were tracked with "wl" dumps.
+On Sat, Jul 19, 2014 at 8:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
+>> As an alternative to loading bytes from the "data" blob when reading
+>> firmware, let kernel read from an fd, so that the LSM can reason about
+>> the origin of firmware contents during userspace on-demand loading.
+>
+> From user space view, maybe it is better to keep previous usage and just
+> check if loading is from 'data' blob or fd in 'echo 0 > loading' of
+> firmware_loading_store(), then the 'fd' usage becomes very similar with
+> before.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c    | 39 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/main.h    |  1 +
- drivers/net/wireless/b43/phy_lcn.c | 35 +---------------------------------
- drivers/net/wireless/b43/phy_n.c   |  7 +------
- include/linux/bcma/bcma.h          |  1 +
- 5 files changed, 43 insertions(+), 40 deletions(-)
+I don't think this is a good idea because otherwise there isn't a good
+way to have an "atomic" check of the firmware contents. What does it
+means to write to "fd" several times, then write "data" a little,
+before writing "loading", etc? I originally wrote the patch series
+requiring the "loading" piece, and it ended up being very complicated
+due to needing to switch the memory buffer logic back and forth.
+Everything is much much cleaner if "fd" is single-shot, and not part
+of the loading/data interface semantics.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 3dcd3aa..3e127be 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2964,6 +2964,45 @@ void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on)
- 	}
- }
- 
-+/* brcms_b_switch_macfreq */
-+void b43_mac_switch_freq(struct b43_wldev *dev, u8 spurmode)
-+{
-+	u16 chip_id = dev->dev->chip_id;
-+
-+	if (chip_id == BCMA_CHIP_ID_BCM43217 ||
-+	    chip_id == BCMA_CHIP_ID_BCM43222 ||
-+	    chip_id == BCMA_CHIP_ID_BCM43224 ||
-+	    chip_id == BCMA_CHIP_ID_BCM43225 ||
-+	    chip_id == BCMA_CHIP_ID_BCM43227 ||
-+	    chip_id == BCMA_CHIP_ID_BCM43228) {
-+		switch (spurmode) {
-+		case 2: /* 126 Mhz */
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x2082);
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
-+			break;
-+		case 1: /* 123 Mhz */
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x5341);
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
-+			break;
-+		default: /* 120 Mhz */
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x8889);
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
-+			break;
-+		}
-+	} else if (dev->phy.type == B43_PHYTYPE_LCN) {
-+		switch (spurmode) {
-+		case 1: /* 82 Mhz */
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x7CE0);
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0xC);
-+			break;
-+		default: /* 80 Mhz */
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0xCCCD);
-+			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0xC);
-+			break;
-+		}
-+	}
-+}
-+
- static void b43_adjust_opmode(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl = dev->wl;
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index f476fc3..9f22e4b 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -99,6 +99,7 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags);
- void b43_mac_suspend(struct b43_wldev *dev);
- void b43_mac_enable(struct b43_wldev *dev);
- void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on);
-+void b43_mac_switch_freq(struct b43_wldev *dev, u8 spurmode);
- 
- 
- struct b43_request_fw_context;
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 0bafa3b..e76bbdf 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -54,39 +54,6 @@ enum lcn_sense_type {
- 	B43_SENSE_VBAT,
- };
- 
--/* In theory it's PHY common function, move if needed */
--/* brcms_b_switch_macfreq */
--static void b43_phy_switch_macfreq(struct b43_wldev *dev, u8 spurmode)
--{
--	if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
--		switch (spurmode) {
--		case 2:		/* 126 Mhz */
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x2082);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
--			break;
--		case 1:		/* 123 Mhz */
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x5341);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
--			break;
--		default:	/* 120 Mhz */
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x8889);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
--			break;
--		}
--	} else if (dev->phy.type == B43_PHYTYPE_LCN) {
--		switch (spurmode) {
--		case 1:		/* 82 Mhz */
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0x7CE0);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0xC);
--			break;
--		default:	/* 80 Mhz */
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, 0xCCCD);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0xC);
--			break;
--		}
--	}
--}
--
- /**************************************************
-  * Radio 2064.
-  **************************************************/
-@@ -609,7 +576,7 @@ static void b43_phy_lcn_txrx_spur_avoidance_mode(struct b43_wldev *dev,
- 		b43_phy_write(dev, 0x93b, ((0 << 13) + 23));
- 		b43_phy_write(dev, 0x93c, ((0 << 13) + 1989));
- 	}
--	b43_phy_switch_macfreq(dev, enable);
-+	b43_mac_switch_freq(dev, enable);
- }
- 
- /**************************************************
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index ef1acae..0f0c130 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -6113,12 +6113,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 
- 		b43_nphy_pmu_spur_avoid(dev, avoid);
- 
--		if (dev->dev->chip_id == 43222 || dev->dev->chip_id == 43224 ||
--		    dev->dev->chip_id == 43225) {
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW,
--				    avoid ? 0x5341 : 0x8889);
--			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
--		}
-+		b43_mac_switch_freq(dev, avoid);
- 
- 		if (dev->phy.rev == 3 || dev->phy.rev == 4)
- 			; /* TODO: reset PLL */
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 7cb2344..969af0f 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -159,6 +159,7 @@ struct bcma_host_ops {
- #define BCMA_CHIP_ID_BCM4313	0x4313
- #define BCMA_CHIP_ID_BCM43142	43142
- #define BCMA_CHIP_ID_BCM43217	43217
-+#define BCMA_CHIP_ID_BCM43222	43222
- #define BCMA_CHIP_ID_BCM43224	43224
- #define  BCMA_PKG_ID_BCM43224_FAB_CSM	0x8
- #define  BCMA_PKG_ID_BCM43224_FAB_SMIC	0xa
+And, as it turns out, the userspace changes are much simpler if
+"loading" isn't part of the picture for the "fd" interface, too.
+
+-Kees
+
+>
+>>
+>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>> ---
+>>  Documentation/firmware_class/README |   10 +++++
+>>  drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
+>>  2 files changed, 86 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
+>> index 71f86859d7d8..d899bdacba1e 100644
+>> --- a/Documentation/firmware_class/README
+>> +++ b/Documentation/firmware_class/README
+>> @@ -59,6 +59,16 @@
+>>   8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
+>>                  the firmware image and any related resource.
+>>
+>> + Alternative loading (via file descriptor):
+>> + ==========================================
+>> + Instead of "loading", and "data" above, firmware can be loaded through
+>> + an open file descriptor as well, via the "fd" file:
+>> +
+>> + Replacing steps 2 thorugh 6 above with the following userspace actions,
+>> + performs the same loading:
+>> +       - open firmware image file (e.g. as fd 3).
+>> +       - write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
+>
+> Then as above, here should be just to replace step 4, 5 as
+>           - open image in user space
+>           - echo fd > /sys/class/firmware/xxx/fd
+>
+>> +
+>>   High level behavior (driver code):
+>>   ==================================
+>>
+>> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+>> index b38cbcd6ebb1..eac996447d28 100644
+>> --- a/drivers/base/firmware_class.c
+>> +++ b/drivers/base/firmware_class.c
+>> @@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
+>>         .write = firmware_data_write,
+>>  };
+>>
+>> +/**
+>> + * fd_store - set value in the 'fd' control file
+>> + * @dev: device pointer
+>> + * @attr: device attribute pointer
+>> + * @buf: buffer to scan for loading fd value
+>> + * @count: number of bytes in @buf
+>> + *
+>> + * Parses an fd number from buf, and then loads firmware bytes from
+>> + * the current process's matching open fd.
+>> + *
+>> + **/
+>> +static ssize_t fd_store(struct device *dev,
+>> +                                struct device_attribute *attr,
+>> +                                const char *buf, size_t count)
+>> +{
+>> +       struct firmware_priv *fw_priv = to_firmware_priv(dev);
+>> +       struct firmware_buf *fw_buf = fw_priv->buf;
+>> +       ssize_t retval;
+>> +       int fd;
+>> +       struct fd f;
+>> +
+>> +       if (!capable(CAP_SYS_RAWIO))
+>> +               return -EPERM;
+>> +
+>> +       retval = kstrtoint(buf, 10, &fd);
+>> +       if (retval)
+>> +               return retval;
+>> +
+>> +       f = fdget(fd);
+>> +       if (!f.file)
+>> +               return -EBADF;
+>> +
+>> +       mutex_lock(&fw_lock);
+>> +       /* If we raced another loader, we must fail. */
+>> +       if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
+>> +               retval = -EINVAL;
+>> +               goto unlock;
+>> +       }
+>> +
+>> +       fw_load_start(fw_buf);
+>> +       /* fw_read_file_contents uses vmalloc, not pages. */
+>> +       fw_buf->is_paged_buf = false;
+>> +       retval = fw_read_file_contents(f.file, fw_buf);
+>> +       if (retval) {
+>> +               /* If we called fw_load_start, we must abort on fail. */
+>> +               fw_load_abort(fw_priv);
+>> +               goto unlock;
+>> +       }
+>> +
+>> +       /* Success. */
+>> +       set_bit(FW_STATUS_DONE, &fw_buf->status);
+>> +       list_del_init(&fw_buf->pending_list);
+>> +       complete_all(&fw_buf->completion);
+>> +
+>> +unlock:
+>> +       mutex_unlock(&fw_lock);
+>> +       fdput(f);
+>> +
+>> +       if (retval)
+>> +               return retval;
+>> +       return count;
+>> +}
+>> +static DEVICE_ATTR_WO(fd);
+>> +
+>>  static void firmware_class_timeout_work(struct work_struct *work)
+>>  {
+>>         struct firmware_priv *fw_priv = container_of(work,
+>> @@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
+>>                 mutex_lock(&fw_lock);
+>>                 list_del_init(&buf->pending_list);
+>>                 mutex_unlock(&fw_lock);
+>> -               dev_err(f_dev, "%s: device_create_file failed\n", __func__);
+>> +               dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
+>>                 goto err_del_bin_attr;
+>>         }
+>>
+>> +       retval = device_create_file(f_dev, &dev_attr_fd);
+>> +       if (retval) {
+>> +               mutex_lock(&fw_lock);
+>> +               list_del_init(&buf->pending_list);
+>> +               mutex_unlock(&fw_lock);
+>> +               dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
+>> +               goto err_del_loading;
+>> +       }
+>> +
+>>         if (opt_flags & FW_OPT_UEVENT) {
+>>                 buf->need_uevent = true;
+>>                 dev_set_uevent_suppress(f_dev, false);
+>> @@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
+>>         if (!buf->data)
+>>                 retval = -ENOMEM;
+>>
+>> +       device_remove_file(f_dev, &dev_attr_fd);
+>> +err_del_loading:
+>>         device_remove_file(f_dev, &dev_attr_loading);
+>>  err_del_bin_attr:
+>>         device_remove_bin_file(f_dev, &firmware_attr_data);
+>> --
+>> 1.7.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
 -- 
-1.8.4.5
-
+Kees Cook
+Chrome OS Security
