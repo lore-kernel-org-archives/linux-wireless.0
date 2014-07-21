@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:45558 "EHLO
-	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752360AbaGTOTZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:19:25 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, joe@perches.com,
-	Fabian Frederick <fabf@skynet.be>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH 03/30] brcm80211: remove unnecessary break after return
-Date: Sun, 20 Jul 2014 16:16:11 +0200
-Message-Id: <1405865801-18806-4-git-send-email-fabf@skynet.be> (sfid-20140720_161943_832468_DD44B3BA)
-In-Reply-To: <1405865801-18806-1-git-send-email-fabf@skynet.be>
-References: <1405865801-18806-1-git-send-email-fabf@skynet.be>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45336 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754178AbaGUKVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 06:21:49 -0400
+Message-ID: <1405938104.32255.18.camel@jlt4.sipsolutions.net> (sfid-20140721_122155_313843_924B357F)
+Subject: Re: [PATCH] mac80211: remove redundant IEEE80211_STA_CSA_RECEIVED
+ flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Mon, 21 Jul 2014 12:21:44 +0200
+In-Reply-To: <1404549781-5893-1-git-send-email-luca@coelho.fi>
+References: <1404549781-5893-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c       | 1 -
- drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c | 1 -
- 2 files changed, 2 deletions(-)
+On Sat, 2014-07-05 at 11:43 +0300, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> The csa_active flag was added in sdata a while ago and made
+> IEEE80211_STA_CSA_RECEIVED redundant.  The new flag is also used to
+> mark when CSA is ongoing on other iftypes and took over the old one as
+> the preferred method for checking whether we're in the middle of a
+> channel switch.  Remove the old, redundant flag.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index f3445ac..c563c65 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2364,7 +2364,6 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		return 0;
- 	default:
- 		return -ENOTSUPP;
--		break;
- 	}
- 
- 	clear_bit(BRCMF_P2P_STATUS_GO_NEG_PHASE, &p2p->status);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index 3e9f5b2..93869e8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -22916,7 +22916,6 @@ static void wlc_phy_rssi_cal_nphy_rev2(struct brcms_phy *pi, u8 rssi_type)
- 		break;
- 	default:
- 		return;
--		break;
- 	}
- 
- 	classif_state = wlc_phy_classifier_nphy(pi, 0, 0);
--- 
-1.9.1
+Applied.
+
+johannes
 
