@@ -1,115 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:33895 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897AbaGFLMQ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38521 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932629AbaGURnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 07:12:16 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so14666592wib.17
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 04:12:14 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: support for PCIe Gen 2 as host platform
-Date: Sun,  6 Jul 2014 13:11:43 +0200
-Message-Id: <1404645103-26100-1-git-send-email-zajec5@gmail.com> (sfid-20140706_131221_073840_0FAB0600)
+	Mon, 21 Jul 2014 13:43:19 -0400
+Date: Mon, 21 Jul 2014 10:43:18 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Kees Cook <kees@outflux.net>, Ming Lei <ming.lei@canonical.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+Message-ID: <20140721174318.GA15788@kroah.com> (sfid-20140721_194408_960862_25E98B9D)
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+ <1405373897-31671-7-git-send-email-keescook@chromium.org>
+ <CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+ <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
+ <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
+ <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
+ <20140721152635.GB6363@kroah.com>
+ <20140721154307.GG5412@outflux.net>
+ <20140721163646.GA14431@kroah.com>
+ <CAGXu5jJJsJG94m2EsX2XiH+M1J1nHaJXSrvMMiWbhtxtJN1Zbg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXu5jJJsJG94m2EsX2XiH+M1J1nHaJXSrvMMiWbhtxtJN1Zbg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-I got reply from Bjorn, that we should *not* depend on PCI_EXP_LNKCAP:
-http://marc.info/?l=linux-pci&m=140457671930896&w=2
+On Mon, Jul 21, 2014 at 10:27:33AM -0700, Kees Cook wrote:
+> On Mon, Jul 21, 2014 at 9:36 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Mon, Jul 21, 2014 at 08:43:07AM -0700, Kees Cook wrote:
+> >> On Mon, Jul 21, 2014 at 08:26:35AM -0700, Greg Kroah-Hartman wrote:
+> >> > On Mon, Jul 21, 2014 at 08:08:16AM -0700, Kees Cook wrote:
+> >> > > Perhaps it would be easier if I also sent the patch to udev's helper,
+> >> > > so you could see how I propose handling the userspace change to using
+> >> > > the new interface?
+> >> >
+> >> > As there is no more "udev firmware helper", I don't know what you would
+> >> > be patching here.  Firmware should always be loaded by the kernel
+> >> > directly, udev isn't involved anyore at all.
+> >> >
+> >> > confused,
+> >> >
+> >> > greg k-h
+> >>
+> >> The kernel _can_ load directly (when the paths are configured correctly),
+> >> but I'm not sure why you say udev isn't involved any more. It's been like
+> >> this for years, and even the latest systemd shows the udev rule is still in
+> >> place:
+> >> http://cgit.freedesktop.org/systemd/systemd/tree/rules/50-firmware.rules
+> >> and that the firmware loader is still in the source tree:
+> >> http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-firmware.c
+> >
+> > Ah, I thought that I had seen patches to delete this code on the systemd
+> > mailing list in the past, I didn't realize they hadn't been accepted
+> > yet.
+> >
+> > But, with my current tree, in linux-next, it's really hard to select the
+> > "external firmware loader" on purpose, as we want people to use the
+> > in-kernel one if at all possible, and only fall back to the "legacy"
+> > udev userspace loader if they are running on old userspace systems.
+> 
+> Heh. Where non-legacy means running a userspace with unaccepted
+> systemd patches? That's some serious time-travel. :)
 
-So the change since RFC is adding a list of PCIe 1.0 and 2.0 devices.
-Use PCI_EXP_LNKCAP only as a fallback, in case someone tries sth like:
-echo "14e4 4360" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
----
- drivers/bcma/host_pci.c        | 32 ++++++++++++++++++++++++++++++--
- include/linux/bcma/bcma.h      |  1 +
- include/linux/bcma/bcma_regs.h |  2 ++
- 3 files changed, 33 insertions(+), 2 deletions(-)
+Don't be so sure, I don't think that all distros enable the firmware
+option of udev today, so it might be more "real" than you think.
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index e3333053..df20a50 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -13,10 +13,12 @@
- 
- static void bcma_host_pci_switch_core(struct bcma_device *core)
- {
-+	int win2 = core->bus->host_is_pcie2 ?
-+		BCMA_PCIE2_BAR0_WIN2 : BCMA_PCI_BAR0_WIN2;
-+
- 	pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN,
- 			       core->addr);
--	pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN2,
--			       core->wrap);
-+	pci_write_config_dword(core->bus->host_pci, win2, core->wrap);
- 	core->bus->mapped_core = core;
- 	bcma_debug(core->bus, "Switched to core: 0x%X\n", core->id.id);
- }
-@@ -194,6 +196,32 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 		goto err_pci_release_regions;
- 	}
- 
-+	/* PCIe Gen 2 has some regs different */
-+	switch (dev->device) {
-+	case 0x0576:
-+	case 0x4313:
-+	case 43224:
-+	case 0x4331:
-+	case 0x4353:
-+	case 0x4357:
-+	case 0x4358:
-+	case 0x4359:
-+	case 0x4365:
-+	case 0x4727:
-+		bus->host_is_pcie2 = false;
-+		break;
-+	case 0x4360:
-+	case 0x43a0:
-+	case 0x43b1:
-+		bus->host_is_pcie2 = true;
-+		break;
-+	default:
-+		/* Fallback, e.g. if someone uses bcma-pci-bridge/new_id */
-+		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &val);
-+		bus->host_is_pcie2 = !!(val & PCI_EXP_LNKCAP_SLS_5_0GB);
-+		break;
-+	}
-+
- 	/* Map MMIO */
- 	err = -ENOMEM;
- 	bus->mmio = pci_iomap(dev, 0, ~0UL);
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 452286a..9f98e2f 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -315,6 +315,7 @@ struct bcma_bus {
- 	const struct bcma_host_ops *ops;
- 
- 	enum bcma_hosttype hosttype;
-+	bool host_is_pcie2; /* Valid for BCMA_HOSTTYPE_PCI only */
- 	union {
- 		/* Pointer to the PCI bus (only for BCMA_HOSTTYPE_PCI) */
- 		struct pci_dev *host_pci;
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index 917dcd7..d02f8b5 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -59,6 +59,8 @@
- #define  BCMA_PCI_GPIO_XTAL		0x40	/* PCI config space GPIO 14 for Xtal powerup */
- #define  BCMA_PCI_GPIO_PLL		0x80	/* PCI config space GPIO 15 for PLL powerdown */
- 
-+#define BCMA_PCIE2_BAR0_WIN2		0x70
-+
- /* SiliconBackplane Address Map.
-  * All regions may not exist on all chips.
-  */
--- 
-1.8.4.5
+> >> Here's the patch for the new interface...
+> >
+> > I'd really not like to add a new interface for this model when we are
+> > trying to delete it entirely.  Why not just rely on the in-kernel loader
+> > instead for this new feature?
+> 
+> Yeah, I see what you're saying. Obviously if the udev loader is going
+> to vanish entirely, it makes no sense to add the "fd" interface. I'll
+> keep the last 3 patches in the series in my tree for backporting
+> purposes, but since the LSM hook is still useful for origin/content
+> validation, I'd still like to see those go in. Though it sounds like I
+> should do that through the security-next tree?
+> 
+> applied:
+> doc: fix minor typos in firmware_class README
+> test: add firmware_class loader test
+> 
+> hopefully for security-next:
+> security: introduce kernel_fw_from_file hook
+> firmware_class: perform new LSM checks
+> 
+> I'll keep these external for backporting to "legacy" kernels/userspace:
+> firmware_class: extract start loading logic
+> firmware_class: add "fd" input file
+> test: add "fd" firmware loading test to selftests
+> 
+> Does that look okay?
 
+That's fine with me, or I can take the "security-next" patches through
+my tree, if that makes merging with the other firmware patches in my
+tree easier (today it's just a line diff, which git can handle easily).
+
+I'll go ack that patch now if James wants to pick it up.
+
+thanks,
+
+greg k-h
