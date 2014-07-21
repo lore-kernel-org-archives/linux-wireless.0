@@ -1,175 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:51178 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030450AbaGRRMC (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:34897 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933404AbaGUSPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 13:12:02 -0400
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Fri, 18 Jul 2014 11:12:01 -0600
-Message-ID: <1405703514.11182.6.camel@dhcp-9-2-203-236.watson.ibm.com> (sfid-20140718_191232_346234_72E61E56)
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>, zohar@us.ibm.com
-Date: Fri, 18 Jul 2014 13:11:54 -0400
-In-Reply-To: <1405373897-31671-7-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	 <1405373897-31671-7-git-send-email-keescook@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 21 Jul 2014 14:15:07 -0400
+Received: by mail-we0-f173.google.com with SMTP id q58so8109780wes.32
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 11:15:06 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/2] iwlwifi: mvm: pass beacons from foreign APs
+Date: Mon, 21 Jul 2014 21:14:58 +0300
+Message-Id: <1405966498-4936-2-git-send-email-egrumbach@gmail.com> (sfid-20140721_201514_054148_3FCC6CFC)
+In-Reply-To: <53CD5785.80408@gmail.com>
+References: <53CD5785.80408@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-07-14 at 14:38 -0700, Kees Cook wrote: 
-> As an alternative to loading bytes from the "data" blob when reading
-> firmware, let kernel read from an fd, so that the LSM can reason about
-> the origin of firmware contents during userspace on-demand loading.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  Documentation/firmware_class/README |   10 +++++
->  drivers/base/firmware_class.c       |   77 ++++++++++++++++++++++++++++++++++-
->  2 files changed, 86 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/firmware_class/README b/Documentation/firmware_class/README
-> index 71f86859d7d8..d899bdacba1e 100644
-> --- a/Documentation/firmware_class/README
-> +++ b/Documentation/firmware_class/README
-> @@ -59,6 +59,16 @@
->   8), kernel(driver): Driver code calls release_firmware(fw_entry) releasing
->  		 the firmware image and any related resource.
-> 
-> + Alternative loading (via file descriptor):
-> + ==========================================
-> + Instead of "loading", and "data" above, firmware can be loaded through
-> + an open file descriptor as well, via the "fd" file:
-> +
-> + Replacing steps 2 thorugh 6 above with the following userspace actions,
-> + performs the same loading:
-> +	- open firmware image file (e.g. as fd 3).
-> +	- write fd (e.g. "3") to /sys/class/firmware/xxx/fd.
-> +
->   High level behavior (driver code):
->   ==================================
-> 
-> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-> index b38cbcd6ebb1..eac996447d28 100644
-> --- a/drivers/base/firmware_class.c
-> +++ b/drivers/base/firmware_class.c
-> @@ -839,6 +839,70 @@ static struct bin_attribute firmware_attr_data = {
->  	.write = firmware_data_write,
->  };
-> 
-> +/**
-> + * fd_store - set value in the 'fd' control file
-> + * @dev: device pointer
-> + * @attr: device attribute pointer
-> + * @buf: buffer to scan for loading fd value
-> + * @count: number of bytes in @buf
-> + *
-> + * Parses an fd number from buf, and then loads firmware bytes from
-> + * the current process's matching open fd.
-> + *
-> + **/
-> +static ssize_t fd_store(struct device *dev,
-> +				 struct device_attribute *attr,
-> +				 const char *buf, size_t count)
-> +{
+From: Eliad Peller <eliad@wizery.com>
 
-I must be missing something.  Here's a static definition, where's the
-call to fd_store()?
+In AP mode, configure the fw to pass beacons from
+foreign APs, in order to be able to set the ht
+protection IE properly.
 
-Mimi
+Add the same filters in case of GO (which didn't have
+any configured filter_flags, probably by mistake)
 
-> +	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-> +	struct firmware_buf *fw_buf = fw_priv->buf;
-> +	ssize_t retval;
-> +	int fd;
-> +	struct fd f;
-> +
-> +	if (!capable(CAP_SYS_RAWIO))
-> +		return -EPERM;
-> +
-> +	retval = kstrtoint(buf, 10, &fd);
-> +	if (retval)
-> +		return retval;
-> +
-> +	f = fdget(fd);
-> +	if (!f.file)
-> +		return -EBADF;
-> +
-> +	mutex_lock(&fw_lock);
-> +	/* If we raced another loader, we must fail. */
-> +	if (test_bit(FW_STATUS_DONE, &fw_buf->status)) {
-> +		retval = -EINVAL;
-> +		goto unlock;
-> +	}
-> +
-> +	fw_load_start(fw_buf);
-> +	/* fw_read_file_contents uses vmalloc, not pages. */
-> +	fw_buf->is_paged_buf = false;
-> +	retval = fw_read_file_contents(f.file, fw_buf);
-> +	if (retval) {
-> +		/* If we called fw_load_start, we must abort on fail. */
-> +		fw_load_abort(fw_priv);
-> +		goto unlock;
-> +	}
-> +
-> +	/* Success. */
-> +	set_bit(FW_STATUS_DONE, &fw_buf->status);
-> +	list_del_init(&fw_buf->pending_list);
-> +	complete_all(&fw_buf->completion);
-> +
-> +unlock:
-> +	mutex_unlock(&fw_lock);
-> +	fdput(f);
-> +
-> +	if (retval)
-> +		return retval;
-> +	return count;
-> +}
-> +static DEVICE_ATTR_WO(fd);
-> +
->  static void firmware_class_timeout_work(struct work_struct *work)
->  {
->  	struct firmware_priv *fw_priv = container_of(work,
-> @@ -912,10 +976,19 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->  		mutex_lock(&fw_lock);
->  		list_del_init(&buf->pending_list);
->  		mutex_unlock(&fw_lock);
-> -		dev_err(f_dev, "%s: device_create_file failed\n", __func__);
-> +		dev_err(f_dev, "%s: dev_attr_loading failed\n", __func__);
->  		goto err_del_bin_attr;
->  	}
-> 
-> +	retval = device_create_file(f_dev, &dev_attr_fd);
-> +	if (retval) {
-> +		mutex_lock(&fw_lock);
-> +		list_del_init(&buf->pending_list);
-> +		mutex_unlock(&fw_lock);
-> +		dev_err(f_dev, "%s: &dev_attr_fd failed\n", __func__);
-> +		goto err_del_loading;
-> +	}
-> +
->  	if (opt_flags & FW_OPT_UEVENT) {
->  		buf->need_uevent = true;
->  		dev_set_uevent_suppress(f_dev, false);
-> @@ -933,6 +1006,8 @@ static int _request_firmware_load(struct firmware_priv *fw_priv,
->  	if (!buf->data)
->  		retval = -ENOMEM;
-> 
-> +	device_remove_file(f_dev, &dev_attr_fd);
-> +err_del_loading:
->  	device_remove_file(f_dev, &dev_attr_loading);
->  err_del_bin_attr:
->  	device_remove_bin_file(f_dev, &firmware_attr_data);
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 725ba49..8b79081 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1072,8 +1072,12 @@ static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
+ 	/* Fill the common data for all mac context types */
+ 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
+ 
+-	/* Also enable probe requests to pass */
+-	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
++	/*
++	 * pass probe requests and beacons from other APs (needed
++	 * for ht protection)
++	 */
++	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST |
++					MAC_FILTER_IN_BEACON);
+ 
+ 	/* Fill the data specific for ap mode */
+ 	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.ap,
+@@ -1094,6 +1098,13 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 	/* Fill the common data for all mac context types */
+ 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
+ 
++	/*
++	 * pass probe requests and beacons from other APs (needed
++	 * for ht protection)
++	 */
++	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST |
++					MAC_FILTER_IN_BEACON);
++
+ 	/* Fill the data specific for GO mode */
+ 	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.go.ap,
+ 				     action == FW_CTXT_ACTION_ADD);
+-- 
+1.8.3.2
 
