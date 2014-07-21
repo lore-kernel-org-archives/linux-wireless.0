@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:36153 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615AbaGQFPJ convert rfc822-to-8bit (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:24627 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbaGUFMp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 01:15:09 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so2388608wiw.6
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 22:15:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53C69A32.3090305@candelatech.com>
-References: <1405516873-26411-1-git-send-email-michal.kazior@tieto.com>
-	<1405516873-26411-2-git-send-email-michal.kazior@tieto.com>
-	<53C69A32.3090305@candelatech.com>
-Date: Thu, 17 Jul 2014 07:15:07 +0200
-Message-ID: <CA+BoTQ=X6GZLYmztehWp=gi6JHWZAJrOnvtB-HjbTqGfwUR4eA@mail.gmail.com> (sfid-20140717_071524_226531_F23FF3F2)
-Subject: Re: [RFC/RFT 2/2] ath10k: don't start monitor vdev for promisc
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sven Schnelle <svens@stackframe.org>,
-	Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 21 Jul 2014 01:12:45 -0400
+Received: from epcpsbgx2.samsung.com
+ (u162.gpu120.samsung.co.kr [203.254.230.162])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N910052FQH8ZO30@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 21 Jul 2014 14:12:44 +0900 (KST)
+Date: Mon, 21 Jul 2014 05:12:43 +0000 (GMT)
+From: =?euc-kr?B?yKux4sjG?= <kihun.hong@secui.com>
+Subject: compile backport-3.15.1-1 with Kernel 2.6.35.14
+To: linux-wireless@vger.kernel.org
+Reply-to: kihun.hong@secui.com
+MIME-version: 1.0
+Content-type: text/plain; charset=euc-kr
+MIME-version: 1.0
+Message-id: <14532028.366481405919563475.JavaMail.weblogic@epml01> (sfid-20140721_071250_938334_D563352D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 July 2014 17:28, Ben Greear <greearb@candelatech.com> wrote:
-> On 07/16/2014 06:21 AM, Michal Kazior wrote:
->>
->> ath10k doesn't apply any extra rx filters so
->> there's no need to start monitor vdev for
->> promiscuous mode.
->>
->> This fixes crashes with 4addr station interface
->> bridging and some very rare crashes of AP
->> interfaces with bridging as well.
->
->
-> Ahh, I was just working on some related hack-arounds to make sure
-> I left a vdev slot open for the monitor interface in case some poor
-> person started a sniffer on an interface and made it go promisc...
->
-> With this patch, I can be sure monitor interfaces will not
-> be automatically created without explicit user request?
-
-I'm not sure if I understand you correctly, but:
-
-With this patch monitor vdev will be created and started only if there
-is at least one monitor interface up and running or CAC is in
-progress. Promiscuous mode does not change driver state at all. IOW if
-you start tcpdump on a wlan0 (station iftype) or add wlan0 (ap iftype,
-sta iftype) to a bridge then monitor vdev will not be created. You
-have to iw wlan0 interface add mon type monitor && ip link set mon up
-to start monitor vdev. From then on you can tcpdump or tcpdump -p on
-mon to sniff everything that the card sees on the air.
+DQpIaSBhbGwsIA0KDQpJIGFtIHRyeWluZyB0byBjb21waWxlIGJhY2twb3J0LTMuMTUuMS0xIHdp
+dGggS2VybmVsIDIuNi4zNS4xNCBmb3IgdGhlIEFQIG1vZGUgb2YgdGhlIGF0aDlrIGRyaXZlci4N
+CihJIG9ubHkgZGlkICJtYWtlIG1lbnVjb25maWciIGFuZCBhZGQgIEtMSUI9ICJjb21waWxlZCBh
+bmQgaW5zdGFsbGVkIGtlcm5lbCBwYXRoIiBpbiBhIE1ha2VmaWxlLikNCg0KSW4gS2VybmVsIDIu
+Ni4zNS4xNCwgaG93ZXZlciwgSSBnb3QgbWFueSBlcnJvcnMgImVycm9yOiBsaW51eC9wcmludGsu
+aDogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSIuIA0KQmVjYXVzZSBtYW55IGZpbGUgbG9hY3Rh
+dGlvbiAoRGlyZWN0b3J5KSB3ZXJlIGNoYW5nZWQgYmV0d2VlbiAyLlggYW5kIDMuWCBrZXJuZWwg
+dmVyc2lvbnMuDQoNCkluIEtlcm5lbCAzLjAuMiwgSSBnb3QgZXJyb3IgImVycm9yOiB0b28gZmV3
+IGFyZ3VtZW50cyB0byBmdW5jdGlvbiAnc2NhdHRlcndhbGtfbWFwJyIuDQpzY2F0dGVyd2Fsa19t
+YXAgb2YgdGhlIGJhY2twb3J0LTMuMTUuMS0xIHVzZXMgb25seSBvbmUgYXJndW1lbnQgYW5kIGFs
+c28gY2FsbCBrZXJuZWwgZnVuY3Rpb24gdXNpbmcgb25lIGFyZ3VtZW50Lg0KQnV0IHNjYXR0ZXJ3
+YWxrX21hcCBvZiB0aGUgS2VybmVsIDMuMC4yIHVzZXMgdHdvIGFyZ3VtZW50cyBhbmQgYWxzbyBj
+YWxsIGtlcm5lbCBmdW5jdGlvbiB1c2luZyB0d28gYXJndW1lbnRzLg0KVGhlIGFyZ3VtZW50IG9m
+IHRoZSBzY2F0dGVyd2Fsa19tYXAgd2FzIGNoYW5nZWQgYmV0d2VlbiBrZXJuZWwgMy4zIGFuZCAz
+LjQuDQoNCkluIEtlcm5lbCAzLjE1LjEsIEkgZ290IGVycm9yICJlcnJvcjogJ3N0cnVjdCBuZXQn
+IGhhcyBubyBtZW1iZXIgbmFtZWQgJ2llZWU4MDIxNTRfbG93cGFuJyIuDQpJbiB0aGUgZmlsZSBi
+YWNrcG9ydHMtMy4xNS4xLTEvYmFja3BvcnQtaW5jbHVkZS9uZXQvbmV0X25hbWVzcGFjZS5oLCBM
+SU5VWF9WRVJTSU9OX0NPREUgaXMgbm90IHdvcmtpbmcuDQpBZnRlciBJIGNvbW1lbnQgKC8vIG9y
+IC8qIC4uLiAqLykgYWxsIGxpbmVzIG9mIHRoZSBmaWxlLCBJIGNhbiBnb3Qgc3VjY2VzcyBpbiB0
+aGUgY29tcGlsZSBvZiB0aGUgYmFja3BvcnQtMy4xNS4xLTEuDQpIb3dldmVyLCB0aGUgY29tcGls
+ZWQga2VybmVsIG1vZHVsZXMgd2lsbCBiZSB3b3JraW5nIHdpdGggb25seSBrZXJuZWwgMy4xNS4x
+Lg0KDQpNeSBjb21waWxlIGVudmlyb25tZW50IGlzIGNvcnJlY3QgPw0KU2hvdWxkIEkgY29tcGls
+ZSB3aXRoIHNhbWUgdmVyc2lvbiBiZXR3ZWVuIGtlcm5lbCBhbmQgYmFja3BvcnQgPyAgKGJhY2tw
+b3J0LTMuMTUuMS0xIHdpdGggS2VybmVsIDMuMTUuMSkNCkhvdyBjYW4gSSBjb21waWxlIGJhY2tw
+b3J0LTMuMTUuMS0xIHdpdGggS2VybmVsIDIuNi4zNS4xNCA/DQoNClRoYW5rcywgSG9uZw0K
 
 
-> Any idea if it will be a problem to apply this to what is
-> effectively a 3.15 kernel?
-
-Hmm.. I guess it should apply. This depends on some earlier monitor
-clean up patches but I can't remember when those were merged.
-
-
-Michał
