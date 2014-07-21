@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:65496 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750702AbaGJFzv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 01:55:51 -0400
-From: Anil Belur <askb23@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Anil Belur <askb23@gmail.com>
-Subject: [PATCH 1/2] staging: rtl8723au: core: rtw_ap.c - removed NULL pointer check before kfree()
-Date: Thu, 10 Jul 2014 11:25:36 +0530
-Message-Id: <1404971737-9737-1-git-send-email-askb23@gmail.com> (sfid-20140710_075630_517021_B96FEB76)
+Received: from s3.sipsolutions.net ([5.9.151.49]:45140 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754430AbaGUKB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 06:01:58 -0400
+Message-ID: <1405936900.32255.7.camel@jlt4.sipsolutions.net> (sfid-20140721_120211_946386_736C47E3)
+Subject: Re: [PATCH v11 0/5] cfg/mac80211: implement multi-vif csa
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Date: Mon, 21 Jul 2014 12:01:40 +0200
+In-Reply-To: <CA+BoTQmizEd3joLf6XDuUrq1Ton_XWcTwKCzWHJcD=gbzVGoMg@mail.gmail.com> (sfid-20140630_114605_200258_A9D95372)
+References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
+	 <1403722063.4140.19.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmizEd3joLf6XDuUrq1Ton_XWcTwKCzWHJcD=gbzVGoMg@mail.gmail.com>
+	 (sfid-20140630_114605_200258_A9D95372)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anil Belur <askb23@gmail.com>
+On Mon, 2014-06-30 at 11:46 +0200, Michal Kazior wrote:
 
-- as kfree() internally check for NULL, additional check it not
-  required.
+> Btw. What is the plan regarding re-enabling CSA itself?
 
-Signed-off-by: Anil Belur <askb23@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_ap.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I guess we should?
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-index c8700b3..8714ae3 100644
---- a/drivers/staging/rtl8723au/core/rtw_ap.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-@@ -1270,8 +1270,7 @@ static void update_bcn_wps_ie(struct rtw_adapter *padapter)
- 		pnetwork->IELength = wps_offset + (wps_ielen+2) + remainder_ielen;
- 	}
- 
--	if (pbackup_remainder_ie)
--		kfree(pbackup_remainder_ie);
-+	kfree(pbackup_remainder_ie);
- }
- 
- static void update_bcn_p2p_ie(struct rtw_adapter *padapter)
--- 
-1.9.1
+johannes
 
