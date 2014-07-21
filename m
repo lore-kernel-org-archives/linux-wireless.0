@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47282 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754507AbaGLD56 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53134 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbaGUESP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 23:57:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 7/7] mwifiex: correct a typo in mwifiex_ret_tdls_oper
-Date: Fri, 11 Jul 2014 20:57:15 -0700
-Message-ID: <1405137435-14045-4-git-send-email-bzhao@marvell.com> (sfid-20140712_055800_561688_CE374427)
-In-Reply-To: <1405137435-14045-1-git-send-email-bzhao@marvell.com>
-References: <1405137435-14045-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Jul 2014 00:18:15 -0400
+Date: Sun, 20 Jul 2014 21:18:13 -0700 (PDT)
+Message-Id: <20140720.211813.942862864883062133.davem@davemloft.net> (sfid-20140721_061837_835506_73CF0BF8)
+To: benoit.taine@lip6.fr
+Cc: linux-pci@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net, linux-hippi@sunsite.dk,
+	dri-devel@lists.freedesktop.org, linux-acenic@sunsite.dk,
+	wil6210@qca.qualcomm.com, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, users@rt2x00.serialmonkey.com,
+	linux-rdma@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	industrypack-devel@lists.sourceforge.net,
+	linux-can@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-crypto@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
+	devel@linuxdriverproject.org, xen-devel@lists.xenproject.org,
+	linux-pcmcia@lists.infradead.org, e1000-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes this typo.
+From: Benoit Taine <benoit.taine@lip6.fr>
+Date: Fri, 18 Jul 2014 17:26:47 +0200
 
-Reported-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> We should prefer `const struct pci_device_id` over
+> `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
+> This issue was reported by checkpatch.
+> 
+> A simplified version of the semantic patch that makes this change is as
+> follows (http://coccinelle.lip6.fr/):
+> 
+> // <smpl>
+> 
+> @@
+> identifier i;
+> declarer name DEFINE_PCI_DEVICE_TABLE;
+> initializer z;
+> @@
+> 
+> - DEFINE_PCI_DEVICE_TABLE(i)
+> + const struct pci_device_id i[]
+> = z;
+> 
+> // </smpl>
+> 
+> I have 103 patches ready, and will only send a few for you to judge if
+> it is useful enough, and to prevent from spamming too much.
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 822357b..08b78ba 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -908,7 +908,7 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
- 		break;
- 	default:
- 		dev_err(priv->adapter->dev,
--			"Unknown TDLS command action respnse %d", action);
-+			"Unknown TDLS command action response %d", action);
- 		return -1;
- 	}
- 
--- 
-1.8.2.3
-
+I'm fine with this wrt. the networking changes, but I don't think this should
+be merged via my tree.
