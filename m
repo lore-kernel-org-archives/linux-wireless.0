@@ -1,210 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:60092 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbaGKACS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52624 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933521AbaGUTpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:02:18 -0400
-Received: by mail-wg0-f49.google.com with SMTP id a1so287674wgh.20
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:15 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/14] wlcore/wl18xx: handle smart config events
-Date: Fri, 11 Jul 2014 03:01:33 +0300
-Message-Id: <1405036899-27396-9-git-send-email-eliad@wizery.com> (sfid-20140711_020221_599710_BE4AD4A3)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+	Mon, 21 Jul 2014 15:45:11 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1X9JWG-00019g-2t
+	for linux-wireless@vger.kernel.org; Mon, 21 Jul 2014 15:45:08 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s6LJernm014474
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 15:40:53 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s6LJerpx014473
+	for linux-wireless@vger.kernel.org; Mon, 21 Jul 2014 15:40:53 -0400
+Date: Mon, 21 Jul 2014 15:40:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.17 needs to be posted _now_
+Message-ID: <20140721194052.GE9026@tuxdriver.com> (sfid-20140721_214517_828048_32D1939D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add defintions and handling for smart config events
-(SMART_CONFIG_SYNC_EVENT_ID and SMART_CONFIG_DECODE_EVENT_ID)
+You may have noticed that Linus has released 3.16-rc6.  So, the merge
+window for 3.17 is around the corner!
 
-parse the relevant info and send it to userspace as
-vendor event.
+For those that need a reminder, the opening of the merge window is
+a _deadline_ for new features.  Once the merge window opens, only
+fixes will be accepted for 3.17.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.17.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/event.c      | 65 +++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/event.h      |  2 +
- drivers/net/wireless/ti/wl18xx/main.c       |  5 ++-
- drivers/net/wireless/ti/wlcore/vendor_cmd.c | 13 ++++++
- drivers/net/wireless/ti/wlcore/vendor_cmd.h |  9 ++++
- 5 files changed, 93 insertions(+), 1 deletion(-)
+You have been warned...this means you!
 
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index c9199d7..eb1848e 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -19,10 +19,12 @@
-  *
-  */
- 
-+#include <net/genetlink.h>
- #include "event.h"
- #include "scan.h"
- #include "../wlcore/cmd.h"
- #include "../wlcore/debug.h"
-+#include "../wlcore/vendor_cmd.h"
- 
- int wl18xx_wait_for_event(struct wl1271 *wl, enum wlcore_wait_event event,
- 			  bool *timeout)
-@@ -45,6 +47,58 @@ int wl18xx_wait_for_event(struct wl1271 *wl, enum wlcore_wait_event event,
- 	return wlcore_cmd_wait_for_event_or_timeout(wl, local_event, timeout);
- }
- 
-+static int wlcore_smart_config_sync_event(struct wl1271 *wl, u8 sync_channel,
-+					  u8 sync_band)
-+{
-+	struct sk_buff *skb;
-+	enum ieee80211_band band;
-+	int freq;
-+
-+	if (sync_band == WLCORE_BAND_5GHZ)
-+		band = IEEE80211_BAND_5GHZ;
-+	else
-+		band = IEEE80211_BAND_2GHZ;
-+
-+	freq = ieee80211_channel_to_frequency(sync_channel, band);
-+
-+	wl1271_debug(DEBUG_EVENT,
-+		     "SMART_CONFIG_SYNC_EVENT_ID, freq: %d (chan: %d band %d)",
-+		     freq, sync_channel, sync_band);
-+	skb = cfg80211_vendor_event_alloc(wl->hw->wiphy, 20,
-+					  WLCORE_VENDOR_EVENT_SC_SYNC,
-+					  GFP_KERNEL);
-+
-+	if (nla_put_u32(skb, WLCORE_VENDOR_ATTR_FREQ, freq)) {
-+		kfree_skb(skb);
-+		return -EMSGSIZE;
-+	}
-+	cfg80211_vendor_event(skb, GFP_KERNEL);
-+	return 0;
-+}
-+
-+static int wlcore_smart_config_decode_event(struct wl1271 *wl,
-+					    u8 ssid_len, u8 *ssid,
-+					    u8 pwd_len, u8 *pwd)
-+{
-+	struct sk_buff *skb;
-+
-+	wl1271_debug(DEBUG_EVENT, "SMART_CONFIG_DECODE_EVENT_ID");
-+	wl1271_dump_ascii(DEBUG_EVENT, "SSID:", ssid, ssid_len);
-+
-+	skb = cfg80211_vendor_event_alloc(wl->hw->wiphy,
-+					  ssid_len + pwd_len + 20,
-+					  WLCORE_VENDOR_EVENT_SC_DECODE,
-+					  GFP_KERNEL);
-+
-+	if (nla_put(skb, WLCORE_VENDOR_ATTR_SSID, ssid_len, ssid) ||
-+	    nla_put(skb, WLCORE_VENDOR_ATTR_PSK, pwd_len, pwd)) {
-+		kfree_skb(skb);
-+		return -EMSGSIZE;
-+	}
-+	cfg80211_vendor_event(skb, GFP_KERNEL);
-+	return 0;
-+}
-+
- int wl18xx_process_mailbox_events(struct wl1271 *wl)
- {
- 	struct wl18xx_event_mailbox *mbox = wl->mbox;
-@@ -107,5 +161,16 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
- 	if (vector & REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID)
- 		wlcore_event_roc_complete(wl);
- 
-+	if (vector & SMART_CONFIG_SYNC_EVENT_ID)
-+		wlcore_smart_config_sync_event(wl, mbox->sc_sync_channel,
-+					       mbox->sc_sync_band);
-+
-+	if (vector & SMART_CONFIG_DECODE_EVENT_ID)
-+		wlcore_smart_config_decode_event(wl,
-+						 mbox->sc_ssid_len,
-+						 mbox->sc_ssid,
-+						 mbox->sc_pwd_len,
-+						 mbox->sc_pwd);
-+
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/event.h b/drivers/net/wireless/ti/wl18xx/event.h
-index a76e98e..0680312 100644
---- a/drivers/net/wireless/ti/wl18xx/event.h
-+++ b/drivers/net/wireless/ti/wl18xx/event.h
-@@ -38,6 +38,8 @@ enum {
- 	REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID      = BIT(18),
- 	DFS_CHANNELS_CONFIG_COMPLETE_EVENT       = BIT(19),
- 	PERIODIC_SCAN_REPORT_EVENT_ID            = BIT(20),
-+	SMART_CONFIG_SYNC_EVENT_ID		 = BIT(22),
-+	SMART_CONFIG_DECODE_EVENT_ID		 = BIT(23),
- };
- 
- struct wl18xx_event_mailbox {
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 2727ca3..4422ecf 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -992,7 +992,10 @@ static int wl18xx_boot(struct wl1271 *wl)
- 		REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID |
- 		INACTIVE_STA_EVENT_ID |
- 		CHANNEL_SWITCH_COMPLETE_EVENT_ID |
--		DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
-+		DFS_CHANNELS_CONFIG_COMPLETE_EVENT |
-+		SMART_CONFIG_SYNC_EVENT_ID |
-+		SMART_CONFIG_DECODE_EVENT_ID;
-+;
- 
- 	wl->ap_event_mask = MAX_TX_FAILURE_EVENT_ID;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/vendor_cmd.c b/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-index 98852b2..ad86a48 100644
---- a/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-@@ -177,8 +177,21 @@ static const struct wiphy_vendor_command wlcore_vendor_commands[] = {
- 	},
- };
- 
-+static const struct nl80211_vendor_cmd_info wlcore_vendor_events[] = {
-+	{
-+		.vendor_id = TI_OUI,
-+		.subcmd = WLCORE_VENDOR_EVENT_SC_SYNC,
-+	},
-+	{
-+		.vendor_id = TI_OUI,
-+		.subcmd = WLCORE_VENDOR_EVENT_SC_DECODE,
-+	},
-+};
-+
- void wlcore_set_vendor_commands(struct wiphy *wiphy)
- {
- 	wiphy->vendor_commands = wlcore_vendor_commands;
- 	wiphy->n_vendor_commands = ARRAY_SIZE(wlcore_vendor_commands);
-+	wiphy->vendor_events = wlcore_vendor_events;
-+	wiphy->n_vendor_events = ARRAY_SIZE(wlcore_vendor_events);
- }
-diff --git a/drivers/net/wireless/ti/wlcore/vendor_cmd.h b/drivers/net/wireless/ti/wlcore/vendor_cmd.h
-index 7e8e92f..6e0c15e 100644
---- a/drivers/net/wireless/ti/wlcore/vendor_cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/vendor_cmd.h
-@@ -11,6 +11,10 @@
- #ifndef __WLCORE_VENDOR_H__
- #define __WLCORE_VENDOR_H__
- 
-+#ifdef __KERNEL__
-+void wlcore_set_vendor_commands(struct wiphy *wiphy);
-+#endif
-+
- #define TI_OUI	0x080028
- 
- enum wlcore_vendor_commands {
-@@ -33,4 +37,9 @@ enum wlcore_vendor_attributes {
- 	MAX_WLCORE_VENDOR_ATTR = NUM_WLCORE_VENDOR_ATTR - 1
- };
- 
-+enum wlcore_vendor_events {
-+	WLCORE_VENDOR_EVENT_SC_SYNC,
-+	WLCORE_VENDOR_EVENT_SC_DECODE,
-+};
-+
- #endif /* __WLCORE_VENDOR_H__ */
+John
 -- 
-1.8.5.1.109.g3d252a9
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
