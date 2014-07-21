@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:43782 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754084AbaG2PUB (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50177 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933136AbaGURAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2014 11:20:01 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: kernel-janitors@vger.kernel.org, linux-ia64@vger.kernel.org,
-	ceph-devel@vger.kernel.org, toralf.foerster@gmx.de, hmh@hmh.eng.br,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 8/9] iwlegacy: use correct structure type name in sizeof
-Date: Tue, 29 Jul 2014 17:16:50 +0200
-Message-Id: <1406647011-8543-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140729_172152_832376_4C247FDD)
-In-Reply-To: <1406647011-8543-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1406647011-8543-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 21 Jul 2014 13:00:14 -0400
+Date: Mon, 21 Jul 2014 12:45:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Yegor Yefremov <yegorslists@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH] wlcore: add basic device-tree support
+Message-ID: <20140721164505.GD9026@tuxdriver.com> (sfid-20140721_190052_347266_C56D40BD)
+References: <1404898305-15588-1-git-send-email-eliad@wizery.com>
+ <CAGm1_kvTYiDZDuFrB9X1ZOCxrhPC_NE_UzzY8PoBpdZHrQgv_A@mail.gmail.com>
+ <CAB3XZEeC8AeAw03Va6WZ_WHwy6YABkSjg0BMdf=6gGu1UyncSA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB3XZEeC8AeAw03Va6WZ_WHwy6YABkSjg0BMdf=6gGu1UyncSA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Wed, Jul 09, 2014 at 02:45:33PM +0300, Eliad Peller wrote:
+> On Wed, Jul 9, 2014 at 2:00 PM, Yegor Yefremov
+> <yegorslists@googlemail.com> wrote:
+> > On Wed, Jul 9, 2014 at 11:31 AM, Eliad Peller <eliad@wizery.com> wrote:
+> >> When running with device-tree, we no longer have a board file
+> >> that can set up the platform data for wlcore.
+> >> Allow this data to be passed from DT.
+> >>
+> >> For now, parse only the irq used. Other (optional) properties
+> >> can be added later on.
+> >
+> > What about adding support for "mac-address"
+> > (Documentation/devicetree/bindings/net/ethernet.txt) node or will it
+> > be automatically available?
+> >
+> the mac address is currently either read from the device itself or
+> from the nvs (calibration) file.
+> i guess additional support for such dt properties can be added later
+> on, if needed.
 
-Correct typo in the name of the type given to sizeof.  Because it is the
-size of a pointer that is wanted, the typo has no impact on compilation or
-execution.
+Ok with the device tree folks?
 
-This problem was found using Coccinelle (http://coccinelle.lip6.fr/).  The
-semantic patch used can be found in message 0 of this patch series.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/iwlegacy/common.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 03de746..2c4fa49 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -2980,7 +2980,8 @@ il_tx_queue_alloc(struct il_priv *il, struct il_tx_queue *txq, u32 id)
- 	/* Driver ilate data, only for Tx (not command) queues,
- 	 * not shared with device. */
- 	if (id != il->cmd_queue) {
--		txq->skbs = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(struct skb *),
-+		txq->skbs = kcalloc(TFD_QUEUE_SIZE_MAX,
-+				    sizeof(struct sk_buff *),
- 				    GFP_KERNEL);
- 		if (!txq->skbs) {
- 			IL_ERR("Fail to alloc skbs\n");
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
