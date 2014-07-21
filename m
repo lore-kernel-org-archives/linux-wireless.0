@@ -1,76 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:60606 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752716AbaGAHsH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 03:48:07 -0400
-Date: Tue, 1 Jul 2014 09:47:59 +0200
-From: Markus Pargmann <mpa@pengutronix.de>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>
-Subject: Re: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
-Message-ID: <20140701074759.GD28033@pengutronix.de> (sfid-20140701_094811_954562_9BF409DC)
-References: <1403963353-27317-1-git-send-email-mpa@pengutronix.de>
- <477F20668A386D41ADCC57781B1F70430FE5F37532@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NtwzykIc2mflq5ck"
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE5F37532@SC-VEXCH1.marvell.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45367 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754580AbaGUKYq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 06:24:46 -0400
+Message-ID: <1405938272.32255.19.camel@jlt4.sipsolutions.net> (sfid-20140721_122506_152367_05490242)
+Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain
+ from wireless-regd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	john@x109.net, chaitanya.mgit@gmail.com, linville@tuxdriver.com,
+	gregkh@linuxfoundation.org, tiwai@suse.de, keescook@chromium.org,
+	nbd@openwrt.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Mon, 21 Jul 2014 12:24:32 +0200
+In-Reply-To: <1405372789-24733-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140714_232013_505482_28009B17)
+References: <1405372789-24733-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20140714_232013_505482_28009B17)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2014-07-14 at 14:19 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> Since "wireless-regdb: remove antenna gain" was merged in the
+> wireless-regdb tree, the awk script parser has been incompatible
+> with the 'official' regulatory database.  This fixes that up.
+> Without this change the max EIRP is set to 0 making 802.11 devices
+> useless.
+> 
+> The fragile nature of the awk parser must be replaced, but ideas
+> over how to do that in the most scalable way are being reviewed.
+> In the meantime update the documentation for CFG80211_INTERNAL_REGDB
+> so folks are aware of expectations for now.
 
---NtwzykIc2mflq5ck
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Applied.
 
-Hi Bing,
+johannes
 
-On Mon, Jun 30, 2014 at 11:18:07PM -0700, Bing Zhao wrote:
-> Hi Markus,
->=20
-> > Subject: [PATCH RESEND] mwifiex: Remove custom world regulatory domain
->=20
-> This patch has been merged to wireless-next already:
-> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/co=
-mmit/?id=3D7d8831bb1bfbf8db896bfc1de9d0b3bc7a8e60f0
-
-Thanks, I didn't notice.
-
-Regards,
-
-Markus
-
---=20
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
-
---NtwzykIc2mflq5ck
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTsmevAAoJEEpcgKtcEGQQKEwP/2RQXtaMaGXs+L17RIBVPXvp
-roZAaKLWtXawu4FsC5Jr2zpKUflAq4KtrqBbL3mcgmk/Ic4aoABPP1Rz3ARG70Xq
-qC0mRcNHdyJv1a67fYf9dHghncAd+6xW8GRMcp93LpAHxOYG+px6DOqWv+yDcxVX
-VRxrAuPQNwJs1C+z5bOHpbD1SWlEbckR/FatEGWJLi1kTV+SujsEgXkRDvAg57hv
-VRUyUQexVNwM1wW/NuSO8nAhOQSusvAjDd9EYERz3VT24xVCD51SaSvFTaDxdMuI
-rUq6+OQKmVC+bApx01Ry+h6DtJGu707ghD/26sWxSkeiuCs63engOcSGug4K8YsL
-Eex0rEFT3KuzAtQzCdF7kKLLLPB3kkAsHrXpDwIQX82SSOvzqfDwrIoRNyBgx6UQ
-BEWXMnkqojEnN4eC6KoZDSF2WxvhURPOZW47WTfY8tIQVNsn9cPNR2TQhqQmv+fu
-t1rqvI3H80fyekRHpAKHWJyKkBHOHRD03d9kJcT0bfkzV6Ob4Fb9n05hp/EfCc+6
-MrGKK6kvlucwr+P38xDXkBzoMVQvYuj+BQnQYlyhmMeneGsYAw332K7BGKHG0WIn
-EZ7/U/3mX+ko4mZhatu5+892ldElBVjAv28sE/GvxqQ9d8C1H5s3eNrK3AJ8HLB4
-0B+zsWL8pU5OKnBu7Teg
-=ObWD
------END PGP SIGNATURE-----
-
---NtwzykIc2mflq5ck--
