@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:56368 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752876AbaGJS5F (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:56400 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028AbaGUICU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:57:05 -0400
-Received: by mail-wg0-f52.google.com with SMTP id b13so3613wgh.11
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/16] staging: vt6656: s_vGenerateTxParameter remove else from if statements
-Date: Thu, 10 Jul 2014 19:56:13 +0100
-Message-Id: <1405018577-6832-12-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205739_950857_408F7CDB)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 21 Jul 2014 04:02:20 -0400
+Received: by mail-we0-f173.google.com with SMTP id q58so7181131wes.18
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 01:02:18 -0700 (PDT)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: bzhao@marvell.com, daniel@zonque.org,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH v2 1/1] mwifiex: card reset: enable rescan of non-removable card
+Date: Mon, 21 Jul 2014 10:01:52 +0200
+Message-Id: <1405929712-27268-2-git-send-email-afenkart@gmail.com> (sfid-20140721_100229_736713_D4689613)
+In-Reply-To: <1405929712-27268-1-git-send-email-afenkart@gmail.com>
+References: <CALtMJEAwvMrZcFW7+ACgDNRVi+O5LE0p8gRUTUN3pNh8N1Eiog@mail.gmail.com>
+ <1405929712-27268-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function returns out at if statements so drop else.
+mmc_rescan will scan for non-removable cards only once, hence the card
+will not be rediscovered.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 6113807..0d0a956 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -717,25 +717,20 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 			return vnt_rxtx_rts(tx_context, &tx_buffer->tx_head,
- 					byPktType, cbFrameSize, bNeedACK,
- 						wCurrentRate, need_mic);
--		} else {
--			if (need_mic)
--				*mic_hdr = &tx_buffer->
--						tx_head.tx_cts.tx.mic.hdr;
--
--			return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
--					byPktType, cbFrameSize, bNeedACK,
--						wCurrentRate, need_mic);
- 		}
--	} else {
-+
- 		if (need_mic)
--			*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
-+			*mic_hdr = &tx_buffer->tx_head.tx_cts.tx.mic.hdr;
- 
--		return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head,
--					byPktType, cbFrameSize, bNeedACK,
--					wCurrentRate, need_rts, need_mic);
-+		return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head, byPktType,
-+				cbFrameSize, bNeedACK, wCurrentRate, need_mic);
- 	}
- 
--	return 0;
-+	if (need_mic)
-+		*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
-+
-+	return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, byPktType,
-+		cbFrameSize, bNeedACK, wCurrentRate, need_rts, need_mic);
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 4ce3d7b..ef22d59 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1931,6 +1931,7 @@ static void sdio_card_reset_worker(struct work_struct *work)
+ 	mmc_remove_host(target);
+ 	/* 20ms delay is based on experiment with sdhci controller */
+ 	mdelay(20);
++	target->rescan_entered = 0; /* rescan non-removable cards */
+ 	mmc_add_host(target);
  }
- 
- static void vnt_fill_txkey(struct vnt_usb_send_context *tx_context,
+ static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
 -- 
-1.9.1
+2.0.1
 
