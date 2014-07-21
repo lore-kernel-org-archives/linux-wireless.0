@@ -1,233 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:41934 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116AbaGOQjX (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59612 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbaGUBmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 12:39:23 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	sven@narfation.org, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [RFC 1/2] ath: Move spectral debugfs structs to shared header
-Date: Tue, 15 Jul 2014 18:32:45 +0200
-Message-Id: <1405441966-32681-2-git-send-email-sw@simonwunderlich.de> (sfid-20140715_183931_503544_C1CC0DD7)
-In-Reply-To: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de>
-References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de>
+	Sun, 20 Jul 2014 21:42:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-7-git-send-email-keescook@chromium.org>
+	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+	<CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
+Date: Mon, 21 Jul 2014 09:42:00 +0800
+Message-ID: <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com> (sfid-20140721_034240_730257_D7E9AF2F)
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+From: Ming Lei <ming.lei@canonical.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sven Eckelmann <sven@narfation.org>
+On Mon, Jul 21, 2014 at 1:43 AM, Kees Cook <keescook@chromium.org> wrote:
+> On Sat, Jul 19, 2014 at 8:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
+>> On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
+>>> As an alternative to loading bytes from the "data" blob when reading
+>>> firmware, let kernel read from an fd, so that the LSM can reason about
+>>> the origin of firmware contents during userspace on-demand loading.
+>>
+>> From user space view, maybe it is better to keep previous usage and just
+>> check if loading is from 'data' blob or fd in 'echo 0 > loading' of
+>> firmware_loading_store(), then the 'fd' usage becomes very similar with
+>> before.
+>
+> I don't think this is a good idea because otherwise there isn't a good
+> way to have an "atomic" check of the firmware contents. What does it
 
-The ath9k and ath10k will share the definitions of the debugfs spectral
-structures and enums. Having them in the same place helps to avoid conflicts.
+Could you share why 'atomic' check is necessary? As we know, it isn't
+real atomic, :-).
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/spectral.h  | 71 +-----------------------
- drivers/net/wireless/ath/spectral_common.h | 88 ++++++++++++++++++++++++++++++
- 2 files changed, 90 insertions(+), 69 deletions(-)
- create mode 100644 drivers/net/wireless/ath/spectral_common.h
+> means to write to "fd" several times, then write "data" a little,
+> before writing "loading", etc? I originally wrote the patch series
 
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index ead6341..7b410c6 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -17,6 +17,8 @@
- #ifndef SPECTRAL_H
- #define SPECTRAL_H
- 
-+#include "../spectral_common.h"
-+
- /* enum spectral_mode:
-  *
-  * @SPECTRAL_DISABLED: spectral mode is disabled
-@@ -54,8 +56,6 @@ struct ath_ht20_mag_info {
- 	u8 max_exp;
- } __packed;
- 
--#define SPECTRAL_HT20_NUM_BINS		56
--
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data by -1/+2. This struct is for reference only.
-  */
-@@ -83,8 +83,6 @@ struct ath_ht20_40_mag_info {
- 	u8 max_exp;
- } __packed;
- 
--#define SPECTRAL_HT20_40_NUM_BINS		128
--
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data. This struct is for reference only.
-  */
-@@ -125,71 +123,6 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- 	return bins[0] & 0x3f;
- }
- 
--/* FFT sample format given to userspace via debugfs.
-- *
-- * Please keep the type/length at the front position and change
-- * other fields after adding another sample type
-- *
-- * TODO: this might need rework when switching to nl80211-based
-- * interface.
-- */
--enum ath_fft_sample_type {
--	ATH_FFT_SAMPLE_HT20 = 1,
--	ATH_FFT_SAMPLE_HT20_40,
--};
--
--struct fft_sample_tlv {
--	u8 type;	/* see ath_fft_sample */
--	__be16 length;
--	/* type dependent data follows */
--} __packed;
--
--struct fft_sample_ht20 {
--	struct fft_sample_tlv tlv;
--
--	u8 max_exp;
--
--	__be16 freq;
--	s8 rssi;
--	s8 noise;
--
--	__be16 max_magnitude;
--	u8 max_index;
--	u8 bitmap_weight;
--
--	__be64 tsf;
--
--	u8 data[SPECTRAL_HT20_NUM_BINS];
--} __packed;
--
--struct fft_sample_ht20_40 {
--	struct fft_sample_tlv tlv;
--
--	u8 channel_type;
--	__be16 freq;
--
--	s8 lower_rssi;
--	s8 upper_rssi;
--
--	__be64 tsf;
--
--	s8 lower_noise;
--	s8 upper_noise;
--
--	__be16 lower_max_magnitude;
--	__be16 upper_max_magnitude;
--
--	u8 lower_max_index;
--	u8 upper_max_index;
--
--	u8 lower_bitmap_weight;
--	u8 upper_bitmap_weight;
--
--	u8 max_exp;
--
--	u8 data[SPECTRAL_HT20_40_NUM_BINS];
--} __packed;
--
- void ath9k_spectral_init_debug(struct ath_softc *sc);
- void ath9k_spectral_deinit_debug(struct ath_softc *sc);
- 
-diff --git a/drivers/net/wireless/ath/spectral_common.h b/drivers/net/wireless/ath/spectral_common.h
-new file mode 100644
-index 0000000..b9ab722
---- /dev/null
-+++ b/drivers/net/wireless/ath/spectral_common.h
-@@ -0,0 +1,88 @@
-+/*
-+ * Copyright (c) 2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef SPECTRAL_COMMON_H
-+#define SPECTRAL_COMMON_H
-+
-+#define SPECTRAL_HT20_NUM_BINS		56
-+#define SPECTRAL_HT20_40_NUM_BINS		128
-+
-+/* FFT sample format given to userspace via debugfs.
-+ *
-+ * Please keep the type/length at the front position and change
-+ * other fields after adding another sample type
-+ *
-+ * TODO: this might need rework when switching to nl80211-based
-+ * interface.
-+ */
-+enum ath_fft_sample_type {
-+	ATH_FFT_SAMPLE_HT20 = 1,
-+	ATH_FFT_SAMPLE_HT20_40,
-+};
-+
-+struct fft_sample_tlv {
-+	u8 type;	/* see ath_fft_sample */
-+	__be16 length;
-+	/* type dependent data follows */
-+} __packed;
-+
-+struct fft_sample_ht20 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 max_exp;
-+
-+	__be16 freq;
-+	s8 rssi;
-+	s8 noise;
-+
-+	__be16 max_magnitude;
-+	u8 max_index;
-+	u8 bitmap_weight;
-+
-+	__be64 tsf;
-+
-+	u8 data[SPECTRAL_HT20_NUM_BINS];
-+} __packed;
-+
-+struct fft_sample_ht20_40 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 channel_type;
-+	__be16 freq;
-+
-+	s8 lower_rssi;
-+	s8 upper_rssi;
-+
-+	__be64 tsf;
-+
-+	s8 lower_noise;
-+	s8 upper_noise;
-+
-+	__be16 lower_max_magnitude;
-+	__be16 upper_max_magnitude;
-+
-+	u8 lower_max_index;
-+	u8 upper_max_index;
-+
-+	u8 lower_bitmap_weight;
-+	u8 upper_bitmap_weight;
-+
-+	u8 max_exp;
-+
-+	u8 data[SPECTRAL_HT20_40_NUM_BINS];
-+} __packed;
-+
-+#endif /* SPECTRAL_COMMON_H */
--- 
-1.9.1
+That depends how firmware loader supports these cases, and won't
+be difficult to handle them.
 
+For non-fd userspace interface, it is very flexible to be capable of
+supporting to load firmware data from multiple images, or in flight.
+With single 'fd' interface, it won't be possible any more.
+
+> requiring the "loading" piece, and it ended up being very complicated
+> due to needing to switch the memory buffer logic back and forth.
+> Everything is much much cleaner if "fd" is single-shot, and not part
+> of the loading/data interface semantics.
+
+You might not avoid the 'loading' piece completely, how does
+the userspace handle non-exist firmware image? The reasonable
+way is to abort the loading from userspace via 'echo -1 > loading'
+since userspace already sees that, and you may choose to let kernel
+side handle that, but your current patch doesn't support it yet.
+
+Thanks,
