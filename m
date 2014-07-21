@@ -1,44 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45238 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754169AbaGUKNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 06:13:42 -0400
-Message-ID: <1405937608.32255.15.camel@jlt4.sipsolutions.net> (sfid-20140721_121350_935151_389810BF)
-Subject: Re: [PATCH 1/2] cfg80211: add enable_dynack API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Date: Mon, 21 Jul 2014 12:13:28 +0200
-In-Reply-To: <1405859555-31806-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143239_045150_A0045046)
-References: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1405859555-31806-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20140720_143239_045150_A0045046)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:53732 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932489AbaGUPNm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 11:13:42 -0400
+Received: by mail-oi0-f51.google.com with SMTP id g201so3492712oib.24
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 08:13:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-7-git-send-email-keescook@chromium.org>
+	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+	<CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
+	<CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
+Date: Mon, 21 Jul 2014 08:08:16 -0700
+Message-ID: <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com> (sfid-20140721_171346_567232_74D56E63)
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+From: Kees Cook <keescook@chromium.org>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-07-20 at 14:32 +0200, Lorenzo Bianconi wrote:
+On Sun, Jul 20, 2014 at 6:42 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> On Mon, Jul 21, 2014 at 1:43 AM, Kees Cook <keescook@chromium.org> wrote:
+>> On Sat, Jul 19, 2014 at 8:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
+>>> On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
+>>>> As an alternative to loading bytes from the "data" blob when reading
+>>>> firmware, let kernel read from an fd, so that the LSM can reason about
+>>>> the origin of firmware contents during userspace on-demand loading.
+>>>
+>>> From user space view, maybe it is better to keep previous usage and just
+>>> check if loading is from 'data' blob or fd in 'echo 0 > loading' of
+>>> firmware_loading_store(), then the 'fd' usage becomes very similar with
+>>> before.
+>>
+>> I don't think this is a good idea because otherwise there isn't a good
+>> way to have an "atomic" check of the firmware contents. What does it
+>
+> Could you share why 'atomic' check is necessary? As we know, it isn't
+> real atomic, :-).
 
-> @@ -2192,6 +2193,12 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->  			return result;
->  	}
->  
-> +	if (info->attrs[NL80211_ATTR_WIPHY_DYNACK]) {
-> +		result = rdev_enable_dynack(rdev);
-> +		if (result)
-> +			return result;
-> +	}
+Right, I don't really mean actually atomic. I just mean "a single
+write operation for loading a single firmware".
 
-I think it may be better to handle this in the call that's normally used
-(coverage class setting), but allow the other attribute to make a sort
-of "dynamic coverage class". And internally, calling drivers, it seems
-fine to pass -1 or so since you can extend the datatype there, instead
-of introducing a new internal callback. External/internal doesn't always
-have to match perfectly.
+>> means to write to "fd" several times, then write "data" a little,
+>> before writing "loading", etc? I originally wrote the patch series
+>
+> That depends how firmware loader supports these cases, and won't
+> be difficult to handle them.
+>
+> For non-fd userspace interface, it is very flexible to be capable of
+> supporting to load firmware data from multiple images, or in flight.
+> With single 'fd' interface, it won't be possible any more.
 
-Additionally, you'll need some capability flag I think.
+That's entirely correct. But I'm not suggesting replacing loading/data
+with fd, I'm suggesting adding an additional separate interface. Any
+system that wants to generate non-file-backed firmware or do multiple
+images at once can continue to use the loading/data interface.
 
-johannes
+However, since nearly all systems currently use udev and its firmware
+helper that reads from single files, this change allows the bulk of
+systems to be able to reason via the LSM about the origin of
+userspace-delivered firmwares.
 
+>> requiring the "loading" piece, and it ended up being very complicated
+>> due to needing to switch the memory buffer logic back and forth.
+>> Everything is much much cleaner if "fd" is single-shot, and not part
+>> of the loading/data interface semantics.
+>
+> You might not avoid the 'loading' piece completely, how does
+> the userspace handle non-exist firmware image? The reasonable
+> way is to abort the loading from userspace via 'echo -1 > loading'
+> since userspace already sees that, and you may choose to let kernel
+> side handle that, but your current patch doesn't support it yet.
+
+That's not true -- my series doesn't remove or change any of the
+existing interface behavior. If userspace doesn't find a firmware
+image, it can still write -1 into loading. What I've added is simply a
+new way to load the firmware, in line with finit_module and
+kexec_file_load: we need to be able to load files from userspace via
+fd instead of via blobs.
+
+There is no reason for the fd interface to use "loading" to indicate
+it's state. First, it's redundant: loading starts the moment fd_store
+is called: from the userspace perspective, the entire load process
+happens during that write. Once the write returns, loading has
+finished. Adding the requirement for writing "loading" before and
+after complicates userspace and complicates kernel-space since now it
+must distinguish between fw_buf's is_paged_buf state, and determine
+how to interact with intermixed calls to "data". For example, what
+would this mean:
+
+echo 1 > loading
+write to data
+write to fd
+echo 0 > loading
+
+With my current patch, writes to "fd" will be rejected if a write to
+"loading" has happened, to be able to trivially distinguish between
+the two interfaces, and to keep sanity in the state of is_paged_buf
+logic.
+
+It seems to me that keeping the interfaces separate makes the most
+sense and provides the cleanest approach.
+
+Perhaps it would be easier if I also sent the patch to udev's helper,
+so you could see how I propose handling the userspace change to using
+the new interface?
+
+-Kees
+
+-- 
+Kees Cook
+Chrome OS Security
