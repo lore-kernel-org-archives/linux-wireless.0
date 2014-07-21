@@ -1,156 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:49384 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464AbaGMM3Q (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53152 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932727AbaGURai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 08:29:16 -0400
-Received: by mail-vc0-f177.google.com with SMTP id ij19so5222462vcb.22
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 05:29:15 -0700 (PDT)
-From: Raphael Silva <rapphil@gmail.com>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	Raphael Silva <rapphil@gmail.com>
-Subject: [PATCH] rtl8723au: Corrections in the coding style
-Date: Sun, 13 Jul 2014 09:28:38 -0300
-Message-Id: <1405254518-2744-1-git-send-email-rapphil@gmail.com> (sfid-20140713_143029_244763_892E16F5)
+	Mon, 21 Jul 2014 13:30:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: handle attention flags correctly when A-MSDU
+References: <1405342041-7114-1-git-send-email-janusz.dziedzic@tieto.com>
+	<87pph225mq.fsf@kamboji.qca.qualcomm.com>
+	<CALhHN=q2XcvPiLpeDgw_DksU1xzQLvJtxjzk8iZte-VMd+viLg@mail.gmail.com>
+Date: Mon, 21 Jul 2014 20:30:32 +0300
+In-Reply-To: <CALhHN=q2XcvPiLpeDgw_DksU1xzQLvJtxjzk8iZte-VMd+viLg@mail.gmail.com>
+	(Janusz Dziedzic's message of "Mon, 21 Jul 2014 10:53:16 +0200")
+Message-ID: <87ha2ay5zb.fsf@kamboji.qca.qualcomm.com> (sfid-20140721_193047_406251_A9E47EA9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some corrections were made to the code in order to conform to the
-Kernel Coding Style.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Signed-off-by: Raphael Silva <rapphil@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 42 ++++++++++++++++++----------
- 1 file changed, 27 insertions(+), 15 deletions(-)
+> On 18 July 2014 14:50, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>>
+>>> In case of A-MSDU RX we should check flags for all
+>>> MSDU subframes to be sure we have correct FCS status.
+>>>
+>>> Before we check attention flags only for first frame
+>>> where we didn't have correct info about FCS status in
+>>> case of A-MSDU. Next didn't mark RX_FLAG_FAILED_FCS_CRC
+>>> for skb. As a side efect we see big TP drop when TCP used.
+>>> This was easy to reproduce when AP interface was used
+>>> and added monitor interface run in promiscuous mode.
+>>>
+>>> Reported-by: Denton Gentry <denton.gentry@gmail.com>
+>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>> I'm having a hard time to understand the commit log. I think it would
+>> make it easier to read if you first clearly describe the bug you are
+>> fixing and then, in a separate paragraph, tell how you fix it.
+>
+> Will change that.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-index 8db844b..0290a9e 100644
---- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-@@ -26,7 +26,7 @@ static const u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 
- static void _rtw_init_stainfo(struct sta_info *psta)
- {
--	memset((u8 *)psta, 0, sizeof (struct sta_info));
-+	memset((u8 *)psta, 0, sizeof(struct sta_info));
- 	spin_lock_init(&psta->lock);
- 	INIT_LIST_HEAD(&psta->list);
- 	INIT_LIST_HEAD(&psta->hash_list);
-@@ -71,8 +71,10 @@ int _rtw_init_sta_priv23a(struct sta_priv *pstapriv)
- 	pstapriv->auth_list_cnt = 0;
- 	pstapriv->auth_to = 3; /*  3*2 = 6 sec */
- 	pstapriv->assoc_to = 3;
--	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min, expire after no any traffic. */
--	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min, expire after no any traffic. */
-+	/* pstapriv->expire_to = 900;  900*2 = 1800 sec = 30 min,
-+	    expire after no any traffic. */
-+	/* pstapriv->expire_to = 30;  30*2 = 60 sec = 1 min,
-+	    expire after no any traffic. */
- 	pstapriv->expire_to = 3; /*  3*2 = 6 sec */
- 	pstapriv->max_num_sta = NUM_STA;
- #endif
-@@ -94,6 +96,7 @@ int _rtw_free_sta_priv23a(struct sta_priv *pstapriv)
- 
- 			list_for_each_safe(plist, ptmp, phead) {
- 				int i;
-+
- 				psta = container_of(plist, struct sta_info,
- 						    hash_list);
- 				for (i = 0; i < 16 ; i++) {
-@@ -144,14 +147,17 @@ rtw_alloc_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr, gfp_t gfp)
- 
- 	list_add_tail(&psta->hash_list, phash_list);
- 
--	pstapriv->asoc_sta_count ++ ;
-+	pstapriv->asoc_sta_count++;
- 
--/*  For the SMC router, the sequence number of first packet of WPS handshake will be 0. */
--/*  In this case, this packet will be dropped by recv_decache function if we use the 0x00 as the default value for tid_rxseq variable. */
-+/*  For the SMC router, the sequence number of first packet of WPS
-+     handshake will be 0. */
-+/*  In this case, this packet will be dropped by recv_decache function
-+    if we use the 0x00 as the default value for tid_rxseq variable. */
- /*  So, we initialize the tid_rxseq variable as the 0xffff. */
- 
- 	for (i = 0; i < 16; i++)
--		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i], &wRxSeqInitialValue, 2);
-+		memcpy(&psta->sta_recvpriv.rxcache.tid_rxseq[i],
-+			&wRxSeqInitialValue, 2);
- 
- 	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_info_,
- 		 ("alloc number_%d stainfo  with hwaddr = %pM\n",
-@@ -242,8 +248,12 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 	spin_unlock_bh(&pxmitpriv->lock);
- 
- 	list_del_init(&psta->hash_list);
--	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_, ("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", pstapriv->asoc_sta_count, psta->hwaddr[0], psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3], psta->hwaddr[4], psta->hwaddr[5]));
--	pstapriv->asoc_sta_count --;
-+	RT_TRACE(_module_rtl871x_sta_mgt_c_, _drv_err_,
-+		("\n free number_%d stainfo  with hwaddr = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x\n",
-+			pstapriv->asoc_sta_count, psta->hwaddr[0],
-+			psta->hwaddr[1], psta->hwaddr[2], psta->hwaddr[3],
-+			psta->hwaddr[4], psta->hwaddr[5]));
-+	pstapriv->asoc_sta_count-;
- 
- 	/*  re-init sta_info; 20061114  will be init in alloc_stainfo */
- 	/* _rtw_init_sta_xmit_priv23a(&psta->sta_xmitpriv); */
-@@ -251,7 +261,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 
- 	del_timer_sync(&psta->addba_retry_timer);
- 
--	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
-+	/* for A-MPDU Rx reordering buffer control,
-+	   cancel reordering_ctrl_timer */
- 	for (i = 0; i < 16; i++) {
- 		struct list_head	*phead, *plist;
- 		struct recv_frame *prframe;
-@@ -261,7 +272,8 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 
- 		del_timer_sync(&preorder_ctrl->reordering_ctrl_timer);
- 
--		ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
-+		ppending_recvframe_queue =
-+			&preorder_ctrl->pending_recvframe_queue;
- 
- 		spin_lock_bh(&ppending_recvframe_queue->lock);
- 		phead =		get_list_head(ppending_recvframe_queue);
-@@ -301,7 +313,7 @@ int rtw_free_stainfo23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 	pstapriv->sta_dz_bitmap &= ~CHKBIT(psta->aid);
- 	pstapriv->tim_bitmap &= ~CHKBIT(psta->aid);
- 
--	if ((psta->aid >0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
-+	if ((psta->aid > 0) && (pstapriv->sta_aid[psta->aid - 1] == psta)) {
- 		pstapriv->sta_aid[psta->aid - 1] = NULL;
- 		psta->aid = 0;
- 	}
-@@ -318,7 +330,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
- 	struct list_head *plist, *phead, *ptmp;
- 	struct sta_info *psta;
- 	struct sta_priv *pstapriv = &padapter->stapriv;
--	struct sta_info* pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
-+	struct sta_info *pbcmc_stainfo = rtw_get_bcmc_stainfo23a(padapter);
- 	s32 index;
- 
- 	if (pstapriv->asoc_sta_count == 1)
-@@ -332,7 +344,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
- 		list_for_each_safe(plist, ptmp, phead) {
- 			psta = container_of(plist, struct sta_info, hash_list);
- 
--			if (pbcmc_stainfo!= psta)
-+			if (pbcmc_stainfo != psta)
- 				rtw_free_stainfo23a(padapter, psta);
- 		}
- 	}
-@@ -374,7 +386,7 @@ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
- 	return psta;
- }
- 
--int rtw_init_bcmc_stainfo23a(struct rtw_adapter* padapter)
-+int rtw_init_bcmc_stainfo23a(struct rtw_adapter *padapter)
- {
- 	struct	sta_priv *pstapriv = &padapter->stapriv;
- 	struct sta_info		*psta;
+Thanks. What you wrote in this email was really good, I understand the
+issue now and I'm sure so do others. I think you should put the same in
+the commit log, there's no max limit for that anyway :)
+
+Also add verb "using" to the title: "ath10k: handle attention flags
+correctly when using A-MSDU"
+
 -- 
-1.9.1
-
+Kalle Valo
