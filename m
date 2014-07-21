@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:43736 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbaG0Vkj (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10096 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753256AbaGUIRZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2014 17:40:39 -0400
-Received: by mail-wg0-f50.google.com with SMTP id n12so6323849wgh.21
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 14:40:38 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: [PATCHv3 3/6] p54: extend p54_set_coverage_class signature
-Date: Sun, 27 Jul 2014 23:40:34 +0200
-Message-Id: <1406497234-25666-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_234042_157489_ABDE8140)
+	Mon, 21 Jul 2014 04:17:25 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Fabian Frederick <fabf@skynet.be>
+CC: <linux-kernel@vger.kernel.org>, <davem@davemloft.net>,
+	<joe@perches.com>, "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 14/30] ath6kl: remove unnecessary break after return
+References: <1405866332-24652-1-git-send-email-fabf@skynet.be>
+	<1405866332-24652-5-git-send-email-fabf@skynet.be>
+Date: Mon, 21 Jul 2014 11:17:18 +0300
+In-Reply-To: <1405866332-24652-5-git-send-email-fabf@skynet.be> (Fabian
+	Frederick's message of "Sun, 20 Jul 2014 16:25:15 +0200")
+Message-ID: <87d2cz15yp.fsf@kamboji.qca.qualcomm.com> (sfid-20140721_101935_147822_82968DF8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Synchronize set_coverage_class routine signature with mac80211 function
-pointer. Function pointer prototype has been changed to activate ath9k ACK
-timeout estimation algorithm (dynack).
+Fabian Frederick <fabf@skynet.be> writes:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/p54/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
 
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 7be3a48..97aeff0 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -696,7 +696,8 @@ static void p54_flush(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
- 	WARN(total, "tx flush timeout, unresponsive firmware");
- }
- 
--static void p54_set_coverage_class(struct ieee80211_hw *dev, u8 coverage_class)
-+static void p54_set_coverage_class(struct ieee80211_hw *dev,
-+				   s16 coverage_class)
- {
- 	struct p54_common *priv = dev->priv;
- 
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Who is taking this patch? Please let me know if I should apply it to my
+tree.
+
 -- 
-1.9.1
-
+Kalle Valo
