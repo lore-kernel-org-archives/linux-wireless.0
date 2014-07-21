@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:44896 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922AbaGJS5K (ORCPT
+Received: from mailapp01.imgtec.com ([195.59.15.196]:56754 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143AbaGUK0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:57:10 -0400
-Received: by mail-wg0-f51.google.com with SMTP id y10so4637479wgg.34
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:57:08 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/16] staging: vt6656: rename s_vGenerateTxParameter to vnt_generate_tx_parameter
-Date: Thu, 10 Jul 2014 19:56:15 +0100
-Message-Id: <1405018577-6832-14-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205726_990898_A3FAA84C)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 21 Jul 2014 06:26:36 -0400
+Message-ID: <53CCEAD6.7030205@imgtec.com> (sfid-20140721_122638_940599_9CB730DE)
+Date: Mon, 21 Jul 2014 15:56:30 +0530
+From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Requeue work for all iftypes after scan completion
+References: <82A67CC48AF04D43A69EB66645975134218BA7EE@hbmail01.hb.imgtec.org>  <53BEB909.3030802@imgtec.com> <1405935434.32255.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1405935434.32255.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing static declaration
+On 07/21/2014 03:07 PM, Johannes Berg wrote:
+> On Thu, 2014-07-10 at 21:32 +0530, Sachin Kulkarni wrote:
+>> From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+>>
+>> During a hw scan ieee80211_iface_work ignores work items for all vifs. However
+>> after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
+>> This occasionally results in event processing getting delayed for iftype AP when
+>> it coexists with a STA, and when the scan durations are very long.
+>>
+>> Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: johannes@sipsolutions.net
+>> ---
+>> We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
+>> not connected to anyone while the AP has a station connected to it. The hardware
+>> we are using currently has scan durations of ~8 sec and a new scan request is
+>> generated every 10 s. This results in a window of only 2 s when work items can
+>> be processed by ieee80211_iface_work. We came across scenarios where the AP is
+>> trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
+>> event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
+>> since a hw scan is in progress most of the time. When the scan completes however
+>> the work item for the AP does not get requeued, and by the time the
+>> IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
+>> the TX frames just keep getting queued up, since the tid has not been destroyed.
+>> This results in disconnections since things like ARP timeouts etc start
+>> happening.
+>> ---
+>>    net/mac80211/mlme.c |    5 +++--
+>>    1 files changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 931330b..49af420 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+>>    		if (!(flags&   IEEE80211_HW_CONNECTION_MONITOR))
+>>    			ieee80211_queue_work(&sdata->local->hw,
+>>    					&sdata->u.mgd.monitor_work);
+>> -		/* and do all the other regular work too */
+>> -		ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+>>    	}
+>> +
+>> +	/* and do all the other regular work too */
+>> +	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+> Please fix the space while at it. :)
+Thanks for getting back Johannes. Just a quick question. When you said 
+"..fix the space.." did you mean the spaces in the following lines:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+   		if (!(flags&   IEEE80211_HW_CONNECTION_MONITOR))
+   			ieee80211_queue_work(&sdata->local->hw,
+   					&sdata->u.mgd.monitor_work);
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 1ff16e2..ad1a1b6 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -25,7 +25,7 @@
-  * Date: May 20, 2003
-  *
-  * Functions:
-- *      s_vGenerateTxParameter - Generate tx dma required parameter.
-+ *      vnt_generate_tx_parameter - Generate tx dma required parameter.
-  *      csBeacon_xmit - beacon tx function
-  *      csMgmt_xmit - management tx function
-  *      s_uGetDataDuration - get tx data required duration
-@@ -83,11 +83,6 @@ static const u16 wFB_Opt1[2][5] = {
- 
- static struct vnt_usb_send_context *s_vGetFreeContext(struct vnt_private *);
- 
--static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
--	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
--	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
--	int bNeedACK, bool need_rts);
--
- static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
- 	u32 cbFrameLength, u16 wRate, int bNeedAck);
- 
-@@ -702,7 +697,7 @@ static u16 vnt_rxtx_ab(struct vnt_usb_send_context *tx_context,
-  *
- -*/
- 
--static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
-+static u16 vnt_generate_tx_parameter(struct vnt_usb_send_context *tx_context,
- 	u8 pkt_type, u16 current_rate, struct vnt_tx_buffer *tx_buffer,
- 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 frame_size,
- 	int need_ack, bool need_rts)
-@@ -950,8 +945,8 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	tx_context->fb_option = fb_option;
- 
--	duration_id = s_vGenerateTxParameter(tx_context, pkt_type, current_rate,
--				tx_buffer, &mic_hdr, need_mic, frame_size,
-+	duration_id = vnt_generate_tx_parameter(tx_context, pkt_type,
-+			current_rate, tx_buffer, &mic_hdr, need_mic, frame_size,
- 						need_ack, need_rts);
- 
- 	tx_header_size = tx_context->tx_hdr_size;
--- 
-1.9.1
 
+or the newline I introduced here:
+
++
++	/* and do all the other regular work too */
++	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+
+
+(I verified the patch with ./scripts/checkpatch.pl and it passed.)
+
+Regards,
+Sachin
