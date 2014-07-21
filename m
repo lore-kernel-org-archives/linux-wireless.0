@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:51216 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964923AbaGCO2l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 10:28:41 -0400
-Received: by mail-ie0-f175.google.com with SMTP id tp5so243320ieb.34
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 07:28:40 -0700 (PDT)
-Date: Thu, 3 Jul 2014 10:28:37 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: mesh_plink: handle confirm frames with new
- plid
-Message-ID: <20140703142837.GA11380@localhost> (sfid-20140703_162846_961326_9052E058)
-References: <1403987726-17576-1-git-send-email-me@bobcopeland.com>
- <20140628205414.GA17825@localhost>
- <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEFj987rJW6bH7bZQKT1W2RzMVB2BnOyWABRQRHwbrCSuOAUig@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45311 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754276AbaGUKUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 06:20:45 -0400
+Message-ID: <1405938028.32255.17.camel@jlt4.sipsolutions.net> (sfid-20140721_122106_937987_6F0991EA)
+Subject: Re: [PATCH] mac80211: Parse IEEE80211_RADIOTAP_RATE on TX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Mon, 21 Jul 2014 12:20:28 +0200
+In-Reply-To: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140710_142756_935664_A8B88F97)
+References: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140710_142756_935664_A8B88F97)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[reordered top-posting]
-
-On Thu, Jul 03, 2014 at 08:36:28PM +0800, Chun-Yeow Yeoh wrote:
-> >> "If the peerLinkID in the mesh peering instance has not been
-> >> set, the Local Link ID field of the Mesh Peering Confirm
-> >> request shall be copied into the peerLinkID in the mesh
-> >> peering instance."
-> >>
-> Hi, Bob
+On Thu, 2014-07-10 at 14:27 +0200, Rostislav Lisovy wrote:
+> Add support for parsing radiotap field IEEE80211_RADIOTAP_RATE
+> for transmitted frames. Use the provided datarate value in
+> info->control.rates[] array so it will be used for transmission.
 > 
-> What is the consequence if we don't handle this case? Is the peer
-> going to do the re-auth again?
-> 
-> Regards,
-> Chun-Yeow
+> Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+> ---
+> This feature is essential for Transmit Datarate Control (TDC)
+> in future implementation of IEEE 802.11-2012 "Wireless Access
+> for the Vehicular Environment" support.
 
-It shouldn't be a big problem -- looking at 802.11-2012 figure 13-2:
+It seems like an extremely bad idea to base your implementation of WAVE
+on monitor mode with injection.
 
-Let's say station A is in OPN_SNT and station B is in OPN_RCVD,
-but station A failed to get the Open frame from B.
+Why can't you add a proper datapath?
 
-When A gets a Confirm frame from B, it would ignore it (due to
-missing plid), then it would resend Open on dot11MeshRetryTimeout.
-Unfortunately, Confirm responses from B to that Open frame would
-be ignored too.
+johannes
 
-However, B should also retry Open on dot11MeshRetryTimeout.
-If any are successful, A moves to OPN_RCVD, then both have plids
-and everything should be ok from then on.
-
-In the worst case, plink timer on either station fires
-dot11MeshMaxRetries times and peering instance closes.  Then peering
-can start over after leaving holding state and either station gets a
-beacon.
-
-So in sum, it just adds a bit of resiliency and means we don't have
-to wait for a dot11MeshRetryTimeout in the case of one lost open
-frame.
-
--- 
-Bob Copeland %% www.bobcopeland.com
