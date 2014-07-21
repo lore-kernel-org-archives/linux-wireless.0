@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:48516 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbaGFWUS (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:37514 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754575AbaGULUL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 18:20:18 -0400
-Received: by mail-we0-f179.google.com with SMTP id w62so3557735wes.38
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 15:20:17 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Mon, 21 Jul 2014 07:20:11 -0400
+Received: by mail-wg0-f43.google.com with SMTP id l18so6216369wgh.26
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 04:20:08 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/3] staging: vt6656: s_nsBulkInUsbIoCompleteRead check that used sk_buff is clean and ready to reuse.
-Date: Sun,  6 Jul 2014 23:19:46 +0100
-Message-Id: <1404685188-3182-1-git-send-email-tvboxspy@gmail.com> (sfid-20140707_002026_415140_BBCC51D5)
+	Ben Greear <greearb@candelatech.com>, sw@simonwunderlich.de,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/2] ath10k: scan fixes 2014-07-21
+Date: Mon, 21 Jul 2014 13:11:19 +0200
+Message-Id: <1405941081-17359-1-git-send-email-michal.kazior@tieto.com> (sfid-20140721_132016_374817_1689AD48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-skb_push the headroom and trimmed back to 0
+Hi,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
-applies after patch staging: vt6656: Include re_alloc_skb within lock
+This addresses an issue found by Janusz with
+current spectral scan patches from Simon.
 
- drivers/staging/vt6656/usbpipe.c | 3 +++
- 1 file changed, 3 insertions(+)
+This goes along patch `ath10k: prevent endless pci rx
+loop` I've posted a few days ago.
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index c8b0ed5..dd031bb 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -303,6 +303,9 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 				spin_unlock_irqrestore(&priv->lock, flags);
- 				return;
- 			}
-+		} else {
-+			skb_push(rcb->skb, skb_headroom(rcb->skb));
-+			skb_trim(rcb->skb, 0);
- 		}
- 
- 		urb->transfer_buffer = skb_put(rcb->skb,
+There seems to be a condition in firmware which
+causes some WMI events to be not delivered by
+firmware to host most likely due to CE/PCI pipe
+being full (that's a guess judging by the huge
+amount of phyerrs reported and their behaviour
+while spectral scan is enabled). This also
+suggests some SWBA events may be dropped by
+firmware when spectral scan is running (same goes
+for management rx).
+
+@Simon: you may be interested in applying these
+patches if you run into trouble while testing
+spectral scan + hw_scan/hw_roc.
+
+@Ben: since you reported some scan issues in the
+past you may be interested in this as well.
+
+
+Michal Kazior (2):
+  ath10k: introduce a stricter scan state machine
+  ath10k: simplify scan debug prints
+
+ drivers/net/wireless/ath/ath10k/core.c |   4 +-
+ drivers/net/wireless/ath/ath10k/core.h |  10 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 219 +++++++++++++++++++--------------
+ drivers/net/wireless/ath/ath10k/mac.h  |   3 +-
+ drivers/net/wireless/ath/ath10k/wmi.c  | 210 ++++++++++++++++++++++---------
+ 5 files changed, 290 insertions(+), 156 deletions(-)
+
 -- 
-1.9.1
+1.8.5.3
 
