@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39502 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752208AbaGTLuB convert rfc822-to-8bit (ORCPT
+Received: from mailapp01.imgtec.com ([195.59.15.196]:31587 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754350AbaGULMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 07:50:01 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by arrakis.dune.hu (Postfix) with ESMTP id 5B7FC284244
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 13:47:45 +0200 (CEST)
-Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com [209.85.192.43])
-	by arrakis.dune.hu (Postfix) with ESMTPSA id 6D800280787
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 13:47:35 +0200 (CEST)
-Received: by mail-qg0-f43.google.com with SMTP id a108so4519095qge.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 04:49:49 -0700 (PDT)
+	Mon, 21 Jul 2014 07:12:41 -0400
+Message-ID: <53CCF5A5.8030404@imgtec.com> (sfid-20140721_131244_233734_B2463D9F)
+Date: Mon, 21 Jul 2014 16:42:37 +0530
+From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <1405854022-11833-2-git-send-email-zajec5@gmail.com>
-References: <1405854022-11833-1-git-send-email-zajec5@gmail.com> <1405854022-11833-2-git-send-email-zajec5@gmail.com>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Sun, 20 Jul 2014 13:49:29 +0200
-Message-ID: <CAOiHx=mi0jJQycjJSNjJ3rXrjQEB2N6JP3yg6vqcDN82tZHjzg@mail.gmail.com> (sfid-20140720_135006_439713_BB76BADE)
-Subject: Re: [PATCH 2/2] b43: N-PHY: support setting custom TX power
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH-v2] mac80211: Requeue work for all iftypes after scan
+ completion
+References: <53BEB909.3030802@imgtec.com> <53CCF498.8000800@imgtec.com>
+In-Reply-To: <53CCF498.8000800@imgtec.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2014 at 1:00 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This is based on top of
-> [PATCH 7/7] b43: enable radio 0x2057 rev 14 support (AKA BCM43217)
-> (not sure if applies cleanly otherwise)
-> ---
->  drivers/net/wireless/b43/b43.h   |  1 +
->  drivers/net/wireless/b43/phy_n.c | 88 ++++++++++++++++++++++++++++++++++------
->  drivers/net/wireless/b43/phy_n.h |  3 ++
->  3 files changed, 80 insertions(+), 12 deletions(-)
+On 07/21/2014 04:38 PM, Sachin Kulkarni wrote:
 >
-
-(snip)
-
-> diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-> index 30bec81..252d843 100644
-> --- a/drivers/net/wireless/b43/phy_n.h
-> +++ b/drivers/net/wireless/b43/phy_n.h
-> @@ -967,6 +967,9 @@ struct b43_phy_n {
->         struct b43_phy_n_txpwrindex txpwrindex[2];
->         struct b43_phy_n_pwr_ctl_info pwr_ctl_info[2];
->         struct b43_chanspec txiqlocal_chanspec;
-> +       struct b43_ppr *tx_pwr_max_ppr;
-
-Why not just make this a struct member? As far as I can tell, it will
-always be allocated, and you would lose one alloc/free call, and
-probably one pointer dereference.
-
-> +       u16 tx_pwr_last_recalc_freq;
-> +       int tx_pwr_last_recalc_limit;
+> From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
 >
->         u8 txrx_chain;
->         u16 tx_rx_cal_phy_saveregs[11];
-> --
-> 1.8.4.5
-
-
-Jonas
+> During a hw scan ieee80211_iface_work ignores work items for all vifs. 
+> However
+> after the scan complete work is requeued only for STA, ADHOC and MESH 
+> iftypes.
+> This occasionally results in event processing getting delayed for 
+> iftype AP when
+> it coexists with a STA, and when the scan durations are very long.
+>
+> Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: johannes@sipsolutions.net
+> ---
+> v2: Fix white space after comma
+>
+> We have a test scenario where there are 2 VIFs: one STA and one AP. 
+> The STA is
+> not connected to anyone while the AP has a station connected to it. 
+> The hardware
+> we are using currently has scan durations of ~8 sec and a new scan 
+> request is
+> generated every 10 s. This results in a window of only 2 s when work 
+> items can
+> be processed by ieee80211_iface_work. We came across scenarios where 
+> the AP is
+> trying to tear down a AMPDU session, and the 
+> IEEE80211_SDATA_QUEUE_AGG_STOP
+> event gets queued. However the work item for this gets ignored by the 
+> ieee80211_iface_work
+> since a hw scan is in progress most of the time. When the scan 
+> completes however
+> the work item for the AP does not get requeued, and by the time the
+> IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items 
+> context,
+> the TX frames just keep getting queued up, since the tid has not been 
+> destroyed.
+> This results in disconnections since things like ARP timeouts etc start
+> happening.
+> ---
+>  net/mac80211/mlme.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 931330b..49af420 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct 
+> ieee80211_sub_if_data *sdata)
+>          if (!(flags&   IEEE80211_HW_CONNECTION_MONITOR))
+>              ieee80211_queue_work(&sdata->local->hw,
+> &sdata->u.mgd.monitor_work);
+> -        /* and do all the other regular work too */
+> -        ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+>      }
+> +
+> +    /* and do all the other regular work too */
+> +    ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+>  }
+>
+>  #ifdef CONFIG_PM
+>
+>
+Sorry Johannes, it looks like my Thunderbird is removing the white space 
+for some reason !! I will try to resend the patch by some other means soon.
