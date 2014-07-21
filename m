@@ -1,126 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:35345 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbaGaUA4 (ORCPT
+Received: from mailapp01.imgtec.com ([195.59.15.196]:41750 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754663AbaGULIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2014 16:00:56 -0400
-Received: by mail-we0-f180.google.com with SMTP id w61so3256210wes.11
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 13:00:55 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3.18 4/7] b43: N-PHY: update rev3+ gain control workarounds
-Date: Thu, 31 Jul 2014 21:59:45 +0200
-Message-Id: <1406836788-23704-5-git-send-email-zajec5@gmail.com> (sfid-20140731_220059_424087_581A5CD2)
-In-Reply-To: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
-References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
+	Mon, 21 Jul 2014 07:08:14 -0400
+Message-ID: <53CCF498.8000800@imgtec.com> (sfid-20140721_130818_006767_FBF110C1)
+Date: Mon, 21 Jul 2014 16:38:08 +0530
+From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH-v2] mac80211: Requeue work for all iftypes after scan completion
+References: <53BEB909.3030802@imgtec.com>
+In-Reply-To: <53BEB909.3030802@imgtec.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes workarounds on rev 6+ and cleans code slightly.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+
+During a hw scan ieee80211_iface_work ignores work items for all vifs. However
+after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
+This occasionally results in event processing getting delayed for iftype AP when
+it coexists with a STA, and when the scan durations are very long.
+
+Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
 ---
- drivers/net/wireless/b43/tables_nphy.c | 61 +++++++++++++++++++++-------------
- 1 file changed, 37 insertions(+), 24 deletions(-)
+v2: Fix white space after comma
 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 4b58850..f449cff 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3197,7 +3197,7 @@ static struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_workaround[2][4] = {
- 			{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 },
- 			0x527E, /* invalid for external LNA! */
- 			{ 0x513F, 0x513F, 0x513F, 0x513F }, /* invalid for external LNA! */
--			0x1076, 0x0066, 0x0000, /* low is invalid (the last one) */
-+			0x007E, 0x0066, 0x0000, /* low is invalid (the last one) */
- 			0x18, 0x18, 0x18,
- 			0x01D0, 0x5,
- 		},
-@@ -3711,6 +3711,7 @@ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev)
- struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 	struct b43_wldev *dev, bool ghz5, bool ext_lna)
- {
-+	struct b43_phy *phy = &dev->phy;
- 	struct nphy_gain_ctl_workaround_entry *e;
- 	u8 phy_idx;
- 
-@@ -3729,37 +3730,49 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 	e = &nphy_gain_ctl_workaround[ghz5][phy_idx];
- 
- 	/* Some workarounds to the workarounds... */
--	if (ghz5 && dev->phy.rev >= 6) {
--		if (dev->phy.radio_rev == 11 &&
--		    !b43_is_40mhz(dev))
--			e->cliplo_gain = 0x2d;
--	} else if (!ghz5 && dev->phy.rev >= 5) {
--		static const int gain_data[] = {0x0062, 0x0064, 0x006a, 0x106a,
--						0x106c, 0x1074, 0x107c, 0x207c};
-+	if (!ghz5) {
- 		u8 tr_iso = dev->dev->bus_sprom->fem.ghz2.tr_iso;
- 
--		if (ext_lna) {
-+		if (tr_iso > 7)
-+			tr_iso = 3;
+We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
+not connected to anyone while the AP has a station connected to it. The hardware
+we are using currently has scan durations of ~8 sec and a new scan request is
+generated every 10 s. This results in a window of only 2 s when work items can
+be processed by ieee80211_iface_work. We came across scenarios where the AP is
+trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
+event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
+since a hw scan is in progress most of the time. When the scan completes however
+the work item for the AP does not get requeued, and by the time the
+IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
+the TX frames just keep getting queued up, since the tid has not been destroyed.
+This results in disconnections since things like ARP timeouts etc start
+happening.
+---
+  net/mac80211/mlme.c |    5 +++--
+  1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 931330b..49af420 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+  		if (!(flags&   IEEE80211_HW_CONNECTION_MONITOR))
+  			ieee80211_queue_work(&sdata->local->hw,
+  					&sdata->u.mgd.monitor_work);
+-		/* and do all the other regular work too */
+-		ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+  	}
 +
-+		if (phy->rev >= 6) {
-+			static const int gain_data[] = { 0x106a, 0x106c, 0x1074,
-+							 0x107c, 0x007e, 0x107e,
-+							 0x207e, 0x307e, };
-+
-+			e->cliplo_gain = gain_data[tr_iso];
-+		} else if (phy->rev == 5) {
-+			static const int gain_data[] = { 0x0062, 0x0064, 0x006a,
-+							 0x106a, 0x106c, 0x1074,
-+							 0x107c, 0x207c, };
-+
-+			e->cliplo_gain = gain_data[tr_iso];
-+		}
-+
-+		if (phy->rev >= 5 && ext_lna) {
- 			e->rfseq_init[0] &= ~0x4000;
- 			e->rfseq_init[1] &= ~0x4000;
- 			e->rfseq_init[2] &= ~0x4000;
- 			e->rfseq_init[3] &= ~0x4000;
- 			e->init_gain &= ~0x4000;
- 		}
--		if (tr_iso > 7)
--			tr_iso = 3;
--		e->cliplo_gain = gain_data[tr_iso];
--
--	} else if (ghz5 && dev->phy.rev == 4 && ext_lna) {
--		e->rfseq_init[0] &= ~0x4000;
--		e->rfseq_init[1] &= ~0x4000;
--		e->rfseq_init[2] &= ~0x4000;
--		e->rfseq_init[3] &= ~0x4000;
--		e->init_gain &= ~0x4000;
--		e->rfseq_init[0] |= 0x1000;
--		e->rfseq_init[1] |= 0x1000;
--		e->rfseq_init[2] |= 0x1000;
--		e->rfseq_init[3] |= 0x1000;
--		e->init_gain |= 0x1000;
-+	} else {
-+		if (phy->rev >= 6) {
-+			if (phy->radio_rev == 11 && !b43_is_40mhz(dev))
-+				e->crsminu = 0x2d;
-+		} else if (phy->rev == 4 && ext_lna) {
-+			e->rfseq_init[0] &= ~0x4000;
-+			e->rfseq_init[1] &= ~0x4000;
-+			e->rfseq_init[2] &= ~0x4000;
-+			e->rfseq_init[3] &= ~0x4000;
-+			e->init_gain &= ~0x4000;
-+			e->rfseq_init[0] |= 0x1000;
-+			e->rfseq_init[1] |= 0x1000;
-+			e->rfseq_init[2] |= 0x1000;
-+			e->rfseq_init[3] |= 0x1000;
-+			e->init_gain |= 0x1000;
-+		}
- 	}
- 
- 	return e;
--- 
-1.8.4.5
++	/* and do all the other regular work too */
++	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+  }
+
+  #ifdef CONFIG_PM
+
+
 
