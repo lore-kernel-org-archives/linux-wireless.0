@@ -1,176 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:63735 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933216AbaGOS4J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 14:56:09 -0400
-Received: by mail-wg0-f42.google.com with SMTP id l18so5964728wgh.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 11:56:07 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/12] staging: vt6656: usbpipe irrelevant function descriptions
-Date: Tue, 15 Jul 2014 19:54:43 +0100
-Message-Id: <1405450483-2875-12-git-send-email-tvboxspy@gmail.com> (sfid-20140715_205952_073048_60377B71)
-In-Reply-To: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
-References: <1405450483-2875-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44992 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754305AbaGUJhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2014 05:37:25 -0400
+Message-ID: <1405935434.32255.2.camel@jlt4.sipsolutions.net> (sfid-20140721_113736_105364_6FBAE043)
+Subject: Re: [PATCH] mac80211: Requeue work for all iftypes after scan
+ completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 21 Jul 2014 11:37:14 +0200
+In-Reply-To: <53BEB909.3030802@imgtec.com>
+References: <82A67CC48AF04D43A69EB66645975134218BA7EE@hbmail01.hb.imgtec.org>
+	 <53BEB909.3030802@imgtec.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All these have no or vague meaning.
+On Thu, 2014-07-10 at 21:32 +0530, Sachin Kulkarni wrote:
+> From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+> 
+> During a hw scan ieee80211_iface_work ignores work items for all vifs. However
+> after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
+> This occasionally results in event processing getting delayed for iftype AP when
+> it coexists with a STA, and when the scan durations are very long.
+> 
+> Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: johannes@sipsolutions.net
+> ---
+> We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
+> not connected to anyone while the AP has a station connected to it. The hardware
+> we are using currently has scan durations of ~8 sec and a new scan request is
+> generated every 10 s. This results in a window of only 2 s when work items can
+> be processed by ieee80211_iface_work. We came across scenarios where the AP is
+> trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
+> event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
+> since a hw scan is in progress most of the time. When the scan completes however
+> the work item for the AP does not get requeued, and by the time the
+> IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
+> the TX frames just keep getting queued up, since the tid has not been destroyed.
+> This results in disconnections since things like ARP timeouts etc start
+> happening.
+> ---
+>   net/mac80211/mlme.c |    5 +++--
+>   1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 931330b..49af420 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+>   		if (!(flags&  IEEE80211_HW_CONNECTION_MONITOR))
+>   			ieee80211_queue_work(&sdata->local->hw,
+>   					&sdata->u.mgd.monitor_work);
+> -		/* and do all the other regular work too */
+> -		ieee80211_queue_work(&sdata->local->hw,&sdata->work);
+>   	}
+> +
+> +	/* and do all the other regular work too */
+> +	ieee80211_queue_work(&sdata->local->hw,&sdata->work);
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/usbpipe.c | 100 ---------------------------------------
- 1 file changed, 100 deletions(-)
+Please fix the space while at it. :)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 5fcfbf5..59e508c 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -117,20 +117,6 @@ void vnt_control_in_u8(struct vnt_private *priv, u8 reg, u8 reg_off, u8 *data)
- 			reg_off, reg, sizeof(u8), data);
- }
- 
--/*
-- * Description:
-- *      Allocates an usb interrupt in irp and calls USBD.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
- int vnt_start_interrupt_urb(struct vnt_private *priv)
- {
- 	int status = STATUS_FAILURE;
-@@ -158,21 +144,6 @@ int vnt_start_interrupt_urb(struct vnt_private *priv)
- 	return status;
- }
- 
--/*
-- * Description:
-- *      Complete function of usb interrupt in irp.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
- static void vnt_start_interrupt_urb_complete(struct urb *urb)
- {
- 	struct vnt_private *priv = urb->context;
-@@ -211,20 +182,6 @@ static void vnt_start_interrupt_urb_complete(struct urb *urb)
- 	return;
- }
- 
--/*
-- * Description:
-- *      Allocates an usb BulkIn  irp and calls USBD.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
- int vnt_submit_rx_urb(struct vnt_private *priv, struct vnt_rcb *rcb)
- {
- 	int status = 0;
-@@ -256,21 +213,6 @@ int vnt_submit_rx_urb(struct vnt_private *priv, struct vnt_rcb *rcb)
- 	return status;
- }
- 
--/*
-- * Description:
-- *      Complete function of usb BulkIn irp.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
- static void vnt_submit_rx_urb_complete(struct urb *urb)
- {
- 	struct vnt_rcb *rcb = urb->context;
-@@ -323,20 +265,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- 	return;
- }
- 
--/*
-- * Description:
-- *      Allocates an usb BulkOut  irp and calls USBD.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice     - Pointer to the adapter
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_INSUFFICIENT_RESOURCES or result of IoCallDriver
-- *
-- */
--
- int vnt_tx_context(struct vnt_private *priv,
- 				struct vnt_usb_send_context *context)
- {
-@@ -369,34 +297,6 @@ int vnt_tx_context(struct vnt_private *priv,
- 	return STATUS_PENDING;
- }
- 
--/*
-- * Description: vnt_tx_context_complete
-- *     1a) Indicate to the protocol the status of the write.
-- *     1b) Return ownership of the packet to the protocol.
-- *
-- *     2)  If any more packets are queue for sending, send another packet
-- *         to USBD.
-- *         If the attempt to send the packet to the driver fails,
-- *         return ownership of the packet to the protocol and
-- *         try another packet (until one succeeds).
-- *
-- * Parameters:
-- *  In:
-- *      pdoUsbDevObj  - pointer to the USB device object which
-- *                      completed the irp
-- *      pIrp          - the irp which was completed by the
-- *                      device object
-- *      pContext      - the context given to IoSetCompletionRoutine
-- *                      before calling IoCallDriver on the irp
-- *                      The pContext is a pointer to the USB device object.
-- *  Out:
-- *      none
-- *
-- * Return Value: STATUS_MORE_PROCESSING_REQUIRED - allows the completion routine
-- *               (IofCompleteRequest) to stop working on the irp.
-- *
-- */
--
- static void vnt_tx_context_complete(struct urb *urb)
- {
- 	struct vnt_usb_send_context *context = urb->context;
--- 
-2.0.1
+johannes
 
