@@ -1,58 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:47060 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbaGAMUK (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:53920 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753954AbaGUMNf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 08:20:10 -0400
+	Mon, 21 Jul 2014 08:13:35 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH 2/2] ath10k: add spectral scan feature
+Date: Mon, 21 Jul 2014 14:13:29 +0200
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Sven Eckelmann <sven@narfation.org>
+References: <1405689992-8538-1-git-send-email-sw@simonwunderlich.de> <201407211159.26103.sw@simonwunderlich.de> <CA+BoTQnCLDJYzGDLA-zHcaddY-cyuC48dMwTnoHJP+KYG2tN_Q@mail.gmail.com>
+In-Reply-To: <CA+BoTQnCLDJYzGDLA-zHcaddY-cyuC48dMwTnoHJP+KYG2tN_Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140701065721.GM24891@us.netrek.org>
-References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
-	<20140628052220.GG10407@us.netrek.org>
-	<20140628072322.GC7410@atomide.com>
-	<CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com>
-	<20140630061912.GA2461@atomide.com>
-	<53B1BAC1.3090902@zonque.org>
-	<477F20668A386D41ADCC57781B1F70430FE5F37540@SC-VEXCH1.marvell.com>
-	<20140701065721.GM24891@us.netrek.org>
-Date: Tue, 1 Jul 2014 17:50:08 +0530
-Message-ID: <CA+NduCAuRFTQneJUBiKP2Aeq2HCxe71yxg_iDDStkNvhzRg-Rg@mail.gmail.com> (sfid-20140701_142017_049627_EA2BE5CA)
-Subject: Re: mwifiex card reset
-From: Yuvaraj Cd <yuvaraj.lkml@gmail.com>
-To: James Cameron <quozl@laptop.org>
-Cc: Bing Zhao <bzhao@marvell.com>, Daniel Mack <daniel@zonque.org>,
-	Tony Lindgren <tony@atomide.com>,
-	Andreas Fenkart <afenkart@gmail.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Douglas Anderson <dianders@chromium.org>,
-	Tomasz Figa <t.figa@samsung.com>,
-	sunil joshi <joshi@samsung.com>, prashanth.g@samsung.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201407211413.29392.sw@simonwunderlich.de> (sfid-20140721_141338_255020_DC5E5D5D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 1, 2014 at 12:27 PM, James Cameron <quozl@laptop.org> wrote:
-> On Mon, Jun 30, 2014 at 11:44:29PM -0700, Bing Zhao wrote:
->> I may have missed something, but doesn't the MMC_POWER_OFF and
->> MMC_POWER_ON|UP handling in controller driver help?
->> Anyway the clocks/GPIOs/regulators are sort of platform
->> dependent. Would it be better putting it in /arch/arm/mach-xxxxx/?
->
-> Wouldn't device tree for mmc be better?
-I have come across same problem.Below is the thread in which more
-discussions happened on this.
- http://patchwork.ozlabs.org/patch/312444/
-I am adding few more those who are interested in this solution.
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> > +       arvif = ath10k_get_spectral_vdev(ar);
+> >> > +       if (!arvif)
+> >> > +               return -ENODEV;
+> >> > +       vdev_id = arvif->vdev_id;
+> >> > +
+> >> > +       if (ar->spectral_mode == SPECTRAL_DISABLED)
+> >> > +               return 0;
+> >> > +
+> >> > +       res = ath10k_wmi_vdev_spectral_enable(ar, vdev_id,
+> >> > +
+> >> > WMI_SPECTRAL_TRIGGER_CMD_CLEAR, +
+> >> > 
+> >> >      WMI_SPECTRAL_ENABLE_CMD_ENABLE); +       if (res < 0)
+> >> > 
+> >> > +               return res;
+> >> > +
+> >> > +       res = ath10k_wmi_vdev_spectral_enable(ar, vdev_id,
+> >> > +
+> >> > WMI_SPECTRAL_TRIGGER_CMD_TRIGGER, +
+> >> > 
+> >> >        WMI_SPECTRAL_ENABLE_CMD_ENABLE); +       if (res < 0)
+> >> > 
+> >> > +               return res;
+> >> > +
+> >> > +       return 0;
+> >> > +}
+> >> > +static int ath10k_spectral_scan_config(struct ath10k *ar,
+> >> > +                                      enum ath10k_spectral_mode mode)
+> >> > +{
+> >> > +       struct wmi_vdev_spectral_conf_arg arg;
+> >> > +       struct ath10k_vif *arvif;
+> >> > +       int vdev_id, count, res = 0;
+> >> > +
+> >> 
+> >> Ditto. lockdep_assert_held().
+> > 
+> > Actually both functions are calling ath10k_get_spectral_vdev() which
+> > already has that assert, but it doesn't hurt to put it here as well.
+> > Will do. :)
+> 
+> True but those functions (scan_config, scan_trigger) also access
+> conf_mutex protected data themselves directly. If
+> ath10k_get_spectral_vdev() was to be changed to not require conf_mutex
+> you'd have to remember to move lockdep_assert_held() up the call
+> stack.
+
+Ah, that's right. I'll add that anyway. :)
+
+> 
+> >> Did you test this against a firmware crash while spectral scan is
+> >> enabled? ar->spectral_mode will be left as-is when restart is
+> >> performed but no spectral scan will be actually configured. You either
+> >> need to restart spectral scan (better from user perspective) or clear
+> >> out the old mode (easier to code, but bad from user perspective
+> >> because suddenly spectral scan would be stopped implicitly by device
+> >> crash).
+> > 
+> > No, I didn't test that against a firmware crash yet ...
+> 
+> There's 'simulate_fw_crash' in debugfs. I suggest 'hard' method.
+> 'soft' works only with fw 636 now. Watch out for possible host lockups
+> though.
+> 
+
+Thanks, the hard firmware crash worked for me.
+
+> > Restarting spectral
+> > would probably a good idea in endless mode, but not if "count" has been
+> > set.
+> 
+> Hmm good point, but then what if you have count=20 and fw crashes in
+> the middle of performing the spectral scan run (e.g. at iteration 10)?
+> 
+> But then this is just a debug interface (or is it?). I don't know if
+> it's worth it going to great lengths to provide a super smooth user
+> experience.
+
+Well yeah, it's in debugfs so its a debug interface. ;) Since we don't really 
+keep track whether a scan was triggered or not, and the firmware takes some 
+time to recover, I don't think it's worth the hassle - without creating more 
+confusion. I'll reset the spectral mode in any case so users at least see that 
+its disabled.
+
+I'll send the next round of patches in some minutes. :)
+
+Thanks!
+    Simon
