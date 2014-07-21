@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50393 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030575AbaGRRpN (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:18748 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932647AbaGURwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 13:45:13 -0400
-Date: Fri, 18 Jul 2014 13:42:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-07-14
-Message-ID: <20140718174203.GE31114@tuxdriver.com> (sfid-20140718_194547_007872_C7C2FCE6)
-References: <20140714214944.GA4374@joana>
+	Mon, 21 Jul 2014 13:52:25 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: workaround boot issues with KVM/PCI-passthrough
+References: <1405515699-32452-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 21 Jul 2014 20:52:20 +0300
+In-Reply-To: <1405515699-32452-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 16 Jul 2014 15:01:39 +0200")
+Message-ID: <878unmy4yz.fsf@kamboji.qca.qualcomm.com> (sfid-20140721_195228_941041_C235AFD6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140714214944.GA4374@joana>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 06:49:44PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> Some more patches for 3.17. The most important change here is the move of
-> the 6lowpan code to net/6lowpan. It has been agreed with Davem that this
-> change will go through the bluetooth tree. The rest are mostly clean up and
-> fixes.
-> 
-> Please pull! or let me know of any issues. Thanks!
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit 6fea7ad1d338dba592d65423427a997f1b7ff485:
-> 
->   Bluetooth: Don't send ERTM configuration option when disabled (2014-07-09 13:53:36 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to 4d042654afb342386cb5c33e29843b76d598ab61:
-> 
->   Bluetooth: cmtp: Remove unnecessary null test (2014-07-14 23:00:13 +0200)
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Pulling now...
+> Apparently iomap writes that unmask CE irqs aren't
+> propagated properly sometimes. Before failing try
+> to poll for the control response message as it may
+> have been delivered without an interrupt.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+Thanks, applied.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
