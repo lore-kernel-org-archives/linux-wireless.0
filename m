@@ -1,91 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:51306 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320AbaGUSKW (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:53992 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755114AbaGUMcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 14:10:22 -0400
-Received: by mail-wi0-f176.google.com with SMTP id bs8so4659385wib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 11:10:21 -0700 (PDT)
-Message-ID: <53CD5785.80408@gmail.com> (sfid-20140721_201027_948112_EF6E8AE4)
-Date: Mon, 21 Jul 2014 21:10:13 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2014-07-21
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="rjE5AEP4cSenv7sRnj3R7WHXWa9SHt6HX"
+	Mon, 21 Jul 2014 08:32:32 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	sven@narfation.org, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCHv2 1/2] ath: Move spectral debugfs structs to shared header
+Date: Mon, 21 Jul 2014 14:32:22 +0200
+Message-Id: <1405945943-8303-2-git-send-email-sw@simonwunderlich.de> (sfid-20140721_143237_124817_3446CFCA)
+In-Reply-To: <1405945943-8303-1-git-send-email-sw@simonwunderlich.de>
+References: <1405945943-8303-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---rjE5AEP4cSenv7sRnj3R7WHXWa9SHt6HX
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Sven Eckelmann <sven@narfation.org>
 
-Hi John,
+The ath9k and ath10k will share the definitions of the debugfs spectral
+structures and enums. Having them in the same place helps to avoid conflicts.
 
-This is a pull request for 3.16.
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ drivers/net/wireless/ath/ath9k/spectral.h  | 71 +-----------------------
+ drivers/net/wireless/ath/spectral_common.h | 88 ++++++++++++++++++++++++++++++
+ 2 files changed, 90 insertions(+), 69 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/spectral_common.h
 
-It includes a merge damage fix. This region has been changed in -next and=
- -fixes quite a few times and apparently, I failed to handle it properly,=
- so here the fix.
-Along with that I have a fix from Eliad to properly handle overlapping BS=
-S in AP mode.
+diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
+index 137e2e6..0b9465e 100644
+--- a/drivers/net/wireless/ath/ath9k/spectral.h
++++ b/drivers/net/wireless/ath/ath9k/spectral.h
+@@ -17,6 +17,8 @@
+ #ifndef SPECTRAL_H
+ #define SPECTRAL_H
+ 
++#include "../spectral_common.h"
++
+ /* enum spectral_mode:
+  *
+  * @SPECTRAL_DISABLED: spectral mode is disabled
+@@ -54,8 +56,6 @@ struct ath_ht20_mag_info {
+ 	u8 max_exp;
+ } __packed;
+ 
+-#define SPECTRAL_HT20_NUM_BINS		56
+-
+ /* WARNING: don't actually use this struct! MAC may vary the amount of
+  * data by -1/+2. This struct is for reference only.
+  */
+@@ -83,8 +83,6 @@ struct ath_ht20_40_mag_info {
+ 	u8 max_exp;
+ } __packed;
+ 
+-#define SPECTRAL_HT20_40_NUM_BINS		128
+-
+ /* WARNING: don't actually use this struct! MAC may vary the amount of
+  * data. This struct is for reference only.
+  */
+@@ -125,71 +123,6 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
+ 	return bins[0] & 0x3f;
+ }
+ 
+-/* FFT sample format given to userspace via debugfs.
+- *
+- * Please keep the type/length at the front position and change
+- * other fields after adding another sample type
+- *
+- * TODO: this might need rework when switching to nl80211-based
+- * interface.
+- */
+-enum ath_fft_sample_type {
+-	ATH_FFT_SAMPLE_HT20 = 1,
+-	ATH_FFT_SAMPLE_HT20_40,
+-};
+-
+-struct fft_sample_tlv {
+-	u8 type;	/* see ath_fft_sample */
+-	__be16 length;
+-	/* type dependent data follows */
+-} __packed;
+-
+-struct fft_sample_ht20 {
+-	struct fft_sample_tlv tlv;
+-
+-	u8 max_exp;
+-
+-	__be16 freq;
+-	s8 rssi;
+-	s8 noise;
+-
+-	__be16 max_magnitude;
+-	u8 max_index;
+-	u8 bitmap_weight;
+-
+-	__be64 tsf;
+-
+-	u8 data[SPECTRAL_HT20_NUM_BINS];
+-} __packed;
+-
+-struct fft_sample_ht20_40 {
+-	struct fft_sample_tlv tlv;
+-
+-	u8 channel_type;
+-	__be16 freq;
+-
+-	s8 lower_rssi;
+-	s8 upper_rssi;
+-
+-	__be64 tsf;
+-
+-	s8 lower_noise;
+-	s8 upper_noise;
+-
+-	__be16 lower_max_magnitude;
+-	__be16 upper_max_magnitude;
+-
+-	u8 lower_max_index;
+-	u8 upper_max_index;
+-
+-	u8 lower_bitmap_weight;
+-	u8 upper_bitmap_weight;
+-
+-	u8 max_exp;
+-
+-	u8 data[SPECTRAL_HT20_40_NUM_BINS];
+-} __packed;
+-
+ void ath9k_spectral_init_debug(struct ath_softc *sc);
+ void ath9k_spectral_deinit_debug(struct ath_softc *sc);
+ 
+diff --git a/drivers/net/wireless/ath/spectral_common.h b/drivers/net/wireless/ath/spectral_common.h
+new file mode 100644
+index 0000000..b9ab722
+--- /dev/null
++++ b/drivers/net/wireless/ath/spectral_common.h
+@@ -0,0 +1,88 @@
++/*
++ * Copyright (c) 2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef SPECTRAL_COMMON_H
++#define SPECTRAL_COMMON_H
++
++#define SPECTRAL_HT20_NUM_BINS		56
++#define SPECTRAL_HT20_40_NUM_BINS		128
++
++/* FFT sample format given to userspace via debugfs.
++ *
++ * Please keep the type/length at the front position and change
++ * other fields after adding another sample type
++ *
++ * TODO: this might need rework when switching to nl80211-based
++ * interface.
++ */
++enum ath_fft_sample_type {
++	ATH_FFT_SAMPLE_HT20 = 1,
++	ATH_FFT_SAMPLE_HT20_40,
++};
++
++struct fft_sample_tlv {
++	u8 type;	/* see ath_fft_sample */
++	__be16 length;
++	/* type dependent data follows */
++} __packed;
++
++struct fft_sample_ht20 {
++	struct fft_sample_tlv tlv;
++
++	u8 max_exp;
++
++	__be16 freq;
++	s8 rssi;
++	s8 noise;
++
++	__be16 max_magnitude;
++	u8 max_index;
++	u8 bitmap_weight;
++
++	__be64 tsf;
++
++	u8 data[SPECTRAL_HT20_NUM_BINS];
++} __packed;
++
++struct fft_sample_ht20_40 {
++	struct fft_sample_tlv tlv;
++
++	u8 channel_type;
++	__be16 freq;
++
++	s8 lower_rssi;
++	s8 upper_rssi;
++
++	__be64 tsf;
++
++	s8 lower_noise;
++	s8 upper_noise;
++
++	__be16 lower_max_magnitude;
++	__be16 upper_max_magnitude;
++
++	u8 lower_max_index;
++	u8 upper_max_index;
++
++	u8 lower_bitmap_weight;
++	u8 upper_bitmap_weight;
++
++	u8 max_exp;
++
++	u8 data[SPECTRAL_HT20_40_NUM_BINS];
++} __packed;
++
++#endif /* SPECTRAL_COMMON_H */
+-- 
+1.9.1
 
-Let me know if you have issues with this.
-Thanks!
-
-The following changes since commit dc271ee0d04d12d6bfabacbec803289a7072fb=
-d9:
-
-  iwlwifi: mvm: disable CTS to Self (2014-07-03 20:55:18 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- master
-
-for you to fetch changes up to 4601879419f94a89fcbf427b4d3bfbf4ce294174:
-
-  iwlwifi: mvm: pass beacons from foreign APs (2014-07-21 10:38:25 +0300)=
-
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      iwlwifi: mvm: pass beacons from foreign APs
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: fix merge damage
-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 15 +++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 -------
- 2 files changed, 13 insertions(+), 9 deletions(-)
-
-
---rjE5AEP4cSenv7sRnj3R7WHXWa9SHt6HX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTzVeIAAoJEC0Llv5uNjIB0kwP/jKGSEOHf0SdU9tRBcJRyWxi
-P66Kxux3GJqFZ6DyiisZZGvxCflPjSJSvO6jyZ7x3m2smTIRYYB+rV9Ar7wUdsks
-cqi0y8cR3gdLnfXdTuAdpTu3WbSX2QCGKyacdwDS/D+M84M871/1dK5iptfdrDKV
-dlGv+K2nzmJ/yv4rmeO+0p8tBanlGNcrJx8+TMlLOc5wpXiF+GcRxeqeCP39POT5
-6Q6wnTB1eoMj6aBgVzd7d36+BCJkVyJijnczqvmkuIG+IdTJA3LERuRWhZ0L8agZ
-h5gNyur768W9MkhwCSW/ig738dPUnlRz+eJR6clo7v5FsACK/6AViyB3zdwbEMA5
-mHaBMsQAy8TitHDKEWtyQFX9twN3TGEAfrsvLYqKCMmM5Pmfnsb4+oKhupGuJzba
-CqVkuWk5ssISHtRV/fijxpDJvkBoRLwHdctPJ+oaLdoF7V04YbuiWti6mFSEo/TM
-81xwUMSD3J1VOEgCmV9OvkyWhyLB8IfC2Y4lUbhzNGa02r860QVR6zEeGptvwzzv
-SIxncQvg6JHvZdAp+bIHT5NJfq0zei/N/aqzsGmTTwOuXIy7vKfqktnHe/D72NfS
-A/tKFzll/3NcGugFbtj8H/nMtu4Pe2zhgnRp4VqmUhAH02/zX8zWDPfM208c0Qcd
-jgKZZmJO2JuUZ9VHy9Qa
-=vD3Y
------END PGP SIGNATURE-----
-
---rjE5AEP4cSenv7sRnj3R7WHXWa9SHt6HX--
