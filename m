@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:45114 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755819AbaGCMuW (ORCPT
+Received: from mailapp01.imgtec.com ([195.59.15.196]:13579 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932332AbaGUOyg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 08:50:22 -0400
-Received: by mail-ob0-f177.google.com with SMTP id uy5so191625obc.22
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2014 05:50:22 -0700 (PDT)
+	Mon, 21 Jul 2014 10:54:36 -0400
+From: Sachin Kulkarni <Sachin.Kulkarni@imgtec.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: [PATCH-v3] mac80211: Requeue work for all iftypes after scan
+ completion
+Date: Mon, 21 Jul 2014 14:54:30 +0000
+Message-ID: <595BC7E78B8E074B8ACE72C46C1F6A2C2A79FF56@hbmail01.hb.imgtec.org> (sfid-20140721_165443_147472_883F2A79)
+References: <595BC7E78B8E074B8ACE72C46C1F6A2C2A79FF28@hbmail01.hb.imgtec.org>
+In-Reply-To: <595BC7E78B8E074B8ACE72C46C1F6A2C2A79FF28@hbmail01.hb.imgtec.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com>
-References: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com>
-Date: Thu, 3 Jul 2014 14:50:21 +0200
-Message-ID: <CACna6rx+EkoCPQ06qDTbaDFEJ1hrn_CYSbrPmosF0ikhkqDxpA@mail.gmail.com> (sfid-20140703_145032_004211_FF41605C)
-Subject: Re: Looking for someone with BCM43227 and (maybe) compilation skill ;)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: b43-dev <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b414164af6f7704fd49738f
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---047d7b414164af6f7704fd49738f
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
 
-On 3 July 2014 14:32, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
-> I want to add support for BCM43227 in b43, however I need help of some
-> BCM43227 owner. Well, I could buy one by myself (less than 10$ on
-> eBay), but I don't want to wait a month to receive it.
->
-> So I need someone with:
-> 1) BCM43227 ;)
-> 2) Kernel with CONFIG_MMIOTRACE=3Dy*
-> 3) Broadcom Linux STA driver 6.30.223.141
->
-> So? Is there anyone around with BCM43227 willing to help?
+During a hw scan ieee80211_iface_work ignores work items for all vifs. However
+after the scan complete work is requeued only for STA, ADHOC and MESH iftypes.
+This occasionally results in event processing getting delayed for iftype AP when
+it coexists with a STA, and when the scan durations are very long.
 
-I'd need someone to:
-1) Disable NetworkManager & blacklist wl
-2) Make a cold boot (power off for 3 seconds)
-3) Run attached script
-4) Provide me /tmp/dump.txt (preferably compressed)
+Signed-off-by: Sachin Kulkarni<sachin.kulkarni@imgtec.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+---
+v3: Fix white space after comma
 
---047d7b414164af6f7704fd49738f
-Content-Type: application/x-sh; name="mmiotrace.sh"
-Content-Disposition: attachment; filename="mmiotrace.sh"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hx62jk361
+We have a test scenario where there are 2 VIFs: one STA and one AP. The STA is
+not connected to anyone while the AP has a station connected to it. The hardware
+we are using currently has scan durations of ~8 sec and a new scan request is
+generated every 10 s. This results in a window of only 2 s when work items can
+be processed by ieee80211_iface_work. We came across scenarios where the AP is
+trying to tear down a AMPDU session, and the IEEE80211_SDATA_QUEUE_AGG_STOP
+event gets queued. However the work item for this gets ignored by the ieee80211_iface_work
+since a hw scan is in progress most of the time. When the scan completes however
+the work item for the AP does not get requeued, and by the time the
+IEEE80211_SDATA_QUEUE_AGG_STOP gets processed in some other work items context,
+the TX frames just keep getting queued up, since the tid has not been destroyed.
+This results in disconnections since things like ARP timeouts etc start
+happening.
+---
+ net/mac80211/mlme.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-IyEvYmluL3NoCgplY2hvIDQwOTQgPiAvc3lzL2tlcm5lbC9kZWJ1Zy90cmFjaW5nL2J1ZmZlcl9z
-aXplX2tiCmVjaG8gbW1pb3RyYWNlID4gL3N5cy9rZXJuZWwvZGVidWcvdHJhY2luZy9jdXJyZW50
-X3RyYWNlcgpjYXQgL3N5cy9rZXJuZWwvZGVidWcvdHJhY2luZy90cmFjZV9waXBlID4gL3RtcC9k
-dW1wLnR4dCAmCgpzbGVlcCAycwoKZWNobyAibW9kcHJvYmUgc3RhcnQiID4gL3N5cy9rZXJuZWwv
-ZGVidWcvdHJhY2luZy90cmFjZV9tYXJrZXIKbW9kcHJvYmUgd2wKZWNobyAibW9kcHJvYmUgZW5k
-IiA+IC9zeXMva2VybmVsL2RlYnVnL3RyYWNpbmcvdHJhY2VfbWFya2VyCgpzbGVlcCAycwoKZWNo
-byAiaXAgbGluayBzZXQgd2xhblggdXAgc3RhcnQiID4gL3N5cy9rZXJuZWwvZGVidWcvdHJhY2lu
-Zy90cmFjZV9tYXJrZXIKaXAgbGluayBzZXQgd2xhbjAgdXAKZWNobyAiaXAgbGluayBzZXQgd2xh
-blggdXAgZW5kIiA+IC9zeXMva2VybmVsL2RlYnVnL3RyYWNpbmcvdHJhY2VfbWFya2VyCgpzbGVl
-cCAycwoKZWNobyAiaXcgZGV2IHdsYW5YIHNjYW4gc3RhcnQiID4gL3N5cy9rZXJuZWwvZGVidWcv
-dHJhY2luZy90cmFjZV9tYXJrZXIKaXcgZGV2IHdsYW4wIHNjYW4KZWNobyAiaXcgZGV2IHdsYW5Y
-IHNjYW4gZW5kIiA+IC9zeXMva2VybmVsL2RlYnVnL3RyYWNpbmcvdHJhY2VfbWFya2VyCgplY2hv
-IG5vcCA+IC9zeXMva2VybmVsL2RlYnVnL3RyYWNpbmcvY3VycmVudF90cmFjZXIKa2lsbGFsbCBj
-YXQK
---047d7b414164af6f7704fd49738f--
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 931330b..49af420 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3647,9 +3647,10 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ 		if (!(flags & IEEE80211_HW_CONNECTION_MONITOR))
+ 			ieee80211_queue_work(&sdata->local->hw,
+ 					     &sdata->u.mgd.monitor_work);
+-		/* and do all the other regular work too */
+-		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 	}
++
++	/* and do all the other regular work too */
++	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ }
+ 
+ #ifdef CONFIG_PM
