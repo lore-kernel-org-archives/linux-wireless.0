@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:44061 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752214AbaGLTNR (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:53212 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450AbaGUKCD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 15:13:17 -0400
-Received: by mail-wg0-f43.google.com with SMTP id l18so1705819wgh.2
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 12:13:16 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/4] staging: vt6656: baseband.c rename abyVT3184_AGC to vnt_vt3184_agc
-Date: Sat, 12 Jul 2014 20:12:43 +0100
-Message-Id: <1405192365-3134-2-git-send-email-tvboxspy@gmail.com> (sfid-20140712_211329_773089_63E6247D)
-In-Reply-To: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
-References: <1405192365-3134-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 21 Jul 2014 06:02:03 -0400
+Received: by mail-wi0-f182.google.com with SMTP id d1so3737514wiv.15
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 03:02:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1405936026.32255.6.camel@jlt4.sipsolutions.net>
+References: <CALhHN=ofbPoy6z+Bj2L4vTroYDde+2+VWY6f6FVgzrY9ZC+xEA@mail.gmail.com>
+	<1405936026.32255.6.camel@jlt4.sipsolutions.net>
+Date: Mon, 21 Jul 2014 12:02:01 +0200
+Message-ID: <CA+BoTQmK5z45fPtGAVedJa+pgL13pf9_OP0LeBQed4iUdp+vkQ@mail.gmail.com> (sfid-20140721_120212_555855_D010CF48)
+Subject: Re: mac80211: A-MPDU reordering issue when RX_FLAG_AMSDU_MORE
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+On 21 July 2014 11:47, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-07-09 at 10:16 +0200, Janusz Dziedzic wrote:
+>> Hello Johannes,
+>>
+>> Seems current mac80211 A-MPDU reordering implementation don't work
+>> correctly with drivers that prefer to report separate A-MSDU subframes
+>> instead of one huge frame (using RX_FLAG_AMSDU_MORE). Seems there is a
+>> table where index is a sequence number (ampdu sn), so don't work
+>> correctly while we report few A-MSDU frames with the same SN.
+>>
+>> We see this problem with ath10k driver. As I understand correctly, we
+>> will have to change/rewrite mac80211 reordering code to support
+>> correctly A-MSDU packets with RX_FLAG_AMSDU_MORE?
+>>
+>> Or
+>>
+[...]
+>> What do you think?
+>
+> Looks like Michal did the former in the meantime? I was moving so was
+> out for a while ...
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index f066f4c..f3640a5 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -40,7 +40,7 @@
- #include "rf.h"
- #include "usbpipe.h"
- 
--static u8 abyVT3184_AGC[] = {
-+static u8 vnt_vt3184_agc[] = {
- 	0x00, 0x00, 0x02, 0x02, 0x04, 0x04, 0x06, 0x06,
- 	0x08, 0x08, 0x0a, 0x0a, 0x0c, 0x0c, 0x0e, 0x0e, /* 0x0f */
- 	0x10, 0x10, 0x12, 0x12, 0x14, 0x14, 0x16, 0x16,
-@@ -405,8 +405,8 @@ int BBbVT3184Init(struct vnt_private *priv)
- 		priv->byBBRxConf = abyVT3184_AL2230[10];
- 		length = sizeof(abyVT3184_AL2230);
- 		addr = abyVT3184_AL2230;
--		agc = abyVT3184_AGC;
--		length_agc = sizeof(abyVT3184_AGC);
-+		agc = vnt_vt3184_agc;
-+		length_agc = sizeof(vnt_vt3184_agc);
- 
- 		priv->abyBBVGA[0] = 0x1C;
- 		priv->abyBBVGA[1] = 0x10;
-@@ -420,8 +420,8 @@ int BBbVT3184Init(struct vnt_private *priv)
- 		priv->byBBRxConf = abyVT3184_AL2230[10];
- 		length = sizeof(abyVT3184_AL2230);
- 		addr = abyVT3184_AL2230;
--		agc = abyVT3184_AGC;
--		length_agc = sizeof(abyVT3184_AGC);
-+		agc = vnt_vt3184_agc;
-+		length_agc = sizeof(vnt_vt3184_agc);
- 
- 		addr[0xd7] = 0x06;
- 
-@@ -438,8 +438,8 @@ int BBbVT3184Init(struct vnt_private *priv)
- 		priv->byBBRxConf = abyVT3184_VT3226D0[10];
- 		length = sizeof(abyVT3184_VT3226D0);
- 		addr = abyVT3184_VT3226D0;
--		agc = abyVT3184_AGC;
--		length_agc = sizeof(abyVT3184_AGC);
-+		agc = vnt_vt3184_agc;
-+		length_agc = sizeof(vnt_vt3184_agc);
- 
- 		priv->abyBBVGA[0] = 0x20;
- 		priv->abyBBVGA[1] = 0x10;
-@@ -455,8 +455,8 @@ int BBbVT3184Init(struct vnt_private *priv)
- 		priv->byBBRxConf = abyVT3184_VT3226D0[10];
- 		length = sizeof(abyVT3184_VT3226D0);
- 		addr = abyVT3184_VT3226D0;
--		agc = abyVT3184_AGC;
--		length_agc = sizeof(abyVT3184_AGC);
-+		agc = vnt_vt3184_agc;
-+		length_agc = sizeof(vnt_vt3184_agc);
- 
- 		priv->abyBBVGA[0] = 0x20;
- 		priv->abyBBVGA[1] = 0x10;
--- 
-1.9.1
+Correct. I've posted `mac80211: fix Rx reordering with
+RX_FLAG_AMSDU_MORE` which makes rx reordering work with sk_buff_head
+instead of sk_buff *.
 
+
+Michał
