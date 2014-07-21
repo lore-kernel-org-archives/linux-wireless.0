@@ -1,89 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:53207 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050AbaGTOem (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33826 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932320AbaGUR1e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:34:42 -0400
-Received: by mail-wg0-f50.google.com with SMTP id n12so5346445wgh.33
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:41 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/25] staging: vt6656: struct vnt_private replace byAutoFBCtrl with auto_fb_ctrl
-Date: Sun, 20 Jul 2014 15:33:24 +0100
-Message-Id: <1405866815-2687-14-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165109_370917_FF293C35)
-In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
-References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 21 Jul 2014 13:27:34 -0400
+Received: by mail-oi0-f44.google.com with SMTP id x69so3616688oia.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 10:27:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140721163646.GA14431@kroah.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-7-git-send-email-keescook@chromium.org>
+	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
+	<CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
+	<CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
+	<CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com>
+	<20140721152635.GB6363@kroah.com>
+	<20140721154307.GG5412@outflux.net>
+	<20140721163646.GA14431@kroah.com>
+Date: Mon, 21 Jul 2014 10:27:33 -0700
+Message-ID: <CAGXu5jJJsJG94m2EsX2XiH+M1J1nHaJXSrvMMiWbhtxtJN1Zbg@mail.gmail.com> (sfid-20140721_192738_901533_DA90D6FB)
+Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
+From: Kees Cook <keescook@chromium.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kees Cook <kees@outflux.net>, Ming Lei <ming.lei@canonical.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing type prefix and camel case.
+On Mon, Jul 21, 2014 at 9:36 AM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Mon, Jul 21, 2014 at 08:43:07AM -0700, Kees Cook wrote:
+>> On Mon, Jul 21, 2014 at 08:26:35AM -0700, Greg Kroah-Hartman wrote:
+>> > On Mon, Jul 21, 2014 at 08:08:16AM -0700, Kees Cook wrote:
+>> > > Perhaps it would be easier if I also sent the patch to udev's helper,
+>> > > so you could see how I propose handling the userspace change to using
+>> > > the new interface?
+>> >
+>> > As there is no more "udev firmware helper", I don't know what you would
+>> > be patching here.  Firmware should always be loaded by the kernel
+>> > directly, udev isn't involved anyore at all.
+>> >
+>> > confused,
+>> >
+>> > greg k-h
+>>
+>> The kernel _can_ load directly (when the paths are configured correctly),
+>> but I'm not sure why you say udev isn't involved any more. It's been like
+>> this for years, and even the latest systemd shows the udev rule is still in
+>> place:
+>> http://cgit.freedesktop.org/systemd/systemd/tree/rules/50-firmware.rules
+>> and that the firmware loader is still in the source tree:
+>> http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-firmware.c
+>
+> Ah, I thought that I had seen patches to delete this code on the systemd
+> mailing list in the past, I didn't realize they hadn't been accepted
+> yet.
+>
+> But, with my current tree, in linux-next, it's really hard to select the
+> "external firmware loader" on purpose, as we want people to use the
+> in-kernel one if at all possible, and only fall back to the "legacy"
+> udev userspace loader if they are running on old userspace systems.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h   | 2 +-
- drivers/staging/vt6656/main_usb.c | 4 ++--
- drivers/staging/vt6656/rxtx.c     | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Heh. Where non-legacy means running a userspace with unaccepted
+systemd patches? That's some serious time-travel. :)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 6647b2b..ef9b505 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -380,7 +380,7 @@ struct vnt_private {
- 
- 	unsigned long key_entry_inuse;
- 
--	u8 byAutoFBCtrl;
-+	u8 auto_fb_ctrl;
- 
- 	/* For Update BaseBand VGA Gain Offset */
- 	u8 abyBBVGA[BB_VGA_LEVEL];
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index f7f4dcc..fac13b1 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -123,7 +123,7 @@ static void device_set_options(struct vnt_private *priv)
- 	priv->op_mode = NL80211_IFTYPE_UNSPECIFIED;
- 	priv->bb_type = BBP_TYPE_DEF;
- 	priv->packet_type = priv->bb_type;
--	priv->byAutoFBCtrl = AUTO_FB_0;
-+	priv->auto_fb_ctrl = AUTO_FB_0;
- 	priv->preamble_type = 0;
- 	priv->exist_sw_net_addr = false;
- }
-@@ -280,7 +280,7 @@ static int device_init_registers(struct vnt_private *priv)
- 	vnt_set_antenna_mode(priv, priv->rx_antenna_mode);
- 
- 	/* get Auto Fall Back type */
--	priv->byAutoFBCtrl = AUTO_FB_0;
-+	priv->auto_fb_ctrl = AUTO_FB_0;
- 
- 	/* default Auto Mode */
- 	priv->bb_type = BB_TYPE_11G;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 8d745af..0febd03 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -866,7 +866,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	/* legacy rates TODO use ieee80211_tx_rate */
- 	if (current_rate >= RATE_18M && ieee80211_is_data(hdr->frame_control)) {
--		if (priv->byAutoFBCtrl == AUTO_FB_0) {
-+		if (priv->auto_fb_ctrl == AUTO_FB_0) {
- 			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_0;
- 
- 			priv->tx_rate_fb0 =
-@@ -875,7 +875,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 				vnt_fb_opt0[FB_RATE1][current_rate - RATE_18M];
- 
- 			fb_option = AUTO_FB_0;
--		} else if (priv->byAutoFBCtrl == AUTO_FB_1) {
-+		} else if (priv->auto_fb_ctrl == AUTO_FB_1) {
- 			tx_buffer_head->wFIFOCtl |= FIFOCTL_AUTO_FB_1;
- 
- 			priv->tx_rate_fb0 =
+>> Here's the patch for the new interface...
+>
+> I'd really not like to add a new interface for this model when we are
+> trying to delete it entirely.  Why not just rely on the in-kernel loader
+> instead for this new feature?
+
+Yeah, I see what you're saying. Obviously if the udev loader is going
+to vanish entirely, it makes no sense to add the "fd" interface. I'll
+keep the last 3 patches in the series in my tree for backporting
+purposes, but since the LSM hook is still useful for origin/content
+validation, I'd still like to see those go in. Though it sounds like I
+should do that through the security-next tree?
+
+applied:
+doc: fix minor typos in firmware_class README
+test: add firmware_class loader test
+
+hopefully for security-next:
+security: introduce kernel_fw_from_file hook
+firmware_class: perform new LSM checks
+
+I'll keep these external for backporting to "legacy" kernels/userspace:
+firmware_class: extract start loading logic
+firmware_class: add "fd" input file
+test: add "fd" firmware loading test to selftests
+
+Does that look okay?
+
+-Kees
+
 -- 
-2.0.1
-
+Kees Cook
+Chrome OS Security
