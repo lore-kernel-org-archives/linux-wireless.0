@@ -1,139 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:48299 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965868AbaGRRLt (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:64572 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756569AbaGVTwF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 13:11:49 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Fri, 18 Jul 2014 11:11:48 -0600
-Message-ID: <1405703500.11182.5.camel@dhcp-9-2-203-236.watson.ibm.com> (sfid-20140718_191232_958054_19E35295)
-Subject: Re: [PATCH 3/7] security: introduce kernel_fw_from_file hook
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 18 Jul 2014 13:11:40 -0400
-In-Reply-To: <1405373897-31671-4-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	 <1405373897-31671-4-git-send-email-keescook@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 Jul 2014 15:52:05 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so149844wes.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:52:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140722180254.GE1299@tuxdriver.com>
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
+	<20140722180254.GE1299@tuxdriver.com>
+Date: Tue, 22 Jul 2014 21:52:04 +0200
+Message-ID: <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com> (sfid-20140722_215211_322420_E80CEE43)
+Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@venema.h4ckr.net,
+	Philippe Duchein <wireless-dev@duchein.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-07-14 at 14:38 -0700, Kees Cook wrote: 
-> In order to validate the contents of firmware being loaded, there must be
-> a hook to evaluate any loaded firmware that wasn't built into the kernel
-> itself. Without this, there is a risk that a root user could load malicious
-> firmware designed to mount an attack against kernel memory (e.g. via DMA).
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  include/linux/security.h |   16 ++++++++++++++++
->  security/capability.c    |    6 ++++++
->  security/security.c      |    6 ++++++
->  3 files changed, 28 insertions(+)
-> 
-> diff --git a/include/linux/security.h b/include/linux/security.h
-> index 9c6b9722ff48..dbb80b3e99d7 100644
-> --- a/include/linux/security.h
-> +++ b/include/linux/security.h
-> @@ -702,6 +702,14 @@ static inline void security_free_mnt_opts(struct security_mnt_opts *opts)
->   *	@inode points to the inode to use as a reference.
->   *	The current task must be the one that nominated @inode.
->   *	Return 0 if successful.
-> + * @kernel_fw_from_file:
-> + *	Load firmware from userspace.
-> + *	@file contains the file structure pointing to the file containing
-> + *	the firmware to load. If the module is being loaded from a blob,
-> + *	this argument will be NULL.
-> + *	@buf pointer to buffer containing firmware contents.
-> + *	@size length of the firmware contents.
-> + *	Return 0 if permission is granted.
->   * @kernel_module_request:
->   *	Ability to trigger the kernel to automatically upcall to userspace for
->   *	userspace to load a kernel module with the given name.
-> @@ -1565,6 +1573,7 @@ struct security_operations {
->  	void (*cred_transfer)(struct cred *new, const struct cred *old);
->  	int (*kernel_act_as)(struct cred *new, u32 secid);
->  	int (*kernel_create_files_as)(struct cred *new, struct inode *inode);
-> +	int (*kernel_fw_from_file)(struct file *file, char *buf, size_t size);
->  	int (*kernel_module_request)(char *kmod_name);
->  	int (*kernel_module_from_file)(struct file *file);
->  	int (*task_fix_setuid) (struct cred *new, const struct cred *old,
-> @@ -1837,6 +1846,7 @@ int security_prepare_creds(struct cred *new, const struct cred *old, gfp_t gfp);
->  void security_transfer_creds(struct cred *new, const struct cred *old);
->  int security_kernel_act_as(struct cred *new, u32 secid);
->  int security_kernel_create_files_as(struct cred *new, struct inode *inode);
-> +int security_kernel_fw_from_file(struct file *file, char *buf, size_t size);
->  int security_kernel_module_request(char *kmod_name);
->  int security_kernel_module_from_file(struct file *file);
->  int security_task_fix_setuid(struct cred *new, const struct cred *old,
-> @@ -2363,6 +2373,12 @@ static inline int security_kernel_create_files_as(struct cred *cred,
->  	return 0;
->  }
-> 
-> +static inline int security_kernel_fw_from_file(struct file *file,
-> +					       char *buf, size_t size)
-> +{
-> +	return 0;
-> +}
-> +
->  static inline int security_kernel_module_request(char *kmod_name)
->  {
->  	return 0;
-> diff --git a/security/capability.c b/security/capability.c
-> index e76373de3129..a74fde6a7468 100644
-> --- a/security/capability.c
-> +++ b/security/capability.c
-> @@ -401,6 +401,11 @@ static int cap_kernel_create_files_as(struct cred *new, struct inode *inode)
->  	return 0;
->  }
-> 
-> +static int cap_kernel_fw_from_file(struct file *file, char *buf, size_t size)
-> +{
-> +	return 0;
-> +}
-> +
->  static int cap_kernel_module_request(char *kmod_name)
->  {
->  	return 0;
-> @@ -1015,6 +1020,7 @@ void __init security_fixup_ops(struct security_operations *ops)
->  	set_to_cap_if_null(ops, cred_transfer);
->  	set_to_cap_if_null(ops, kernel_act_as);
->  	set_to_cap_if_null(ops, kernel_create_files_as);
-> +	set_to_cap_if_null(ops, kernel_fw_from_file);
->  	set_to_cap_if_null(ops, kernel_module_request);
->  	set_to_cap_if_null(ops, kernel_module_from_file);
->  	set_to_cap_if_null(ops, task_fix_setuid);
-> diff --git a/security/security.c b/security/security.c
-> index 31614e9e96e5..35d37d0f0d49 100644
-> --- a/security/security.c
-> +++ b/security/security.c
-> @@ -845,6 +845,12 @@ int security_kernel_create_files_as(struct cred *new, struct inode *inode)
->  	return security_ops->kernel_create_files_as(new, inode);
->  }
-> 
-> +int security_kernel_fw_from_file(struct file *file, char *buf, size_t size)
-> +{
-> +	return security_ops->kernel_fw_from_file(file, buf, size);
-> +}
-> +EXPORT_SYMBOL_GPL(security_kernel_fw_from_file);
-> +
+Hi John,
 
-Nice set of patches!  I'll need to send you a patch to call IMA.
+> On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
+>> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
+>> Moreover disable dynack if the coverage class has been configured
+>>
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
+>>  1 file changed, 34 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index e6ac8d2..52ca884 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+>>       mutex_lock(&sc->mutex);
+>>       ah->coverage_class = coverage_class;
+>>
+>> +     if (ah->dynack.enabled) {
+>> +             u32 rfilt;
+>> +
+>> +             ah->dynack.enabled = false;
+>> +             rfilt = ath_calcrxfilter(sc);
+>> +             ath9k_hw_setrxfilter(ah, rfilt);
+>> +     }
+>> +
+>>       ath9k_ps_wakeup(sc);
+>>       ath9k_hw_init_global_settings(ah);
+>>       ath9k_ps_restore(sc);
+>> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+>>       mutex_unlock(&sc->mutex);
+>>  }
+>>
+>> +#ifdef CONFIG_ATH9K_DYNACK
+>> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
+>> +{
+>> +     u32 rfilt;
+>> +     struct ath_softc *sc = hw->priv;
+>> +     struct ath_hw *ah = sc->sc_ah;
+>> +
+>> +     if (config_enabled(CONFIG_ATH9K_TX99))
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     if (!ah->dynack.enabled) {
+>> +             ath_dynack_reset(ah);
+>> +
+>> +             ah->dynack.enabled = true;
+>> +             rfilt = ath_calcrxfilter(sc);
+>> +             ath9k_hw_setrxfilter(ah, rfilt);
+>> +     }
+>> +
+>> +     return 0;
+>> +}
+>> +#endif
+>> +
+>>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
+>>  {
+>>       int i, npend = 0;
+>> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
+>>  #endif
+>>       .sw_scan_start      = ath9k_sw_scan_start,
+>>       .sw_scan_complete   = ath9k_sw_scan_complete,
+>> +
+>> +#ifdef CONFIG_ATH9K_DYNACK
+>> +     .enable_dynack      = ath9k_enable_dynack,
+>> +#endif
+>>  };
+>
+>   CC      drivers/net/wireless/ath/ath9k/main.o
+> drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
+>   .enable_dynack      = ath9k_enable_dynack,
+>   ^
+> drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
+> drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
+> make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
+> make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
+> make[1]: *** [drivers/net/wireless/ath] Error 2
+> make: *** [drivers/net/wireless/] Error 2
+>
+> Missing a header file change?
+>
 
-Mimi
+The function pointer is defined in "configure ack timeout estimation
+algorithm through mac80211 stack" patchset sent on linux-wireless.
+Anyway I will send patchset v3 to take Johannes's hint.
 
->  int security_kernel_module_request(char *kmod_name)
->  {
->  	return security_ops->kernel_module_request(kmod_name);
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+
+Best regards,
+Lorenzo
 
 
+-- 
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
