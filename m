@@ -1,105 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48582 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbaGGSaL (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:32939 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbaGVT1K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 14:30:11 -0400
-Date: Mon, 7 Jul 2014 14:23:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [PATCH v3 1/4] dt: bindings: add bindings for Broadcom bcm43xx
- sdio devices
-Message-ID: <20140707182302.GA29650@tuxdriver.com> (sfid-20140707_203019_019718_7267F678)
-References: <1404051421-24377-1-git-send-email-hdegoede@redhat.com>
- <1404051421-24377-2-git-send-email-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404051421-24377-2-git-send-email-hdegoede@redhat.com>
+	Tue, 22 Jul 2014 15:27:10 -0400
+Received: by mail-we0-f178.google.com with SMTP id w61so113642wes.23
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:09 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH 03/20] iwlwifi: fix Kconfig issues
+Date: Tue, 22 Jul 2014 22:26:34 +0300
+Message-Id: <1406057211-31752-3-git-send-email-egrumbach@gmail.com> (sfid-20140722_212717_417964_201F80E7)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any word from the devicetree folks?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Sun, Jun 29, 2014 at 04:16:58PM +0200, Hans de Goede wrote:
-> From: Arend van Spriel <arend@broadcom.com>
-> 
-> The Broadcom bcm43xx sdio devices are fullmac devices that may be
-> integrated in ARM platforms. Currently, the brcmfmac driver for
-> these devices support use of platform data. This patch specifies
-> the bindings that allow this platform data to be expressed in the
-> devicetree.
-> 
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> [hdegoede@redhat.com: drop clk / reg_on gpio handling, as there is no consensus
->  on how to handle this yet]
-> [hdegoede@redhat.com: move from bindings/staging to bindings]
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->  .../bindings/net/wireless/brcm,bcm43xx-fmac.txt    | 41 ++++++++++++++++++++++
->  1 file changed, 41 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> new file mode 100644
-> index 0000000..5dbf169
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> @@ -0,0 +1,41 @@
-> +Broadcom BCM43xx Fullmac wireless SDIO devices
-> +
-> +This node provides properties for controlling the Broadcom wireless device. The
-> +node is expected to be specified as a child node to the SDIO controller that
-> +connects the device to the system.
-> +
-> +Required properties:
-> +
-> + - compatible : Should be "brcm,bcm4329-fmac".
-> +
-> +Optional properties:
-> + - brcm,drive-strength : drive strength used for SDIO pins on device in mA
-> +	(default = 6).
-> + - interrupt-parent : the phandle for the interrupt controller to which the
-> +	device interrupts are connected.
-> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
-> +	When not specified the device will use in-band SDIO interrupts.
-> + - interrupt-names : name of the out-of-band interrupt, which must be set
-> +	to "host-wake".
-> +
-> +Example:
-> +
-> +mmc3: mmc@01c12000 {
-> +	#address-cells = <1>;
-> +	#size-cells = <0>;
-> +
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&mmc3_pins_a>;
-> +	vmmc-supply = <&reg_vmmc3>;
-> +	bus-width = <4>;
-> +	non-removable;
-> +	status = "okay";
-> +
-> +	brcmf: bcrmf@1 {
-> +		reg = <1>;
-> +		compatible = "brcm,bcm4329-fmac";
-> +		interrupt-parent = <&pio>;
-> +		interrupts = <10 8>; /* PH10 / EINT10 */
-> +		interrupt-names = "host-wake";
-> +	};
-> +};
-> -- 
-> 2.0.0
-> 
-> 
+Randy fixes a few issues in iwlwifi's Kconfig. Because of
+this, 'Debugging options' was not indented under iwlwifi
+using menuconfig.
 
+I added a few other fixes on the way, like the link to the
+website and added 7265 in the supported NICs.
+
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+[ Commit message + other fixes ]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 7fd5042..6451d2b 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -20,16 +20,17 @@ config IWLWIFI
+ 		Intel 2000 Series Wi-Fi Adapters
+ 		Intel 7260 Wi-Fi Adapter
+ 		Intel 3160 Wi-Fi Adapter
++		Intel 7265 Wi-Fi Adapter
+ 
+ 
+ 	  This driver uses the kernel's mac80211 subsystem.
+ 
+-	  In order to use this driver, you will need a microcode (uCode)
++	  In order to use this driver, you will need a firmware
+ 	  image for it. You can obtain the microcode from:
+ 
+-	          <http://intellinuxwireless.org/>.
++	          <http://wireless.kernel.org/en/users/Drivers/iwlwifi>.
+ 
+-	  The microcode is typically installed in /lib/firmware. You can
++	  The firmware is typically installed in /lib/firmware. You can
+ 	  look in the hotplug script /etc/hotplug/firmware.agent to
+ 	  determine which directory FIRMWARE_DIR is set to when the script
+ 	  runs.
+@@ -39,9 +40,10 @@ config IWLWIFI
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+ 	  module will be called iwlwifi.
+ 
++if IWLWIFI
++
+ config IWLWIFI_LEDS
+ 	bool
+-	depends on IWLWIFI
+ 	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
+@@ -49,7 +51,7 @@ config IWLWIFI_LEDS
+ 
+ config IWLDVM
+ 	tristate "Intel Wireless WiFi DVM Firmware support"
+-	depends on IWLWIFI
++	depends on m
+ 	default IWLWIFI
+ 	help
+ 	  This is the driver that supports the DVM firmware which is
+@@ -58,7 +60,7 @@ config IWLDVM
+ 
+ config IWLMVM
+ 	tristate "Intel Wireless WiFi MVM Firmware support"
+-	depends on IWLWIFI
++	depends on m
+ 	help
+ 	  This is the driver that supports the MVM firmware which is
+ 	  currently only available for 7260 and 3160 devices.
+@@ -70,7 +72,7 @@ config IWLWIFI_OPMODE_MODULAR
+ 	default y if IWLMVM=m
+ 
+ comment "WARNING: iwlwifi is useless without IWLDVM or IWLMVM"
+-	depends on IWLWIFI && IWLDVM=n && IWLMVM=n
++	depends on IWLDVM=n && IWLMVM=n
+ 
+ config IWLWIFI_BCAST_FILTERING
+ 	bool "Enable broadcast filtering"
+@@ -86,11 +88,9 @@ config IWLWIFI_BCAST_FILTERING
+ 	  expect incoming broadcasts for their normal operations.
+ 
+ menu "Debugging Options"
+-	depends on IWLWIFI
+ 
+ config IWLWIFI_DEBUG
+ 	bool "Enable full debugging output in the iwlwifi driver"
+-	depends on IWLWIFI
+ 	---help---
+ 	  This option will enable debug tracing output for the iwlwifi drivers
+ 
+@@ -115,7 +115,7 @@ config IWLWIFI_DEBUG
+ 
+ config IWLWIFI_DEBUGFS
+         bool "iwlwifi debugfs support"
+-        depends on IWLWIFI && MAC80211_DEBUGFS
++        depends on MAC80211_DEBUGFS
+         ---help---
+ 	  Enable creation of debugfs files for the iwlwifi drivers. This
+ 	  is a low-impact option that allows getting insight into the
+@@ -123,13 +123,12 @@ config IWLWIFI_DEBUGFS
+ 
+ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+         bool "Experimental uCode support"
+-        depends on IWLWIFI && IWLWIFI_DEBUG
++        depends on IWLWIFI_DEBUG
+         ---help---
+ 	  Enable use of experimental ucode for testing and debugging.
+ 
+ config IWLWIFI_DEVICE_TRACING
+ 	bool "iwlwifi device access tracing"
+-	depends on IWLWIFI
+ 	depends on EVENT_TRACING
+ 	help
+ 	  Say Y here to trace all commands, including TX frames and IO
+@@ -145,3 +144,5 @@ config IWLWIFI_DEVICE_TRACING
+ 	  If unsure, say Y so we can help you better when problems
+ 	  occur.
+ endmenu
++
++endif
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.3.2
+
