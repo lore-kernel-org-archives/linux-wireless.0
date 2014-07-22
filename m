@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:59667 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbaGORok (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:59366 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932138AbaGVT1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2014 13:44:40 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so4827486wib.4
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2014 10:44:39 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: add support for BCM43217 found in Tenda W322E (14e4:43a9)
-Date: Tue, 15 Jul 2014 19:44:28 +0200
-Message-Id: <1405446268-6801-1-git-send-email-zajec5@gmail.com> (sfid-20140715_194443_652698_9164E20F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Jul 2014 15:27:48 -0400
+Received: by mail-we0-f175.google.com with SMTP id t60so115771wes.20
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:47 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/20] iwlwifi: mvm: update smart fifo / beacon filtering upon association
+Date: Tue, 22 Jul 2014 22:26:49 +0300
+Message-Id: <1406057211-31752-18-git-send-email-egrumbach@gmail.com> (sfid-20140722_212754_516572_4D6428FD)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/driver_chipcommon_pmu.c | 1 +
- drivers/bcma/host_pci.c              | 1 +
- drivers/bcma/sprom.c                 | 1 +
- include/linux/bcma/bcma.h            | 1 +
- 4 files changed, 4 insertions(+)
+From: Eran Harary <eran.harary@intel.com>
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 5081a8c..bb694e2 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -603,6 +603,7 @@ void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid)
- 		tmp = BCMA_CC_PMU_CTL_PLL_UPD | BCMA_CC_PMU_CTL_NOILPONW;
- 		break;
- 
-+	case BCMA_CHIP_ID_BCM43217:
- 	case BCMA_CHIP_ID_BCM43227:
- 	case BCMA_CHIP_ID_BCM43228:
- 	case BCMA_CHIP_ID_BCM43428:
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index e3333053..3cf725a 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -279,6 +279,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ 0, },
- };
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index a9dfb1a..97bb38e 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -534,6 +534,7 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
- 		/* for these chips OTP is always available */
- 		present = true;
- 		break;
-+	case BCMA_CHIP_ID_BCM43217:
- 	case BCMA_CHIP_ID_BCM43227:
- 	case BCMA_CHIP_ID_BCM43228:
- 	case BCMA_CHIP_ID_BCM43428:
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 452286a..7cb2344 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -158,6 +158,7 @@ struct bcma_host_ops {
- /* Chip IDs of PCIe devices */
- #define BCMA_CHIP_ID_BCM4313	0x4313
- #define BCMA_CHIP_ID_BCM43142	43142
-+#define BCMA_CHIP_ID_BCM43217	43217
- #define BCMA_CHIP_ID_BCM43224	43224
- #define  BCMA_PKG_ID_BCM43224_FAB_CSM	0x8
- #define  BCMA_PKG_ID_BCM43224_FAB_SMIC	0xa
+When we associate, we may have heard the beacon before the
+association. In that case, BSS_CHANGED_BEACON_INFO will be
+set along with BSS_CHANGED_ASSOC in changes in
+bss_info_change.
+
+In this case, we didn't update the smart fifo nor beacon
+filtering leaving those two feature disabled.
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index bd924a1..01af86a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1501,14 +1501,18 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		 */
+ 		iwl_mvm_remove_time_event(mvm, mvmvif,
+ 					  &mvmvif->time_event_data);
+-		iwl_mvm_sf_update(mvm, vif, false);
+-		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 	} else if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS |
+ 			      BSS_CHANGED_QOS)) {
+ 		ret = iwl_mvm_power_update_mac(mvm);
+ 		if (ret)
+ 			IWL_ERR(mvm, "failed to update power mode\n");
+ 	}
++
++	if (changes & BSS_CHANGED_BEACON_INFO) {
++		iwl_mvm_sf_update(mvm, vif, false);
++		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
++	}
++
+ 	if (changes & BSS_CHANGED_TXPOWER) {
+ 		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
+ 				bss_conf->txpower);
 -- 
-1.8.4.5
+1.8.3.2
 
