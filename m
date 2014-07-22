@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:64014 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877AbaGTOe4 (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:36485
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756435AbaGVTAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:34:56 -0400
-Received: by mail-we0-f176.google.com with SMTP id q58so6455677wes.21
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:34:55 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 20/25] staging: vt6656: vnt_get_duration_le fix typo piv to priv
-Date: Sun, 20 Jul 2014 15:33:30 +0100
-Message-Id: <1405866815-2687-20-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165108_639047_D4EFD611)
-In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
-References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 22 Jul 2014 15:00:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix crash on getting sta info with uninitialized rate control
+Date: Tue, 22 Jul 2014 21:00:26 +0200
+Message-Id: <1406055626-9419-1-git-send-email-nbd@openwrt.org> (sfid-20140722_210040_664731_FAD3D15E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+If the expected throughput is queried before rate control has been
+initialized, the minstrel op for it will crash while trying to access
+the rate table.
+Check for WLAN_STA_RATE_CONTROL before attempting to use the rate
+control op.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 0febd03..5d2072f 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -180,20 +180,20 @@ static __le16 vnt_get_rtscts_rsvtime_le(struct vnt_private *priv,
- 	return cpu_to_le16((u16)rrv_time);
- }
- 
--static __le16 vnt_get_duration_le(struct vnt_private *piv,
-+static __le16 vnt_get_duration_le(struct vnt_private *priv,
- 					u8 pkt_type, int need_ack)
+Reported-by: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/cfg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d7513a5..592f4b1 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -472,12 +472,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
  {
- 	u32 ack_time = 0;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct rate_control_ref *ref = local->rate_ctrl;
++	struct rate_control_ref *ref = NULL;
+ 	struct timespec uptime;
+ 	u64 packets = 0;
+ 	u32 thr = 0;
+ 	int i, ac;
  
- 	if (need_ack) {
- 		if (pkt_type == PK_TYPE_11B)
--			ack_time = vnt_get_frame_time(piv->preamble_type,
--				pkt_type, 14, piv->top_cck_basic_rate);
-+			ack_time = vnt_get_frame_time(priv->preamble_type,
-+				pkt_type, 14, priv->top_cck_basic_rate);
- 		else
--			ack_time = vnt_get_frame_time(piv->preamble_type,
--				pkt_type, 14, piv->top_ofdm_basic_rate);
-+			ack_time = vnt_get_frame_time(priv->preamble_type,
-+				pkt_type, 14, priv->top_ofdm_basic_rate);
++	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
++		ref = local->rate_ctrl;
++
+ 	sinfo->generation = sdata->local->sta_generation;
  
--		return cpu_to_le16((u16)(piv->sifs + ack_time));
-+		return cpu_to_le16((u16)(priv->sifs + ack_time));
- 	}
- 
- 	return 0;
+ 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
 -- 
-2.0.1
+1.8.5.2 (Apple Git-48)
 
