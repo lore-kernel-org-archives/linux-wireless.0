@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0059.hostedemail.com ([216.40.44.59]:57924 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751226AbaGBNf4 (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:55598 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756896AbaGVUzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:35:56 -0400
-Message-ID: <1404308150.14624.73.camel@joe-AO725> (sfid-20140702_153632_053779_5986F38F)
-Subject: Re: [PATCH 5/6] staging: rtl8192e: re-use string_escape_mem()
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+	Tue, 22 Jul 2014 16:55:20 -0400
+Received: by mail-oa0-f46.google.com with SMTP id m1so347737oag.33
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 13:55:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6WnP-7YCr8DzCq-HOLZVuQxmCa+nwN7kQBxTnUHK+xMRg@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-4-git-send-email-keescook@chromium.org>
+	<20140714222419.GC10393@wotan.suse.de>
+	<CAGXu5j+V807cyDdyEzoRzSjYEyhkDntaEkKOx6n=OzUoF31-sA@mail.gmail.com>
+	<CAB=NE6WnP-7YCr8DzCq-HOLZVuQxmCa+nwN7kQBxTnUHK+xMRg@mail.gmail.com>
+Date: Tue, 22 Jul 2014 13:55:19 -0700
+Message-ID: <CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com> (sfid-20140722_225539_170084_42442FE7)
+Subject: Re: [PATCH 3/7] security: introduce kernel_fw_from_file hook
+From: Kees Cook <keescook@chromium.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Ming Lei <ming.lei@canonical.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Date: Wed, 02 Jul 2014 06:35:50 -0700
-In-Reply-To: <1404307229-19186-6-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404307229-19186-6-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-02 at 16:20 +0300, Andy Shevchenko wrote:
-> Let's use kernel's library function to escape a buffer.
-[]
-> diff --git a/drivers/staging/rtl8192e/rtllib.h b/drivers/staging/rtl8192e/rtllib.h
-[]
-> @@ -2956,7 +2957,6 @@ extern inline int rtllib_get_scans(struct rtllib_device *ieee)
->  static inline const char *escape_essid(const char *essid, u8 essid_len)
->  {
->  	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> -	const char *s = essid;
->  	char *d = escaped;
->  
->  	if (rtllib_is_empty_essid(essid, essid_len)) {
-> @@ -2965,15 +2965,8 @@ static inline const char *escape_essid(const char *essid, u8 essid_len)
->  	}
->  
->  	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
-> -	while (essid_len--) {
-> -		if (*s == '\0') {
-> -			*d++ = '\\';
-> -			*d++ = '0';
-> -			s++;
-> -		} else {
-> -			*d++ = *s++;
-> -		}
-> -	}
-> +	d += string_escape_mem(essid, essid_len, escaped, sizeof(escaped) - 1,
-> +			       ESCAPE_NULL, NULL);
+On Tue, Jul 22, 2014 at 12:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Mon, Jul 14, 2014 at 3:31 PM, Kees Cook <keescook@chromium.org> wrote:
+>> Yup, with this and the module hook, adding a similar hook for kexec
+>> makes sense as well. A paranoid kernel doesn't want to trust anything
+>> it's loading from userspace. :)
+>
+> Well I'm actually wondering if we could generalize requiring hooks or
+> not for LSM as part of the general kobject definition. Then we
+> wouldn't need to keep growing hooks for modules, firmware, kexec
+> images, etc, but instead using the interfaces for kobjects and who
+> depend on them. How that would actually look -- I'm not sure, but just
+> a thought.
 
-I'd've probably used
+Yeah, there does seem to be a repeated "get a thing from userspace"
+method here, but the interfaces have been rather scattered so far. I
+haven't seen an obvious way to consolidate them yet.
 
-	d += string_escape_mem(essid, essid_len, d, ...
-or
-	d = escaped + string_escap_mem(essid, essid_len, escaped, ...
+-Kees
 
-so there's some relation between the thing being added to
-
->  	*d = '\0';
-
-or maybe not used d at all with
-
-	escaped[1 + string_escape_mem(etc...)] = 0;
-
->  	return escaped;
->  }
-
-Unrelated but this isn't a thread safe or multiple instance
-safe function.
-
-It seems it's used only in debugging message output though.
-
+-- 
+Kees Cook
+Chrome OS Security
