@@ -1,47 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39306 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39955 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755655AbaGVRaN (ORCPT
+	with ESMTP id S1752149AbaGVSPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 13:30:13 -0400
-Date: Tue, 22 Jul 2014 13:22:23 -0400
+	Tue, 22 Jul 2014 14:15:20 -0400
+Date: Tue, 22 Jul 2014 14:02:54 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2014-07-21
-Message-ID: <20140722172222.GB1299@tuxdriver.com> (sfid-20140722_193018_471534_AF5FB0C6)
-References: <53CD5785.80408@gmail.com>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
+Message-ID: <20140722180254.GE1299@tuxdriver.com> (sfid-20140722_201523_893796_28D07A0D)
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+ <1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53CD5785.80408@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 09:10:13PM +0300, Emmanuel Grumbach wrote:
-> Hi John,
+On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
+> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
+> Moreover disable dynack if the coverage class has been configured
 > 
-> This is a pull request for 3.16.
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
 > 
-> It includes a merge damage fix. This region has been changed in -next and -fixes quite a few times and apparently, I failed to handle it properly, so here the fix.
-> Along with that I have a fix from Eliad to properly handle overlapping BSS in AP mode.
-> 
-> Let me know if you have issues with this.
-> Thanks!
-> 
-> The following changes since commit dc271ee0d04d12d6bfabacbec803289a7072fbd9:
-> 
->   iwlwifi: mvm: disable CTS to Self (2014-07-03 20:55:18 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git master
-> 
-> for you to fetch changes up to 4601879419f94a89fcbf427b4d3bfbf4ce294174:
-> 
->   iwlwifi: mvm: pass beacons from foreign APs (2014-07-21 10:38:25 +0300)
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index e6ac8d2..52ca884 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+>  	mutex_lock(&sc->mutex);
+>  	ah->coverage_class = coverage_class;
+>  
+> +	if (ah->dynack.enabled) {
+> +		u32 rfilt;
+> +
+> +		ah->dynack.enabled = false;
+> +		rfilt = ath_calcrxfilter(sc);
+> +		ath9k_hw_setrxfilter(ah, rfilt);
+> +	}
+> +
+>  	ath9k_ps_wakeup(sc);
+>  	ath9k_hw_init_global_settings(ah);
+>  	ath9k_ps_restore(sc);
+> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+>  	mutex_unlock(&sc->mutex);
+>  }
+>  
+> +#ifdef CONFIG_ATH9K_DYNACK
+> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
+> +{
+> +	u32 rfilt;
+> +	struct ath_softc *sc = hw->priv;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +
+> +	if (config_enabled(CONFIG_ATH9K_TX99))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (!ah->dynack.enabled) {
+> +		ath_dynack_reset(ah);
+> +
+> +		ah->dynack.enabled = true;
+> +		rfilt = ath_calcrxfilter(sc);
+> +		ath9k_hw_setrxfilter(ah, rfilt);
+> +	}
+> +
+> +	return 0;
+> +}
+> +#endif
+> +
+>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
+>  {
+>  	int i, npend = 0;
+> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
+>  #endif
+>  	.sw_scan_start	    = ath9k_sw_scan_start,
+>  	.sw_scan_complete   = ath9k_sw_scan_complete,
+> +
+> +#ifdef CONFIG_ATH9K_DYNACK
+> +	.enable_dynack      = ath9k_enable_dynack,
+> +#endif
+>  };
 
-Pulling now...
+  CC      drivers/net/wireless/ath/ath9k/main.o
+drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
+  .enable_dynack      = ath9k_enable_dynack,
+  ^
+drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
+drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
+make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
+make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
+make[1]: *** [drivers/net/wireless/ath] Error 2
+make: *** [drivers/net/wireless/] Error 2
 
+Missing a header file change?
+
+John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
