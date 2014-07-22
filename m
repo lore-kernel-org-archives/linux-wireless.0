@@ -1,87 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:57227 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757249AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:38:37 -0400
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] firmware_class: extract start loading logic
-Date: Mon, 14 Jul 2014 14:38:15 -0700
-Message-Id: <1405373897-31671-6-git-send-email-keescook@chromium.org> (sfid-20140714_233936_690526_3E59869A)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48694 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755962AbaGVScH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2014 14:32:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: prevent endless pci rx loop
+References: <1405687501-25917-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 22 Jul 2014 21:32:01 +0300
+In-Reply-To: <1405687501-25917-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 18 Jul 2014 14:45:01 +0200")
+Message-ID: <87vbqptfby.fsf@kamboji.qca.qualcomm.com> (sfid-20140722_203212_014591_A4E52EE0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extract the logic performed when starting a new firmware load.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/base/firmware_class.c |   29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+> It was possible to enter an endless loop while
+> processing a single pci copy engine pipe. This
+> could effectively render ath10k incapable of
+> responding to any requests.
+>
+> An example case when this could happen is when
+> firmware generates a lot of events, e.g. spectral
+> scan phyerr via WMI.
+>
+> Reported-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 7399bab71ced..b38cbcd6ebb1 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -604,6 +604,23 @@ static int fw_map_pages_buf(struct firmware_buf *buf)
- 	return 0;
- }
- 
-+/* fw_lock must be held */
-+static void fw_load_start(struct firmware_buf *fw_buf)
-+{
-+	/* discarding any previous partial load */
-+	if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
-+		int i;
-+
-+		for (i = 0; i < fw_buf->nr_pages; i++)
-+			__free_page(fw_buf->pages[i]);
-+		kfree(fw_buf->pages);
-+		fw_buf->pages = NULL;
-+		fw_buf->page_array_size = 0;
-+		fw_buf->nr_pages = 0;
-+		set_bit(FW_STATUS_LOADING, &fw_buf->status);
-+	}
-+}
-+
- /**
-  * firmware_loading_store - set value in the 'loading' control file
-  * @dev: device pointer
-@@ -624,7 +641,6 @@ static ssize_t firmware_loading_store(struct device *dev,
- 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
- 	struct firmware_buf *fw_buf;
- 	int loading = simple_strtol(buf, NULL, 10);
--	int i;
- 
- 	mutex_lock(&fw_lock);
- 	fw_buf = fw_priv->buf;
-@@ -633,16 +649,7 @@ static ssize_t firmware_loading_store(struct device *dev,
- 
- 	switch (loading) {
- 	case 1:
--		/* discarding any previous partial load */
--		if (!test_bit(FW_STATUS_DONE, &fw_buf->status)) {
--			for (i = 0; i < fw_buf->nr_pages; i++)
--				__free_page(fw_buf->pages[i]);
--			kfree(fw_buf->pages);
--			fw_buf->pages = NULL;
--			fw_buf->page_array_size = 0;
--			fw_buf->nr_pages = 0;
--			set_bit(FW_STATUS_LOADING, &fw_buf->status);
--		}
-+		fw_load_start(fw_buf);
- 		break;
- 	case 0:
- 		if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
+Thanks, applied.
+
 -- 
-1.7.9.5
-
+Kalle Valo
