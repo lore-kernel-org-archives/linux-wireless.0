@@ -1,112 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:63044 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbaG1UoU (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:61385 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932115AbaGVVue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:44:20 -0400
+	Tue, 22 Jul 2014 17:50:34 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so267235wes.36
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 14:50:33 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/4] staging: vt6655: dead code remove undefined macro IO_MAP
-Date: Mon, 28 Jul 2014 21:43:30 +0100
-Message-Id: <1406580210-2794-4-git-send-email-tvboxspy@gmail.com> (sfid-20140728_224533_434969_BDBCA46C)
-In-Reply-To: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
-References: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 5/7] staging: vt6656: struct vnt_beacon_buffer replace byType with type
+Date: Tue, 22 Jul 2014 22:49:47 +0100
+Message-Id: <1406065789-3374-5-git-send-email-tvboxspy@gmail.com> (sfid-20140722_235037_646337_78A69538)
+In-Reply-To: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
+References: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This device is always memory mapped
+Removing camel case
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device_main.c | 10 +---------
- drivers/staging/vt6655/upc.h         | 34 ----------------------------------
- 2 files changed, 1 insertion(+), 43 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 2 +-
+ drivers/staging/vt6656/rxtx.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index e8584fd..926c0d9 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -902,10 +902,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	VNSvInPortB(pDevice->PortOffset+0x4F, &value);
- 	pr_debug("After write: value is %x\n", value);
- #endif
--
--#ifdef IO_MAP
--	pDevice->PortOffset = pDevice->ioaddr;
--#endif
- 	// do reset
- 	if (!MACbSoftwareReset(pDevice->PortOffset)) {
- 		pr_err(DEVICE_NAME ": Failed to access MAC hardware..\n");
-@@ -949,14 +945,10 @@ static void device_print_info(PSDevice pDevice)
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 5a7114d..2dc7a17 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1046,7 +1046,7 @@ static int vnt_beacon_xmit(struct vnt_private *priv,
  
- 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO "%s: %s\n", dev->name, get_chip_name(pDevice->chip_id));
- 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO "%s: MAC=%pM", dev->name, dev->dev_addr);
--#ifdef IO_MAP
--	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IO=0x%lx  ", (unsigned long)pDevice->ioaddr);
--	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IRQ=%d\n", pDevice->dev->irq);
--#else
-+
- 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IO=0x%lx Mem=0x%lx ",
- 		(unsigned long)pDevice->ioaddr, (unsigned long)pDevice->PortOffset);
- 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IRQ=%d\n", pDevice->dev->irq);
--#endif
- }
+ 	beacon_buffer->tx_byte_count = cpu_to_le16(count);
+ 	beacon_buffer->pkt_no = context->pkt_no;
+-	beacon_buffer->byType = 0x01;
++	beacon_buffer->type = 0x01;
  
- static void vt6655_init_info(struct pci_dev *pcid, PSDevice *ppDevice,
-diff --git a/drivers/staging/vt6655/upc.h b/drivers/staging/vt6655/upc.h
-index af12a86..e262f1b0 100644
---- a/drivers/staging/vt6655/upc.h
-+++ b/drivers/staging/vt6655/upc.h
-@@ -35,38 +35,6 @@
- /*---------------------  Export Definitions -------------------------*/
+ 	context->type = CONTEXT_BEACON_PACKET;
+ 	context->buf_len = count + 4; /* USB header */
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 808058f..d5769c1 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -245,7 +245,7 @@ struct vnt_tx_short_buf_head {
+ } __packed;
  
- //
--//  For IO mapped
--//
--
--#ifdef IO_MAP
--
--#define VNSvInPortB(dwIOAddress, pbyData)	\
--do {						\
--	*(pbyData) = inb(dwIOAddress);		\
--} while (0)
--
--#define VNSvInPortW(dwIOAddress, pwData)	\
--do {						\
--	*(pwData) = inw(dwIOAddress);		\
--} while (0)
--
--#define VNSvInPortD(dwIOAddress, pdwData)	\
--do {						\
--	*(pdwData) = inl(dwIOAddress);		\
--} while (0)
--
--#define VNSvOutPortB(dwIOAddress, byData)	\
--	outb(byData, dwIOAddress)
--
--#define VNSvOutPortW(dwIOAddress, wData)	\
--	outw(wData, dwIOAddress)
--
--#define VNSvOutPortD(dwIOAddress, dwData)	\
--	outl(dwData, dwIOAddress)
--
--#else
--
--//
- //  For memory mapped IO
- //
- 
-@@ -100,8 +68,6 @@ do {									\
- 	writel((unsigned long)dwData, dwIOAddress);			\
- } while (0)
- 
--#endif
--
- //
- // ALWAYS IO-Mapped IO when in 16-bit/32-bit environment
- //
+ struct vnt_beacon_buffer {
+-	u8 byType;
++	u8 type;
+ 	u8 pkt_no;
+ 	__le16 tx_byte_count;
+ 	struct vnt_tx_short_buf_head short_head;
 -- 
-1.9.1
+2.0.1
 
