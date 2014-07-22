@@ -1,46 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57603 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754746AbaGNNJ6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43141 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460AbaGVVaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 09:09:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath6kl@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/6] ath6kl: add ar6004 hw3.0
-References: <20140617093836.22040.99081.stgit@potku.adurom.net>
-Date: Mon, 14 Jul 2014 16:05:54 +0300
-In-Reply-To: <20140617093836.22040.99081.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Tue, 17 Jun 2014 12:40:45 +0300")
-Message-ID: <87zjgcks3x.fsf@kamboji.qca.qualcomm.com> (sfid-20140714_151001_665999_1FBA5707)
+	Tue, 22 Jul 2014 17:30:19 -0400
+Date: Tue, 22 Jul 2014 17:23:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@venema.h4ckr.net,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
+Message-ID: <20140722212327.GF1299@tuxdriver.com> (sfid-20140722_233022_757265_A8674D3C)
+References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+ <1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
+ <20140722180254.GE1299@tuxdriver.com>
+ <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Tue, Jul 22, 2014 at 09:52:04PM +0200, Lorenzo Bianconi wrote:
+> Hi John,
+> 
+> > On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
+> >> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
+> >> Moreover disable dynack if the coverage class has been configured
+> >>
+> >> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> >> ---
+> >>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
+> >>  1 file changed, 34 insertions(+)
+> >>
+> >> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> >> index e6ac8d2..52ca884 100644
+> >> --- a/drivers/net/wireless/ath/ath9k/main.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> >> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+> >>       mutex_lock(&sc->mutex);
+> >>       ah->coverage_class = coverage_class;
+> >>
+> >> +     if (ah->dynack.enabled) {
+> >> +             u32 rfilt;
+> >> +
+> >> +             ah->dynack.enabled = false;
+> >> +             rfilt = ath_calcrxfilter(sc);
+> >> +             ath9k_hw_setrxfilter(ah, rfilt);
+> >> +     }
+> >> +
+> >>       ath9k_ps_wakeup(sc);
+> >>       ath9k_hw_init_global_settings(ah);
+> >>       ath9k_ps_restore(sc);
+> >> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+> >>       mutex_unlock(&sc->mutex);
+> >>  }
+> >>
+> >> +#ifdef CONFIG_ATH9K_DYNACK
+> >> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
+> >> +{
+> >> +     u32 rfilt;
+> >> +     struct ath_softc *sc = hw->priv;
+> >> +     struct ath_hw *ah = sc->sc_ah;
+> >> +
+> >> +     if (config_enabled(CONFIG_ATH9K_TX99))
+> >> +             return -EOPNOTSUPP;
+> >> +
+> >> +     if (!ah->dynack.enabled) {
+> >> +             ath_dynack_reset(ah);
+> >> +
+> >> +             ah->dynack.enabled = true;
+> >> +             rfilt = ath_calcrxfilter(sc);
+> >> +             ath9k_hw_setrxfilter(ah, rfilt);
+> >> +     }
+> >> +
+> >> +     return 0;
+> >> +}
+> >> +#endif
+> >> +
+> >>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
+> >>  {
+> >>       int i, npend = 0;
+> >> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
+> >>  #endif
+> >>       .sw_scan_start      = ath9k_sw_scan_start,
+> >>       .sw_scan_complete   = ath9k_sw_scan_complete,
+> >> +
+> >> +#ifdef CONFIG_ATH9K_DYNACK
+> >> +     .enable_dynack      = ath9k_enable_dynack,
+> >> +#endif
+> >>  };
+> >
+> >   CC      drivers/net/wireless/ath/ath9k/main.o
+> > drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
+> >   .enable_dynack      = ath9k_enable_dynack,
+> >   ^
+> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
+> > drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
+> > make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
+> > make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
+> > make[1]: *** [drivers/net/wireless/ath] Error 2
+> > make: *** [drivers/net/wireless/] Error 2
+> >
+> > Missing a header file change?
+> >
+> 
+> The function pointer is defined in "configure ack timeout estimation
+> algorithm through mac80211 stack" patchset sent on linux-wireless.
+> Anyway I will send patchset v3 to take Johannes's hint.
 
-> Add support for frequently requested ar6004 hw3.0 version. 
->
-> Kalle
->
-> ---
->
-> Jessica Wu (3):
->       ath6kl: implement rx flush for htc pipe
->       ath6kl: add support wmi rate tables with mcs15
->       ath6kl: add support for ar6004 hw3.0
->
-> Kalle Valo (3):
->       ath6kl: convert ar6004 hardware flags to firmware feature flags
->       ath6kl: don't set hi_refclk_hz if hardware version doesn't need
->       it
-
-These patches applied.
-
->       ath6kl: properly null terminate the firmware string
-
-This patch dropped, I need to fix the warning first.
+Perhaps you should post them all together, or keep this series as
+RFC until the other one gets merged?
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
