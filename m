@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51730 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbaGTMdx (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:33030 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103AbaGVIOG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 08:33:53 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so5251942wgh.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:33:52 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [PATCH 0/2] add auto parameter to set distance command
-Date: Sun, 20 Jul 2014 14:33:47 +0200
-Message-Id: <1405859629-32326-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143356_883226_D1083E6D)
+	Tue, 22 Jul 2014 04:14:06 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so7531148wgg.12
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 01:14:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87d2cyy5kh.fsf@kamboji.qca.qualcomm.com>
+References: <1405516873-26411-1-git-send-email-michal.kazior@tieto.com>
+	<87d2cyy5kh.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 22 Jul 2014 10:14:03 +0200
+Message-ID: <CA+BoTQ=qXyEqo0ZpWcJVGjttGj0SSFo3Cj18qNZxT4xHhzSwgQ@mail.gmail.com> (sfid-20140722_101414_271857_5F77DCC1)
+Subject: Re: [RFC/RFT 1/2] ath10k: fix monitor start/stop sequences
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>,
+	Sven Schnelle <svens@stackframe.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add auto parameter to set distance command in order to enable ack timeout
-estimation algorithm (dynack). Currently dynack is supported just by ath9k
+On 21 July 2014 19:39, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Fix some cases where monitor start failure left
+>> the driver in a confused state.
+>>
+>> This also makes the monitor code simpler.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> From a quick review looks good to me. Are you planning to submit this as
+> a proper patch at some point?
 
-This patchset is based on "configure ack timeout estimation algorithm through
-mac80211 stack" one sent on linux-wireless
+I've been waiting for feedback in case this breaks someone's setup/use
+cases (it shouldn't but hey). No one has complained so I guess I'll be
+posting this as a PATCH soon.
 
-Lorenzo Bianconi (2):
-  iw: sync nl80211_attrs
-  iw: add auto parameter to set distance command
 
- nl80211.h | 10 ++++++++++
- phy.c     | 44 +++++++++++++++++++++++++-------------------
- 2 files changed, 35 insertions(+), 19 deletions(-)
-
--- 
-1.9.1
-
+Michał
