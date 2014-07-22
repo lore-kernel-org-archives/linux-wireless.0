@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:34154 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757409AbaGAHD6 (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:56819 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757120AbaGVVuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2014 03:03:58 -0400
-Date: Tue, 1 Jul 2014 17:03:49 +1000
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Daniel Mack <daniel@zonque.org>, Tony Lindgren <tony@atomide.com>,
-	Andreas Fenkart <afenkart@gmail.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: mwifiex card reset
-Message-ID: <20140701070349.GN24891@us.netrek.org> (sfid-20140701_090404_820964_884D4864)
-References: <CALtMJEBWPM+75wxM2Mp5EX_o6NWtZUJdYRCv6psbvdUn4k295w@mail.gmail.com>
- <20140628052220.GG10407@us.netrek.org>
- <20140628072322.GC7410@atomide.com>
- <CALtMJED5vfgkAhMBXKaDP6u9U9n41c-wziyTxt6e_7XTSxG3oQ@mail.gmail.com>
- <20140630061912.GA2461@atomide.com>
- <53B1BAC1.3090902@zonque.org>
- <477F20668A386D41ADCC57781B1F70430FE5F37540@SC-VEXCH1.marvell.com>
- <20140701065721.GM24891@us.netrek.org>
- <477F20668A386D41ADCC57781B1F70430FE5F3754E@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430FE5F3754E@SC-VEXCH1.marvell.com>
+	Tue, 22 Jul 2014 17:50:32 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so270688wes.22
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 14:50:31 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/7] staging: vt6656: vnt_tx_buffer replace byType with type
+Date: Tue, 22 Jul 2014 22:49:46 +0100
+Message-Id: <1406065789-3374-4-git-send-email-tvboxspy@gmail.com> (sfid-20140722_235036_240034_F8405B20)
+In-Reply-To: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
+References: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 01, 2014 at 12:02:25AM -0700, Bing Zhao wrote:
-> Hi James,
-> 
-> > On Mon, Jun 30, 2014 at 11:44:29PM -0700, Bing Zhao wrote:
-> > > I may have missed something, but doesn't the MMC_POWER_OFF and
-> > > MMC_POWER_ON|UP handling in controller driver help?
-> > > Anyway the clocks/GPIOs/regulators are sort of platform dependent.
-> > > Would it be better putting it in /arch/arm/mach-xxxxx/?
-> > 
-> > Wouldn't device tree for mmc be better?
-> 
-> Yes, device tree is better for defining clocks/GPIO/regulators, etc.
-> But I guess the reset logic (making use of these definitions) cannot
-> be device tree?
+Removing camel case
 
-I think the reset logic can exist, but does nothing unless the device
-tree definitions are present.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 2 +-
+ drivers/staging/vt6656/rxtx.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 8e33e40..5a7114d 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -950,7 +950,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	tx_buffer->tx_byte_count = cpu_to_le16(tx_bytes);
+ 	tx_buffer->pkt_no = tx_context->pkt_no;
+-	tx_buffer->byType = 0x00;
++	tx_buffer->type = 0x00;
+ 
+ 	tx_bytes += 4;
+ 
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 5439ed0..808058f 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -229,7 +229,7 @@ struct vnt_tx_fifo_head {
+ } __packed;
+ 
+ struct vnt_tx_buffer {
+-	u8 byType;
++	u8 type;
+ 	u8 pkt_no;
+ 	__le16 tx_byte_count;
+ 	struct vnt_tx_fifo_head fifo_head;
 -- 
-James Cameron
-http://quozl.linux.org.au/
+2.0.1
+
