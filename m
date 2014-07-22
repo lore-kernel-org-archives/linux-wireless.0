@@ -1,112 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:49629 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450AbaGSPP0 (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:53171 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932124AbaGVT1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2014 11:15:26 -0400
-Received: by mail-oa0-f46.google.com with SMTP id m1so5105872oag.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2014 08:15:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.11.1407191720160.26264@namei.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	<1405373897-31671-5-git-send-email-keescook@chromium.org>
-	<alpine.LRH.2.11.1407181339510.15709@namei.org>
-	<CAGXu5jK5np62pR4f7_qa_LU97hBN8e1hu998=C4ah+Xyv3eYtg@mail.gmail.com>
-	<alpine.LRH.2.11.1407191720160.26264@namei.org>
-Date: Sat, 19 Jul 2014 08:15:25 -0700
-Message-ID: <CAGXu5jLqzgJMCqkfLT2azk3J5jX_hBiguA3wkimv9wu60_+xHA@mail.gmail.com> (sfid-20140719_171558_350581_CCCB50C1)
-Subject: Re: [PATCH 4/7] firmware_class: perform new LSM checks
-From: Kees Cook <keescook@chromium.org>
-To: James Morris <jmorris@namei.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Jul 2014 15:27:38 -0400
+Received: by mail-wg0-f42.google.com with SMTP id l18so109713wgh.25
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:37 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/20] iwlwifi: mvm: minor change in debug print
+Date: Tue, 22 Jul 2014 22:26:44 +0300
+Message-Id: <1406057211-31752-13-git-send-email-egrumbach@gmail.com> (sfid-20140722_212743_545331_4C1AD6FE)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 19, 2014 at 12:22 AM, James Morris <jmorris@namei.org> wrote:
-> On Fri, 18 Jul 2014, Kees Cook wrote:
->
->> On Thu, Jul 17, 2014 at 8:41 PM, James Morris <jmorris@namei.org> wrote:
->> > On Mon, 14 Jul 2014, Kees Cook wrote:
->> >
->> >> This attaches LSM hooks to the existing firmware loading interfaces:
->> >> filesystem-found firmware and demand-loaded blobs.
->> >
->> >>  static int fw_get_filesystem_firmware(struct device *device,
->> >> @@ -640,6 +646,12 @@ static ssize_t firmware_loading_store(struct device *dev,
->> >>               break;
->> >>       case 0:
->> >>               if (test_bit(FW_STATUS_LOADING, &fw_buf->status)) {
->> >> +                     if (security_kernel_fw_from_file(NULL, fw_buf->data,
->> >> +                                                      fw_buf->size)) {
->> >> +                             fw_load_abort(fw_priv);
->> >> +                             break;
->> >> +                     }
->> >> +
->> >>                       set_bit(FW_STATUS_DONE, &fw_buf->status);
->> >>                       clear_bit(FW_STATUS_LOADING, &fw_buf->status);
->> >>
->> >>
->> >
->> > Can you explain the loading store, and what the semantics are for an LSM
->> > when a NULL is passed as the file?
->>
->> I'm not sure what you mean by "loading store"?
->
-> The caller: firmware_loading_store()
+From: Eran Harary <eran.harary@intel.com>
 
-Ah, sure! This is part of the existing userspace interface to firmware
-loading. It uses a very strange sysfs interface. The existing
-interface creates 2 files in /sys: "loading" and "data", and then
-issues a uevent. The kernel uevent listener (generally udev) sees the
-event, and launches the userspace firmware loader handler. That
-handler locates the requested firmware, writes "1" to "loading", then
-writes firmware bytes into "data", and when finished, writes "0" to
-"loading".
+Add OTP to the string: "can't parse empty OTP/NVM section"
+NVM usually refers to nvm_file while the problem can be in
+the OTP.
 
->> When NULL is passed as the file, it means that the firmware was passes
->> a blob, and there is no file backing it:
->
-> Where does this blob come from, is cached, built into the kernel, or what?
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The firmware_class interface (before this series) uses three
-mechanisms to resolve firmware requests. The first is to find a
-firmware that is built into the kernel image itself, as part of a
-static array of available firmwares. If this isn't found, the second
-is to search the filesystem from within kernel space, trying to find a
-matching firmware filename. If found, it will open and load it. If
-this mechanism fails, it will call out to userspace (using the
-uevent-triggered interface I described above).
-
-In all cases, it is up to the caller of request_firmware to decide if
-it wants to cache the loaded firmware or not. Once it's done with it,
-it releases the memory.
-
-The documentation for the firmware_class interfaces is in
-Documentation/firmware_class/README.
-
-With the patch series, the LSM hook sees the userspace-touching loads:
-- from kernel built-in: no LSM hook (nonsense to check the static list)
-- direct from filesystem: called with file struct
-- via uevent /sys "loading"/"data" interface: called with NULL file struct
-- via uevent /sys "fd" interface: called with file struct
-
-The reason the "fd" interface was added was because otherwise there's
-no way for systems that use the uevent handler to communicate to the
-kernel where the bytes being shoved into the "data" interface are
-coming from.
-
--Kees
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index b04805c..cfdd314 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -265,7 +265,7 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+ 		if (!mvm->nvm_sections[NVM_SECTION_TYPE_SW].data ||
+ 		    !mvm->nvm_sections[mvm->cfg->nvm_hw_section_num].data) {
+-			IWL_ERR(mvm, "Can't parse empty NVM sections\n");
++			IWL_ERR(mvm, "Can't parse empty OTP/NVM sections\n");
+ 			return NULL;
+ 		}
+ 	} else {
+@@ -273,7 +273,7 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 		if (!mvm->nvm_sections[NVM_SECTION_TYPE_SW].data ||
+ 		    !mvm->nvm_sections[NVM_SECTION_TYPE_REGULATORY].data) {
+ 			IWL_ERR(mvm,
+-				"Can't parse empty family 8000 NVM sections\n");
++				"Can't parse empty family 8000 OTP/NVM sections\n");
+ 			return NULL;
+ 		}
+ 		/* MAC_OVERRIDE or at least HW section must exist */
 -- 
-Kees Cook
-Chrome OS Security
+1.8.3.2
+
