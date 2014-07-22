@@ -1,66 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:42908 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747AbaGHTAj (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:35606 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756555AbaGVT1e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 15:00:39 -0400
-Received: by mail-wg0-f48.google.com with SMTP id x12so1485529wgg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2014 12:00:38 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][3.16 MAYBE?] b43: don't warn about no 5 GHz support on 2.4 GHz devices
-Date: Tue,  8 Jul 2014 21:00:19 +0200
-Message-Id: <1404846019-11079-1-git-send-email-zajec5@gmail.com> (sfid-20140708_210042_950709_DCBEE798)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Jul 2014 15:27:34 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so114506wgh.6
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:33 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/20] iwlwifi: mvm: BT Coex - don't change AP SMPS mode
+Date: Tue, 22 Jul 2014 22:26:42 +0300
+Message-Id: <1406057211-31752-11-git-send-email-egrumbach@gmail.com> (sfid-20140722_212740_216520_2888AE84)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This could be a bit confusing to see warning about lacking support for
-5 GHz band if your device supports 2.4 GHz only.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-John: even I was quite confused to see this warning on my BCM5357. I
-suspected b43 incorrectly detected my WiFi as 5 GHz capable. I think
-that proposed behavior makes more sense.
-Do you think it's OK/worth to take it for 3.16?
----
- drivers/net/wireless/b43/main.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+Leave it to default instead - regardless of the BT activity.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 8aeef10..27dc343 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5268,14 +5268,16 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 	b43_supported_bands(dev, &have_2ghz_phy, &have_5ghz_phy);
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c        | 21 ++++++++-------------
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 17 +++++++----------
+ 2 files changed, 15 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index a65b1bb..2291bbc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -768,13 +768,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		/* default smps_mode for AP / GO is OFF */
+-		smps_mode = IEEE80211_SMPS_OFF;
+-		if (!mvmvif->ap_ibss_active) {
+-			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
+-					    smps_mode);
++		if (!mvmvif->ap_ibss_active)
+ 			return;
+-		}
+ 		break;
+ 	default:
+ 		return;
+@@ -785,10 +780,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	/* If channel context is invalid or not on 2.4GHz .. */
+ 	if ((!chanctx_conf ||
+ 	     chanctx_conf->def.chan->band != IEEE80211_BAND_2GHZ)) {
+-		/* ... relax constraints and disable rssi events */
+-		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
+-				    smps_mode);
+ 		if (vif->type == NL80211_IFTYPE_STATION) {
++			/* ... relax constraints and disable rssi events */
++			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++					    smps_mode);
+ 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
+ 						    false);
+ 			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
+@@ -800,9 +795,7 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	if (bt_activity_grading >= BT_HIGH_TRAFFIC)
+ 		smps_mode = IEEE80211_SMPS_STATIC;
+ 	else if (bt_activity_grading >= BT_LOW_TRAFFIC)
+-		smps_mode = vif->type == NL80211_IFTYPE_AP ?
+-				IEEE80211_SMPS_OFF :
+-				IEEE80211_SMPS_DYNAMIC;
++		smps_mode = IEEE80211_SMPS_DYNAMIC;
  
- 	/* We don't support 5 GHz on some PHYs yet */
--	switch (dev->phy.type) {
--	case B43_PHYTYPE_A:
--	case B43_PHYTYPE_G:
--	case B43_PHYTYPE_N:
--	case B43_PHYTYPE_LP:
--	case B43_PHYTYPE_HT:
--		b43warn(wl, "5 GHz band is unsupported on this PHY\n");
--		have_5ghz_phy = false;
-+	if (have_5ghz_phy) {
-+		switch (dev->phy.type) {
-+		case B43_PHYTYPE_A:
-+		case B43_PHYTYPE_G:
-+		case B43_PHYTYPE_N:
-+		case B43_PHYTYPE_LP:
-+		case B43_PHYTYPE_HT:
-+			b43warn(wl, "5 GHz band is unsupported on this PHY\n");
-+			have_5ghz_phy = false;
-+		}
- 	}
+ 	/* relax SMPS contraints for next association */
+ 	if (!vif->bss_conf.assoc)
+@@ -816,7 +809,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		       "mac %d: bt_activity_grading %d smps_req %d\n",
+ 		       mvmvif->id, bt_activity_grading, smps_mode);
  
- 	if (!have_2ghz_phy && !have_5ghz_phy) {
+-	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
++	if (vif->type == NL80211_IFTYPE_STATION)
++		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++				    smps_mode);
+ 
+ 	/* low latency is always primary */
+ 	if (iwl_mvm_vif_low_latency(mvmvif)) {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index 9e3ba5a..a3be333 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -793,13 +793,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		/* default smps_mode for AP / GO is OFF */
+-		smps_mode = IEEE80211_SMPS_OFF;
+-		if (!mvmvif->ap_ibss_active) {
+-			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
+-					    smps_mode);
++		if (!mvmvif->ap_ibss_active)
+ 			return;
+-		}
+ 		break;
+ 	default:
+ 		return;
+@@ -810,10 +805,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	/* If channel context is invalid or not on 2.4GHz .. */
+ 	if ((!chanctx_conf ||
+ 	     chanctx_conf->def.chan->band != IEEE80211_BAND_2GHZ)) {
+-		/* ... relax constraints and disable rssi events */
+-		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
+-				    smps_mode);
+ 		if (vif->type == NL80211_IFTYPE_STATION) {
++			/* ... relax constraints and disable rssi events */
++			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++					    smps_mode);
+ 			iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
+ 						    false);
+ 			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
+@@ -838,7 +833,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
+ 		       smps_mode);
+ 
+-	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
++	if (vif->type == NL80211_IFTYPE_STATION)
++		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++				    smps_mode);
+ 
+ 	/* low latency is always primary */
+ 	if (iwl_mvm_vif_low_latency(mvmvif)) {
 -- 
-1.8.4.5
+1.8.3.2
 
