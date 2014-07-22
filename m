@@ -1,45 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:60357 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933778AbaGQOOU (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:51552 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131AbaGVT1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:20 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so2115601wgh.15
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:19 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 11/15] mac80211: set Rx highest rate in ht_cap
-Date: Thu, 17 Jul 2014 17:14:27 +0300
-Message-Id: <1405606471-30128-12-git-send-email-arik@wizery.com> (sfid-20140717_161451_154882_95511AF9)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+	Tue, 22 Jul 2014 15:27:47 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so107438wes.36
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:45 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/20] iwlwifi: dump CSRs to fw-error-dump
+Date: Tue, 22 Jul 2014 22:26:48 +0300
+Message-Id: <1406057211-31752-17-git-send-email-egrumbach@gmail.com> (sfid-20140722_212801_138351_974AAAD6)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set for completeness mostly, currently unused in the code.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Add the Control Status Registers to the firmware error dump
+infrastructure.
+
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/ht.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  4 +--
+ drivers/net/wireless/iwlwifi/pcie/trans.c        | 33 +++++++++++++++++++++++-
+ 2 files changed, 34 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 568055c..ff630be 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -227,6 +227,9 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (own_cap.mcs.rx_mask[32/8] & ht_cap_ie->mcs.rx_mask[32/8] & 1)
- 		ht_cap.mcs.rx_mask[32/8] |= 1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 5121479..de5994a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -70,7 +70,7 @@
+ /**
+  * enum iwl_fw_error_dump_type - types of data in the dump file
+  * @IWL_FW_ERROR_DUMP_SRAM:
+- * @IWL_FW_ERROR_DUMP_REG:
++ * @IWL_FW_ERROR_DUMP_CSR: Control Status Registers - from offset 0
+  * @IWL_FW_ERROR_DUMP_RXF:
+  * @IWL_FW_ERROR_DUMP_TXCMD: last TX command data, structured as
+  *	&struct iwl_fw_error_dump_txcmd packets
+@@ -82,7 +82,7 @@
+  */
+ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_SRAM = 0,
+-	IWL_FW_ERROR_DUMP_REG = 1,
++	IWL_FW_ERROR_DUMP_CSR = 1,
+ 	IWL_FW_ERROR_DUMP_RXF = 2,
+ 	IWL_FW_ERROR_DUMP_TXCMD = 3,
+ 	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 153c3dd..06e04aa 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1912,6 +1912,27 @@ static u32 iwl_trans_pcie_dump_prph(struct iwl_trans *trans,
+ 	return prph_len;
+ }
  
-+	/* set Rx highest rate */
-+	ht_cap.mcs.rx_highest = ht_cap_ie->mcs.rx_highest;
++#define IWL_CSR_TO_DUMP (0x250)
 +
-  apply:
- 	changed = memcmp(&sta->sta.ht_cap, &ht_cap, sizeof(ht_cap));
++static u32 iwl_trans_pcie_dump_csr(struct iwl_trans *trans,
++				   struct iwl_fw_error_dump_data **data)
++{
++	u32 csr_len = sizeof(**data) + IWL_CSR_TO_DUMP;
++	__le32 *val;
++	int i;
++
++	(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_CSR);
++	(*data)->len = cpu_to_le32(IWL_CSR_TO_DUMP);
++	val = (void *)(*data)->data;
++
++	for (i = 0; i < IWL_CSR_TO_DUMP; i += 4)
++		*val++ = cpu_to_le32(iwl_trans_pcie_read32(trans, i));
++
++	*data = iwl_fw_error_next_data(*data);
++
++	return csr_len;
++}
++
+ static
+ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
+ {
+@@ -1923,9 +1944,17 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
+ 	u32 len;
+ 	int i, ptr;
  
+-	len = sizeof(*dump_data) + sizeof(*data) +
++	/* transport dump header */
++	len = sizeof(*dump_data);
++
++	/* host commands */
++	len += sizeof(*data) +
+ 		cmdq->q.n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
+ 
++	/* CSR registers */
++	len += sizeof(*data) + IWL_CSR_TO_DUMP;
++
++	/* PRPH registers */
+ 	for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr); i++) {
+ 		/* The range includes both boundaries */
+ 		int num_bytes_in_chunk = iwl_prph_dump_addr[i].end -
+@@ -1935,6 +1964,7 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
+ 			num_bytes_in_chunk;
+ 	}
+ 
++	/* FW monitor */
+ 	if (trans_pcie->fw_mon_page)
+ 		len += sizeof(*data) + sizeof(struct iwl_fw_error_dump_fw_mon) +
+ 			trans_pcie->fw_mon_size;
+@@ -1973,6 +2003,7 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
+ 	data = iwl_fw_error_next_data(data);
+ 
+ 	len += iwl_trans_pcie_dump_prph(trans, &data);
++	len += iwl_trans_pcie_dump_csr(trans, &data);
+ 	/* data is already pointing to the next section */
+ 
+ 	if (trans_pcie->fw_mon_page) {
 -- 
-1.9.1
+1.8.3.2
 
