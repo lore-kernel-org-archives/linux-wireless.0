@@ -1,100 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51283 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751703AbaGGPWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:22:00 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 07/10] lib80211: remove unused print_ssid()
-Date: Mon,  7 Jul 2014 18:21:49 +0300
-Message-Id: <1404746512-12749-8-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172556_074158_0DF9A0DD)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:43318 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbaGVPPy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2014 11:15:54 -0400
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: "'Felix Fietkau'" <nbd@openwrt.org>,
+	<linux-wireless@vger.kernel.org>
+References: <004101cfa58c$e0ccb3f0$a2661bd0$@acksys.fr> <53CE6B6F.3090503@openwrt.org>
+In-Reply-To: <53CE6B6F.3090503@openwrt.org>
+Subject: RE: get_expected_throughput introduces a kernel oops on sta_set_sinfo calls
+Date: Tue, 22 Jul 2014 16:55:22 +0200
+Message-ID: <005001cfa5bc$f6befc60$e43cf520$@acksys.fr> (sfid-20140722_171557_476218_74DA7BAB)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel we have %*pE specifier to print an escaped buffer. All users now
-switched to that approach.
+Great, it works! No more oops, and my debug printk never appears anymore.
 
-This fixes a bug as well. The current implementation wrongly prints octal
-numbers: only two first digits are used in case when 3 are required and the
-rest of the string ends up cut off.
+But it looks like one line is missing in your patch, 12/15 lines announced
+but only 11/14 lines present?
 
-Additionally by default the \f, \v, \a, and \e are escaped to their alphabetic
-representation. It's safe to do since it is currently used for messaging only.
+Thanks you so much!
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+-----Message d'origine-----
+De : Felix Fietkau [mailto:nbd@openwrt.org] 
+Envoyé : mardi 22 juillet 2014 15:47
+À : Jean-Pierre Tosoni; linux-wireless@vger.kernel.org
+Objet : Re: get_expected_throughput introduces a kernel oops on
+sta_set_sinfo calls
+
+On 2014-07-22 11:11, Jean-Pierre Tosoni wrote:
+> Hi list,
+> 
+> I am using compat-wireless-20132-04-16 with kernel 3.3.8.
+> I experienced a kernel oops after applying the "get_expected_throughput"
+> patches series from Antonio Quartulli.
+> It happens when a station_dump is issued from userspace while an 
+> association has begun but does not complete immediately due to bad
+channel.
+> After some debugging I made this patch which solves the issue:
+Please try this patch:
 ---
- include/net/lib80211.h  |  5 -----
- net/wireless/lib80211.c | 32 --------------------------------
- 2 files changed, 37 deletions(-)
-
-diff --git a/include/net/lib80211.h b/include/net/lib80211.h
-index be95b92..aab0f42 100644
---- a/include/net/lib80211.h
-+++ b/include/net/lib80211.h
-@@ -32,11 +32,6 @@
- #include <linux/timer.h>
- #include <linux/seq_file.h>
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -472,12 +472,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct
+station_info *sinfo)  {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct rate_control_ref *ref = local->rate_ctrl;
++	struct rate_control_ref *ref = NULL;
+ 	struct timespec uptime;
+ 	u64 packets = 0;
+ 	u32 thr = 0;
+ 	int i, ac;
  
--/* print_ssid() is intended to be used in debug (and possibly error)
-- * messages. It should never be used for passing ssid to user space. */
--const char *print_ssid(char *buf, const char *ssid, u8 ssid_len);
--#define DECLARE_SSID_BUF(var) char var[IEEE80211_MAX_SSID_LEN * 4 + 1] __maybe_unused
--
- #define NUM_WEP_KEYS	4
++	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
++		ref = local->rate_ctrl;
++
+ 	sinfo->generation = sdata->local->sta_generation;
  
- enum {
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index a55c27b..4596115 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -46,38 +46,6 @@ static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
- static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
- static void lib80211_crypt_deinit_handler(unsigned long data);
- 
--const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
--{
--	const char *s = ssid;
--	char *d = buf;
--
--	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
--	while (ssid_len--) {
--		if (isprint(*s)) {
--			*d++ = *s++;
--			continue;
--		}
--
--		*d++ = '\\';
--		if (*s == '\0')
--			*d++ = '0';
--		else if (*s == '\n')
--			*d++ = 'n';
--		else if (*s == '\r')
--			*d++ = 'r';
--		else if (*s == '\t')
--			*d++ = 't';
--		else if (*s == '\\')
--			*d++ = '\\';
--		else
--			d += snprintf(d, 3, "%03o", *s);
--		s++;
--	}
--	*d = '\0';
--	return buf;
--}
--EXPORT_SYMBOL(print_ssid);
--
- int lib80211_crypt_info_init(struct lib80211_crypt_info *info, char *name,
- 				spinlock_t *lock)
- {
--- 
-2.0.1
+ 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
 
