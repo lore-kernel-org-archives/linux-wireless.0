@@ -1,131 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:40218 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629AbaGGJbz (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:56340 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757139AbaGVWLu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 05:31:55 -0400
-Received: by mail-wi0-f176.google.com with SMTP id n3so15624250wiv.15
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2014 02:31:54 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 08/10] ath9k: add debugfs support for dynack
-Date: Mon,  7 Jul 2014 11:31:44 +0200
-Message-Id: <1404725506-9571-9-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140707_113206_994767_B2142041)
-In-Reply-To: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1404725506-9571-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Tue, 22 Jul 2014 18:11:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+ <1405373897-31671-4-git-send-email-keescook@chromium.org> <20140714222419.GC10393@wotan.suse.de>
+ <CAGXu5j+V807cyDdyEzoRzSjYEyhkDntaEkKOx6n=OzUoF31-sA@mail.gmail.com>
+ <CAB=NE6WnP-7YCr8DzCq-HOLZVuQxmCa+nwN7kQBxTnUHK+xMRg@mail.gmail.com> <CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Tue, 22 Jul 2014 15:11:27 -0700
+Message-ID: <CAB=NE6VMca9gkvino-_SbThX3DgNSMJ+x-AkmyPR-G-x4Pq_jA@mail.gmail.com> (sfid-20140723_001157_536770_93119472)
+Subject: Re: [PATCH 3/7] security: introduce kernel_fw_from_file hook
+To: Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ack_to entry to debugfs in order to dump current ack timeout value.
-Add dynack entry to enable/disable ack timeout estimation algorithm:
+On Tue, Jul 22, 2014 at 1:55 PM, Kees Cook <keescook@chromium.org> wrote:
+> On Tue, Jul 22, 2014 at 12:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>> On Mon, Jul 14, 2014 at 3:31 PM, Kees Cook <keescook@chromium.org> wrote:
+>>> Yup, with this and the module hook, adding a similar hook for kexec
+>>> makes sense as well. A paranoid kernel doesn't want to trust anything
+>>> it's loading from userspace. :)
+>>
+>> Well I'm actually wondering if we could generalize requiring hooks or
+>> not for LSM as part of the general kobject definition. Then we
+>> wouldn't need to keep growing hooks for modules, firmware, kexec
+>> images, etc, but instead using the interfaces for kobjects and who
+>> depend on them. How that would actually look -- I'm not sure, but just
+>> a thought.
+>
+> Yeah, there does seem to be a repeated "get a thing from userspace"
+> method here, but the interfaces have been rather scattered so far. I
+> haven't seen an obvious way to consolidate them yet.
 
-echo (1|0) > /sys/kernel/debug/ieee80211/phy0/ath9k/dynack
+If we are going to be adding a new system call for each type of
+userspace object to help LSMs with requirements I wonder if its a
+worthy endeavor to review. This series didn't add one but you had
+mentioned finit_module() for example, are we going to want one for
+finit_firmware() finit_kexec_image(), etc?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/debug.c | 82 ++++++++++++++++++++++++++++++++++
- 1 file changed, 82 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index ce073e9..2f8354f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1169,6 +1169,81 @@ static const struct file_operations fops_btcoex = {
- };
- #endif
- 
-+#ifdef CONFIG_ATH9K_DYNACK
-+/* enable/disable dynack processing */
-+static ssize_t read_file_dynack(struct file *file, char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	char buf[32];
-+	unsigned int len;
-+
-+	len = sprintf(buf, "%u\n", !ah->dynack.fix_to);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_dynack(struct file *file, const char __user *user_buf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	char buf[32];
-+	unsigned long dynack;
-+	ssize_t len;
-+	u32 rfilt;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+
-+	buf[len] = '\0';
-+	if (kstrtoul(buf, 0, &dynack))
-+			return -EINVAL;
-+
-+	ah->dynack.fix_to = !dynack;
-+
-+	rfilt = ath_calcrxfilter(sc);
-+	ath9k_hw_setrxfilter(ah, rfilt);
-+
-+	if (ah->dynack.fix_to)
-+		ath9k_hw_init_global_settings(ah);
-+	else
-+		ath_dynack_reset(ah);
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_dynack = {
-+	.read = read_file_dynack,
-+	.write = write_file_dynack,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static ssize_t read_file_ackto(struct file *file, char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	char buf[32];
-+	unsigned int len;
-+
-+	len = sprintf(buf, "%u %c\n", ah->dynack.ackto,
-+		      (ah->dynack.fix_to) ? 'S' : 'A');
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_ackto = {
-+	.read = read_file_ackto,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+#endif
-+
- /* Ethtool support for get-stats */
- 
- #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
-@@ -1374,5 +1449,12 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_btcoex);
- #endif
- 
-+#ifdef CONFIG_ATH9K_DYNACK
-+	debugfs_create_file("dynack", S_IRUSR | S_IWUSR,
-+			    sc->debug.debugfs_phy, sc, &fops_dynack);
-+	debugfs_create_file("ack_to", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
-+			    sc, &fops_ackto);
-+#endif
-+
- 	return 0;
- }
--- 
-1.9.1
-
+ Luis
