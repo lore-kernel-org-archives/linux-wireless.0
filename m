@@ -1,229 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:47575 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932622AbaGPNaJ (ORCPT
+Received: from smtp-out04.msg.oleane.net ([62.161.7.2]:58503 "EHLO
+	smtp-out04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509AbaGVJwI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 09:30:09 -0400
-Received: by mail-we0-f175.google.com with SMTP id t60so939859wes.34
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 06:30:07 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, svens@stackframe.org,
-	vh.nguyen@actiasodielec.fr, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC/RFT 1/2] ath10k: fix monitor start/stop sequences
-Date: Wed, 16 Jul 2014 15:21:12 +0200
-Message-Id: <1405516873-26411-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_153018_837169_E04F5B92)
+	Tue, 22 Jul 2014 05:52:08 -0400
+Received: from smtp27.msg.oleane.net (smtp27.mail.priv [172.17.20.149])
+	by smtp-out04.msg.oleane.net with ESMTP id s6M9Vjhm004268
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 11:31:45 +0200
+Received: from RD9 ([195.6.104.67]) (authenticated)
+	by smtp27.msg.oleane.net (MSA) with ESMTP id s6M9B9Gv024041
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 11:11:10 +0200
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
+Subject: get_expected_throughput introduces a kernel oops on sta_set_sinfo calls
+Date: Tue, 22 Jul 2014 11:11:07 +0200
+Message-ID: <004101cfa58c$e0ccb3f0$a2661bd0$@acksys.fr> (sfid-20140722_115212_527421_1611CD6B)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some cases where monitor start failure left
-the driver in a confused state.
+Hi list,
 
-This also makes the monitor code simpler.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 117 +++++++++++++---------------------
- 1 file changed, 45 insertions(+), 72 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b8314a5..2a1c710 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -492,19 +492,6 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- 	return 0;
- }
+I am using compat-wireless-20132-04-16 with kernel 3.3.8.
+I experienced a kernel oops after applying the "get_expected_throughput"
+patches series from Antonio Quartulli.
+It happens when a station_dump is issued from userspace while an association
+has begun but does not complete immediately due to bad channel.
+After some debugging I made this patch which solves the issue:
+===========================================================================
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@@ -708,6 +708,15 @@ static u32 minstrel_get_expected_throughput(
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	int idx = mi->max_tp_rate[0];
  
--static bool ath10k_monitor_is_enabled(struct ath10k *ar)
--{
--	lockdep_assert_held(&ar->conf_mutex);
--
--	ath10k_dbg(ATH10K_DBG_MAC,
--		   "mac monitor refs: promisc %d monitor %d cac %d\n",
--		   ar->promisc, ar->monitor,
--		   test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags));
--
--	return ar->promisc || ar->monitor ||
--	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
--}
--
- static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
- {
- 	struct cfg80211_chan_def *chandef = &ar->chandef;
-@@ -654,16 +641,6 @@ static int ath10k_monitor_start(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (!ath10k_monitor_is_enabled(ar)) {
--		ath10k_warn("trying to start monitor with no references\n");
--		return 0;
--	}
--
--	if (ar->monitor_started) {
--		ath10k_dbg(ATH10K_DBG_MAC, "mac monitor already started\n");
--		return 0;
--	}
--
- 	ret = ath10k_monitor_vdev_create(ar);
- 	if (ret) {
- 		ath10k_warn("failed to create monitor vdev: %d\n", ret);
-@@ -683,34 +660,48 @@ static int ath10k_monitor_start(struct ath10k *ar)
- 	return 0;
- }
- 
--static void ath10k_monitor_stop(struct ath10k *ar)
-+static int ath10k_monitor_stop(struct ath10k *ar)
- {
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (ath10k_monitor_is_enabled(ar)) {
--		ath10k_dbg(ATH10K_DBG_MAC,
--			   "mac monitor will be stopped later\n");
--		return;
--	}
--
--	if (!ar->monitor_started) {
--		ath10k_dbg(ATH10K_DBG_MAC,
--			   "mac monitor probably failed to start earlier\n");
--		return;
--	}
--
- 	ret = ath10k_monitor_vdev_stop(ar);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to stop monitor vdev: %d\n", ret);
-+		return ret;
++	if (!mi->r) {
++		/*
++		 * Happens if get_expected_throughput() is called by
++		 * ieee80211_dump_station during association from HT
++		 * client to AP, before getting the HT IE from the AP
++		 */
++		printk(KERN_ERR "minstrel: uninitialized station rates");
++		return 0; /* value suggested by J. Berg 25-apr-2014 */
 +	}
- 
- 	ret = ath10k_monitor_vdev_delete(ar);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to delete monitor vdev: %d\n", ret);
-+		return ret;
-+	}
- 
- 	ar->monitor_started = false;
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor stopped\n");
-+
-+	return 0;
-+}
-+
-+static int ath10k_monitor_recalc(struct ath10k *ar)
-+{
-+	bool should_start;
-+
-+	should_start = ar->promisc || ar->monitor ||
-+		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-+
-+	ath10k_dbg(ATH10K_DBG_MAC,
-+		   "mac monitor recalc started? %d should? %d\n",
-+		   ar->monitor_started, should_start);
-+
-+	if (should_start == ar->monitor_started)
-+		return 0;
-+
-+	if (should_start)
-+		return ath10k_monitor_start(ar);
-+	else
-+		return ath10k_monitor_stop(ar);
- }
- 
- static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
-@@ -741,7 +732,7 @@ static int ath10k_start_cac(struct ath10k *ar)
- 
- 	set_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- 
--	ret = ath10k_monitor_start(ar);
-+	ret = ath10k_monitor_recalc(ar);
- 	if (ret) {
- 		ath10k_warn("failed to start monitor (cac): %d\n", ret);
- 		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-@@ -2316,12 +2307,12 @@ void ath10k_halt(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (ath10k_monitor_is_enabled(ar)) {
--		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
--		ar->promisc = false;
--		ar->monitor = false;
-+	clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-+	ar->promisc = false;
-+	ar->monitor = false;
-+
-+	if (ar->monitor_started)
- 		ath10k_monitor_stop(ar);
--	}
- 
- 	del_timer_sync(&ar->scan.timeout);
- 	ath10k_reset_scan((unsigned long)ar);
-@@ -2574,7 +2565,7 @@ static void ath10k_config_chan(struct ath10k *ar)
- 	/* First stop monitor interface. Some FW versions crash if there's a
- 	 * lone monitor interface. */
- 	if (ar->monitor_started)
--		ath10k_monitor_vdev_stop(ar);
-+		ath10k_monitor_stop(ar);
- 
- 	list_for_each_entry(arvif, &ar->arvifs, list) {
- 		if (!arvif->is_started)
-@@ -2619,8 +2610,7 @@ static void ath10k_config_chan(struct ath10k *ar)
- 		}
- 	}
- 
--	if (ath10k_monitor_is_enabled(ar))
--		ath10k_monitor_vdev_start(ar, ar->monitor_vdev_id);
-+	ath10k_monitor_recalc(ar);
- }
- 
- static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
-@@ -2675,19 +2665,10 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 		ath10k_config_ps(ar);
- 
- 	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
--		if (conf->flags & IEEE80211_CONF_MONITOR && !ar->monitor) {
--			ar->monitor = true;
--			ret = ath10k_monitor_start(ar);
--			if (ret) {
--				ath10k_warn("failed to start monitor (config): %d\n",
--					    ret);
--				ar->monitor = false;
--			}
--		} else if (!(conf->flags & IEEE80211_CONF_MONITOR) &&
--			   ar->monitor) {
--			ar->monitor = false;
--			ath10k_monitor_stop(ar);
--		}
-+		ar->monitor = conf->flags & IEEE80211_CONF_MONITOR;
-+		ret = ath10k_monitor_recalc(ar);
-+		if (ret)
-+			ath10k_warn("failed to recalc monitor: %d\n", ret);
- 	}
- 
- 	mutex_unlock(&ar->conf_mutex);
-@@ -2944,18 +2925,10 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
- 	*total_flags &= SUPPORTED_FILTERS;
- 	ar->filter_flags = *total_flags;
- 
--	if (ar->filter_flags & FIF_PROMISC_IN_BSS && !ar->promisc) {
--		ar->promisc = true;
--		ret = ath10k_monitor_start(ar);
--		if (ret) {
--			ath10k_warn("failed to start monitor (promisc): %d\n",
--				    ret);
--			ar->promisc = false;
--		}
--	} else if (!(ar->filter_flags & FIF_PROMISC_IN_BSS) && ar->promisc) {
--		ar->promisc = false;
--		ath10k_monitor_stop(ar);
--	}
-+	ar->promisc = !!(ar->filter_flags & FIF_PROMISC_IN_BSS);
-+	ret = ath10k_monitor_recalc(ar);
-+	if (ret)
-+		ath10k_warn("failed to recalc montior: %d\n", ret);
- 
- 	mutex_unlock(&ar->conf_mutex);
- }
--- 
-1.8.5.3
+ 	/* convert pkt per sec in kbps (1200 is the average pkt size used
+for
+ 	 * computing cur_tp
+ 	 */
+===========================================================================
+
+With this patch I get this trace (the timeout is expected, since the SNR is
+very low):
+
+[  359.798796] wlan0: authenticate with 92:a4:de:21:4f:85
+
+[  359.813180] wlan0: direct probe to 92:a4:de:21:4f:85 (try 1/3)
+
+[  359.922306] wlan0: direct probe to 92:a4:de:21:4f:85 (try 2/3)
+
+[  360.005424] minstrel: uninitialized station rates
+
+[  360.030318] wlan0: direct probe to 92:a4:de:21:4f:85 (try 3/3)
+
+[  360.138294] wlan0: authentication with 92:a4:de:21:4f:85 timed out
+
+Maybe station_dump should not dump the stations just created by an
+yet-unanswered authentication request?
+Or is my patch the right thing to do?
+
+Regards
+Jean-Pierre Tosoni
 
