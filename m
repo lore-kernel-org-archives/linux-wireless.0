@@ -1,264 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55894 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbaGLGtq (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:42024 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756430AbaGVT1g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 02:49:46 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 5/9] brcmfmac: move attach and detach functions in wl_cfg80211.c
-Date: Sat, 12 Jul 2014 08:49:38 +0200
-Message-ID: <1405147782-12768-6-git-send-email-arend@broadcom.com> (sfid-20140712_085007_461617_74718863)
-In-Reply-To: <1405147782-12768-1-git-send-email-arend@broadcom.com>
-References: <1405147782-12768-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Jul 2014 15:27:36 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so1023429wiv.7
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:35 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliadx.peller@intel.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/20] iwlwifi: mvm: wait for handlers when stopping scans
+Date: Tue, 22 Jul 2014 22:26:43 +0300
+Message-Id: <1406057211-31752-12-git-send-email-egrumbach@gmail.com> (sfid-20140722_212741_369477_087C7538)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparing for another patch move the functions in separate commit.
+From: Eliad Peller <eliadx.peller@intel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The recent unified scan api change introduced issues
+when stopping ongoing scans, since both regular and
+sched scan now use same stopped notification.
+
+When issuing a new scan right after a running one,
+we get the "old" notification and handle it wrongly
+as notification for the current scan.
+
+Fix it by introducing a new function that make sure
+we consume the pending notifications before issuing
+a new scan.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: ArikX Nemtsov <arik@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 216 ++++++++++-----------
- 1 file changed, 108 insertions(+), 108 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 86 +++++++++++++++++------------
+ 1 file changed, 51 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 9682cf2..af846d5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4967,114 +4967,6 @@ static int brcmf_enable_bw40_2g(struct brcmf_if *ifp)
- 	return err;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 5219b3a..46ff7cd 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1718,6 +1718,47 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_BSS_CHANGED);
  }
  
--struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
--						  struct device *busdev)
--{
--	struct net_device *ndev = drvr->iflist[0]->ndev;
--	struct brcmf_cfg80211_info *cfg;
--	struct wiphy *wiphy;
--	struct brcmf_cfg80211_vif *vif;
--	struct brcmf_if *ifp;
--	s32 err = 0;
--	s32 io_type;
--
--	if (!ndev) {
--		brcmf_err("ndev is invalid\n");
--		return NULL;
--	}
--
--	ifp = netdev_priv(ndev);
--	wiphy = brcmf_setup_wiphy(busdev);
--	if (IS_ERR(wiphy))
--		return NULL;
--
--	cfg = wiphy_priv(wiphy);
--	cfg->wiphy = wiphy;
--	cfg->pub = drvr;
--	init_vif_event(&cfg->vif_event);
--	INIT_LIST_HEAD(&cfg->vif_list);
--
--	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
--	if (IS_ERR(vif)) {
--		wiphy_free(wiphy);
--		return NULL;
--	}
--
--	vif->ifp = ifp;
--	vif->wdev.netdev = ndev;
--	ndev->ieee80211_ptr = &vif->wdev;
--	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
--
--	err = wl_init_priv(cfg);
--	if (err) {
--		brcmf_err("Failed to init iwm_priv (%d)\n", err);
--		goto cfg80211_attach_out;
--	}
--	ifp->vif = vif;
--
--	err = brcmf_p2p_attach(cfg);
--	if (err) {
--		brcmf_err("P2P initilisation failed (%d)\n", err);
--		goto cfg80211_p2p_attach_out;
--	}
--	err = brcmf_btcoex_attach(cfg);
--	if (err) {
--		brcmf_err("BT-coex initialisation failed (%d)\n", err);
--		brcmf_p2p_detach(&cfg->p2p);
--		goto cfg80211_p2p_attach_out;
--	}
--
--	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
--	 * setup 40MHz in 2GHz band and enable OBSS scanning.
--	 */
--	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
--	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
--		err = brcmf_enable_bw40_2g(ifp);
--		if (!err)
--			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
--						      BRCMF_OBSS_COEX_AUTO);
--	}
--	/* clear for now and rely on update later */
--	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
--	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
--
--	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
--	if (err) {
--		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
--		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
--	}
--
--	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
--				    &io_type);
--	if (err) {
--		brcmf_err("Failed to get D11 version (%d)\n", err);
--		goto cfg80211_p2p_attach_out;
--	}
--	cfg->d11inf.io_type = (u8)io_type;
--	brcmu_d11_attach(&cfg->d11inf);
--
--	return cfg;
--
--cfg80211_p2p_attach_out:
--	wl_deinit_priv(cfg);
--
--cfg80211_attach_out:
--	brcmf_free_vif(vif);
--	return NULL;
--}
--
--void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
--{
--	if (!cfg)
--		return;
--
--	WARN_ON(!list_empty(&cfg->vif_list));
--	wiphy_unregister(cfg->wiphy);
--	brcmf_btcoex_detach(cfg);
--	wl_deinit_priv(cfg);
--	wiphy_free(cfg->wiphy);
--}
--
- static s32
- brcmf_dongle_roam(struct brcmf_if *ifp, u32 bcn_timeout)
- {
-@@ -5658,3 +5550,111 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
- 				  vif_event_equals(event, action), timeout);
++static int iwl_mvm_cancel_scan_wait_notif(struct iwl_mvm *mvm,
++					  enum iwl_scan_status scan_type)
++{
++	int ret;
++	bool wait_for_handlers = false;
++
++	mutex_lock(&mvm->mutex);
++
++	if (mvm->scan_status != scan_type) {
++		ret = 0;
++		/* make sure there are no pending notifications */
++		wait_for_handlers = true;
++		goto out;
++	}
++
++	switch (scan_type) {
++	case IWL_MVM_SCAN_SCHED:
++		ret = iwl_mvm_scan_offload_stop(mvm, true);
++		break;
++	case IWL_MVM_SCAN_OS:
++		ret = iwl_mvm_cancel_scan(mvm);
++		break;
++	case IWL_MVM_SCAN_NONE:
++	default:
++		WARN_ON_ONCE(1);
++		ret = -EINVAL;
++		break;
++	}
++	if (ret)
++		goto out;
++
++	wait_for_handlers = true;
++out:
++	mutex_unlock(&mvm->mutex);
++
++	/* make sure we consume the completion notification */
++	if (wait_for_handlers)
++		iwl_mvm_wait_for_async_handlers(mvm);
++
++	return ret;
++}
+ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ieee80211_scan_request *hw_req)
+@@ -1730,19 +1771,13 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 	    req->n_channels > mvm->fw->ucode_capa.n_scan_channels)
+ 		return -EINVAL;
+ 
++	ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_SCHED);
++	if (ret)
++		return ret;
++
+ 	mutex_lock(&mvm->mutex);
+ 
+-	switch (mvm->scan_status) {
+-	case IWL_MVM_SCAN_SCHED:
+-		ret = iwl_mvm_scan_offload_stop(mvm, true);
+-		if (ret) {
+-			ret = -EBUSY;
+-			goto out;
+-		}
+-		break;
+-	case IWL_MVM_SCAN_NONE:
+-		break;
+-	default:
++	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
+ 		ret = -EBUSY;
+ 		goto out;
+ 	}
+@@ -1758,8 +1793,6 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+ out:
+ 	mutex_unlock(&mvm->mutex);
+-	/* make sure to flush the Rx handler before the next scan arrives */
+-	iwl_mvm_wait_for_async_handlers(mvm);
+ 	return ret;
  }
  
-+struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
-+						  struct device *busdev)
-+{
-+	struct net_device *ndev = drvr->iflist[0]->ndev;
-+	struct brcmf_cfg80211_info *cfg;
-+	struct wiphy *wiphy;
-+	struct brcmf_cfg80211_vif *vif;
-+	struct brcmf_if *ifp;
-+	s32 err = 0;
-+	s32 io_type;
+@@ -2135,6 +2168,10 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	int ret;
+ 
++	ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_OS);
++	if (ret)
++		return ret;
 +
-+	if (!ndev) {
-+		brcmf_err("ndev is invalid\n");
-+		return NULL;
-+	}
-+
-+	ifp = netdev_priv(ndev);
-+	wiphy = brcmf_setup_wiphy(busdev);
-+	if (IS_ERR(wiphy))
-+		return NULL;
-+
-+	cfg = wiphy_priv(wiphy);
-+	cfg->wiphy = wiphy;
-+	cfg->pub = drvr;
-+	init_vif_event(&cfg->vif_event);
-+	INIT_LIST_HEAD(&cfg->vif_list);
-+
-+	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
-+	if (IS_ERR(vif)) {
-+		wiphy_free(wiphy);
-+		return NULL;
-+	}
-+
-+	vif->ifp = ifp;
-+	vif->wdev.netdev = ndev;
-+	ndev->ieee80211_ptr = &vif->wdev;
-+	SET_NETDEV_DEV(ndev, wiphy_dev(cfg->wiphy));
-+
-+	err = wl_init_priv(cfg);
-+	if (err) {
-+		brcmf_err("Failed to init iwm_priv (%d)\n", err);
-+		goto cfg80211_attach_out;
-+	}
-+	ifp->vif = vif;
-+
-+	err = brcmf_p2p_attach(cfg);
-+	if (err) {
-+		brcmf_err("P2P initilisation failed (%d)\n", err);
-+		goto cfg80211_p2p_attach_out;
-+	}
-+	err = brcmf_btcoex_attach(cfg);
-+	if (err) {
-+		brcmf_err("BT-coex initialisation failed (%d)\n", err);
-+		brcmf_p2p_detach(&cfg->p2p);
-+		goto cfg80211_p2p_attach_out;
-+	}
-+
-+	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
-+	 * setup 40MHz in 2GHz band and enable OBSS scanning.
-+	 */
-+	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
-+	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+		err = brcmf_enable_bw40_2g(ifp);
-+		if (!err)
-+			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
-+						      BRCMF_OBSS_COEX_AUTO);
-+	}
-+	/* clear for now and rely on update later */
-+	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.ht_supported = false;
-+	wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap = 0;
-+
-+	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
-+	if (err) {
-+		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
-+		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
-+	}
-+
-+	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
-+				    &io_type);
-+	if (err) {
-+		brcmf_err("Failed to get D11 version (%d)\n", err);
-+		goto cfg80211_p2p_attach_out;
-+	}
-+	cfg->d11inf.io_type = (u8)io_type;
-+	brcmu_d11_attach(&cfg->d11inf);
-+
-+	return cfg;
-+
-+cfg80211_p2p_attach_out:
-+	wl_deinit_priv(cfg);
-+
-+cfg80211_attach_out:
-+	brcmf_free_vif(vif);
-+	return NULL;
-+}
-+
-+void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
-+{
-+	if (!cfg)
-+		return;
-+
-+	WARN_ON(!list_empty(&cfg->vif_list));
-+	wiphy_unregister(cfg->wiphy);
-+	brcmf_btcoex_detach(cfg);
-+	wl_deinit_priv(cfg);
-+	wiphy_free(cfg->wiphy);
-+}
-+
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	if (!iwl_mvm_is_idle(mvm)) {
+@@ -2142,26 +2179,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
+-	switch (mvm->scan_status) {
+-	case IWL_MVM_SCAN_OS:
+-		IWL_DEBUG_SCAN(mvm, "Stopping previous scan for sched_scan\n");
+-		ret = iwl_mvm_cancel_scan(mvm);
+-		if (ret) {
+-			ret = -EBUSY;
+-			goto out;
+-		}
+-
+-		/*
+-		 * iwl_mvm_rx_scan_complete() will be called soon but will
+-		 * not reset the scan status as it won't be IWL_MVM_SCAN_OS
+-		 * any more since we queue the next scan immediately (below).
+-		 * We make sure it is called before the next scan starts by
+-		 * flushing the async-handlers work.
+-		 */
+-		break;
+-	case IWL_MVM_SCAN_NONE:
+-		break;
+-	default:
++	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
+ 		ret = -EBUSY;
+ 		goto out;
+ 	}
+@@ -2189,8 +2207,6 @@ err:
+ 	mvm->scan_status = IWL_MVM_SCAN_NONE;
+ out:
+ 	mutex_unlock(&mvm->mutex);
+-	/* make sure to flush the Rx handler before the next scan arrives */
+-	iwl_mvm_wait_for_async_handlers(mvm);
+ 	return ret;
+ }
+ 
 -- 
-1.9.1
+1.8.3.2
 
