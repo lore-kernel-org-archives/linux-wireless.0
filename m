@@ -1,70 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:58748 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175AbaGQMyI (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:36231 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143AbaGVT1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 08:54:08 -0400
-Received: by mail-we0-f182.google.com with SMTP id k48so1636808wev.41
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 05:54:05 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: workaround qos nullfunc bug
-Date: Thu, 17 Jul 2014 14:45:22 +0200
-Message-Id: <1405601122-29726-2-git-send-email-michal.kazior@tieto.com> (sfid-20140717_145413_136361_09128A80)
-In-Reply-To: <1405601122-29726-1-git-send-email-michal.kazior@tieto.com>
-References: <1405601122-29726-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 22 Jul 2014 15:27:54 -0400
+Received: by mail-we0-f169.google.com with SMTP id u56so116998wes.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:52 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/20] iwlwifi: mvm: teardown TDLS peers during chan-switch and AP DCM
+Date: Tue, 22 Jul 2014 22:26:51 +0300
+Message-Id: <1406057211-31752-20-git-send-email-egrumbach@gmail.com> (sfid-20140722_212802_707475_6206FD9B)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently fw/hw generates a corrupted QoS Control
-Field in Qos NullFunc frames. The only way to
-workaround this is to downgrade frames to
-NullFunc. This should be okay since powersave is
-done by fw/hw and these frames are only used for
-CQM purposes (e.g. from hostapd to check if
-station is still connected).
+From: Arik Nemtsov <arik@wizery.com>
 
-This doesn't fix any user visible bug that I know
-of. It just prevents from sending out funky frames
-on the air.
+The DCM condition was not checked well for channel switch in both AP and
+station scenarios. Teardown was also not done for AP/GO DCM. Add the
+missing checks.
 
-Reported-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reported-by: Peer, Ilan <ilan.peer@intel.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 52 +++++++++++++++++------------
+ 1 file changed, 30 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bbce3a0..3f9afaa 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1871,6 +1871,7 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar,
- static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
- 	u8 *qos_ctl;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 6639341..0d6a8b7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1406,6 +1406,28 @@ static inline int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm,
+ }
+ #endif
  
- 	if (!ieee80211_is_data_qos(hdr->frame_control))
-@@ -1880,6 +1881,16 @@ static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	memmove(skb->data + IEEE80211_QOS_CTL_LEN,
- 		skb->data, (void *)qos_ctl - (void *)skb->data);
- 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
++static void iwl_mvm_teardown_tdls_peers(struct iwl_mvm *mvm)
++{
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_sta *mvmsta;
++	int i;
 +
-+	/* Fw/Hw generates a corrupted QoS Control Field for QoS NullFunc
-+	 * frames. Powersave is handled by the fw/hw so QoS NyllFunc frames are
-+	 * used only for CQM purposes (e.g. hostapd station keepalive ping) so
-+	 * it is safe to downgrade to NullFunc.
-+	 */
-+	if (ieee80211_is_qos_nullfunc(hdr->frame_control)) {
-+		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
-+		cb->htt.tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++	lockdep_assert_held(&mvm->mutex);
++
++	for (i = 0; i < IWL_MVM_STATION_COUNT; i++) {
++		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[i],
++						lockdep_is_held(&mvm->mutex));
++		if (!sta || IS_ERR(sta) || !sta->tdls)
++			continue;
++
++		mvmsta = iwl_mvm_sta_from_mac80211(sta);
++		ieee80211_tdls_oper_request(mvmsta->vif, sta->addr,
++				NL80211_TDLS_TEARDOWN,
++				WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED,
++				GFP_KERNEL);
 +	}
++}
++
+ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 					     struct ieee80211_vif *vif,
+ 					     struct ieee80211_bss_conf *bss_conf,
+@@ -1600,6 +1622,10 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 
+ 	iwl_mvm_bt_coex_vif_change(mvm);
+ 
++	/* we don't support TDLS during DCM */
++	if (iwl_mvm_phy_ctx_count(mvm) > 1)
++		iwl_mvm_teardown_tdls_peers(mvm);
++
+ 	mutex_unlock(&mvm->mutex);
+ 	return 0;
+ 
+@@ -1947,28 +1973,6 @@ static void iwl_mvm_recalc_tdls_state(struct iwl_mvm *mvm,
+ 		iwl_mvm_power_update_mac(mvm);
  }
  
- static void ath10k_tx_wep_key_work(struct work_struct *work)
+-static void iwl_mvm_teardown_tdls_peers(struct iwl_mvm *mvm)
+-{
+-	struct ieee80211_sta *sta;
+-	struct iwl_mvm_sta *mvmsta;
+-	int i;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	for (i = 0; i < IWL_MVM_STATION_COUNT; i++) {
+-		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[i],
+-						lockdep_is_held(&mvm->mutex));
+-		if (!sta || IS_ERR(sta) || !sta->tdls)
+-			continue;
+-
+-		mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-		ieee80211_tdls_oper_request(mvmsta->vif, sta->addr,
+-				NL80211_TDLS_TEARDOWN,
+-				WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED,
+-				GFP_KERNEL);
+-	}
+-}
+-
+ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_sta *sta,
+@@ -2846,6 +2850,10 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 		goto out_remove;
+ 	}
+ 
++	/* we don't support TDLS during DCM - can be caused by channel switch */
++	if (iwl_mvm_phy_ctx_count(mvm) > 1)
++		iwl_mvm_teardown_tdls_peers(mvm);
++
+ 	goto out;
+ 
+ out_remove:
 -- 
-1.8.5.3
+1.8.3.2
 
