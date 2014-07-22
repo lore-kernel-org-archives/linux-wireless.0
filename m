@@ -1,134 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:40349 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756896AbaGNVUM (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:59900 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179AbaGVT1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:20:12 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	john@x109.net, chaitanya.mgit@gmail.com, linville@tuxdriver.com,
-	gregkh@linuxfoundation.org, tiwai@suse.de, keescook@chromium.org,
-	nbd@openwrt.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain from wireless-regd
-Date: Mon, 14 Jul 2014 14:19:49 -0700
-Message-Id: <1405372789-24733-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140714_232016_017921_ABC3DE21)
+	Tue, 22 Jul 2014 15:27:03 -0400
+Received: by mail-we0-f176.google.com with SMTP id q58so114431wes.21
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:01 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/20] iwlwifi: mvm: BT Coex - fix TLC with old API
+Date: Tue, 22 Jul 2014 22:26:32 +0300
+Message-Id: <1406057211-31752-1-git-send-email-egrumbach@gmail.com> (sfid-20140722_212709_754371_77964084)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Since "wireless-regdb: remove antenna gain" was merged in the
-wireless-regdb tree, the awk script parser has been incompatible
-with the 'official' regulatory database.  This fixes that up.
-Without this change the max EIRP is set to 0 making 802.11 devices
-useless.
+A copy paste issue broke the rate control when a firmware
+with the old API is used.
 
-The fragile nature of the awk parser must be replaced, but ideas
-over how to do that in the most scalable way are being reviewed.
-In the meantime update the documentation for CFG80211_INTERNAL_REGDB
-so folks are aware of expectations for now.
-
-Reported-by: John Walker <john@x109.net>
-Reported-by: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-!!! Note !!!
-
-This means older kernels that upgrade wireless-regdb and use
-CFG80211_INTERNAL_REGDB are bust too and they should then merge
-the latest updates to the awk script if they want to synch the
-wireless-regdb files with the kernel builds. The affected Linux
-distributions would be the users of CFG80211_INTERNAL_REGDB which
-should consists of OpenWrt which is reported to have this fixed
-already and mobile platforms.
-
-We are looking at a way to not have to deal with parsers all together
-at build time, for that discussion see:
-
-https://lkml.org/lkml/2014/7/14/706
-
- net/wireless/Kconfig      |  6 ++++++
- net/wireless/genregdb.awk | 35 ++++++++++++++++++++++-------------
- 2 files changed, 28 insertions(+), 13 deletions(-)
-
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 405f3c4..29c8675 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -162,6 +162,12 @@ config CFG80211_INTERNAL_REGDB
- 	  and includes code to query that database.  This is an alternative
- 	  to using CRDA for defining regulatory rules for the kernel.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index 8110fe0..e0a5cf2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -1150,7 +1150,7 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
+ 	enum iwl_bt_coex_lut_type lut_type;
  
-+	  Using this option requires some parsing of the db.txt at build time,
-+	  the parser will be upkept with the latest wireless-regdb updates but
-+	  older wireless-regdb formats will be ignored. The parser may later
-+	  be replaced to avoid issues with conflicts on versions of
-+	  wireless-regdb.
-+
- 	  For details see:
+ 	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
+-		return iwl_mvm_coex_agg_time_limit_old(mvm, sta);
++		return iwl_mvm_bt_coex_is_mimo_allowed_old(mvm, sta);
  
- 	  http://wireless.kernel.org/en/developers/Regulatory
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 40c37fc..baf2426 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -51,32 +51,41 @@ function parse_country_head() {
- 
- function parse_reg_rule()
- {
-+	flag_starts_at = 7
-+
- 	start = $1
- 	sub(/\(/, "", start)
- 	end = $3
- 	bw = $5
- 	sub(/\),/, "", bw)
--	gain = $6
--	sub(/\(/, "", gain)
--	sub(/,/, "", gain)
--	power = $7
--	sub(/\)/, "", power)
--	sub(/,/, "", power)
-+	gain = 0
-+	power = $6
- 	# power might be in mW...
--	units = $8
-+	units = $7
-+	dfs_cac = 0
-+
-+	sub(/\(/, "", power)
-+	sub(/\),/, "", power)
-+	sub(/\),/, "", units)
- 	sub(/\)/, "", units)
--	sub(/,/, "", units)
--	dfs_cac = $9
-+
- 	if (units == "mW") {
-+		flag_starts_at = 8
- 		power = 10 * log(power)/log(10)
-+		if ($8 ~ /[[:digit:]]/) {
-+			flag_starts_at = 9
-+			dfs_cac = $8
-+		}
- 	} else {
--		dfs_cac = $8
-+		if ($7 ~ /[[:digit:]]/) {
-+			flag_starts_at = 8
-+			dfs_cac = $7
-+		}
- 	}
--	sub(/,/, "", dfs_cac)
- 	sub(/\(/, "", dfs_cac)
--	sub(/\)/, "", dfs_cac)
-+	sub(/\),/, "", dfs_cac)
- 	flagstr = ""
--	for (i=8; i<=NF; i++)
-+	for (i=flag_starts_at; i<=NF; i++)
- 		flagstr = flagstr $i
- 	split(flagstr, flagarray, ",")
- 	flags = ""
+ 	if (IWL_COEX_IS_TTC_ON(mvm->last_bt_notif.ttc_rrc_status, phy_ctxt->id))
+ 		return true;
 -- 
-2.0.1
+1.8.3.2
 
