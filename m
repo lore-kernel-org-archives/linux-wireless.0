@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33045 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752666AbaGXLMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 07:12:37 -0400
-Message-ID: <1406200353.14675.18.camel@jlt4.sipsolutions.net> (sfid-20140724_131240_570044_05250D8D)
-Subject: Re: [PATCHv2 2/2] mac80211: extend set_coverage_class signature
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Philippe Duchein <wireless-dev@duchein.net>
-Date: Thu, 24 Jul 2014 13:12:33 +0200
-In-Reply-To: <1406198362-4999-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140724_123927_028644_16DA8409)
-References: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1406198362-4999-3-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20140724_123927_028644_16DA8409)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22772 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755906AbaGVPyu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2014 11:54:50 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: simplify tx helpers
+References: <1405601122-29726-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 22 Jul 2014 18:54:44 +0300
+In-Reply-To: <1405601122-29726-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 17 Jul 2014 14:45:21 +0200")
+Message-ID: <87iompv16j.fsf@kamboji.qca.qualcomm.com> (sfid-20140722_175453_264562_9587702D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-07-24 at 12:39 +0200, Lorenzo Bianconi wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> @@ -2950,7 +2951,7 @@ struct ieee80211_ops {
->  	int (*get_survey)(struct ieee80211_hw *hw, int idx,
->  		struct survey_info *survey);
->  	void (*rfkill_poll)(struct ieee80211_hw *hw);
-> -	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
-> +	int (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
+> It always bugged me how tid is computed and stored
+> in a temporary var before written to the control
+> buffer. It was confusing and it made it difficult
+> to work with tx helpers.
+>
+> While at it rename the qos workaround function as
+> it was misleading - it's not a workaround but
+> preparation for nwifi tx mode.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-This patch also needs to update all drivers ......
+Thanks, both patches applied.
 
-johannes
-
+-- 
+Kalle Valo
