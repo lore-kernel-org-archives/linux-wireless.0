@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:54977 "EHLO isis.lip6.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762587AbaGRPf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:35:28 -0400
-From: Benoit Taine <benoit.taine@lip6.fr>
-To: Jouni Malinen <j@w1.fi>
-Cc: benoit.taine@lip6.fr, "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 21/25] hostap: Replace DEFINE_PCI_DEVICE_TABLE macro use
-Date: Fri, 18 Jul 2014 17:27:08 +0200
-Message-Id: <1405697232-11785-22-git-send-email-benoit.taine@lip6.fr> (sfid-20140718_173620_649622_FB1E66AB)
-In-Reply-To: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:48531 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbaGVT1R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2014 15:27:17 -0400
+Received: by mail-we0-f182.google.com with SMTP id k48so111981wev.41
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:16 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/20] iwlwifi: mvm: fix wrong offset while reading from NVM
+Date: Tue, 22 Jul 2014 22:26:36 +0300
+Message-Id: <1406057211-31752-5-git-send-email-egrumbach@gmail.com> (sfid-20140722_212730_312454_D6CAC7C1)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should prefer `struct pci_device_id` over `DEFINE_PCI_DEVICE_TABLE` to meet
-kernel coding style guidelines. This issue was reported by checkpatch.
+From: Eytan Lifshitz <eytan.lifshitz@intel.com>
 
-Signed-off-by: Benoit Taine <benoit.taine@lip6.fr>
+As part of thermal throttling, some data is being read from NVM.
+The offset is in words, but was addressed as in octets. fixed.
 
+Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-Tested by compilation without errors.
+ drivers/net/wireless/iwlwifi/mvm/tt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/hostap/hostap_pci.c |    2 +-
- drivers/net/wireless/hostap/hostap_plx.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_pci.c b/drivers/net/wireless/hostap/hostap_pci.c
-index 91158e2..c864ef4 100644
---- a/drivers/net/wireless/hostap/hostap_pci.c
-+++ b/drivers/net/wireless/hostap/hostap_pci.c
-@@ -39,7 +39,7 @@ struct hostap_pci_priv {
- /* FIX: do we need mb/wmb/rmb with memory operations? */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index 8685615..0c4ff3a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -140,9 +140,9 @@ static u16 iwl_mvm_dts_get_ptat_deviation_offset(struct iwl_mvm *mvm)
  
+ 	/* TODO: move parsing to NVM code */
+ 	calib = mvm->nvm_sections[NVM_SECTION_TYPE_CALIBRATION].data;
+-	ptat = calib[OTP_DTS_DIODE_DEVIATION];
+-	pa1 = calib[OTP_DTS_DIODE_DEVIATION + 1];
+-	pa2 = calib[OTP_DTS_DIODE_DEVIATION + 2];
++	ptat = calib[OTP_DTS_DIODE_DEVIATION * 2];
++	pa1 = calib[OTP_DTS_DIODE_DEVIATION * 2 + 1];
++	pa2 = calib[OTP_DTS_DIODE_DEVIATION * 2 + 2];
  
--static DEFINE_PCI_DEVICE_TABLE(prism2_pci_id_table) = {
-+static const struct pci_device_id prism2_pci_id_table[] = {
- 	/* Intersil Prism3 ISL3872 11Mb/s WLAN Controller */
- 	{ 0x1260, 0x3872, PCI_ANY_ID, PCI_ANY_ID },
- 	/* Intersil Prism2.5 ISL3874 11Mb/s WLAN Controller */
-diff --git a/drivers/net/wireless/hostap/hostap_plx.c b/drivers/net/wireless/hostap/hostap_plx.c
-index 3bf530d..4901a99 100644
---- a/drivers/net/wireless/hostap/hostap_plx.c
-+++ b/drivers/net/wireless/hostap/hostap_plx.c
-@@ -60,7 +60,7 @@ struct hostap_plx_priv {
- 
- #define PLXDEV(vendor,dev,str) { vendor, dev, PCI_ANY_ID, PCI_ANY_ID }
- 
--static DEFINE_PCI_DEVICE_TABLE(prism2_plx_id_table) = {
-+static const struct pci_device_id prism2_plx_id_table[] = {
- 	PLXDEV(0x10b7, 0x7770, "3Com AirConnect PCI 777A"),
- 	PLXDEV(0x111a, 0x1023, "Siemens SpeedStream SS1023"),
- 	PLXDEV(0x126c, 0x8030, "Nortel emobility"),
+ 	/* get the median: */
+ 	if (ptat > pa1) {
+-- 
+1.8.3.2
 
