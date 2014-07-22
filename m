@@ -1,262 +1,385 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:63965 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932720AbaGPL1o (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:40056 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756535AbaGVT1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 07:27:44 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so1135538wiw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 04:27:42 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Denton Gentry <denton.gentry@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3] ath10k: fix Rx aggregation reordering
-Date: Wed, 16 Jul 2014 13:19:00 +0200
-Message-Id: <1405509540-32691-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_132750_891501_FF088C0C)
-In-Reply-To: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com>
-References: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 22 Jul 2014 15:27:21 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so6416346wiv.2
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:20 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/20] iwlwifi: mvm: add some missing iwl_mvm_ref_sync() calls
+Date: Tue, 22 Jul 2014 22:26:37 +0300
+Message-Id: <1406057211-31752-6-git-send-email-egrumbach@gmail.com> (sfid-20140722_212733_948163_693955CA)
+In-Reply-To: <53CEB854.9000008@gmail.com>
+References: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware doesn't perform Rx reordering so it is
-left to the host driver to do that.
+From: Eliad Peller <eliad@wizery.com>
 
-Use mac80211 to perform reordering instead of
-re-inventing the wheel.
+Add iwl_mvm_ref_sync() calls (with new ref types) to
+flows that might access the device directly.
 
-This fixes TCP throughput issues in some
-environments.
+These calls make sure the device is out of d0i3,
+and the bus is available for direct access.
 
-Reported-by: Denton Gentry <denton.gentry@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Since some of these functions are reentrant, convert
+the refs_bitmap to a ref counter, so multiple refs
+of the same type could be taken concurrently.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-This depends on:
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c  | 43 +++++++++++++++----
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 66 ++++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 15 ++++++-
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  3 +-
+ drivers/net/wireless/iwlwifi/mvm/tt.c       |  6 +++
+ 5 files changed, 110 insertions(+), 23 deletions(-)
 
- * mac80211: fix Rx reordering with RX_FLAG_AMSDU_MORE
- * mac80211: add support for Rx reordering offloading
-
-I'm still seeing some issues with TCP traffic.
-Apparently firmware/hardware sometimes stalls Rx
-for ~100ms and misses some aggregate frames. I
-wasn't able to pinpoint what the problem is. The
-more parallel TCP streams (iperf) the more often
-stalls happen. UDP doesn't seem to trigger the Rx
-stalls at all.
-
-
-Notes:
-    v3:
-     * make ath10k_ampdu_action() static
-    
-    v2:
-     * split addba/delba handling into separate functions [Kalle]
-     * extend ampdu_action debug print (+vdev_id, +sta addr, +tid)
-
- drivers/net/wireless/ath/ath10k/htt_rx.c | 94 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/mac.c    | 33 +++++++++++
- drivers/net/wireless/ath/ath10k/txrx.c   |  3 +-
- drivers/net/wireless/ath/ath10k/txrx.h   |  1 +
- 4 files changed, 127 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index eebc860..966bd4a 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -21,6 +21,7 @@
- #include "txrx.h"
- #include "debug.h"
- #include "trace.h"
-+#include "mac.h"
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index f131ef0..ac9787c0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -830,8 +830,14 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
+ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mvm *mvm, char *buf,
+ 				      size_t count, loff_t *ppos)
+ {
++	int ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_NMI);
++	if (ret)
++		return ret;
++
+ 	iwl_force_nmi(mvm->trans);
  
- #include <linux/log2.h>
++	iwl_mvm_unref(mvm, IWL_MVM_REF_NMI);
++
+ 	return count;
+ }
  
-@@ -1422,6 +1423,86 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
+@@ -1115,11 +1121,11 @@ static ssize_t iwl_dbgfs_d3_sram_read(struct file *file, char __user *user_buf,
+ }
+ #endif
+ 
+-#define PRINT_MVM_REF(ref) do {					\
+-	if (test_bit(ref, mvm->ref_bitmap))			\
+-		pos += scnprintf(buf + pos, bufsz - pos,	\
+-				 "\t(0x%lx) %s\n",		\
+-				 BIT(ref), #ref);		\
++#define PRINT_MVM_REF(ref) do {						\
++	if (mvm->refs[ref])						\
++		pos += scnprintf(buf + pos, bufsz - pos,		\
++				 "\t(0x%lx): %d %s\n",			\
++				 BIT(ref), mvm->refs[ref], #ref);	\
+ } while (0)
+ 
+ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
+@@ -1127,12 +1133,17 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
+ 					size_t count, loff_t *ppos)
+ {
+ 	struct iwl_mvm *mvm = file->private_data;
+-	int pos = 0;
++	int i, pos = 0;
+ 	char buf[256];
+ 	const size_t bufsz = sizeof(buf);
++	u32 refs = 0;
++
++	for (i = 0; i < IWL_MVM_REF_COUNT; i++)
++		if (mvm->refs[i])
++			refs |= BIT(i);
+ 
+-	pos += scnprintf(buf + pos, bufsz - pos, "taken mvm refs: 0x%lx\n",
+-			 mvm->ref_bitmap[0]);
++	pos += scnprintf(buf + pos, bufsz - pos, "taken mvm refs: 0x%x\n",
++			 refs);
+ 
+ 	PRINT_MVM_REF(IWL_MVM_REF_UCODE_DOWN);
+ 	PRINT_MVM_REF(IWL_MVM_REF_SCAN);
+@@ -1158,7 +1169,7 @@ static ssize_t iwl_dbgfs_d0i3_refs_write(struct iwl_mvm *mvm, char *buf,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	taken = test_bit(IWL_MVM_REF_USER, mvm->ref_bitmap);
++	taken = mvm->refs[IWL_MVM_REF_USER];
+ 	if (value == 1 && !taken)
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_USER);
+ 	else if (value == 0 && taken)
+@@ -1194,14 +1205,21 @@ iwl_dbgfs_prph_reg_read(struct file *file,
+ 	int pos = 0;
+ 	char buf[32];
+ 	const size_t bufsz = sizeof(buf);
++	int ret;
+ 
+ 	if (!mvm->dbgfs_prph_reg_addr)
+ 		return -EINVAL;
+ 
++	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PRPH_READ);
++	if (ret)
++		return ret;
++
+ 	pos += scnprintf(buf + pos, bufsz - pos, "Reg 0x%x: (0x%x)\n",
+ 		mvm->dbgfs_prph_reg_addr,
+ 		iwl_read_prph(mvm->trans, mvm->dbgfs_prph_reg_addr));
+ 
++	iwl_mvm_unref(mvm, IWL_MVM_REF_PRPH_READ);
++
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+@@ -1211,6 +1229,7 @@ iwl_dbgfs_prph_reg_write(struct iwl_mvm *mvm, char *buf,
+ {
+ 	u8 args;
+ 	u32 value;
++	int ret;
+ 
+ 	args = sscanf(buf, "%i %i", &mvm->dbgfs_prph_reg_addr, &value);
+ 	/* if we only want to set the reg address - nothing more to do */
+@@ -1221,7 +1240,13 @@ iwl_dbgfs_prph_reg_write(struct iwl_mvm *mvm, char *buf,
+ 	if (args != 2)
+ 		return -EINVAL;
+ 
++	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PRPH_WRITE);
++	if (ret)
++		return ret;
++
+ 	iwl_write_prph(mvm->trans, mvm->dbgfs_prph_reg_addr, value);
++
++	iwl_mvm_unref(mvm, IWL_MVM_REF_PRPH_WRITE);
+ out:
+ 	return count;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 2eb6ebe..12a9aed 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -211,7 +211,9 @@ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
+ 		return;
+ 
+ 	IWL_DEBUG_RPM(mvm, "Take mvm reference - type %d\n", ref_type);
+-	WARN_ON(test_and_set_bit(ref_type, mvm->ref_bitmap));
++	spin_lock_bh(&mvm->refs_lock);
++	mvm->refs[ref_type]++;
++	spin_unlock_bh(&mvm->refs_lock);
+ 	iwl_trans_ref(mvm->trans);
+ }
+ 
+@@ -221,29 +223,35 @@ void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
+ 		return;
+ 
+ 	IWL_DEBUG_RPM(mvm, "Leave mvm reference - type %d\n", ref_type);
+-	WARN_ON(!test_and_clear_bit(ref_type, mvm->ref_bitmap));
++	spin_lock_bh(&mvm->refs_lock);
++	WARN_ON(!mvm->refs[ref_type]--);
++	spin_unlock_bh(&mvm->refs_lock);
+ 	iwl_trans_unref(mvm->trans);
+ }
+ 
+-static void
+-iwl_mvm_unref_all_except(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref)
++static void iwl_mvm_unref_all_except(struct iwl_mvm *mvm,
++				     enum iwl_mvm_ref_type except_ref)
+ {
+-	int i;
++	int i, j;
+ 
+ 	if (!iwl_mvm_is_d0i3_supported(mvm))
+ 		return;
+ 
+-	for_each_set_bit(i, mvm->ref_bitmap, IWL_MVM_REF_COUNT) {
+-		if (ref == i)
++	spin_lock_bh(&mvm->refs_lock);
++	for (i = 0; i < IWL_MVM_REF_COUNT; i++) {
++		if (except_ref == i || !mvm->refs[i])
+ 			continue;
+ 
+-		IWL_DEBUG_RPM(mvm, "Cleanup: remove mvm ref type %d\n", i);
+-		clear_bit(i, mvm->ref_bitmap);
+-		iwl_trans_unref(mvm->trans);
++		IWL_DEBUG_RPM(mvm, "Cleanup: remove mvm ref type %d (%d)\n",
++			      i, mvm->refs[i]);
++		for (j = 0; j < mvm->refs[i]; j++)
++			iwl_trans_unref(mvm->trans);
++		mvm->refs[i] = 0;
  	}
++	spin_unlock_bh(&mvm->refs_lock);
  }
  
-+static void ath10k_htt_rx_addba(struct ath10k *ar, struct htt_resp *resp)
-+{
-+	struct htt_rx_addba *ev = &resp->rx_addba;
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	u16 info0, tid, peer_id;
-+
-+	info0 = __le32_to_cpu(ev->info0);
-+	tid = MS(info0, HTT_RX_BA_INFO0_TID);
-+	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx addba tid %hu peer_id %hu size %hhu\n",
-+		   tid, peer_id, ev->window_size);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer) {
-+		ath10k_warn("received addba event for invalid peer_id: %hu\n",
-+			    peer_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	arvif = ath10k_get_arvif(ar, peer->vdev_id);
-+	if (!arvif) {
-+		ath10k_warn("received addba event for invalid vdev_id: %u\n",
-+			    peer->vdev_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx start rx ba session sta %pM tid %hu size %hhu\n",
-+		   peer->addr, tid, ev->window_size);
-+
-+	ieee80211_start_rx_ba_session_offl(arvif->vif, peer->addr, tid);
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
-+static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
-+{
-+	struct htt_rx_addba *ev = &resp->rx_addba;
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	u16 info0, tid, peer_id;
-+
-+	info0 = __le32_to_cpu(ev->info0);
-+	tid = MS(info0, HTT_RX_BA_INFO0_TID);
-+	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx delba tid %hu peer_id %hu\n",
-+		   tid, peer_id);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer) {
-+		ath10k_warn("received addba event for invalid peer_id: %hu\n",
-+			    peer_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	arvif = ath10k_get_arvif(ar, peer->vdev_id);
-+	if (!arvif) {
-+		ath10k_warn("received addba event for invalid vdev_id: %u\n",
-+			    peer->vdev_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx stop rx ba session sta %pM tid %hu\n",
-+		   peer->addr, tid);
-+
-+	ieee80211_stop_rx_ba_session_offl(arvif->vif, peer->addr, tid);
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
- void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+-static int iwl_mvm_ref_sync(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
++int iwl_mvm_ref_sync(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
  {
- 	struct ath10k_htt *htt = &ar->htt;
-@@ -1515,10 +1596,19 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_STATS_CONF:
- 		trace_ath10k_htt_stats(skb->data, skb->len);
- 		break;
--	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	case HTT_T2H_MSG_TYPE_RX_ADDBA:
-+		ath10k_htt_rx_addba(ar, resp);
-+		break;
- 	case HTT_T2H_MSG_TYPE_RX_DELBA:
--	case HTT_T2H_MSG_TYPE_RX_FLUSH:
-+		ath10k_htt_rx_delba(ar, resp);
-+		break;
-+	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
-+		/* Ignore this event because mac80211 takes care of Rx
-+		 * aggregation reordering.
-+		 */
-+		break;
-+	}
-+	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	default:
- 		ath10k_dbg(ATH10K_DBG_HTT, "htt event (%d) not handled\n",
- 			   resp->hdr.msg_type);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b8314a5..67bf8ed 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4331,6 +4331,38 @@ static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	return 0;
+ 	iwl_mvm_ref(mvm, ref_type);
+ 
+@@ -1533,6 +1541,14 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
+ 
++	/*
++	 * iwl_mvm_mac_ctxt_add() might read directly from the device
++	 * (the system time), so make sure it is available.
++	 */
++	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_START_AP);
++	if (ret)
++		return ret;
++
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	/* Send the beacon template */
+@@ -1594,6 +1610,7 @@ out_remove:
+ 	iwl_mvm_mac_ctxt_remove(mvm, vif);
+ out_unlock:
+ 	mutex_unlock(&mvm->mutex);
++	iwl_mvm_unref(mvm, IWL_MVM_REF_START_AP);
+ 	return ret;
  }
  
-+static int ath10k_ampdu_action(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       enum ieee80211_ampdu_mlme_action action,
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			       u8 buf_size)
-+{
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+
-+	ath10k_dbg(ATH10K_DBG_MAC, "mac ampdu vdev_id %i sta %pM tid %hu action %d\n",
-+		   arvif->vdev_id, sta->addr, tid, action);
-+
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+	case IEEE80211_AMPDU_RX_STOP:
-+		/* HTT AddBa/DelBa events trigger mac80211 Rx BA session
-+		 * creation/removal. Do we need to verify this?
-+		 */
-+		return 0;
-+	case IEEE80211_AMPDU_TX_START:
-+	case IEEE80211_AMPDU_TX_STOP_CONT:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		/* Firmware offloads Tx aggregation entirely so deny mac80211
-+		 * Tx aggregation requests.
-+		 */
-+		break;
-+	}
-+
-+	return -EOPNOTSUPP;
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_tx,
- 	.start				= ath10k_start,
-@@ -4358,6 +4390,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
- 	.sta_rc_update			= ath10k_sta_rc_update,
- 	.get_tsf			= ath10k_get_tsf,
-+	.ampdu_action			= ath10k_ampdu_action,
- #ifdef CONFIG_PM
- 	.suspend			= ath10k_suspend,
- 	.resume				= ath10k_resume,
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 82669a7..f4fa22d 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -119,8 +119,7 @@ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 	return NULL;
- }
- 
--static struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar,
--						  int peer_id)
-+struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+@@ -1671,6 +1688,14 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
  {
- 	struct ath10k_peer *peer;
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
  
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
-index aee3e20..a90e09f 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.h
-+++ b/drivers/net/wireless/ath/ath10k/txrx.h
-@@ -24,6 +24,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
++	/*
++	 * iwl_mvm_bss_info_changed_station() might call
++	 * iwl_mvm_protect_session(), which reads directly from
++	 * the device (the system time), so make sure it is available.
++	 */
++	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_BSS_CHANGED))
++		return;
++
+ 	mutex_lock(&mvm->mutex);
  
- struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 				     const u8 *addr);
-+struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id);
- int ath10k_wait_for_peer_created(struct ath10k *ar, int vdev_id,
- 				 const u8 *addr);
- int ath10k_wait_for_peer_deleted(struct ath10k *ar, int vdev_id,
+ 	if (changes & BSS_CHANGED_IDLE && !bss_conf->idle)
+@@ -1690,6 +1715,7 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	mutex_unlock(&mvm->mutex);
++	iwl_mvm_unref(mvm, IWL_MVM_REF_BSS_CHANGED);
+ }
+ 
+ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+@@ -2065,10 +2091,19 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	if (WARN_ON_ONCE(vif->bss_conf.assoc))
+ 		return;
+ 
++	/*
++	 * iwl_mvm_protect_session() reads directly from the device
++	 * (the system time), so make sure it is available.
++	 */
++	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PREPARE_TX))
++		return;
++
+ 	mutex_lock(&mvm->mutex);
+ 	/* Try really hard to protect the session and hear a beacon */
+ 	iwl_mvm_protect_session(mvm, vif, duration, min_duration, 500);
+ 	mutex_unlock(&mvm->mutex);
++
++	iwl_mvm_unref(mvm, IWL_MVM_REF_PREPARE_TX);
+ }
+ 
+ static void iwl_mvm_mac_mgd_protect_tdls_discover(struct ieee80211_hw *hw,
+@@ -2077,10 +2112,19 @@ static void iwl_mvm_mac_mgd_protect_tdls_discover(struct ieee80211_hw *hw,
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	u32 duration = 2 * vif->bss_conf.dtim_period * vif->bss_conf.beacon_int;
+ 
++	/*
++	 * iwl_mvm_protect_session() reads directly from the device
++	 * (the system time), so make sure it is available.
++	 */
++	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PROTECT_TDLS))
++		return;
++
+ 	mutex_lock(&mvm->mutex);
+ 	/* Protect the session to hear the TDLS setup response on the channel */
+ 	iwl_mvm_protect_session(mvm, vif, duration, duration, 100);
+ 	mutex_unlock(&mvm->mutex);
++
++	iwl_mvm_unref(mvm, IWL_MVM_REF_PROTECT_TDLS);
+ }
+ 
+ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 785e523..24c12c7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -249,6 +249,15 @@ enum iwl_mvm_ref_type {
+ 	IWL_MVM_REF_TX,
+ 	IWL_MVM_REF_TX_AGG,
+ 	IWL_MVM_REF_ADD_IF,
++	IWL_MVM_REF_START_AP,
++	IWL_MVM_REF_BSS_CHANGED,
++	IWL_MVM_REF_PREPARE_TX,
++	IWL_MVM_REF_PROTECT_TDLS,
++	IWL_MVM_REF_CHECK_CTKILL,
++	IWL_MVM_REF_PRPH_READ,
++	IWL_MVM_REF_PRPH_WRITE,
++	IWL_MVM_REF_NMI,
++	IWL_MVM_REF_TM_CMD,
+ 	IWL_MVM_REF_EXIT_WORK,
+ 
+ 	IWL_MVM_REF_COUNT,
+@@ -606,8 +615,9 @@ struct iwl_mvm {
+ 	 */
+ 	unsigned long fw_key_table[BITS_TO_LONGS(STA_KEY_MAX_NUM)];
+ 
+-	/* A bitmap of reference types taken by the driver. */
+-	unsigned long ref_bitmap[BITS_TO_LONGS(IWL_MVM_REF_COUNT)];
++	/* references taken by the driver and spinlock protecting them */
++	spinlock_t refs_lock;
++	u8 refs[IWL_MVM_REF_COUNT];
+ 
+ 	u8 vif_count;
+ 
+@@ -988,6 +998,7 @@ int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
+ /* D0i3 */
+ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
++int iwl_mvm_ref_sync(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ void iwl_mvm_d0i3_enable_tx(struct iwl_mvm *mvm, __le16 *qos_seq);
+ int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 7f0e9af..19a66b5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -428,6 +428,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	INIT_WORK(&mvm->d0i3_exit_work, iwl_mvm_d0i3_exit_work);
+ 
+ 	spin_lock_init(&mvm->d0i3_tx_lock);
++	spin_lock_init(&mvm->refs_lock);
+ 	skb_queue_head_init(&mvm->d0i3_tx);
+ 	init_waitqueue_head(&mvm->d0i3_exit_waitq);
+ 
+@@ -542,7 +543,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	memset(&mvm->rx_stats, 0, sizeof(struct mvm_statistics_rx));
+ 
+ 	/* rpm starts with a taken ref. only set the appropriate bit here. */
+-	set_bit(IWL_MVM_REF_UCODE_DOWN, mvm->ref_bitmap);
++	mvm->refs[IWL_MVM_REF_UCODE_DOWN] = 1;
+ 
+ 	return op_mode;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index 0c4ff3a..0464599 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -338,10 +338,16 @@ static void check_exit_ctkill(struct work_struct *work)
+ 
+ 	duration = tt->params->ct_kill_duration;
+ 
++	/* make sure the device is available for direct read/writes */
++	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_CHECK_CTKILL))
++		goto reschedule;
++
+ 	iwl_trans_start_hw(mvm->trans);
+ 	temp = check_nic_temperature(mvm);
+ 	iwl_trans_stop_device(mvm->trans);
+ 
++	iwl_mvm_unref(mvm, IWL_MVM_REF_CHECK_CTKILL);
++
+ 	if (temp < MIN_TEMPERATURE || temp > MAX_TEMPERATURE) {
+ 		IWL_DEBUG_TEMP(mvm, "Failed to measure NIC temperature\n");
+ 		goto reschedule;
 -- 
-1.8.5.3
+1.8.3.2
 
