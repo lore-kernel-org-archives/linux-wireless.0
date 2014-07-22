@@ -1,112 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:49755 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927AbaGHFxO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2014 01:53:14 -0400
-Message-ID: <53BB8740.6070209@rempel-privat.de> (sfid-20140708_075319_583716_4BFFFAC8)
-Date: Tue, 08 Jul 2014 07:53:04 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Anders Darander <anders.darander@gmail.com>
-CC: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: ath9k -> bogus usb xfer on at91
-References: <Pine.LNX.4.44L0.1407041225290.6607-100000@netrider.rowland.org>	<53B6DC5F.3090304@rempel-privat.de> <CAE4k238pWc4nB1S1S7OJBVh-_bUnO+D6uQJ98wMTk-E7FZ4+yw@mail.gmail.com> <53BAB7F7.3060705@rempel-privat.de>
-In-Reply-To: <53BAB7F7.3060705@rempel-privat.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="khuRcA4NkPC1WWu0uP5M0XDMAgp5SrwKD"
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:54607 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932115AbaGVVug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2014 17:50:36 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so6668446wib.2
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 14:50:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/7] staging: vt6656: struct vnt_tx_fifo_head fifo_ctl change base type to __le16
+Date: Tue, 22 Jul 2014 22:49:48 +0100
+Message-Id: <1406065789-3374-6-git-send-email-tvboxspy@gmail.com> (sfid-20140722_235039_711631_E4A01428)
+In-Reply-To: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
+References: <1406065789-3374-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---khuRcA4NkPC1WWu0uP5M0XDMAgp5SrwKD
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Endian is always little add correction in vnt_tx_packet.
 
-Am 07.07.2014 17:08, schrieb Oleksij Rempel:
-> Am 07.07.2014 15:40, schrieb Anders Darander:
->> On 4 July 2014 18:54, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>> Am 04.07.2014 18:30, schrieb Alan Stern:
->>>> On Fri, 4 Jul 2014, Anders Darander wrote:
->>>>> ~# usb 1-1: new full-speed USB device number 3 using at91_ohci
->>>>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested
->>>>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
->>>>> -----------[ cut here ]-----------
->>>>> WARNING: CPU: 0 PID: 93 at
->>>>> /mnt/cs-builds/anders/oe-build/build-ccu/tmp-eglibc/work/ccu-oe-lin=
-ux-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/us=
-b/core/urb.c:450
->>>>> usb_submit_urb+0x2ac/0x460()
->>>>> usb 1-1: BOGUS urb xfer, pipe 1 !=3D type 3
->>
->>>>
->>>> I can't tell exactly where the fault is, but this message means that=
- an
->>>> URB was submitted for a bulk endpoint with a pipe of type
->>>> PIPE_INTERRUPT.
->>>
->>> Then kernel driver and firmware should be updated. There was some
->>> Bulk/Interrupt issues which was fixed last year.
->>
->> Any pointers to the bulk/interrupt issues? Was it a general issue, or
->> related either to
->> at91-ohci or ar9271?
->=20
-> It is primary ar9271 issue. The interrupt EP has different response tim=
-e
-> on different host controllers. Initially as workaround ath9k was forcin=
-g
-> Bulk traffic on Interrupt EP. But this workaround is working with some
-> host controllers and completely fails on others. So i removed it. The
-> patches are included in master kernel branch and git firmware source.
->=20
->>
->> As far as I've been able to find out, I've got the latest firmware
->> (check again with linux-firmware).
->> I've also tried with the master from open-ath9k-htc-firmware.
->>
->>> I hope this HW will not be used as AP.
->>
->> Is this based on the use of at91- SoC, or based on the ar9271?
->=20
-> ar9271 can work as AP with limit on 8 stations but according to user
-> reports it fails even with one station on at91
->=20
->> The primary use case is to run as a client, though there will likely
->> be some instances where it'll
->> function as a AP. (Though primarily for M2M communications), thus
->> pretty low traffic.
->=20
-> For AP usually should be created monitor mode interface for receiving
-> and transmitting management frames. Depending on location and STAs or
-> APs working on same channel, you will get a lot of traffic on this usb
-> interface.
-> Some users reported huge traffic drops on at91 based APs. Since i can't=
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 26 ++++++++++++++------------
+ drivers/staging/vt6656/rxtx.h |  2 +-
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-> debug it, i can't promise that it will be fixed any time soon.
->=20
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 2dc7a17..64ec206 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -830,16 +830,16 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 	if (pkt_type == PK_TYPE_11A)
+ 		tx_buffer_head->fifo_ctl = 0;
+ 	else if (pkt_type == PK_TYPE_11B)
+-		tx_buffer_head->fifo_ctl = FIFOCTL_11B;
++		tx_buffer_head->fifo_ctl = cpu_to_le16(FIFOCTL_11B);
+ 	else if (pkt_type == PK_TYPE_11GB)
+-		tx_buffer_head->fifo_ctl = FIFOCTL_11GB;
++		tx_buffer_head->fifo_ctl = cpu_to_le16(FIFOCTL_11GB);
+ 	else if (pkt_type == PK_TYPE_11GA)
+-		tx_buffer_head->fifo_ctl = FIFOCTL_11GA;
++		tx_buffer_head->fifo_ctl = cpu_to_le16(FIFOCTL_11GA);
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control)) {
+-		tx_buffer_head->fifo_ctl |= (FIFOCTL_GENINT |
+-			FIFOCTL_ISDMA0);
+-		tx_buffer_head->fifo_ctl |= FIFOCTL_TMOEN;
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_GENINT |
++							FIFOCTL_ISDMA0);
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_TMOEN);
+ 
+ 		tx_buffer_head->time_stamp =
+ 			cpu_to_le16(DEFAULT_MGN_LIFETIME_RES_64us);
+@@ -849,12 +849,12 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 	}
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-		tx_buffer_head->fifo_ctl |= FIFOCTL_NEEDACK;
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_NEEDACK);
+ 		tx_context->need_ack = true;
+ 	}
+ 
+ 	if (ieee80211_has_retry(hdr->frame_control))
+-		tx_buffer_head->fifo_ctl |= FIFOCTL_LRETRY;
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_LRETRY);
+ 
+ 	if (tx_rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		priv->preamble_type = PREAMBLE_SHORT;
+@@ -863,11 +863,11 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	if (tx_rate->flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		need_rts = true;
+-		tx_buffer_head->fifo_ctl |= FIFOCTL_RTS;
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_RTS);
+ 	}
+ 
+ 	if (ieee80211_has_a4(hdr->frame_control))
+-		tx_buffer_head->fifo_ctl |= FIFOCTL_LHEAD;
++		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_LHEAD);
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)
+ 		is_pspoll = true;
+@@ -899,7 +899,8 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 	/* legacy rates TODO use ieee80211_tx_rate */
+ 	if (current_rate >= RATE_18M && ieee80211_is_data(hdr->frame_control)) {
+ 		if (priv->auto_fb_ctrl == AUTO_FB_0) {
+-			tx_buffer_head->fifo_ctl |= FIFOCTL_AUTO_FB_0;
++			tx_buffer_head->fifo_ctl |=
++						cpu_to_le16(FIFOCTL_AUTO_FB_0);
+ 
+ 			priv->tx_rate_fb0 =
+ 				vnt_fb_opt0[FB_RATE0][current_rate - RATE_18M];
+@@ -908,7 +909,8 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 			fb_option = AUTO_FB_0;
+ 		} else if (priv->auto_fb_ctrl == AUTO_FB_1) {
+-			tx_buffer_head->fifo_ctl |= FIFOCTL_AUTO_FB_1;
++			tx_buffer_head->fifo_ctl |=
++						cpu_to_le16(FIFOCTL_AUTO_FB_1);
+ 
+ 			priv->tx_rate_fb0 =
+ 				vnt_fb_opt1[FB_RATE0][current_rate - RATE_18M];
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index d5769c1..3f0ff7a 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -222,7 +222,7 @@ union vnt_tx_head {
+ 
+ struct vnt_tx_fifo_head {
+ 	u8 tx_key[WLAN_KEY_LEN_CCMP];
+-	u16 fifo_ctl;
++	__le16 fifo_ctl;
+ 	__le16 time_stamp;
+ 	__le16 frag_ctl;
+ 	__le16 current_rate;
+-- 
+2.0.1
 
-Beside, do any one know how can i get hands on usb protocol analyser?
-I think ath9k_htc should be fixed or at least limited.
-
---=20
-Regards,
-Oleksij
-
-
---khuRcA4NkPC1WWu0uP5M0XDMAgp5SrwKD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlO7h0QACgkQHwImuRkmbWlaewD/cLi/6XDm45HSMtGHJdDfW7ib
-u6cICxlajM5avkBP16AA/Red8X8xtCkTXJOkYny0v1EWLJIyTQYVD/cLbtug7ioU
-=vxM7
------END PGP SIGNATURE-----
-
---khuRcA4NkPC1WWu0uP5M0XDMAgp5SrwKD--
