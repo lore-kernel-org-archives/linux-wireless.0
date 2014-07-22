@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:37888 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbaGXJeP convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60414 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933657AbaGVXAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 05:34:15 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so3590715wiw.12
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 02:34:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
-References: <87mwc0ro8i.fsf@kamboji.qca.qualcomm.com>
-	<1406136773-19957-1-git-send-email-sw@simonwunderlich.de>
-	<871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 24 Jul 2014 11:34:12 +0200
-Message-ID: <CA+BoTQkmEoJ4TTDvBE9cagUGRFPKWVBFjGcyXfMsHHD9-bdDJA@mail.gmail.com> (sfid-20140724_113419_278635_0BDC0352)
-Subject: Re: [PATCHv3-ath-resend 2/2] ath10k: add spectral scan feature
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sven Eckelmann <sven@narfation.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Jul 2014 19:00:08 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Improve 'hard' simulate fw crash.
+Date: Tue, 22 Jul 2014 16:00:04 -0700
+Message-Id: <1406070004-6238-1-git-send-email-greearb@candelatech.com> (sfid-20140723_010025_409037_8C46FC31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 July 2014 11:29, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Simon Wunderlich <sw@simonwunderlich.de> writes:
->
->> Adds the spectral scan feature for ath10k. The spectral scan is triggered by
->> configuring a mode through a debugfs control file. Samples can be gathered via
->> another relay debugfs file.
->>
-[...]
->> @@ -800,8 +800,6 @@ int ath10k_core_start(struct ath10k *ar)
->>       else
->>               ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
->>
->> -     INIT_LIST_HEAD(&ar->arvifs);
->> -
->>       if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
->>               ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
->>                           ar->hw_params.name,
->> @@ -1084,6 +1082,12 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
->>       INIT_WORK(&ar->register_work, ath10k_core_register_work);
->>       INIT_WORK(&ar->restart_work, ath10k_core_restart);
->>
->> +     INIT_LIST_HEAD(&ar->arvifs);
->
-> I'm a bit suspicious about this, why is it needed?
+From: Ben Greear <greearb@candelatech.com>
 
-Good hunch. ar->arvifs must be re-initialized in core_start for
-recovery to work correctly.
+Different firmware may support different numbers of
+vdevs.  Use value that is always out of range for all
+firmware.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Michał
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 3030158..c9e35c87e 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -531,7 +531,10 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
+ 	} else if (!strcmp(buf, "hard")) {
+ 		ath10k_info("simulating hard firmware crash\n");
+-		ret = ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
++		/* 0x7fff is vdev id, and it is always out of range for all
++		 * firmware variants in order to force a firmware crash.
++		 */
++		ret = ath10k_wmi_vdev_set_param(ar, 0x7fff,
+ 					ar->wmi.vdev_param->rts_threshold, 0);
+ 	} else {
+ 		ret = -EINVAL;
+-- 
+1.7.11.7
+
