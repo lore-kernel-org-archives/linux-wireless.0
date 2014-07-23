@@ -1,299 +1,378 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:42914 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103AbaGQRcu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 13:32:50 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so3172143wib.14
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 10:32:48 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/6] b43: N-PHY: add tables for radio 0x2057 rev 14
-Date: Thu, 17 Jul 2014 19:31:02 +0200
-Message-Id: <1405618266-20200-2-git-send-email-zajec5@gmail.com> (sfid-20140717_193301_774126_41146949)
-In-Reply-To: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
-References: <1405618266-20200-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56529 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757301AbaGWLrX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2014 07:47:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/2] mac80211: implement TX TSPEC support
+Date: Wed, 23 Jul 2014 13:47:06 +0200
+Message-Id: <1406116026-27514-3-git-send-email-johannes@sipsolutions.net> (sfid-20140723_134726_946066_DCC5C6B0)
+In-Reply-To: <1406116026-27514-1-git-send-email-johannes@sipsolutions.net>
+References: <1406116026-27514-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Channel tables were fetched using this lovely set of commands:
-egrep -A 60 'read32 0x.....160 -> 0x00010028' 43217-wl.txt.b43 > 43217-channels-1.txt
-vim 43217-channels-1.txt
-:%s/radio_write(0x0016) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\tRADIOREGS7_2G(\1, \2, \3, \4, \5, \6, \7, \8,/
-:%s/radio_write(0x002d) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\t\t      \1, \2, \3, \4, \5, \6, \7, \8,/
-:%s/radio_write(0x00e3) <- \(.*\)\n.* <- \(.*\)/\t\t\t      \1, \2),/
-:%s/phy_write(0x01ce) <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)\n.* <- \(.*\)/\t\tPHYREGS(\1, \2, \3, \4, \5, \6),/
-:%s/ read32 0x.....160 -> 0x00010028\nwrite16 0x.....164 <- \(.*\)/\t\t.freq\t\t\t= \1/
-:wq
-grep -P "\t" 43217-channels-1.txt > 43217-channels-2.txt
-vim 43217-channels-2.txt
-:%s/\(.*freq\)/\t{\r\1/
-:%s/\(PHYREGS.*\)/\1\r\t},/
-:wq
+From: Johannes Berg <johannes.berg@intel.com>
 
-Inittable was extracted from the following part of dump:
->>> b43_radio_init2057_pre end
-radio_write(0x0011) <- 0x00fc
-radio_write(0x0030) <- 0x0024
-radio_write(0x0040) <- 0x001c
-radio_write(0x0082) <- 0x0008
-radio_write(0x00b4) <- 0x0044
-radio_write(0x00c8) <- 0x0001
-radio_write(0x00c9) <- 0x0001
-radio_write(0x0107) <- 0x0008
-radio_write(0x014d) <- 0x0001
-radio_write(0x014e) <- 0x0001
-radio_write(0x01af) <- 0x0040
-radio_write(0x01b0) <- 0x0040
-radio_write(0x01cc) <- 0x0001
-radio_write(0x01cf) <- 0x0010
-radio_write(0x01d0) <- 0x000f
-radio_write(0x01d3) <- 0x0010
-radio_write(0x01d4) <- 0x000f
----
- drivers/net/wireless/b43/phy_n.c       |  12 +++-
- drivers/net/wireless/b43/radio_2057.c  | 103 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/b43/tables_nphy.c |  40 +++++++++++++
- 3 files changed, 152 insertions(+), 3 deletions(-)
+If drivers want to support TX TS support, they can implement the
+two new add_tx_ts/del_tx_ts callbacks. The code will then allow
+transmission on ACs that have mandatory admission control, the
+device should implement time accounting and also downgrading if
+the admitted time isn't sufficient.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 479cda8..3da02ff 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -765,7 +765,12 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
- 			}
- 		}
- 		break;
--	/* TODO */
-+	case 14: /* 2 GHz only */
-+		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_R1, 0x1b);
-+		b43_radio_write(dev, R2057_CP_KPD_IDAC, 0x3f);
-+		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C1, 0x1f);
-+		b43_radio_write(dev, R2057_RFPLL_LOOPFILTER_C2, 0x1f);
-+		break;
- 	}
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-@@ -778,8 +783,11 @@ static void b43_radio_2057_setup(struct b43_wldev *dev,
- 				txmix2g_tune_boost_pu = 0x0041;
- 				/* TODO */
- 				break;
-+			case 14:
-+				txmix2g_tune_boost_pu = 0x21;
-+				pad2g_tune_pus = 0x23;
-+				break;
- 			}
--			/* TODO */
- 		}
- 
- 		if (txmix2g_tune_boost_pu)
-diff --git a/drivers/net/wireless/b43/radio_2057.c b/drivers/net/wireless/b43/radio_2057.c
-index c9c24b6..ff1e026 100644
---- a/drivers/net/wireless/b43/radio_2057.c
-+++ b/drivers/net/wireless/b43/radio_2057.c
-@@ -117,6 +117,15 @@ static u16 r2057_rev9_init[][2] = {
- 	{ 0x14e, 0x01 }, { 0x1b7, 0x05 }, { 0x1c2, 0xa0 },
+Change-Id: I081b82873f9ac16c40143f254b932e456a3f1a6e
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h    | 10 ++++++
+ net/mac80211/cfg.c        | 77 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 26 ++++++++++++++++
+ net/mac80211/sta_info.h   |  9 ++++++
+ net/mac80211/trace.h      | 58 +++++++++++++++++++++++++++++++++++
+ net/mac80211/wme.c        | 24 ++++++++++-----
+ 6 files changed, 196 insertions(+), 8 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index db283fbf4492..e4399f57f6bd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2845,6 +2845,11 @@ enum ieee80211_roc_type {
+  * @get_expected_throughput: extract the expected throughput towards the
+  *	specified station. The returned value is expressed in Kbps. It returns 0
+  *	if the RC algorithm does not have proper data to provide.
++ *
++ * @add_tx_ts: validate or add a TX TS, see &struct cfg80211_ops documentation.
++ *	Note that the device/driver must implement accounting of admitted time
++ *	and the downgrading when running out of admitted time.
++ * @del_tx_ts: remove an existing TX TS
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3047,6 +3052,11 @@ struct ieee80211_ops {
+ 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
++
++	int (*add_tx_ts)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta, u8 ac, u16 admitted_time);
++	void (*del_tx_ts)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			  struct ieee80211_sta *sta, u8 ac);
  };
  
-+/* Extracted from MMIO dump of 6.30.223.248 */
-+static u16 r2057_rev14_init[][2] = {
-+	{ 0x011, 0xfc }, { 0x030, 0x24 }, { 0x040, 0x1c }, { 0x082, 0x08 },
-+	{ 0x0b4, 0x44 }, { 0x0c8, 0x01 }, { 0x0c9, 0x01 }, { 0x107, 0x08 },
-+	{ 0x14d, 0x01 }, { 0x14e, 0x01 }, { 0x1af, 0x40 }, { 0x1b0, 0x40 },
-+	{ 0x1cc, 0x01 }, { 0x1cf, 0x10 }, { 0x1d0, 0x0f }, { 0x1d3, 0x10 },
-+	{ 0x1d4, 0x0f },
-+};
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9058e25030e7..85e64625aaf2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -19,6 +19,7 @@
+ #include "cfg.h"
+ #include "rate.h"
+ #include "mesh.h"
++#include "wme.h"
+ 
+ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 						const char *name,
+@@ -3548,6 +3549,80 @@ static int ieee80211_set_ap_chanwidth(struct wiphy *wiphy,
+ 	return ret;
+ }
+ 
++static int ieee80211_add_tx_ts(struct wiphy *wiphy, struct net_device *dev,
++			       u8 tsid, const u8 *peer, u8 up,
++			       u16 admitted_time)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++	int ac = ieee802_1d_to_ac[up];
++	int err;
 +
- #define RADIOREGS7(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
- 		   r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
- 		   r20, r21, r22, r23, r24, r25, r26, r27) \
-@@ -280,6 +289,87 @@ static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev8_radio_
- 	}
++	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
++
++	if (!(sdata->wmm_acm & BIT(up)))
++		return -EINVAL;
++
++	mutex_lock(&local->sta_mtx);
++	sta = sta_info_get(sdata, peer);
++	if (!sta) {
++		err = -ENOENT;
++		goto out;
++	}
++
++	if (sta->tx_tspec[ac].admitted_time) {
++		err = -EBUSY;
++		goto out;
++	}
++
++	err = drv_add_tx_ts(local, sdata, &sta->sta, ac, admitted_time);
++	if (!err && admitted_time) {
++		sta->tx_tspec[ac].admitted_time = admitted_time;
++		sta->tx_tspec[ac].tsid = tsid;
++	}
++ out:
++	mutex_unlock(&local->sta_mtx);
++	return err;
++}
++
++static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
++			       u8 tsid, const u8 *peer)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++	int ac, err;
++
++	mutex_lock(&local->sta_mtx);
++	sta = sta_info_get(sdata, peer);
++	if (!sta) {
++		err = -ENOENT;
++		goto out;
++	}
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		/* skip unused entries */
++		if (!sta->tx_tspec[ac].admitted_time)
++			continue;
++
++		if (sta->tx_tspec[ac].tsid != tsid)
++			continue;
++
++		drv_del_tx_ts(local, sdata, &sta->sta, ac);
++		memset(&sta->tx_tspec[ac], 0, sizeof(sta->tx_tspec[ac]));
++		err = 0;
++		goto out;
++	}
++
++	err = -ENOENT;
++
++ out:
++	mutex_unlock(&local->sta_mtx);
++	return err;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3624,4 +3699,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.channel_switch = ieee80211_channel_switch,
+ 	.set_qos_map = ieee80211_set_qos_map,
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
++	.add_tx_ts = ieee80211_add_tx_ts,
++	.del_tx_ts = ieee80211_del_tx_ts,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index ffd124bd2c20..9010f8bccdff 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1252,4 +1252,30 @@ static inline u32 drv_get_expected_throughput(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline int drv_add_tx_ts(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				struct ieee80211_sta *sta,
++				u8 ac, u16 admitted_time)
++{
++	int ret = -EOPNOTSUPP;
++
++	trace_drv_add_tx_ts(local, sdata, sta, ac, admitted_time);
++	if (local->ops->add_tx_ts)
++		ret = local->ops->add_tx_ts(&local->hw, &sdata->vif,
++					    sta, ac, admitted_time);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
++static inline void drv_del_tx_ts(struct ieee80211_local *local,
++				 struct ieee80211_sub_if_data *sdata,
++				 struct ieee80211_sta *sta, u8 ac)
++{
++	trace_drv_del_tx_ts(local, sdata, sta, ac);
++	if (local->ops->del_tx_ts)
++		local->ops->del_tx_ts(&local->hw, &sdata->vif, sta, ac);
++	trace_drv_return_void(local);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index bb0a02ce7d9b..06467e1cbc00 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -272,6 +272,11 @@ struct ieee80211_tx_latency_stat {
+ 	u32 bin_count;
  };
  
-+/* Extracted from MMIO dump of 6.30.223.248 */
-+static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev17_radio_rev14[] = {
-+	{
-+		.freq			= 2412,
-+		RADIOREGS7_2G(0x48, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x6c,
-+			      0x09, 0x0d, 0x09, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
-+	},
-+	{
-+		.freq			= 2417,
-+		RADIOREGS7_2G(0x4b, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x71,
-+			      0x09, 0x0d, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
-+	},
-+	{
-+		.freq			= 2422,
-+		RADIOREGS7_2G(0x4e, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x76,
-+			      0x09, 0x0d, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
-+	},
-+	{
-+		.freq			= 2427,
-+		RADIOREGS7_2G(0x52, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x7b,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
-+	},
-+	{
-+		.freq			= 2432,
-+		RADIOREGS7_2G(0x55, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x80,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
-+	},
-+	{
-+		.freq			= 2437,
-+		RADIOREGS7_2G(0x58, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x85,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x53, 0xff, 0x21,
-+			      0x53, 0xff),
-+		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
-+	},
-+	{
-+		.freq			= 2442,
-+		RADIOREGS7_2G(0x5c, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x8a,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
-+			      0x43, 0xff),
-+		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
-+	},
-+	{
-+		.freq			= 2447,
-+		RADIOREGS7_2G(0x5f, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x8f,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
-+			      0x43, 0xff),
-+		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
-+	},
-+	{
-+		.freq			= 2452,
-+		RADIOREGS7_2G(0x62, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x94,
-+			      0x09, 0x0c, 0x08, 0x03, 0x21, 0x43, 0xff, 0x21,
-+			      0x43, 0xff),
-+		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
-+	},
-+	{
-+		.freq			= 2457,
-+		RADIOREGS7_2G(0x66, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x99,
-+			      0x09, 0x0b, 0x07, 0x03, 0x21, 0x43, 0xff, 0x21,
-+			      0x43, 0xff),
-+		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
-+	},
-+	{
-+		.freq			= 2462,
-+		RADIOREGS7_2G(0x69, 0x16, 0x30, 0x2b, 0x1f, 0x1f, 0x30, 0x9e,
-+			      0x09, 0x0b, 0x07, 0x03, 0x01, 0x43, 0xff, 0x01,
-+			      0x43, 0xff),
-+		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
-+	},
++struct ieee80211_sta_tx_tspec {
++	u8 tsid;
++	u8 admitted_time;
 +};
 +
- /* Extracted from MMIO dump of 6.30.223.141 */
- static const struct b43_nphy_chantabent_rev7 b43_nphy_chantab_phy_rev16_radio_rev9[] = {
- 	{
-@@ -476,6 +566,12 @@ void r2057_upload_inittabs(struct b43_wldev *dev)
- 			size = ARRAY_SIZE(r2057_rev9_init);
- 		}
- 		break;
-+	case 17:
-+		if (phy->radio_rev == 14) {
-+			table = r2057_rev14_init[0];
-+			size = ARRAY_SIZE(r2057_rev14_init);
-+		}
-+		break;
- 	}
+ /**
+  * struct sta_info - STA information
+  *
+@@ -360,6 +365,7 @@ struct ieee80211_tx_latency_stat {
+  * @known_smps_mode: the smps_mode the client thinks we are in. Relevant for
+  *	AP only.
+  * @cipher_scheme: optional cipher scheme for this station
++ * @tx_tspec: active TX TS (for admission control) information
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -395,6 +401,9 @@ struct sta_info {
+ 	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
+ 	unsigned long driver_buffered_tids;
  
- 	B43_WARN_ON(!table);
-@@ -498,7 +594,6 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
- 	*tabent_r7 = NULL;
- 	*tabent_r7_2g = NULL;
- 
--	/* TODO */
- 	switch (phy->rev) {
- 	case 8:
- 		if (phy->radio_rev == 5) {
-@@ -512,6 +607,12 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
- 			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev16_radio_rev9);
- 		}
- 		break;
-+	case 17:
-+		if (phy->radio_rev == 14) {
-+			e_r7_2g = b43_nphy_chantab_phy_rev17_radio_rev14;
-+			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev17_radio_rev14);
-+		}
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index b39a8dd..ab27c2d 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2764,6 +2764,42 @@ static const u32 b43_ntab_tx_gain_ipa_2057_rev9_2g[] = {
- 	0x600f0715, 0x600f0715, 0x600f0715, 0x600f0715,
- };
- 
-+/* Extracted from MMIO dump of 6.30.223.248 */
-+static const u32 b43_ntab_tx_gain_ipa_2057_rev14_2g[] = {
-+	0x50df002e, 0x50cf002d, 0x50bf002c, 0x50b7002b,
-+	0x50af002a, 0x50a70029, 0x509f0029, 0x50970028,
-+	0x508f0027, 0x50870027, 0x507f0027, 0x50770027,
-+	0x506f0027, 0x50670027, 0x505f0028, 0x50570029,
-+	0x504f002b, 0x5047002e, 0x5047002b, 0x50470029,
-+	0x503f002c, 0x503f0029, 0x5037002c, 0x5037002a,
-+	0x50370028, 0x502f002d, 0x502f002b, 0x502f0028,
-+	0x502f0026, 0x5027002d, 0x5027002a, 0x50270028,
-+	0x50270026, 0x50270024, 0x501f002e, 0x501f002b,
-+	0x501f0029, 0x501f0027, 0x501f0024, 0x501f0022,
-+	0x501f0020, 0x501f001f, 0x5017002c, 0x50170029,
-+	0x50170027, 0x50170024, 0x50170022, 0x50170021,
-+	0x5017001f, 0x5017001d, 0x5017001b, 0x5017001a,
-+	0x50170018, 0x50170017, 0x50170015, 0x500f002c,
-+	0x500f002a, 0x500f0027, 0x500f0025, 0x500f0023,
-+	0x500f0022, 0x500f001f, 0x500f001e, 0x500f001c,
-+	0x500f001a, 0x500f0019, 0x500f0018, 0x500f0016,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+	0x500f0015, 0x500f0015, 0x500f0015, 0x500f0015,
-+};
++	/* read-only for TX path, RTNL protection for config changes */
++	struct ieee80211_sta_tx_tspec tx_tspec[IEEE80211_NUM_ACS];
 +
- /* IPA 2 5Hz */
+ 	/* Updated from RX path only, no locking requirements */
+ 	unsigned long rx_packets;
+ 	u64 rx_bytes;
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 5668ef8093a2..e5315f3af30a 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1623,6 +1623,64 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
  
- static const u32 b43_ntab_tx_gain_ipa_rev3_5g[] = {
-@@ -3583,6 +3619,10 @@ static const u32 *b43_nphy_get_ipa_gain_table(struct b43_wldev *dev)
++TRACE_EVENT(drv_add_tx_ts,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 u8 ac, u16 admitted_time),
++
++	TP_ARGS(local, sdata, sta, ac, admitted_time),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u8, ac)
++		__field(u16, admitted_time)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->ac = ac;
++		__entry->admitted_time = admitted_time;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT ", " VIF_PR_FMT ", " STA_PR_FMT ", ac:%d, time:%d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG,
++		__entry->ac, __entry->admitted_time
++	)
++);
++
++TRACE_EVENT(drv_del_tx_ts,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta, u8 ac),
++
++	TP_ARGS(local, sdata, sta, ac),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u8, ac)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->ac = ac;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT ", " VIF_PR_FMT ", " STA_PR_FMT ", ac:%d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->ac
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 7963d9ce171f..2a159534b435 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -53,10 +53,15 @@ static int wme_downgrade_ac(struct sk_buff *skb)
+ }
  
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
- 		switch (phy->rev) {
-+		case 17:
-+			if (phy->radio_rev == 14)
-+				return b43_ntab_tx_gain_ipa_2057_rev14_2g;
-+			break;
- 		case 16:
- 			if (phy->radio_rev == 9)
- 				return b43_ntab_tx_gain_ipa_2057_rev9_2g;
+ static u16 ieee80211_downgrade_queue(struct ieee80211_sub_if_data *sdata,
+-				     struct sk_buff *skb)
++				     struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	/* in case we are a client verify acm is not set for this ac */
+ 	while (unlikely(sdata->wmm_acm & BIT(skb->priority))) {
++		int ac = ieee802_1d_to_ac[skb->priority];
++
++		if (sta && sta->tx_tspec[ac].admitted_time)
++			return ac;
++
+ 		if (wme_downgrade_ac(skb)) {
+ 			/*
+ 			 * This should not really happen. The AP has marked all
+@@ -95,7 +100,7 @@ u16 ieee80211_select_queue_80211(struct ieee80211_sub_if_data *sdata,
+ 	p = ieee80211_get_qos_ctl(hdr);
+ 	skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 
+-	return ieee80211_downgrade_queue(sdata, skb);
++	return ieee80211_downgrade_queue(sdata, NULL, skb);
+ }
+ 
+ /* Indicate which queue to use. */
+@@ -107,6 +112,7 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 	const u8 *ra = NULL;
+ 	bool qos = false;
+ 	struct mac80211_qos_map *qos_map;
++	u16 ret;
+ 
+ 	if (local->hw.queues < IEEE80211_NUM_ACS || skb->len < 6) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+@@ -147,27 +153,29 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 		if (sta)
+ 			qos = test_sta_flag(sta, WLAN_STA_WME);
+ 	}
+-	rcu_read_unlock();
+ 
+ 	if (!qos) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+-		return IEEE80211_AC_BE;
++		ret = IEEE80211_AC_BE;
++		goto out;
+ 	}
+ 
+ 	if (skb->protocol == sdata->control_port_protocol) {
+ 		skb->priority = 7;
+-		return ieee80211_downgrade_queue(sdata, skb);
++		goto downgrade;
+ 	}
+ 
+ 	/* use the data classifier to determine what 802.1d tag the
+ 	 * data frame has */
+-	rcu_read_lock();
+ 	qos_map = rcu_dereference(sdata->qos_map);
+ 	skb->priority = cfg80211_classify8021d(skb, qos_map ?
+ 					       &qos_map->qos_map : NULL);
+-	rcu_read_unlock();
+ 
+-	return ieee80211_downgrade_queue(sdata, skb);
++ downgrade:
++	ret = ieee80211_downgrade_queue(sdata, sta, skb);
++ out:
++	rcu_read_unlock();
++	return ret;
+ }
+ 
+ /**
 -- 
-1.8.4.5
+2.0.0
 
