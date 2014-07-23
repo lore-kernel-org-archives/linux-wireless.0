@@ -1,100 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f173.google.com ([209.85.128.173]:37125 "EHLO
-	mail-ve0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755532AbaGILtF (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:50916 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757420AbaGWK3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2014 07:49:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <53BAB7F7.3060705@rempel-privat.de>
-References: <Pine.LNX.4.44L0.1407041225290.6607-100000@netrider.rowland.org>
-	<53B6DC5F.3090304@rempel-privat.de>
-	<CAE4k238pWc4nB1S1S7OJBVh-_bUnO+D6uQJ98wMTk-E7FZ4+yw@mail.gmail.com>
-	<53BAB7F7.3060705@rempel-privat.de>
-Date: Wed, 9 Jul 2014 13:49:03 +0200
-Message-ID: <CAE4k238cFpA-y3T9G3+1MXun8fv8jt=6TJv8k9ZJuav9f5Av9A@mail.gmail.com> (sfid-20140709_134912_583009_BAE52A6A)
-Subject: Re: ath9k -> bogus usb xfer on at91
-From: Anders Darander <anders.darander@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Jul 2014 06:29:22 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so936053wgg.28
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 03:29:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Denton Gentry <denton.gentry@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4] ath10k: fix Rx aggregation reordering
+Date: Wed, 23 Jul 2014 12:20:33 +0200
+Message-Id: <1406110833-14031-1-git-send-email-michal.kazior@tieto.com> (sfid-20140723_122929_859421_12DE407A)
+In-Reply-To: <1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
+References: <1405509540-32691-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 July 2014 17:08, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 07.07.2014 15:40, schrieb Anders Darander:
->> On 4 July 2014 18:54, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>> Am 04.07.2014 18:30, schrieb Alan Stern:
->>>> On Fri, 4 Jul 2014, Anders Darander wrote:
->>>>> ~# usb 1-1: new full-speed USB device number 3 using at91_ohci
->>>>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested
->>>>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
->>>>> -----------[ cut here ]-----------
->>>>> WARNING: CPU: 0 PID: 93 at
->>>>> /mnt/cs-builds/anders/oe-build/build-ccu/tmp-eglibc/work/ccu-oe-linux-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/usb/core/urb.c:450
->>>>> usb_submit_urb+0x2ac/0x460()
->>>>> usb 1-1: BOGUS urb xfer, pipe 1 != type 3
->>
->>>>
->>>> I can't tell exactly where the fault is, but this message means that an
->>>> URB was submitted for a bulk endpoint with a pipe of type
->>>> PIPE_INTERRUPT.
->>>
->>> Then kernel driver and firmware should be updated. There was some
->>> Bulk/Interrupt issues which was fixed last year.
->>
->> Any pointers to the bulk/interrupt issues? Was it a general issue, or
->> related either to
->> at91-ohci or ar9271?
->
-> It is primary ar9271 issue. The interrupt EP has different response time
-> on different host controllers. Initially as workaround ath9k was forcing
-> Bulk traffic on Interrupt EP. But this workaround is working with some
-> host controllers and completely fails on others. So i removed it. The
-> patches are included in master kernel branch and git firmware source.
+Firmware doesn't perform Rx reordering so it is
+left to the host driver to do that.
 
-Thanks for the comments!
-I'll take a look at it, though it might have to be scheduled after the
-upcoming vacations...
+Use mac80211 to perform reordering instead of
+re-inventing the wheel.
 
-I'll sure try to look into those workarounds (and your removal of
-those). I guess that
-it's the firmware in open-ath9-htc-firmware you're talking about.
+This fixes TCP throughput issues in some
+environments.
 
->>
->> As far as I've been able to find out, I've got the latest firmware
->> (check again with linux-firmware).
->> I've also tried with the master from open-ath9k-htc-firmware.
->>
->>> I hope this HW will not be used as AP.
->>
->> Is this based on the use of at91- SoC, or based on the ar9271?
->
-> ar9271 can work as AP with limit on 8 stations but according to user
-> reports it fails even with one station on at91
->
->> The primary use case is to run as a client, though there will likely
->> be some instances where it'll
->> function as a AP. (Though primarily for M2M communications), thus
->> pretty low traffic.
->
-> For AP usually should be created monitor mode interface for receiving
-> and transmitting management frames. Depending on location and STAs or
-> APs working on same channel, you will get a lot of traffic on this usb
-> interface.
-> Some users reported huge traffic drops on at91 based APs. Since i can't
-> debug it, i can't promise that it will be fixed any time soon.
+Reported-by: Denton Gentry <denton.gentry@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+This depends on:
 
-Again, thanks for the information.
-I think I've got a much better understanding of the issues (both those that I've
-seen, and those that you have mentioned / explained). I'll see when/what I can
-look into this and what I can find out.
+ * mac80211: fix Rx reordering with RX_FLAG_AMSDU_MORE
+ * mac80211: add support for Rx reordering offloading
 
-Cheers,
-Anders
+I'm still seeing some issues with TCP traffic.
+Apparently firmware/hardware sometimes stalls Rx
+for ~100ms and misses some aggregate frames. I
+wasn't able to pinpoint what the problem is. The
+more parallel TCP streams (iperf) the more often
+stalls happen. UDP doesn't seem to trigger the Rx
+stalls at all.
 
+
+Notes:
+    v4:
+     * return immediatelly instead break [Varka]
+     * fix endianess conversion (__le32 -> __le16)
+     * use rx_delba in delba callback
+    
+    v3:
+     * make ath10k_ampdu_action() static
+    
+    v2:
+     * split addba/delba handling into separate functions [Kalle]
+     * extend ampdu_action debug print (+vdev_id, +sta addr, +tid)
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 92 +++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/mac.c    | 33 ++++++++++++
+ drivers/net/wireless/ath/ath10k/txrx.c   |  3 +-
+ drivers/net/wireless/ath/ath10k/txrx.h   |  1 +
+ 4 files changed, 126 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 318efc3..77cdc21 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -21,6 +21,7 @@
+ #include "txrx.h"
+ #include "debug.h"
+ #include "trace.h"
++#include "mac.h"
+ 
+ #include <linux/log2.h>
+ 
+@@ -1422,6 +1423,86 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
+ 	}
+ }
+ 
++static void ath10k_htt_rx_addba(struct ath10k *ar, struct htt_resp *resp)
++{
++	struct htt_rx_addba *ev = &resp->rx_addba;
++	struct ath10k_peer *peer;
++	struct ath10k_vif *arvif;
++	u16 info0, tid, peer_id;
++
++	info0 = __le16_to_cpu(ev->info0);
++	tid = MS(info0, HTT_RX_BA_INFO0_TID);
++	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
++
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt rx addba tid %hu peer_id %hu size %hhu\n",
++		   tid, peer_id, ev->window_size);
++
++	spin_lock_bh(&ar->data_lock);
++	peer = ath10k_peer_find_by_id(ar, peer_id);
++	if (!peer) {
++		ath10k_warn("received addba event for invalid peer_id: %hu\n",
++			    peer_id);
++		spin_unlock_bh(&ar->data_lock);
++		return;
++	}
++
++	arvif = ath10k_get_arvif(ar, peer->vdev_id);
++	if (!arvif) {
++		ath10k_warn("received addba event for invalid vdev_id: %u\n",
++			    peer->vdev_id);
++		spin_unlock_bh(&ar->data_lock);
++		return;
++	}
++
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt rx start rx ba session sta %pM tid %hu size %hhu\n",
++		   peer->addr, tid, ev->window_size);
++
++	ieee80211_start_rx_ba_session_offl(arvif->vif, peer->addr, tid);
++	spin_unlock_bh(&ar->data_lock);
++}
++
++static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
++{
++	struct htt_rx_delba *ev = &resp->rx_delba;
++	struct ath10k_peer *peer;
++	struct ath10k_vif *arvif;
++	u16 info0, tid, peer_id;
++
++	info0 = __le16_to_cpu(ev->info0);
++	tid = MS(info0, HTT_RX_BA_INFO0_TID);
++	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
++
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt rx delba tid %hu peer_id %hu\n",
++		   tid, peer_id);
++
++	spin_lock_bh(&ar->data_lock);
++	peer = ath10k_peer_find_by_id(ar, peer_id);
++	if (!peer) {
++		ath10k_warn("received addba event for invalid peer_id: %hu\n",
++			    peer_id);
++		spin_unlock_bh(&ar->data_lock);
++		return;
++	}
++
++	arvif = ath10k_get_arvif(ar, peer->vdev_id);
++	if (!arvif) {
++		ath10k_warn("received addba event for invalid vdev_id: %u\n",
++			    peer->vdev_id);
++		spin_unlock_bh(&ar->data_lock);
++		return;
++	}
++
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt rx stop rx ba session sta %pM tid %hu\n",
++		   peer->addr, tid);
++
++	ieee80211_stop_rx_ba_session_offl(arvif->vif, peer->addr, tid);
++	spin_unlock_bh(&ar->data_lock);
++}
++
+ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+@@ -1524,8 +1605,17 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_warn("received an unexpected htt tx inspect event\n");
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_RX_ADDBA:
++		ath10k_htt_rx_addba(ar, resp);
++		break;
+ 	case HTT_T2H_MSG_TYPE_RX_DELBA:
+-	case HTT_T2H_MSG_TYPE_RX_FLUSH:
++		ath10k_htt_rx_delba(ar, resp);
++		break;
++	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
++		/* Ignore this event because mac80211 takes care of Rx
++		 * aggregation reordering.
++		 */
++		break;
++	}
+ 	default:
+ 		ath10k_dbg(ATH10K_DBG_HTT, "htt event (%d) not handled\n",
+ 			   resp->hdr.msg_type);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3f9afaa..3baa229 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4333,6 +4333,38 @@ static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	return 0;
+ }
+ 
++static int ath10k_ampdu_action(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       enum ieee80211_ampdu_mlme_action action,
++			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
++			       u8 buf_size)
++{
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++
++	ath10k_dbg(ATH10K_DBG_MAC, "mac ampdu vdev_id %i sta %pM tid %hu action %d\n",
++		   arvif->vdev_id, sta->addr, tid, action);
++
++	switch (action) {
++	case IEEE80211_AMPDU_RX_START:
++	case IEEE80211_AMPDU_RX_STOP:
++		/* HTT AddBa/DelBa events trigger mac80211 Rx BA session
++		 * creation/removal. Do we need to verify this?
++		 */
++		return 0;
++	case IEEE80211_AMPDU_TX_START:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		/* Firmware offloads Tx aggregation entirely so deny mac80211
++		 * Tx aggregation requests.
++		 */
++		return -EOPNOTSUPP;
++	}
++
++	return -EINVAL;
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -4360,6 +4392,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
+ 	.sta_rc_update			= ath10k_sta_rc_update,
+ 	.get_tsf			= ath10k_get_tsf,
++	.ampdu_action			= ath10k_ampdu_action,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 82669a7..f4fa22d 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -119,8 +119,7 @@ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+ 	return NULL;
+ }
+ 
+-static struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar,
+-						  int peer_id)
++struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+ {
+ 	struct ath10k_peer *peer;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
+index aee3e20..a90e09f 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.h
++++ b/drivers/net/wireless/ath/ath10k/txrx.h
+@@ -24,6 +24,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+ 				     const u8 *addr);
++struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id);
+ int ath10k_wait_for_peer_created(struct ath10k *ar, int vdev_id,
+ 				 const u8 *addr);
+ int ath10k_wait_for_peer_deleted(struct ath10k *ar, int vdev_id,
 -- 
-Anders Darander
-EPO guidelines 1978: "If the contribution to the known art resides
-solely in a computer program then the subject matter is not
-patentable in whatever manner it may be presented in the claims."
+1.8.5.3
+
