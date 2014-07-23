@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:47226 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbaGXWev (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:58229 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932846AbaGWSwy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 18:34:51 -0400
-Received: by mail-wg0-f50.google.com with SMTP id n12so3483720wgh.9
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 15:34:50 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/5] staging: vt6656: dpc remove unneeded headers
-Date: Thu, 24 Jul 2014 23:34:15 +0100
-Message-Id: <1406241258-10025-2-git-send-email-tvboxspy@gmail.com> (sfid-20140725_003455_179879_112BD86E)
-In-Reply-To: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
-References: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 23 Jul 2014 14:52:54 -0400
+Date: Wed, 23 Jul 2014 19:52:06 +0100
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	linux-firmware@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/7] security: introduce kernel_fw_from_file hook
+Message-ID: <20140723195206.48af0851@alan.etchedpixels.co.uk> (sfid-20140723_205308_969292_C1D35308)
+In-Reply-To: <CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com>
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	<1405373897-31671-4-git-send-email-keescook@chromium.org>
+	<20140714222419.GC10393@wotan.suse.de>
+	<CAGXu5j+V807cyDdyEzoRzSjYEyhkDntaEkKOx6n=OzUoF31-sA@mail.gmail.com>
+	<CAB=NE6WnP-7YCr8DzCq-HOLZVuQxmCa+nwN7kQBxTnUHK+xMRg@mail.gmail.com>
+	<CAGXu5jJxEJQ5+05O-Q=W652O-fZ1WBVsUjb3d2JEwAAMF=fx-Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/dpc.c | 3 ---
- drivers/staging/vt6656/dpc.h | 1 -
- 2 files changed, 4 deletions(-)
+> Yeah, there does seem to be a repeated "get a thing from userspace"
+> method here, but the interfaces have been rather scattered so far. I
+> haven't seen an obvious way to consolidate them yet.
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index f5fbb5f..07de768 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -37,12 +37,9 @@
- 
- #include "dpc.h"
- #include "device.h"
--#include "rxtx.h"
--#include "card.h"
- #include "mac.h"
- #include "baseband.h"
- #include "rf.h"
--#include "usbpipe.h"
- 
- int vnt_rx_data(struct vnt_private *priv, struct vnt_rcb *ptr_rcb,
- 	unsigned long bytes_received)
-diff --git a/drivers/staging/vt6656/dpc.h b/drivers/staging/vt6656/dpc.h
-index d538aa3..fab195f 100644
---- a/drivers/staging/vt6656/dpc.h
-+++ b/drivers/staging/vt6656/dpc.h
-@@ -30,7 +30,6 @@
- #define __DPC_H__
- 
- #include "device.h"
--#include "wcmd.h"
- 
- int vnt_rx_data(struct vnt_private *, struct vnt_rcb *,
- 	unsigned long bytes_recieved);
--- 
-2.0.1
+Sign them all with the kernel key just as we do now with modules.
+
+Alan
 
