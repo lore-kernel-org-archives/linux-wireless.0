@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:61393 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751516AbaGQStd (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:59525 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757616AbaGWPMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 14:49:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: remove needless current_bssid variable
-Date: Thu, 17 Jul 2014 11:48:47 -0700
-Message-ID: <1405622927-26207-1-git-send-email-bzhao@marvell.com> (sfid-20140717_204946_832213_313A41C7)
+	Wed, 23 Jul 2014 11:12:46 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCHv2 2/2] ath10k: add spectral scan feature
+Date: Wed, 23 Jul 2014 17:12:43 +0200
+Cc: ath10k@lists.infradead.org, mathias.kretschmer@fokus.fraunhofer.de,
+	kgiori@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	sven@narfation.org
+References: <1405945943-8303-1-git-send-email-sw@simonwunderlich.de> <1405945943-8303-3-git-send-email-sw@simonwunderlich.de> <87zjg1tfjd.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zjg1tfjd.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201407231712.43500.sw@simonwunderlich.de> (sfid-20140723_171251_831968_CDCB34C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hey Kalle,
 
-This local variable is not used anywhere in function.
+thanks for all the comments!
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/join.c | 6 ------
- 1 file changed, 6 deletions(-)
+I'll make the changes as you suggested, although I'd like to point out that 
+the "empty line before comment" and the "no indentation for WMI command 
+parameters" things are not really consistent - there are also empty lines 
+missing (e.g. struct wmi_start_scan_cmd) and indentation present (e.g. 
+ath10k_wmi_peer_assoc and many others). Maybe that should be cleaned up at 
+some point if you think that's important. :)
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 0b977ea..8d6c259 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1288,8 +1288,6 @@ done:
- int mwifiex_associate(struct mwifiex_private *priv,
- 		      struct mwifiex_bssdescriptor *bss_desc)
- {
--	u8 current_bssid[ETH_ALEN];
--
- 	/* Return error if the adapter is not STA role or table entry
- 	 * is not marked as infra.
- 	 */
-@@ -1304,10 +1302,6 @@ int mwifiex_associate(struct mwifiex_private *priv,
- 	else
- 		mwifiex_set_ba_params(priv);
- 
--	memcpy(&current_bssid,
--	       &priv->curr_bss_params.bss_descriptor.mac_address,
--	       sizeof(current_bssid));
--
- 	/* Clear any past association response stored for application
- 	   retrieval */
- 	priv->assoc_rsp_size = 0;
--- 
-1.8.2.3
+> > +struct fft_sample_ath10k {
+> > +	struct fft_sample_tlv tlv;
+> > +	u8 chan_width_mhz;
+> > +	__be16 freq1;
+> > +	__be16 freq2;
+> > +	__be16 noise;
+> > +	__be16 max_magnitude;
+> > +	__be16 total_gain_db;
+> > +	__be16 base_pwr_db;
+> > +	__be64 tsf;
+> > +	s8 max_index;
+> > +	u8 rssi;
+> > +	u8 relpwr_db;
+> > +	u8 avgpwr_db;
+> > +	u8 max_exp;
+> > +
+> > +	u8 data[0];
+> > +} __packed;
+> 
+> __be16, that's a first. Just making sure that this really is big endian?
 
+As the __le32 you use in other ath10k structs, this is just for checking - at 
+least sparse should check that, maybe other tools as well.
+
+I'll send a new patchset with the suggestions of Michal, Chun-Yeow and you 
+soon. :)
+
+Thanks!
+    Simon
