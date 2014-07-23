@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:55201 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbaGKAJ2 (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:58974 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932975AbaGWUft (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:09:28 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so7636wes.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:09:25 -0700 (PDT)
+	Wed, 23 Jul 2014 16:35:49 -0400
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/13] staging: vt6656: rename and cleanup wTimeStampOff
-Date: Fri, 11 Jul 2014 01:08:25 +0100
-Message-Id: <1405037311-3666-7-git-send-email-tvboxspy@gmail.com> (sfid-20140711_020932_694612_78FFF9F6)
-In-Reply-To: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
-References: <1405037311-3666-1-git-send-email-tvboxspy@gmail.com>
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/2] staging: vt6655: Fix Warning on boot handle_irq_event_percpu.
+Date: Wed, 23 Jul 2014 21:35:11 +0100
+Message-Id: <1406147712-3152-1-git-send-email-tvboxspy@gmail.com> (sfid-20140723_223556_078463_C8B6032D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename to vnt_time_stampoff
+WARNING: CPU: 0 PID: 929 at /home/apw/COD/linux/kernel/irq/handle.c:147 handle_irq_event_percpu+0x1d1/0x1e0()
+irq 17 handler device_intr+0x0/0xa80 [vt6655_stage] enabled interrupts
+
+Using spin_lock_irqsave appears to fix this.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Cc: <stable@vger.kernel.org>
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 5084434..7faef28 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -52,10 +52,10 @@
+---
+ drivers/staging/vt6655/device_main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 5eeb19e..a0863ca 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -2322,6 +2322,7 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance) {
+ 	int             handled = 0;
+ 	unsigned char byData = 0;
+ 	int             ii = 0;
++	unsigned long flags;
  
- static int          msglevel                = MSG_LEVEL_INFO;
+ 	MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
  
--static const u16 wTimeStampOff[2][MAX_RATE] = {
--        {384, 288, 226, 209, 54, 43, 37, 31, 28, 25, 24, 23}, // Long Preamble
--        {384, 192, 130, 113, 54, 43, 37, 31, 28, 25, 24, 23}, // Short Preamble
--    };
-+static const u16 vnt_time_stampoff[2][MAX_RATE] = {
-+	{384, 288, 226, 209, 54, 43, 37, 31, 28, 25, 24, 23},/* Long Preamble */
-+	{384, 192, 130, 113, 54, 43, 37, 31, 28, 25, 24, 23},/* Short Preamble */
-+};
+@@ -2335,7 +2336,8 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance) {
  
- static const u16 wFB_Opt0[2][5] = {
-         {RATE_12M, RATE_18M, RATE_24M, RATE_36M, RATE_48M}, // fallback_rate0
-@@ -128,7 +128,7 @@ static struct vnt_usb_send_context
+ 	handled = 1;
+ 	MACvIntDisable(pDevice->PortOffset);
+-	spin_lock_irq(&pDevice->lock);
++
++	spin_lock_irqsave(&pDevice->lock, flags);
  
- static __le16 vnt_time_stamp_off(struct vnt_private *priv, u16 rate)
- {
--	return cpu_to_le16(wTimeStampOff[priv->byPreambleType % 2]
-+	return cpu_to_le16(vnt_time_stampoff[priv->byPreambleType % 2]
- 							[rate % MAX_RATE]);
- }
+ 	//Make sure current page is 0
+ 	VNSvInPortB(pDevice->PortOffset + MAC_REG_PAGE1SEL, &byOrgPageSel);
+@@ -2564,7 +2566,8 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance) {
+ 	if (byOrgPageSel == 1)
+ 		MACvSelectPage1(pDevice->PortOffset);
  
+-	spin_unlock_irq(&pDevice->lock);
++	spin_unlock_irqrestore(&pDevice->lock, flags);
++
+ 	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
+ 
+ 	return IRQ_RETVAL(handled);
 -- 
 1.9.1
 
