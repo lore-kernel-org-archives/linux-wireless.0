@@ -1,173 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:44368 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933786AbaGQOOI (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:42984 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932514AbaGWTPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:08 -0400
-Received: by mail-we0-f181.google.com with SMTP id k48so2034144wev.12
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:07 -0700 (PDT)
+	Wed, 23 Jul 2014 15:15:30 -0400
+Received: by mail-pd0-f170.google.com with SMTP id g10so2151325pdj.15
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 12:15:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
+References: <CA+XVXfcJwZJPz9rLWx6+KSWzEfkcdnjBYpzhyKfvmX7Au38akA@mail.gmail.com>
+ <20140630222132.GN1390@garbanzo.do-not-panic.com> <CA+XVXffHGQFDQ+yAhdh+R=XuDsT4QfhvFfWK4b2Cw_DttzL-BQ@mail.gmail.com>
+ <20140702020442.GP1390@garbanzo.do-not-panic.com> <CA+XVXffvG6GagBPMZF+iogaAeYV0kUoi4BX68J0fxOfsHjE70A@mail.gmail.com>
+ <20140703221901.GS1390@garbanzo.do-not-panic.com> <CA+XVXffnDs4oCnyD0NzmyG6=jxqXwUFd+Tj8XAsWGC1bgcMH8A@mail.gmail.com>
+ <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
+ <20140708025719.GU1390@garbanzo.do-not-panic.com> <CA+XVXffMM9W76ysqgs=pyAHubavefgjqW5u8bNSZxTX69j7nzg@mail.gmail.com>
+ <20140723004132.GX1390@garbanzo.do-not-panic.com> <CA+XVXfd-4jYUy3oz4cOqBprG358X2D9m7Pgq_JrkZKHERm6f3A@mail.gmail.com>
+ <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
 From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 03/15] mac80211: consolidate TDLS IE treatment
-Date: Thu, 17 Jul 2014 17:14:19 +0300
-Message-Id: <1405606471-30128-4-git-send-email-arik@wizery.com> (sfid-20140717_161416_501068_31446B00)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+Date: Wed, 23 Jul 2014 22:15:13 +0300
+Message-ID: <CA+XVXfcHwOAndEfUo3YtZxbgHtC12qC22QcpVXZFM41WKn0LiQ@mail.gmail.com> (sfid-20140723_211536_812299_45CA8701)
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add all information elements for TDLS discovery and setup in the same
-function.
+On Wed, Jul 23, 2014 at 9:06 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+>> I also suggest adding another argument to regulatory_hint_regd() to
+>> allow the driver to specify the intersection policy. It seems that
+>> currently the code (__reg_process_hint_driver()) only allows to
+>> intersect, which is not appropriate to us.
+>> So the final form can look like:
+>>
+>> regulatory_hint_regd(struct wiphy,
+>>                               const struct ieee80211_regdomain *regd,
+>>                               enum nl80211_driver_reg_hint_type,
+>>                               enum nl80211_reg_intersect_policy policy);
+>>
+>> enum nl80211_reg_intersect_policy {
+>>          REG_INTERSECT_POLICY_DEFAULT,
+>>          REG_INTERSECT_POLICY_OVERRIDE,
+>>          REG_INTERSECT_POLICY_INTERSECT,
+>> };
+>
+> We don't want to use the driver regulatory data to help the regulatory
+> core at all because I noted it would get things messy fast. That would
+> mean you never have to deal with any intersection or the cfg80211
+> regulatory domain at all. So none of this would be needed. The hint
+> would just be for the driver. Its sad that driver regulatory data
+> can't contribute to the regulatory core but I think its best this way
+> to keep things clean and simple. If the driver does want to help the
+> best way is to contribute to wireless-regdb and move to that.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tdls.c | 69 +++++++++++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 28 deletions(-)
+I guess I didn't get that one.
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 53c235d..b61448a 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -78,13 +78,49 @@ static void ieee80211_tdls_add_link_ie(struct sk_buff *skb, const u8 *src_addr,
- 	memcpy(lnkid->resp_sta, peer, ETH_ALEN);
- }
- 
-+static void ieee80211_tdls_add_ies(struct ieee80211_sub_if_data *sdata,
-+				   struct sk_buff *skb, const u8 *peer,
-+				   u8 action_code, bool initiator,
-+				   const u8 *extra_ies, size_t extra_ies_len)
-+{
-+	const u8 *init_addr, *rsp_addr;
-+	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
-+
-+	switch (action_code) {
-+	case WLAN_TDLS_SETUP_REQUEST:
-+	case WLAN_TDLS_SETUP_RESPONSE:
-+	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
-+		ieee80211_add_srates_ie(sdata, skb, false, band);
-+		ieee80211_add_ext_srates_ie(sdata, skb, false, band);
-+		ieee80211_tdls_add_ext_capab(skb);
-+		break;
-+	case WLAN_TDLS_SETUP_CONFIRM:
-+	case WLAN_TDLS_TEARDOWN:
-+	case WLAN_TDLS_DISCOVERY_REQUEST:
-+		break;
-+	}
-+
-+	if (initiator) {
-+		init_addr = sdata->vif.addr;
-+		rsp_addr = peer;
-+	} else {
-+		init_addr = peer;
-+		rsp_addr = sdata->vif.addr;
-+	}
-+
-+	if (extra_ies_len)
-+		memcpy(skb_put(skb, extra_ies_len), extra_ies, extra_ies_len);
-+
-+	ieee80211_tdls_add_link_ie(skb, init_addr, rsp_addr,
-+				   sdata->u.mgd.bssid);
-+}
-+
- static int
- ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
- 			       const u8 *peer, u8 action_code, u8 dialog_token,
- 			       u16 status_code, struct sk_buff *skb)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_tdls_data *tf;
- 
- 	tf = (void *)skb_put(skb, offsetof(struct ieee80211_tdls_data, u));
-@@ -103,10 +139,6 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
- 		tf->u.setup_req.dialog_token = dialog_token;
- 		tf->u.setup_req.capability =
- 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
--
--		ieee80211_add_srates_ie(sdata, skb, false, band);
--		ieee80211_add_ext_srates_ie(sdata, skb, false, band);
--		ieee80211_tdls_add_ext_capab(skb);
- 		break;
- 	case WLAN_TDLS_SETUP_RESPONSE:
- 		tf->category = WLAN_CATEGORY_TDLS;
-@@ -117,10 +149,6 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
- 		tf->u.setup_resp.dialog_token = dialog_token;
- 		tf->u.setup_resp.capability =
- 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
--
--		ieee80211_add_srates_ie(sdata, skb, false, band);
--		ieee80211_add_ext_srates_ie(sdata, skb, false, band);
--		ieee80211_tdls_add_ext_capab(skb);
- 		break;
- 	case WLAN_TDLS_SETUP_CONFIRM:
- 		tf->category = WLAN_CATEGORY_TDLS;
-@@ -157,7 +185,6 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
- 			   u16 status_code, struct sk_buff *skb)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_mgmt *mgmt;
- 
- 	mgmt = (void *)skb_put(skb, 24);
-@@ -179,10 +206,6 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
- 			dialog_token;
- 		mgmt->u.action.u.tdls_discover_resp.capability =
- 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
--
--		ieee80211_add_srates_ie(sdata, skb, false, band);
--		ieee80211_add_ext_srates_ie(sdata, skb, false, band);
--		ieee80211_tdls_add_ext_capab(skb);
- 		break;
- 	default:
- 		return -EINVAL;
-@@ -202,7 +225,6 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = NULL;
- 	bool send_direct;
--	const u8 *init_addr, *rsp_addr;
- 	struct sta_info *sta;
- 	int ret;
- 
-@@ -243,9 +265,6 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	if (ret < 0)
- 		goto fail;
- 
--	if (extra_ies_len)
--		memcpy(skb_put(skb, extra_ies_len), extra_ies, extra_ies_len);
--
- 	rcu_read_lock();
- 	sta = sta_info_get(sdata, peer);
- 
-@@ -279,21 +298,15 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 	}
- 
--	if (initiator || (sta && test_sta_flag(sta, WLAN_STA_TDLS_INITIATOR))) {
--		init_addr = sdata->vif.addr;
--		rsp_addr = peer;
--	} else {
--		init_addr = peer;
--		rsp_addr = sdata->vif.addr;
--	}
-+	if (sta && test_sta_flag(sta, WLAN_STA_TDLS_INITIATOR))
-+		initiator = true;
- 
- 	rcu_read_unlock();
- 	if (ret < 0)
- 		goto fail;
- 
--	ieee80211_tdls_add_link_ie(skb, init_addr, rsp_addr,
--				   sdata->u.mgd.bssid);
--
-+	ieee80211_tdls_add_ies(sdata, skb, peer, action_code, initiator,
-+			       extra_ies, extra_ies_len);
- 	if (send_direct) {
- 		ieee80211_tx_skb(sdata, skb);
- 		return 0;
--- 
-1.9.1
+Isn't that problematic for cell-base hints coming from usermode? I
+mean, what wiphy are they from?
+It's also problematic because currently usermode uses the
+cfg80211_regdomain for its regulatory data (NL80211_CMD_GET_REG).
 
+Granted, all of this can be changed, but I think it's easier to update
+the global regdomain.
+
+The cell-base hints from usermode with the regdomain data coming from
+the FW was the original reason to introduce the get_regd() callback.
+For driver originating hints I agree regulatory_hint_regd() is a
+cleaner solution.
+
+I feel the case of two different cards, one of which uses get_regd()
+and the other wireless-regdb is a non-existent corner-case. And we're
+throwing out the baby with the bathwater.
+Why write extra code for a case that doesn't happen? How about adding
+appropriate regulatory_flags to ensure this can't happen?
+
+Overall it seems to be the API you've suggested in the previous email
+with the addition of get_regd() for usermode hints can work well,
+updating the global cfg80211_regdomain.
+
+Regards,
+Arik
