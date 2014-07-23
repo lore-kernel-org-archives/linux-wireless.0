@@ -1,67 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40697 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751611AbaGTMLC convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:39362 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756244AbaGWQiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 08:11:02 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by arrakis.dune.hu (Postfix) with ESMTP id A4F7A2807A5
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 14:08:46 +0200 (CEST)
-Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com [209.85.192.43])
-	by arrakis.dune.hu (Postfix) with ESMTPSA id C41DA2809BE
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 14:08:36 +0200 (CEST)
-Received: by mail-qg0-f43.google.com with SMTP id a108so4640494qge.30
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:10:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rw=VWjTEmQTeKzWtqhfejFEExnvqHMhWU3hjJ3m0CWGvw@mail.gmail.com>
-References: <1405854022-11833-1-git-send-email-zajec5@gmail.com>
- <1405854022-11833-2-git-send-email-zajec5@gmail.com> <CAOiHx=mi0jJQycjJSNjJ3rXrjQEB2N6JP3yg6vqcDN82tZHjzg@mail.gmail.com>
- <CACna6rw=VWjTEmQTeKzWtqhfejFEExnvqHMhWU3hjJ3m0CWGvw@mail.gmail.com>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Sun, 20 Jul 2014 14:10:29 +0200
-Message-ID: <CAOiHx=mR0NKdpXuGKvSXVm-71vhor3eSiSF58+mY43MAddfwSA@mail.gmail.com> (sfid-20140720_141107_712632_22A987AD)
-Subject: Re: [PATCH 2/2] b43: N-PHY: support setting custom TX power
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Jul 2014 12:38:18 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4 3/5] ath10k:  save firmware stack upon firmware crash.
+Date: Wed, 23 Jul 2014 09:38:05 -0700
+Message-Id: <1406133487-7541-3-git-send-email-greearb@candelatech.com> (sfid-20140723_183826_571381_6093A8DB)
+In-Reply-To: <1406133487-7541-1-git-send-email-greearb@candelatech.com>
+References: <1406133487-7541-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2014 at 1:53 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 20 July 2014 13:49, Jonas Gorski <jogo@openwrt.org> wrote:
->> On Sun, Jul 20, 2014 at 1:00 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
->>> diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
->>> index 30bec81..252d843 100644
->>> --- a/drivers/net/wireless/b43/phy_n.h
->>> +++ b/drivers/net/wireless/b43/phy_n.h
->>> @@ -967,6 +967,9 @@ struct b43_phy_n {
->>>         struct b43_phy_n_txpwrindex txpwrindex[2];
->>>         struct b43_phy_n_pwr_ctl_info pwr_ctl_info[2];
->>>         struct b43_chanspec txiqlocal_chanspec;
->>> +       struct b43_ppr *tx_pwr_max_ppr;
->>
->> Why not just make this a struct member? As far as I can tell, it will
->> always be allocated, and you would lose one alloc/free call, and
->> probably one pointer dereference.
->
-> My idea was to prevent driver parts from knowing PPR implementation
-> details. Just to don't mess with its internals and allow redesigning
-> in the future. That is why I put "struct b43_ppr_rates" in .c file and
-> all other driver parts use a pointer only.
+From: Ben Greear <greearb@candelatech.com>
 
-If this were a library used by several drivers I could understand. But
-hiding things from yourself? Seriously? ;P
+Should help debug firmware crashes, and give users a way
+to provide some useful debug reports to firmware developers.
 
->
-> Seriously, I doubt in the sense of posting RFCs :P
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  |  3 +++
+ drivers/net/wireless/ath/ath10k/debug.c |  9 ++++++++
+ drivers/net/wireless/ath/ath10k/hw.h    |  1 +
+ drivers/net/wireless/ath/ath10k/pci.c   | 41 +++++++++++++++++++++++++++++++++
+ 4 files changed, 54 insertions(+)
 
-I know that feel :p. I usually try to do a thorough code review if I
-review, and was missing the time when you posted the RFC. Also I'm
-usually a bit more lenient with RFCs as I assume this is usually a
-request for commenting on the intend of the code, and less for finding
-nitpicks/bugs.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 5c0c5bf..2f200f6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -280,10 +280,12 @@ struct ath10k_vif_iter {
+  * enum ath10k_fw_error_dump_type - types of data in the dump file
+  * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
+  * @ATH10K_FW_ERROR_DUMP_REGDUMP: Register crash dump in binary format
++ * @ATH10K_FW_ERROR_DUMP_STACK:   Stack memory contents.
+  */
+ enum ath10k_fw_error_dump_type {
+ 	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
+ 	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
++	ATH10K_FW_ERROR_DUMP_STACK = 2,
+ 
+ 	ATH10K_FW_ERROR_DUMP_MAX,
+ };
+@@ -364,6 +366,7 @@ struct ath10k_debug {
+ 	bool crashed_since_read;
+ 	struct ath10k_dbglog_entry_storage dbglog_entry_data;
+ 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
++	unsigned char stack_buf[ATH10K_FW_STACK_SIZE];
+ };
+ 
+ enum ath10k_state {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index cc81a99..6fec433 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -620,6 +620,7 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	len = hdr_len;
+ 	len += sizeof(*dump_tlv) + sizeof(ar->debug.reg_dump_values);
+ 	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
++	len += sizeof(*dump_tlv) + sizeof(ar->debug.stack_buf);
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -686,8 +687,16 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	memcpy(dump_tlv->tlv_data, &ar->debug.reg_dump_values, dump_tlv->tlv_len);
+ 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
+ 
++	/* Gather firmware stack dump */
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = ATH10K_FW_ERROR_DUMP_STACK;
++	dump_tlv->tlv_len = sizeof(ar->debug.stack_buf);
++	memcpy(dump_tlv->tlv_data, &ar->debug.stack_buf, dump_tlv->tlv_len);
++	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
++
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	WARN_ON(sofar != len);
+ 	return dump_data;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index d4df3f0..38a03e4 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -39,6 +39,7 @@
+ #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
+ 
+ #define REG_DUMP_COUNT_QCA988X 60
++#define ATH10K_FW_STACK_SIZE 4096
+ 
+ struct ath10k_fw_ie {
+ 	__le32 id;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 24ddc22..b58f1a1 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -833,6 +833,40 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
+ }
+ 
++static void ath10k_save_firmware_mem_helper(struct ath10k *ar, u32 sz,
++					    unsigned char *to, u32 addr)
++{
++	u32 host_addr;
++	u32 reg_dump_area;
++	int ret;
++
++	host_addr = host_interest_item_address(addr);
++
++	ret = ath10k_pci_diag_read_mem(ar, host_addr, &reg_dump_area,
++				       sizeof(u32));
++	if (ret != 0) {
++		ath10k_warn("failed to read FW addr: %d (addr %d)\n",
++			    ret, addr);
++		return;
++	}
++
++	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area, to, sz);
++	if (ret != 0)
++		ath10k_err("failed to read FW memory: %d (addr %d sz %d)\n",
++			   ret, reg_dump_area, sz);
++}
++
++#ifdef CONFIG_ATH10K_DEBUGFS
++/* Save the main firmware stack */
++static void ath10k_save_firmware_stack(struct ath10k *ar)
++{
++	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
++	ath10k_save_firmware_mem_helper(ar, ATH10K_FW_STACK_SIZE,
++					ar->debug.stack_buf, HI_ITEM(hi_stack));
++}
++#endif
++
++
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ {
+ 	u32 reg_dump_area = 0;
+@@ -882,6 +916,13 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 			   reg_dump_values[i + 3]);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
++	spin_lock_bh(&ar->data_lock);
++
++	if (!ar->debug.crashed_since_read)
++		ath10k_save_firmware_stack(ar);
++
++	spin_unlock_bh(&ar->data_lock);
++
+ 	/* Dump the debug logs on the target */
+ 	host_addr = host_interest_item_address(HI_ITEM(hi_dbglog_hdr));
+ 	ret = ath10k_pci_diag_read_mem(ar, host_addr,
+-- 
+1.7.11.7
 
-
-Jonas
