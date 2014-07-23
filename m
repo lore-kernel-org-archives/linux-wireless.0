@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:43624 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbaGFJgn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59249 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932719AbaGWRPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:36:43 -0400
-Received: by mail-wi0-f175.google.com with SMTP id r20so14466423wiv.14
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:36:42 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/40] iwlwifi: mvm: BT Coex - convert reduced Tx power to new API
-Date: Sun,  6 Jul 2014 12:35:50 +0300
-Message-Id: <1404639376-3792-14-git-send-email-egrumbach@gmail.com> (sfid-20140706_115954_731665_1600C3FD)
-In-Reply-To: <53B917DC.5050902@gmail.com>
-References: <53B917DC.5050902@gmail.com>
+	Wed, 23 Jul 2014 13:15:13 -0400
+Date: Wed, 23 Jul 2014 13:08:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: pull request: iwlwifi-next 2014-07-22
+Message-ID: <20140723170800.GD14162@tuxdriver.com> (sfid-20140723_191520_394413_C4F47261)
+References: <53CEB854.9000008@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53CEB854.9000008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, Jul 22, 2014 at 10:15:32PM +0300, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> here is a pull request for 3.17.
+> 
+> I have the usual amount of BT Coex stuff. Arik continues to work on TDLS and Ariej contributes a few things for HS2.0. I added a few more things to the firmware debugging infrastructure. Eran fixes a small bug - pretty normal content.
+> 
+> I merged iwlwifi-fixes to avoid a conflict. I also merged wireless-next because I needed some bits from mac80211.
+> Let me know if this causes you any trouble!
+> 
+> 
+> The following changes since commit a006827a152c3f4d09324157096c8f89cf7ddca3:
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next (2014-07-22 13:49:34 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to f697267f827516fba4d0c325ed1db1e72f402f11:
 
-No need to send the big BT_COEX_CMD command, we have now
-a much thiner command that updates only what is needed.
-Adapt the code to that.
+Pulling now...
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c | 29 +++++++----------------------
- 1 file changed, 7 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 216357a..95b86cf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -665,19 +665,11 @@ static int iwl_mvm_bt_udpate_sw_boost(struct iwl_mvm *mvm,
- static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- 				       bool enable)
- {
--	struct iwl_bt_coex_cmd_old *bt_cmd;
--	/* Send ASYNC since this can be sent from an atomic context */
--	struct iwl_host_cmd cmd = {
--		.id = BT_CONFIG,
--		.len = { sizeof(*bt_cmd), },
--		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
--		.flags = CMD_ASYNC,
--	};
-+	struct iwl_bt_coex_reduced_txp_update_cmd cmd = {};
- 	struct iwl_mvm_sta *mvmsta;
-+	u32 value;
- 	int ret;
- 
--	return 0;
--
- 	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, sta_id);
- 	if (!mvmsta)
- 		return 0;
-@@ -686,27 +678,20 @@ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- 	if (mvmsta->bt_reduced_txpower == enable)
- 		return 0;
- 
--	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_ATOMIC);
--	if (!bt_cmd)
--		return -ENOMEM;
--	cmd.data[0] = bt_cmd;
--	bt_cmd->flags = cpu_to_le32(BT_COEX_NW_OLD);
--
--	bt_cmd->valid_bit_msk =
--		cpu_to_le32(BT_VALID_ENABLE | BT_VALID_REDUCED_TX_POWER);
--	bt_cmd->bt_reduced_tx_power = sta_id;
-+	value = mvmsta->sta_id;
- 
- 	if (enable)
--		bt_cmd->bt_reduced_tx_power |= BT_REDUCED_TX_POWER_BIT;
-+		value |= BT_REDUCED_TX_POWER_BIT;
- 
- 	IWL_DEBUG_COEX(mvm, "%sable reduced Tx Power for sta %d\n",
- 		       enable ? "en" : "dis", sta_id);
- 
-+	cmd.reduced_txp = cpu_to_le32(value);
- 	mvmsta->bt_reduced_txpower = enable;
- 
--	ret = iwl_mvm_send_cmd(mvm, &cmd);
-+	ret = iwl_mvm_send_cmd_pdu(mvm, BT_COEX_UPDATE_REDUCED_TXP, CMD_ASYNC,
-+				   sizeof(cmd), &cmd);
- 
--	kfree(bt_cmd);
- 	return ret;
- }
- 
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
