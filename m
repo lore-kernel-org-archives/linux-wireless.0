@@ -1,127 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:50990 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbaGVTbP (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:34829 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756802AbaGWIZS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:31:15 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so115514wgg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:31:13 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: N-PHY: fix rev7+ typos at random places
-Date: Tue, 22 Jul 2014 21:31:05 +0200
-Message-Id: <1406057465-24264-1-git-send-email-zajec5@gmail.com> (sfid-20140722_213125_818798_C2C5E2EE)
+	Wed, 23 Jul 2014 04:25:18 -0400
+Received: by mail-we0-f182.google.com with SMTP id k48so791215wev.41
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 01:25:17 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
+References: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
+Date: Wed, 23 Jul 2014 10:25:16 +0200
+Message-ID: <CA+BoTQnngYO_AzqQnxFpWQrez-q7Z=hBUNOt+H8FybE9+fq5fA@mail.gmail.com> (sfid-20140723_102542_353532_411C6A61)
+Subject: Re: [PATCH v3 1/5] ath10k: provide firmware crash info via debugfs.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c       | 19 ++++++++++---------
- drivers/net/wireless/b43/tables_nphy.c |  4 ++--
- 2 files changed, 12 insertions(+), 11 deletions(-)
+On 23 July 2014 01:02,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Store the firmware crash registers and last 128 or so
+> firmware debug-log ids and present them to user-space
+> via debugfs.
+>
+> Should help with figuring out why the firmware crashed.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+[...]
+> +struct ath10k_dump_file_data {
+> +       /* Dump file information */
+> +       char df_magic[16]; /* ATH10K-FW-DUMP */
+> +       u32 len;
+> +       u32 big_endian; /* 0x1 if host is big-endian */
+> +       u32 version; /* File dump version, 1 for now. */
+> +
+> +       /* Some info we can get from ath10k struct that might help. */
+> +       u32 chip_id;
+> +       u32 bus_type; /* 0 for now, in place for later hardware */
+> +       u32 target_version;
+> +       u32 fw_version_major;
+> +       u32 fw_version_minor;
+> +       u32 fw_version_release;
+> +       u32 fw_version_build;
+> +       u32 phy_capability;
+> +       u32 hw_min_tx_power;
+> +       u32 hw_max_tx_power;
+> +       u32 ht_cap_info;
+> +       u32 vht_cap_info;
+> +       u32 num_rf_chains;
+> +       char fw_ver[ETHTOOL_FWVERS_LEN]; /* Firmware version string */
+> +
+> +       /* Kernel related information */
+> +       u32 tv_sec_hi; /* time-of-day stamp, high 32-bits for seconds */
+> +       u32 tv_sec_lo; /* time-of-day stamp, low 32-bits for seconds */
+> +       u32 tv_nsec_hi; /* time-of-day stamp, nano-seconds, high bits */
+> +       u32 tv_nsec_lo; /* time-of-day stamp, nano-seconds, low bits */
+> +       u32 kernel_ver_code; /* LINUX_VERSION_CODE */
+> +       char kernel_ver[64]; /* VERMAGIC_STRING */
+> +
+> +       u8 unused[128]; /* Room for growth w/out changing binary format */
+> +
+> +       u8 data[0]; /* struct ath10k_tlv_dump_data + more */
+> +} __packed;
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 11d7543..44bb58b 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -225,13 +225,13 @@ static void b43_nphy_rf_ctl_override_one_to_many(struct b43_wldev *dev,
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x2, value, core, off, 1);
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x1, value, core, off, 1);
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x2, value, core, off, 2);
--		b43_nphy_rf_ctl_override_rev7(dev, 0x0800, value, core, off, 1);
-+		b43_nphy_rf_ctl_override_rev7(dev, 0x0800, 0, core, off, 1);
- 		break;
- 	case N_RF_CTL_OVER_CMD_TX_PU:
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x4, value, core, off, 0);
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x2, value, core, off, 1);
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x1, value, core, off, 2);
--		b43_nphy_rf_ctl_override_rev7(dev, 0x0800, value, core, off, 1);
-+		b43_nphy_rf_ctl_override_rev7(dev, 0x0800, 1, core, off, 1);
- 		break;
- 	case N_RF_CTL_OVER_CMD_RX_GAIN:
- 		tmp = value & 0xFF;
-@@ -343,6 +343,7 @@ static void b43_nphy_rf_ctl_intc_override_rev7(struct b43_wldev *dev,
- 		switch (intc_override) {
- 		case N_INTC_OVERRIDE_OFF:
- 			b43_phy_write(dev, reg, 0);
-+			b43_phy_mask(dev, 0x2ff, ~0x2000);
- 			b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
- 			break;
- 		case N_INTC_OVERRIDE_TRSW:
-@@ -1596,7 +1597,7 @@ static void b43_nphy_run_samples(struct b43_wldev *dev, u16 samps, u16 loops,
- 		bool lpf_bw3, lpf_bw4;
- 
- 		lpf_bw3 = b43_phy_read(dev, B43_NPHY_REV7_RF_CTL_OVER3) & 0x80;
--		lpf_bw4 = b43_phy_read(dev, B43_NPHY_REV7_RF_CTL_OVER3) & 0x80;
-+		lpf_bw4 = b43_phy_read(dev, B43_NPHY_REV7_RF_CTL_OVER4) & 0x80;
- 
- 		if (lpf_bw3 || lpf_bw4) {
- 			/* TODO */
-@@ -2117,7 +2118,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
- 						     N_RF_CTL_OVER_CMD_RX_PU,
- 						     1, 0, false);
- 		b43_nphy_rf_ctl_override_rev7(dev, 0x80, 1, 0, false, 0);
--		b43_nphy_rf_ctl_override_rev7(dev, 0x80, 1, 0, false, 0);
-+		b43_nphy_rf_ctl_override_rev7(dev, 0x40, 1, 0, false, 0);
- 		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
- 			b43_nphy_rf_ctl_override_rev7(dev, 0x20, 0, 0, false,
- 						      0);
-@@ -3543,7 +3544,7 @@ static void b43_nphy_stop_playback(struct b43_wldev *dev)
- 		nphy->bb_mult_save = 0;
- 	}
- 
--	if (phy->rev >= 7) {
-+	if (phy->rev >= 7 && nphy->lpf_bw_overrode_for_sample_play) {
- 		if (phy->rev >= 19)
- 			b43_nphy_rf_ctl_override_rev19(dev, 0x80, 0, 0, true,
- 						       1);
-@@ -3962,9 +3963,9 @@ static void b43_nphy_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
- 		b43_nphy_ipa_internal_tssi_setup(dev);
- 
- 	if (phy->rev >= 19)
--		b43_nphy_rf_ctl_override_rev19(dev, 0x2000, 0, 3, false, 0);
-+		b43_nphy_rf_ctl_override_rev19(dev, 0x1000, 0, 3, false, 0);
- 	else if (phy->rev >= 7)
--		b43_nphy_rf_ctl_override_rev7(dev, 0x2000, 0, 3, false, 0);
-+		b43_nphy_rf_ctl_override_rev7(dev, 0x1000, 0, 3, false, 0);
- 	else if (phy->rev >= 3)
- 		b43_nphy_rf_ctl_override(dev, 0x2000, 0, 3, false);
- 
-@@ -3977,9 +3978,9 @@ static void b43_nphy_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
- 	b43_nphy_rssi_select(dev, 0, N_RSSI_W1);
- 
- 	if (phy->rev >= 19)
--		b43_nphy_rf_ctl_override_rev19(dev, 0x2000, 0, 3, true, 0);
-+		b43_nphy_rf_ctl_override_rev19(dev, 0x1000, 0, 3, true, 0);
- 	else if (phy->rev >= 7)
--		b43_nphy_rf_ctl_override_rev7(dev, 0x2000, 0, 3, true, 0);
-+		b43_nphy_rf_ctl_override_rev7(dev, 0x1000, 0, 3, true, 0);
- 	else if (phy->rev >= 3)
- 		b43_nphy_rf_ctl_override(dev, 0x2000, 0, 3, true);
- 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index ab27c2d..4b58850 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3109,11 +3109,11 @@ static const struct nphy_rf_control_override_rev7
- 	{ 0x0010, 0x07A, 0x07D, 0x0010, 4 },
- 	{ 0x0020, 0x07A, 0x07D, 0x0020, 5 },
- 	{ 0x0040, 0x07A, 0x07D, 0x0040, 6 },
--	{ 0x0080, 0x0F8, 0x0FA, 0x0080, 7 },
-+	{ 0x0080, 0x07A, 0x07D, 0x0080, 7 },
- 	{ 0x0400, 0x0F8, 0x0FA, 0x0070, 4 },
- 	{ 0x0800, 0x07B, 0x07E, 0xFFFF, 0 },
- 	{ 0x1000, 0x07C, 0x07F, 0xFFFF, 0 },
--	{ 0x6000, 0x348, 0x349, 0xFFFF, 0 },
-+	{ 0x6000, 0x348, 0x349, 0x00FF, 0 },
- 	{ 0x2000, 0x348, 0x349, 0x000F, 0 },
- };
- 
--- 
-1.8.4.5
+I think it would be a lot better if this format had a fixed endianess
+(__le/__be instead of u32). But see below.
 
+
+> +static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+[...]
+> +       getnstimeofday(&timestamp);
+> +       dump_data->tv_sec_hi = timestamp.tv_sec >> 32;
+> +       dump_data->tv_sec_lo = timestamp.tv_sec;
+> +       dump_data->tv_nsec_hi = timestamp.tv_nsec >> 32;
+> +       dump_data->tv_nsec_lo = timestamp.tv_nsec;
+> +
+> +       spin_lock_irqsave(&ar->data_lock, flags);
+
+You can't just use _irqsave with data_lock like that. You have to
+convert *all* data_lock usages from _bh to _irqsave.
+
+Is it really necessary to use the _irqsave here anyway? We can
+probably make sure dump function is never called directly from an
+interrupt. I think that's already the case anyway.
+
+
+> +/* Target debug log related defines and structs */
+> +
+> +/* Target is 32-bit CPU, so we just use u32 for
+> + * the pointers.  The memory space is relative to the
+> + * target, not the host.
+> + */
+> +struct ath10k_fw_dbglog_buf {
+> +       u32 next; /* pointer to dblog_buf_s. */
+> +       u32 buffer; /* pointer to u8 buffer */
+> +       u32 bufsize;
+> +       u32 length;
+> +       u32 count;
+> +       u32 free;
+> +} __packed;
+> +
+> +struct ath10k_fw_dbglog_hdr {
+> +       u32 dbuf; /* pointer to dbglog_buf_s */
+> +       u32 dropped;
+> +} __packed;
+
+These structures are target device specific, right? Since the target
+is little-endian I'd think these structures should be defined as such
+(i.e. __le32 instead of u32).
+
+But then ath10k_pci_diag_read/write_mem() do byte-swapping
+automatically (hint: they shouldn't, but since it's my fault I guess I
+should be the one to fix it up.. :).
+
+This would also explain why you defined a big_endian bool in the dump
+structure instead of using __be/__le and explicit conversion. It's all
+good until you start dumping RAM and try to deal with non-word data
+(e.g. mac addresses).
+
+
+Michał
