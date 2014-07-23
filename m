@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:65190 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932143AbaGVT1u (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:54096
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751549AbaGWNlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:50 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so1012212wib.2
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:49 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 23 Jul 2014 09:41:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/20] iwlwifi: mvm: reset beacon filtering and BT Coex data upon FW restart
-Date: Tue, 22 Jul 2014 22:26:50 +0300
-Message-Id: <1406057211-31752-19-git-send-email-egrumbach@gmail.com> (sfid-20140722_212755_164412_E05859C9)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+Cc: linville@tuxdriver.com, antonio@open-mesh.com
+Subject: [PATCH] ath9k: fix aggregation session lockup
+Date: Wed, 23 Jul 2014 15:40:54 +0200
+Message-Id: <1406122854-60239-1-git-send-email-nbd@openwrt.org> (sfid-20140723_154113_711218_DF924617)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+If an aggregation session fails, frames still end up in the driver queue
+with IEEE80211_TX_CTL_AMPDU set.
+This causes tx for the affected station/tid to stall, since
+ath_tx_get_tid_subframe returning packets to send.
 
-When the firmware asserts, we restart the device and reset
-the relevant data we hold in the driver. BT Coex data was
-not reset and because of that, the driver wouldn't
-reconfigure the firmware properly after firmware restart.
-Same for beacon filtering. Fix that.
+Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
+session is running.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: stable@vger.kernel.org
+Reported-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/ath9k/xmit.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 01af86a..634bb7b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -668,6 +668,7 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
- 	spin_unlock_bh(&mvm->time_event_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3611529..704fcbc 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -897,6 +897,15 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
  
- 	mvmvif->phy_ctxt = NULL;
-+	memset(&mvmvif->bf_data, 0, sizeof(mvmvif->bf_data));
- }
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-@@ -795,6 +796,12 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
- 	iwl_mvm_reset_phy_ctxts(mvm);
- 	memset(mvm->fw_key_table, 0, sizeof(mvm->fw_key_table));
- 	memset(mvm->sta_drained, 0, sizeof(mvm->sta_drained));
-+	memset(&mvm->last_bt_notif, 0, sizeof(mvm->last_bt_notif));
-+	memset(&mvm->last_bt_notif_old, 0, sizeof(mvm->last_bt_notif_old));
-+	memset(&mvm->last_bt_ci_cmd, 0, sizeof(mvm->last_bt_ci_cmd));
-+	memset(&mvm->last_bt_ci_cmd_old, 0, sizeof(mvm->last_bt_ci_cmd_old));
-+	memset(&mvm->bt_ack_kill_msk, 0, sizeof(mvm->bt_ack_kill_msk));
-+	memset(&mvm->bt_cts_kill_msk, 0, sizeof(mvm->bt_cts_kill_msk));
- 
- 	ieee80211_wake_queues(mvm->hw);
- 
+ 		tx_info = IEEE80211_SKB_CB(skb);
+ 		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
++
++		/*
++		 * No aggregation session is running, but there may be frames
++		 * from a previous session or a failed attempt in the queue.
++		 * Send them out as normal data frames
++		 */
++		if (!tid->active)
++			tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
++
+ 		if (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
+ 			bf->bf_state.bf_type = 0;
+ 			return bf;
 -- 
-1.8.3.2
+1.8.5.2 (Apple Git-48)
 
