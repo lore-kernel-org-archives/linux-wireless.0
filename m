@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:60213 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbaGJFzy (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59618 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932179AbaGWXMB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 01:55:54 -0400
-From: Anil Belur <askb23@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Anil Belur <askb23@gmail.com>
-Subject: [PATCH 2/2] staging: rtl8723au: core: rtw_cmd.c - removed NULL pointer check before kfree()
-Date: Thu, 10 Jul 2014 11:25:37 +0530
-Message-Id: <1404971737-9737-2-git-send-email-askb23@gmail.com> (sfid-20140710_075619_039718_B58B6549)
-In-Reply-To: <1404971737-9737-1-git-send-email-askb23@gmail.com>
-References: <1404971737-9737-1-git-send-email-askb23@gmail.com>
+	Wed, 23 Jul 2014 19:12:01 -0400
+Date: Wed, 23 Jul 2014 16:12:00 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] staging: vt6655: Fix Warning on boot
+ handle_irq_event_percpu.
+Message-ID: <20140723231200.GB31075@kroah.com> (sfid-20140724_011208_155608_77860D24)
+References: <1406147712-3152-1-git-send-email-tvboxspy@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1406147712-3152-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anil Belur <askb23@gmail.com>
+On Wed, Jul 23, 2014 at 09:35:11PM +0100, Malcolm Priestley wrote:
+> WARNING: CPU: 0 PID: 929 at /home/apw/COD/linux/kernel/irq/handle.c:147 handle_irq_event_percpu+0x1d1/0x1e0()
+> irq 17 handler device_intr+0x0/0xa80 [vt6655_stage] enabled interrupts
+> 
+> Using spin_lock_irqsave appears to fix this.
+> 
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> Cc: <stable@vger.kernel.org>
 
-- as kfree() internally checks for NULL, additional check it not
-required.
+So should both of these go into the 3.16-final kernel release?
 
-Signed-off-by: Anil Belur <askb23@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_cmd.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+thanks,
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index 1696cb8..b160780 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -516,8 +516,7 @@ int rtw_joinbss_cmd23a(struct rtw_adapter *padapter,
- 
- 	psecnetwork = &psecuritypriv->sec_bss;
- 	if (!psecnetwork) {
--		if (pcmd)
--			kfree(pcmd);
-+		kfree(pcmd);
- 
- 		res = _FAIL;
- 
--- 
-1.9.1
-
+greg k-h
