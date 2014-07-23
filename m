@@ -1,130 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:58782 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964792AbaGESYx (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:37095 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757973AbaGWOt1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2014 14:24:53 -0400
-Received: by mail-we0-f172.google.com with SMTP id u57so2683194wes.3
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:52 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/8] staging: vt6656: vnt_rf_set_txpower use power for priv->byCurPwr
-Date: Sat,  5 Jul 2014 19:24:21 +0100
-Message-Id: <1404584667-3582-2-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202457_019871_D95A371E)
-In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
-References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 23 Jul 2014 10:49:27 -0400
+Received: by mail-we0-f169.google.com with SMTP id u56so1342033wes.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 07:49:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1406125788.14675.0.camel@jlt4.sipsolutions.net>
+References: <1405859555-31806-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1405859555-31806-2-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1405937608.32255.15.camel@jlt4.sipsolutions.net>
+	<CAA2SeNKL1ZQq_G6My1Fz+vmptML1RwjTjzxBM5v8sbXCq8C0nQ@mail.gmail.com>
+	<1406125788.14675.0.camel@jlt4.sipsolutions.net>
+Date: Wed, 23 Jul 2014 16:49:26 +0200
+Message-ID: <CAA2SeNKmrMJRd6sm3BDoUxUOxwJbHsnApsWGh_TacA9NF5oWdQ@mail.gmail.com> (sfid-20140723_164940_414828_C494E6C9)
+Subject: Re: [PATCH 1/2] cfg80211: add enable_dynack API
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Philippe Duchein <wireless-dev@duchein.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The byCurPwr value can change state while in another thread,.
+> On Wed, 2014-07-23 at 00:56 +0200, Lorenzo Bianconi wrote:
+>
+>> > I think it may be better to handle this in the call that's normally used
+>> > (coverage class setting), but allow the other attribute to make a sort
+>> > of "dynamic coverage class". And internally, calling drivers, it seems
+>> > fine to pass -1 or so since you can extend the datatype there, instead
+>> > of introducing a new internal callback. External/internal doesn't always
+>> > have to match perfectly.
+>> >
+>>
+>> So we can pass coverage class equal to -1 to lower drivers in order to
+>> enable ack timeout estimation. In this case I have to modify driver
+>> routine signature in p54, ath5k and ath9k drivers. Moreover in
+>> cfg80211/mac80211 stack we can take into account dynamic coverage
+>> class using s16 datatype instead of u8 for coverage_class in wiphy
+>> data structure.
+>
+> Right. But that seems reasonable, no?
 
-Change to local variable power which is the last set value.
+Yes, it sounds good for me. Moreover using s16 as datatype for
+coverage_class in wiphy structure allows to detect if dynack is
+enabled using iw (i.e. iw phy phy0 info)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rf.c | 28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+>
+> johannes
+>
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 8c2c2bd..971f844 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -821,11 +821,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 
- 	switch (priv->byRFType) {
- 	case RF_AL2230:
--		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
-+		if (power >= AL2230_PWR_IDX_LEN)
- 			return false;
- 
--		ret &= vnt_rf_write_embedded(priv,
--			al2230_power_table[priv->byCurPwr]);
-+		ret &= vnt_rf_write_embedded(priv, al2230_power_table[power]);
- 
- 		if (rate <= RATE_11M)
- 			ret &= vnt_rf_write_embedded(priv, 0x0001b400 +
-@@ -835,11 +834,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 				(BY_AL2230_REG_LEN << 3) + IFREGCTL_REGW);
- 		break;
- 	case RF_AL2230S:
--		if (priv->byCurPwr >= AL2230_PWR_IDX_LEN)
-+		if (power >= AL2230_PWR_IDX_LEN)
- 			return false;
- 
--		ret &= vnt_rf_write_embedded(priv,
--			al2230_power_table[priv->byCurPwr]);
-+		ret &= vnt_rf_write_embedded(priv, al2230_power_table[power]);
- 
- 		if (rate <= RATE_11M) {
- 			ret &= vnt_rf_write_embedded(priv, 0x040c1400 +
-@@ -862,14 +860,14 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 			ret &= vnt_rf_write_embedded(priv, 0x221bb900 +
- 				(BY_AL7230_REG_LEN << 3)+IFREGCTL_REGW);
- 
--		if (priv->byCurPwr > AL7230_PWR_IDX_LEN)
-+		if (power >= AL7230_PWR_IDX_LEN)
- 			return false;
- 
- 		/*
- 		* 0x080F1B00 for 3 wire control TxGain(D10)
- 		* and 0x31 as TX Gain value
- 		*/
--		power_setting = 0x080c0b00 | ((priv->byCurPwr) << 12) |
-+		power_setting = 0x080c0b00 | (power << 12) |
- 				(BY_AL7230_REG_LEN << 3) | IFREGCTL_REGW;
- 
- 		ret &= vnt_rf_write_embedded(priv, power_setting);
-@@ -877,22 +875,22 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 		break;
- 
- 	case RF_VT3226:
--		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
-+		if (power >= VT3226_PWR_IDX_LEN)
- 			return false;
--		power_setting = ((0x3f - priv->byCurPwr) << 20) | (0x17 << 8) |
-+		power_setting = ((0x3f - power) << 20) | (0x17 << 8) |
- 				(BY_VT3226_REG_LEN << 3) | IFREGCTL_REGW;
- 
- 		ret &= vnt_rf_write_embedded(priv, power_setting);
- 
- 		break;
- 	case RF_VT3226D0:
--		if (priv->byCurPwr >= VT3226_PWR_IDX_LEN)
-+		if (power >= VT3226_PWR_IDX_LEN)
- 			return false;
- 
- 		if (rate <= RATE_11M) {
- 			u16 hw_value = priv->hw->conf.chandef.chan->hw_value;
- 
--			power_setting = ((0x3f-priv->byCurPwr) << 20) |
-+			power_setting = ((0x3f - power) << 20) |
- 				(0xe07 << 8) | (BY_VT3226_REG_LEN << 3) |
- 						IFREGCTL_REGW;
- 
-@@ -915,7 +913,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 			dev_dbg(&priv->usb->dev,
- 					"@@@@ vnt_rf_set_txpower> 11G mode\n");
- 
--			power_setting = ((0x3f-priv->byCurPwr) << 20) |
-+			power_setting = ((0x3f - power) << 20) |
- 				(0x7 << 8) | (BY_VT3226_REG_LEN << 3) |
- 					IFREGCTL_REGW;
- 
-@@ -930,10 +928,10 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 		break;
- 
- 	case RF_VT3342A0:
--		if (priv->byCurPwr >= VT3342_PWR_IDX_LEN)
-+		if (power >= VT3342_PWR_IDX_LEN)
- 			return false;
- 
--		power_setting =  ((0x3F-priv->byCurPwr) << 20) |
-+		power_setting =  ((0x3f - power) << 20) |
- 			(0x27 << 8) | (BY_VT3342_REG_LEN << 3) |
- 					IFREGCTL_REGW;
- 
+Lorenzo
+
 -- 
-1.9.1
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
