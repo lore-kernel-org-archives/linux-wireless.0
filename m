@@ -1,119 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:47154 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754250AbaGNMrg (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:50688 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbaGWFsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 08:47:36 -0400
-Received: by mail-wi0-f170.google.com with SMTP id f8so1490644wiw.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2014 05:47:34 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: handle attention flags correctly when A-MSDU
-Date: Mon, 14 Jul 2014 14:47:21 +0200
-Message-Id: <1405342041-7114-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140714_144740_343022_E36D5619)
+	Wed, 23 Jul 2014 01:48:51 -0400
+Received: by mail-pd0-f181.google.com with SMTP id g10so950218pdj.26
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 22:48:49 -0700 (PDT)
+Message-ID: <53CF4CBE.9020402@aurabindo.in> (sfid-20140723_074854_658666_C4CF8722)
+Date: Wed, 23 Jul 2014 11:18:46 +0530
+From: Jay Aurabind <mail@aurabindo.in>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, iwl@linux.intel.com
+Subject: [HELP] Intel 7260 powering up / down wifi inconsistency
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of A-MSDU RX we should check flags for all
-MSDU subframes to be sure we have correct FCS status.
+Dear all,
 
-Before we check attention flags only for first frame
-where we didn't have correct info about FCS status in
-case of A-MSDU. Next didn't mark RX_FLAG_FAILED_FCS_CRC
-for skb. As a side efect we see big TP drop when TCP used.
-This was easy to reproduce when AP interface was used
-and added monitor interface run in promiscuous mode.
+I know this is devel list, but iwlwifi web page points here for support. So here we go.
 
-Reported-by: Denton Gentry <denton.gentry@gmail.com>
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |   23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+Initially, I couldnt turn off wifi. I am currently on Ubuntu 14.04 (fresh install). I tried the following commands:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6c102b1..9f704fe 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -307,7 +307,8 @@ static void ath10k_htt_rx_free_msdu_chain(struct sk_buff *skb)
- static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 				   u8 **fw_desc, int *fw_desc_len,
- 				   struct sk_buff **head_msdu,
--				   struct sk_buff **tail_msdu)
-+				   struct sk_buff **tail_msdu,
-+				   u32 *attention)
- {
- 	int msdu_len, msdu_chaining = 0;
- 	struct sk_buff *msdu;
-@@ -358,6 +359,11 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 			break;
- 		}
- 
-+		*attention |= __le32_to_cpu(rx_desc->attention.flags) &
-+					    (RX_ATTENTION_FLAGS_TKIP_MIC_ERR |
-+					     RX_ATTENTION_FLAGS_DECRYPT_ERR |
-+					     RX_ATTENTION_FLAGS_FCS_ERR |
-+					     RX_ATTENTION_FLAGS_MGMT_TYPE);
- 		/*
- 		 * Copy the FW rx descriptor for this MSDU from the rx
- 		 * indication message into the MSDU's netbuf. HL uses the
-@@ -1233,13 +1239,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
- 			struct sk_buff *msdu_head, *msdu_tail;
- 
-+			attention = 0;
- 			msdu_head = NULL;
- 			msdu_tail = NULL;
- 			ret = ath10k_htt_rx_amsdu_pop(htt,
- 						      &fw_desc,
- 						      &fw_desc_len,
- 						      &msdu_head,
--						      &msdu_tail);
-+						      &msdu_tail,
-+						      &attention);
- 
- 			if (ret < 0) {
- 				ath10k_warn("failed to pop amsdu from htt rx ring %d\n",
-@@ -1251,7 +1259,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			rxd = container_of((void *)msdu_head->data,
- 					   struct htt_rx_desc,
- 					   msdu_payload);
--			attention = __le32_to_cpu(rxd->attention.flags);
- 
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
- 							 status,
-@@ -1304,6 +1311,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	u8 *fw_desc;
- 	int fw_desc_len, hdrlen, paramlen;
- 	int trim;
-+	u32 attention = 0;
- 
- 	fw_desc_len = __le16_to_cpu(frag->fw_rx_desc_bytes);
- 	fw_desc = (u8 *)frag->fw_msdu_rx_desc;
-@@ -1313,7 +1321,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	spin_lock_bh(&htt->rx_ring.lock);
- 	ret = ath10k_htt_rx_amsdu_pop(htt, &fw_desc, &fw_desc_len,
--				      &msdu_head, &msdu_tail);
-+				      &msdu_head, &msdu_tail,
-+				      &attention);
- 	spin_unlock_bh(&htt->rx_ring.lock);
- 
- 	ath10k_dbg(ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
-@@ -1330,10 +1339,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	hdr = (struct ieee80211_hdr *)msdu_head->data;
- 	rxd = (void *)msdu_head->data - sizeof(*rxd);
--	tkip_mic_err = !!(__le32_to_cpu(rxd->attention.flags) &
--				RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
--	decrypt_err = !!(__le32_to_cpu(rxd->attention.flags) &
--				RX_ATTENTION_FLAGS_DECRYPT_ERR);
-+	tkip_mic_err = !!(attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
-+	decrypt_err = !!(attention & RX_ATTENTION_FLAGS_DECRYPT_ERR);
- 	fmt = MS(__le32_to_cpu(rxd->msdu_start.info1),
- 			RX_MSDU_START_INFO1_DECAP_FORMAT);
- 
--- 
-1.7.9.5
+Via NetworkManger "nmcli nm wifi off"
+Via TLP "wifi off"
+Via Unity GUI, Network Menu-> Uncheck "Enable WiFi"
+
+These were the methods that I successfully used to switch off wifi in my previous laptop with an atheros card. However, with this "HP ENVY 15T J100" with Intel 7260 Card (possibly single band version), I cannot "really" turn off the wifi and bluetooth. Even when they show turned off in GUI, I mobile can pick them up (confirmed for bluetooth only).
+
+In the default state (after powerup), "rfkill list" gives:
+
+0: phy0: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+1: hci0: Bluetooth
+	Soft blocked: no
+	Hard blocked: no
+
+If I give "rfkill block all", I get this:
+
+0: phy0: Wireless LAN
+	Soft blocked: yes
+	Hard blocked: no
+1: hci0: Bluetooth
+	Soft blocked: yes
+	Hard blocked: no
+
+Output of "dmesg | grep iwlwifi" is:
+
+[    9.489423] iwlwifi 0000:07:00.0: irq 47 for MSI/MSI-X
+[    9.633385] iwlwifi 0000:07:00.0: loaded firmware version 22.24.8.0 op_mode iwlmvm
+[   10.339967] iwlwifi 0000:07:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
+[   10.340063] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
+[   10.340323] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
+[   15.750742] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
+[   15.751091] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
+
+
+This laptop does not have a dedicated physical wifi "switch". However, F12 is muxed with this function, and also hosts the wifi indicator led.
+
+I've noticed that while system is booting up, the wifi is in off state because wifi indicator is orange color, called  "Airplane Mode" in windows 8. This laptop came with win8. Before I wiped it out, I put it to Airplane mode. As soon as Ubuntu starts up, wifi indicator becomes white. 
+
+But things arent that worse. After I configured tlp to "block" all radio device on startup, wifi & bluetooth is "really" turned off. Now if I use nmcli, I can turn on/off the wifi.
+
+So my question is: Why didnt it work the first time (before configuring TLP to disable radio at startup). Doest this behavior indicate a bug ? I actually dont remember if my previous laptop set up, whether I could / couldnt switch wifi *before* configuring TLP to block wifi with nmcli.
+
+Cheers,
+Aurabindo
 
