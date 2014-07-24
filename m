@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:45659 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757276AbaGRIMN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 04:12:13 -0400
-Date: Fri, 18 Jul 2014 18:12:00 +1000
-From: James Cameron <quozl@laptop.org>
-To: Andreas Fenkart <afenkart@gmail.com>
-Cc: linux-wireless@vger.kernel.org, bzhao@marvell.com,
-	daniel@zonque.org
-Subject: Re: [PATCH] mwifiex: card reset: enable rescan of non-removable card
-Message-ID: <20140718081200.GQ13892@us.netrek.org> (sfid-20140718_101231_523206_4E1BAFB2)
-References: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23078 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932207AbaGXQAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2014 12:00:23 -0400
+Message-ID: <1406217620.5015.2.camel@dcbw.local> (sfid-20140724_180030_130896_D3150D34)
+Subject: Re: How to get RSSI periodically
+From: Dan Williams <dcbw@redhat.com>
+To: Jean-Marie Lemetayer <jeanmarie.lemetayer@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 24 Jul 2014 11:00:20 -0500
+In-Reply-To: <CAAdc0hyDepy7zn+1TQsjcZpkSkQrwFhbkPBJoH0vYKqbqkktAg@mail.gmail.com>
+References: <CAAdc0hyDepy7zn+1TQsjcZpkSkQrwFhbkPBJoH0vYKqbqkktAg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 18, 2014 at 10:00:37AM +0200, Andreas Fenkart wrote:
-> mmc_rescan will scan for non-removable cards only once, hence the card
-> will not be rediscovered.
+On Thu, 2014-07-24 at 17:25 +0200, Jean-Marie Lemetayer wrote:
+> Hi,
 > 
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
-> ---
->  drivers/net/wireless/mwifiex/sdio.c | 1 +
->  1 file changed, 1 insertion(+)
+> I am looking for a way to get the RSSI of the SELECTED network with
+> the wpa_supplicant (2.1). To update periodically the status connection
+> icon of my app.
 > 
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index 4ce3d7b..eff3d6e 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
-> @@ -1931,6 +1931,7 @@ static void sdio_card_reset_worker(struct work_struct *work)
->  	mmc_remove_host(target);
->  	/* 20ms delay is based on experiment with sdhci controller */
->  	mdelay(20);
-> +	reset_host->rescan_entered = 0; /* rescan non-removable cards */
->  	mmc_add_host(target);
->  }
->  static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
+> I known that I can get it with the command: 'bss <bssid>' but it seems
+> that this information is updated only when perform a scan.
+> 
+> Have I miss something simpler than doing a background scan on the freq
+> of the SELECTED network ?
 
-Thanks!  Maybe that was my problem.
+Try the SIGNAL_POLL control interface command (called "signal_poll" for
+wpa_cli).
 
--- 
-James Cameron
-http://quozl.linux.org.au/
+Dan
+
