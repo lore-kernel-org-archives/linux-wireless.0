@@ -1,88 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f48.google.com ([209.85.213.48]:53954 "EHLO
-	mail-yh0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933437AbaGWWDS (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:59564 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbaGXKjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 18:03:18 -0400
-Date: Wed, 23 Jul 2014 19:03:11 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-07-23
-Message-ID: <20140723220311.GD1628@joana> (sfid-20140724_000335_157160_FC3A3989)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DiL7RhKs8rK9YGuF"
+	Thu, 24 Jul 2014 06:39:53 -0400
+Received: by mail-we0-f179.google.com with SMTP id u57so2571685wes.10
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 03:39:52 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCHv2 1/2] iw: sync nl80211_attrs
+Date: Thu, 24 Jul 2014 12:39:47 +0200
+Message-Id: <1406198388-5040-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140724_123956_461377_BBC48542)
+In-Reply-To: <1406198388-5040-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1406198388-5040-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sync nl80211_attrs with mac80211 stack
 
---DiL7RhKs8rK9YGuF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi John,
-
-Some last minute fixes for -next. We have a fix for a use after free in
-RFCOMM, another fix to an issue with ADV_DIRECT_IND and one for ADV_IND with
-auto-connection handling.  Last, we added support for reading the codec and
-MWS setting for controllers that support these features.
-
-Please pull! Thanks!
-
-	Gustavo
-
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
-The following changes since commit c2aef6e8cbebd60f79555baeb9266e220f135a44:
+ nl80211.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-  Bluetooth: Add support for Broadcom device of Asus Z97-DELUXE motherboard (2014-07-21 15:07:08 +0300)
+diff --git a/nl80211.h b/nl80211.h
+index be9519b..f1db15b 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -1591,6 +1591,9 @@ enum nl80211_commands {
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed
+  *
++ * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
++ *	the TDLS link initiator.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1931,6 +1934,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
+ 
++	NL80211_ATTR_TDLS_INITIATOR,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+-- 
+1.9.1
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git master
-
-for you to fetch changes up to 4b9e7e7516135b1d5f047ad59188b5355bacc106:
-
-  Bluetooth: Fix issue with ADV_IND reports and auto-connection handling (2014-07-24 00:37:23 +0300)
-
-----------------------------------------------------------------
-Marcel Holtmann (4):
-      Bluetooth: Read list of local codecs supported by the controller
-      Bluetooth: Get MWS transport configuration of the controller
-      Bluetooth: Ignore ADV_DIRECT_IND attempts from unknown devices
-      Bluetooth: Fix issue with ADV_IND reports and auto-connection handling
-
-Vignesh Raman (1):
-      Bluetooth: Avoid use of session socket after the session gets freed
-
- include/net/bluetooth/hci.h      |  4 ++++
- include/net/bluetooth/hci_core.h |  1 +
- net/bluetooth/hci_core.c         |  9 +++++++++
- net/bluetooth/hci_event.c        | 33 ++++++++++++++++++++++++++-------
- net/bluetooth/mgmt.c             |  9 ++++++---
- net/bluetooth/rfcomm/core.c      |  7 +++++--
- 6 files changed, 51 insertions(+), 12 deletions(-)
-
---DiL7RhKs8rK9YGuF
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJT0DEfAAoJEPs3PUX4s20ojjEQALgjJ05wDu6l0B/4OId4SgqF
-Brb1f5+PlDV4to5je968rUqPGUvYP647Swho7fikYDZ+1I1Gm3pnDYSUY6CcTINr
-buiEC++QAVmTbgEazHW1MboLobBeBWuXDlrpl+fZbtOIqgCRM3fYRXQL9LHuA7dB
-t9W52/EGBpjzmFoFABVuVaPzm7GDSVXBPkOQ5/0ilKtr5dU/L4Q2pz0KDfm4p2jn
-msaNNiXy9zGbrvXr23aSm+nYz3KPcw/ABJA5LOdUwTj8pvre/gj4JV8DkCu/xnvA
-WimUUwiUUshDpB38PIVOr9EL+cfKW6DRQfdhXG00Dz2O95dTiEn4X9dE4qeb9fF/
-wv8EfnIsibGQfN3bRm9866garnf1dghQzKTVr7OdDobTE6LWBzvx+siuTis2R9Rf
-2pLVO9z7HtwBalOEpB3bPGVxMJNHsL8cp+cKaM2mXWNaUiR9conT1VQMCnq1FbkH
-zC4BS16USMZmo0KK3nN/UPypVoDRcB5Y9oW7D5Nw3BYjVuZ9kIykEcHJK4LUezWZ
-suxQR243himj1k5iNSI5VAX7EQxVQf+e2gEsmjpeWeoz7M9lSDCZ6CroNtnY9pEM
-PxOY4yShaRzGkp1CLEmD9uEaLlJyzszHShW+BSphOiXsHONmb5jPJHgVyCQhy2vA
-yL+zNO3dOKo405bCfyLm
-=Mxyf
------END PGP SIGNATURE-----
-
---DiL7RhKs8rK9YGuF--
