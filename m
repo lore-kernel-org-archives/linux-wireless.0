@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:64399 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbaGUIPY (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:45684 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758527AbaGXMzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 04:15:24 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Fabian Frederick <fabf@skynet.be>
-Cc: linux-kernel@vger.kernel.org, davem@davemloft.net, joe@perches.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 15/30] carl9170: remove unnecessary break after return
-Date: Mon, 21 Jul 2014 10:15:07 +0200
-Message-ID: <3022358.4W3VLEbhdR@blech> (sfid-20140721_101553_468929_6C705A0F)
-In-Reply-To: <1405866332-24652-6-git-send-email-fabf@skynet.be>
-References: <1405866332-24652-1-git-send-email-fabf@skynet.be> <1405866332-24652-6-git-send-email-fabf@skynet.be>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 24 Jul 2014 08:55:09 -0400
+Message-ID: <1406206505.6621.4.camel@umadbro> (sfid-20140724_145535_710669_81BA1F78)
+Subject: Re: [PATCH v2] cfg80211: Try multiple bandwidths when checking
+ usable channels.
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Thu, 24 Jul 2014 14:55:05 +0200
+In-Reply-To: <1406205820-18152-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1406205820-18152-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 20, 2014 04:25:16 PM Fabian Frederick wrote:
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+On Thu, 2014-07-24 at 14:43 +0200, Rostislav Lisovy wrote:
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index e46c437..919f759 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3679,6 +3679,8 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+>   * freq_reg_info - get regulatory information for the given frequency
+>   * @wiphy: the wiphy for which we want to process this rule for
+>   * @center_freq: Frequency in KHz for which we want regulatory information for
+> + * @desired_bw_khz: The bandwidth of the channel in KHz we want regulatory
+> + *                  information for
 
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
->  drivers/net/wireless/ath/carl9170/phy.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
-> index ab4ee7d..b80b213 100644
-> --- a/drivers/net/wireless/ath/carl9170/phy.c
-> +++ b/drivers/net/wireless/ath/carl9170/phy.c
-> @@ -1139,7 +1139,6 @@ static int carl9170_set_freq_cal_data(struct ar9170 *ar,
->  
->  	default:
->  		return -EINVAL;
-> -		break;
->  	}
->  
->  	for (; i >= 0; i--) {
-> 
+Forgot to add this:
+... or 0 to use the default bandwidth (20MHz)
+
+
+Best regards;
+Rostislav Lisovy
 
