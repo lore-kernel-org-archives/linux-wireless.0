@@ -1,115 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:45047 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756124AbaGNVIY (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:47096 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbaGXWex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:08:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140702143003.GA13564@tuxdriver.com>
-References: <1404245874-350-1-git-send-email-linville@tuxdriver.com>
- <20140702001936.GQ27687@wotan.suse.de> <20140702143003.GA13564@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Mon, 14 Jul 2014 14:08:02 -0700
-Message-ID: <CAB=NE6U3PMsatwcczO6hrfe+2z3mN9n9zcX0tgy5iTbCRNRcmw@mail.gmail.com> (sfid-20140714_230843_459072_ABE2729E)
-Subject: Re: [PATCH] wireless: fixup genregdb.awk for remove of antenna gain
- from wireless-regdb
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Kees Cook <keescook@chromium.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>, linux-firmware@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 Jul 2014 18:34:53 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so3427283wgh.30
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 15:34:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/5] staging: vt6656: power.h remove dead macros
+Date: Thu, 24 Jul 2014 23:34:16 +0100
+Message-Id: <1406241258-10025-3-git-send-email-tvboxspy@gmail.com> (sfid-20140725_003457_382357_99EF9C8D)
+In-Reply-To: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
+References: <1406241258-10025-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 2, 2014 at 7:30 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Wed, Jul 02, 2014 at 02:19:36AM +0200, Luis R. Rodriguez wrote:
->> On Tue, Jul 01, 2014 at 04:17:54PM -0400, John W. Linville wrote:
->> > Since "wireless-regdb: remove antenna gain" was merged in the
->> > wireless-regdb tree, this script has been incompatible with the
->> > 'official' regulatory database.  Let's fix it up.
->> >
->> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> > ---
->> > I think the dfs_cac stuff is still broken, since it does not account
->> > for the starting offset of the flags.
->>
->> Indeed, but that also breaks other stuff too, because the DFS CAC stuff
->> is optional it means the flags can now start at different locations, it
->> also means that we need to distinguish a flag from a CAC.
->>
->> Here's a complex example we should test for as an example now:
->>
->> country US: DFS-FCC
->>       (2400 - 2450 @ 40), (100 mW)
->>       (2450 - 2500 @ 0), (100 mW), DFS, AUTO-BW
->>       (5170 - 5250 @ 80), (100 mW), DFS, AUTO-BW, NO-OUTDOOR
->>       (5250 - 5330 @ 0), (20), (60000), DFS, AUTO-BW
->>       (5735 - 5835 @ 80), (30)
->>       (57240 - 63720 @ 2160), (40)
->>
->> The changes below seem to address it. I think awk is too fragile to
->
-> Your patch looks almost exactly like what I was thinkg to do.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/power.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-OK I'll resend and update the Kconfig entry to ensure folks are aware
-of the issues discussed and our resolution on requiring folks deal
-with issue on the awk parser.
+diff --git a/drivers/staging/vt6656/power.h b/drivers/staging/vt6656/power.h
+index bd9de77..256726f 100644
+--- a/drivers/staging/vt6656/power.h
++++ b/drivers/staging/vt6656/power.h
+@@ -30,8 +30,6 @@
+ #define __POWER_H__
+ 
+ #define     C_PWBT                   1000      // micro sec. power up before TBTT
+-#define     PS_FAST_INTERVAL         1         // Fast power saving listen interval
+-#define     PS_MAX_INTERVAL          4         // MAX power saving listen interval
+ 
+ void vnt_disable_power_saving(struct vnt_private *);
+ void vnt_enable_power_saving(struct vnt_private *, u16);
+-- 
+2.0.1
 
->> scale well and keep us sane. A C parser exists but right now it
->> ignores the DFS CAC. Having a parser is nice as it allows us to
->> modify the db.txt on the fly, however parser still requires a bit
->> of an update in code. If we wanted to avoid the parser all together
->> we could just merge a CRDA reader at build time and require a
->> a regulatory.bin file for reading instead of the db.txt. If we
->> had support for that then its really only one step further from
->> having full CRDA functionality upstream on the kernel, ie letting
->> us read the file at run time rather than just build time. If we
->> are to follow the steps from udev with its firmware loader helper
->> we might as well merge CRDA upstream, in fact we could just use
->> request_firmware_direct() for the reader, what remains questionable
->> to me is the signing stuff, but if we already have support module
->> signing checks it doesn't seem far fetched to be able to have
->> request firmware verify a signature on a file, which probably
->> ain't such a bad idea anyway. If we did this we'd have two options:
->>
->> 1) regulatory.bin reader at build time to build the static regulatory domains
->> 2) the same reader code can use request the file at run time via
->>    request_firmware_direct() and if we added signature verification
->>    it can replace CRDA
->>
->> We'd eliminate the ASCII representation completely from the build picture
->> and peg a regulatory.bin firmware to each kernel then. Thoughts?
->
-> I'll have to digest this -- needs some more discussion, for sure.
-
-Some more on this. I stumbled upon Takashi Iwai's November 2012
-firmware_class Takashi Iwai's signature check series [0] [1]. His
-second iteration didn't get merged but there weren't any particular
-NACKs on the threads -- upon following up with him it would seem the
-way to move this forward though is to integrate this somehow with Kees
-Cook's work on LSM. I have yet to do that but at least by looking at
-Takashi's patches it would seem moving CRDA functionality upstream is
-certainly doable, this would remove both the requirement of CRDA on
-userspace and remove any requirement for any build-time parsers on the
-kernel. The regulatory format then would move along with the kernel.
-
-The way I'd envision this is we'd enable drivers to pass a
-specification of requirements for the firmware, one of which could be
-the digital signature check. Another option would be whether or not
-the firmware is required or not -- right now we use two different APIs
-for this: request_firmware() and request_firmware_direct(), having a
-specification could let us unify this into one a bit more cleanly. The
-digital signature options then simply become an option for drivers,
-and if some distributions do want to force require digital signatures
-for all request_firmware() requests it can do so as well through a
-Kconfig option.
-
-[0] https://lkml.org/lkml/2012/11/5/467
-[1] https://lkml.org/lkml/2012/11/8/343
-
-  Luis
