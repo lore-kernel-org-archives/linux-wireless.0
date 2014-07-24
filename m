@@ -1,48 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50802 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030626AbaGCJfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2014 05:35:06 -0400
-Message-ID: <1404380071.5102.57.camel@smile.fi.intel.com> (sfid-20140703_113612_070551_2060FB50)
-Subject: Re: [PATCH 1/6] lib / string_helpers: clean up test suite
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Thu, 03 Jul 2014 12:34:31 +0300
-In-Reply-To: <20140702145410.e1885ad85c25a6f4b6cef2c4@linux-foundation.org>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1404307229-19186-2-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <20140702145410.e1885ad85c25a6f4b6cef2c4@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f170.google.com ([74.125.82.170]:65374 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934565AbaGXUOH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2014 16:14:07 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so3221404wes.29
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 13:14:06 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 8/8] staging: vt6656: use test_bit to check flags status
+Date: Thu, 24 Jul 2014 21:13:20 +0100
+Message-Id: <1406232800-3694-8-git-send-email-tvboxspy@gmail.com> (sfid-20140724_221417_117554_9F804A22)
+In-Reply-To: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
+References: <1406232800-3694-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-07-02 at 14:54 -0700, Andrew Morton wrote:
-> On Wed,  2 Jul 2014 16:20:24 +0300 Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ drivers/staging/vt6656/usbpipe.c  | 6 +++---
+ drivers/staging/vt6656/wcmd.c     | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-[]
-
-> > +	pr_err("Test '%s' failed: flags = %u\n", name, flags);
-> > +
-> > +	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
-> > +		       in, p, true);
-> > +	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
-> > +		       out_test, q_test, true);
-> > +	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
-> > +		       out_real, q_real, true);
-> 
-> Seems strange to mix KERN_ERR and KERN_WARNING.  The code's always been
-> that way, but maybe it can be improved.
-
-Will fix this.
-
-
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index d729d94..fdc5c7b 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -591,7 +591,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
+ 	/* clear all keys */
+ 	priv->key_entry_inuse = 0;
+ 
+-	if ((priv->flags & DEVICE_FLAGS_UNPLUG) == false)
++	if (!test_bit(DEVICE_FLAGS_UNPLUG, &priv->flags))
+ 		vnt_mac_shutdown(priv);
+ 
+ 	ieee80211_stop_queues(hw);
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index b2722b9..f1969fe 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -52,7 +52,7 @@ int vnt_control_out(struct vnt_private *priv, u8 request, u16 value,
+ {
+ 	int status = 0;
+ 
+-	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
++	if (test_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags))
+ 		return STATUS_FAILURE;
+ 
+ 	mutex_lock(&priv->usb_lock);
+@@ -80,7 +80,7 @@ int vnt_control_in(struct vnt_private *priv, u8 request, u16 value,
+ {
+ 	int status;
+ 
+-	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
++	if (test_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags))
+ 		return STATUS_FAILURE;
+ 
+ 	mutex_lock(&priv->usb_lock);
+@@ -289,7 +289,7 @@ int vnt_tx_context(struct vnt_private *priv,
+ 	int status;
+ 	struct urb *urb;
+ 
+-	if (priv->flags & DEVICE_FLAGS_DISCONNECTED) {
++	if (test_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags)) {
+ 		context->in_use = false;
+ 		return STATUS_RESOURCES;
+ 	}
+diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
+index e5330e3..8f6417bc 100644
+--- a/drivers/staging/vt6656/wcmd.c
++++ b/drivers/staging/vt6656/wcmd.c
+@@ -97,7 +97,7 @@ void vnt_run_command(struct work_struct *work)
+ 	struct vnt_private *priv =
+ 		container_of(work, struct vnt_private, run_command_work.work);
+ 
+-	if (priv->flags & DEVICE_FLAGS_DISCONNECTED)
++	if (test_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags))
+ 		return;
+ 
+ 	if (priv->cmd_running != true)
 -- 
-Andy Shevchenko <andriy.shevchenko@intel.com>
-Intel Finland Oy
+2.0.1
 
