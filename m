@@ -1,75 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:54694 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965128AbaGESY6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49228 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758807AbaGXSaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2014 14:24:58 -0400
-Received: by mail-wg0-f42.google.com with SMTP id n12so963420wgh.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2014 11:24:57 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/8] staging: vt6656: vnt_set_channel remove power setting functions
-Date: Sat,  5 Jul 2014 19:24:25 +0100
-Message-Id: <1404584667-3582-6-git-send-email-tvboxspy@gmail.com> (sfid-20140705_202504_806473_49A3A046)
-In-Reply-To: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
-References: <1404584667-3582-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 24 Jul 2014 14:30:12 -0400
+Date: Thu, 24 Jul 2014 14:18:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless 2014-07-24
+Message-ID: <20140724181813.GE3256@tuxdriver.com> (sfid-20140724_203024_533385_C4C31991)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Power setting is already done in vnt_config and vnt_tx_packet.
 
-Just check that for connection_channel, if invalid return.
+--SUOF0GtieIMvvwua
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Dave,
+
+Please pull this batch of fixes intended for the 3.16 stream...
+
+For the mac80211 fixes, Johannes says:
+
+"I have two fixes: one for tracing that fixes a long-standing NULL
+pointer dereference, and one for a mac80211 issue that causes iwlmvm to
+send invalid frames during authentication/association."
+
+and,
+
+"One more fix - for a bug in the newly introduced code that obtains rate
+control information for stations."
+
+For the iwlwifi fixes, Emmanuel says:
+
+"It includes a merge damage fix. This region has been changed in -next
+and -fixes quite a few times and apparently, I failed to handle it
+properly, so here the fix.  Along with that I have a fix from Eliad
+to properly handle overlapping BSS in AP mode."
+
+On top of that, Felix provides and ath9k fix for Tx stalls that happen
+after an aggregation session failure.
+
+Please let me know if there are problems!  There are some changes
+here that will cause merge conflicts in -next.  Once you merge this
+I can pull it into wireless-next and resolve those issues.
+
+John
+
 ---
- drivers/staging/vt6656/card.c | 25 ++-----------------------
- 1 file changed, 2 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 1849e34..a5f8df1 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -74,15 +74,8 @@ static const u16 cwRXBCNTSFOff[MAX_RATE] =
- void vnt_set_channel(struct vnt_private *priv, u32 connection_channel)
- {
- 
--	if (priv->byBBType == BB_TYPE_11A) {
--		if ((connection_channel < (CB_MAX_CHANNEL_24G + 1)) ||
--					(connection_channel > CB_MAX_CHANNEL))
--			connection_channel = (CB_MAX_CHANNEL_24G + 1);
--	} else {
--		if ((connection_channel > CB_MAX_CHANNEL_24G) ||
--						(connection_channel == 0))
--			connection_channel = 1;
--	}
-+	if (connection_channel > CB_MAX_CHANNEL || !connection_channel)
-+		return;
- 
- 	/* clear NAV */
- 	vnt_mac_reg_bits_on(priv, MAC_REG_MACCR, MACCR_CLRNAV);
-@@ -93,20 +86,6 @@ void vnt_set_channel(struct vnt_private *priv, u32 connection_channel)
- 	vnt_control_out(priv, MESSAGE_TYPE_SELECT_CHANNLE,
- 					connection_channel, 0, 0, NULL);
- 
--	if (priv->byBBType == BB_TYPE_11A) {
--		priv->byCurPwr = 0xff;
--		vnt_rf_set_txpower(priv,
--			priv->abyOFDMAPwrTbl[connection_channel-15], RATE_54M);
--	} else if (priv->byBBType == BB_TYPE_11G) {
--		priv->byCurPwr = 0xff;
--		vnt_rf_set_txpower(priv,
--			priv->abyOFDMPwrTbl[connection_channel-1], RATE_54M);
--	} else {
--		priv->byCurPwr = 0xff;
--		vnt_rf_set_txpower(priv,
--			priv->abyCCKPwrTbl[connection_channel-1], RATE_1M);
--	}
--
- 	vnt_control_out_u8(priv, MESSAGE_REQUEST_MACREG, MAC_REG_CHANNEL,
- 		(u8)(connection_channel|0x80));
- }
--- 
-1.9.1
+The following changes since commit 2c4db12ec469b9fcdad9f6bfd6fa20e65a563ac5:
 
+  rt2800usb: Don't perform DMA from stack (2014-07-07 15:04:34 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git tags/=
+master-2014-07-23
+
+for you to fetch changes up to c01fac1c77a00227f706a1654317023e3f4ac7f0:
+
+  ath9k: fix aggregation session lockup (2014-07-23 13:03:11 -0400)
+
+----------------------------------------------------------------
+Eliad Peller (2):
+      cfg80211: fix mic_failure tracing
+      iwlwifi: mvm: pass beacons from foreign APs
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: fix merge damage
+
+Felix Fietkau (2):
+      mac80211: fix crash on getting sta info with uninitialized rate contr=
+ol
+      ath9k: fix aggregation session lockup
+
+Johannes Berg (1):
+      Revert "mac80211: move "bufferable MMPDU" check to fix AP mode scan"
+
+John W. Linville (3):
+      Merge git://git.kernel.org/.../jberg/mac80211
+      Merge branch 'master' of git://git.kernel.org/.../iwlwifi/iwlwifi-fix=
+es
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
+
+ drivers/net/wireless/ath/ath9k/xmit.c       |  9 +++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 15 +++++++++++++--
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 -------
+ net/mac80211/cfg.c                          |  5 ++++-
+ net/mac80211/tx.c                           | 20 ++++++++++----------
+ net/wireless/trace.h                        |  3 ++-
+ 6 files changed, 38 insertions(+), 21 deletions(-)
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--SUOF0GtieIMvvwua
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT0U3lAAoJEJctW/TcYTgGBv4P/RqLOVkNku36T79sHmXqmr76
+ckP931P75OfMmDu0Ft4k7hdf4b9+zJmcAjEk4pxkcdNeo2X5Nbd20H0izmCd6xI8
+aehkf9iOCybx/TC2A2K5speWF8o4b8KZkyuKqZAsvhNjrPpPH2NqZYq7AZlPcj1B
+Wkiso5WW67tOSreqNIKnVwCnYOODFIn+FzKhtWLdydUz4RSmDoQ48s43lrv/X305
+prpd9LGakFmpK5W085/oUKB4a/K/h1qZA5p/YRIzfAnO5Upq+t2OW5Eblln3etlB
+6LKkEfpnGs7yX5gaU4PP94qe+afN1h7gsL8SgeClsDI0hiMPKgtOPhW9HBsptfHF
+hWqU6V+W8XIQLAaZ3NYrbY1xz+uCGqiHmd2bylsuiY6qFiyWOkbRklnnF/5xOkTf
+fhJgURnQqT+YEiCtRq1+UoI5d5mZY+5qEpWm1/cv1sHDZoaYDFQT+RqwzEVTnhxv
+rU5AGZtG9/uMCJYqKUapbnYLvHVK5PLugUXEKb/tAo/j/zzawJaA19jJR49maP0k
+I2kwNFGNqpDO8QhKa/EsjGLDR1CcHnRl23hTUrSUg1UhduG1IWovLv4+miFNKRHT
+rx3acBVTU5eF3HuM2fH9ULkRquDkKhYMqnTr6BcJonhSUZZDHE+fNNr7R44nYSYO
+8/f0ZVzpve/17eeYvlTn
+=JSQv
+-----END PGP SIGNATURE-----
+
+--SUOF0GtieIMvvwua--
