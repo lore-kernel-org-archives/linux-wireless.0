@@ -1,45 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:63653 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751305AbaGaUdG convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:50775 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbaGXKj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2014 16:33:06 -0400
-Received: by mail-ig0-f174.google.com with SMTP id c1so291159igq.7
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 13:33:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53DAA5DD.7050608@hauke-m.de>
-References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
-	<1406836788-23704-4-git-send-email-zajec5@gmail.com>
-	<53DAA5DD.7050608@hauke-m.de>
-Date: Thu, 31 Jul 2014 22:33:06 +0200
-Message-ID: <CACna6rwZdcW9KC+dyvm+tUjVvvLJ+TnObY-_Ew6fXmpLqFW0qg@mail.gmail.com> (sfid-20140731_223312_339393_9D340AB1)
-Subject: Re: [PATCH 3.18 3/7] b43: flush some writes on Broadcom MIPS SoCs
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 Jul 2014 06:39:27 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so2523931wgh.30
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 03:39:26 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCHv2 2/2] mac80211: extend set_coverage_class signature
+Date: Thu, 24 Jul 2014 12:39:22 +0200
+Message-Id: <1406198362-4999-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140724_123932_122824_A5F38F5A)
+In-Reply-To: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 July 2014 22:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> A comment in brcmsmac says this is only needed to work around a bug in
-> the host pcie controller of 4717, 4718 and 4706. I haven't noticed this
-> problem with BCM4706, so it could be that it is already fixed in the
-> shipped version of bcm4706.
->
-> The comment says the following:
-> bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
-> transactions. As a fix, a read after write is performed on certain
-> places in the code. Older chips and the newer 5357 family don't require
-> this fix.
->
-> This commit did the cleanup:
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=6a9a25eec0b55ea45e22710a9bcaf9690cb42fe6
+Extend set_coverage_class API in order to enable ACK timeout estimation
+algorithm (dynack).
 
-Any idea why Broadcom didn't own comments and didn't enable it for
-bcm4716 and bcm4706 only?
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ include/net/mac80211.h    | 5 +++--
+ net/mac80211/driver-ops.h | 9 +++------
+ net/mac80211/trace.h      | 4 ++--
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dae2e24..30fd354 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2666,7 +2666,8 @@ enum ieee80211_roc_type {
+  *
+  * @set_coverage_class: Set slot time for given coverage class as specified
+  *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
+- *	accordingly. This callback is not required and may sleep.
++ *	accordingly; coverage_class equals to -1 to enable ACK timeout
++ *	estimation algorithm. This callback is not required and may sleep.
+  *
+  * @testmode_cmd: Implement a cfg80211 test mode command. The passed @vif may
+  *	be %NULL. The callback can sleep.
+@@ -2950,7 +2951,7 @@ struct ieee80211_ops {
+ 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
+ 		struct survey_info *survey);
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
+-	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
++	int (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    void *data, int len);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1142395..68a840d 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -450,17 +450,14 @@ static inline int drv_set_rts_threshold(struct ieee80211_local *local,
+ }
+ 
+ static inline int drv_set_coverage_class(struct ieee80211_local *local,
+-					 u8 value)
++					 s16 value)
+ {
+-	int ret = 0;
++	int ret = -EOPNOTSUPP;
+ 	might_sleep();
+ 
+ 	trace_drv_set_coverage_class(local, value);
+ 	if (local->ops->set_coverage_class)
+-		local->ops->set_coverage_class(&local->hw, value);
+-	else
+-		ret = -EOPNOTSUPP;
+-
++		ret = local->ops->set_coverage_class(&local->hw, value);
+ 	trace_drv_return_int(local, ret);
+ 	return ret;
+ }
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 02ac535..38fae7e 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -672,13 +672,13 @@ DEFINE_EVENT(local_u32_evt, drv_set_rts_threshold,
+ );
+ 
+ TRACE_EVENT(drv_set_coverage_class,
+-	TP_PROTO(struct ieee80211_local *local, u8 value),
++	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
+ 	TP_ARGS(local, value),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+-		__field(u8, value)
++		__field(s16, value)
+ 	),
+ 
+ 	TP_fast_assign(
 -- 
-Rafał
+1.9.1
+
