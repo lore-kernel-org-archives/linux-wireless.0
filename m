@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:43275 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760814AbaGPIiN (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:52202 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758059AbaGXMpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 04:38:13 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Sven Eckelmann <sven@narfation.org>
-Subject: Re: [RFC 0/2] ath10k spectral scan support
-Date: Wed, 16 Jul 2014 10:38:09 +0200
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-References: <1405441966-32681-1-git-send-email-sw@simonwunderlich.de> <CA+BoTQmNJuwYpSiXqF8OUuXQULLSdUW+PO4Sz5oNKyaduHMKPg@mail.gmail.com> <4111404.UJkIUxkzQm@bentobox>
-In-Reply-To: <4111404.UJkIUxkzQm@bentobox>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201407161038.10130.sw@simonwunderlich.de> (sfid-20140716_103819_760373_7660271C)
+	Thu, 24 Jul 2014 08:45:23 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so9078026wiv.2
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 05:45:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix aggregated 4addr Rx
+Date: Thu, 24 Jul 2014 14:36:14 +0200
+Message-Id: <1406205374-24858-1-git-send-email-michal.kazior@tieto.com> (sfid-20140724_144527_875274_20AFF05B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A-MSDU 4addr frames weren't reconstructed properly
+and in some cases this resulted in a warning:
 
-> On Wednesday 16 July 2014 08:24:58 Michal Kazior wrote:
-> > >  * So far, we always get 64 bins of fft data in the samples, even if we
-> > >  
-> > >    are in HT40 or VHT80 mode. That doesn't seem right, as there should
-> > >    be more bins for wider channels (e.g. 128 or 256 bins). Is there any
-> > >    parameter to change in the configuration to get the output from
-> > >    multiple channels / higher bandwidth?
-> > 
-> > Hmm.. I suspect this may be because you use scan command. Scanning
-> > uses channel list which is programmed with legacy modes a and g
-> > (implying 20Mhz). Perhaps that's the limiting factor now. Using other
-> > (wider) modes breaks scan from what I remember but it might be worth
-> > checking out if it impacts fft bin sizes.
-> 
-> I did the HT80 and HT40 stuff on a single channel in the spectral
-> "background" mode. They reports from the firmware (10.1) still only had 64
-> bins. The HT80 stuff wasn't tested with the "main" firmware because it
-> refused to switch to HT80 mode as AP/Sta.
+ br0: received packet on wlan0.sta1 with own address as source address
 
-Just to clarify this a little more, we tried AP (running hostapd) as well a 
-STA in 40 and 80 MHz modes. We always got 64 bins returned.
+Since this was only related to A-MSDU it would
+trigger when more intense traffic was generated.
 
-Cheers,
-    Simon
+Reported-by: Vu Hai NGUYEN <vh.nguyen@actiasodielec.fr>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 318efc3..a8328f9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -859,7 +859,7 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 	enum rx_msdu_decap_format fmt;
+ 	enum htt_rx_mpdu_encrypt_type enctype;
+ 	struct ieee80211_hdr *hdr;
+-	u8 hdr_buf[64], addr[ETH_ALEN], *qos;
++	u8 hdr_buf[64], da[ETH_ALEN], sa[ETH_ALEN], *qos;
+ 	unsigned int hdr_len;
+ 
+ 	rxd = (void *)skb->data - sizeof(*rxd);
+@@ -897,10 +897,11 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 			skb_trim(skb, skb->len - FCS_LEN);
+ 			break;
+ 		case RX_MSDU_DECAP_NATIVE_WIFI:
+-			/* pull decapped header and copy DA */
++			/* pull decapped header and copy SA & DA */
+ 			hdr = (struct ieee80211_hdr *)skb->data;
+ 			hdr_len = ath10k_htt_rx_nwifi_hdrlen(hdr);
+-			memcpy(addr, ieee80211_get_DA(hdr), ETH_ALEN);
++			memcpy(da, ieee80211_get_DA(hdr), ETH_ALEN);
++			memcpy(sa, ieee80211_get_SA(hdr), ETH_ALEN);
+ 			skb_pull(skb, hdr_len);
+ 
+ 			/* push original 802.11 header */
+@@ -914,8 +915,11 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 			qos = ieee80211_get_qos_ctl(hdr);
+ 			qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 
+-			/* original 802.11 header has a different DA */
+-			memcpy(ieee80211_get_DA(hdr), addr, ETH_ALEN);
++			/* original 802.11 header has a different DA and in
++			 * case of 4addr it may also have different SA
++			 */
++			memcpy(ieee80211_get_DA(hdr), da, ETH_ALEN);
++			memcpy(ieee80211_get_SA(hdr), sa, ETH_ALEN);
+ 			break;
+ 		case RX_MSDU_DECAP_ETHERNET2_DIX:
+ 			/* strip ethernet header and insert decapped 802.11
+-- 
+1.8.5.3
+
