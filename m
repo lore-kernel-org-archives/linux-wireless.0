@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60663 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755036AbaGLD5n (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:33175 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049AbaGXJgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2014 23:57:43 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 6/7] mwifiex: declare sta_ptr in smaller scope
-Date: Fri, 11 Jul 2014 20:57:14 -0700
-Message-ID: <1405137435-14045-3-git-send-email-bzhao@marvell.com> (sfid-20140712_055746_917238_5EEF822F)
-In-Reply-To: <1405137435-14045-1-git-send-email-bzhao@marvell.com>
-References: <1405137435-14045-1-git-send-email-bzhao@marvell.com>
+	Thu, 24 Jul 2014 05:36:10 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCHv3-ath-resend 2/2] ath10k: add spectral scan feature
+Date: Thu, 24 Jul 2014 11:36:07 +0200
+Cc: ath10k@lists.infradead.org, mathias.kretschmer@fokus.fraunhofer.de,
+	kgiori@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	sven@narfation.org
+References: <87mwc0ro8i.fsf@kamboji.qca.qualcomm.com> <1406136773-19957-1-git-send-email-sw@simonwunderlich.de> <871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <871ttbrtp8.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201407241136.08090.sw@simonwunderlich.de> (sfid-20140724_113614_901636_C200CCA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_ptr is used only in an 'if' branch in this function.
-Move it to the smaller scope where it is used.
+> > +ath10k_core-$(CPTCFG_ATH10K_DEBUGFS) += spectral.o
+> 
+> This one still uses CPTCFG_ prefix, I'll fix those.
+> 
 
-Reported-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Argh, OK, thanks!
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 9d6d8d9..62f5dbe 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -541,7 +541,6 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
- {
- 	struct host_cmd_ds_11n_addba_req add_ba_req;
--	struct mwifiex_sta_node *sta_ptr;
- 	u32 tx_win_size = priv->add_ba_param.tx_win_size;
- 	static u8 dialog_tok;
- 	int ret;
-@@ -553,6 +552,8 @@ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
- 	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
- 	    priv->adapter->is_hw_11ac_capable &&
- 	    memcmp(priv->cfg_bssid, peer_mac, ETH_ALEN)) {
-+		struct mwifiex_sta_node *sta_ptr;
-+
- 		sta_ptr = mwifiex_get_sta_entry(priv, peer_mac);
- 		if (!sta_ptr) {
- 			dev_warn(priv->adapter->dev,
--- 
-1.8.2.3
+> > @@ -800,8 +800,6 @@ int ath10k_core_start(struct ath10k *ar)
+> > 
+> >  	else
+> >  	
+> >  		ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+> > 
+> > -	INIT_LIST_HEAD(&ar->arvifs);
+> > -
+> > 
+> >  	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
+> >  	
+> >  		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
+> >  		
+> >  			    ar->hw_params.name,
+> > 
+> > @@ -1084,6 +1082,12 @@ struct ath10k *ath10k_core_create(void *hif_priv,
+> > struct device *dev,
+> > 
+> >  	INIT_WORK(&ar->register_work, ath10k_core_register_work);
+> >  	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+> > 
+> > +	INIT_LIST_HEAD(&ar->arvifs);
+> 
+> I'm a bit suspicious about this, why is it needed?
 
+ath10k_spectral_init() clears the spectral_enabled bit for each vif, and 
+therefore needs the list to be initialized ... it is also called on firmware 
+crash by ath10k_halt, where checking the list is more useful.
+
+Thanks,
+    Simon
