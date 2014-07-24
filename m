@@ -1,159 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:57658 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbaGFJhI (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:38008 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934186AbaGXHRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2014 05:37:08 -0400
-Received: by mail-we0-f179.google.com with SMTP id w62so3125932wes.24
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2014 02:37:07 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/40] iwlwifi: mvm: CSA unbind-bind flow support for client
-Date: Sun,  6 Jul 2014 12:36:06 +0300
-Message-Id: <1404639376-3792-30-git-send-email-egrumbach@gmail.com> (sfid-20140706_115956_528353_AC25F348)
-In-Reply-To: <53B917DC.5050902@gmail.com>
-References: <53B917DC.5050902@gmail.com>
+	Thu, 24 Jul 2014 03:17:31 -0400
+Received: by mail-la0-f52.google.com with SMTP id e16so1593684lan.11
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 00:17:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87egxdv0u2.fsf@kamboji.qca.qualcomm.com>
+References: <1405672472-16302-1-git-send-email-janusz.dziedzic@tieto.com>
+	<87egxdv0u2.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 24 Jul 2014 09:17:29 +0200
+Message-ID: <CALhHN=oOWgAhWL4B15OduHuL-qrLs3DaSMnpYJDa1xqmK=aZ6Q@mail.gmail.com> (sfid-20140724_091735_187502_EC6B5314)
+Subject: Re: [PATCH] ath10k: extend debug code for RX path
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 22 July 2014 18:02, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>
+>> Print sequence number, AMSDU_MORE flag and AC when additional
+>> debug enabled in RX path. This is usefull for debugging purpose.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/htt_rx.c |   32 ++++++++++++++++++++++++++++--
+>>  1 file changed, 30 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> index 6db0e49..04140e3 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> @@ -819,19 +819,46 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
+>>       return true;
+>>  }
+>>
+>> +static char *tid_to_ac[] = {
+>
+> static const?
+>
+>> +     "BE(0)",
+>> +     "BK(1)",
+>> +     "BK(2)",
+>> +     "BE(3)",
+>> +     "VI(4)",
+>> +     "VI(5)",
+>> +     "VO(6)",
+>> +     "VO(7)",
+>> +     "tid(8)",
+>> +     "tid(9)",
+>> +     "tid(10)",
+>> +     "tid(11)",
+>> +     "tid(12)",
+>> +     "tid(13)",
+>> +     "tid(14)",
+>> +     "tid(15)",
+>> +};
+>
+> I don't see much point of adding tid number to the string when you could
+> print it with "%i". Also about the string format, maybe this would be
+> clearer:
+>
+> "rx skb %p len %u peer %pM tid %i (%s) sn %u"
+>
+> For example "...tid 4 (VI)..." and for tid > 7 we don't print "(VI)"
+> part at all, just the number.
+>
+tid don't need to be always present (eg sta with disabled qos).
+So I can use:
+- table as above
+- buffer[] + snprintf() + %i
+Depends what you prefer here.
 
-Implement support for unbind-bind flow for the client roles.  This
-includes telling the firmware that we are not associated, removing
-time-events, removing quotas and updating power management during the
-actual switch, and redoing everything in the new channel.
+>>  static void ath10k_process_rx(struct ath10k *ar,
+>>                             struct ieee80211_rx_status *rx_status,
+>>                             struct sk_buff *skb)
+>>  {
+>>       struct ieee80211_rx_status *status;
+>> +     struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>
+>>       status = IEEE80211_SKB_RXCB(skb);
+>>       *status = *rx_status;
+>>
+>>       ath10k_dbg(ATH10K_DBG_DATA,
+>> -                "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %imic-err %i\n",
+>> +                "rx skb %p len %u peer %pM %s sn %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+>>                  skb,
+>>                  skb->len,
+>> +                ieee80211_get_SA(hdr),
+>
+> This looks ok.
+>
+>> +                ieee80211_is_data_qos(hdr->frame_control) ?
+>> +                     (tid_to_ac[*(ieee80211_get_qos_ctl(hdr)) &
+>> +                                IEEE80211_QOS_CTL_TID_MASK]) :
+>> +                     (is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
+>> +                             "mcast" : "ucast"),
+>> +                (__le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4,
+>
+> But this is hard to read. Is it possible to have a helper function for
+> this?
+Sure I can put this in the function.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 35 ++++++++++++++++++++---------
- 1 file changed, 25 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 24cc569..78a78c0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -293,6 +293,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
- 		    IEEE80211_HW_TIMING_BEACON_ONLY |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
-+		    IEEE80211_HW_CHANCTX_STA_CSA |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 		    IEEE80211_HW_SUPPORTS_STATIC_SMPS;
- 
-@@ -2374,7 +2375,8 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
- 
- static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif,
--					struct ieee80211_chanctx_conf *ctx)
-+					struct ieee80211_chanctx_conf *ctx,
-+					bool switching_chanctx)
- {
- 	u16 *phy_ctxt_id = (u16 *)ctx->drv_priv;
- 	struct iwl_mvm_phy_ctxt *phy_ctxt = &mvm->phy_ctxts[*phy_ctxt_id];
-@@ -2429,7 +2431,8 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 	}
- 
- 	/* Handle binding during CSA */
--	if (vif->type == NL80211_IFTYPE_AP) {
-+	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (switching_chanctx && (vif->type == NL80211_IFTYPE_STATION))) {
- 		iwl_mvm_update_quotas(mvm, NULL);
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false);
- 	}
-@@ -2452,7 +2455,7 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	mutex_lock(&mvm->mutex);
--	ret = __iwl_mvm_assign_vif_chanctx(mvm, vif, ctx);
-+	ret = __iwl_mvm_assign_vif_chanctx(mvm, vif, ctx, false);
- 	mutex_unlock(&mvm->mutex);
- 
- 	return ret;
-@@ -2460,9 +2463,11 @@ static int iwl_mvm_assign_vif_chanctx(struct ieee80211_hw *hw,
- 
- static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 					   struct ieee80211_vif *vif,
--					   struct ieee80211_chanctx_conf *ctx)
-+					   struct ieee80211_chanctx_conf *ctx,
-+					   bool switching_chanctx)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct ieee80211_vif *disabled_vif = NULL;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -2473,7 +2478,6 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 		goto out;
- 	case NL80211_IFTYPE_MONITOR:
- 		mvmvif->monitor_active = false;
--		iwl_mvm_update_quotas(mvm, NULL);
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		/* This part is triggered only during CSA */
-@@ -2481,11 +2485,20 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 			goto out;
- 
- 		mvmvif->ap_ibss_active = false;
--		iwl_mvm_update_quotas(mvm, NULL);
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		if (!switching_chanctx)
-+			break;
-+
-+		disabled_vif = vif;
-+
-+		iwl_mvm_mac_ctxt_changed(mvm, vif, true);
-+		break;
- 	default:
- 		break;
- 	}
- 
-+	iwl_mvm_update_quotas(mvm, disabled_vif);
- 	iwl_mvm_binding_remove_vif(mvm, vif);
- 
- out:
-@@ -2500,7 +2513,7 @@ static void iwl_mvm_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 
- 	mutex_lock(&mvm->mutex);
--	__iwl_mvm_unassign_vif_chanctx(mvm, vif, ctx);
-+	__iwl_mvm_unassign_vif_chanctx(mvm, vif, ctx, false);
- 	mutex_unlock(&mvm->mutex);
- }
- 
-@@ -2517,7 +2530,7 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
- 		return -EOPNOTSUPP;
- 
- 	mutex_lock(&mvm->mutex);
--	__iwl_mvm_unassign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx);
-+	__iwl_mvm_unassign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx, true);
- 	__iwl_mvm_remove_chanctx(mvm, vifs[0].old_ctx);
- 
- 	ret = __iwl_mvm_add_chanctx(mvm, vifs[0].new_ctx);
-@@ -2526,7 +2539,8 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
- 		goto out_reassign;
- 	}
- 
--	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].new_ctx);
-+	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].new_ctx,
-+					   true);
- 	if (ret) {
- 		IWL_ERR(mvm,
- 			"failed to assign new_ctx during channel switch\n");
-@@ -2545,7 +2559,8 @@ out_reassign:
- 		goto out_restart;
- 	}
- 
--	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx);
-+	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx,
-+					   true);
- 	if (ret) {
- 		IWL_ERR(mvm, "failed to reassign old_ctx after failure.\n");
- 		goto out_restart;
--- 
-1.8.3.2
-
+BR
+Janusz
