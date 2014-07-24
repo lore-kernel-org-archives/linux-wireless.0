@@ -1,99 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37151 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbaGPVX3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:23:29 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so6969568wiv.5
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/21] staging: vt6656: main_usb replace DBG_PRT debug messages
-Date: Wed, 16 Jul 2014 22:22:02 +0100
-Message-Id: <1405545731-6082-12-git-send-email-tvboxspy@gmail.com> (sfid-20140716_235107_966381_C63F1BD9)
-In-Reply-To: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
-References: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:32967 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751137AbaGXKyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2014 06:54:49 -0400
+Message-ID: <1406199271.14675.10.camel@jlt4.sipsolutions.net> (sfid-20140724_125519_352167_B8180F6A)
+Subject: Re: [PATCH] mac80211_hwsim: fix compiler warning on MIPS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Bresticker <abrestic@chromium.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 24 Jul 2014 12:54:31 +0200
+In-Reply-To: <1406065431-20813-1-git-send-email-abrestic@chromium.org> (sfid-20140722_234503_746857_0630E11C)
+References: <1406065431-20813-1-git-send-email-abrestic@chromium.org>
+	 (sfid-20140722_234503_746857_0630E11C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-replace with dev_dbg
+On Tue, 2014-07-22 at 14:43 -0700, Andrew Bresticker wrote:
+> The dividend in do_div() is expected to be an unsigned 64-bit integer,
+> which leads to the following warning when building for 32-bit MIPS:
+> 
+>   drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_set_tsf':
+>   drivers/net/wireless/mac80211_hwsim.c:664:98: warning: comparison of distinct pointer types lacks a cast [enabled by default]
+>     data->bcn_delta = do_div(delta, bcn_int);
+> 
+> Since we care about the signedness of delta when adjusting tsf_offset
+> and bcm_delta, use the absolute value for the division and compare
+> the two timestamps to determine the sign.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+Applied, thanks.
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 12f93c7..021e892 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -230,25 +230,24 @@ static int device_init_registers(struct vnt_private *priv)
- 	u8 tmp;
- 	u8 calib_tx_iq = 0, calib_tx_dc = 0, calib_rx_iq = 0;
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "---->INIbInitAdapter. [%d][%d]\n",
-+	dev_dbg(&priv->usb->dev, "---->INIbInitAdapter. [%d][%d]\n",
- 				DEVICE_INIT_COLD, priv->byPacketType);
- 
- 	if (!vnt_check_firmware_version(priv)) {
- 		if (vnt_download_firmware(priv) == true) {
- 			if (vnt_firmware_branch_to_sram(priv) == false) {
--				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+				dev_dbg(&priv->usb->dev,
- 					" vnt_firmware_branch_to_sram fail\n");
- 				return false;
- 			}
- 		} else {
--			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--				" FIRMWAREbDownload fail\n");
-+			dev_dbg(&priv->usb->dev, "FIRMWAREbDownload fail\n");
- 			return false;
- 		}
- 	}
- 
- 	if (!vnt_vt3184_init(priv)) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" vnt_vt3184_init fail\n");
-+		dev_dbg(&priv->usb->dev, "vnt_vt3184_init fail\n");
- 		return false;
- 	}
- 
-@@ -264,14 +263,14 @@ static int device_init_registers(struct vnt_private *priv)
- 		MESSAGE_TYPE_CARDINIT, 0, 0,
- 		sizeof(struct vnt_cmd_card_init), (u8 *)init_cmd);
- 	if (status != STATUS_SUCCESS) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Issue Card init fail\n");
-+		dev_dbg(&priv->usb->dev, "Issue Card init fail\n");
- 		return false;
- 	}
- 
- 	status = vnt_control_in(priv, MESSAGE_TYPE_INIT_RSP, 0, 0,
- 		sizeof(struct vnt_rsp_card_init), (u8 *)init_rsp);
- 	if (status != STATUS_SUCCESS) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+		dev_dbg(&priv->usb->dev,
- 			"Cardinit request in status fail!\n");
- 		return false;
- 	}
-@@ -429,7 +428,7 @@ static int device_init_registers(struct vnt_private *priv)
- 				priv->abyPermanentNetAddr, ETH_ALEN);
- 
- 	/* if exist SW network address, use it */
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Network address = %pM\n",
-+	dev_dbg(&priv->usb->dev, "Network address = %pM\n",
- 		priv->abyCurrentNetAddr);
- 
- 	/*
-@@ -478,7 +477,7 @@ static int device_init_registers(struct vnt_private *priv)
- 		vnt_radio_power_on(priv);
- 	}
- 
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----INIbInitAdapter Exit\n");
-+	dev_dbg(&priv->usb->dev, "<----INIbInitAdapter Exit\n");
- 
- 	return true;
- }
--- 
-2.0.1
+johannes
 
