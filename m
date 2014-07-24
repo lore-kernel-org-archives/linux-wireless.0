@@ -1,88 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:54287 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844AbaGJS4w (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:49351 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759323AbaGXPoJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 14:56:52 -0400
-Received: by mail-we0-f170.google.com with SMTP id w61so4301wes.15
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 11:56:51 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/16] staging: vt6656: s_vGenerateTxParameter Parse out struct vnt_rrv_time_rts
-Date: Thu, 10 Jul 2014 19:56:06 +0100
-Message-Id: <1405018577-6832-5-git-send-email-tvboxspy@gmail.com> (sfid-20140710_205657_038778_7F790242)
-In-Reply-To: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
-References: <1405018577-6832-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 24 Jul 2014 11:44:09 -0400
+Received: by mail-we0-f176.google.com with SMTP id q58so2874387wes.7
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 08:44:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1406206914.14675.20.camel@jlt4.sipsolutions.net>
+References: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1406198362-4999-3-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1406200353.14675.18.camel@jlt4.sipsolutions.net>
+	<CAA2SeNLPf6Tt61H5D1j6d3SwO1nuZQM3WuqL8-+15RKLmVAe1w@mail.gmail.com>
+	<1406206914.14675.20.camel@jlt4.sipsolutions.net>
+Date: Thu, 24 Jul 2014 17:44:06 +0200
+Message-ID: <CAA2SeN+kA=Sjix8S-_3BE1wLKuU=1eqRTM4R98D1kk5-xPc6Rw@mail.gmail.com> (sfid-20140724_174413_458134_E16B3249)
+Subject: Re: [PATCHv2 2/2] mac80211: extend set_coverage_class signature
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Philippe Duchein <wireless-dev@duchein.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Creat new function vnt_rxtx_rts that will eventually carry onward
-functions.
+> On Thu, 2014-07-24 at 14:12 +0200, Lorenzo Bianconi wrote:
+>> > On Thu, 2014-07-24 at 12:39 +0200, Lorenzo Bianconi wrote:
+>> >
+>> >> @@ -2950,7 +2951,7 @@ struct ieee80211_ops {
+>> >>       int (*get_survey)(struct ieee80211_hw *hw, int idx,
+>> >>               struct survey_info *survey);
+>> >>       void (*rfkill_poll)(struct ieee80211_hw *hw);
+>> >> -     void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
+>> >> +     int (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
+>> >
+>> > This patch also needs to update all drivers ......
+>>
+>> Currently just ath9k, ath5k and p54 implement set_coverage_class
+>> function pointer. I would send a different patch for these changes.
+>> Should I include them in this patchset?
+>
+> Guess what will happen if I merge this patch?
+>
+> Hint: the kernel will not compile correctly any more.
+>
+> johannes
+>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 39 ++++++++++++++++++++++++---------------
- 1 file changed, 24 insertions(+), 15 deletions(-)
+Ok, I will include changes to lower drivers in this patchset.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 2ed045d..7d0b74c 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -629,6 +629,28 @@ static u16 s_vFillCTSHead(struct vnt_usb_send_context *tx_context,
- 	return 0;
- }
- 
-+static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
-+	union vnt_tx_head *tx_head, u8 pkt_type, u32 frame_size,
-+	int need_ack, u16 current_rate)
-+{
-+	struct vnt_private *priv = tx_context->priv;
-+	struct vnt_rrv_time_rts *buf = &tx_head->tx_rts.rts;
-+
-+	buf->rts_rrv_time_aa = s_uGetRTSCTSRsvTime(priv, 2,
-+				pkt_type, frame_size, current_rate);
-+	buf->rts_rrv_time_ba = s_uGetRTSCTSRsvTime(priv, 1,
-+				pkt_type, frame_size, current_rate);
-+	buf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(priv, 0,
-+				pkt_type, frame_size, current_rate);
-+
-+	buf->rrv_time_a = vnt_rxtx_rsvtime_le16(priv, pkt_type, frame_size,
-+							current_rate, need_ack);
-+	buf->rrv_time_b = vnt_rxtx_rsvtime_le16(priv, PK_TYPE_11B, frame_size,
-+					priv->byTopCCKBasicRate, need_ack);
-+
-+	return 0;
-+}
-+
- /*+
-  *
-  * Description:
-@@ -661,21 +683,8 @@ static u16 s_vGenerateTxParameter(struct vnt_usb_send_context *tx_context,
- 
- 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
- 		if (need_rts) {
--			struct vnt_rrv_time_rts *pBuf =
--					&tx_buffer->tx_head.tx_rts.rts;
--
--			pBuf->rts_rrv_time_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
--					byPktType, cbFrameSize, wCurrentRate);
--			pBuf->rts_rrv_time_ba = s_uGetRTSCTSRsvTime(pDevice, 1,
--					byPktType, cbFrameSize, wCurrentRate);
--			pBuf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
--				byPktType, cbFrameSize, wCurrentRate);
--
--			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
--				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
--			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
--					PK_TYPE_11B, cbFrameSize,
--					pDevice->byTopCCKBasicRate, bNeedACK);
-+			vnt_rxtx_rts(tx_context, &tx_buffer->tx_head,
-+				byPktType, cbFrameSize, bNeedACK, wCurrentRate);
- 
- 			if (need_mic) {
- 				*mic_hdr = &tx_buffer->
+Lorenzo
+
 -- 
-1.9.1
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
