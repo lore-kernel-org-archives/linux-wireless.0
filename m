@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37429 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093AbaGRBtS (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:43437 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759211AbaGXPZX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 21:49:18 -0400
-Date: Thu, 17 Jul 2014 18:49:17 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] firmware validation
-Message-ID: <20140718014917.GB603@kroah.com> (sfid-20140718_034934_812972_786A38D7)
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+	Thu, 24 Jul 2014 11:25:23 -0400
+Received: by mail-we0-f170.google.com with SMTP id w62so2984146wes.15
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 08:25:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+From: Jean-Marie Lemetayer <jeanmarie.lemetayer@gmail.com>
+Date: Thu, 24 Jul 2014 17:25:02 +0200
+Message-ID: <CAAdc0hyDepy7zn+1TQsjcZpkSkQrwFhbkPBJoH0vYKqbqkktAg@mail.gmail.com> (sfid-20140724_172526_590508_C7310A45)
+Subject: How to get RSSI periodically
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 02:38:10PM -0700, Kees Cook wrote:
-> This creates a new LSM hook to validate the contents (and origin) of
-> component firmware being provided to the kernel from userspace via the
-> request_firmware() interface.
-> 
-> Additionally creates a test module and test cases for all of the existing
-> interfaces as well as the new "fd" interface.
+Hi,
 
-This looks good to me.
+I am looking for a way to get the RSSI of the SELECTED network with
+the wpa_supplicant (2.1). To update periodically the status connection
+icon of my app.
 
-I've applied the first 2 patches for now, I'd like to have some other
-reviews and acks before applying the rest.
+I known that I can get it with the command: 'bss <bssid>' but it seems
+that this information is updated only when perform a scan.
 
-thanks,
+Have I miss something simpler than doing a background scan on the freq
+of the SELECTED network ?
 
-greg k-h
+Regards,
+Jean-Marie Lemetayer
