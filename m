@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:22494 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752712AbaGBNUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2014 09:20:36 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 3/6] lib80211: re-use string_escape_mem_any_np()
-Date: Wed,  2 Jul 2014 16:20:26 +0300
-Message-Id: <1404307229-19186-4-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140702_152307_252223_DD9FA203)
-In-Reply-To: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404307229-19186-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:48458 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759288AbaGXKjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2014 06:39:54 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so2424257wgh.21
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 03:39:51 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Philippe Duchein <wireless-dev@duchein.net>
+Subject: [PATCHv2 0/2] add auto parameter to set distance command
+Date: Thu, 24 Jul 2014 12:39:46 +0200
+Message-Id: <1406198388-5040-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140724_123958_557897_34F839D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel we have function to escape a given string. Let's use it instead of
-custom approach.
+Add auto parameter to set distance command in order to enable ack timeout
+estimation algorithm (dynack). Currently dynack is supported just by ath9k
 
-This fixes a bug. The current implementation wrongly prints octal numbers: only
-two first digits are used in case when 3 are required and the rest of the
-string ends up cut off.
+This patchset is based on "configure ack timeout estimation algorithm through
+mac80211 stack" one sent on linux-wireless
 
-Additionally the \f, \v, \a, and \e are escaped to their alphabetic
-representation. It's safe to do since the print_ssid() is currently used for
-messaging only.
+Changes since v1:
+- add dynack info to info command
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- net/wireless/lib80211.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+Lorenzo Bianconi (2):
+  iw: sync nl80211_attrs
+  iw: add auto parameter to set distance command
 
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index a55c27b..0c2f67b 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -22,6 +22,7 @@
- #include <linux/init.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-+#include <linux/string_helpers.h>
- 
- #include <net/lib80211.h>
- 
-@@ -48,31 +49,10 @@ static void lib80211_crypt_deinit_handler(unsigned long data);
- 
- const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
- {
--	const char *s = ssid;
- 	char *d = buf;
- 
- 	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
--	while (ssid_len--) {
--		if (isprint(*s)) {
--			*d++ = *s++;
--			continue;
--		}
--
--		*d++ = '\\';
--		if (*s == '\0')
--			*d++ = '0';
--		else if (*s == '\n')
--			*d++ = 'n';
--		else if (*s == '\r')
--			*d++ = 'r';
--		else if (*s == '\t')
--			*d++ = 't';
--		else if (*s == '\\')
--			*d++ = '\\';
--		else
--			d += snprintf(d, 3, "%03o", *s);
--		s++;
--	}
-+	d += string_escape_mem_any_np(ssid, ssid_len, buf, ~0UL, NULL);
- 	*d = '\0';
- 	return buf;
- }
+ info.c    | 16 +++++++++++-----
+ nl80211.h | 10 ++++++++++
+ phy.c     | 44 +++++++++++++++++++++++++-------------------
+ 3 files changed, 46 insertions(+), 24 deletions(-)
+
 -- 
-2.0.0
+1.9.1
 
