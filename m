@@ -1,125 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64572 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756569AbaGVTwF convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:41526 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932508AbaGYTxD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:52:05 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so149844wes.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:52:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140722180254.GE1299@tuxdriver.com>
-References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1405859486-31414-10-git-send-email-lorenzo.bianconi83@gmail.com>
-	<20140722180254.GE1299@tuxdriver.com>
-Date: Tue, 22 Jul 2014 21:52:04 +0200
-Message-ID: <CAA2SeNLqYvtghDPvBFARjEU4MKSMeSoG_2XFVkUtRWnt66LzJQ@mail.gmail.com> (sfid-20140722_215211_322420_E80CEE43)
-Subject: Re: [PATCH 09/10] ath9k: add ath9k_enable_dynack() method
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net,
-	Philippe Duchein <wireless-dev@duchein.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Jul 2014 15:53:03 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so4767277wes.36
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:53:02 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/12] staging: vt6656: remove comments of old functions nolonger present.
+Date: Fri, 25 Jul 2014 20:51:55 +0100
+Message-Id: <1406317916-21884-11-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215326_341418_CD7F9ED7)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/card.c    | 6 ------
+ drivers/staging/vt6656/dpc.c     | 5 -----
+ drivers/staging/vt6656/usbpipe.c | 1 -
+ 3 files changed, 12 deletions(-)
 
-> On Sun, Jul 20, 2014 at 02:31:25PM +0200, Lorenzo Bianconi wrote:
->> Add ath9k_enable_dynack() method to enable ack timeout estimation algorithm.
->> Moreover disable dynack if the coverage class has been configured
->>
->> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/main.c | 34 ++++++++++++++++++++++++++++++++++
->>  1 file changed, 34 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index e6ac8d2..52ca884 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -1970,6 +1970,14 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
->>       mutex_lock(&sc->mutex);
->>       ah->coverage_class = coverage_class;
->>
->> +     if (ah->dynack.enabled) {
->> +             u32 rfilt;
->> +
->> +             ah->dynack.enabled = false;
->> +             rfilt = ath_calcrxfilter(sc);
->> +             ath9k_hw_setrxfilter(ah, rfilt);
->> +     }
->> +
->>       ath9k_ps_wakeup(sc);
->>       ath9k_hw_init_global_settings(ah);
->>       ath9k_ps_restore(sc);
->> @@ -1977,6 +1985,28 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
->>       mutex_unlock(&sc->mutex);
->>  }
->>
->> +#ifdef CONFIG_ATH9K_DYNACK
->> +static int ath9k_enable_dynack(struct ieee80211_hw *hw)
->> +{
->> +     u32 rfilt;
->> +     struct ath_softc *sc = hw->priv;
->> +     struct ath_hw *ah = sc->sc_ah;
->> +
->> +     if (config_enabled(CONFIG_ATH9K_TX99))
->> +             return -EOPNOTSUPP;
->> +
->> +     if (!ah->dynack.enabled) {
->> +             ath_dynack_reset(ah);
->> +
->> +             ah->dynack.enabled = true;
->> +             rfilt = ath_calcrxfilter(sc);
->> +             ath9k_hw_setrxfilter(ah, rfilt);
->> +     }
->> +
->> +     return 0;
->> +}
->> +#endif
->> +
->>  static bool ath9k_has_tx_pending(struct ath_softc *sc)
->>  {
->>       int i, npend = 0;
->> @@ -2651,4 +2681,8 @@ struct ieee80211_ops ath9k_ops = {
->>  #endif
->>       .sw_scan_start      = ath9k_sw_scan_start,
->>       .sw_scan_complete   = ath9k_sw_scan_complete,
->> +
->> +#ifdef CONFIG_ATH9K_DYNACK
->> +     .enable_dynack      = ath9k_enable_dynack,
->> +#endif
->>  };
->
->   CC      drivers/net/wireless/ath/ath9k/main.o
-> drivers/net/wireless/ath/ath9k/main.c:2690:2: error: unknown field ‘enable_dynack’ specified in initializer
->   .enable_dynack      = ath9k_enable_dynack,
->   ^
-> drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: initialization from incompatible pointer type [enabled by default]
-> drivers/net/wireless/ath/ath9k/main.c:2690:2: warning: (near initialization for ‘ath9k_ops.get_stats’) [enabled by default]
-> make[3]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
-> make[2]: *** [drivers/net/wireless/ath/ath9k] Error 2
-> make[1]: *** [drivers/net/wireless/ath] Error 2
-> make: *** [drivers/net/wireless/] Error 2
->
-> Missing a header file change?
->
-
-The function pointer is defined in "configure ack timeout estimation
-algorithm through mac80211 stack" patchset sent on linux-wireless.
-Anyway I will send patchset v3 to take Johannes's hint.
-
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-
-Best regards,
-Lorenzo
-
-
+diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
+index 8c0b8fa..98567a7 100644
+--- a/drivers/staging/vt6656/card.c
++++ b/drivers/staging/vt6656/card.c
+@@ -19,15 +19,11 @@
+  * File: card.c
+  * Purpose: Provide functions to setup NIC operation mode
+  * Functions:
+- *      s_vSafeResetTx - Rest Tx
+  *      vnt_set_rspinf - Set RSPINF
+  *      vnt_update_ifs - Update slotTime,SIFS,DIFS, and EIFS
+  *      vnt_update_top_rates - Update BasicTopRate
+  *      vnt_add_basic_rate - Add to BasicRateSet
+- *      CARDbSetBasicRate - Set Basic Tx Rate
+  *      vnt_ofdm_min_rate - Check if any OFDM rate is in BasicRateSet
+- *      CARDvSetLoopbackMode - Set Loopback mode
+- *      CARDbSoftwareReset - Sortware reset NIC
+  *      vnt_get_tsf_offset - Calculate TSFOffset
+  *      vnt_get_current_tsf - Read Current NIC TSF counter
+  *      vnt_get_next_tbtt - Calculate Next Beacon TSF counter
+@@ -35,8 +31,6 @@
+  *      vnt_update_next_tbtt - Sync. NIC Beacon time
+  *      vnt_radio_power_off - Turn Off NIC Radio Power
+  *      vnt_radio_power_on - Turn On NIC Radio Power
+- *      CARDbSetWEPMode - Set NIC Wep mode
+- *      CARDbSetTxPower - Set NIC tx power
+  *
+  * Revision History:
+  *      06-10-2003 Bryan YC Fan:  Re-write codes to support VT3253 spec.
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index 07de768..e6367ed 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -25,11 +25,6 @@
+  * Date: May 20, 2003
+  *
+  * Functions:
+- *      device_receive_frame - Rcv 802.11 frame function
+- *      s_bHandleRxEncryption- Rcv decrypted data via on-fly
+- *      s_byGetRateIdx- get rate index
+- *      s_vGetDASA- get data offset
+- *      s_vProcessRxMACHeader- Rcv 802.11 and translate to 802.3
+  *
+  * Revision History:
+  *
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index df31ae6..cba6532 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -30,7 +30,6 @@
+  *	vnt_control_in - Read variable length bytes from MEM/BB/MAC/EEPROM
+  *	vnt_control_out_u8 - Write one byte to MEM/BB/MAC/EEPROM
+  *	vnt_control_in_u8 - Read one byte from MEM/BB/MAC/EEPROM
+- *      ControlvMaskByte - Read one byte from MEM/BB/MAC/EEPROM and clear/set some bits in the same address
+  *
+  * Revision History:
+  *      04-05-2004 Jerry Chen:  Initial release
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+2.0.1
+
