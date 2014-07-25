@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:62008 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755604AbaGWO4A (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:48582 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761146AbaGYTwg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 10:56:00 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so7945194wiv.13
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 07:55:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: report correct rate to mac80211 for 5 GHz packets
-Date: Wed, 23 Jul 2014 16:55:44 +0200
-Message-Id: <1406127344-4112-1-git-send-email-zajec5@gmail.com> (sfid-20140723_165609_655571_E8ED8196)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Jul 2014 15:52:36 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so1550283wiw.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/12] staging: vt6656: rename device_free_rx_bufs to vnt_free_rx_bufs
+Date: Fri, 25 Jul 2014 20:51:48 +0100
+Message-Id: <1406317916-21884-4-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215240_912742_67102ACA)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far we were assuming only A-PHY supports 5 GHz.
+changing vnt to device
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/b43/xmit.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/staging/vt6656/main_usb.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 6e6ef3f..426dc13 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -80,9 +80,10 @@ static int b43_plcp_get_bitrate_idx_cck(struct b43_plcp_hdr6 *plcp)
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 88484c8..76678c8 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -397,7 +397,7 @@ static void vnt_free_tx_bufs(struct vnt_private *priv)
+ 	return;
  }
  
- /* Extract the bitrate index out of an OFDM PLCP header. */
--static int b43_plcp_get_bitrate_idx_ofdm(struct b43_plcp_hdr6 *plcp, bool aphy)
-+static int b43_plcp_get_bitrate_idx_ofdm(struct b43_plcp_hdr6 *plcp, bool ghz5)
+-static void device_free_rx_bufs(struct vnt_private *priv)
++static void vnt_free_rx_bufs(struct vnt_private *priv)
  {
--	int base = aphy ? 0 : 4;
-+	/* For 2 GHz band first OFDM rate is at index 4, see main.c */
-+	int base = ghz5 ? 0 : 4;
+ 	struct vnt_rcb *rcb;
+ 	int ii;
+@@ -518,7 +518,7 @@ static bool device_alloc_bufs(struct vnt_private *priv)
+ 	return true;
  
- 	switch (plcp->raw[0] & 0xF) {
- 	case 0xB:
-@@ -767,7 +768,7 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ free_rx_tx:
+-	device_free_rx_bufs(priv);
++	vnt_free_rx_bufs(priv);
  
- 	if (phystat0 & B43_RX_PHYST0_OFDM)
- 		rate_idx = b43_plcp_get_bitrate_idx_ofdm(plcp,
--						phytype == B43_PHYTYPE_A);
-+					!!(chanstat & B43_RX_CHAN_5GHZ));
- 	else
- 		rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
- 	if (unlikely(rate_idx == -1)) {
+ free_tx:
+ 	vnt_free_tx_bufs(priv);
+@@ -567,7 +567,7 @@ static int vnt_start(struct ieee80211_hw *hw)
+ 	return 0;
+ 
+ free_all:
+-	device_free_rx_bufs(priv);
++	vnt_free_rx_bufs(priv);
+ 	vnt_free_tx_bufs(priv);
+ 	device_free_int_bufs(priv);
+ 
+@@ -603,7 +603,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
+ 	priv->cmd_running = false;
+ 
+ 	vnt_free_tx_bufs(priv);
+-	device_free_rx_bufs(priv);
++	vnt_free_rx_bufs(priv);
+ 	device_free_int_bufs(priv);
+ 
+ 	usb_kill_urb(priv->interrupt_urb);
 -- 
-1.8.4.5
+2.0.1
 
