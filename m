@@ -1,60 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:59803 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbaGWQkZ (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:51290 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761158AbaGYTwp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 12:40:25 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCHv2 2/2] ath10k: add spectral scan feature
-Date: Wed, 23 Jul 2014 18:40:22 +0200
-Cc: ath10k@lists.infradead.org, mathias.kretschmer@fokus.fraunhofer.de,
-	kgiori@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	sven@narfation.org
-References: <1405945943-8303-1-git-send-email-sw@simonwunderlich.de> <201407231712.43500.sw@simonwunderlich.de> <8738dst4o6.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8738dst4o6.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201407231840.22674.sw@simonwunderlich.de> (sfid-20140723_184029_293442_A33FB079)
+	Fri, 25 Jul 2014 15:52:45 -0400
+Received: by mail-wi0-f174.google.com with SMTP id d1so1578502wiv.1
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:44 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/12] staging: vt6656: main_usb.c remove return from void functions
+Date: Fri, 25 Jul 2014 20:51:53 +0100
+Message-Id: <1406317916-21884-9-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215248_982592_88D8A789)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Kalle,
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-> Simon Wunderlich <sw@simonwunderlich.de> writes:
-> >> > +struct fft_sample_ath10k {
-> >> > +	struct fft_sample_tlv tlv;
-> >> > +	u8 chan_width_mhz;
-> >> > +	__be16 freq1;
-> >> > +	__be16 freq2;
-> >> > +	__be16 noise;
-> >> > +	__be16 max_magnitude;
-> >> > +	__be16 total_gain_db;
-> >> > +	__be16 base_pwr_db;
-> >> > +	__be64 tsf;
-> >> > +	s8 max_index;
-> >> > +	u8 rssi;
-> >> > +	u8 relpwr_db;
-> >> > +	u8 avgpwr_db;
-> >> > +	u8 max_exp;
-> >> > +
-> >> > +	u8 data[0];
-> >> > +} __packed;
-> >> 
-> >> __be16, that's a first. Just making sure that this really is big endian?
-> > 
-> > As the __le32 you use in other ath10k structs, this is just for checking
-> > - at least sparse should check that, maybe other tools as well.
-> 
-> Sorry, I didn't understand your comment here. But basically I was asking
-> is the fft sample really in big endian? I assume it would be little
-> endian as everything else coming from the firmware.
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 87e89d7..422fcba 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -381,8 +381,6 @@ static void vnt_free_tx_bufs(struct vnt_private *priv)
+ 
+ 		kfree(tx_context);
+ 	}
+-
+-	return;
+ }
+ 
+ static void vnt_free_rx_bufs(struct vnt_private *priv)
+@@ -407,8 +405,6 @@ static void vnt_free_rx_bufs(struct vnt_private *priv)
+ 
+ 		kfree(rcb);
+ 	}
+-
+-	return;
+ }
+ 
+ static void usb_device_reset(struct vnt_private *priv)
+@@ -419,14 +415,11 @@ static void usb_device_reset(struct vnt_private *priv)
+ 	if (status)
+ 		dev_warn(&priv->usb->dev,
+ 			 "usb_device_reset fail status=%d\n", status);
+-	return ;
+ }
+ 
+ static void vnt_free_int_bufs(struct vnt_private *priv)
+ {
+ 	kfree(priv->int_buf.data_buf);
+-
+-	return;
+ }
+ 
+ static bool vnt_alloc_bufs(struct vnt_private *priv)
+@@ -596,8 +589,6 @@ static void vnt_stop(struct ieee80211_hw *hw)
+ 
+ 	usb_kill_urb(priv->interrupt_urb);
+ 	usb_free_urb(priv->interrupt_urb);
+-
+-	return;
+ }
+ 
+ static int vnt_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+@@ -663,8 +654,6 @@ static void vnt_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	/* LED slow blink */
+ 	vnt_mac_set_led(priv, LEDSTS_STS, LEDSTS_SLOW);
+-
+-	return;
+ }
+ 
+ static int vnt_config(struct ieee80211_hw *hw, u32 changed)
+@@ -844,8 +833,6 @@ static void vnt_configure(struct ieee80211_hw *hw,
+ 	vnt_control_out_u8(priv, MESSAGE_REQUEST_MACREG, MAC_REG_RCR, rx_mode);
+ 
+ 	dev_dbg(&priv->usb->dev, "rx mode out= %x\n", rx_mode);
+-
+-	return;
+ }
+ 
+ static int vnt_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+-- 
+2.0.1
 
-Yeah that is intended - we are also using big endian in ath9k to send fft 
-samples to userspace, because that is the network byte order and we then just 
-use ntohs() and friends in userspace to read samples from any system. 
-Therefore we intent to use the same encoding in ath10k. :)
-
-Cheers,
-    Simon
