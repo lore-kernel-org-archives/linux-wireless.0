@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48628 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752546AbaGGKU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 06:20:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] Revert "mac80211: move "bufferable MMPDU" check to fix AP mode scan"
-Date: Mon,  7 Jul 2014 12:20:13 +0200
-Message-Id: <1404728413-4931-1-git-send-email-johannes@sipsolutions.net> (sfid-20140707_122034_022800_AB8D3D8F)
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48429 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761162AbaGYTwl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jul 2014 15:52:41 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so1550484wiv.7
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:40 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/12] staging: vt6656: main_usb.c remove comments to functions nolonger present.
+Date: Fri, 25 Jul 2014 20:51:51 +0100
+Message-Id: <1406317916-21884-7-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215247_385483_F3DF5EBC)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-This reverts commit 277d916fc2e959c3f106904116bb4f7b1148d47a as it was
-at least breaking iwlwifi by setting the IEEE80211_TX_CTL_NO_PS_BUFFER
-flag in all kinds of interface modes, not only for AP mode where it is
-appropriate.
-
-To avoid reintroducing the original problem, explicitly check for probe
-request frames in the multicast buffering code.
-
-Cc: stable@vger.kernel.org
-Fixes: 277d916fc2e9 ("mac80211: move "bufferable MMPDU" check to fix AP mode scan")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/tx.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/vt6656/main_usb.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 865bdaf06ff1..464106c023d8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -415,6 +415,9 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 	if (ieee80211_has_order(hdr->frame_control))
- 		return TX_CONTINUE;
- 
-+	if (ieee80211_is_probe_req(hdr->frame_control))
-+		return TX_CONTINUE;
-+
- 	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
- 		info->hw_queue = tx->sdata->vif.cab_queue;
- 
-@@ -464,6 +467,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- {
- 	struct sta_info *sta = tx->sta;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 	struct ieee80211_local *local = tx->local;
- 
- 	if (unlikely(!sta))
-@@ -475,6 +479,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		     !(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER))) {
- 		int ac = skb_get_queue_mapping(tx->skb);
- 
-+		if (ieee80211_is_mgmt(hdr->frame_control) &&
-+		    !ieee80211_is_bufferable_mmpdu(hdr->frame_control)) {
-+			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
-+			return TX_CONTINUE;
-+		}
-+
- 		ps_dbg(sta->sdata, "STA %pM aid %d: PS buffer for AC %d\n",
- 		       sta->sta.addr, sta->sta.aid, ac);
- 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
-@@ -534,19 +544,9 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
--
- 	if (unlikely(tx->flags & IEEE80211_TX_PS_BUFFERED))
- 		return TX_CONTINUE;
- 
--	if (ieee80211_is_mgmt(hdr->frame_control) &&
--	    !ieee80211_is_bufferable_mmpdu(hdr->frame_control)) {
--		if (tx->flags & IEEE80211_TX_UNICAST)
--			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
--		return TX_CONTINUE;
--	}
--
- 	if (tx->flags & IEEE80211_TX_UNICAST)
- 		return ieee80211_tx_h_unicast_ps_buf(tx);
- 	else
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index fa0128f..87e89d7 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -27,20 +27,8 @@
+  * Functions:
+  *
+  *   vt6656_probe - module initial (insmod) driver entry
+- *   device_remove1 - module remove entry
+- *   device_open - allocate dma/descripter resource & initial mac/bbp function
+- *   device_xmit - asynchronous data tx function
+- *   device_set_multi - set mac filter
+- *   device_ioctl - ioctl entry
+- *   device_close - shutdown mac/bbp & free dma/descriptor resource
+- *   device_alloc_frag_buf - rx fragement pre-allocated function
+  *   vnt_free_tx_bufs - free tx buffer function
+- *   device_dma0_tx_80211- tx 802.11 frame via dma0
+- *   device_dma0_xmit- tx PS buffered frame via dma0
+  *   vnt_init_registers- initial MAC & BBP & RF internal registers.
+- *   device_init_rings- initial tx/rx ring buffer
+- *   device_init_defrag_cb- initial & allocate de-fragement buffer.
+- *   device_tx_srv- tx interrupt service function
+  *
+  * Revision History:
+  */
 -- 
-2.0.0
+2.0.1
 
