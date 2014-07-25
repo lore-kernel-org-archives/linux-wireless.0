@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f193.google.com ([209.85.212.193]:33815 "EHLO
-	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaGYJNW (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:53452 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761152AbaGYTwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 05:13:22 -0400
-Date: Fri, 25 Jul 2014 11:13:14 +0200
-From: Christophe RICARD <christophe.ricard@gmail.com>
-To: Emil Goode <emilgoode@gmail.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] NFC: st21nfca: Remove double assignment of .owner in
- struct device_driver
-Message-ID: <20140725111314.0578f122@toffy-MacBookPro> (sfid-20140725_111345_479687_2C0D93BE)
-In-Reply-To: <1401718860-10901-1-git-send-email-emilgoode@gmail.com>
-References: <1401718860-10901-1-git-send-email-emilgoode@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 25 Jul 2014 15:52:38 -0400
+Received: by mail-wi0-f173.google.com with SMTP id f8so1572255wiw.6
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:37 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 05/12] staging: vt6656: rename device_free_int_bufs to vnt_free_int_bufs
+Date: Fri, 25 Jul 2014 20:51:49 +0100
+Message-Id: <1406317916-21884-5-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215242_647089_4A7833C7)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon,  2 Jun 2014 16:21:00 +0200
-Emil Goode <emilgoode@gmail.com> wrote:
+changing device to vnt
 
-> The .owner member of struct device_driver is assigned THIS_MODULE
-> twice.
-> 
-> Introduced by:
-> 
-> commit c44cb2edd01ca31471d9385f0895891b006ab904
-> ("NFC: dts: st21nfca: Add device-tree (Open Firmware) support to
-> st21nfca")
-> 
-> Signed-off-by: Emil Goode <emilgoode@gmail.com>
-> ---
->  drivers/nfc/st21nfca/i2c.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-> index 3f954ed..95942ca 100644
-> --- a/drivers/nfc/st21nfca/i2c.c
-> +++ b/drivers/nfc/st21nfca/i2c.c
-> @@ -710,7 +710,6 @@ static struct i2c_driver st21nfca_hci_i2c_driver
-> = { .driver = {
->  		.owner = THIS_MODULE,
->  		.name = ST21NFCA_HCI_I2C_DRIVER_NAME,
-> -		.owner = THIS_MODULE,
->  		.of_match_table =
-> of_match_ptr(of_st21nfca_i2c_match), },
->  	.probe = st21nfca_hci_i2c_probe,
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Acked-by: Christophe RICARD <christophe-h.ricard@st.com>
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 76678c8..50955d2 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -434,7 +434,7 @@ static void usb_device_reset(struct vnt_private *priv)
+ 	return ;
+ }
+ 
+-static void device_free_int_bufs(struct vnt_private *priv)
++static void vnt_free_int_bufs(struct vnt_private *priv)
+ {
+ 	kfree(priv->int_buf.data_buf);
+ 
+@@ -569,7 +569,7 @@ static int vnt_start(struct ieee80211_hw *hw)
+ free_all:
+ 	vnt_free_rx_bufs(priv);
+ 	vnt_free_tx_bufs(priv);
+-	device_free_int_bufs(priv);
++	vnt_free_int_bufs(priv);
+ 
+ 	usb_kill_urb(priv->interrupt_urb);
+ 	usb_free_urb(priv->interrupt_urb);
+@@ -604,7 +604,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
+ 
+ 	vnt_free_tx_bufs(priv);
+ 	vnt_free_rx_bufs(priv);
+-	device_free_int_bufs(priv);
++	vnt_free_int_bufs(priv);
+ 
+ 	usb_kill_urb(priv->interrupt_urb);
+ 	usb_free_urb(priv->interrupt_urb);
+-- 
+2.0.1
+
