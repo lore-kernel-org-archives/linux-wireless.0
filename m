@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:54096
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751549AbaGWNlJ (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:37789 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633AbaGYTwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 09:41:09 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, antonio@open-mesh.com
-Subject: [PATCH] ath9k: fix aggregation session lockup
-Date: Wed, 23 Jul 2014 15:40:54 +0200
-Message-Id: <1406122854-60239-1-git-send-email-nbd@openwrt.org> (sfid-20140723_154113_711218_DF924617)
+	Fri, 25 Jul 2014 15:52:31 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so1553035wiv.13
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:30 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/12] staging: vt6656: rename device_set_options to vnt_set_options
+Date: Fri, 25 Jul 2014 20:51:45 +0100
+Message-Id: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215236_196529_C055522F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If an aggregation session fails, frames still end up in the driver queue
-with IEEE80211_TX_CTL_AMPDU set.
-This causes tx for the affected station/tid to stall, since
-ath_tx_get_tid_subframe returning packets to send.
+changing device to vnt
 
-Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
-session is running.
-
-Cc: stable@vger.kernel.org
-Reported-by: Antonio Quartulli <antonio@open-mesh.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/staging/vt6656/main_usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3611529..704fcbc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -897,6 +897,15 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index fdc5c7b..7e8551f 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -104,7 +104,7 @@ static struct usb_device_id vt6656_table[] = {
+ 	{}
+ };
  
- 		tx_info = IEEE80211_SKB_CB(skb);
- 		tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+
-+		/*
-+		 * No aggregation session is running, but there may be frames
-+		 * from a previous session or a failed attempt in the queue.
-+		 * Send them out as normal data frames
-+		 */
-+		if (!tid->active)
-+			tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
-+
- 		if (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
- 			bf->bf_state.bf_type = 0;
- 			return bf;
+-static void device_set_options(struct vnt_private *priv)
++static void vnt_set_options(struct vnt_private *priv)
+ {
+ 	/* Set number of TX buffers */
+ 	if (vnt_tx_buffers < CB_MIN_TX_DESC || vnt_tx_buffers > CB_MAX_TX_DESC)
+@@ -997,7 +997,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	priv->hw = hw;
+ 	priv->usb = udev;
+ 
+-	device_set_options(priv);
++	vnt_set_options(priv);
+ 
+ 	spin_lock_init(&priv->lock);
+ 	mutex_init(&priv->usb_lock);
 -- 
-1.8.5.2 (Apple Git-48)
+2.0.1
 
