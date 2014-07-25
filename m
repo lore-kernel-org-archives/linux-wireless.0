@@ -1,92 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:54414 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756915AbaGNVih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2014 17:38:37 -0400
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/7] test: add "fd" firmware loading test to selftests
-Date: Mon, 14 Jul 2014 14:38:17 -0700
-Message-Id: <1405373897-31671-8-git-send-email-keescook@chromium.org> (sfid-20140714_234047_462429_786AC363)
-In-Reply-To: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:43107
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752073AbaGYOU2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jul 2014 10:20:28 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/2] mac80211: fix smps mode check for AP_VLAN
+Date: Fri, 25 Jul 2014 16:20:23 +0200
+Message-Id: <1406298023-13389-2-git-send-email-nbd@openwrt.org> (sfid-20140725_162412_701637_9DE66D6A)
+In-Reply-To: <1406298023-13389-1-git-send-email-nbd@openwrt.org>
+References: <1406298023-13389-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds tests for the new "fd" interface to the firmware selftests.
+In ieee80211_sta_ps_deliver_wakeup, sdata->smps_mode is checked. This is
+initialized only for the base AP interface, not the individual VLANs.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- tools/testing/selftests/firmware/fw_userhelper.sh |   34 ++++++++++++++++++---
- 1 file changed, 30 insertions(+), 4 deletions(-)
+ net/mac80211/sta_info.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/firmware/fw_userhelper.sh b/tools/testing/selftests/firmware/fw_userhelper.sh
-index 6efbade12139..e2766613e5b5 100644
---- a/tools/testing/selftests/firmware/fw_userhelper.sh
-+++ b/tools/testing/selftests/firmware/fw_userhelper.sh
-@@ -25,6 +25,7 @@ load_fw()
- {
- 	local name="$1"
- 	local file="$2"
-+	local fd="$3"
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f41177f..6b0e886 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1094,8 +1094,11 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	unsigned long flags;
+ 	struct ps_data *ps;
  
- 	# This will block until our load (below) has finished.
- 	echo -n "$name" >"$DIR"/trigger_request &
-@@ -40,9 +41,16 @@ load_fw()
- 		fi
- 	done
- 
--	echo 1 >"$DIR"/"$name"/loading
--	cat "$file" >"$DIR"/"$name"/data
--	echo 0 >"$DIR"/"$name"/loading
-+	if [ -z "$fd" ]; then
-+		echo 1 >"$DIR"/"$name"/loading
-+		cat "$file" >"$DIR"/"$name"/data
-+		echo 0 >"$DIR"/"$name"/loading
-+	else
-+		if ! echo "$fd" <"$file" >"$DIR"/"$name"/fd 2>/dev/null ; then
-+			# If the echo fails, abort to avoid timeout.
-+			echo -1 > "$DIR"/"$name"/loading
-+		fi
-+	fi
- 
- 	# Wait for request to finish.
- 	wait
-@@ -83,7 +91,25 @@ if ! diff -q "$FW" /dev/test_firmware >/dev/null ; then
- 	echo "$0: firmware was not loaded" >&2
- 	exit 1
- else
--	echo "$0: user helper firmware loading works"
-+	echo "$0: user helper firmware via 'loading' works"
-+fi
+-	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
++				     u.ap);
 +
-+# Request a bad file descriptor, expected to fail.
-+load_fw "$NAME" "$FW" 100
-+if diff -q "$FW" /dev/test_firmware >/dev/null ; then
-+	echo "$0: firmware was not expected to match" >&2
-+	exit 1
-+else
-+	echo "$0: bad file descriptor correctly fails"
-+fi
-+
-+# Request with the correct file descriptor.
-+load_fw "$NAME" "$FW" 0
-+if ! diff -q "$FW" /dev/test_firmware >/dev/null ; then
-+	echo "$0: failed to load with good fd" >&2
-+	exit 1
-+else
-+	echo "$0: user helper firmware via 'fd' works"
- fi
- 
- exit 0
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		ps = &sdata->bss->ps;
+ 	else if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		ps = &sdata->u.mesh.ps;
 -- 
-1.7.9.5
+1.8.5.2 (Apple Git-48)
 
