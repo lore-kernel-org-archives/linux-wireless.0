@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34533 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbaGMJnr (ORCPT
+Received: from mail-wi0-f193.google.com ([209.85.212.193]:33815 "EHLO
+	mail-wi0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbaGYJNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 05:43:47 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so1189403wib.4
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:46 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 11/13] staging: vt6656: rename vResetCommandTimer to vnt_reset_command_timer
-Date: Sun, 13 Jul 2014 10:42:51 +0100
-Message-Id: <1405244573-10978-11-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114410_108882_48C85196)
-In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
-References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 25 Jul 2014 05:13:22 -0400
+Date: Fri, 25 Jul 2014 11:13:14 +0200
+From: Christophe RICARD <christophe.ricard@gmail.com>
+To: Emil Goode <emilgoode@gmail.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] NFC: st21nfca: Remove double assignment of .owner in
+ struct device_driver
+Message-ID: <20140725111314.0578f122@toffy-MacBookPro> (sfid-20140725_111345_479687_2C0D93BE)
+In-Reply-To: <1401718860-10901-1-git-send-email-emilgoode@gmail.com>
+References: <1401718860-10901-1-git-send-email-emilgoode@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 2 +-
- drivers/staging/vt6656/wcmd.c     | 2 +-
- drivers/staging/vt6656/wcmd.h     | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+On Mon,  2 Jun 2014 16:21:00 +0200
+Emil Goode <emilgoode@gmail.com> wrote:
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index ceef9ef..dffd0c7 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1135,7 +1135,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	usb_device_reset(priv);
- 
- 	MP_CLEAR_FLAG(priv, fMP_DISCONNECTED);
--	vResetCommandTimer(priv);
-+	vnt_reset_command_timer(priv);
- 
- 	vnt_schedule_command(priv, WLAN_CMD_INIT_MAC80211);
- 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index b217efb..bb9500f 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -202,7 +202,7 @@ int vnt_schedule_command(struct vnt_private *priv, enum vnt_cmd command)
- 
- }
- 
--void vResetCommandTimer(struct vnt_private *priv)
-+void vnt_reset_command_timer(struct vnt_private *priv)
- {
- 	priv->free_cmd_queue = CMD_Q_SIZE;
- 	priv->cmd_dequeue_idx = 0;
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 3248c95..0fc2c40 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -59,7 +59,7 @@ enum vnt_cmd_state {
- 
- struct vnt_private;
- 
--void vResetCommandTimer(struct vnt_private *);
-+void vnt_reset_command_timer(struct vnt_private *);
- 
- int vnt_schedule_command(struct vnt_private *, enum vnt_cmd);
- 
--- 
-1.9.1
+> The .owner member of struct device_driver is assigned THIS_MODULE
+> twice.
+> 
+> Introduced by:
+> 
+> commit c44cb2edd01ca31471d9385f0895891b006ab904
+> ("NFC: dts: st21nfca: Add device-tree (Open Firmware) support to
+> st21nfca")
+> 
+> Signed-off-by: Emil Goode <emilgoode@gmail.com>
+> ---
+>  drivers/nfc/st21nfca/i2c.c |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+> index 3f954ed..95942ca 100644
+> --- a/drivers/nfc/st21nfca/i2c.c
+> +++ b/drivers/nfc/st21nfca/i2c.c
+> @@ -710,7 +710,6 @@ static struct i2c_driver st21nfca_hci_i2c_driver
+> = { .driver = {
+>  		.owner = THIS_MODULE,
+>  		.name = ST21NFCA_HCI_I2C_DRIVER_NAME,
+> -		.owner = THIS_MODULE,
+>  		.of_match_table =
+> of_match_ptr(of_st21nfca_i2c_match), },
+>  	.probe = st21nfca_hci_i2c_probe,
 
+Acked-by: Christophe RICARD <christophe-h.ricard@st.com>
