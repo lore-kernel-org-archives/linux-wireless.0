@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:37796 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758080AbaGZCo3 (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33064 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760501AbaGYOSG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 22:44:29 -0400
-Received: by mail-la0-f53.google.com with SMTP id gl10so3695800lab.12
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 19:44:27 -0700 (PDT)
+	Fri, 25 Jul 2014 10:18:06 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by gateway1.nyi.internal (Postfix) with ESMTP id A761222413
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 10:10:55 -0400 (EDT)
+Message-ID: <53D26552.2070201@fastmail.fm> (sfid-20140725_162411_478464_280FDD12)
+Date: Fri, 25 Jul 2014 15:10:26 +0100
+From: Michalis Pappas <mpappas@fastmail.fm>
 MIME-Version: 1.0
-In-Reply-To: <20140724194358.GY1390@garbanzo.do-not-panic.com>
-References: <CA+XVXffvG6GagBPMZF+iogaAeYV0kUoi4BX68J0fxOfsHjE70A@mail.gmail.com>
- <20140703221901.GS1390@garbanzo.do-not-panic.com> <CA+XVXffnDs4oCnyD0NzmyG6=jxqXwUFd+Tj8XAsWGC1bgcMH8A@mail.gmail.com>
- <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
- <20140708025719.GU1390@garbanzo.do-not-panic.com> <CA+XVXffMM9W76ysqgs=pyAHubavefgjqW5u8bNSZxTX69j7nzg@mail.gmail.com>
- <20140723004132.GX1390@garbanzo.do-not-panic.com> <CA+XVXfd-4jYUy3oz4cOqBprG358X2D9m7Pgq_JrkZKHERm6f3A@mail.gmail.com>
- <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
- <CA+XVXfcHwOAndEfUo3YtZxbgHtC12qC22QcpVXZFM41WKn0LiQ@mail.gmail.com> <20140724194358.GY1390@garbanzo.do-not-panic.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 25 Jul 2014 19:44:07 -0700
-Message-ID: <CAB=NE6V2L1myxtHfFfijSTiOOez9zB=5bTLq+nKhsKD_JjXDew@mail.gmail.com> (sfid-20140726_044438_369827_FE45EB58)
-Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Chan <benchan@chromium.org>, Greg KH <greg@kroah.com>
+CC: devel@driverdev.osuosl.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, inaky@linux.intel.com
+Subject: Re: How to replace control code in gdm72xx?
+References: <53C6DF7C.8030109@fastmail.fm> <20140716204004.GA31349@kroah.com> <CAC5Y2nNfiZ_cdiitj07KsB_DbGTgO=PMUwHGaXwrXjQ-U1bLyA@mail.gmail.com>
+In-Reply-To: <CAC5Y2nNfiZ_cdiitj07KsB_DbGTgO=PMUwHGaXwrXjQ-U1bLyA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2014 at 12:43 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
->> How about adding appropriate regulatory_flags to ensure this can't happen?
->
-> That'd be being restrictive and lazy, for instance it'd let a
-> manufacturer build an image for phones that would not let users
-> plug in another type of 802.11 device. I think this flag is OK
-> however if once a device is found that uses wireless-regdb we'd
-> simply disallow the 802.11 devices that have the internal reg data
-> solution.
+On 07/17/2014 01:59 AM, Ben Chan wrote:
+> 
+> From what I read from the user-space code, the custom ioctl is to read
+> the following information from the driver:
+> 
+> enum {
+>     SIOC_DATA_FSM,           // Device/Connection State
+>     SIOC_DATA_NETLIST,       // Network list
+>     SIOC_DATA_CONNNSP,     // Connected NSP
+>     SIOC_DATA_CONNCOMP,    // Connection completion info
+>     SIOC_DATA_PROFILEID,    // WiMAX profile ID
+>     SIOC_DATA_END
+> };
+> 
 
-I'm growing mor eand more inclined to simply reject all this as
-nonsense. I obviously can't and its why I'm seriously trying to find
-ways to make this work in a sane architectural way that can scale, but
-I hope you can see that this is really only bringing complexities. Can
-you please, please try once more, and with all you got to push against
-this internal firmware junk. Who the fuck could have decided this was
-a good idea?
+Sorry for the late reply, I was away. 
 
-  Luis
+I had a look at the library's source to clear things out a bit. From what I see the driver is tightly coupled -actually dependent- to the library, as all control operations are performed by the latter. So without the library, the driver is pretty much of no use.
+
+The way control works is that the driver acts as a middleman between the library and the hci. All operations are initiated and handled by the library, through the netlink channel. So the information mentioned above, eg SIOC_DATA_NETLIST, are requested by the library, by sending the appropriate command to the driver via netlink. The driver will forward the request to the hci and forward the response back to userspace.
+
+Here is where the ioctl part interface into play. The ioctl interface supports two commands: SIOCS_DATA and SIOCG_DATA (set data / get data). The above can store and retrieve data from the driver, which in turn keeps this information in the nic.sdk_data array. This array maintains one element for each one of the SIOC_DATA_* mentioned above.
+
+So once received and processed, the library will store the received data (eg the network list) in the driver's memory via the ioctl, just to retrieve it again later(!) With the exception of SIOC_FSM_XXX, the driver does not inspect or process the contents of these objects by any means (see gdm_wimax_ioctl() in gdm_wimax.c).
+
+Now, I have no clue why it was written this way, but as per its current 
+status all this might as well (and probably should) be stored locally, in userspace memory. So the ioctl part can be completely removed, and the driver will then be in conformance with the interface defined by the wimax stack, in wimax.h.
+
+> 
+> The driver has a corresponding user-space library, so I'd like to
+> figure out a way to maintain backward compatibility if possible. But
+> I'm happy to help make minor changes to  the user-space library in
+> case we need to modify the ioctl / netlink part of the driver (caveat:
+> I'm not the author of the driver or the user-space library).
+> 
+
+Why maintain backwards compatibility? The only part to change is the
+communication layer between the library and the driver. The applications
+using the library won't notice any difference.
+
+IMO the right thing to do is to push whatever changes made to the library upstream. Which brings us to the question of who is the library's maintainer and where is it officially hosted?
+
+If the answers to the above are "none" and "nowhere", then we have a bigger problem, as the updated driver will appear to be broken to anyone who hasn't been updated with the latest version of the library.
+
+In conclusion, I am happy to fix the driver and even write a patch for the corresponding userspace parts, but only as long as:
+
+* You are willing to help me with testing, as I do not own the hardware.
+
+* My work will not be waisted. What I mean by that is, if the library has been distributed only to a few parties worldwide, then IMO we'd better delete the driver and let it be distributed along with the library, since they are interdependent anyway.
+
+In any other case, I'd rather move on to some other driver that does not depend on third party stuff :)
+
+Thanks,
+
+Michalis
