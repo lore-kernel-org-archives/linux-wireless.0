@@ -1,130 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:51557 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbaG1OCc (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:45969 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761138AbaGYTwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 10:02:32 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so4504605wiw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 07:02:31 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
-Date: Mon, 28 Jul 2014 16:02:27 +0200
-Message-Id: <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140728_160236_990069_48C4BCD9)
-In-Reply-To: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Fri, 25 Jul 2014 15:52:35 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so4669142wgg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:33 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/12] staging: vt6656: rename device_free_tx_bufs to vnt_free_tx_bufs
+Date: Fri, 25 Jul 2014 20:51:47 +0100
+Message-Id: <1406317916-21884-3-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215239_119175_DEF404B1)
+In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Define NL80211_ATTR_WIPHY_DYN_ACK attribute in order to enable ack timeout
-estimation algorithm (dynack) using set_coverage_class codepath.
-Define NL80211_FEATURE_ACKTO_ESTIMATION flag, which is set by lower drivers to
-show dynack capability
+changing device to vnt
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  8 ++++++++
- net/wireless/nl80211.c       | 11 +++++++++++
- 3 files changed, 21 insertions(+)
+ drivers/staging/vt6656/main_usb.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0a080c4..ef7f250 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1800,6 +1800,7 @@ struct cfg80211_connect_params {
-  * @WIPHY_PARAM_FRAG_THRESHOLD: wiphy->frag_threshold has changed
-  * @WIPHY_PARAM_RTS_THRESHOLD: wiphy->rts_threshold has changed
-  * @WIPHY_PARAM_COVERAGE_CLASS: coverage class changed
-+ * @WIPHY_PARAM_DYN_ACK: dynack has been enabled
-  */
- enum wiphy_params_flags {
- 	WIPHY_PARAM_RETRY_SHORT		= 1 << 0,
-@@ -1807,6 +1808,7 @@ enum wiphy_params_flags {
- 	WIPHY_PARAM_FRAG_THRESHOLD	= 1 << 2,
- 	WIPHY_PARAM_RTS_THRESHOLD	= 1 << 3,
- 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
-+	WIPHY_PARAM_DYN_ACK		= 1 << 5,
- };
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 51fad26..88484c8 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -34,7 +34,7 @@
+  *   device_ioctl - ioctl entry
+  *   device_close - shutdown mac/bbp & free dma/descriptor resource
+  *   device_alloc_frag_buf - rx fragement pre-allocated function
+- *   device_free_tx_bufs - free tx buffer function
++ *   vnt_free_tx_bufs - free tx buffer function
+  *   device_dma0_tx_80211- tx 802.11 frame via dma0
+  *   device_dma0_xmit- tx PS buffered frame via dma0
+  *   vnt_init_registers- initial MAC & BBP & RF internal registers.
+@@ -378,7 +378,7 @@ static int vnt_init_registers(struct vnt_private *priv)
+ 	return true;
+ }
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f1db15b..0b2d55d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1594,6 +1594,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-  *
-+ * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
-+ *	algorithm is enabled
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1936,6 +1939,8 @@ enum nl80211_attrs {
+-static void device_free_tx_bufs(struct vnt_private *priv)
++static void vnt_free_tx_bufs(struct vnt_private *priv)
+ {
+ 	struct vnt_usb_send_context *tx_context;
+ 	int ii;
+@@ -521,7 +521,7 @@ free_rx_tx:
+ 	device_free_rx_bufs(priv);
  
- 	NL80211_ATTR_TDLS_INITIATOR,
+ free_tx:
+-	device_free_tx_bufs(priv);
++	vnt_free_tx_bufs(priv);
  
-+	NL80211_ATTR_WIPHY_DYN_ACK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ 	return false;
+ }
+@@ -568,7 +568,7 @@ static int vnt_start(struct ieee80211_hw *hw)
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3956,6 +3961,8 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE: This driver supports dynamic
-  *	channel bandwidth change (e.g., HT 20 <-> 40 MHz channel) during the
-  *	lifetime of a BSS.
-+ * @NL80211_FEATURE_ACKTO_ESTIMATION: This driver supports dynamic ACK timeout
-+ *	estimation.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3977,6 +3984,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
- 	NL80211_FEATURE_ACTIVE_MONITOR			= 1 << 17,
- 	NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE	= 1 << 18,
-+	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 19,
- };
+ free_all:
+ 	device_free_rx_bufs(priv);
+-	device_free_tx_bufs(priv);
++	vnt_free_tx_bufs(priv);
+ 	device_free_int_bufs(priv);
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df7b133..b00cd11 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -225,6 +225,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WIPHY_FRAG_THRESHOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_RTS_THRESHOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_COVERAGE_CLASS] = { .type = NLA_U8 },
-+	[NL80211_ATTR_WIPHY_DYN_ACK] = { .type = NLA_FLAG },
+ 	usb_kill_urb(priv->interrupt_urb);
+@@ -602,7 +602,7 @@ static void vnt_stop(struct ieee80211_hw *hw)
  
- 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
-@@ -2237,11 +2238,21 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	}
+ 	priv->cmd_running = false;
  
- 	if (info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
-+		if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK])
-+			return -EINVAL;
-+
- 		coverage_class = nla_get_u8(
- 			info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
- 		changed |= WIPHY_PARAM_COVERAGE_CLASS;
- 	}
+-	device_free_tx_bufs(priv);
++	vnt_free_tx_bufs(priv);
+ 	device_free_rx_bufs(priv);
+ 	device_free_int_bufs(priv);
  
-+	if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_ACKTO_ESTIMATION))
-+			return -EOPNOTSUPP;
-+
-+		changed |= WIPHY_PARAM_DYN_ACK;
-+	}
-+
- 	if (changed) {
- 		u8 old_retry_short, old_retry_long;
- 		u32 old_frag_threshold, old_rts_threshold;
 -- 
-1.9.1
+2.0.1
 
