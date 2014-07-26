@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52390 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753647AbaGGPWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:22:11 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 05/10] wireless: libertas: print esaped string via %*pE
-Date: Mon,  7 Jul 2014 18:21:47 +0300
-Message-Id: <1404746512-12749-6-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172340_405270_C1C62E5B)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:37796 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758080AbaGZCo3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jul 2014 22:44:29 -0400
+Received: by mail-la0-f53.google.com with SMTP id gl10so3695800lab.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 19:44:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140724194358.GY1390@garbanzo.do-not-panic.com>
+References: <CA+XVXffvG6GagBPMZF+iogaAeYV0kUoi4BX68J0fxOfsHjE70A@mail.gmail.com>
+ <20140703221901.GS1390@garbanzo.do-not-panic.com> <CA+XVXffnDs4oCnyD0NzmyG6=jxqXwUFd+Tj8XAsWGC1bgcMH8A@mail.gmail.com>
+ <CA+XVXfewhKpsdVo5Yq3RiKWoDe85h1ne_QVUDtFuC4sfECkV7g@mail.gmail.com>
+ <20140708025719.GU1390@garbanzo.do-not-panic.com> <CA+XVXffMM9W76ysqgs=pyAHubavefgjqW5u8bNSZxTX69j7nzg@mail.gmail.com>
+ <20140723004132.GX1390@garbanzo.do-not-panic.com> <CA+XVXfd-4jYUy3oz4cOqBprG358X2D9m7Pgq_JrkZKHERm6f3A@mail.gmail.com>
+ <CAB=NE6WxUi9J+ODtvojAkT5PN5LsB=SWKhgbzqSkGkbepWeaOg@mail.gmail.com>
+ <CA+XVXfcHwOAndEfUo3YtZxbgHtC12qC22QcpVXZFM41WKn0LiQ@mail.gmail.com> <20140724194358.GY1390@garbanzo.do-not-panic.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 25 Jul 2014 19:44:07 -0700
+Message-ID: <CAB=NE6V2L1myxtHfFfijSTiOOez9zB=5bTLq+nKhsKD_JjXDew@mail.gmail.com> (sfid-20140726_044438_369827_FE45EB58)
+Subject: Re: [PATCH 4/5] cfg80211: accept world/same regdom from driver/user hints
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of custom approach this allows to print escaped strings via recently
-added kernel extension: %*pE.
+On Thu, Jul 24, 2014 at 12:43 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+>> How about adding appropriate regulatory_flags to ensure this can't happen?
+>
+> That'd be being restrictive and lazy, for instance it'd let a
+> manufacturer build an image for phones that would not let users
+> plug in another type of 802.11 device. I think this flag is OK
+> however if once a device is found that uses wireless-regdb we'd
+> simply disallow the 802.11 devices that have the internal reg data
+> solution.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/libertas/cfg.c  | 8 ++------
- drivers/net/wireless/libertas/mesh.c | 7 +++----
- 2 files changed, 5 insertions(+), 10 deletions(-)
+I'm growing mor eand more inclined to simply reject all this as
+nonsense. I obviously can't and its why I'm seriously trying to find
+ways to make this work in a sane architectural way that can scale, but
+I hope you can see that this is really only bringing complexities. Can
+you please, please try once more, and with all you got to push against
+this internal firmware junk. Who the fuck could have decided this was
+a good idea?
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 47a998d..1188814 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -590,7 +590,6 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 		int chan_no = -1;
- 		const u8 *ssid = NULL;
- 		u8 ssid_len = 0;
--		DECLARE_SSID_BUF(ssid_buf);
- 
- 		int len = get_unaligned_le16(pos);
- 		pos += 2;
-@@ -644,10 +643,8 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 			struct ieee80211_channel *channel =
- 				ieee80211_get_channel(wiphy, freq);
- 
--			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %s, "
--				     "%d dBm\n",
--				     bssid, capa, chan_no,
--				     print_ssid(ssid_buf, ssid, ssid_len),
-+			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %*pE, %d dBm\n",
-+				     bssid, capa, chan_no, ssid_len, ssid,
- 				     LBS_SCAN_RSSI_TO_MBM(rssi)/100);
- 
- 			if (channel &&
-@@ -1982,7 +1979,6 @@ static int lbs_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 	struct lbs_private *priv = wiphy_priv(wiphy);
- 	int ret = 0;
- 	struct cfg80211_bss *bss;
--	DECLARE_SSID_BUF(ssid_buf);
- 
- 	if (dev == priv->mesh_dev)
- 		return -EOPNOTSUPP;
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index 6fef746..b211ff8 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -93,7 +93,6 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
- {
- 	struct cmd_ds_mesh_config cmd;
- 	struct mrvl_meshie *ie;
--	DECLARE_SSID_BUF(ssid);
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.channel = cpu_to_le16(chan);
-@@ -122,9 +121,9 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
- 	default:
- 		return -1;
- 	}
--	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
--		    action, priv->mesh_tlv, chan,
--		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
-+	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %*pE\n",
-+		    action, priv->mesh_tlv, chan, priv->mesh_ssid_len,
-+		    priv->mesh_ssid);
- 
- 	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
- }
--- 
-2.0.1
-
+  Luis
