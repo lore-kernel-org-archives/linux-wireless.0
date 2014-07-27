@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:39138 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425AbaF3WE3 (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:45920 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546AbaG0Vgz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2014 18:04:29 -0400
-Received: by mail-pa0-f46.google.com with SMTP id eu11so9389757pac.33
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2014 15:04:29 -0700 (PDT)
-Date: Mon, 30 Jun 2014 15:04:24 -0700
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/5] cfg80211: treat the special "unknown" alpha2 as valid
-Message-ID: <20140630220424.GM1390@garbanzo.do-not-panic.com> (sfid-20140701_000433_468075_2E31BB18)
-References: <1402469724-22358-1-git-send-email-arik@wizery.com>
- <1402469724-22358-3-git-send-email-arik@wizery.com>
- <CAB=NE6UZPcgAAJ6GAnjy2nSdYhLRqxo4h1ZZoZ7vYsAbYBiw+Q@mail.gmail.com>
- <CA+XVXfc=zDyie-3xO86k98zKQUZqDm0dEf9d5qMDAX83svfR_Q@mail.gmail.com>
- <20140623182333.GB1390@garbanzo.do-not-panic.com>
- <CA+XVXfe91Lcf2H1vEficPTNumdd2sBOR8KV8cD5tsy+po4M0mg@mail.gmail.com>
- <CAB=NE6Va7ynqAsRkgVQ1hCLMu6_Wco_=-Wa5dqrSzPMkA-pYeQ@mail.gmail.com>
- <CA+XVXfeTn99ZW9OzUQZNNaHLCMNipsubVP8CVLapWA8Z3oM4+w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+XVXfeTn99ZW9OzUQZNNaHLCMNipsubVP8CVLapWA8Z3oM4+w@mail.gmail.com>
+	Sun, 27 Jul 2014 17:36:55 -0400
+Received: by mail-we0-f179.google.com with SMTP id u57so6552365wes.38
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 14:36:54 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: [PATCHv3 2/6] mac80211: extend set_coverage_class signature
+Date: Sun, 27 Jul 2014 23:36:48 +0200
+Message-Id: <1406497008-25383-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_233701_012840_C5CADAC9)
+In-Reply-To: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 09:09:41AM +0300, Arik Nemtsov wrote:
-> On Mon, Jun 23, 2014 at 9:57 PM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
-> > On Mon, Jun 23, 2014 at 11:32 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> >>> modifieres for user_reg_hint_type, you'd want a driver_reg_hint_type,
-> >
-> > Minor note, since the driver reg hint type can be require the
-> > regulatory data source to be internal to the driver (firmware or
-> > driver, we won't know) and since the new API can allow the
-> > driver/firmware to pass and let the request come from CRDA /
-> > wireless-regdb / internal db the driver hint is different from the
-> > final *set* regulatory domain. So for example although the goal was to
-> > query firmware first if the driver passed and let the source of
-> > regulatory data come from CRDA / wireless-regdb / internal regdb we'd
-> > want to ensure userspace is informed of this. So I think we'd need a
-> > regulatory data structure source type as well, right now it'd default
-> > to wireless-regdb as the source (that would suffice for CRDA or
-> > internal-db), and your changes would add an internal-driver source.
-> 
-> Sure I can add a source to the regulatory_request structure. It will
-> have something like CORE, CRDA, INTERNAL_REGDB, DRIVER.
+Extend set_coverage_class API in order to enable ACK timeout estimation
+algorithm (dynack) passing coverage_class equals to -1 to lower drivers.
 
-OK.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ include/net/mac80211.h    | 5 +++--
+ net/mac80211/cfg.c        | 9 +++++++--
+ net/mac80211/driver-ops.h | 2 +-
+ net/mac80211/trace.h      | 4 ++--
+ 4 files changed, 13 insertions(+), 7 deletions(-)
 
-> > Since this is allowing drivers to be explicit about their regulatory
-> > data it would be nice if as part of this we can then get 'iw reg get'
-> > the ability to then spit out per wiphy regd. Since even the custom
-> > regd requires passing a custom regd this could even enable parsing
-> > that data as well. This should make trouble shooting for intersections
-> > much easier on complex systems.
-> 
-> This would have to wait a bit on my side.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dae2e24..3a43f66 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2666,7 +2666,8 @@ enum ieee80211_roc_type {
+  *
+  * @set_coverage_class: Set slot time for given coverage class as specified
+  *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
+- *	accordingly. This callback is not required and may sleep.
++ *	accordingly; coverage_class equals to -1 to enable ACK timeout
++ *	estimation algorithm. This callback is not required and may sleep.
+  *
+  * @testmode_cmd: Implement a cfg80211 test mode command. The passed @vif may
+  *	be %NULL. The callback can sleep.
+@@ -2950,7 +2951,7 @@ struct ieee80211_ops {
+ 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
+ 		struct survey_info *survey);
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
+-	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
++	void (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    void *data, int len);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 927b4ea..5927822 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1984,8 +1984,13 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 			return err;
+ 	}
+ 
+-	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
+-		err = drv_set_coverage_class(local, wiphy->coverage_class);
++	if ((changed & WIPHY_PARAM_COVERAGE_CLASS) ||
++	    (changed & WIPHY_PARAM_DYN_ACK)) {
++		s16 coverage_class;
++
++		coverage_class = (changed & WIPHY_PARAM_COVERAGE_CLASS)
++				  ? wiphy->coverage_class : -1;
++		err = drv_set_coverage_class(local, coverage_class);
+ 
+ 		if (err)
+ 			return err;
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1142395..196d48c 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -450,7 +450,7 @@ static inline int drv_set_rts_threshold(struct ieee80211_local *local,
+ }
+ 
+ static inline int drv_set_coverage_class(struct ieee80211_local *local,
+-					 u8 value)
++					 s16 value)
+ {
+ 	int ret = 0;
+ 	might_sleep();
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 02ac535..38fae7e 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -672,13 +672,13 @@ DEFINE_EVENT(local_u32_evt, drv_set_rts_threshold,
+ );
+ 
+ TRACE_EVENT(drv_set_coverage_class,
+-	TP_PROTO(struct ieee80211_local *local, u8 value),
++	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
+ 	TP_ARGS(local, value),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+-		__field(u8, value)
++		__field(s16, value)
+ 	),
+ 
+ 	TP_fast_assign(
+-- 
+1.9.1
 
-OK.
-
-  Luis
