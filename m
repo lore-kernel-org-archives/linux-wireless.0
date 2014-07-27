@@ -1,104 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51283 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751689AbaGGPV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2014 11:21:59 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 02/10] lib / string_helpers: refactoring the test suite
-Date: Mon,  7 Jul 2014 18:21:44 +0300
-Message-Id: <1404746512-12749-3-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140707_172539_851715_F8132868)
-In-Reply-To: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1404746512-12749-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:63097 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657AbaG0Vgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jul 2014 17:36:55 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so6423469wgh.34
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 14:36:54 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: [PATCHv3 1/6] cfg80211: enable dynack through nl80211
+Date: Sun, 27 Jul 2014 23:36:47 +0200
+Message-Id: <1406497008-25383-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140727_233659_459426_5F33C3B8)
+In-Reply-To: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1406497008-25383-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch prepares test suite for a following update. It introduces
-test_string_check_buf() helper which checks the result and dumps an error.
+Define NL80211_ATTR_WIPHY_DYN_ACK attribute in order to enable ack timeout
+estimation algorithm (dynack) using set_coverage_class codepath.
+Define NL80211_FEATURE_ACKTO_ESTIMATION flag, which is set by lower drivers to
+show dynack capability
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- lib/test-string_helpers.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  8 ++++++++
+ net/wireless/nl80211.c       | 11 +++++++++++
+ 3 files changed, 21 insertions(+)
 
-diff --git a/lib/test-string_helpers.c b/lib/test-string_helpers.c
-index 6ac48de..ac44c92 100644
---- a/lib/test-string_helpers.c
-+++ b/lib/test-string_helpers.c
-@@ -10,6 +10,26 @@
- #include <linux/string.h>
- #include <linux/string_helpers.h>
- 
-+static __init bool test_string_check_buf(const char *name, unsigned int flags,
-+					 char *in, size_t p,
-+					 char *out_real, size_t q_real,
-+					 char *out_test, size_t q_test)
-+{
-+	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
-+		return true;
-+
-+	pr_warn("Test '%s' failed: flags = %u\n", name, flags);
-+
-+	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
-+		       in, p, true);
-+	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_test, q_test, true);
-+	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_real, q_real, true);
-+
-+	return false;
-+}
-+
- struct test_string {
- 	const char *in;
- 	const char *out;
-@@ -39,7 +59,8 @@ static const struct test_string strings[] __initconst = {
- 	},
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0a080c4..ef7f250 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1800,6 +1800,7 @@ struct cfg80211_connect_params {
+  * @WIPHY_PARAM_FRAG_THRESHOLD: wiphy->frag_threshold has changed
+  * @WIPHY_PARAM_RTS_THRESHOLD: wiphy->rts_threshold has changed
+  * @WIPHY_PARAM_COVERAGE_CLASS: coverage class changed
++ * @WIPHY_PARAM_DYN_ACK: dynack has been enabled
+  */
+ enum wiphy_params_flags {
+ 	WIPHY_PARAM_RETRY_SHORT		= 1 << 0,
+@@ -1807,6 +1808,7 @@ enum wiphy_params_flags {
+ 	WIPHY_PARAM_FRAG_THRESHOLD	= 1 << 2,
+ 	WIPHY_PARAM_RTS_THRESHOLD	= 1 << 3,
+ 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
++	WIPHY_PARAM_DYN_ACK		= 1 << 5,
  };
  
--static void __init test_string_unescape(unsigned int flags, bool inplace)
-+static void __init test_string_unescape(const char *name, unsigned int flags,
-+					bool inplace)
- {
- 	char in[256];
- 	char out_test[256];
-@@ -77,15 +98,8 @@ static void __init test_string_unescape(unsigned int flags, bool inplace)
- 		q_real = string_unescape(in, out_real, q_real, flags);
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f1db15b..0b2d55d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1594,6 +1594,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+  *
++ * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
++ *	algorithm is enabled
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1936,6 +1939,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TDLS_INITIATOR,
+ 
++	NL80211_ATTR_WIPHY_DYN_ACK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3956,6 +3961,8 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE: This driver supports dynamic
+  *	channel bandwidth change (e.g., HT 20 <-> 40 MHz channel) during the
+  *	lifetime of a BSS.
++ * @NL80211_FEATURE_ACKTO_ESTIMATION: This driver supports dynamic ACK timeout
++ *	estimation.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3977,6 +3984,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
+ 	NL80211_FEATURE_ACTIVE_MONITOR			= 1 << 17,
+ 	NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE	= 1 << 18,
++	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 19,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df7b133..b00cd11 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -225,6 +225,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_WIPHY_FRAG_THRESHOLD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WIPHY_RTS_THRESHOLD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WIPHY_COVERAGE_CLASS] = { .type = NLA_U8 },
++	[NL80211_ATTR_WIPHY_DYN_ACK] = { .type = NLA_FLAG },
+ 
+ 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
+@@ -2237,11 +2238,21 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
  	}
  
--	if (q_real != q_test || memcmp(out_test, out_real, q_test)) {
--		pr_warn("Test failed: flags = %u\n", flags);
--		print_hex_dump(KERN_WARNING, "Input: ",
--			       DUMP_PREFIX_NONE, 16, 1, in, p - 1, true);
--		print_hex_dump(KERN_WARNING, "Expected: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_test, q_test, true);
--		print_hex_dump(KERN_WARNING, "Got: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_real, q_real, true);
--	}
-+	test_string_check_buf(name, flags, in, p - 1, out_real, q_real,
-+			      out_test, q_test);
- }
+ 	if (info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
++		if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK])
++			return -EINVAL;
++
+ 		coverage_class = nla_get_u8(
+ 			info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
+ 		changed |= WIPHY_PARAM_COVERAGE_CLASS;
+ 	}
  
- static int __init test_string_helpers_init(void)
-@@ -94,8 +108,9 @@ static int __init test_string_helpers_init(void)
- 
- 	pr_info("Running tests...\n");
- 	for (i = 0; i < UNESCAPE_ANY + 1; i++)
--		test_string_unescape(i, false);
--	test_string_unescape(get_random_int() % (UNESCAPE_ANY + 1), true);
-+		test_string_unescape("unescape", i, false);
-+	test_string_unescape("unescape inplace",
-+			     get_random_int() % (UNESCAPE_ANY + 1), true);
- 
- 	return -EINVAL;
- }
++	if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
++		if (!(rdev->wiphy.features & NL80211_FEATURE_ACKTO_ESTIMATION))
++			return -EOPNOTSUPP;
++
++		changed |= WIPHY_PARAM_DYN_ACK;
++	}
++
+ 	if (changed) {
+ 		u8 old_retry_short, old_retry_long;
+ 		u32 old_frag_threshold, old_rts_threshold;
 -- 
-2.0.1
+1.9.1
 
