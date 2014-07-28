@@ -1,77 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:46978 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbaGTMba (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:58983 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbaG1G0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 08:31:30 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so2843919wiv.11
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 05:31:29 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	Philippe Duchein <wireless-dev@duchein.net>
-Subject: [PATCH 01/10] ath9k: export methods related to ack timeout estimation
-Date: Sun, 20 Jul 2014 14:31:17 +0200
-Message-Id: <1405859486-31414-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140720_143135_213409_CD9D18D5)
-In-Reply-To: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1405859486-31414-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Mon, 28 Jul 2014 02:26:33 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so6757935wgg.28
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2014 23:26:32 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2] ath10k: extend debug code for RX path
+Date: Mon, 28 Jul 2014 08:26:05 +0200
+Message-Id: <1406528765-4669-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140728_082637_137671_D8625EA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove static keyword and export ath9k_hw_setslottime(),
-ath9k_hw_set_ack_timeout() and ath9k_hw_set_cts_timeout() in hw.h. These
-methods will be used in dynamic ack timeout estimation
+Print sequence number, AMSDU_MORE flag and AC when additional
+debug enabled in RX path. This is usefull for debugging purpose.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 6 +++---
- drivers/net/wireless/ath/ath9k/hw.h | 4 ++++
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   41 ++++++++++++++++++++++++++++--
+ 1 file changed, 39 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index fd0158f..e88896c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -935,21 +935,21 @@ static void ath9k_hw_set_sifs_time(struct ath_hw *ah, u32 us)
- 	REG_WRITE(ah, AR_D_GBL_IFS_SIFS, val);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d80fcda..f7c8021 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -818,19 +818,55 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
+ 	return true;
  }
  
--static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
-+void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
- {
- 	u32 val = ath9k_hw_mac_to_clks(ah, us);
- 	val = min(val, (u32) 0xFFFF);
- 	REG_WRITE(ah, AR_D_GBL_IFS_SLOT, val);
- }
- 
--static void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
-+void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
- {
- 	u32 val = ath9k_hw_mac_to_clks(ah, us);
- 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_ACK));
- 	REG_RMW_FIELD(ah, AR_TIME_OUT, AR_TIME_OUT_ACK, val);
- }
- 
--static void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
-+void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
- {
- 	u32 val = ath9k_hw_mac_to_clks(ah, us);
- 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_CTS));
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 51b4ebe..f36d971 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
- void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
- 
-+void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
-+void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
-+void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
++static const char * const tid_to_ac[] = {
++	"BE",
++	"BK",
++	"BK",
++	"BE",
++	"VI",
++	"VI",
++	"VO",
++	"VO",
++};
 +
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
++static char *ath10k_get_tid(struct ieee80211_hdr *hdr, char *out, size_t size)
++{
++	u8 *qc;
++	int tid;
++
++	if (!ieee80211_is_data_qos(hdr->frame_control))
++		return "";
++
++	qc = ieee80211_get_qos_ctl(hdr);
++	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++	if (tid < 8)
++		snprintf(out, size, "tid %d (%s)", tid, tid_to_ac[tid]);
++	else
++		snprintf(out, size, "tid %d", tid);
++
++	return out;
++}
++
+ static void ath10k_process_rx(struct ath10k *ar,
+ 			      struct ieee80211_rx_status *rx_status,
+ 			      struct sk_buff *skb)
  {
+ 	struct ieee80211_rx_status *status;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	char tid[32];
+ 
+ 	status = IEEE80211_SKB_RXCB(skb);
+ 	*status = *rx_status;
+ 
+ 	ath10k_dbg(ATH10K_DBG_DATA,
+-		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %imic-err %i\n",
++		   "rx skb %p len %u peer %pM %s %s sn %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+ 		   skb,
+ 		   skb->len,
++		   ieee80211_get_SA(hdr),
++		   ath10k_get_tid(hdr, tid, sizeof(tid)),
++		   is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
++							"mcast" : "ucast",
++		   (__le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4,
+ 		   status->flag == 0 ? "legacy" : "",
+ 		   status->flag & RX_FLAG_HT ? "ht" : "",
+ 		   status->flag & RX_FLAG_VHT ? "vht" : "",
+@@ -842,7 +878,8 @@ static void ath10k_process_rx(struct ath10k *ar,
+ 		   status->freq,
+ 		   status->band, status->flag,
+ 		   !!(status->flag & RX_FLAG_FAILED_FCS_CRC),
+-		   !!(status->flag & RX_FLAG_MMIC_ERROR));
++		   !!(status->flag & RX_FLAG_MMIC_ERROR),
++		   !!(status->flag & RX_FLAG_AMSDU_MORE));
+ 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
+ 			skb->data, skb->len);
+ 
 -- 
-1.9.1
+1.7.9.5
 
