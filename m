@@ -1,117 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60454 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932615AbaGVXCo (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:55812 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbaG1OCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 19:02:44 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 4/5] ath10k:  Dump exception stack contents on firmware crash.
-Date: Tue, 22 Jul 2014 16:02:33 -0700
-Message-Id: <1406070154-6614-4-git-send-email-greearb@candelatech.com> (sfid-20140723_010252_150716_43192601)
-In-Reply-To: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
-References: <1406070154-6614-1-git-send-email-greearb@candelatech.com>
+	Mon, 28 Jul 2014 10:02:36 -0400
+Received: by mail-wi0-f182.google.com with SMTP id d1so4394891wiv.15
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 07:02:31 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCHv4 2/2] mac80211: extend set_coverage_class signature
+Date: Mon, 28 Jul 2014 16:02:28 +0200
+Message-Id: <1406556148-3924-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140728_160241_062276_6516441C)
+In-Reply-To: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Extend set_coverage_class API in order to enable ACK timeout estimation
+algorithm (dynack) passing coverage_class equals to -1 to lower drivers.
+Synchronize set_coverage_class routine signature with mac80211 function pointer
+for p54, ath9k, ath9k_htc and ath5k drivers.
 
-Firmware developers can decode this and maybe figure out
-why the firmware crashed.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h  |  3 +++
- drivers/net/wireless/ath/ath10k/debug.c |  8 ++++++++
- drivers/net/wireless/ath/ath10k/pci.c   | 13 +++++++++++--
- 3 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c | 2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c         | 3 ++-
+ drivers/net/wireless/p54/main.c               | 3 ++-
+ include/net/mac80211.h                        | 5 +++--
+ net/mac80211/cfg.c                            | 9 +++++++--
+ net/mac80211/driver-ops.h                     | 2 +-
+ net/mac80211/trace.h                          | 4 ++--
+ 8 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2f200f6..f122eae 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -281,11 +281,13 @@ struct ath10k_vif_iter {
-  * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
-  * @ATH10K_FW_ERROR_DUMP_REGDUMP: Register crash dump in binary format
-  * @ATH10K_FW_ERROR_DUMP_STACK:   Stack memory contents.
-+ * @ATH10K_FW_ERROR_DUMP_EXC_STACK:  Exception stack contents
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index b65c38f..ab2709a 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -704,7 +704,7 @@ ath5k_get_survey(struct ieee80211_hw *hw, int idx, struct survey_info *survey)
+  * reset.
   */
- enum ath10k_fw_error_dump_type {
- 	ATH10K_FW_ERROR_DUMP_DBGLOG = 0,
- 	ATH10K_FW_ERROR_DUMP_REGDUMP = 1,
- 	ATH10K_FW_ERROR_DUMP_STACK = 2,
-+	ATH10K_FW_ERROR_DUMP_EXC_STACK = 3,
- 
- 	ATH10K_FW_ERROR_DUMP_MAX,
- };
-@@ -367,6 +369,7 @@ struct ath10k_debug {
- 	struct ath10k_dbglog_entry_storage dbglog_entry_data;
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
- 	unsigned char stack_buf[ATH10K_FW_STACK_SIZE];
-+	unsigned char exc_stack_buf[ATH10K_FW_STACK_SIZE];
- };
- 
- enum ath10k_state {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index befdc60..1cbc175 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -623,6 +623,7 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.reg_dump_values);
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.stack_buf);
-+	len += sizeof(*dump_tlv) + sizeof(ar->debug.exc_stack_buf);
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -696,6 +697,13 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	memcpy(dump_tlv->tlv_data, &ar->debug.stack_buf, dump_tlv->tlv_len);
- 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
- 
-+	/* Gather firmware exception (irq) stack dump */
-+	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+	dump_tlv->type = ATH10K_FW_ERROR_DUMP_EXC_STACK;
-+	dump_tlv->tlv_len = sizeof(ar->debug.exc_stack_buf);
-+	memcpy(dump_tlv->tlv_data, &ar->debug.exc_stack_buf, dump_tlv->tlv_len);
-+	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+
- 	spin_unlock_irqrestore(&ar->data_lock, flags);
- 
- 	WARN_ON(sofar != len);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index b58f1a1..d298e14 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -864,8 +864,15 @@ static void ath10k_save_firmware_stack(struct ath10k *ar)
- 	ath10k_save_firmware_mem_helper(ar, ATH10K_FW_STACK_SIZE,
- 					ar->debug.stack_buf, HI_ITEM(hi_stack));
- }
--#endif
- 
-+/* Save the firmware exception stack */
-+static void ath10k_save_firmware_exc_stack(struct ath10k *ar)
-+{
-+	ath10k_save_firmware_mem_helper(ar, ATH10K_FW_STACK_SIZE,
-+					ar->debug.exc_stack_buf,
-+					HI_ITEM(hi_err_stack));
-+}
-+#endif
- 
- static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ static void
+-ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
++ath5k_set_coverage_class(struct ieee80211_hw *hw, s16 coverage_class)
  {
-@@ -918,8 +925,10 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- #ifdef CONFIG_ATH10K_DEBUGFS
- 	spin_lock_bh(&ar->data_lock);
+ 	struct ath5k_hw *ah = hw->priv;
  
--	if (!ar->debug.crashed_since_read)
-+	if (!ar->debug.crashed_since_read) {
- 		ath10k_save_firmware_stack(ar);
-+		ath10k_save_firmware_exc_stack(ar);
-+	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 5627917..994fff1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1722,7 +1722,7 @@ static int ath9k_htc_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ }
  
- 	spin_unlock_bh(&ar->data_lock);
+ static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
+-					 u8 coverage_class)
++					 s16 coverage_class)
+ {
+ 	struct ath9k_htc_priv *priv = hw->priv;
  
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e6ac8d2..97c028e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1959,7 +1959,8 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	return 0;
+ }
+ 
+-static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
++static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
++				     s16 coverage_class)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 7be3a48..97aeff0 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -696,7 +696,8 @@ static void p54_flush(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
+ 	WARN(total, "tx flush timeout, unresponsive firmware");
+ }
+ 
+-static void p54_set_coverage_class(struct ieee80211_hw *dev, u8 coverage_class)
++static void p54_set_coverage_class(struct ieee80211_hw *dev,
++				   s16 coverage_class)
+ {
+ 	struct p54_common *priv = dev->priv;
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dae2e24..3a43f66 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2666,7 +2666,8 @@ enum ieee80211_roc_type {
+  *
+  * @set_coverage_class: Set slot time for given coverage class as specified
+  *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
+- *	accordingly. This callback is not required and may sleep.
++ *	accordingly; coverage_class equals to -1 to enable ACK timeout
++ *	estimation algorithm. This callback is not required and may sleep.
+  *
+  * @testmode_cmd: Implement a cfg80211 test mode command. The passed @vif may
+  *	be %NULL. The callback can sleep.
+@@ -2950,7 +2951,7 @@ struct ieee80211_ops {
+ 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
+ 		struct survey_info *survey);
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
+-	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
++	void (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    void *data, int len);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 927b4ea..5927822 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1984,8 +1984,13 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 			return err;
+ 	}
+ 
+-	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
+-		err = drv_set_coverage_class(local, wiphy->coverage_class);
++	if ((changed & WIPHY_PARAM_COVERAGE_CLASS) ||
++	    (changed & WIPHY_PARAM_DYN_ACK)) {
++		s16 coverage_class;
++
++		coverage_class = (changed & WIPHY_PARAM_COVERAGE_CLASS)
++				  ? wiphy->coverage_class : -1;
++		err = drv_set_coverage_class(local, coverage_class);
+ 
+ 		if (err)
+ 			return err;
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1142395..196d48c 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -450,7 +450,7 @@ static inline int drv_set_rts_threshold(struct ieee80211_local *local,
+ }
+ 
+ static inline int drv_set_coverage_class(struct ieee80211_local *local,
+-					 u8 value)
++					 s16 value)
+ {
+ 	int ret = 0;
+ 	might_sleep();
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 02ac535..38fae7e 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -672,13 +672,13 @@ DEFINE_EVENT(local_u32_evt, drv_set_rts_threshold,
+ );
+ 
+ TRACE_EVENT(drv_set_coverage_class,
+-	TP_PROTO(struct ieee80211_local *local, u8 value),
++	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
+ 	TP_ARGS(local, value),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+-		__field(u8, value)
++		__field(s16, value)
+ 	),
+ 
+ 	TP_fast_assign(
 -- 
-1.7.11.7
+1.9.1
 
