@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46140 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755885AbaGRQyf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42840 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbaG1U7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 12:54:35 -0400
-Message-ID: <1405702472.30262.1.camel@dabdike.int.hansenpartnership.com> (sfid-20140718_185449_663855_1F071F2A)
-Subject: Re: [PATCH 0/25] Replace DEFINE_PCI_DEVICE_TABLE macro use
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Benoit Taine <benoit.taine@lip6.fr>, linux-mips@linux-mips.org,
-	linux-fbdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, linux-acenic@sunsite.dk,
-	linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-hippi@sunsite.dk,
-	industrypack-devel@lists.sourceforge.net,
-	linux-mmc@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com,
-	virtualization@lists.linux-foundation.org,
-	ath9k-devel@venema.h4ckr.net, wil6210@qca.qualcomm.com,
-	linux-pcmcia@lists.infradead.org, linux-can@vger.kernel.org,
-	xen-devel@lists.xenproject.org,
-	platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	e1000-devel@lists.sourceforge.net, linux-crypto@vger.kernel.org,
-	devel@linuxdriverproject.org
-Date: Fri, 18 Jul 2014 09:54:32 -0700
-In-Reply-To: <20140718164340.GA24960@kroah.com>
-References: <1405697232-11785-1-git-send-email-benoit.taine@lip6.fr>
-	 <20140718162213.GC31114@tuxdriver.com> <20140718164340.GA24960@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Mime-Version: 1.0
+	Mon, 28 Jul 2014 16:59:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add support for 10.2 firmware
+References: <1406287937-26507-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 28 Jul 2014 23:59:15 +0300
+In-Reply-To: <1406287937-26507-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 25 Jul 2014 13:32:17 +0200")
+Message-ID: <87oaw9jj30.fsf@kamboji.qca.qualcomm.com> (sfid-20140728_225927_383581_BCD0A30E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-07-18 at 09:43 -0700, Greg KH wrote:
-> On Fri, Jul 18, 2014 at 12:22:13PM -0400, John W. Linville wrote:
-> > On Fri, Jul 18, 2014 at 05:26:47PM +0200, Benoit Taine wrote:
-> > > We should prefer `const struct pci_device_id` over
-> > > `DEFINE_PCI_DEVICE_TABLE` to meet kernel coding style guidelines.
-> > > This issue was reported by checkpatch.
-> > 
-> > Honestly, I prefer the macro -- it stands-out more.  Maybe the style
-> > guidelines and/or checkpatch should change instead?
-> 
-> The macro is horrid, no other bus has this type of thing just to save a
-> few characters in typing
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-OK, so this is the macro:
+> The 10.2 firmware is a successor of 10.1 firmware
+> (formerly identified as 10.x). Both share a lot
+> but have some slight ABI differences that need to
+> be taken care of.
+>
+> The 10.2 firmware introduces some new features but
+> those can be added in subsequent patches. This
+> patch makes ath10k boot and work with 10.2 with
+> comparable functionality to 10.1.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-#define DEFINE_PCI_DEVICE_TABLE(_table) \
-	const struct pci_device_id _table[]
+Thanks, applied with minor changes:
 
-Could you explain what's so horrible?
+> +static void ath10k_wmi_10_2_process_rx(struct ath10k *ar, struct sk_buff *skb)
+> +{
+> +	struct wmi_cmd_hdr *cmd_hdr;
+> +	enum wmi_10_2_event_id id;
+> +
+> +	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
+> +	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
+> +
+> +	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
+> +		return;
+> +
+> +	trace_ath10k_wmi_event(id, skb->data, skb->len);
+> +
+> +	switch (id) {
+> +
+> +
+> +	case WMI_10_2_MGMT_RX_EVENTID:
 
-The reason it's useful today is that people forget the const (and
-sometimes the [] making it a true table instead of a pointer).  If you
-use the DEFINE_PCI_DEVICE_TABLE macro, the compile breaks if you use it
-wrongly (good) and you automatically get the correct annotations.
+checkpatch warned about extra newlines here.
 
-> , so why should PCI be "special" in this regard
-> anymore?
+> +static void
+> +ath10k_wmi_peer_assoc_fill_main_636(struct ath10k *ar, void *buf,
+> +				    const struct wmi_peer_assoc_complete_arg *arg)
+> +{
 
-I think the PCI usage dwarfs most other bus types now, so you could turn
-the question around.  However, I don't think majority voting is a good
-guide to best practise; lets debate the merits for their own sake.
+And this was too long. I "fixed" it by s/main_636/main/. I think the 636
+part was a bit redundant anyway.
 
-James
-
-
+-- 
+Kalle Valo
