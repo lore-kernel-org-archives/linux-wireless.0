@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55663 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757549AbaGWRh2 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52561 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbaG1UuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 13:37:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v4 1/5] ath10k:  provide firmware crash info via debugfs.
-References: <1406133487-7541-1-git-send-email-greearb@candelatech.com>
-Date: Wed, 23 Jul 2014 20:37:23 +0300
-In-Reply-To: <1406133487-7541-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Wed, 23 Jul 2014 09:38:03
-	-0700")
-Message-ID: <87a980rn70.fsf@kamboji.qca.qualcomm.com> (sfid-20140723_193732_013007_051037C9)
+	Mon, 28 Jul 2014 16:50:23 -0400
+Message-ID: <53D6B78E.1070705@candelatech.com> (sfid-20140728_225026_055526_F9CC4A1D)
+Date: Mon, 28 Jul 2014 13:50:22 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
+References: <5338F1B8.5040305@candelatech.com> <12936014.DUEgOXk110@blech>
+In-Reply-To: <12936014.DUEgOXk110@blech>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+On 03/31/2014 11:09 AM, Christian Lamparter wrote:
+> Hello,
+> 
+> On Sunday, March 30, 2014 09:40:24 PM Ben Greear wrote:
+>> Due to hardware/firmware limitations, it does not appear possible to
+>> have a wifi NIC do hardware decrypt when using multiple stations on a single
+>> NIC (and have both stations connected to the same AP).
+>>
+>> This just happens to be one of my favourite things to do, and it kills
+>> performance compared to normal 'Open' throughput.
+>>
+>> I am curious if anyone knows of any way to accelerate rx-decrypt, perhaps by
+>> using a specialized hardware board or maybe a feature of certain CPUs?
+> 
+> You could check if your CPU (bios and kernel) have support for AES-NI [0].
+> AFAICT mac80211 utilizes the cryptoapi. Therefore anything that supports
+> the proper crypto bindings can be used to accelerate the encryption and
+> decryption process to some degree. And it just happens that thanks to
+> AES-NI parts of math can be efficiently calculated by the CPU. 
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> Store the firmware crash registers and last 128 or so
-> firmware debug-log ids and present them to user-space
-> via debugfs.
->
-> Should help with figuring out why the firmware crashed.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->
-> v4:  Use _bh spinlock variants everywhere.
->
-> For patch 0005:  Fix kmalloc/vfree problem. 
+I recently took a look at this again, and the Intel E5 I'm using
+does use the aesni instructions/driver as far as I can tell.
 
-I see quite a few sparse and checkpatch warnings. But I think we can
-ignore about LINUX_VERSION_CODE.
+Throughput is still around 500Mbps where open is around 800Mbps.
 
-drivers/net/wireless/ath/ath10k/debug.c: In function 'ath10k_build_dump_file':
-drivers/net/wireless/ath/ath10k/debug.c:685:2: warning: right shift count >= width of type [enabled by default]
-drivers/net/wireless/ath/ath10k/debug.c:687:2: warning: right shift count >= width of type [enabled by default]
-drivers/net/wireless/ath/ath10k/debug.c:685:49: warning: shift too big (32) for type long
-drivers/net/wireless/ath/ath10k/debug.c:687:51: warning: shift too big (32) for type long
-drivers/net/wireless/ath/ath10k/core.c:491:53: warning: cast to restricted __le32
-drivers/net/wireless/ath/ath10k/core.c:492:52: warning: cast to restricted __le32
-drivers/net/wireless/ath/ath10k/core.c:493:53: warning: cast to restricted __le32
-drivers/net/wireless/ath/ath10k/core.c:494:52: warning: cast to restricted __le32
-drivers/net/wireless/ath/ath10k/core.c:491: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/core.c:492: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/core.c:493: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/core.c:494: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/core.c:495: CHECK: multiple assignments should be avoided
-drivers/net/wireless/ath/ath10k/debug.c:680: WARNING: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
-drivers/net/wireless/ath/ath10k/debug.c:696: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/debug.c:703: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/debug.c:725: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/debug.c:733: WARNING: line over 80 characters
+perf top shows this:
+
+Samples: 37K of event 'cycles', Event count (approx.): 19360716192
+ 12.01%  [kernel]                                      [k] math_state_restore
+ 11.64%  [kernel]                                      [k] _aesni_enc1
+  8.25%  [kernel]                                      [k] __save_init_fpu
+  2.44%  [kernel]                                      [k] crypto_xor
+  1.87%  [kernel]                                      [k] irq_fpu_usable
+  1.30%  [kernel]                                      [k] aes_encrypt
+  0.76%  [kernel]                                      [k] __kernel_fpu_end
+....
+
+
+Any other magic add-in cards that would somehow just make this all faster w/out
+having to do any real programming work? :)
+
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
