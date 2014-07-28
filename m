@@ -1,45 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:58263 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbaGKACV (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:63044 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbaG1UoU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2014 20:02:21 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so291243wgh.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2014 17:02:20 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/14] wlcore: increase max roc duration to 30 seconds
-Date: Fri, 11 Jul 2014 03:01:34 +0300
-Message-Id: <1405036899-27396-10-git-send-email-eliad@wizery.com> (sfid-20140711_020224_730114_09C98606)
-In-Reply-To: <1405036899-27396-1-git-send-email-eliad@wizery.com>
-References: <1405036899-27396-1-git-send-email-eliad@wizery.com>
+	Mon, 28 Jul 2014 16:44:20 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/4] staging: vt6655: dead code remove undefined macro IO_MAP
+Date: Mon, 28 Jul 2014 21:43:30 +0100
+Message-Id: <1406580210-2794-4-git-send-email-tvboxspy@gmail.com> (sfid-20140728_224533_434969_BDBCA46C)
+In-Reply-To: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
+References: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we don't have any actual limitation in the driver, so
-increase it arbitrarily to 30 seconds.
+This device is always memory mapped
 
-The long ROC is needed for the smart config.flow.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6655/device_main.c | 10 +---------
+ drivers/staging/vt6655/upc.h         | 34 ----------------------------------
+ 2 files changed, 1 insertion(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4c16262..01b4d9e 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5806,7 +5806,7 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
- 		sizeof(struct ieee80211_header);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index e8584fd..926c0d9 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -902,10 +902,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 	VNSvInPortB(pDevice->PortOffset+0x4F, &value);
+ 	pr_debug("After write: value is %x\n", value);
+ #endif
+-
+-#ifdef IO_MAP
+-	pDevice->PortOffset = pDevice->ioaddr;
+-#endif
+ 	// do reset
+ 	if (!MACbSoftwareReset(pDevice->PortOffset)) {
+ 		pr_err(DEVICE_NAME ": Failed to access MAC hardware..\n");
+@@ -949,14 +945,10 @@ static void device_print_info(PSDevice pDevice)
  
--	wl->hw->wiphy->max_remain_on_channel_duration = 5000;
-+	wl->hw->wiphy->max_remain_on_channel_duration = 30000;
+ 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO "%s: %s\n", dev->name, get_chip_name(pDevice->chip_id));
+ 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO "%s: MAC=%pM", dev->name, dev->dev_addr);
+-#ifdef IO_MAP
+-	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IO=0x%lx  ", (unsigned long)pDevice->ioaddr);
+-	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IRQ=%d\n", pDevice->dev->irq);
+-#else
++
+ 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IO=0x%lx Mem=0x%lx ",
+ 		(unsigned long)pDevice->ioaddr, (unsigned long)pDevice->PortOffset);
+ 	DBG_PRT(MSG_LEVEL_INFO, KERN_INFO " IRQ=%d\n", pDevice->dev->irq);
+-#endif
+ }
  
- 	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD |
- 				WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+ static void vt6655_init_info(struct pci_dev *pcid, PSDevice *ppDevice,
+diff --git a/drivers/staging/vt6655/upc.h b/drivers/staging/vt6655/upc.h
+index af12a86..e262f1b0 100644
+--- a/drivers/staging/vt6655/upc.h
++++ b/drivers/staging/vt6655/upc.h
+@@ -35,38 +35,6 @@
+ /*---------------------  Export Definitions -------------------------*/
+ 
+ //
+-//  For IO mapped
+-//
+-
+-#ifdef IO_MAP
+-
+-#define VNSvInPortB(dwIOAddress, pbyData)	\
+-do {						\
+-	*(pbyData) = inb(dwIOAddress);		\
+-} while (0)
+-
+-#define VNSvInPortW(dwIOAddress, pwData)	\
+-do {						\
+-	*(pwData) = inw(dwIOAddress);		\
+-} while (0)
+-
+-#define VNSvInPortD(dwIOAddress, pdwData)	\
+-do {						\
+-	*(pdwData) = inl(dwIOAddress);		\
+-} while (0)
+-
+-#define VNSvOutPortB(dwIOAddress, byData)	\
+-	outb(byData, dwIOAddress)
+-
+-#define VNSvOutPortW(dwIOAddress, wData)	\
+-	outw(wData, dwIOAddress)
+-
+-#define VNSvOutPortD(dwIOAddress, dwData)	\
+-	outl(dwData, dwIOAddress)
+-
+-#else
+-
+-//
+ //  For memory mapped IO
+ //
+ 
+@@ -100,8 +68,6 @@ do {									\
+ 	writel((unsigned long)dwData, dwIOAddress);			\
+ } while (0)
+ 
+-#endif
+-
+ //
+ // ALWAYS IO-Mapped IO when in 16-bit/32-bit environment
+ //
 -- 
-1.8.5.1.109.g3d252a9
+1.9.1
 
