@@ -1,48 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64397 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933849AbaGQOOW (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:37835 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbaG1UoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2014 10:14:22 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so3136676wes.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2014 07:14:21 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 12/15] mac80211: disable VHT for TDLS
-Date: Thu, 17 Jul 2014 17:14:28 +0300
-Message-Id: <1405606471-30128-13-git-send-email-arik@wizery.com> (sfid-20140717_161446_016306_6AF0E4DD)
-In-Reply-To: <1405606471-30128-1-git-send-email-arik@wizery.com>
-References: <1405606471-30128-1-git-send-email-arik@wizery.com>
+	Mon, 28 Jul 2014 16:44:16 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/4] staging: vt6655: remove undefined TASK_LET code
+Date: Mon, 28 Jul 2014 21:43:27 +0100
+Message-Id: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com> (sfid-20140728_224421_538526_6969FB6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TDLS VHT support requires some more information elements during setup.
-While these are not there, mask out the peer's VHT capabilities so that
-VHT rates are not mistakenly used.
+Removing all code within and function MngWorkItem.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/vht.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/vt6655/device.h      |  1 -
+ drivers/staging/vt6655/device_main.c |  6 ------
+ drivers/staging/vt6655/dpc.c         | 24 ------------------------
+ drivers/staging/vt6655/dpc.h         |  2 --
+ 4 files changed, 33 deletions(-)
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 9265adf..671ce0d 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -129,6 +129,10 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
- 		return;
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index a707984..fccb510 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -425,7 +425,6 @@ typedef struct __device_info {
  
-+	/* don't support VHT for TDLS peers for now */
-+	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
-+		return;
-+
- 	/*
- 	 * A VHT STA must support 40 MHz, but if we verify that here
- 	 * then we break a few things - some APs (e.g. Netgear R6300v2
+ 	spinlock_t                  lock;
+ //PLICE_DEBUG->
+-	struct	tasklet_struct	RxMngWorkItem;
+ 	RxManagementQueue	rxManeQueue;
+ //PLICE_DEBUG<-
+ //PLICE_DEBUG ->
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 1e1d3b4..c43fc79 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1704,9 +1704,6 @@ static int  device_open(struct net_device *dev)
+ 	vMgrTimerInit(pDevice);
+ 
+ //PLICE_DEBUG->
+-#ifdef	TASK_LET
+-	tasklet_init(&pDevice->RxMngWorkItem, (void *)MngWorkItem, (unsigned long)pDevice);
+-#endif
+ #ifdef	THREAD
+ 	InitRxManagementQueue(pDevice);
+ 	mlme_kill = 0;
+@@ -1789,9 +1786,6 @@ static int  device_close(struct net_device *dev)
+ 		del_timer(&pDevice->TimerSQ3Tmax3);
+ 	}
+ 
+-#ifdef	TASK_LET
+-	tasklet_kill(&pDevice->RxMngWorkItem);
+-#endif
+ 	netif_stop_queue(dev);
+ 	pDevice->bCmdRunning = false;
+ 	MACbShutdown(pDevice->PortOffset);
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index ac588cb..31bb2b7 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -268,23 +268,6 @@ s_vGetDASA(unsigned char *pbyRxBufferAddr, unsigned int *pcbHeaderSize,
+ 	*pcbHeaderSize = cbHeaderSize;
+ }
+ 
+-//PLICE_DEBUG ->
+-
+-void	MngWorkItem(void *Context)
+-{
+-	PSRxMgmtPacket			pRxMgmtPacket;
+-	PSDevice	pDevice =  (PSDevice) Context;
+-
+-	spin_lock_irq(&pDevice->lock);
+-	while (pDevice->rxManeQueue.packet_num != 0) {
+-		pRxMgmtPacket =  DeQueue(pDevice);
+-		vMgrRxManagePacket(pDevice, pDevice->pMgmt, pRxMgmtPacket);
+-	}
+-	spin_unlock_irq(&pDevice->lock);
+-}
+-
+-//PLICE_DEBUG<-
+-
+ bool
+ device_receive_frame(
+ 	PSDevice pDevice,
+@@ -551,15 +534,8 @@ device_receive_frame(
+ #ifdef	THREAD
+ 			EnQueue(pDevice, pRxPacket);
+ #else
+-
+-#ifdef	TASK_LET
+-			EnQueue(pDevice, pRxPacket);
+-			tasklet_schedule(&pDevice->RxMngWorkItem);
+-#else
+ 			vMgrRxManagePacket((void *)pDevice, pDevice->pMgmt, pRxPacket);
+ #endif
+-
+-#endif
+ //PLICE_DEBUG<-
+ 			// hostap Deamon handle 802.11 management
+ 			if (pDevice->bEnableHostapd) {
+diff --git a/drivers/staging/vt6655/dpc.h b/drivers/staging/vt6655/dpc.h
+index 0c7e0e7..4914890 100644
+--- a/drivers/staging/vt6655/dpc.h
++++ b/drivers/staging/vt6655/dpc.h
+@@ -39,6 +39,4 @@ device_receive_frame(
+ 	PSRxDesc pCurrRD
+ );
+ 
+-void	MngWorkItem(void *Context);
+-
+ #endif // __RXTX_H__
 -- 
 1.9.1
 
