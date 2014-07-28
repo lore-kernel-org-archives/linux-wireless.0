@@ -1,98 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:56869 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017AbaGPVUN (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:52753 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbaG1W1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:20:13 -0400
-Received: by mail-wi0-f170.google.com with SMTP id f8so5529601wiw.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:20:12 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH] ath9k: set up tx power into the MRR
-Date: Wed, 16 Jul 2014 23:20:10 +0200
-Message-Id: <1405545610-17285-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140716_232022_932157_200D691E)
+	Mon, 28 Jul 2014 18:27:25 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/2] staging: vt6655: clean up the tail of function device_init_registers
+Date: Mon, 28 Jul 2014 23:26:26 +0100
+Message-Id: <1406586386-2789-2-git-send-email-tvboxspy@gmail.com> (sfid-20140729_002755_156414_377CA509)
+In-Reply-To: <1406586386-2789-1-git-send-email-tvboxspy@gmail.com>
+References: <1406586386-2789-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set up tx power for each MRR segment in the tx descriptor
+Aligning the code.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |  6 +++++-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |  6 +++++-
- drivers/net/wireless/ath/ath9k/mac.h        | 10 ++++++++--
- 3 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/staging/vt6655/device_main.c | 37 ++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 741b38d..59af9f9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -281,7 +281,7 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 0ecc99b..3f72c34 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -736,30 +736,31 @@ static void device_init_registers(PSDevice pDevice)
+ 	if (pDevice->bHWRadioOff || pDevice->bRadioControlOff)
+ 		CARDbRadioPowerOff(pDevice);
  
- 	ACCESS_ONCE(ads->ds_ctl0) = (i->pkt_len & AR_FrameLen)
- 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
--		| SM(i->txpower, AR_XmitPower)
-+		| SM(i->txpower, AR_XmitPower0)
- 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
- 		| (i->flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
- 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
-@@ -306,6 +306,10 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 		| set11nRateFlags(i->rates, 2)
- 		| set11nRateFlags(i->rates, 3)
- 		| SM(i->rtscts_rate, AR_RTSCTSRate);
+-pMgmt->eScanType = WMAC_SCAN_PASSIVE;
+-// get Permanent network address
+-SROMvReadEtherAddress(pDevice->PortOffset, pDevice->abyCurrentNetAddr);
+-DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Network address = %pM\n",
+-	pDevice->abyCurrentNetAddr);
++	pMgmt->eScanType = WMAC_SCAN_PASSIVE;
+ 
+-// reset Tx pointer
+-CARDvSafeResetRx(pDevice);
+-// reset Rx pointer
+-CARDvSafeResetTx(pDevice);
++	/* get Permanent network address */
++	SROMvReadEtherAddress(pDevice->PortOffset, pDevice->abyCurrentNetAddr);
++	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Network address = %pM\n",
++		pDevice->abyCurrentNetAddr);
+ 
+-if (pDevice->byLocalID <= REV_ID_VT3253_A1)
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_RCR, RCR_WPAERR);
++	/* reset Tx pointer */
++	CARDvSafeResetRx(pDevice);
++	/* reset Rx pointer */
++	CARDvSafeResetTx(pDevice);
+ 
+-pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
++	if (pDevice->byLocalID <= REV_ID_VT3253_A1)
++		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_RCR, RCR_WPAERR);
+ 
+-// Turn On Rx DMA
+-MACvReceive0(pDevice->PortOffset);
+-MACvReceive1(pDevice->PortOffset);
++	pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+ 
+-// start the adapter
+-MACvStart(pDevice->PortOffset);
++	/* Turn On Rx DMA */
++	MACvReceive0(pDevice->PortOffset);
++	MACvReceive1(pDevice->PortOffset);
+ 
+-netif_stop_queue(pDevice->dev);
++	/* start the adapter */
++	MACvStart(pDevice->PortOffset);
 +
-+	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower, AR_XmitPower1);
-+	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower, AR_XmitPower2);
-+	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower, AR_XmitPower3);
++	netif_stop_queue(pDevice->dev);
  }
  
- static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 729ffbf..71e38e8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -101,7 +101,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 
- 	ACCESS_ONCE(ads->ctl11) = (i->pkt_len & AR_FrameLen)
- 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
--		| SM(i->txpower, AR_XmitPower)
-+		| SM(i->txpower, AR_XmitPower0)
- 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
- 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
- 		| (i->flags & ATH9K_TXDESC_LOWRXCHAIN ? AR_LowRxChain : 0)
-@@ -151,6 +151,10 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 		| SM(i->rtscts_rate, AR_RTSCTSRate);
- 
- 	ACCESS_ONCE(ads->ctl19) = AR_Not_Sounding;
-+
-+	ACCESS_ONCE(ads->ctl20) = SM(i->txpower, AR_XmitPower1);
-+	ACCESS_ONCE(ads->ctl21) = SM(i->txpower, AR_XmitPower2);
-+	ACCESS_ONCE(ads->ctl22) = SM(i->txpower, AR_XmitPower3);
- }
- 
- static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index da76867..6c56caf 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -346,8 +346,14 @@ struct ar5416_desc {
- #define AR_FrameLen         0x00000fff
- #define AR_VirtMoreFrag     0x00001000
- #define AR_TxCtlRsvd00      0x0000e000
--#define AR_XmitPower        0x003f0000
--#define AR_XmitPower_S      16
-+#define AR_XmitPower0       0x003f0000
-+#define AR_XmitPower0_S     16
-+#define AR_XmitPower1	    0x3f000000
-+#define AR_XmitPower1_S     24
-+#define AR_XmitPower2	    0x3f000000
-+#define AR_XmitPower2_S     24
-+#define AR_XmitPower3	    0x3f000000
-+#define AR_XmitPower3_S     24
- #define AR_RTSEnable        0x00400000
- #define AR_VEOL             0x00800000
- #define AR_ClrDestMask      0x01000000
+ static void device_init_diversity_timer(PSDevice pDevice)
 -- 
 1.9.1
 
