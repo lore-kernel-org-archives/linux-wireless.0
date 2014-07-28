@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45140 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754430AbaGUKB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 06:01:58 -0400
-Message-ID: <1405936900.32255.7.camel@jlt4.sipsolutions.net> (sfid-20140721_120211_946386_736C47E3)
-Subject: Re: [PATCH v11 0/5] cfg/mac80211: implement multi-vif csa
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Date: Mon, 21 Jul 2014 12:01:40 +0200
-In-Reply-To: <CA+BoTQmizEd3joLf6XDuUrq1Ton_XWcTwKCzWHJcD=gbzVGoMg@mail.gmail.com> (sfid-20140630_114605_200258_A9D95372)
-References: <1403692510-27873-1-git-send-email-michal.kazior@tieto.com>
-	 <1403722063.4140.19.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmizEd3joLf6XDuUrq1Ton_XWcTwKCzWHJcD=gbzVGoMg@mail.gmail.com>
-	 (sfid-20140630_114605_200258_A9D95372)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:52589 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbaG1UyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2014 16:54:22 -0400
+Message-ID: <53D6B87D.6080007@candelatech.com> (sfid-20140728_225425_375870_9A5C3EAC)
+Date: Mon, 28 Jul 2014 13:54:21 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	antonio@open-mesh.com
+Subject: Re: [PATCH] ath9k: fix aggregation session lockup
+References: <1406122854-60239-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1406122854-60239-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-06-30 at 11:46 +0200, Michal Kazior wrote:
+On 07/23/2014 06:40 AM, Felix Fietkau wrote:
+> If an aggregation session fails, frames still end up in the driver queue
+> with IEEE80211_TX_CTL_AMPDU set.
+> This causes tx for the affected station/tid to stall, since
+> ath_tx_get_tid_subframe returning packets to send.
+> 
+> Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
+> session is running.
 
-> Btw. What is the plan regarding re-enabling CSA itself?
+Did this and your previous patch about 'pending tx frames accounting'
+fix the issues reported?
 
-I guess we should?
+They at least do not fix the problems I see where tx appears to hang,
+but my setup is pretty 'special'....
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
