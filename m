@@ -1,57 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:49351 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759323AbaGXPoJ (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:38060 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839AbaG1Nhr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 11:44:09 -0400
-Received: by mail-we0-f176.google.com with SMTP id q58so2874387wes.7
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 08:44:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1406206914.14675.20.camel@jlt4.sipsolutions.net>
-References: <1406198362-4999-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406198362-4999-3-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406200353.14675.18.camel@jlt4.sipsolutions.net>
-	<CAA2SeNLPf6Tt61H5D1j6d3SwO1nuZQM3WuqL8-+15RKLmVAe1w@mail.gmail.com>
-	<1406206914.14675.20.camel@jlt4.sipsolutions.net>
-Date: Thu, 24 Jul 2014 17:44:06 +0200
-Message-ID: <CAA2SeN+kA=Sjix8S-_3BE1wLKuU=1eqRTM4R98D1kk5-xPc6Rw@mail.gmail.com> (sfid-20140724_174413_458134_E16B3249)
-Subject: Re: [PATCHv2 2/2] mac80211: extend set_coverage_class signature
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Philippe Duchein <wireless-dev@duchein.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 28 Jul 2014 09:37:47 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so7265148wgh.6
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 06:37:45 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: improve channel switching
+Date: Mon, 28 Jul 2014 15:28:52 +0200
+Message-Id: <1406554132-17264-1-git-send-email-michal.kazior@tieto.com> (sfid-20140728_153751_200263_60C43885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thu, 2014-07-24 at 14:12 +0200, Lorenzo Bianconi wrote:
->> > On Thu, 2014-07-24 at 12:39 +0200, Lorenzo Bianconi wrote:
->> >
->> >> @@ -2950,7 +2951,7 @@ struct ieee80211_ops {
->> >>       int (*get_survey)(struct ieee80211_hw *hw, int idx,
->> >>               struct survey_info *survey);
->> >>       void (*rfkill_poll)(struct ieee80211_hw *hw);
->> >> -     void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
->> >> +     int (*set_coverage_class)(struct ieee80211_hw *hw, s16 coverage_class);
->> >
->> > This patch also needs to update all drivers ......
->>
->> Currently just ath9k, ath5k and p54 implement set_coverage_class
->> function pointer. I would send a different patch for these changes.
->> Should I include them in this patchset?
->
-> Guess what will happen if I merge this patch?
->
-> Hint: the kernel will not compile correctly any more.
->
-> johannes
->
+In some cases during heavy tx vdev stop-start
+would timeout on vdev synchronization causing
+traffic to stall for a few seconds.
 
-Ok, I will include changes to lower drivers in this patchset.
+Instead of stop-starting use a dedicated vdev
+restart command and down vdevs explicitly before
+doing so.
 
-Lorenzo
+This gets rid of the synchronization
+warnings/timeouts and makes channel switching
+smoother during traffic.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 31 ++++++++++++++++++++++++-------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9d61bb1..b76efe2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -796,7 +796,7 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
+ 	}
+ }
+ 
+-static int ath10k_vdev_start(struct ath10k_vif *arvif)
++static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ {
+ 	struct ath10k *ar = arvif->ar;
+ 	struct cfg80211_chan_def *chandef = &ar->chandef;
+@@ -838,7 +838,11 @@ static int ath10k_vdev_start(struct ath10k_vif *arvif)
+ 		   arg.vdev_id, arg.channel.freq,
+ 		   ath10k_wmi_phymode_str(arg.channel.mode));
+ 
+-	ret = ath10k_wmi_vdev_start(ar, &arg);
++	if (restart)
++		ret = ath10k_wmi_vdev_restart(ar, &arg);
++	else
++		ret = ath10k_wmi_vdev_start(ar, &arg);
++
+ 	if (ret) {
+ 		ath10k_warn("failed to start WMI vdev %i: %d\n",
+ 			    arg.vdev_id, ret);
+@@ -858,6 +862,16 @@ static int ath10k_vdev_start(struct ath10k_vif *arvif)
+ 	return ret;
+ }
+ 
++static int ath10k_vdev_start(struct ath10k_vif *arvif)
++{
++	return ath10k_vdev_start_restart(arvif, false);
++}
++
++static int ath10k_vdev_restart(struct ath10k_vif *arvif)
++{
++	return ath10k_vdev_start_restart(arvif, true);
++}
++
+ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+ {
+ 	struct ath10k *ar = arvif->ar;
+@@ -2582,18 +2596,21 @@ static void ath10k_config_chan(struct ath10k *ar)
+ 		if (!arvif->is_started)
+ 			continue;
+ 
++		if (!arvif->is_up)
++			continue;
++
+ 		if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
+ 			continue;
+ 
+-		ret = ath10k_vdev_stop(arvif);
++		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
+ 		if (ret) {
+-			ath10k_warn("failed to stop vdev %d: %d\n",
++			ath10k_warn("failed to down vdev %d: %d\n",
+ 				    arvif->vdev_id, ret);
+ 			continue;
+ 		}
+ 	}
+ 
+-	/* all vdevs are now stopped - now attempt to restart them */
++	/* all vdevs are downed now - attempt to restart and re-up them */
+ 
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		if (!arvif->is_started)
+@@ -2602,9 +2619,9 @@ static void ath10k_config_chan(struct ath10k *ar)
+ 		if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
+ 			continue;
+ 
+-		ret = ath10k_vdev_start(arvif);
++		ret = ath10k_vdev_restart(arvif);
+ 		if (ret) {
+-			ath10k_warn("failed to start vdev %d: %d\n",
++			ath10k_warn("failed to restart vdev %d: %d\n",
+ 				    arvif->vdev_id, ret);
+ 			continue;
+ 		}
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.8.5.3
+
