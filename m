@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:38505 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833AbaGXJez (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52823 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296AbaG1VRp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 05:34:55 -0400
-Received: by mail-pa0-f52.google.com with SMTP id bj1so3590673pad.39
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2014 02:34:54 -0700 (PDT)
-Message-ID: <53D0D335.5050702@aurabindo.in> (sfid-20140724_113458_642243_3EFA8D58)
-Date: Thu, 24 Jul 2014 15:04:45 +0530
-From: Jay Aurabind <mail@aurabindo.in>
+	Mon, 28 Jul 2014 17:17:45 -0400
+Message-ID: <53D6BDF8.7080005@candelatech.com> (sfid-20140728_232425_773491_08074372)
+Date: Mon, 28 Jul 2014 14:17:44 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	iwl@linux.intel.com
-Subject: Re: [HELP] Intel 7260 powering up / down wifi inconsistency
-References: <53CF4CBE.9020402@aurabindo.in> <CANUX_P0cPy5aVg-cv9MqncRsWX8FemkQhvG3KYwG=CUm9xgKVQ@mail.gmail.com>
-In-Reply-To: <CANUX_P0cPy5aVg-cv9MqncRsWX8FemkQhvG3KYwG=CUm9xgKVQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	antonio@open-mesh.com
+Subject: Re: [PATCH] ath9k: fix aggregation session lockup
+References: <1406122854-60239-1-git-send-email-nbd@openwrt.org> <53D6B87D.6080007@candelatech.com> <53D6BC7F.2020002@openwrt.org>
+In-Reply-To: <53D6BC7F.2020002@openwrt.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/24/2014 12:04 PM, Emmanuel Grumbach wrote:
-> On Wed, Jul 23, 2014 at 8:48 AM, Jay Aurabind <mail@aurabindo.in> wrote:
->> Dear all,
+On 07/28/2014 02:11 PM, Felix Fietkau wrote:
+> On 2014-07-28 22:54, Ben Greear wrote:
+>> On 07/23/2014 06:40 AM, Felix Fietkau wrote:
+>>> If an aggregation session fails, frames still end up in the driver queue
+>>> with IEEE80211_TX_CTL_AMPDU set.
+>>> This causes tx for the affected station/tid to stall, since
+>>> ath_tx_get_tid_subframe returning packets to send.
+>>>
+>>> Fix this by clearing IEEE80211_TX_CTL_AMPDU as long as no aggregation
+>>> session is running.
 >>
->> I know this is devel list, but iwlwifi web page points here for support. So here we go.
->>
->> Initially, I couldnt turn off wifi. I am currently on Ubuntu 14.04 (fresh install). I tried the following commands:
->>
->> Via NetworkManger "nmcli nm wifi off"
->> Via TLP "wifi off"
->> Via Unity GUI, Network Menu-> Uncheck "Enable WiFi"
->>
->> These were the methods that I successfully used to switch off wifi in my previous laptop with an atheros card. However, with this "HP ENVY 15T J100" with Intel 7260 Card (possibly single band version), I cannot "really" turn off the wifi and bluetooth. Even when they show turned off in GUI, I mobile can pick them up (confirmed for bluetooth only).
->>
->> In the default state (after powerup), "rfkill list" gives:
->>
->> 0: phy0: Wireless LAN
->>         Soft blocked: no
->>         Hard blocked: no
->> 1: hci0: Bluetooth
->>         Soft blocked: no
->>         Hard blocked: no
->>
->> If I give "rfkill block all", I get this:
->>
->> 0: phy0: Wireless LAN
->>         Soft blocked: yes
->>         Hard blocked: no
->> 1: hci0: Bluetooth
->>         Soft blocked: yes
->>         Hard blocked: no
->>
->> Output of "dmesg | grep iwlwifi" is:
->>
->> [    9.489423] iwlwifi 0000:07:00.0: irq 47 for MSI/MSI-X
->> [    9.633385] iwlwifi 0000:07:00.0: loaded firmware version 22.24.8.0 op_mode iwlmvm
->> [   10.339967] iwlwifi 0000:07:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
->> [   10.340063] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
->> [   10.340323] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
->> [   15.750742] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
->> [   15.751091] iwlwifi 0000:07:00.0: L1 Enabled; Disabling L0S
->>
->>
->> This laptop does not have a dedicated physical wifi "switch". However, F12 is muxed with this function, and also hosts the wifi indicator led.
->>
->> I've noticed that while system is booting up, the wifi is in off state because wifi indicator is orange color, called  "Airplane Mode" in windows 8. This laptop came with win8. Before I wiped it out, I put it to Airplane mode. As soon as Ubuntu starts up, wifi indicator becomes white.
->>
->> But things arent that worse. After I configured tlp to "block" all radio device on startup, wifi & bluetooth is "really" turned off. Now if I use nmcli, I can turn on/off the wifi.
->>
->> So my question is: Why didnt it work the first time (before configuring TLP to disable radio at startup). Doest this behavior indicate a bug ? I actually dont remember if my previous laptop set up, whether I could / couldnt switch wifi *before* configuring TLP to block wifi with nmcli.
->>
+>> Did this and your previous patch about 'pending tx frames accounting'
+>> fix the issues reported?
+> Yes.
 > 
-> You lost me fairly quickly with lots of details that seem not really
-> related. In any case, putting WiFi in rfkill from Windows and then
-> removing Windows is not a good idea though.
-> 
+>> They at least do not fix the problems I see where tx appears to hang,
+>> but my setup is pretty 'special'....
+> Interesting. Maybe you should ask Antonio for an updated version of the
+> patch that he used to debug this issue. If you give me the output of it
+> while it's locked up, I might be able to figure out what's going on in
+> your setup.
 
-Now it doesnt look like Ubuntu's private problem. After I updated my system (archlinux), I found this problem to reappear. So I began downgrading packages and I finally figured out the culprit.
+Let me first try to reproduce with a recent, un-hacked-upon kernel...
 
-This is the one that caused the breakage (from pacman log): 
+I would welcome the debug patch in the meantime.
 
-[PACMAN] upgraded linux-api-headers (3.13.2-1 -> 3.14.1-1)
+Thanks,
+Ben
 
-I reverted back to 3.13.2-1 and wifi toggle is working again. 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-The kernel version doestn seem to make any problems. I tried on both 3.12.9-2 and 3.15.5-2 with linux-api-headers 3.13.2-1
-
-So this is *definitely* kernel problem. I dont understand why the api header pacakge is of a lower version than the latest kernel they pack. 
-
-Where should I file a bug report? arch or the kenrel ?
