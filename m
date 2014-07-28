@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:48531 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbaGVT1R (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:55886 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbaG1OCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:17 -0400
-Received: by mail-we0-f182.google.com with SMTP id k48so111981wev.41
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:16 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/20] iwlwifi: mvm: fix wrong offset while reading from NVM
-Date: Tue, 22 Jul 2014 22:26:36 +0300
-Message-Id: <1406057211-31752-5-git-send-email-egrumbach@gmail.com> (sfid-20140722_212730_312454_D6CAC7C1)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+	Mon, 28 Jul 2014 10:02:33 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so4454544wib.16
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 07:02:29 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCHv4 0/2] configure dynack through mac80211/cfg80211 stack
+Date: Mon, 28 Jul 2014 16:02:26 +0200
+Message-Id: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140728_160239_380936_F97F5CFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Extend set_coverage_class API in order to enable ACK timeout estimation
+algorithm (dynack) passing coverage_class equals to -1 to lower drivers.
+Currently dynack is supported just by ath9k.
+Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
 
-As part of thermal throttling, some data is being read from NVM.
-The offset is in words, but was addressed as in octets. fixed.
+Changes since v3:
+- squash driver patches and mac80211 one
 
-Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tt.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Changes since v2:
+- add set_coverage_class signature fix to patchset
+- define NL80211_FEATURE_ACKTO_ESTIMATION to report driver dynack capability
+- reject configuration if both NL80211_ATTR_WIPHY_COVERAGE_CLASS and
+  NL80211_ATTR_WIPHY_DYN_ACK are given
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
-index 8685615..0c4ff3a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
-@@ -140,9 +140,9 @@ static u16 iwl_mvm_dts_get_ptat_deviation_offset(struct iwl_mvm *mvm)
- 
- 	/* TODO: move parsing to NVM code */
- 	calib = mvm->nvm_sections[NVM_SECTION_TYPE_CALIBRATION].data;
--	ptat = calib[OTP_DTS_DIODE_DEVIATION];
--	pa1 = calib[OTP_DTS_DIODE_DEVIATION + 1];
--	pa2 = calib[OTP_DTS_DIODE_DEVIATION + 2];
-+	ptat = calib[OTP_DTS_DIODE_DEVIATION * 2];
-+	pa1 = calib[OTP_DTS_DIODE_DEVIATION * 2 + 1];
-+	pa2 = calib[OTP_DTS_DIODE_DEVIATION * 2 + 2];
- 
- 	/* get the median: */
- 	if (ptat > pa1) {
+Changes since v1:
+- extend set_coverage_class signature insted of define enable_dynack API
+
+Lorenzo Bianconi (2):
+  cfg80211: enable dynack through nl80211
+  mac80211: extend set_coverage_class signature
+
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |  2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c         |  3 ++-
+ drivers/net/wireless/p54/main.c               |  3 ++-
+ include/net/cfg80211.h                        |  2 ++
+ include/net/mac80211.h                        |  5 +++--
+ include/uapi/linux/nl80211.h                  |  8 ++++++++
+ net/mac80211/cfg.c                            |  9 +++++++--
+ net/mac80211/driver-ops.h                     |  2 +-
+ net/mac80211/trace.h                          |  4 ++--
+ net/wireless/nl80211.c                        | 11 +++++++++++
+ 11 files changed, 40 insertions(+), 11 deletions(-)
+
 -- 
-1.8.3.2
+1.9.1
 
