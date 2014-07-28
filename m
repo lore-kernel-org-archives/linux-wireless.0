@@ -1,83 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:33737 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752603AbaGMJnd (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:42330 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbaG1N0D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 05:43:33 -0400
-Received: by mail-wg0-f49.google.com with SMTP id k14so2175313wgh.20
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:32 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/13] staging: vt6656: remove typedef struct tagCMD_ITEM
-Date: Sun, 13 Jul 2014 10:42:43 +0100
-Message-Id: <1405244573-10978-3-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114338_185861_D4BA5E2E)
-In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
-References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 28 Jul 2014 09:26:03 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so4365690wiv.13
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 06:25:59 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] mac80211: fix chantype recalc warning
+Date: Mon, 28 Jul 2014 15:16:59 +0200
+Message-Id: <1406553419-16196-1-git-send-email-michal.kazior@tieto.com> (sfid-20140728_152608_504899_581CCC70)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since enum vnt_cmd is only member replace with array
-enum vnt_cmd cmd_queue with size of CMD_Q_SIZE
+When a device driver is unloaded local->interfaces
+list is cleared. If there was more than 1
+interface running and connected (bound to a
+chanctx) then chantype recalc was called and it
+ended up with compat being NULL causing a call
+trace warning.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Warn if compat becomes NULL as a result of
+incompatible bss_conf.chandef of interfaces bound
+to a given channel context only.
+
+The call trace looked like this:
+
+ WARNING: CPU: 2 PID: 2594 at /devel/src/linux/net/mac80211/chan.c:557 ieee80211_recalc_chanctx_chantype+0x2cd/0x2e0()
+ Modules linked in: ath10k_pci(-) ath10k_core ath
+ CPU: 2 PID: 2594 Comm: rmmod Tainted: G        W     3.16.0-rc1+ #150
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+  0000000000000009 ffff88001ea279c0 ffffffff818dfa93 0000000000000000
+  ffff88001ea279f8 ffffffff810514a8 ffff88001ce09cd0 ffff88001e03cc58
+  0000000000000000 ffff88001ce08840 ffff88001ce09cd0 ffff88001ea27a08
+ Call Trace:
+  [<ffffffff818dfa93>] dump_stack+0x4d/0x66
+  [<ffffffff810514a8>] warn_slowpath_common+0x78/0xa0
+  [<ffffffff81051585>] warn_slowpath_null+0x15/0x20
+  [<ffffffff818a407d>] ieee80211_recalc_chanctx_chantype+0x2cd/0x2e0
+  [<ffffffff818a3dda>] ? ieee80211_recalc_chanctx_chantype+0x2a/0x2e0
+  [<ffffffff818a4919>] ieee80211_assign_vif_chanctx+0x1a9/0x770
+  [<ffffffff818a6220>] __ieee80211_vif_release_channel+0x70/0x130
+  [<ffffffff818a6dd3>] ieee80211_vif_release_channel+0x43/0xb0
+  [<ffffffff81885f4e>] ieee80211_stop_ap+0x21e/0x5a0
+  [<ffffffff8184b9b5>] __cfg80211_stop_ap+0x85/0x520
+  [<ffffffff8181c188>] __cfg80211_leave+0x68/0x120
+  [<ffffffff8181c268>] cfg80211_leave+0x28/0x40
+  [<ffffffff8181c5f3>] cfg80211_netdev_notifier_call+0x373/0x6b0
+  [<ffffffff8107f965>] notifier_call_chain+0x55/0x110
+  [<ffffffff8107fa41>] raw_notifier_call_chain+0x11/0x20
+  [<ffffffff816a8dc0>] call_netdevice_notifiers_info+0x30/0x60
+  [<ffffffff816a8eb9>] __dev_close_many+0x59/0xf0
+  [<ffffffff816a9021>] dev_close_many+0x81/0x120
+  [<ffffffff816aa1c5>] rollback_registered_many+0x115/0x2a0
+  [<ffffffff816aa3a6>] unregister_netdevice_many+0x16/0xa0
+  [<ffffffff8187d841>] ieee80211_remove_interfaces+0x121/0x1b0
+  [<ffffffff8185e0e6>] ieee80211_unregister_hw+0x56/0x110
+  [<ffffffffa0011ac4>] ath10k_mac_unregister+0x14/0x60 [ath10k_core]
+  [<ffffffffa0014fe7>] ath10k_core_unregister+0x27/0x40 [ath10k_core]
+  [<ffffffffa003b1f4>] ath10k_pci_remove+0x44/0xa0 [ath10k_pci]
+  [<ffffffff81373138>] pci_device_remove+0x28/0x60
+  [<ffffffff814cb534>] __device_release_driver+0x64/0xd0
+  [<ffffffff814cbcc8>] driver_detach+0xb8/0xc0
+  [<ffffffff814cb23a>] bus_remove_driver+0x4a/0xb0
+  [<ffffffff814cc697>] driver_unregister+0x27/0x50
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/device.h | 2 +-
- drivers/staging/vt6656/wcmd.c   | 4 ++--
- drivers/staging/vt6656/wcmd.h   | 4 ----
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ net/mac80211/chan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 0c9166e..a6eeebc 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -406,7 +406,7 @@ struct vnt_private {
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f3317fa..d810b2e 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -549,12 +549,12 @@ static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
  
- 	/* 802.11 counter */
- 
--	CMD_ITEM eCmdQueue[CMD_Q_SIZE];
-+	enum vnt_cmd cmd_queue[CMD_Q_SIZE];
- 	u32 uCmdDequeueIdx;
- 	u32 uCmdEnqueueIdx;
- 	u32 cbFreeCmdQueue;
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index e0ad20a..c2da8cc 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -146,7 +146,7 @@ static int s_bCommandComplete(struct vnt_private *priv)
- 		return true;
+ 		compat = cfg80211_chandef_compatible(
+ 				&sdata->vif.bss_conf.chandef, compat);
+-		if (!compat)
++		if (WARN_ON_ONCE(!compat))
+ 			break;
  	}
+ 	rcu_read_unlock();
  
--	priv->command = priv->eCmdQueue[priv->uCmdDequeueIdx].cmd;
-+	priv->command = priv->cmd_queue[priv->uCmdDequeueIdx];
+-	if (WARN_ON_ONCE(!compat))
++	if (!compat)
+ 		return;
  
- 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdDequeueIdx, CMD_Q_SIZE);
- 	priv->cbFreeCmdQueue++;
-@@ -192,7 +192,7 @@ int bScheduleCommand(struct vnt_private *priv, enum vnt_cmd command, u8 *item0)
- 	if (priv->cbFreeCmdQueue == 0)
- 		return false;
- 
--	priv->eCmdQueue[priv->uCmdEnqueueIdx].cmd = command;
-+	priv->cmd_queue[priv->uCmdEnqueueIdx] = command;
- 
- 	ADD_ONE_WITH_WRAP_AROUND(priv->uCmdEnqueueIdx, CMD_Q_SIZE);
- 	priv->cbFreeCmdQueue--;
-diff --git a/drivers/staging/vt6656/wcmd.h b/drivers/staging/vt6656/wcmd.h
-index 283df61..f42270b 100644
---- a/drivers/staging/vt6656/wcmd.h
-+++ b/drivers/staging/vt6656/wcmd.h
-@@ -56,10 +56,6 @@ typedef enum tagCMD_STATUS {
- 
- } CMD_STATUS, *PCMD_STATUS;
- 
--typedef struct tagCMD_ITEM {
--	enum vnt_cmd cmd;
--} CMD_ITEM, *PCMD_ITEM;
--
- /* Command state */
- enum vnt_cmd_state {
- 	WLAN_CMD_INIT_MAC80211_START,
+ 	ieee80211_change_chanctx(local, ctx, compat);
 -- 
-1.9.1
+1.8.5.3
 
