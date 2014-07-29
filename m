@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:37518 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182AbaGILpe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40685 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbaG2Jv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2014 07:45:34 -0400
+	Tue, 29 Jul 2014 05:51:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
+Subject: Re: [PATCH 1/2] ath10k: introduce a stricter scan state machine
+References: <1405941081-17359-1-git-send-email-michal.kazior@tieto.com>
+	<1405941081-17359-2-git-send-email-michal.kazior@tieto.com>
+	<87egx4iksd.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnMKDCPTOZswZTg8s-_hmaKBiwDT_Rj4tt=ReR7RUWQ3w@mail.gmail.com>
+Date: Tue, 29 Jul 2014 12:51:17 +0300
+In-Reply-To: <CA+BoTQnMKDCPTOZswZTg8s-_hmaKBiwDT_Rj4tt=ReR7RUWQ3w@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 29 Jul 2014 11:46:48 +0200")
+Message-ID: <87wqawh4ru.fsf@kamboji.qca.qualcomm.com> (sfid-20140729_115130_633557_FA5B82C9)
 MIME-Version: 1.0
-In-Reply-To: <CAGm1_kvTYiDZDuFrB9X1ZOCxrhPC_NE_UzzY8PoBpdZHrQgv_A@mail.gmail.com>
-References: <1404898305-15588-1-git-send-email-eliad@wizery.com>
-	<CAGm1_kvTYiDZDuFrB9X1ZOCxrhPC_NE_UzzY8PoBpdZHrQgv_A@mail.gmail.com>
-Date: Wed, 9 Jul 2014 14:45:33 +0300
-Message-ID: <CAB3XZEeC8AeAw03Va6WZ_WHwy6YABkSjg0BMdf=6gGu1UyncSA@mail.gmail.com> (sfid-20140709_134546_984206_7478BADB)
-Subject: Re: [PATCH] wlcore: add basic device-tree support
-From: Eliad Peller <eliad@wizery.com>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 9, 2014 at 2:00 PM, Yegor Yefremov
-<yegorslists@googlemail.com> wrote:
-> On Wed, Jul 9, 2014 at 11:31 AM, Eliad Peller <eliad@wizery.com> wrote:
->> When running with device-tree, we no longer have a board file
->> that can set up the platform data for wlcore.
->> Allow this data to be passed from DT.
->>
->> For now, parse only the irq used. Other (optional) properties
->> can be added later on.
->
-> What about adding support for "mac-address"
-> (Documentation/devicetree/bindings/net/ethernet.txt) node or will it
-> be automatically available?
->
-the mac address is currently either read from the device itself or
-from the nvs (calibration) file.
-i guess additional support for such dt properties can be added later
-on, if needed.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Eliad.
+>>> @@ -2323,8 +2348,6 @@ void ath10k_halt(struct ath10k *ar)
+>>>               ath10k_monitor_stop(ar);
+>>>       }
+>>>
+>>> -     del_timer_sync(&ar->scan.timeout);
+>>> -     ath10k_reset_scan((unsigned long)ar);
+>>>       ath10k_peer_cleanup_all(ar);
+>>>       ath10k_core_stop(ar);
+>>>       ath10k_hif_power_down(ar);
+>>
+>> Why you don't call ath10k_scan_reset() here? I would have assumed that
+>> you do that.
+>
+> Hmm.. Good catch.
+>
+> Anyway I need to work on this patch a little bit more and fix another
+> corner case.
+
+Ok, I'll drop this patch and wait for the next version.
+
+-- 
+Kalle Valo
