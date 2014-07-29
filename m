@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37394 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbaGPVXH (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:51405 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbaG2Km1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 17:23:07 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so2057966wib.10
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 14:23:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, peter.senna@gmail.com,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/21] staging: vt6656: baseband.c rename awcFrameTime to vnt_frame_time
-Date: Wed, 16 Jul 2014 22:21:51 +0100
-Message-Id: <1405545731-6082-1-git-send-email-tvboxspy@gmail.com> (sfid-20140716_232313_205029_9CEE6E4A)
+	Tue, 29 Jul 2014 06:42:27 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so5875354wib.14
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2014 03:42:24 -0700 (PDT)
+MIME-Version: 1.0
+From: tara petric <tara.petric@gmail.com>
+Date: Tue, 29 Jul 2014 12:42:04 +0200
+Message-ID: <CAKXW2E8m=OJpo79LLkxG4hLU9ANEmTVS3dpSatDXAYZ88t0Bfw@mail.gmail.com> (sfid-20140729_124231_336585_3E483FF4)
+Subject: a way to prevent authenticaion frames in IBSS mode for unfamiliar stations?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/baseband.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 040b232..e56defa 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -123,7 +123,7 @@ static u8 vnt_vt3184_vt3226d0[] = {
- 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 0xff */
- };
- 
--static const u16 awcFrameTime[MAX_RATE] = {
-+static const u16 vnt_frame_time[MAX_RATE] = {
- 	10, 20, 55, 110, 24, 36, 48, 72, 96, 144, 192, 216
- };
- 
-@@ -152,7 +152,7 @@ unsigned int vnt_get_frame_time(u8 preamble_type, u8 pkt_type,
- 	if (tx_rate > RATE_54M)
- 		return 0;
- 
--	rate = (unsigned int)awcFrameTime[tx_rate];
-+	rate = (unsigned int)vnt_frame_time[tx_rate];
- 
- 	if (tx_rate <= 3) {
- 		if (preamble_type == 1)
--- 
-2.0.1
+I have noticed that when a WNIC running an IBSS network receives a
+frame from an unfamiliar station, it (after adding the station ) sends
+an Authentication frame before it's able to receive the intended
+frame.
 
+This seems like unnecessary behavior and I am wondering - is there a
+way to somehow prevent this from user space? Or pre-add a particular
+station, so that it wont go into ieee80211_ibss_rx_no_sta upon
+receival? Or more generally is there a way to prevent authentication
+frames being sent out alltogether from non-encrypted IBSS (since it's
+not required by the standard)?
+
+The reason I want to know about this is because I am trying to see if
+it is possible to have minimal exchange of frames ( only useful
+information ) with linux 80211 capabilites.
+
+I'm guessing that this happens in this case, as well as the regular
+IBSS join case, when this part of code is executed :
+lxr.free-electrons.com/source/net/mac80211/ibss.c?v=3.10#L328
+
+I am using Kernel Version 3.10.25
+
+Thank you very much,
+Tara
