@@ -1,147 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:59593 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356AbaGLKan (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2014 06:30:43 -0400
-Received: by mail-wi0-f173.google.com with SMTP id cc10so398013wib.12
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2014 03:30:42 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/4] staging: vt6656: rf.c cleanup comments
-Date: Sat, 12 Jul 2014 11:30:03 +0100
-Message-Id: <1405161003-2914-4-git-send-email-tvboxspy@gmail.com> (sfid-20140712_123056_773086_2E09AA0A)
-In-Reply-To: <1405161003-2914-1-git-send-email-tvboxspy@gmail.com>
-References: <1405161003-2914-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33779 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751223AbaG2GeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2014 02:34:19 -0400
+Message-ID: <1406615652.7611.0.camel@jlt4.sipsolutions.net> (sfid-20140729_083422_570672_79C5DB04)
+Subject: Re: [PATCH] regulatory: add NULL to alpha2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Eliad Peller <eliad@wizery.com>
+Date: Tue, 29 Jul 2014 08:34:12 +0200
+In-Reply-To: <CAB=NE6URWePHjBhKcWE_Jy06YbTsSWF3+xsrw9KcFYZJuv2Gsw@mail.gmail.com> (sfid-20140729_032717_589381_77A5D52B)
+References: <1402471415-22723-1-git-send-email-arik@wizery.com>
+	 <1403516586.4418.13.camel@jlt4.sipsolutions.net>
+	 <20140630222303.GO1390@garbanzo.do-not-panic.com>
+	 <1405936933.32255.8.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6URWePHjBhKcWE_Jy06YbTsSWF3+xsrw9KcFYZJuv2Gsw@mail.gmail.com>
+	 (sfid-20140729_032717_589381_77A5D52B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-named comments are already referenced in revision history
-in high-level comment.
+On Mon, 2014-07-28 at 18:26 -0700, Luis R. Rodriguez wrote:
+> On Mon, Jul 21, 2014 at 3:02 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > This was never intended to be a string, only 2 characters ... so why use
+> > it with string functions?
+> 
+> Sure makes sense, the report was not clear so indeed, if userspace can
+> be fixed that's better to enable consistent use.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rf.c | 65 +++------------------------------------------
- 1 file changed, 4 insertions(+), 61 deletions(-)
+Sadly, it looks like userspace *is* relying on a NUL-byte (e.g. iw using
+nla_get_string()) which would always be there due to padding, but it's
+probably better to make it explicit.
 
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 1c3b3fa..28e64b4 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -46,15 +46,11 @@
- #define CB_AL7230_INIT_SEQ    16
- #define AL7230_PWR_IDX_LEN    64
- 
--//{{RobertYu:20051111
- #define CB_VT3226_INIT_SEQ    11
- #define VT3226_PWR_IDX_LEN    64
--//}}
- 
--//{{RobertYu:20060609
- #define CB_VT3342_INIT_SEQ    13
- #define VT3342_PWR_IDX_LEN    64
--//}}
- 
- static u8 al2230_init_table[CB_AL2230_INIT_SEQ][3] = {
- 	{0x03, 0xf7, 0x90},
-@@ -536,12 +532,7 @@ static u8 vt3342_channel_table1[CB_MAX_CHANNEL][3] = {
- 	{0x03, 0x00, 0x04}
- };
- 
--/*+
-- *
-- * Power Table
-- *
---*/
--
-+/* Power Table */
- static const u32 al2230_power_table[AL2230_PWR_IDX_LEN] = {
- 	0x04040900,
- 	0x04041900,
-@@ -611,15 +602,6 @@ static const u32 al2230_power_table[AL2230_PWR_IDX_LEN] = {
- 
- /*
-  * Description: Write to IF/RF, by embedded programming
-- *
-- * Parameters:
-- *  In:
-- *      dwData      - data to write
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-  */
- int vnt_rf_write_embedded(struct vnt_private *priv, u32 data)
- {
-@@ -638,19 +620,7 @@ int vnt_rf_write_embedded(struct vnt_private *priv, u32 data)
- 	return true;
- }
- 
--/*
-- * Description: Set Tx power
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase       - I/O base address
-- *      dwRFPowerTable - RF Tx Power Setting
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
-+/* Set Tx power by rate and channel number */
- int vnt_rf_setpower(struct vnt_private *priv, u32 rate, u32 channel)
- {
- 	int ret = true;
-@@ -714,20 +684,7 @@ static u8 vnt_rf_addpower(struct vnt_private *priv)
- 	return 0;
- }
- 
--/*
-- * Description: Set Tx power
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase       - I/O base address
-- *      dwRFPowerTable - RF Tx Power Setting
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
-+/* Set Tx power by power level and rate */
- int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- {
- 	u32 power_setting = 0;
-@@ -846,21 +803,7 @@ int vnt_rf_set_txpower(struct vnt_private *priv, u8 power, u32 rate)
- 	return ret;
- }
- 
--/*+
-- *
-- * Routine Description:
-- *     Translate RSSI to dBm
-- *
-- * Parameters:
-- *  In:
-- *      pDevice         - The adapter to be translated
-- *      byCurrRSSI      - RSSI to be translated
-- *  Out:
-- *      pdwdbm          - Translated dbm number
-- *
-- * Return Value: none
-- *
---*/
-+/* Convert rssi to dbm */
- void vnt_rf_rssi_to_dbm(struct vnt_private *priv, u8 rssi, long *dbm)
- {
- 	u8 idx = (((rssi & 0xc0) >> 6) & 0x03);
--- 
-1.9.1
+johannes
 
