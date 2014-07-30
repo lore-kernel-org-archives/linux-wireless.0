@@ -1,104 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:55835 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770AbaGYVEe (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:36285 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333AbaG3S1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 17:04:34 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so1649477wiw.6
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 14:04:33 -0700 (PDT)
-Date: Fri, 25 Jul 2014 23:04:27 +0200
-From: Christophe RICARD <christophe.ricard@gmail.com>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	christophe-h.ricard@st.com, axel.lin@ingics.com
-Subject: Re: [PATCH] NFC: st21nfca: Convert to use devm_gpio_request_one
-Message-ID: <20140725230427.5d46dc33@toffy-MacBookPro> (sfid-20140725_230439_663695_46AFF404)
-In-Reply-To: <0B9F1C5B86169C4EA9D042C251022E4938E98AD9CA@SAFEX1MAIL3.st.com>
-References: <1401112462.22584.2.camel@phoenix>
-	<0B9F1C5B86169C4EA9D042C251022E4938E98AD9CA@SAFEX1MAIL3.st.com>
+	Wed, 30 Jul 2014 14:27:47 -0400
+Date: Wed, 30 Jul 2014 20:27:40 +0200
+From: Alexander Aring <alex.aring@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Martin Townsend <mtownsend1973@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-zigbee-devel@lists.sourceforge.net,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Martin Townsend <martin.townsend@xsilon.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within
+ function and fix return values.
+Message-ID: <20140730182738.GA21664@omega> (sfid-20140730_202759_118259_54AF3281)
+References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com>
+ <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 May 2014 16:00:08 +0200
-Axel Lin <axel.lin@ingics.com> wrote:
+Hi Marcel,
 
+On Wed, Jul 30, 2014 at 10:42:09AM -0700, Marcel Holtmann wrote:
+> Hi Martin,
 > 
-> This simplifies the code a bit.
+> > Currently it is up to the functions below lowpan_rcv to free the skb on error
+> >    conditions.  This patch now removes all the UAPI error codes and process data
+> >    now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
+> >    the skb and return NET_RX_DROP.  This also fixes the problem where
+> >    NET_RX_SUCCESS is returned on error
+> > 
+> > Martin Townsend (2):
+> >  Remove dev parameter from skb_delivery_cb in 6lowpan.
+> >  Change lowpan_rcv so skb is freed within function and fix return
+> >    values.
+> > 
+> > include/net/6lowpan.h         |  4 ++--
+> > net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
+> > net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
+> > net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
+> > 4 files changed, 52 insertions(+), 54 deletions(-)
 > 
-> Signed-off-by: Axel Lin <axel.lin@ingics.com>
-> ---
->  drivers/nfc/st21nfca/i2c.c | 28 ++++++----------------------
->  1 file changed, 6 insertions(+), 22 deletions(-)
+> I can not take these patches at this point.
 > 
-> diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-> index 3f954ed..0e096ad 100644 --- a/drivers/nfc/st21nfca/i2c.c
-> +++ b/drivers/nfc/st21nfca/i2c.c
-> @@ -524,17 +524,13 @@ static int
-> st21nfca_hci_i2c_of_request_resources(struct i2c_client *client) }
->  
->  	/* GPIO request and configuration */
-> -	r = devm_gpio_request(&client->dev, gpio, "clf_enable");
-> +	r = devm_gpio_request_one(&client->dev, gpio,
-> GPIOF_OUT_INIT_HIGH,
-> +				  "clf_enable");
->  	if (r) {
->  		nfc_err(&client->dev, "Failed to request enable
-> pin\n"); return -ENODEV;
->  	}
->  
-> -	r = gpio_direction_output(gpio, 1);
-> -	if (r) {
-> -		nfc_err(&client->dev, "Failed to set enable pin
-> direction as output\n");
-> -		return -ENODEV;
-> -	}
->  	phy->gpio_ena = gpio;
->  
->  	/* IRQ */
-> @@ -575,32 +571,20 @@ static int
-> st21nfca_hci_i2c_request_resources(struct i2c_client *client)
-> phy->gpio_ena = pdata->gpio_ena; phy->irq_polarity =
-> pdata->irq_polarity; 
-> -	r = devm_gpio_request(&client->dev, phy->gpio_irq,
-> "wake_up");
-> +	r = devm_gpio_request_one(&client->dev, phy->gpio_irq,
-> GPIOF_IN,
-> +				  "wake_up");
->  	if (r) {
->  		pr_err("%s : gpio_request failed\n", __FILE__);
->  		return -ENODEV;
->  	}
->  
-> -	r = gpio_direction_input(phy->gpio_irq);
-> -	if (r) {
-> -		pr_err("%s : gpio_direction_input failed\n",
-> __FILE__);
-> -		return -ENODEV;
-> -	}
-> -
->  	if (phy->gpio_ena > 0) {
-> -		r = devm_gpio_request(&client->dev,
-> -					phy->gpio_ena, "clf_enable");
-> +		r = devm_gpio_request_one(&client->dev,
-> phy->gpio_ena,
-> +					  GPIOF_OUT_INIT_HIGH,
-> "clf_enable"); if (r) {
->  			pr_err("%s : ena gpio_request failed\n",
-> __FILE__); return -ENODEV;
->  		}
-> -		r = gpio_direction_output(phy->gpio_ena, 1);
-> -
-> -		if (r) {
-> -			pr_err("%s : ena gpio_direction_output
-> failed\n",
-> -			       __FILE__);
-> -			return -ENODEV;
-> -		}
->  	}
->  
->  	/* IRQ */
+> checking file net/ieee802154/6lowpan_rtnl.c
+> Hunk #1 FAILED at 143.
+> Hunk #2 succeeded at 480 (offset -4 lines).
+> 1 out of 2 hunks FAILED
+> 
+> We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
+> 
 
-Acked-by: Christophe RICARD <christophe-h.ricard@st.com>
+I already told Martin that these patches should be based on bluetooth
+(better bluetooth-next, 802.15.4 hasn't a real stable strategie and there
+are also some known other issues in the current implementation). I don't
+think that the current implementation is used in a real environment.
 
+I get this patch-series in a resend of this series, after Martin
+subscribed the linux-zigbee-devel mailinglist, then I told Martin that I
+need some time for review and he want to resend them tomorrow or friday.
+The resend should based on bluetooth-next then, if this is okay for you.
+
+I will cc bluetooth mailinglist in my review notes.
+
+- Alex
