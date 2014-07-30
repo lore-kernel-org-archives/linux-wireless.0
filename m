@@ -1,417 +1,409 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:46844 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbaGTOfC (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:62844 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247AbaG3LUM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2014 10:35:02 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ho1so2843706wib.4
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2014 07:35:00 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 23/25] staging: vt6656: rxtx move frame_len/size into vnt_usb_send_context as frame_len
-Date: Sun, 20 Jul 2014 15:33:33 +0100
-Message-Id: <1405866815-2687-23-git-send-email-tvboxspy@gmail.com> (sfid-20140720_165108_234089_997AAFF7)
-In-Reply-To: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
-References: <1405866815-2687-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Jul 2014 07:20:12 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 8/8] brcmfmac: Add TDLS support to msgbuf.
+Date: Wed, 30 Jul 2014 13:20:07 +0200
+Message-ID: <1406719207-5126-9-git-send-email-arend@broadcom.com> (sfid-20140730_132036_778555_4A867A3A)
+In-Reply-To: <1406719207-5126-1-git-send-email-arend@broadcom.com>
+References: <1406719207-5126-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing frame_len and frame_size from function declarations
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+TDLS connections require dedicated flowrings. This patches adds
+TDLS event handling and flowring creation/deletion based on these
+events.
+
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/device.h |   1 +
- drivers/staging/vt6656/rxtx.c   | 115 ++++++++++++++++++++--------------------
- 2 files changed, 58 insertions(+), 58 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |  7 ++
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c | 94 +++++++++++++++++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.h |  9 +++
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |  5 ++
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 10 +++
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c    |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.h    |  7 ++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 24 ++++++
+ 9 files changed, 158 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 9d42877..d3c36af 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -232,6 +232,7 @@ struct vnt_usb_send_context {
- 	struct urb *urb;
- 	struct ieee80211_hdr *hdr;
- 	unsigned int buf_len;
-+	u32 frame_len;
- 	u16 tx_hdr_size;
- 	u8 type;
- 	u8 pkt_no;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 81086ab..163bb1a 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -254,13 +254,13 @@ static u16 vnt_mac_hdr_pos(struct vnt_usb_send_context *tx_context,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+index 10b48c2..a159ff3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+@@ -349,6 +349,12 @@ brcmf_proto_bcdc_delete_peer(struct brcmf_pub *drvr, int ifidx,
+ {
  }
  
- static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
--		u16 rate, struct vnt_tx_datahead_g *buf,
--		u32 frame_len)
-+		u16 rate, struct vnt_tx_datahead_g *buf)
++static void
++brcmf_proto_bcdc_add_tdls_peer(struct brcmf_pub *drvr, int ifidx,
++			       u8 peer[ETH_ALEN])
++{
++}
++
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
  {
+ 	struct brcmf_bcdc *bcdc;
+@@ -369,6 +375,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->txdata = brcmf_proto_bcdc_txdata;
+ 	drvr->proto->configure_addr_mode = brcmf_proto_bcdc_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_proto_bcdc_delete_peer;
++	drvr->proto->add_tdls_peer = brcmf_proto_bcdc_add_tdls_peer;
+ 	drvr->proto->pd = bcdc;
  
- 	struct vnt_private *priv = tx_context->priv;
- 	struct ieee80211_hdr *hdr =
- 				(struct ieee80211_hdr *)tx_context->skb->data;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
+ 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+index 4d55c21..fa17b69 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+@@ -49,6 +49,23 @@ static const u8 brcmf_flowring_prio2fifo[] = {
+ };
  
- 	/* Get SignalField,ServiceField,Length */
-@@ -291,10 +291,10 @@ static u16 vnt_rxtx_datahead_g(struct vnt_usb_send_context *tx_context,
- }
  
- static u16 vnt_rxtx_datahead_g_fb(struct vnt_usb_send_context *tx_context,
--		u16 rate, struct vnt_tx_datahead_g_fb *buf,
--		u32 frame_len)
-+		u16 rate, struct vnt_tx_datahead_g_fb *buf)
++static bool
++brcmf_flowring_is_tdls_mac(struct brcmf_flowring *flow, u8 mac[ETH_ALEN])
++{
++	struct brcmf_flowring_tdls_entry *search;
++
++	search = flow->tdls_entry;
++
++	while (search) {
++		if (memcmp(search->mac, mac, ETH_ALEN) == 0)
++			return true;
++		search = search->next;
++	}
++
++	return false;
++}
++
++
+ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
+ 			  u8 prio, u8 ifidx)
  {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
- 
- 	/* Get SignalField,ServiceField,Length */
-@@ -323,12 +323,12 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_usb_send_context *tx_context,
- }
- 
- static u16 vnt_rxtx_datahead_a_fb(struct vnt_usb_send_context *tx_context,
--		u16 rate, struct vnt_tx_datahead_a_fb *buf,
--		u32 frame_len)
-+		u16 rate, struct vnt_tx_datahead_a_fb *buf)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	u8 pkt_type = tx_context->pkt_type;
- 	u8 need_ack = tx_context->need_ack;
-+	u32 frame_len = tx_context->frame_len;
- 
- 	/* Get SignalField,ServiceField,Length */
- 	vnt_get_phy_field(priv, frame_len, rate, pkt_type, &buf->a);
-@@ -346,12 +346,12 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_usb_send_context *tx_context,
- }
- 
- static u16 vnt_rxtx_datahead_ab(struct vnt_usb_send_context *tx_context,
--		u16 rate, struct vnt_tx_datahead_ab *buf,
--		u32 frame_len)
-+		u16 rate, struct vnt_tx_datahead_ab *buf)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	struct ieee80211_hdr *hdr =
- 				(struct ieee80211_hdr *)tx_context->skb->data;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
- 
- 	/* Get SignalField,ServiceField,Length */
-@@ -392,13 +392,13 @@ static int vnt_fill_ieee80211_rts(struct vnt_usb_send_context *tx_context,
- }
- 
- static u16 vnt_rxtx_rts_g_head(struct vnt_usb_send_context *tx_context,
--	struct vnt_rts_g *buf, u32 frame_len, u16 current_rate)
-+	struct vnt_rts_g *buf, u16 current_rate)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u16 rts_frame_len = 20;
- 	u8 need_ack = tx_context->need_ack;
- 
--
- 	vnt_get_phy_field(priv, rts_frame_len, priv->top_cck_basic_rate,
- 		PK_TYPE_11B, &buf->b);
- 	vnt_get_phy_field(priv, rts_frame_len, priv->top_ofdm_basic_rate,
-@@ -413,14 +413,14 @@ static u16 vnt_rxtx_rts_g_head(struct vnt_usb_send_context *tx_context,
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration_aa);
- 
--	return vnt_rxtx_datahead_g(tx_context, current_rate, &buf->data_head,
--				   frame_len);
-+	return vnt_rxtx_datahead_g(tx_context, current_rate, &buf->data_head);
- }
- 
- static u16 vnt_rxtx_rts_g_fb_head(struct vnt_usb_send_context *tx_context,
--	struct vnt_rts_g_fb *buf, u32 frame_len, u16 current_rate)
-+	struct vnt_rts_g_fb *buf, u16 current_rate)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u16 rts_frame_len = 20;
- 	u8 need_ack = tx_context->need_ack;
- 
-@@ -448,14 +448,15 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_usb_send_context *tx_context,
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration_aa);
- 
--	return vnt_rxtx_datahead_g_fb(tx_context, current_rate, &buf->data_head,
--				      frame_len);
-+	return vnt_rxtx_datahead_g_fb(tx_context,
-+				      current_rate, &buf->data_head);
- }
- 
- static u16 vnt_rxtx_rts_ab_head(struct vnt_usb_send_context *tx_context,
--	struct vnt_rts_ab *buf, u32 frame_len, u16 current_rate)
-+	struct vnt_rts_ab *buf, u16 current_rate)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u16 rts_frame_len = 20;
- 	u8 need_ack = tx_context->need_ack;
- 
-@@ -470,13 +471,14 @@ static u16 vnt_rxtx_rts_ab_head(struct vnt_usb_send_context *tx_context,
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration);
- 
- 	return vnt_rxtx_datahead_ab(tx_context, current_rate,
--				    &buf->data_head, frame_len);
-+				    &buf->data_head);
- }
- 
- static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
--	struct vnt_rts_a_fb *buf, u32 frame_len, u16 current_rate)
-+	struct vnt_rts_a_fb *buf, u16 current_rate)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u16 rts_frame_len = 20;
- 	u8 need_ack = tx_context->need_ack;
- 
-@@ -496,18 +498,18 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
- 
- 	vnt_fill_ieee80211_rts(tx_context, &buf->data, buf->duration);
- 
--	return vnt_rxtx_datahead_a_fb(tx_context, current_rate, &buf->data_head,
--				      frame_len);
-+	return vnt_rxtx_datahead_a_fb(tx_context,
-+				      current_rate, &buf->data_head);
- }
- 
- static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
--	union vnt_tx_data_head *head, u32 frame_len, u16 current_rate)
-+	union vnt_tx_data_head *head, u16 current_rate)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	u32 frame_len = tx_context->frame_len;
- 	u32 cts_frame_len = 14;
- 	u8 need_ack = tx_context->need_ack;
- 
--
- 	if (!head)
- 		return 0;
- 
-@@ -536,7 +538,7 @@ static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
- 		memcpy(buf->data.ra, priv->current_net_addr, ETH_ALEN);
- 
- 		return vnt_rxtx_datahead_g_fb(tx_context, current_rate,
--					      &buf->data_head, frame_len);
-+					      &buf->data_head);
- 	} else {
- 		struct vnt_cts *buf = &head->cts_g;
- 		/* Get SignalField,ServiceField,Length */
-@@ -554,32 +556,33 @@ static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
- 		memcpy(buf->data.ra, priv->current_net_addr, ETH_ALEN);
- 
- 		return vnt_rxtx_datahead_g(tx_context, current_rate,
--					   &buf->data_head, frame_len);
-+					   &buf->data_head);
-         }
- 
- 	return 0;
- }
- 
- static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
--	union vnt_tx_head *tx_head, u32 frame_size,
-+	union vnt_tx_head *tx_head,
- 	u16 current_rate, bool need_mic)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	struct vnt_rrv_time_rts *buf = &tx_head->tx_rts.rts;
- 	union vnt_tx_data_head *head = &tx_head->tx_rts.tx.head;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
- 
- 	buf->rts_rrv_time_aa = vnt_get_rtscts_rsvtime_le(priv, 2,
--			tx_context->pkt_type, frame_size, current_rate);
-+			tx_context->pkt_type, frame_len, current_rate);
- 	buf->rts_rrv_time_ba = vnt_get_rtscts_rsvtime_le(priv, 1,
--			tx_context->pkt_type, frame_size, current_rate);
-+			tx_context->pkt_type, frame_len, current_rate);
- 	buf->rts_rrv_time_bb = vnt_get_rtscts_rsvtime_le(priv, 0,
--			tx_context->pkt_type, frame_size, current_rate);
-+			tx_context->pkt_type, frame_len, current_rate);
- 
- 	buf->rrv_time_a = vnt_rxtx_rsvtime_le16(priv, tx_context->pkt_type,
--						frame_size, current_rate,
-+						frame_len, current_rate,
- 						need_ack);
--	buf->rrv_time_b = vnt_rxtx_rsvtime_le16(priv, PK_TYPE_11B, frame_size,
-+	buf->rrv_time_b = vnt_rxtx_rsvtime_le16(priv, PK_TYPE_11B, frame_len,
- 					priv->top_cck_basic_rate, need_ack);
- 
- 	if (need_mic)
-@@ -587,48 +590,47 @@ static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
- 
- 	if (tx_context->fb_option)
- 		return vnt_rxtx_rts_g_fb_head(tx_context, &head->rts_g_fb,
--					frame_size, current_rate);
-+					      current_rate);
- 
--	return vnt_rxtx_rts_g_head(tx_context, &head->rts_g, frame_size,
--				   current_rate);
-+	return vnt_rxtx_rts_g_head(tx_context, &head->rts_g, current_rate);
- }
- 
- static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
--	union vnt_tx_head *tx_head, u32 frame_size,
--	u16 current_rate, bool need_mic)
-+	union vnt_tx_head *tx_head, u16 current_rate, bool need_mic)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	struct vnt_rrv_time_cts *buf = &tx_head->tx_cts.cts;
- 	union vnt_tx_data_head *head = &tx_head->tx_cts.tx.head;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
- 
--
- 	buf->rrv_time_a = vnt_rxtx_rsvtime_le16(priv, tx_context->pkt_type,
--					frame_size, current_rate, need_ack);
-+					frame_len, current_rate, need_ack);
- 	buf->rrv_time_b = vnt_rxtx_rsvtime_le16(priv, PK_TYPE_11B,
--				frame_size, priv->top_cck_basic_rate, need_ack);
-+				frame_len, priv->top_cck_basic_rate, need_ack);
- 
- 	buf->cts_rrv_time_ba = vnt_get_rtscts_rsvtime_le(priv, 3,
--			tx_context->pkt_type, frame_size, current_rate);
-+			tx_context->pkt_type, frame_len, current_rate);
- 
- 	if (need_mic)
- 		head = &tx_head->tx_cts.tx.mic.head;
- 
- 	/* Fill CTS */
--	return vnt_fill_cts_head(tx_context, head, frame_size, current_rate);
-+	return vnt_fill_cts_head(tx_context, head, current_rate);
- }
- 
- static u16 vnt_rxtx_ab(struct vnt_usb_send_context *tx_context,
--	union vnt_tx_head *tx_head, u32 frame_size,
-+	union vnt_tx_head *tx_head,
- 	u16 current_rate, bool need_rts, bool need_mic)
- {
- 	struct vnt_private *priv = tx_context->priv;
- 	struct vnt_rrv_time_ab *buf = &tx_head->tx_ab.ab;
- 	union vnt_tx_data_head *head = &tx_head->tx_ab.tx.head;
-+	u32 frame_len = tx_context->frame_len;
- 	u8 need_ack = tx_context->need_ack;
- 
- 	buf->rrv_time = vnt_rxtx_rsvtime_le16(priv, tx_context->pkt_type,
--			frame_size, current_rate, need_ack);
-+			frame_len, current_rate, need_ack);
- 
- 	if (need_mic)
- 		head = &tx_head->tx_ab.tx.mic.head;
-@@ -636,33 +638,32 @@ static u16 vnt_rxtx_ab(struct vnt_usb_send_context *tx_context,
- 	if (need_rts) {
- 		if (tx_context->pkt_type == PK_TYPE_11B)
- 			buf->rts_rrv_time = vnt_get_rtscts_rsvtime_le(priv, 0,
--				tx_context->pkt_type, frame_size, current_rate);
-+				tx_context->pkt_type, frame_len, current_rate);
- 		else /* PK_TYPE_11A */
- 			buf->rts_rrv_time = vnt_get_rtscts_rsvtime_le(priv, 2,
--				tx_context->pkt_type, frame_size, current_rate);
-+				tx_context->pkt_type, frame_len, current_rate);
- 
- 		if (tx_context->fb_option &&
- 		    tx_context->pkt_type == PK_TYPE_11A)
- 			return vnt_rxtx_rts_a_fb_head(tx_context,
- 						      &head->rts_a_fb,
--						      frame_size, current_rate);
-+						      current_rate);
- 
- 		return vnt_rxtx_rts_ab_head(tx_context, &head->rts_ab,
--					    frame_size, current_rate);
-+					    current_rate);
+@@ -67,6 +84,10 @@ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
+ 		mac = (u8 *)ALLFFMAC;
+ 		fifo = 0;
  	}
- 
- 	if (tx_context->pkt_type == PK_TYPE_11A)
- 		return vnt_rxtx_datahead_a_fb(tx_context, current_rate,
--					      &head->data_head_a_fb,
--					      frame_size);
-+					      &head->data_head_a_fb);
- 
- 	return vnt_rxtx_datahead_ab(tx_context, current_rate,
--				    &head->data_head_ab, frame_size);
-+				    &head->data_head_ab);
- }
- 
- static u16 vnt_generate_tx_parameter(struct vnt_usb_send_context *tx_context,
- 	u16 current_rate, struct vnt_tx_buffer *tx_buffer,
--	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 frame_size,
-+	struct vnt_mic_hdr **mic_hdr, u32 need_mic,
- 	bool need_rts)
- {
- 
-@@ -674,20 +675,20 @@ static u16 vnt_generate_tx_parameter(struct vnt_usb_send_context *tx_context,
- 						tx_head.tx_rts.tx.mic.hdr;
- 
- 			return vnt_rxtx_rts(tx_context, &tx_buffer->tx_head,
--					    frame_size, current_rate, need_mic);
-+					    current_rate, need_mic);
- 		}
- 
- 		if (need_mic)
- 			*mic_hdr = &tx_buffer->tx_head.tx_cts.tx.mic.hdr;
- 
--		return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head, frame_size,
-+		return vnt_rxtx_cts(tx_context, &tx_buffer->tx_head,
- 				    current_rate, need_mic);
++	if ((sta) && (flow->tdls_active) &&
++	    (brcmf_flowring_is_tdls_mac(flow, da))) {
++		sta = false;
++	}
+ 	hash_idx =  sta ? BRCMF_FLOWRING_HASH_STA(fifo, ifidx) :
+ 			  BRCMF_FLOWRING_HASH_AP(mac, fifo, ifidx);
+ 	found = false;
+@@ -106,15 +127,17 @@ u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
+ 		mac = (u8 *)ALLFFMAC;
+ 		fifo = 0;
  	}
- 
- 	if (need_mic)
- 		*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
- 
--	return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head, frame_size,
-+	return vnt_rxtx_ab(tx_context, &tx_buffer->tx_head,
- 			   current_rate, need_rts, need_mic);
- }
- 
-@@ -772,7 +773,6 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	struct vnt_tx_fifo_head *tx_buffer_head;
- 	struct vnt_usb_send_context *tx_context;
- 	unsigned long flags;
--	u32 frame_size = 0;
- 	u16 tx_bytes, tx_header_size, tx_body_size, current_rate, duration_id;
- 	u8 pkt_type, fb_option = AUTO_FB_NONE;
- 	bool need_rts = false, is_pspoll = false;
-@@ -806,6 +806,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	tx_context->skb = skb;
- 	tx_context->pkt_type = pkt_type;
- 	tx_context->need_ack = false;
-+	tx_context->frame_len = skb->len + 4;
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-@@ -813,8 +814,6 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	tx_buffer_head = &tx_buffer->fifo_head;
- 	tx_body_size = skb->len;
- 
--	frame_size = tx_body_size + 4;
--
- 	/*Set fifo controls */
- 	if (pkt_type == PK_TYPE_11A)
- 		tx_buffer_head->wFIFOCtl = 0;
-@@ -880,7 +879,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 		default:
++	if ((sta) && (flow->tdls_active) &&
++	    (brcmf_flowring_is_tdls_mac(flow, da))) {
++		sta = false;
++	}
+ 	hash_idx =  sta ? BRCMF_FLOWRING_HASH_STA(fifo, ifidx) :
+ 			  BRCMF_FLOWRING_HASH_AP(mac, fifo, ifidx);
+ 	found = false;
+ 	hash = flow->hash;
+ 	for (i = 0; i < BRCMF_FLOWRING_HASHSIZE; i++) {
+-		if (((sta) &&
+-		     (hash[hash_idx].ifidx == BRCMF_FLOWRING_INVALID_IFIDX)) ||
+-		    ((!sta) &&
+-		     (memcmp(hash[hash_idx].mac, ALLZEROMAC, ETH_ALEN) == 0))) {
++		if ((hash[hash_idx].ifidx == BRCMF_FLOWRING_INVALID_IFIDX) &&
++		    (memcmp(hash[hash_idx].mac, ALLZEROMAC, ETH_ALEN) == 0)) {
+ 			found = true;
  			break;
  		}
--		frame_size += tx_key->icv_len;
-+		tx_context->frame_len += tx_key->icv_len;
+@@ -356,12 +379,21 @@ void brcmf_flowring_detach(struct brcmf_flowring *flow)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
++	struct brcmf_flowring_tdls_entry *search;
++	struct brcmf_flowring_tdls_entry *remove;
+ 	u8 flowid;
+ 
+ 	for (flowid = 0; flowid < flow->nrofrings; flowid++) {
+ 		if (flow->rings[flowid])
+ 			brcmf_msgbuf_delete_flowring(drvr, flowid);
+ 	}
++
++	search = flow->tdls_entry;
++	while (search) {
++		remove = search;
++		search = search->next;
++		kfree(remove);
++	}
+ 	kfree(flow->rings);
+ 	kfree(flow);
+ }
+@@ -396,11 +428,25 @@ void brcmf_flowring_delete_peer(struct brcmf_flowring *flow, int ifidx,
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
+ 	struct brcmf_flowring_hash *hash;
++	struct brcmf_flowring_tdls_entry *prev;
++	struct brcmf_flowring_tdls_entry *search;
+ 	u32 i;
+ 	u8 flowid;
+ 	bool sta;
+ 
+ 	sta = (flow->addr_mode[ifidx] == ADDR_INDIRECT);
++
++	search = flow->tdls_entry;
++	prev = NULL;
++	while (search) {
++		if (memcmp(search->mac, peer, ETH_ALEN) == 0) {
++			sta = false;
++			break;
++		}
++		prev = search;
++		search = search->next;
++	}
++
+ 	hash = flow->hash;
+ 	for (i = 0; i < BRCMF_FLOWRING_HASHSIZE; i++) {
+ 		if ((sta || (memcmp(hash[i].mac, peer, ETH_ALEN) == 0)) &&
+@@ -412,5 +458,45 @@ void brcmf_flowring_delete_peer(struct brcmf_flowring *flow, int ifidx,
+ 			}
+ 		}
+ 	}
++
++	if (search) {
++		if (prev)
++			prev->next = search->next;
++		else
++			flow->tdls_entry = search->next;
++		kfree(search);
++		if (flow->tdls_entry == NULL)
++			flow->tdls_active = false;
++	}
++}
++
++
++void brcmf_flowring_add_tdls_peer(struct brcmf_flowring *flow, int ifidx,
++				  u8 peer[ETH_ALEN])
++{
++	struct brcmf_flowring_tdls_entry *tdls_entry;
++	struct brcmf_flowring_tdls_entry *search;
++
++	tdls_entry = kzalloc(sizeof(*tdls_entry), GFP_ATOMIC);
++	if (tdls_entry == NULL)
++		return;
++
++	memcpy(tdls_entry->mac, peer, ETH_ALEN);
++	tdls_entry->next = NULL;
++	if (flow->tdls_entry == NULL) {
++		flow->tdls_entry = tdls_entry;
++	} else {
++		search = flow->tdls_entry;
++		if (memcmp(search->mac, peer, ETH_ALEN) == 0)
++			return;
++		while (search->next) {
++			search = search->next;
++			if (memcmp(search->mac, peer, ETH_ALEN) == 0)
++				return;
++		}
++		search->next = tdls_entry;
++	}
++
++	flow->tdls_active = true;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+index cb9644c..a34cd39 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+@@ -40,6 +40,11 @@ struct brcmf_flowring_ring {
+ 	struct sk_buff_head skblist;
+ };
+ 
++struct brcmf_flowring_tdls_entry {
++	u8 mac[ETH_ALEN];
++	struct brcmf_flowring_tdls_entry *next;
++};
++
+ struct brcmf_flowring {
+ 	struct device *dev;
+ 	struct brcmf_flowring_hash hash[BRCMF_FLOWRING_HASHSIZE];
+@@ -47,6 +52,8 @@ struct brcmf_flowring {
+ 	spinlock_t block_lock;
+ 	enum proto_addr_mode addr_mode[BRCMF_MAX_IFS];
+ 	u16 nrofrings;
++	bool tdls_active;
++	struct brcmf_flowring_tdls_entry *tdls_entry;
+ };
+ 
+ 
+@@ -70,6 +77,8 @@ void brcmf_flowring_configure_addr_mode(struct brcmf_flowring *flow, int ifidx,
+ 					enum proto_addr_mode addr_mode);
+ void brcmf_flowring_delete_peer(struct brcmf_flowring *flow, int ifidx,
+ 				u8 peer[ETH_ALEN]);
++void brcmf_flowring_add_tdls_peer(struct brcmf_flowring *flow, int ifidx,
++				  u8 peer[ETH_ALEN]);
+ 
+ 
+ #endif /* BRCMFMAC_FLOWRING_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index fad77dd..4f1daab 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -293,7 +293,11 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
+ 			goto event_free;
+ 		}
+ 
+-		ifp = drvr->iflist[emsg.bsscfgidx];
++		if ((event->code == BRCMF_E_TDLS_PEER_EVENT) &&
++		    (emsg.bsscfgidx == 1))
++			ifp = drvr->iflist[0];
++		else
++			ifp = drvr->iflist[emsg.bsscfgidx];
+ 		err = brcmf_fweh_call_event_handler(ifp, event->code, &emsg,
+ 						    event->data);
+ 		if (err) {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index 51b53a7..dd20b18 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -102,6 +102,7 @@ struct brcmf_event;
+ 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
+ 	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
+ 	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75) \
++	BRCMF_ENUM_DEF(TDLS_PEER_EVENT, 92) \
+ 	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127) \
+ 	BRCMF_ENUM_DEF(PSTA_PRIMARY_INTF_IND, 128)
+ 
+@@ -155,6 +156,10 @@ enum brcmf_fweh_event_code {
+ #define BRCMF_E_REASON_TSPEC_REJECTED		7
+ #define BRCMF_E_REASON_BETTER_AP		8
+ 
++#define BRCMF_E_REASON_TDLS_PEER_DISCOVERED	0
++#define BRCMF_E_REASON_TDLS_PEER_CONNECTED	1
++#define BRCMF_E_REASON_TDLS_PEER_DISCONNECTED	2
++
+ /* action field values for brcmf_ifevent */
+ #define BRCMF_E_IF_ADD				1
+ #define BRCMF_E_IF_DEL				2
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 4dd6890..01ac387 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -752,6 +752,15 @@ brcmf_msgbuf_delete_peer(struct brcmf_pub *drvr, int ifidx, u8 peer[ETH_ALEN])
+ 
+ 
+ static void
++brcmf_msgbuf_add_tdls_peer(struct brcmf_pub *drvr, int ifidx, u8 peer[ETH_ALEN])
++{
++	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
++
++	brcmf_flowring_add_tdls_peer(msgbuf->flow, ifidx, peer);
++}
++
++
++static void
+ brcmf_msgbuf_process_ioctl_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ {
+ 	struct msgbuf_ioctl_resp_hdr *ioctl_resp;
+@@ -1298,6 +1307,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->txdata = brcmf_msgbuf_txdata;
+ 	drvr->proto->configure_addr_mode = brcmf_msgbuf_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_msgbuf_delete_peer;
++	drvr->proto->add_tdls_peer = brcmf_msgbuf_add_tdls_peer;
+ 	drvr->proto->pd = msgbuf;
+ 
+ 	init_waitqueue_head(&msgbuf->ioctl_resp_wait);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+index 44b1cb4..62b9407 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+@@ -54,7 +54,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
+ 	if ((proto->txdata == NULL) || (proto->hdrpull == NULL) ||
+ 	    (proto->query_dcmd == NULL) || (proto->set_dcmd == NULL) ||
+ 	    (proto->configure_addr_mode == NULL) ||
+-	    (proto->delete_peer == NULL)) {
++	    (proto->delete_peer == NULL) || (proto->add_tdls_peer == NULL)) {
+ 		brcmf_err("Not all proto handlers have been installed\n");
+ 		goto fail;
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/brcm80211/brcmfmac/proto.h
+index 55942e3..971172ff 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.h
+@@ -36,6 +36,8 @@ struct brcmf_proto {
+ 				    enum proto_addr_mode addr_mode);
+ 	void (*delete_peer)(struct brcmf_pub *drvr, int ifidx,
+ 			    u8 peer[ETH_ALEN]);
++	void (*add_tdls_peer)(struct brcmf_pub *drvr, int ifidx,
++			      u8 peer[ETH_ALEN]);
+ 	void *pd;
+ };
+ 
+@@ -74,6 +76,11 @@ brcmf_proto_delete_peer(struct brcmf_pub *drvr, int ifidx, u8 peer[ETH_ALEN])
+ {
+ 	drvr->proto->delete_peer(drvr, ifidx, peer);
+ }
++static inline void
++brcmf_proto_add_tdls_peer(struct brcmf_pub *drvr, int ifidx, u8 peer[ETH_ALEN])
++{
++	drvr->proto->add_tdls_peer(drvr, ifidx, peer);
++}
+ 
+ 
+ #endif /* BRCMFMAC_PROTO_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index a0e555a..02fe706 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4155,6 +4155,27 @@ static void brcmf_cfg80211_crit_proto_stop(struct wiphy *wiphy,
+ 	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
+ }
+ 
++static s32
++brcmf_notify_tdls_peer_event(struct brcmf_if *ifp,
++			     const struct brcmf_event_msg *e, void *data)
++{
++	switch (e->reason) {
++	case BRCMF_E_REASON_TDLS_PEER_DISCOVERED:
++		brcmf_dbg(TRACE, "TDLS Peer Discovered\n");
++		break;
++	case BRCMF_E_REASON_TDLS_PEER_CONNECTED:
++		brcmf_dbg(TRACE, "TDLS Peer Connected\n");
++		brcmf_proto_add_tdls_peer(ifp->drvr, ifp->ifidx, (u8 *)e->addr);
++		break;
++	case BRCMF_E_REASON_TDLS_PEER_DISCONNECTED:
++		brcmf_dbg(TRACE, "TDLS Peer Disconnected\n");
++		brcmf_proto_delete_peer(ifp->drvr, ifp->ifidx, (u8 *)e->addr);
++		break;
++	}
++
++	return 0;
++}
++
+ static int brcmf_convert_nl80211_tdls_oper(enum nl80211_tdls_operation oper)
+ {
+ 	int ret;
+@@ -5691,6 +5712,9 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	if (err) {
+ 		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
+ 		wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_TDLS;
++	} else {
++		brcmf_fweh_register(cfg->pub, BRCMF_E_TDLS_PEER_EVENT,
++				    brcmf_notify_tdls_peer_event);
  	}
  
- 	tx_buffer_head->current_rate = cpu_to_le16(current_rate);
-@@ -912,7 +911,7 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	duration_id = vnt_generate_tx_parameter(tx_context, current_rate,
- 						tx_buffer, &mic_hdr, need_mic,
--						frame_size, need_rts);
-+						need_rts);
- 
- 	tx_header_size = tx_context->tx_hdr_size;
- 	if (!tx_header_size) {
+ 	return cfg;
 -- 
-2.0.1
+1.9.1
 
