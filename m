@@ -1,257 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:46323 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbaGPK0S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 06:26:18 -0400
-Received: by mail-we0-f176.google.com with SMTP id q58so686615wes.21
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 03:26:17 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+Received: from mga02.intel.com ([134.134.136.20]:26652 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106AbaG3LkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2014 07:40:10 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Denton Gentry <denton.gentry@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] ath10k: fix Rx aggregation reordering
-Date: Wed, 16 Jul 2014 12:17:35 +0200
-Message-Id: <1405505855-13741-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_122627_739349_3C800B56)
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] ieee80211: Support parsing TPC report element in action frames
+Date: Wed, 30 Jul 2014 14:36:18 +0300
+Message-Id: <1406720178-6178-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140730_134015_222432_9BFF87A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware doesn't perform Rx reordering so it is
-left to the host driver to do that.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Use mac80211 to perform reordering instead of
-re-inventing the wheel.
+TPC report element is contained in spectrum management's tpc report
+action frames and in radio measurement's link measurement report
+action frames. Add a function which checks whether an action frame
+contains this element. This may be needed by the drivers in order
+to set the correct tx power value in these frames.
 
-This fixes TCP throughput issues in some
-environments.
-
-Reported-by: Denton Gentry <denton.gentry@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-This depends on:
+ include/linux/ieee80211.h | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
- * mac80211: fix Rx reordering with RX_FLAG_AMSDU_MORE
- * mac80211: add support for Rx reordering offloading
-
-I'm still seeing some issues with TCP traffic.
-Apparently firmware/hardware sometimes stalls Rx
-for ~100ms and misses some aggregate frames. I
-wasn't able to pinpoint what the problem is. The
-more parallel TCP streams (iperf) the more often
-stalls happen. UDP doesn't seem to trigger the Rx
-stalls at all.
-
-
-Notes:
-    v2:
-     * split addba/delba handling into separate functions [Kalle]
-     * extend ampdu_action debug print (+vdev_id, +sta addr, +tid)
-
- drivers/net/wireless/ath/ath10k/htt_rx.c | 94 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/mac.c    | 33 +++++++++++
- drivers/net/wireless/ath/ath10k/txrx.c   |  3 +-
- drivers/net/wireless/ath/ath10k/txrx.h   |  1 +
- 4 files changed, 127 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index eebc860..966bd4a 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -21,6 +21,7 @@
- #include "txrx.h"
- #include "debug.h"
- #include "trace.h"
-+#include "mac.h"
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 37ffd9d..2875cf8 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -839,6 +839,16 @@ enum ieee80211_vht_opmode_bits {
  
- #include <linux/log2.h>
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
  
-@@ -1422,6 +1423,86 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
- 	}
- }
++/**
++ * struct ieee80211_tpc_report_ie
++ *
++ * This structure refers to "TPC Report element"
++ */
++struct ieee80211_tpc_report_ie {
++	u8 tx_power;
++	u8 link_margin;
++} __packed;
++
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+@@ -974,6 +984,13 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 operating_mode;
+ 				} __packed vht_opmode_notif;
++				struct {
++					u8 action_code;
++					u8 dialog_token;
++					u8 tpc_elem_id;
++					u8 tpc_elem_length;
++					struct ieee80211_tpc_report_ie tpc;
++				} __packed tpc_report;
+ 			} u;
+ 		} __packed action;
+ 	} u;
+@@ -1865,6 +1882,7 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_DLS = 2,
+ 	WLAN_CATEGORY_BACK = 3,
+ 	WLAN_CATEGORY_PUBLIC = 4,
++	WLAN_CATEGORY_RADIO_MEASUREMENT = 5,
+ 	WLAN_CATEGORY_HT = 7,
+ 	WLAN_CATEGORY_SA_QUERY = 8,
+ 	WLAN_CATEGORY_PROTECTED_DUAL_OF_ACTION = 9,
+@@ -2383,4 +2401,51 @@ static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,
+ #define TU_TO_JIFFIES(x)	(usecs_to_jiffies((x) * 1024))
+ #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
  
-+static void ath10k_htt_rx_addba(struct ath10k *ar, struct htt_resp *resp)
++/**
++ * ieee80211_action_contains_tpc - checks if the frame contains TPC element
++ * @skb: the skb containing the frame, length will be checked
++ *
++ * This function checks if it's either TPC report action frame or Link
++ * Measurement report action frame as defined in IEEE Std. 802.11-2012 8.5.2.5
++ * and 8.5.7.5 accordingly.
++ */
++static inline bool ieee80211_action_contains_tpc(struct sk_buff *skb)
 +{
-+	struct htt_rx_addba *ev = &resp->rx_addba;
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	u16 info0, tid, peer_id;
++	struct ieee80211_mgmt *mgmt = (void *)skb->data;
 +
-+	info0 = __le32_to_cpu(ev->info0);
-+	tid = MS(info0, HTT_RX_BA_INFO0_TID);
-+	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
++	if (!ieee80211_is_action(mgmt->frame_control))
++		return false;
 +
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx addba tid %hu peer_id %hu size %hhu\n",
-+		   tid, peer_id, ev->window_size);
++	if (skb->len < IEEE80211_MIN_ACTION_SIZE +
++		       sizeof(mgmt->u.action.u.tpc_report))
++		return false;
 +
-+	spin_lock_bh(&ar->data_lock);
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer) {
-+		ath10k_warn("received addba event for invalid peer_id: %hu\n",
-+			    peer_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
++	/*
++	 * TPC report - check that:
++	 * category = 0 (Spectrum Management) or 5 (Radio Measurement)
++	 * spectrum management action = 3 (TPC/Link Measurement report)
++	 * TPC report EID = 35
++	 * TPC report element length = 2
++	 *
++	 * The spectrum management's tpc_report struct is used here both for
++	 * parsing tpc_report and radio measurement's link measurement report
++	 * frame, since the relevant part is identical in both frames.
++	 */
++	if (mgmt->u.action.category != WLAN_CATEGORY_SPECTRUM_MGMT &&
++	    mgmt->u.action.category != WLAN_CATEGORY_RADIO_MEASUREMENT)
++		return false;
 +
-+	arvif = ath10k_get_arvif(ar, peer->vdev_id);
-+	if (!arvif) {
-+		ath10k_warn("received addba event for invalid vdev_id: %u\n",
-+			    peer->vdev_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
++	/* both spectrum mgmt and link measurement have same action code */
++	if (mgmt->u.action.u.tpc_report.action_code !=
++	    WLAN_ACTION_SPCT_TPC_RPRT)
++		return false;
 +
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx start rx ba session sta %pM tid %hu size %hhu\n",
-+		   peer->addr, tid, ev->window_size);
++	if (mgmt->u.action.u.tpc_report.tpc_elem_id != WLAN_EID_TPC_REPORT ||
++	    mgmt->u.action.u.tpc_report.tpc_elem_length !=
++	    sizeof(struct ieee80211_tpc_report_ie))
++		return false;
 +
-+	ieee80211_start_rx_ba_session_offl(arvif->vif, peer->addr, tid);
-+	spin_unlock_bh(&ar->data_lock);
++	return true;
 +}
 +
-+static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
-+{
-+	struct htt_rx_addba *ev = &resp->rx_addba;
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	u16 info0, tid, peer_id;
-+
-+	info0 = __le32_to_cpu(ev->info0);
-+	tid = MS(info0, HTT_RX_BA_INFO0_TID);
-+	peer_id = MS(info0, HTT_RX_BA_INFO0_PEER_ID);
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx delba tid %hu peer_id %hu\n",
-+		   tid, peer_id);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer) {
-+		ath10k_warn("received addba event for invalid peer_id: %hu\n",
-+			    peer_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	arvif = ath10k_get_arvif(ar, peer->vdev_id);
-+	if (!arvif) {
-+		ath10k_warn("received addba event for invalid vdev_id: %u\n",
-+			    peer->vdev_id);
-+		spin_unlock_bh(&ar->data_lock);
-+		return;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt rx stop rx ba session sta %pM tid %hu\n",
-+		   peer->addr, tid);
-+
-+	ieee80211_stop_rx_ba_session_offl(arvif->vif, peer->addr, tid);
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
- void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
-@@ -1515,10 +1596,19 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_STATS_CONF:
- 		trace_ath10k_htt_stats(skb->data, skb->len);
- 		break;
--	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	case HTT_T2H_MSG_TYPE_RX_ADDBA:
-+		ath10k_htt_rx_addba(ar, resp);
-+		break;
- 	case HTT_T2H_MSG_TYPE_RX_DELBA:
--	case HTT_T2H_MSG_TYPE_RX_FLUSH:
-+		ath10k_htt_rx_delba(ar, resp);
-+		break;
-+	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
-+		/* Ignore this event because mac80211 takes care of Rx
-+		 * aggregation reordering.
-+		 */
-+		break;
-+	}
-+	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	default:
- 		ath10k_dbg(ATH10K_DBG_HTT, "htt event (%d) not handled\n",
- 			   resp->hdr.msg_type);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b8314a5..24d5ac0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4331,6 +4331,38 @@ static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	return 0;
- }
- 
-+int ath10k_ampdu_action(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			enum ieee80211_ampdu_mlme_action action,
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			u8 buf_size)
-+{
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+
-+	ath10k_dbg(ATH10K_DBG_MAC, "mac ampdu vdev_id %i sta %pM tid %hu action %d\n",
-+		   arvif->vdev_id, sta->addr, tid, action);
-+
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+	case IEEE80211_AMPDU_RX_STOP:
-+		/* HTT AddBa/DelBa events trigger mac80211 Rx BA session
-+		 * creation/removal. Do we need to verify this?
-+		 */
-+		return 0;
-+	case IEEE80211_AMPDU_TX_START:
-+	case IEEE80211_AMPDU_TX_STOP_CONT:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		/* Firmware offloads Tx aggregation entirely so deny mac80211
-+		 * Tx aggregation requests.
-+		 */
-+		break;
-+	}
-+
-+	return -EOPNOTSUPP;
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_tx,
- 	.start				= ath10k_start,
-@@ -4358,6 +4390,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
- 	.sta_rc_update			= ath10k_sta_rc_update,
- 	.get_tsf			= ath10k_get_tsf,
-+	.ampdu_action			= ath10k_ampdu_action,
- #ifdef CONFIG_PM
- 	.suspend			= ath10k_suspend,
- 	.resume				= ath10k_resume,
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 82669a7..f4fa22d 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -119,8 +119,7 @@ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 	return NULL;
- }
- 
--static struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar,
--						  int peer_id)
-+struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
- {
- 	struct ath10k_peer *peer;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
-index aee3e20..a90e09f 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.h
-+++ b/drivers/net/wireless/ath/ath10k/txrx.h
-@@ -24,6 +24,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 				     const u8 *addr);
-+struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id);
- int ath10k_wait_for_peer_created(struct ath10k *ar, int vdev_id,
- 				 const u8 *addr);
- int ath10k_wait_for_peer_deleted(struct ath10k *ar, int vdev_id,
+ #endif /* LINUX_IEEE80211_H */
 -- 
-1.8.5.3
+1.9.1
 
