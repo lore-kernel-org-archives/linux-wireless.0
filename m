@@ -1,108 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:43862 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaGYTwq (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:10238 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342AbaG3Pbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 15:52:46 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so1578532wiv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 12:52:45 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/12] staging: vt6656: remove return from all void functions
-Date: Fri, 25 Jul 2014 20:51:54 +0100
-Message-Id: <1406317916-21884-10-git-send-email-tvboxspy@gmail.com> (sfid-20140725_215250_690151_797EC44B)
-In-Reply-To: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
-References: <1406317916-21884-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Jul 2014 11:31:39 -0400
+Message-ID: <53D90FCA.9030603@broadcom.com> (sfid-20140730_173142_753164_CFA830C4)
+Date: Wed, 30 Jul 2014 17:31:22 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?ANDR=C9_SI?= <andre_cte2010@hotmail.com>
+CC: "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bug Driver Broadcom
+References: <BLU180-W14370D921EDB121FE8EC149DF90@phx.gbl> <BLU180-W146AAC9DB0BDA5C16DED8B9DF90@phx.gbl>
+In-Reply-To: <BLU180-W146AAC9DB0BDA5C16DED8B9DF90@phx.gbl>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c    | 4 ----
- drivers/staging/vt6656/mac.c     | 2 --
- drivers/staging/vt6656/usbpipe.c | 6 ------
- drivers/staging/vt6656/wcmd.c    | 2 --
- 4 files changed, 14 deletions(-)
+On 07/30/14 16:59, ANDRÉ SI wrote:
+>
+> Good Day,
+> I have a laptop with a Broadcom wireless card:
+> 02:00.0 Network controller: Broadcom Corporation BCM43225 802.11b/g/n
+> (rev 01)
+> and PCI ID 14e4:4357.
+> I have Linux installed and the chipset just don't identifies wireless
+> network in channel 12 and 13,
+> I live in Brazil, wireless networks at channel 12 and 13 are permitted
+> here, how can i solve this problem ?
+> I have searched solutions on the internet but none work.
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index c06dd9d..8c0b8fa 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -669,8 +669,6 @@ void vnt_reset_next_tbtt(struct vnt_private *priv, u16 beacon_interval)
- 
- 	vnt_control_out(priv, MESSAGE_TYPE_SET_TSFTBTT,
- 		MESSAGE_REQUEST_TBTT, 0, 8, data);
--
--	return;
- }
- 
- /*
-@@ -708,8 +706,6 @@ void vnt_update_next_tbtt(struct vnt_private *priv, u64 tsf,
- 			MESSAGE_REQUEST_TBTT, 0, 8, data);
- 
- 	dev_dbg(&priv->usb->dev, "%s TBTT: %8llx\n", __func__, tsf);
--
--	return;
- }
- 
- /*
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 641d77b..bb37e33 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -243,6 +243,4 @@ void vnt_mac_set_led(struct vnt_private *priv, u8 state, u8 led)
- 
- 	vnt_control_out(priv, MESSAGE_TYPE_WRITE_MASK, MAC_REG_PAPEDELAY,
- 			MESSAGE_REQUEST_MACREG, ARRAY_SIZE(data), data);
--
--	return;
- }
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index f1969fe..df31ae6 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -137,8 +137,6 @@ static void vnt_start_interrupt_urb_complete(struct urb *urb)
- 	} else {
- 		priv->int_buf.in_use = true;
- 	}
--
--	return;
- }
- 
- int vnt_start_interrupt_urb(struct vnt_private *priv)
-@@ -216,8 +214,6 @@ static void vnt_submit_rx_urb_complete(struct urb *urb)
- 
- 		rcb->in_use = false;
- 	}
--
--	return;
- }
- 
- int vnt_submit_rx_urb(struct vnt_private *priv, struct vnt_rcb *rcb)
-@@ -279,8 +275,6 @@ static void vnt_tx_context_complete(struct urb *urb)
- 
- 		context->in_use = false;
- 	}
--
--	return;
- }
- 
- int vnt_tx_context(struct vnt_private *priv,
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 8f6417bc..3cbf479 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -164,8 +164,6 @@ void vnt_run_command(struct work_struct *work)
- 	}
- 
- 	vnt_cmd_complete(priv);
--
--	return;
- }
- 
- int vnt_schedule_command(struct vnt_private *priv, enum vnt_cmd command)
--- 
-2.0.1
+As far as I know the brcmsmac driver has a custom regulatory domain, 
+which allows those channels although it is not allowed to initiate 
+radiation on them. Without any kernel log I can only guess. Can you 
+provide a kernel log and output of 'iw list' command?
 
+Regards,
+Arend
