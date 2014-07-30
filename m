@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:37264 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189AbaGMJnt (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60514 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662AbaG3RmL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2014 05:43:49 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so1183896wib.14
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jul 2014 02:43:47 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/13] staging: vt6656: wcmd remove unneeded headers
-Date: Sun, 13 Jul 2014 10:42:52 +0100
-Message-Id: <1405244573-10978-12-git-send-email-tvboxspy@gmail.com> (sfid-20140713_114407_864335_C71952BC)
-In-Reply-To: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
-References: <1405244573-10978-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Jul 2014 13:42:11 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within function and fix return values.
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com>
+Date: Wed, 30 Jul 2014 10:42:09 -0700
+Cc: linux-zigbee-devel@lists.sourceforge.net,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Martin Townsend <martin.townsend@xsilon.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>
+Message-Id: <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org> (sfid-20140730_194220_992274_CAD22958)
+References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com>
+To: Martin Townsend <mtownsend1973@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Alexander Aring <alex.aring@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wcmd.c | 3 ---
- 1 file changed, 3 deletions(-)
+Hi Martin,
 
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index bb9500f..3c65228 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -40,14 +40,11 @@
- 
- #include "device.h"
- #include "mac.h"
--#include "card.h"
- #include "wcmd.h"
- #include "power.h"
--#include "baseband.h"
- #include "usbpipe.h"
- #include "rxtx.h"
- #include "rf.h"
--#include "channel.h"
- 
- static void vnt_cmd_timer_wait(struct vnt_private *priv, unsigned long msecs)
- {
--- 
-1.9.1
+> Currently it is up to the functions below lowpan_rcv to free the skb on error
+>    conditions.  This patch now removes all the UAPI error codes and process data
+>    now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
+>    the skb and return NET_RX_DROP.  This also fixes the problem where
+>    NET_RX_SUCCESS is returned on error
+> 
+> Martin Townsend (2):
+>  Remove dev parameter from skb_delivery_cb in 6lowpan.
+>  Change lowpan_rcv so skb is freed within function and fix return
+>    values.
+> 
+> include/net/6lowpan.h         |  4 ++--
+> net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
+> net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
+> net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
+> 4 files changed, 52 insertions(+), 54 deletions(-)
+
+I can not take these patches at this point.
+
+checking file net/ieee802154/6lowpan_rtnl.c
+Hunk #1 FAILED at 143.
+Hunk #2 succeeded at 480 (offset -4 lines).
+1 out of 2 hunks FAILED
+
+We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
+
+John, how confident are you with pulling net-next into wireless-next at this point in time?
+
+Regards
+
+Marcel
 
