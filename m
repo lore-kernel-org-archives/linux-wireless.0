@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:46403 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932124AbaGVT1k (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:61680 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbaG3VCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 15:27:40 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so1026526wib.8
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2014 12:27:39 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/20] iwlwifi: fix inconsistency about power_save module parameter
-Date: Tue, 22 Jul 2014 22:26:45 +0300
-Message-Id: <1406057211-31752-14-git-send-email-egrumbach@gmail.com> (sfid-20140722_212745_066903_C2B4DFD5)
-In-Reply-To: <53CEB854.9000008@gmail.com>
-References: <53CEB854.9000008@gmail.com>
+	Wed, 30 Jul 2014 17:02:46 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so3054770wiw.6
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2014 14:02:45 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [FIX][PATCH 3.17] b43: N-PHY: fix "Data bus error" while working in 5 GHz
+Date: Wed, 30 Jul 2014 23:02:30 +0200
+Message-Id: <1406754150-25752-1-git-send-email-zajec5@gmail.com> (sfid-20140730_230302_890733_E4DFF377)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+When switching from one 5 GHz channel to another 5 GHz channel we need
+to make sure BPHY is still in a reset. However to access BPHY register
+we have to switch to 2 GHz mode for a moment. Otherwise this may result
+in "Data bus error" (noticed by Hauke with BCM43224 connected to the
+SoC).
 
-modinfo and kerneldoc disagreed on the meaning of this field.
-
-Reported-by: Andrea Oliveri <oliveriandrea@gmail.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-modparams.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/b43/phy_n.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-index f2d39cb..71507cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-@@ -99,7 +99,7 @@ enum iwl_disable_11n {
-  * @wd_disable: disable stuck queue check, default = 1
-  * @bt_coex_active: enable bt coex, default = true
-  * @led_mode: system default, default = 0
-- * @power_save: disable power save, default = false
-+ * @power_save: enable power save, default = false
-  * @power_level: power level, default = 1
-  * @debug_level: levels are IWL_DL_*
-  * @ant_coupling: antenna coupling in dB, default = 0
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 1eead7a..e2a3f0d 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -6217,6 +6217,9 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 	u16 tmp16;
+ 
+ 	if (new_channel->band == IEEE80211_BAND_5GHZ) {
++		/* Switch to 2 GHz for a moment to access B43_PHY_B_BBCFG */
++		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
++
+ 		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
+ 		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
+ 		/* Put BPHY in the reset */
 -- 
-1.8.3.2
+1.8.4.5
 
