@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39756 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbaGVSAK (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:59626 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbaG3NiM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2014 14:00:10 -0400
-Date: Tue, 22 Jul 2014 13:50:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-07-21
-Message-ID: <20140722175002.GC1299@tuxdriver.com> (sfid-20140722_200044_696262_5609F159)
-References: <1405973274.32255.31.camel@jlt4.sipsolutions.net>
+	Wed, 30 Jul 2014 09:38:12 -0400
+Received: by mail-wi0-f182.google.com with SMTP id d1so2295218wiv.9
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2014 06:38:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: update PHY descriptions in Kconfig
+Date: Wed, 30 Jul 2014 15:38:00 +0200
+Message-Id: <1406727480-19952-1-git-send-email-zajec5@gmail.com> (sfid-20140730_153815_856620_F201DC95)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405973274.32255.31.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 10:07:54PM +0200, Johannes Berg wrote:
-> Following your warning ... :-)
-> 
-> We have a lot of TDLS patches, among them a fix that should make hwsim
-> tests happy again. The rest, this time, is mostly small fixes.
-> 
-> Let me know if there are any issues.
-> 
-> johannes
-> 
-> 
-> The following changes since commit 97dc94f1d933c9df2c0b327066ea130c0e92083f:
-> 
->   cfg80211: remove channel_switch combination check (2014-06-25 18:06:20 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git HEAD
-> 
-> for you to fetch changes up to 08cf42e843f9a7e253502011c81677f61f7e5c42:
-> 
->   mac80211: add support for Rx reordering offloading (2014-07-21 17:42:07 +0200)
+Add lists of chipsets, so people can enable support for their device
+easier (at least after checking lspci).
 
-Pulling now...
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/Kconfig | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index d4c6ae3..64a5b67 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -132,35 +132,31 @@ config B43_PHY_G
+ 	  SoC: BCM4712, BCM5352E
+ 
+ config B43_PHY_N
+-	bool "Support for 802.11n (N-PHY) devices"
++	bool "Support for N-PHY (the main 802.11n series) devices"
+ 	depends on B43
+ 	default y
+ 	---help---
+-	  Support for the N-PHY.
+-
+-	  This enables support for devices with N-PHY.
+-
+-	  Say N if you expect high stability and performance. Saying Y will not
+-	  affect other devices support and may provide support for basic needs.
++	  This PHY type can be found in the following chipsets:
++	  PCI: BCM4321, BCM4322,
++	       BCM43222, BCM43224, BCM43225,
++	       BCM43131, BCM43217, BCM43227, BCM43228
++	  SoC: BCM4716, BCM4717, BCM4718, BCM5356, BCM5357, BCM5358
+ 
+ config B43_PHY_LP
+-	bool "Support for low-power (LP-PHY) devices"
++	bool "Support for LP-PHY (low-power 802.11g) devices"
+ 	depends on B43 && B43_SSB
+ 	default y
+ 	---help---
+-	  Support for the LP-PHY.
+ 	  The LP-PHY is a low-power PHY built into some notebooks
+ 	  and embedded devices. It supports 802.11a/b/g
+ 	  (802.11a support is optional, and currently disabled).
+ 
+ config B43_PHY_HT
+-	bool "Support for HT-PHY (high throughput) devices"
++	bool "Support for HT-PHY (high throughput 802.11n) devices"
+ 	depends on B43 && B43_BCMA
+ 	default y
+ 	---help---
+-	  Support for the HT-PHY.
+-
+-	  Enables support for BCM4331 and possibly other chipsets with that PHY.
++	  This PHY type with 3x3:3 MIMO can be found in the BCM4331 PCI chipset.
+ 
+ config B43_PHY_LCN
+ 	bool "Support for LCN-PHY devices (BROKEN)"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.5
+
