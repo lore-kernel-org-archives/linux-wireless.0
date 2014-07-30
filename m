@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59248 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932201AbaGWRPN (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:33428 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755312AbaG3ScS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2014 13:15:13 -0400
-Date: Wed, 23 Jul 2014 13:01:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-07-22
-Message-ID: <20140723170158.GC14162@tuxdriver.com> (sfid-20140723_191517_550406_27F422D5)
-References: <1406064989.32255.39.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
+	Wed, 30 Jul 2014 14:32:18 -0400
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1406064989.32255.39.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within function and fix return values.
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20140730182738.GA21664@omega>
+Date: Wed, 30 Jul 2014 11:32:16 -0700
+Cc: Martin Townsend <mtownsend1973@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-zigbee-devel@lists.sourceforge.net,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Martin Townsend <martin.townsend@xsilon.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>
+Message-Id: <362B23B3-72BB-4E0E-9E06-ABD19C1F2BEF@holtmann.org> (sfid-20140730_203227_801515_CA630A93)
+References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com> <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org> <20140730182738.GA21664@omega>
+To: Alexander Aring <alex.aring@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 11:36:29PM +0200, Johannes Berg wrote:
-> John,
-> 
-> One more fix - for a bug in the newly introduced code that obtains rate
-> control information for stations.
-> 
-> It would be good to get this in, otherwise we'd probably have to send it
-> to stable.
-> 
-> johannes
-> 
-> The following changes since commit 8c26d458394be44e135d1c6bd4557e1c4e1a0535:
-> 
->   cfg80211: fix mic_failure tracing (2014-07-18 09:53:56 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to fa8f136fe9a8fbdcb11a1db94f30146cae6d8777:
-> 
->   mac80211: fix crash on getting sta info with uninitialized rate control (2014-07-22 22:17:17 +0200)
+Hi Alex,
 
-Pulling now...
+>>> Currently it is up to the functions below lowpan_rcv to free the skb on error
+>>>   conditions.  This patch now removes all the UAPI error codes and process data
+>>>   now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
+>>>   the skb and return NET_RX_DROP.  This also fixes the problem where
+>>>   NET_RX_SUCCESS is returned on error
+>>> 
+>>> Martin Townsend (2):
+>>> Remove dev parameter from skb_delivery_cb in 6lowpan.
+>>> Change lowpan_rcv so skb is freed within function and fix return
+>>>   values.
+>>> 
+>>> include/net/6lowpan.h         |  4 ++--
+>>> net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
+>>> net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
+>>> net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
+>>> 4 files changed, 52 insertions(+), 54 deletions(-)
+>> 
+>> I can not take these patches at this point.
+>> 
+>> checking file net/ieee802154/6lowpan_rtnl.c
+>> Hunk #1 FAILED at 143.
+>> Hunk #2 succeeded at 480 (offset -4 lines).
+>> 1 out of 2 hunks FAILED
+>> 
+>> We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
+>> 
+> 
+> I already told Martin that these patches should be based on bluetooth
+> (better bluetooth-next, 802.15.4 hasn't a real stable strategie and there
+> are also some known other issues in the current implementation). I don't
+> think that the current implementation is used in a real environment.
+> 
+> I get this patch-series in a resend of this series, after Martin
+> subscribed the linux-zigbee-devel mailinglist, then I told Martin that I
+> need some time for review and he want to resend them tomorrow or friday.
+> The resend should based on bluetooth-next then, if this is okay for you.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+if patches are based on bluetooth-next, then we have no problem here. I can easily merge them.
+
+Regards
+
+Marcel
+
