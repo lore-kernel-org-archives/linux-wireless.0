@@ -1,97 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:41338 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753759AbaGEAsm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2014 20:48:42 -0400
-Received: by mail-wg0-f51.google.com with SMTP id x12so2088864wgg.10
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2014 17:48:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC][PATCH] bcma: support for PCIe Gen 2 as host platform
-Date: Sat,  5 Jul 2014 02:48:30 +0200
-Message-Id: <1404521310-502-1-git-send-email-zajec5@gmail.com> (sfid-20140705_024845_443481_4F8D7472)
+Received: from bar.sig21.net ([80.81.252.164]:54909 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751002AbaG3LIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2014 07:08:38 -0400
+Date: Wed, 30 Jul 2014 13:08:30 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Nate Carlson <linux-wireless@natecarlson.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Borislav Boev <borislavboev@hotmail.com>, ilw@linux.intel.com
+Subject: Re: Poor wifi performance on Intel 7260 Dual-Band AC Wifi card
+Message-ID: <20140730110829.GA3563@sig21.net> (sfid-20140730_130842_610738_548062D5)
+References: <BAY178-W38CA42DFDD4031D453FB48CFF80@phx.gbl>
+ <53D7AEF5.5040907@lwfinger.net>
+ <alpine.DEB.2.02.1407290946100.1431@admin.chi.technicality.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.02.1407290946100.1431@admin.chi.technicality.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I dumped LNKCAP on most of my devices and it seems we can use
-PCI_EXP_LNKCAP_SLS_5_0GB to determine if device is PCIe 2.0.
+On Tue, Jul 29, 2014 at 09:56:46AM -0500, Nate Carlson wrote:
+> On Tue, 29 Jul 2014, Larry Finger wrote:
+> >You should try the experimental firmware file from
+> >https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/plain/iwlwifi-7260-9.ucode?h=Core6.
+> >
+> >I am currently testing it and getting throughput of 60 Mbps on the 2.4 GHz band,
+> >and 90 Mbps at 5 GHz.
 
-PCIe Gen 1:
-14e4:4331	0x00176C11 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
-14e4:4353	0x00176C11 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
-14e4:4359	0x00176811 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
-14e4:4365	0x00076C11 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
-14e4:4727	0x00176C11 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
+I'm getting 1...5 Mbs with 7260 AC (Thinkpad Yoga) in 2.4 GHz band
+in the office (11n AP), more decent speed at home.
+I'm about 5m away from the AP.  A tiny Ralink rt2800usb dongle in the
+same machine gives solid performance (40...60 Mbs).
 
-PCIe Gen 2:
-14e4:4360	0x0046DC12 (hint: PCI_EXP_LNKCAP_SLS_5_0GB)
----
- drivers/bcma/host_pci.c        | 10 ++++++++--
- include/linux/bcma/bcma.h      |  1 +
- include/linux/bcma/bcma_regs.h |  2 ++
- 3 files changed, 11 insertions(+), 2 deletions(-)
+The experimental firmware didn't make a difference for me, except
+it seems to fix /sys/kernel/debug/ieee80211/phy0/iwlwifi/iwlmvm/fw_rx_stats
+(previously all values were 0, but I don't know how to interpret them).
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index e3333053..5328d05 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -13,10 +13,12 @@
- 
- static void bcma_host_pci_switch_core(struct bcma_device *core)
- {
-+	int win2 = core->bus->host_is_pcie2 ?
-+		BCMA_PCIE2_BAR0_WIN2 : BCMA_PCI_BAR0_WIN2;
-+
- 	pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN,
- 			       core->addr);
--	pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN2,
--			       core->wrap);
-+	pci_write_config_dword(core->bus->host_pci, win2, core->wrap);
- 	core->bus->mapped_core = core;
- 	bcma_debug(core->bus, "Switched to core: 0x%X\n", core->id.id);
- }
-@@ -194,6 +196,10 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 		goto err_pci_release_regions;
- 	}
- 
-+	/* PCIe Gen 2 has some regs different */
-+	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &val);
-+	bus->host_is_pcie2 = !!(val & PCI_EXP_LNKCAP_SLS_5_0GB);
-+
- 	/* Map MMIO */
- 	err = -ENOMEM;
- 	bus->mmio = pci_iomap(dev, 0, ~0UL);
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 452286a..9f98e2f 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -315,6 +315,7 @@ struct bcma_bus {
- 	const struct bcma_host_ops *ops;
- 
- 	enum bcma_hosttype hosttype;
-+	bool host_is_pcie2; /* Valid for BCMA_HOSTTYPE_PCI only */
- 	union {
- 		/* Pointer to the PCI bus (only for BCMA_HOSTTYPE_PCI) */
- 		struct pci_dev *host_pci;
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index 917dcd7..d02f8b5 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -59,6 +59,8 @@
- #define  BCMA_PCI_GPIO_XTAL		0x40	/* PCI config space GPIO 14 for Xtal powerup */
- #define  BCMA_PCI_GPIO_PLL		0x80	/* PCI config space GPIO 15 for PLL powerdown */
- 
-+#define BCMA_PCIE2_BAR0_WIN2		0x70
-+
- /* SiliconBackplane Address Map.
-  * All regions may not exist on all chips.
-  */
--- 
-1.8.4.5
 
+> For what it's worth - on both this experimental firmware and previous
+> revisions, I can do > 200Mbps to the public internet (on my office internet
+> connection), with 13 other users currently on the same AP as me (the APs are
+> Cisco 3702i's managed by a Cisco 2504.) This is (obviously) on the 5ghz
+> band, with VHT enabled. I've had issues with occasional 'dropouts' with this
+> card, where traffic will randomly stop passing and/or ping times will jump
+> to > 10s; sometimes it clears up on its own, somethings I have to
+> re-associate to the AP to get it to stop. I'm hoping the new firmware and/or
+> the newest Cisco WLC build fixes it; testing now.
+> 
+> Borislav - you didn't mention what firmware revision you are running; if you
+> aren't on one of the -9 builds, I'd highly recommend moving to it.
+> 
+> I do have the following set in
+> /etc/modprobe.d/iwlwifi-disable-powersave.conf:
+> "options iwlwifi power_save=0 bt_coex_active=0"
+
+I also tried iwlmvm option power_scheme=1 (Continuously Active Mode),
+11n_disable=1, and "iw dev wlan0 set power_save off".  It stays slow,
+and typing in ssh is still somewhat laggy.
+
+> Once I move to 3.16, I'll probably try turning both of those features back
+> on, and see what happens.
+> 
+> Here's a speedtest result; I've gotten better, but this is representative of
+> my average speeds:
+> http://www.speedtest.net/my-result/3655207245
+> 
+> In any case - this card _is_ capable of decent speeds for sure!
+
+The question is how to go about testing.  ISTR the Windows 8 driver
+didn't have any issue and gave decent speed, but I don't have the
+time to restore the Windows image for testing now.  If Windows
+and Linux use the same firmware I guess a comparison would
+reveal if it's a driver of firmware issue.
+
+Otherwise I'm hoping Intel guys could provide some guidance for
+testing so we could find the root cause.
+
+
+Johannes
