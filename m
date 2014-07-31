@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:61420 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933044AbaGPNKV (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:63653 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305AbaGaUdG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2014 09:10:21 -0400
-Received: by mail-wg0-f52.google.com with SMTP id a1so894697wgh.35
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2014 06:10:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: workaround boot issues with KVM/PCI-passthrough
-Date: Wed, 16 Jul 2014 15:01:39 +0200
-Message-Id: <1405515699-32452-1-git-send-email-michal.kazior@tieto.com> (sfid-20140716_151027_490827_24E0B19B)
+	Thu, 31 Jul 2014 16:33:06 -0400
+Received: by mail-ig0-f174.google.com with SMTP id c1so291159igq.7
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 13:33:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53DAA5DD.7050608@hauke-m.de>
+References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
+	<1406836788-23704-4-git-send-email-zajec5@gmail.com>
+	<53DAA5DD.7050608@hauke-m.de>
+Date: Thu, 31 Jul 2014 22:33:06 +0200
+Message-ID: <CACna6rwZdcW9KC+dyvm+tUjVvvLJ+TnObY-_Ew6fXmpLqFW0qg@mail.gmail.com> (sfid-20140731_223312_339393_9D340AB1)
+Subject: Re: [PATCH 3.18 3/7] b43: flush some writes on Broadcom MIPS SoCs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently iomap writes that unmask CE irqs aren't
-propagated properly sometimes. Before failing try
-to poll for the control response message as it may
-have been delivered without an interrupt.
+On 31 July 2014 22:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> A comment in brcmsmac says this is only needed to work around a bug in
+> the host pcie controller of 4717, 4718 and 4706. I haven't noticed this
+> problem with BCM4706, so it could be that it is already fixed in the
+> shipped version of bcm4706.
+>
+> The comment says the following:
+> bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+> transactions. As a fix, a read after write is performed on certain
+> places in the code. Older chips and the newer 5357 family don't require
+> this fix.
+>
+> This commit did the cleanup:
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=6a9a25eec0b55ea45e22710a9bcaf9690cb42fe6
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Any idea why Broadcom didn't own comments and didn't enable it for
+bcm4716 and bcm4706 only?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index e493db4..5fdc40d 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -546,7 +546,7 @@ static u8 ath10k_htc_get_credit_allocation(struct ath10k_htc *htc,
- 
- int ath10k_htc_wait_target(struct ath10k_htc *htc)
- {
--	int status = 0;
-+	int i, status = 0;
- 	struct ath10k_htc_svc_conn_req conn_req;
- 	struct ath10k_htc_svc_conn_resp conn_resp;
- 	struct ath10k_htc_msg *msg;
-@@ -556,10 +556,26 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 
- 	status = wait_for_completion_timeout(&htc->ctl_resp,
- 					     ATH10K_HTC_WAIT_TIMEOUT_HZ);
--	if (status <= 0) {
-+	if (status == 0) {
-+		/* Workaround: In some cases the PCI HIF doesn't
-+		 * receive interrupt for the control response message
-+		 * even if the buffer was completed. It is suspected
-+		 * iomap writes unmasking PCI CE irqs aren't propagated
-+		 * properly in KVM PCI-passthrough sometimes.
-+		 */
-+		ath10k_warn("failed to receive control response completion, polling..\n");
-+
-+		for (i = 0; i < CE_COUNT; i++)
-+			ath10k_hif_send_complete_check(htc->ar, i, 1);
-+
-+		status = wait_for_completion_timeout(&htc->ctl_resp,
-+					ATH10K_HTC_WAIT_TIMEOUT_HZ);
-+
- 		if (status == 0)
- 			status = -ETIMEDOUT;
-+	}
- 
-+	if (status < 0) {
- 		ath10k_err("ctl_resp never came in (%d)\n", status);
- 		return status;
- 	}
 -- 
-1.8.5.3
-
+Rafał
