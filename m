@@ -1,133 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:41327 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbaG1UoU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 16:44:20 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/4] staging: vt6655: dead code remove undefined macro FOR_LED_ON_NOTEBOOK code.
-Date: Mon, 28 Jul 2014 21:43:29 +0100
-Message-Id: <1406580210-2794-3-git-send-email-tvboxspy@gmail.com> (sfid-20140728_224514_456710_80CC7241)
-In-Reply-To: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
-References: <1406580210-2794-1-git-send-email-tvboxspy@gmail.com>
+Received: from mail-hk1lp0123.outbound.protection.outlook.com ([207.46.51.123]:32496
+	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756844AbaGaGKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2014 02:10:05 -0400
+From: Krishnankutty Plachikkattle
+	<Krishnankutty_Plachikkattle@mindtree.com>
+To: Bing Zhao <bzhao@marvell.com>,
+	Avinash Patil <avinashapatil@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: 80211ac support in 88W8897
+Date: Thu, 31 Jul 2014 05:54:12 +0000
+Message-ID: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com> (sfid-20140731_081019_712723_B36E887C)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing all variables associated with the code.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/bssdb.c       | 53 ------------------------------------
- drivers/staging/vt6655/device_main.c | 15 ----------
- 2 files changed, 68 deletions(-)
-
-diff --git a/drivers/staging/vt6655/bssdb.c b/drivers/staging/vt6655/bssdb.c
-index 58f85e8..6367684 100644
---- a/drivers/staging/vt6655/bssdb.c
-+++ b/drivers/staging/vt6655/bssdb.c
-@@ -901,11 +901,6 @@ BSSvAddMulticastNode(
-  *    none.
-  *
-  -*/
--/* 2008-4-14 <add> by chester for led issue */
--#ifdef FOR_LED_ON_NOTEBOOK
--bool cc = false;
--unsigned int status;
--#endif
- void
- BSSvSecondCallBack(
- 	void *hDeviceContext
-@@ -926,54 +921,6 @@ BSSvSecondCallBack(
- 
- 	pDevice->byERPFlag &=
- 		~(WLAN_SET_ERP_BARKER_MODE(1) | WLAN_SET_ERP_NONERP_PRESENT(1));
--	/* 2008-4-14 <add> by chester for led issue */
--#ifdef FOR_LED_ON_NOTEBOOK
--	MACvGPIOIn(pDevice->PortOffset, &pDevice->byGPIO);
--	if (((!(pDevice->byGPIO & GPIO0_DATA) && (!pDevice->bHWRadioOff)) ||
--	     ((pDevice->byGPIO & GPIO0_DATA) && pDevice->bHWRadioOff)) &&
--	    (!cc)) {
--		cc = true;
--	} else if (cc) {
--		if (pDevice->bHWRadioOff) {
--			if (!(pDevice->byGPIO & GPIO0_DATA)) {
--				if (status == 1)
--					goto start;
--				status = 1;
--				CARDbRadioPowerOff(pDevice);
--				pMgmt->sNodeDBTable[0].bActive = false;
--				pMgmt->eCurrMode = WMAC_MODE_STANDBY;
--				pMgmt->eCurrState = WMAC_STATE_IDLE;
--				pDevice->bLinkPass = false;
--
--			}
--			if (pDevice->byGPIO & GPIO0_DATA) {
--				if (status == 2)
--					goto start;
--				status = 2;
--				CARDbRadioPowerOn(pDevice);
--			}
--		} else {
--			if (pDevice->byGPIO & GPIO0_DATA) {
--				if (status == 3)
--					goto start;
--				status = 3;
--				CARDbRadioPowerOff(pDevice);
--				pMgmt->sNodeDBTable[0].bActive = false;
--				pMgmt->eCurrMode = WMAC_MODE_STANDBY;
--				pMgmt->eCurrState = WMAC_STATE_IDLE;
--				pDevice->bLinkPass = false;
--
--			}
--			if (!(pDevice->byGPIO & GPIO0_DATA)) {
--				if (status == 4)
--					goto start;
--				status = 4;
--				CARDbRadioPowerOn(pDevice);
--			}
--		}
--	}
--start:
--#endif
- 
- 	if (pDevice->wUseProtectCntDown > 0) {
- 		pDevice->wUseProtectCntDown--;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index fe6de98..e8584fd 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -691,19 +691,6 @@ static void device_init_registers(PSDevice pDevice, DEVICE_INIT_TYPE InitType)
- 			// Get GPIO
- 			MACvGPIOIn(pDevice->PortOffset, &pDevice->byGPIO);
- //2008-4-14 <add> by chester for led issue
--#ifdef FOR_LED_ON_NOTEBOOK
--			if (pDevice->byGPIO & GPIO0_DATA)
--				pDevice->bHWRadioOff = true;
--
--			if (!(pDevice->byGPIO & GPIO0_DATA))
--				pDevice->bHWRadioOff = false;
--		}
--
--		if (pDevice->bRadioControlOff)
--			CARDbRadioPowerOff(pDevice);
--		else
--			CARDbRadioPowerOn(pDevice);
--#else
- 		if (((pDevice->byGPIO & GPIO0_DATA) && !(pDevice->byRadioCtl & EEP_RADIOCTL_INV)) ||
- 		    (!(pDevice->byGPIO & GPIO0_DATA) && (pDevice->byRadioCtl & EEP_RADIOCTL_INV))) {
- 			pDevice->bHWRadioOff = true;
-@@ -711,8 +698,6 @@ static void device_init_registers(PSDevice pDevice, DEVICE_INIT_TYPE InitType)
- 	}
- 	if (pDevice->bHWRadioOff || pDevice->bRadioControlOff)
- 		CARDbRadioPowerOff(pDevice);
--
--#endif
- }
- pMgmt->eScanType = WMAC_SCAN_PASSIVE;
- // get Permanent network address
--- 
-1.9.1
-
+SGVsbG8gQmluZywNCg0KSSBhbSB0cnlpbmcgdG8gZW5hYmxlIEhUIHN1cHBvcnQgZm9yIDg4Vzg4
+OTcgIHVzaW5nIGhvc3RhcGQgMi4yLg0KODAyMTFuIG1vZGUgd29ya3Mgd2VsbCAuIE5vdyBJIHdh
+bnQgdG8gZW5hYmxlIEFDIG1vZGUgdG8gaW1wcm92ZSB0aHJvdWdocHV0IC4NCg0KQ2FuIHlvdSBz
+aGFyZSBhIHNhbXBsZSBob3N0YXBkLmNvbmYgIHdpdGggIDgwMjExYWMgY29uZmlndXJhdGlvbi4N
+Cg0KVGhhbmtzIGluIGFkdmFuY2UsDQoNClJlZ2FyZHMsDQpLcmlzaG5hbi4NCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJpbmcgWmhhbyBbbWFpbHRvOmJ6aGFvQG1hcnZlbGwu
+Y29tXQ0KU2VudDogRnJpZGF5LCBNYXkgMzAsIDIwMTQgNjoxNiBBTQ0KVG86IEF2aW5hc2ggUGF0
+aWw7IEtyaXNobmFua3V0dHkgUGxhY2hpa2thdHRsZTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnDQpTdWJqZWN0OiBSRTogU3VwcG9ydCBmb3IgODhXODg5NyBpbiAzLjEwLjE3IGtlcm5l
+bA0KDQoNCj4+SXMgdGhlcmUgYW55IG9wZW4gc291cmNlIGRyaXZlciB0aGF0IHN1cHBvcnRzICBO
+RkMgYW5kIEJsdWV0b290aCBpbiB0aGlzIFNvQz8NCj4gWWVzOyBidG1ydmwua28gYW5kIGJ0dXNi
+LmtvIHdvdWxkIHN1cHBvcnQgUENJZS1VU0I4ODk3IEJUIGZ1bmN0aW9uYWxpdHkuDQo+IFBsZWFz
+ZSBjaGVjayBDT05GSUdfQlRfTVJWTCBrZXJuZWwgY29uZmlndXJhdGlvbiBwYXJhbWV0ZXIuDQoN
+CkNsYXJpZmljYXRpb246DQpidG1ydmwgZHJpdmVyIG9ubHkgc3VwcG9ydHMgQmx1ZXRvb3RoIG92
+ZXIgU0RJTyAoYnRtcnZsX3NkaW8pLiBTbyBpdCdzIGZvciBTRDg4OTcgY2FyZHMgb25seS4NClRo
+ZSBnZW5lcmljIGJ0dXNiIGRyaXZlciB3b3JrcyBmb3IgUENJZS1VU0IgODg5NyBjYXJkcyAoQmx1
+ZXRvb3RoIGlzIG92ZXIgVVNCKS4NCg0KUmVnYXJkcywNCkJpbmcNCg0KPiBGb3IgTkZDLCAgbmZj
+bXJ2bC5rbyAmIG5mY21ydmxfdXNiLmtvIHdvdWxkIHN1cHBvcnQgODg5NyBORkMgZnVuY3Rpb25h
+bGl0eS4NCj4gUGxlYXNlIGNoZWNrIGZvciBDT05GSUdfTkZDX01SVkwga2VybmVsIGNvbmZpZ3Vy
+YXRpb24gcGFyYW1ldGVyLg0KPg0KPiBUaGFua3MsDQo+IEF2aW5hc2gNCg0KDQpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXw0KDQpodHRwOi8vd3d3Lm1pbmR0cmVlLmNvbS9lbWFpbC9k
+aXNjbGFpbWVyLmh0bWwNCg==
