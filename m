@@ -1,95 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:58813 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbaGXGTj (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:54332 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbaGaUAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2014 02:19:39 -0400
-Received: by mail-lb0-f170.google.com with SMTP id w7so1912419lbi.15
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2014 23:19:37 -0700 (PDT)
+	Thu, 31 Jul 2014 16:00:51 -0400
+Received: by mail-we0-f174.google.com with SMTP id x48so3274904wes.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 13:00:47 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3.18 1/7] b43: update flushing many writes performed in a row
+Date: Thu, 31 Jul 2014 21:59:42 +0200
+Message-Id: <1406836788-23704-2-git-send-email-zajec5@gmail.com> (sfid-20140731_220054_158031_9978B719)
+In-Reply-To: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
+References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQbGr2b6xzMM9ES6H+7eTVyPVp=ZH3ct0tF7RO2asqf9=w@mail.gmail.com>
-References: <CALkVjQbNMNs__LsNG450fCpTNmAR3kfDFn2o7xxrdLjSi1wu=w@mail.gmail.com>
-	<CALkVjQbmrypdzG9B2nQ1oCPGuzO2Va0_vcpvkQmdtOsWP2HHZA@mail.gmail.com>
-	<CANUX_P0uf66J_k9FNV6AaJedq9PE==dHaOBsNXqc58T1L+qv1A@mail.gmail.com>
-	<CALkVjQbGr2b6xzMM9ES6H+7eTVyPVp=ZH3ct0tF7RO2asqf9=w@mail.gmail.com>
-Date: Thu, 24 Jul 2014 09:19:36 +0300
-Message-ID: <CANUX_P2HVN8xqJ-xDh=8XXKh0L7Z+O86MjZG5pEduZca2PvizQ@mail.gmail.com> (sfid-20140724_082257_799064_FDB7A95B)
-Subject: Re: [iwlwifi] Wireless-AC 7260 disconnects every half and hour
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sascha Weaver <wzyboy@wzyboy.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Thanks Emmanuel. I tried this patch but it seems that this patch does not work.
->
-> I applied the patch, installed the kernel and rebooted my laptop.
-> After conencting to the AP and I wait for 25 minutes, then I start to
-> ping my gateway. At exactly 30 minutes, it re-associates, and the
-> network connection is lost for about 9 seconds:
->
-> 64 bytes from 192.168.108.254: icmp_seq=116 ttl=255 time=1.84 ms
-> 64 bytes from 192.168.108.254: icmp_seq=117 ttl=255 time=2.45 ms
-> 64 bytes from 192.168.108.254: icmp_seq=118 ttl=255 time=8.38 ms
-> 64 bytes from 192.168.108.254: icmp_seq=119 ttl=255 time=3.92 ms
-> 64 bytes from 192.168.108.254: icmp_seq=120 ttl=255 time=5.33 ms
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> ping: sendmsg: Network is unreachable
-> 64 bytes from 192.168.108.254: icmp_seq=131 ttl=255 time=4.90 ms
-> 64 bytes from 192.168.108.254: icmp_seq=132 ttl=255 time=5.42 ms
-> 64 bytes from 192.168.108.254: icmp_seq=133 ttl=255 time=2.38 ms
-> 64 bytes from 192.168.108.254: icmp_seq=134 ttl=255 time=16.4 ms
-> 64 bytes from 192.168.108.254: icmp_seq=135 ttl=255 time=29.7 ms
->
->
-> You can see there is nine pings which produce "Network is unreachable"
-> error. That's about nine seconds I suppose.
->
->
-> The dmesg seems the same:
->
-> Jul 13 14:46:47 xenien kernel: wlan0: authenticate with c0:7b:bc:1a:85:ff
-> Jul 13 14:46:47 xenien kernel: wlan0: send auth to c0:7b:bc:1a:85:ff (try 1/3)
-> Jul 13 14:46:47 xenien kernel: wlan0: authenticated
-> Jul 13 14:46:47 xenien kernel: wlan0: associate with c0:7b:bc:1a:85:ff (try 1/3)
-> Jul 13 14:46:47 xenien kernel: wlan0: RX AssocResp from
-> c0:7b:bc:1a:85:ff (capab=0x11 status=0 aid=2)
-> Jul 13 14:46:47 xenien kernel: wlan0: associated
-> Jul 13 14:46:47 xenien kernel: IPv6: ADDRCONF(NETDEV_CHANGE): wlan0:
-> link becomes ready
-> Jul 13 14:46:48 xenien kernel: psmouse serio2: trackpoint: IBM
-> TrackPoint firmware: 0x0e, buttons: 3/3
-> Jul 13 14:46:48 xenien kernel: input: TPPS/2 IBM TrackPoint as
-> /devices/platform/i8042/serio1/serio2/input/input16
-> Jul 13 14:46:52 xenien kernel: fuse init (API version 7.23)
-> Jul 13 14:47:28 xenien kernel: snd_hda_intel 0000:00:1b.0: IRQ timing
-> workaround is activated for card #1. Suggest a bigger bdl_pos_adj.
-> Jul 13 15:16:57 xenien kernel: wlan0: deauthenticated from
-> c0:7b:bc:1a:85:ff (Reason: 2=PREV_AUTH_NOT_VALID)
-> Jul 13 15:16:57 xenien kernel: cfg80211: Calling CRDA for country: CN
-> Jul 13 15:17:00 xenien kernel: wlan0: authenticate with 18:9c:5d:97:76:1f
-> Jul 13 15:17:00 xenien kernel: wlan0: send auth to 18:9c:5d:97:76:1f (try 1/3)
-> Jul 13 15:17:00 xenien kernel: wlan0: authenticated
-> Jul 13 15:17:00 xenien kernel: wlan0: associate with 18:9c:5d:97:76:1f (try 1/3)
-> Jul 13 15:17:00 xenien kernel: wlan0: RX AssocResp from
-> 18:9c:5d:97:76:1f (capab=0x11 status=0 aid=11)
-> Jul 13 15:17:00 xenien kernel: wlan0: associated
->
->
+Flush radio writes as well and add some tiny optimizations (e.g.
+masksetting PHY reg involves reading it, so reset the counter).
 
-please open a bug on bugzilla.kernel.org
-Cc ilw@linux.intel.com to your bug.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/bus.h        | 14 ++++++++++++++
+ drivers/net/wireless/b43/phy_common.c | 13 ++++++++++---
+ drivers/net/wireless/b43/phy_n.c      |  1 +
+ 3 files changed, 25 insertions(+), 3 deletions(-)
 
-And in the meantime, please reproduce while you have trace-cmd record
--e iwlwifi -e mac80211 -e cfg80211 -e iwlwifi_msg running.
+diff --git a/drivers/net/wireless/b43/bus.h b/drivers/net/wireless/b43/bus.h
+index f3205c6..460d9d9 100644
+--- a/drivers/net/wireless/b43/bus.h
++++ b/drivers/net/wireless/b43/bus.h
+@@ -60,7 +60,21 @@ static inline bool b43_bus_host_is_pcmcia(struct b43_bus_dev *dev)
+ #else
+ 	return false;
+ #endif
++};
++
++static inline bool b43_bus_host_is_pci(struct b43_bus_dev *dev)
++{
++#ifdef CONFIG_B43_BCMA
++	if (dev->bus_type == B43_BUS_BCMA)
++		return (dev->bdev->bus->hosttype == BCMA_HOSTTYPE_PCI);
++#endif
++#ifdef CONFIG_B43_SSB
++	if (dev->bus_type == B43_BUS_SSB)
++		return (dev->sdev->bus->bustype == SSB_BUSTYPE_PCI);
++#endif
++	return false;
+ }
++
+ static inline bool b43_bus_host_is_sdio(struct b43_bus_dev *dev)
+ {
+ #ifdef CONFIG_B43_SSB
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 3cbef21..c868748 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -222,12 +222,18 @@ static inline void assert_mac_suspended(struct b43_wldev *dev)
+ u16 b43_radio_read(struct b43_wldev *dev, u16 reg)
+ {
+ 	assert_mac_suspended(dev);
++	dev->phy.writes_counter = 0;
+ 	return dev->phy.ops->radio_read(dev, reg);
+ }
+ 
+ void b43_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
+ {
+ 	assert_mac_suspended(dev);
++	if (b43_bus_host_is_pci(dev->dev) &&
++	    ++dev->phy.writes_counter > B43_MAX_WRITES_IN_ROW) {
++		b43_read32(dev, B43_MMIO_MACCTL);
++		dev->phy.writes_counter = 1;
++	}
+ 	dev->phy.ops->radio_write(dev, reg, value);
+ }
+ 
+@@ -274,11 +280,12 @@ u16 b43_phy_read(struct b43_wldev *dev, u16 reg)
+ void b43_phy_write(struct b43_wldev *dev, u16 reg, u16 value)
+ {
+ 	assert_mac_suspended(dev);
+-	dev->phy.ops->phy_write(dev, reg, value);
+-	if (++dev->phy.writes_counter == B43_MAX_WRITES_IN_ROW) {
++	if (b43_bus_host_is_pci(dev->dev) &&
++	    ++dev->phy.writes_counter > B43_MAX_WRITES_IN_ROW) {
+ 		b43_read16(dev, B43_MMIO_PHY_VER);
+-		dev->phy.writes_counter = 0;
++		dev->phy.writes_counter = 1;
+ 	}
++	dev->phy.ops->phy_write(dev, reg, value);
+ }
+ 
+ void b43_phy_copy(struct b43_wldev *dev, u16 destreg, u16 srcreg)
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index e2a3f0d..b04aa34 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -6517,6 +6517,7 @@ static void b43_nphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
+ 	check_phyreg(dev, reg);
+ 	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
+ 	b43_maskset16(dev, B43_MMIO_PHY_DATA, mask, set);
++	dev->phy.writes_counter = 1;
+ }
+ 
+ static u16 b43_nphy_op_radio_read(struct b43_wldev *dev, u16 reg)
+-- 
+1.8.4.5
 
-Thanks.
