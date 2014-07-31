@@ -1,127 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:53983 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaG1Hwb (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54975 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbaGaPOp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2014 03:52:31 -0400
-Received: by mail-lb0-f180.google.com with SMTP id v6so5567644lbi.11
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2014 00:52:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53D5EF33.1080208@gmail.com>
-References: <1406528765-4669-1-git-send-email-janusz.dziedzic@tieto.com>
-	<53D5EF33.1080208@gmail.com>
-Date: Mon, 28 Jul 2014 09:52:30 +0200
-Message-ID: <CALhHN=rOF+-8gJCM4tBNk39ksd_F_w_h2GB=njP6N6PXqkZiXg@mail.gmail.com> (sfid-20140728_095236_198812_976B150A)
-Subject: Re: [PATCH v2] ath10k: extend debug code for RX path
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Varka Bhadram <varkabhadram@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 31 Jul 2014 11:14:45 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within function and fix return values.
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20140731135945.GB17560@tuxdriver.com>
+Date: Thu, 31 Jul 2014 08:14:42 -0700
+Cc: Alexander Aring <alex.aring@gmail.com>,
+	Martin Townsend <mtownsend1973@gmail.com>,
+	linux-zigbee-devel@lists.sourceforge.net,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Martin Townsend <martin.townsend@xsilon.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>
+Message-Id: <6930C094-CF61-4424-9296-8B0023B8B1DE@holtmann.org> (sfid-20140731_171516_401593_0A3B6C1E)
+References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com> <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org> <20140730182738.GA21664@omega> <362B23B3-72BB-4E0E-9E06-ABD19C1F2BEF@holtmann.org> <20140731135945.GB17560@tuxdriver.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 July 2014 08:35, Varka Bhadram <varkabhadram@gmail.com> wrote:
-> On 07/28/2014 11:56 AM, Janusz Dziedzic wrote:
->>
->> Print sequence number, AMSDU_MORE flag and AC when additional
->> debug enabled in RX path. This is usefull for debugging purpose.
->>
->> Signed-off-by: Janusz Dziedzic<janusz.dziedzic@tieto.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/htt_rx.c |   41
->> ++++++++++++++++++++++++++++--
->>   1 file changed, 39 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> index d80fcda..f7c8021 100644
->> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> @@ -818,19 +818,55 @@ static bool ath10k_htt_rx_h_channel(struct ath10k
->> *ar,
->>         return true;
->>   }
->>   +static const char * const tid_to_ac[] = {
->
->
-> No space required '*' and const.
->
-Seems checkpatch didn't find this.
+Hi John,
 
-> static const char *const tid_to_ac[] = {
->
->
->
->> +       "BE",
->> +       "BK",
->> +       "BK",
->> +       "BE",
->> +       "VI",
->> +       "VI",
->> +       "VO",
->> +       "VO",
->> +};
->> +
->> +static char *ath10k_get_tid(struct ieee80211_hdr *hdr, char *out, size_t
->> size)
->> +{
->> +       u8 *qc;
->> +       int tid;
->> +
->> +       if (!ieee80211_is_data_qos(hdr->frame_control))
->> +               return "";
->
->
-> return NULL would be more readable...?
->
-We don't need extra "(null)" in printf, empty string is what I expect
-here (same as other params in this dbg info).
-Anyway I can return "out" here and initialize as empty before calling
-ath10k_get_tid().
+>>>>> Currently it is up to the functions below lowpan_rcv to free the skb on error
+>>>>>  conditions.  This patch now removes all the UAPI error codes and process data
+>>>>>  now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
+>>>>>  the skb and return NET_RX_DROP.  This also fixes the problem where
+>>>>>  NET_RX_SUCCESS is returned on error
+>>>>> 
+>>>>> Martin Townsend (2):
+>>>>> Remove dev parameter from skb_delivery_cb in 6lowpan.
+>>>>> Change lowpan_rcv so skb is freed within function and fix return
+>>>>>  values.
+>>>>> 
+>>>>> include/net/6lowpan.h         |  4 ++--
+>>>>> net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
+>>>>> net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
+>>>>> net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
+>>>>> 4 files changed, 52 insertions(+), 54 deletions(-)
+>>>> 
+>>>> I can not take these patches at this point.
+>>>> 
+>>>> checking file net/ieee802154/6lowpan_rtnl.c
+>>>> Hunk #1 FAILED at 143.
+>>>> Hunk #2 succeeded at 480 (offset -4 lines).
+>>>> 1 out of 2 hunks FAILED
+>>>> 
+>>>> We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
+>>>> 
+>>> 
+>>> I already told Martin that these patches should be based on bluetooth
+>>> (better bluetooth-next, 802.15.4 hasn't a real stable strategie and there
+>>> are also some known other issues in the current implementation). I don't
+>>> think that the current implementation is used in a real environment.
+>>> 
+>>> I get this patch-series in a resend of this series, after Martin
+>>> subscribed the linux-zigbee-devel mailinglist, then I told Martin that I
+>>> need some time for review and he want to resend them tomorrow or friday.
+>>> The resend should based on bluetooth-next then, if this is okay for you.
+>> 
+>> if patches are based on bluetooth-next, then we have no problem here. I can easily merge them.
+> 
+> Does that resolve it?  That probably won't make 3.17, fwiw...
 
->
->> +
->> +       qc = ieee80211_get_qos_ctl(hdr);
->> +       tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
->> +       if (tid < 8)
->> +               snprintf(out, size, "tid %d (%s)", tid, tid_to_ac[tid]);
->> +       else
->> +               snprintf(out, size, "tid %d", tid);
->> +
->> +       return out;
->> +}
->> +
->>   static void ath10k_process_rx(struct ath10k *ar,
->>                               struct ieee80211_rx_status *rx_status,
->>                               struct sk_buff *skb)
->>   {
->>         struct ieee80211_rx_status *status;
->> +       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->> +       char tid[32];
->>         status = IEEE80211_SKB_RXCB(skb);
->>         *status = *rx_status;
->>         ath10k_dbg(ATH10K_DBG_DATA,
->> -                  "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u
->> freq %u band %u flag 0x%x fcs-err %imic-err %i\n",
->> +                  "rx skb %p len %u peer %pM %s %s sn %u %s%s%s%s%s
->> %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i
->> amsdu-more %i\n",
->>                    skb,
->>                    skb->len,
->> +                  ieee80211_get_SA(hdr),
->> +                  ath10k_get_tid(hdr, tid, sizeof(tid)),
->> +                  is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
->> +                                                       "mcast" : "ucast",
->
->
-> should match open paranthesis...
->
-> is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
->
->                         "mcast" : "ucast",
->
-Could you describe this more (I didn't find clear description about this)?
+I agree that this is out of the question for 3.17 at this point in time. Johan send our last pull request which includes what we have for 6LoWPAN right now. Everything else needs to wait for 3.18.
 
-BR
-Janusz
+Regards
+
+Marcel
+
