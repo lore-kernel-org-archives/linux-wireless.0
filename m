@@ -1,125 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:53732 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932489AbaGUPNm (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:59298 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbaGaHoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2014 11:13:42 -0400
-Received: by mail-oi0-f51.google.com with SMTP id g201so3492712oib.24
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2014 08:13:42 -0700 (PDT)
+	Thu, 31 Jul 2014 03:44:10 -0400
+Date: Thu, 31 Jul 2014 10:43:57 +0300
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2014-07-31
+Message-ID: <20140731074357.GA26071@t440s.lan> (sfid-20140731_094435_393620_8A57DDDF)
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org>
-	<1405373897-31671-7-git-send-email-keescook@chromium.org>
-	<CACVXFVOnxjXjnKRWg7sv425POLSS96kAxxEohtLqj4dvcxnRyg@mail.gmail.com>
-	<CAGXu5j+xx2exZdD64mXWzmvVUzBrFUOg-kZ5E4+tvKAuGTKW4w@mail.gmail.com>
-	<CACVXFVMk5hTAvMgL0V2ycy-P=LCtOktimw5Hst+aFYLS6jewXw@mail.gmail.com>
-Date: Mon, 21 Jul 2014 08:08:16 -0700
-Message-ID: <CAGXu5jLD=9cqzV90JKEBJjwzTXVzGhz9_1nnwFCG_0zcA1TE8A@mail.gmail.com> (sfid-20140721_171346_567232_74D56E63)
-Subject: Re: [PATCH 6/7] firmware_class: add "fd" input file
-From: Kees Cook <keescook@chromium.org>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2014 at 6:42 PM, Ming Lei <ming.lei@canonical.com> wrote:
-> On Mon, Jul 21, 2014 at 1:43 AM, Kees Cook <keescook@chromium.org> wrote:
->> On Sat, Jul 19, 2014 at 8:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
->>> On Tue, Jul 15, 2014 at 5:38 AM, Kees Cook <keescook@chromium.org> wrote:
->>>> As an alternative to loading bytes from the "data" blob when reading
->>>> firmware, let kernel read from an fd, so that the LSM can reason about
->>>> the origin of firmware contents during userspace on-demand loading.
->>>
->>> From user space view, maybe it is better to keep previous usage and just
->>> check if loading is from 'data' blob or fd in 'echo 0 > loading' of
->>> firmware_loading_store(), then the 'fd' usage becomes very similar with
->>> before.
->>
->> I don't think this is a good idea because otherwise there isn't a good
->> way to have an "atomic" check of the firmware contents. What does it
->
-> Could you share why 'atomic' check is necessary? As we know, it isn't
-> real atomic, :-).
 
-Right, I don't really mean actually atomic. I just mean "a single
-write operation for loading a single firmware".
+--vkogqOf2sHV7VnPd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->> means to write to "fd" several times, then write "data" a little,
->> before writing "loading", etc? I originally wrote the patch series
->
-> That depends how firmware loader supports these cases, and won't
-> be difficult to handle them.
->
-> For non-fd userspace interface, it is very flexible to be capable of
-> supporting to load firmware data from multiple images, or in flight.
-> With single 'fd' interface, it won't be possible any more.
+Hi John,
 
-That's entirely correct. But I'm not suggesting replacing loading/data
-with fd, I'm suggesting adding an additional separate interface. Any
-system that wants to generate non-file-backed firmware or do multiple
-images at once can continue to use the loading/data interface.
+Here's one more (hopefully last) pull request for 3.17.
 
-However, since nearly all systems currently use udev and its firmware
-helper that reads from single files, this change allows the bulk of
-systems to be able to reason via the LSM about the origin of
-userspace-delivered firmwares.
+We've got:
 
->> requiring the "loading" piece, and it ended up being very complicated
->> due to needing to switch the memory buffer logic back and forth.
->> Everything is much much cleaner if "fd" is single-shot, and not part
->> of the loading/data interface semantics.
->
-> You might not avoid the 'loading' piece completely, how does
-> the userspace handle non-exist firmware image? The reasonable
-> way is to abort the loading from userspace via 'echo -1 > loading'
-> since userspace already sees that, and you may choose to let kernel
-> side handle that, but your current patch doesn't support it yet.
+- 6lowpan fixes/cleanups
+- A couple crash fixes, one for the Marvell HCI driver and another in LE SMP.
+- Fix for an incorrect connected state check
+- Fix for the bondable requirement during pairing (an issue which had
+  crept in because of using "pairable" when in fact the actual meaning
+  was "bondable" (these have different meanings in Bluetooth)
 
-That's not true -- my series doesn't remove or change any of the
-existing interface behavior. If userspace doesn't find a firmware
-image, it can still write -1 into loading. What I've added is simply a
-new way to load the firmware, in line with finit_module and
-kexec_file_load: we need to be able to load files from userspace via
-fd instead of via blobs.
+Let me know if there are any issues. Thanks.
 
-There is no reason for the fd interface to use "loading" to indicate
-it's state. First, it's redundant: loading starts the moment fd_store
-is called: from the userspace perspective, the entire load process
-happens during that write. Once the write returns, loading has
-finished. Adding the requirement for writing "loading" before and
-after complicates userspace and complicates kernel-space since now it
-must distinguish between fw_buf's is_paged_buf state, and determine
-how to interact with intermixed calls to "data". For example, what
-would this mean:
+Johan
 
-echo 1 > loading
-write to data
-write to fd
-echo 0 > loading
+---
+The following changes since commit 568ba389be505f505b7fbeedb9ab4ece27603fc9:
 
-With my current patch, writes to "fd" will be rejected if a write to
-"loading" has happened, to be able to trivially distinguish between
-the two interfaces, and to keep sanity in the state of is_paged_buf
-logic.
+  brcmfmac: Fix OOB interrupt not working for BCM43362 (2014-07-29 10:32:57 -0400)
 
-It seems to me that keeping the interfaces separate makes the most
-sense and provides the cleanest approach.
+are available in the git repository at:
 
-Perhaps it would be easier if I also sent the patch to udev's helper,
-so you could see how I propose handling the userspace change to using
-the new interface?
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
 
--Kees
+for you to fetch changes up to 8500d791c458ccbbb3e2d3fa9a0320ffd5729069:
 
--- 
-Kees Cook
-Chrome OS Security
+  Bluetooth: Fix crash in the Marvell driver initialization codepath (2014-07-31 01:07:28 +0200)
+
+----------------------------------------------------------------
+Alexander Aring (7):
+      6lowpan: iphc: rename hc06_ptr pointer to hc_ptr
+      6lowpan: iphc: use sizeof in udp uncompression
+      6lowpan: iphc: cleanup use of lowpan_fetch_skb
+      6lowpan: iphc: cleanup use of lowpan_push_hc_data
+      6lowpan: iphc: use ipv6 api to check address scope
+      6lowpan: iphc: remove check on null
+      6lowpan: remove unused LOWPAN_FRAG_SIZE define
+
+Anatol Pomozov (1):
+      Bluetooth: Fix crash in the Marvell driver initialization codepath
+
+Johan Hedberg (5):
+      Bluetooth: Fix SMP context tracking leading to a kernel crash
+      Bluetooth: Fix check for connected state when pairing
+      Bluetooth: Rename HCI_PAIRABLE to HCI_BONDABLE
+      Bluetooth: Rename pairable mgmt setting to bondable
+      Bluetooth: Always use non-bonding requirement when not bondable
+
+Marcel Holtmann (6):
+      6lowpan: iphc: Fix block comments to match networking style
+      6lowpan: iphc: Fix issues with alignment matching open parenthesis
+      6lowpan: iphc: Fix missing blank line after variable declarations
+      6lowpan: iphc: Fix missing braces for if statement
+      6lowpan: iphc: Fix parenthesis alignments which off-by-one
+      Bluetooth: Fix sparse warning from HID new leds handling
+
+Varka Bhadram (2):
+      6lowpan: remove unused macros
+      6lowpan: remove unused function
+
+ drivers/bluetooth/btmrvl_main.c |   5 +
+ include/net/6lowpan.h           |  50 ------
+ include/net/bluetooth/hci.h     |   2 +-
+ include/net/bluetooth/mgmt.h    |   4 +-
+ net/6lowpan/iphc.c              | 295 +++++++++++++++++-------------------
+ net/bluetooth/hci_core.c        |   4 +-
+ net/bluetooth/hci_event.c       |  15 +-
+ net/bluetooth/hidp/core.c       |   2 +-
+ net/bluetooth/mgmt.c            |  24 +--
+ net/bluetooth/smp.c             |  17 ++-
+ 10 files changed, 185 insertions(+), 233 deletions(-)
+
+
+--vkogqOf2sHV7VnPd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJT2fO9AAoJECQj9vv5qNQS3e0P/1GLtWm1uJBLJXMm5VlpkT2t
+tq1aQoOMvFFx6XRwyD6ZKzQ28QyB4sIg580NTU+DQYt47eO4Bru+Gu1Bd7KzWX8p
+qBQNx9+W8CQUfEXG8RwkO0xJQ1P6hezLUYJOs1fFpTS6x9cpP6bQWK8sK/jB8SWB
+nyC5+uei3nFVpH4jMZtNxD1xv9O+LUxPalmA9OZIXk5DOPlZmjK4uilKwSYAmR1T
+DtFqQd3J8VOyxFoXjXK4+cp6l4Zz/YZ7bohI2YhaHw2gDU5Jf0joRxqqRutoboLA
+29CIJtblq21DSME2NTfb5/3iZ/0Gnlf76LV8TWgrN5WTfgiAgNErSigGsaygfGpz
+GnFZm42CbH74GlQ4Y5fQkdeXJ1bAAOraSgBpMBvCBmZI6ClTaHbOl+vEeLayltJd
+8UlJL9dOlummDvzpVcOPurzsnAAqA/WqWr3766KlgGqTmRLtlZZzgvcvyAkUdK2k
+LRfMguoPFbNDePVtmQQGUUl8WLldV4z29g+f14Us57o5niiyO3Fsp4dyMrbcku0d
+Bz39u5+iKT7Yi62D4U2h01Po/4LPhwT9U9hANtmj729/dIJWLbBUPuxbw7sCt7Ft
+hGCCls/6DvDwDkio+kCdJifol0+aSfJHRZhXdlTfmllGY04x5U8GL4IN2xz2kOd4
+SvKRMQ/h7bKCFWdWbSP/
+=1mbE
+-----END PGP SIGNATURE-----
+
+--vkogqOf2sHV7VnPd--
