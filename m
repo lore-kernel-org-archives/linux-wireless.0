@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33064 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760501AbaGYOSG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51069 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbaGaOAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2014 10:18:06 -0400
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by gateway1.nyi.internal (Postfix) with ESMTP id A761222413
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2014 10:10:55 -0400 (EDT)
-Message-ID: <53D26552.2070201@fastmail.fm> (sfid-20140725_162411_478464_280FDD12)
-Date: Fri, 25 Jul 2014 15:10:26 +0100
-From: Michalis Pappas <mpappas@fastmail.fm>
+	Thu, 31 Jul 2014 10:00:17 -0400
+Date: Thu, 31 Jul 2014 09:59:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Alexander Aring <alex.aring@gmail.com>,
+	Martin Townsend <mtownsend1973@gmail.com>,
+	linux-zigbee-devel@lists.sourceforge.net,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Martin Townsend <martin.townsend@xsilon.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] linux-wpan-next: lowpan_rcv - skb is freed within
+ function and fix return values.
+Message-ID: <20140731135945.GB17560@tuxdriver.com> (sfid-20140731_160024_234688_C2651FB4)
+References: <1406732105-17500-1-git-send-email-martin.townsend@xsilon.com>
+ <C8606BA6-2918-4313-BEC5-FC3A377DE347@holtmann.org>
+ <20140730182738.GA21664@omega>
+ <362B23B3-72BB-4E0E-9E06-ABD19C1F2BEF@holtmann.org>
 MIME-Version: 1.0
-To: Ben Chan <benchan@chromium.org>, Greg KH <greg@kroah.com>
-CC: devel@driverdev.osuosl.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, inaky@linux.intel.com
-Subject: Re: How to replace control code in gdm72xx?
-References: <53C6DF7C.8030109@fastmail.fm> <20140716204004.GA31349@kroah.com> <CAC5Y2nNfiZ_cdiitj07KsB_DbGTgO=PMUwHGaXwrXjQ-U1bLyA@mail.gmail.com>
-In-Reply-To: <CAC5Y2nNfiZ_cdiitj07KsB_DbGTgO=PMUwHGaXwrXjQ-U1bLyA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <362B23B3-72BB-4E0E-9E06-ABD19C1F2BEF@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/17/2014 01:59 AM, Ben Chan wrote:
+On Wed, Jul 30, 2014 at 11:32:16AM -0700, Marcel Holtmann wrote:
+> Hi Alex,
 > 
-> From what I read from the user-space code, the custom ioctl is to read
-> the following information from the driver:
+> >>> Currently it is up to the functions below lowpan_rcv to free the skb on error
+> >>>   conditions.  This patch now removes all the UAPI error codes and process data
+> >>>   now returns -1 if there is a problem.  In this scenario lowpan_rcv will free
+> >>>   the skb and return NET_RX_DROP.  This also fixes the problem where
+> >>>   NET_RX_SUCCESS is returned on error
+> >>> 
+> >>> Martin Townsend (2):
+> >>> Remove dev parameter from skb_delivery_cb in 6lowpan.
+> >>> Change lowpan_rcv so skb is freed within function and fix return
+> >>>   values.
+> >>> 
+> >>> include/net/6lowpan.h         |  4 ++--
+> >>> net/6lowpan/iphc.c            | 37 ++++++++++++++++++------------------
+> >>> net/bluetooth/6lowpan.c       | 21 ++++++++++-----------
+> >>> net/ieee802154/6lowpan_rtnl.c | 44 +++++++++++++++++++++----------------------
+> >>> 4 files changed, 52 insertions(+), 54 deletions(-)
+> >> 
+> >> I can not take these patches at this point.
+> >> 
+> >> checking file net/ieee802154/6lowpan_rtnl.c
+> >> Hunk #1 FAILED at 143.
+> >> Hunk #2 succeeded at 480 (offset -4 lines).
+> >> 1 out of 2 hunks FAILED
+> >> 
+> >> We need to get the IEEE 802.15.4 changes merged through John's wireless-next tree. IEEE 802.15.4 going straight into net-next and Bluetooth going into wireless-next will not work out smoothly when both technologies are now utilizing 6LoWPAN and we are heavily working on 6LoWPAN.
+> >> 
+> > 
+> > I already told Martin that these patches should be based on bluetooth
+> > (better bluetooth-next, 802.15.4 hasn't a real stable strategie and there
+> > are also some known other issues in the current implementation). I don't
+> > think that the current implementation is used in a real environment.
+> > 
+> > I get this patch-series in a resend of this series, after Martin
+> > subscribed the linux-zigbee-devel mailinglist, then I told Martin that I
+> > need some time for review and he want to resend them tomorrow or friday.
+> > The resend should based on bluetooth-next then, if this is okay for you.
 > 
-> enum {
->     SIOC_DATA_FSM,           // Device/Connection State
->     SIOC_DATA_NETLIST,       // Network list
->     SIOC_DATA_CONNNSP,     // Connected NSP
->     SIOC_DATA_CONNCOMP,    // Connection completion info
->     SIOC_DATA_PROFILEID,    // WiMAX profile ID
->     SIOC_DATA_END
-> };
-> 
+> if patches are based on bluetooth-next, then we have no problem here. I can easily merge them.
 
-Sorry for the late reply, I was away. 
+Does that resolve it?  That probably won't make 3.17, fwiw...
 
-I had a look at the library's source to clear things out a bit. From what I see the driver is tightly coupled -actually dependent- to the library, as all control operations are performed by the latter. So without the library, the driver is pretty much of no use.
-
-The way control works is that the driver acts as a middleman between the library and the hci. All operations are initiated and handled by the library, through the netlink channel. So the information mentioned above, eg SIOC_DATA_NETLIST, are requested by the library, by sending the appropriate command to the driver via netlink. The driver will forward the request to the hci and forward the response back to userspace.
-
-Here is where the ioctl part interface into play. The ioctl interface supports two commands: SIOCS_DATA and SIOCG_DATA (set data / get data). The above can store and retrieve data from the driver, which in turn keeps this information in the nic.sdk_data array. This array maintains one element for each one of the SIOC_DATA_* mentioned above.
-
-So once received and processed, the library will store the received data (eg the network list) in the driver's memory via the ioctl, just to retrieve it again later(!) With the exception of SIOC_FSM_XXX, the driver does not inspect or process the contents of these objects by any means (see gdm_wimax_ioctl() in gdm_wimax.c).
-
-Now, I have no clue why it was written this way, but as per its current 
-status all this might as well (and probably should) be stored locally, in userspace memory. So the ioctl part can be completely removed, and the driver will then be in conformance with the interface defined by the wimax stack, in wimax.h.
-
-> 
-> The driver has a corresponding user-space library, so I'd like to
-> figure out a way to maintain backward compatibility if possible. But
-> I'm happy to help make minor changes to  the user-space library in
-> case we need to modify the ioctl / netlink part of the driver (caveat:
-> I'm not the author of the driver or the user-space library).
-> 
-
-Why maintain backwards compatibility? The only part to change is the
-communication layer between the library and the driver. The applications
-using the library won't notice any difference.
-
-IMO the right thing to do is to push whatever changes made to the library upstream. Which brings us to the question of who is the library's maintainer and where is it officially hosted?
-
-If the answers to the above are "none" and "nowhere", then we have a bigger problem, as the updated driver will appear to be broken to anyone who hasn't been updated with the latest version of the library.
-
-In conclusion, I am happy to fix the driver and even write a patch for the corresponding userspace parts, but only as long as:
-
-* You are willing to help me with testing, as I do not own the hardware.
-
-* My work will not be waisted. What I mean by that is, if the library has been distributed only to a few parties worldwide, then IMO we'd better delete the driver and let it be distributed along with the library, since they are interdependent anyway.
-
-In any other case, I'd rather move on to some other driver that does not depend on third party stuff :)
-
-Thanks,
-
-Michalis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
