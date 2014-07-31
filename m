@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50548 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885AbaGRSAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2014 14:00:12 -0400
-Date: Fri, 18 Jul 2014 13:59:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andreas Fenkart <afenkart@gmail.com>
-Cc: linux-wireless@vger.kernel.org, bzhao@marvell.com,
-	daniel@zonque.org
-Subject: Re: [PATCH] mwifiex: card reset: enable rescan of non-removable card
-Message-ID: <20140718175915.GG31114@tuxdriver.com> (sfid-20140718_200018_803080_8093E084)
-References: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
+Received: from test.hauke-m.de ([5.39.93.123]:37868 "EHLO test.hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750945AbaGaUYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2014 16:24:10 -0400
+Message-ID: <53DAA5DD.7050608@hauke-m.de> (sfid-20140731_222415_393847_6D9E6175)
+Date: Thu, 31 Jul 2014 22:23:57 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH 3.18 3/7] b43: flush some writes on Broadcom MIPS SoCs
+References: <1406836788-23704-1-git-send-email-zajec5@gmail.com> <1406836788-23704-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1406836788-23704-4-git-send-email-zajec5@gmail.com>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1405670437-18723-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 18, 2014 at 10:00:37AM +0200, Andreas Fenkart wrote:
-> mmc_rescan will scan for non-removable cards only once, hence the card
-> will not be rediscovered.
+On 07/31/2014 09:59 PM, Rafał Miłecki wrote:
+> Access to PHY and radio registers is indirect on Broadcom hardware and
+> it seems that addressing on MIPS SoCs may require flushing. Broadcom
+> code does that unconditionally on MIPS, so let's do the same to make
+> sure hardware won't miss anything important.
 > 
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 > ---
->  drivers/net/wireless/mwifiex/sdio.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/net/wireless/b43/b43.h        |  8 ++++++++
+>  drivers/net/wireless/b43/main.c       | 17 ++++++++---------
+>  drivers/net/wireless/b43/phy_a.c      |  4 ++--
+>  drivers/net/wireless/b43/phy_common.c |  4 ++--
+>  drivers/net/wireless/b43/phy_g.c      |  8 ++++----
+>  drivers/net/wireless/b43/phy_ht.c     |  6 +++---
+>  drivers/net/wireless/b43/phy_lcn.c    |  6 +++---
+>  drivers/net/wireless/b43/phy_lp.c     |  6 +++---
+>  drivers/net/wireless/b43/phy_n.c      |  6 +++---
+>  9 files changed, 36 insertions(+), 29 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index 4ce3d7b..eff3d6e 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
-> @@ -1931,6 +1931,7 @@ static void sdio_card_reset_worker(struct work_struct *work)
->  	mmc_remove_host(target);
->  	/* 20ms delay is based on experiment with sdhci controller */
->  	mdelay(20);
-> +	reset_host->rescan_entered = 0; /* rescan non-removable cards */
->  	mmc_add_host(target);
->  }
->  static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
 
-Building wireless-next:
+A comment in brcmsmac says this is only needed to work around a bug in
+the host pcie controller of 4717, 4718 and 4706. I haven't noticed this
+problem with BCM4706, so it could be that it is already fixed in the
+shipped version of bcm4706.
 
-  CC      drivers/net/wireless/mwifiex/sdio.o
-drivers/net/wireless/mwifiex/sdio.c: In function ‘mwifiex_sdio_card_reset_work’:
-drivers/net/wireless/mwifiex/sdio.c:1957:2: error: ‘reset_host’ undeclared (first use in this function)
-  reset_host->rescan_entered = 0; /* rescan non-removable cards */
-  ^
-drivers/net/wireless/mwifiex/sdio.c:1957:2: note: each undeclared identifier is reported only once for each function it appears in
+The comment says the following:
+bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+transactions. As a fix, a read after write is performed on certain
+places in the code. Older chips and the newer 5357 family don't require
+this fix.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This commit did the cleanup:
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=6a9a25eec0b55ea45e22710a9bcaf9690cb42fe6
+
+Hauke
