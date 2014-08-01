@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13888 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaHZQHu (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:50581 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753497AbaHALf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 12:07:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: improve logging to include dev id
-References: <1408961378-1390-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 26 Aug 2014 19:07:44 +0300
-In-Reply-To: <1408961378-1390-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 25 Aug 2014 12:09:38 +0200")
-Message-ID: <87ha0z1bfz.fsf@kamboji.qca.qualcomm.com> (sfid-20140826_180757_531872_2F9D29DD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 1 Aug 2014 07:35:59 -0400
+From: Miguel Oliveira <cmroliv@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	cmroliv@gmail.com
+Subject: [PATCH] staging: rtl8723au: Fix static symbol sparse warning
+Date: Fri,  1 Aug 2014 14:06:27 +0100
+Message-Id: <1406898387-13987-1-git-send-email-cmroliv@gmail.com> (sfid-20140801_133621_432944_E462438C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Fix sparse warning:
+drivers/staging/rtl8723au/core/rtw_efuse.c:579:5: warning: symbol 'efuse_GetCurrentSize23a' was not declared. Should it be static?
 
-> This makes it a lot easier to log and debug
-> messages if there's more than 1 ath10k device on a
-> system.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->
-> Notes:
->     v2:
->      * rebased on latest master branch
->      * move "pci probe" debug print after core is allocated [Kalle]
+Signed-off-by: Miguel Oliveira <cmroliv@gmail.com>
+---
+ drivers/staging/rtl8723au/include/rtw_efuse.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks, applied. I just folded the patch to fix the smatch warning about
-ret variable.
-
+diff --git a/drivers/staging/rtl8723au/include/rtw_efuse.h b/drivers/staging/rtl8723au/include/rtw_efuse.h
+index 07bdc34..304cc71 100644
+--- a/drivers/staging/rtl8723au/include/rtw_efuse.h
++++ b/drivers/staging/rtl8723au/include/rtw_efuse.h
+@@ -82,6 +82,7 @@ struct pg_pkt_struct {
+ /*------------------------Export global variable----------------------------*/
+ 
+ u16	efuse_GetMaxSize23a(struct rtw_adapter *padapter);
++int	efuse_GetCurrentSize23a(struct rtw_adapter *padapter, u16 *size);
+ int	rtw_efuse_access23a(struct rtw_adapter *padapter, u8 bRead, u16 start_addr, u16 cnts, u8 *data);
+ int	rtw_efuse_map_read23a(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
+ u8	rtw_efuse_map_write(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
 -- 
-Kalle Valo
+1.7.10.4
+
