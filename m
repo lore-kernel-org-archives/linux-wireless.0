@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:33032 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932217AbaHNXAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 19:00:19 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Andrea Merello <andrea.merello@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] at76c50x-usb: fix use after free on failure path in at76_probe()
-Date: Fri, 15 Aug 2014 03:00:06 +0400
-Message-Id: <1408057206-8854-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140815_010040_338038_801A8C93)
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:63066 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbaHAPAh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2014 11:00:37 -0400
+Received: by mail-ob0-f173.google.com with SMTP id vb8so2690630obc.32
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2014 08:00:34 -0700 (PDT)
+Message-ID: <53DBAB90.3040401@lwfinger.net> (sfid-20140801_170041_212618_A853E893)
+Date: Fri, 01 Aug 2014 10:00:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Rohit Kumar <rkthebest@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Fwd: cross compiling realtek 8188 (RTL8188EU)
+References: <CABzetm2Af-_WD29MrejTUQOH9pqDzCGCj8JC9LqyuTp5dyrT9Q@mail.gmail.com> <CABzetm3EgZrvaL370TnCFgDfoeFKqJ-LfhnExSjNwPnW6-HM=Q@mail.gmail.com>
+In-Reply-To: <CABzetm3EgZrvaL370TnCFgDfoeFKqJ-LfhnExSjNwPnW6-HM=Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit 174beab7d445 ("at76c50x-usb: Don't perform DMA from stack memory")
-at76_delete_device() and usb_put_dev() are called both
-if at76_init_new_device() fails in at76_probe().
-But at76_delete_device() does usb_put_dev(priv->dev) itself
-that means double usb_put_dev().
+On 07/31/2014 12:55 AM, Rohit Kumar wrote:
+> Hello,
+> 
+> i have compiled the driver for USB to wifi dongle which uses realtek
+> 8188 chipset for ARM11.
+> it works fine but
+> 
+> iw wlan0 info
+> shows "no device found"
+> 
+> but iwconfig works fine.
+> 
+> also how can i add nl80211 support for the driver?
 
-The patch avoids the problem by moving usb_put_dev() from
-at76_delete_device() to at76_disconnect().
+When you post about a particular piece of hardware, please use the full name.
+There are at least 3 different Realtek chips that have 8188 in their name.
+Please do not make us have to assume what you mean.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+If you want nl80211 support, you will need to add the necessary structures and
+callbacks to the driver. Driver r8723au in the staging tree could serve as
+sample code. If you do make these changes, they should be made as patches to the
+driver in drivers/staging/rtl8188eu/.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/at76c50x-usb.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index 334c2ece855a..da92bfa76b7c 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -2423,8 +2423,6 @@ static void at76_delete_device(struct at76_priv *priv)
- 
- 	kfree_skb(priv->rx_skb);
- 
--	usb_put_dev(priv->udev);
--
- 	at76_dbg(DBG_PROC_ENTRY, "%s: before freeing priv/ieee80211_hw",
- 		 __func__);
- 	ieee80211_free_hw(priv->hw);
-@@ -2558,6 +2556,7 @@ static void at76_disconnect(struct usb_interface *interface)
- 
- 	wiphy_info(priv->hw->wiphy, "disconnecting\n");
- 	at76_delete_device(priv);
-+	usb_put_dev(priv->udev);
- 	dev_info(&interface->dev, "disconnected\n");
- }
- 
--- 
-1.9.1
+Larry
 
