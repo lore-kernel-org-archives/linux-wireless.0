@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.111]:15839 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751575AbaHQV5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2014 17:57:38 -0400
-From: Hans Wennborg <hans@hanshq.net>
-To: kvalo@qca.qualcomm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath6kl@lists.infradead.org
-Cc: Hans Wennborg <hans@hanshq.net>
-Subject: [PATCH 1/1] ath6kl: fix %d confusingly prefixed with 0x in format strings
-Date: Sun, 17 Aug 2014 14:57:11 -0700
-Message-Id: <1408312631-5619-1-git-send-email-hans@hanshq.net> (sfid-20140817_235754_853976_9039977B)
-In-Reply-To: <8738czmejl.fsf@kamboji.qca.qualcomm.com>
-References: <8738czmejl.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:58329 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624AbaHABzu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2014 21:55:50 -0400
+Received: by mail-oa0-f47.google.com with SMTP id g18so2651877oah.34
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2014 18:55:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rw3J+vDO8LsupMOUkGJV6bc9V6+gcZBA==b69AQYuSoXg@mail.gmail.com>
+References: <1406836788-23704-1-git-send-email-zajec5@gmail.com>
+ <1406836788-23704-4-git-send-email-zajec5@gmail.com> <CAGVrzcaWKwAdY=cgbb9GNoEG8hkjrPa5OWBHKjftcOdLJKJARQ@mail.gmail.com>
+ <CACna6rw3J+vDO8LsupMOUkGJV6bc9V6+gcZBA==b69AQYuSoXg@mail.gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Date: Thu, 31 Jul 2014 18:55:10 -0700
+Message-ID: <CAGVrzcan_wYou6dUQi0NHRBWbzyjy+rmOWZEr849XfDsjiG=0A@mail.gmail.com> (sfid-20140801_035554_119577_966D2ED0)
+Subject: Re: [PATCH 3.18 3/7] b43: flush some writes on Broadcom MIPS SoCs
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hans Wennborg <hans@hanshq.net>
----
- drivers/net/wireless/ath/ath6kl/init.c | 2 +-
- drivers/net/wireless/ath/ath6kl/main.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+2014-07-31 13:34 GMT-07:00 Rafał Miłecki <zajec5@gmail.com>:
+> On 31 July 2014 22:25, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>> +static inline void b43_write16f(struct b43_wldev *dev, u16 offset, u16 value)
+>>> +{
+>>> +       b43_write16(dev, offset, value);
+>>> +#if defined(CONFIG_BCM47XX) || defined(CONFIG_BCM63XX)
+>>> +       b43_read16(dev, offset);
+>>> +#endif
+>>> +}
+>>
+>> How about you leave the calls to b43_write16() to avoid missing call
+>> sites, but you re-define it for BCM47XX and BCM63XX? Or, you could
+>> introduce a __b43_write16() that defaults to dev->dev->write16 in the
+>> normal case, and gets called by b43_write16() such that we you'd get:
+>
+> I didn't mean (and I didn't) enable flushing for all writes. Only
+> these touching specific registers. I don't think we need to flush
+> every single write.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index fffd523..6e473fa 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1049,7 +1049,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ar->hw.reserved_ram_size = le32_to_cpup(val);
- 
- 			ath6kl_dbg(ATH6KL_DBG_BOOT,
--				   "found reserved ram size ie 0x%d\n",
-+				   "found reserved ram size ie %d\n",
- 				   ar->hw.reserved_ram_size);
- 			break;
- 		case ATH6KL_FW_IE_CAPABILITIES:
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 21516bc..933aef0 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -225,7 +225,7 @@ int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
- 	ret = ath6kl_hif_diag_write32(ar, address, value);
- 
- 	if (ret) {
--		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
-+		ath6kl_err("failed to write 0x%x during diagnose window to 0x%x\n",
- 			   address, value);
- 		return ret;
- 	}
+Ok, then the current approach looks good to me, thanks!
 -- 
-2.1.0.rc2.206.gedb03e5
-
+Florian
