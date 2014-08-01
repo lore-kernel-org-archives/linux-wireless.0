@@ -1,65 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36144 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753180AbaHSQF6 (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:50642 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147AbaHANRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 12:05:58 -0400
-Message-ID: <53F375E4.90409@candelatech.com> (sfid-20140819_180605_246421_F2A402EF)
-Date: Tue, 19 Aug 2014 09:05:56 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>,
+	Fri, 1 Aug 2014 09:17:50 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	sven@narfation.org, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>,
 	Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v7 2/8] ath10k: provide firmware crash info via debugfs
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>	<20140819082253.16842.32433.stgit@potku.adurom.net> <CA+BoTQn2aq5EV4mvTs3Ww4i9gAJsmMM5iDfrFd=YfC0YxMi2WQ@mail.gmail.com> <53F36C63.8040809@candelatech.com>
-In-Reply-To: <53F36C63.8040809@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCHv5 1/2] ath: Move spectral debugfs structs to shared header
+Date: Fri,  1 Aug 2014 15:17:13 +0200
+Message-Id: <1406899034-13473-2-git-send-email-sw@simonwunderlich.de> (sfid-20140801_151756_169937_7D4D918D)
+In-Reply-To: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
+References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2014 08:25 AM, Ben Greear wrote:
+From: Sven Eckelmann <sven@narfation.org>
 
->>> +       dump_data->kernel_ver_code = cpu_to_le32(LINUX_VERSION_CODE);
->>> +       strlcpy(dump_data->kernel_ver, VERMAGIC_STRING,
->>> +               sizeof(dump_data->kernel_ver));
->>> +
->>> +       dump_data->tv_sec = cpu_to_le64(crash_data->timestamp.tv_sec);
->>> +       dump_data->tv_nsec = cpu_to_le64(crash_data->timestamp.tv_nsec);
->>> +
->>> +       /* Gather dbg-log */
->>> +       dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
->>> +       dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_DBGLOG);
->>> +       dump_tlv->tlv_len = cpu_to_le32(sizeof(crash_data->dbglog_entry_data));
->>
->> Hmm should this really be sizeof()? Not next_idx (which effectively
->> defines number of bytes of the dbglog)?
-> 
-> I haven't tried decoding this yet, but we may need to know the next_idx
-> to decode this properly.
+The ath9k and ath10k will share the definitions of the debugfs spectral
+structures and enums. Having them in the same place helps to avoid conflicts.
 
-I thought some more on this on the way to work..and I think it will not
-be easy to decode this if we do not know the starting point for the
-messages.  Each report from firmware will start at the beginning of
-a message, so we either need to do a lot of memory copying, or play
-tricks with a circular buffer storage.
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/spectral.h  | 71 +-----------------------
+ drivers/net/wireless/ath/spectral_common.h | 88 ++++++++++++++++++++++++++++++
+ 2 files changed, 90 insertions(+), 69 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/spectral_common.h
 
-A long time ago, Kalle mentioned he didn't want any ability to decode
-the messages in the kernel, so the 'start' boundary will need to be
-the start of the message(s) received from firmware.
-
-This means that the ath10k_debug_dbglog_add will need to be improved
-to handle wraps more intelligently, somehow.
-
-This series has taken a long time already, so it would be fine with me
-to deal with the dbglog cleanup in subsequent patches, and just assume
-for now that the dbglog messages start at index 0 in the dbglog-entry-data.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
+index ead6341..7b410c6 100644
+--- a/drivers/net/wireless/ath/ath9k/spectral.h
++++ b/drivers/net/wireless/ath/ath9k/spectral.h
+@@ -17,6 +17,8 @@
+ #ifndef SPECTRAL_H
+ #define SPECTRAL_H
+ 
++#include "../spectral_common.h"
++
+ /* enum spectral_mode:
+  *
+  * @SPECTRAL_DISABLED: spectral mode is disabled
+@@ -54,8 +56,6 @@ struct ath_ht20_mag_info {
+ 	u8 max_exp;
+ } __packed;
+ 
+-#define SPECTRAL_HT20_NUM_BINS		56
+-
+ /* WARNING: don't actually use this struct! MAC may vary the amount of
+  * data by -1/+2. This struct is for reference only.
+  */
+@@ -83,8 +83,6 @@ struct ath_ht20_40_mag_info {
+ 	u8 max_exp;
+ } __packed;
+ 
+-#define SPECTRAL_HT20_40_NUM_BINS		128
+-
+ /* WARNING: don't actually use this struct! MAC may vary the amount of
+  * data. This struct is for reference only.
+  */
+@@ -125,71 +123,6 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
+ 	return bins[0] & 0x3f;
+ }
+ 
+-/* FFT sample format given to userspace via debugfs.
+- *
+- * Please keep the type/length at the front position and change
+- * other fields after adding another sample type
+- *
+- * TODO: this might need rework when switching to nl80211-based
+- * interface.
+- */
+-enum ath_fft_sample_type {
+-	ATH_FFT_SAMPLE_HT20 = 1,
+-	ATH_FFT_SAMPLE_HT20_40,
+-};
+-
+-struct fft_sample_tlv {
+-	u8 type;	/* see ath_fft_sample */
+-	__be16 length;
+-	/* type dependent data follows */
+-} __packed;
+-
+-struct fft_sample_ht20 {
+-	struct fft_sample_tlv tlv;
+-
+-	u8 max_exp;
+-
+-	__be16 freq;
+-	s8 rssi;
+-	s8 noise;
+-
+-	__be16 max_magnitude;
+-	u8 max_index;
+-	u8 bitmap_weight;
+-
+-	__be64 tsf;
+-
+-	u8 data[SPECTRAL_HT20_NUM_BINS];
+-} __packed;
+-
+-struct fft_sample_ht20_40 {
+-	struct fft_sample_tlv tlv;
+-
+-	u8 channel_type;
+-	__be16 freq;
+-
+-	s8 lower_rssi;
+-	s8 upper_rssi;
+-
+-	__be64 tsf;
+-
+-	s8 lower_noise;
+-	s8 upper_noise;
+-
+-	__be16 lower_max_magnitude;
+-	__be16 upper_max_magnitude;
+-
+-	u8 lower_max_index;
+-	u8 upper_max_index;
+-
+-	u8 lower_bitmap_weight;
+-	u8 upper_bitmap_weight;
+-
+-	u8 max_exp;
+-
+-	u8 data[SPECTRAL_HT20_40_NUM_BINS];
+-} __packed;
+-
+ void ath9k_spectral_init_debug(struct ath_softc *sc);
+ void ath9k_spectral_deinit_debug(struct ath_softc *sc);
+ 
+diff --git a/drivers/net/wireless/ath/spectral_common.h b/drivers/net/wireless/ath/spectral_common.h
+new file mode 100644
+index 0000000..b9ab722
+--- /dev/null
++++ b/drivers/net/wireless/ath/spectral_common.h
+@@ -0,0 +1,88 @@
++/*
++ * Copyright (c) 2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef SPECTRAL_COMMON_H
++#define SPECTRAL_COMMON_H
++
++#define SPECTRAL_HT20_NUM_BINS		56
++#define SPECTRAL_HT20_40_NUM_BINS		128
++
++/* FFT sample format given to userspace via debugfs.
++ *
++ * Please keep the type/length at the front position and change
++ * other fields after adding another sample type
++ *
++ * TODO: this might need rework when switching to nl80211-based
++ * interface.
++ */
++enum ath_fft_sample_type {
++	ATH_FFT_SAMPLE_HT20 = 1,
++	ATH_FFT_SAMPLE_HT20_40,
++};
++
++struct fft_sample_tlv {
++	u8 type;	/* see ath_fft_sample */
++	__be16 length;
++	/* type dependent data follows */
++} __packed;
++
++struct fft_sample_ht20 {
++	struct fft_sample_tlv tlv;
++
++	u8 max_exp;
++
++	__be16 freq;
++	s8 rssi;
++	s8 noise;
++
++	__be16 max_magnitude;
++	u8 max_index;
++	u8 bitmap_weight;
++
++	__be64 tsf;
++
++	u8 data[SPECTRAL_HT20_NUM_BINS];
++} __packed;
++
++struct fft_sample_ht20_40 {
++	struct fft_sample_tlv tlv;
++
++	u8 channel_type;
++	__be16 freq;
++
++	s8 lower_rssi;
++	s8 upper_rssi;
++
++	__be64 tsf;
++
++	s8 lower_noise;
++	s8 upper_noise;
++
++	__be16 lower_max_magnitude;
++	__be16 upper_max_magnitude;
++
++	u8 lower_max_index;
++	u8 upper_max_index;
++
++	u8 lower_bitmap_weight;
++	u8 upper_bitmap_weight;
++
++	u8 max_exp;
++
++	u8 data[SPECTRAL_HT20_40_NUM_BINS];
++} __packed;
++
++#endif /* SPECTRAL_COMMON_H */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
