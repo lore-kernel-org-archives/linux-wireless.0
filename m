@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.112]:51399 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756755AbaHGFZK convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:51567 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750876AbaHAMLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 01:25:10 -0400
-Message-ID: <53E30DFB.6090309@hanshq.net> (sfid-20140807_072527_619648_07C6EC54)
-Date: Wed, 06 Aug 2014 22:26:19 -0700
-From: Hans Wennborg <hans@hanshq.net>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/15] rtlwifi: rtl8192de: fix decimal printf format specifiers
- prefixed with 0x
-References: <1407300186-32673-1-git-send-email-hans@hanshq.net> <53E23DFE.7070209@lwfinger.net>
-In-Reply-To: <53E23DFE.7070209@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Fri, 1 Aug 2014 08:11:41 -0400
+Message-ID: <1406895098.2110.10.camel@x220> (sfid-20140801_141158_110164_1C7755A6)
+Subject: Re: [PATCH] staging: rtl8723au: Fix static symbol sparse warning
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Miguel Oliveira <cmroliv@gmail.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Date: Fri, 01 Aug 2014 14:11:38 +0200
+In-Reply-To: <1406898387-13987-1-git-send-email-cmroliv@gmail.com>
+References: <1406898387-13987-1-git-send-email-cmroliv@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/06/2014 07:38 AM, Larry Finger wrote:
-> On 08/05/2014 11:43 PM, Hans Wennborg wrote:
->> The prefix suggests the number should be printed in hex, so use
->> the %x specifier to do that.
->>
->> Found by using regex suggested by Joe Perches.
->>
->> Signed-off-by: Hans Wennborg <hans@hanshq.net>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
->> index 2317707..66e1760 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
->> @@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
->>   			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
->>   	}
->>   	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
->> -		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
->> +		 "Polling FW ready fail!! REG_MCUFWDL:0x%08lx\n",
->>   		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
->>   	return -1;
->>   }
->
-> It would be best to actually build with your patches installed. This one yields
-> the following warning:
+On Fri, 2014-08-01 at 14:06 +0100, Miguel Oliveira wrote:
+> Fix sparse warning:
+> drivers/staging/rtl8723au/core/rtw_efuse.c:579:5: warning: symbol 'efuse_GetCurrentSize23a' was not declared. Should it be static?
+> 
+> Signed-off-by: Miguel Oliveira <cmroliv@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/include/rtw_efuse.h |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/staging/rtl8723au/include/rtw_efuse.h b/drivers/staging/rtl8723au/include/rtw_efuse.h
+> index 07bdc34..304cc71 100644
+> --- a/drivers/staging/rtl8723au/include/rtw_efuse.h
+> +++ b/drivers/staging/rtl8723au/include/rtw_efuse.h
+> @@ -82,6 +82,7 @@ struct pg_pkt_struct {
+>  /*------------------------Export global variable----------------------------*/
+>  
+>  u16	efuse_GetMaxSize23a(struct rtw_adapter *padapter);
+> +int	efuse_GetCurrentSize23a(struct rtw_adapter *padapter, u16 *size);
+>  int	rtw_efuse_access23a(struct rtw_adapter *padapter, u8 bRead, u16 start_addr, u16 cnts, u8 *data);
+>  int	rtw_efuse_map_read23a(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
+>  u8	rtw_efuse_map_write(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
 
-Terribly sorry about that, and thanks for catching it. I naively assumed 
-that the code was correct besides the decimal vs. hex issue.
+This function is never used in current linux-next. So I think it might
+as well be dropped.
 
->    CC [M]  drivers/net/wireless/rtlwifi/rtl8192de/fw.o
-> drivers/net/wireless/rtlwifi/rtl8192de/fw.c: In function ‘_rtl92d_fw_init’:
-> drivers/net/wireless/rtlwifi/rtl8192de/fw.c:236:2: warning: format ‘%lx’ expects
-> argument of type ‘long unsigned int’, but argument 5 has type ‘u32’ [-Wformat=]
->    RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
->    ^
->
-> The format specifier should be %04x, not %08lx.
+Note there's also Efuse_GetCurrentSize23a (with an uppercase 'E'). It's
+used just once. You could probably submit another patch to remove that
+from rtw_efuse.h and make it static in rtw_efuse.c The comment above
+that function needs and update too, but maybe it's also OK to drop that
+comment.
 
-Shouldn't it be %08x since it's a 32-bit value?
 
- > I have no idea why gcc did not complain as %08ul is also wrong.
+Paul Bolle
 
-I assume the compiler would have warned about %08lu, but %08ul takes an 
-unsigned and just prints an l afterwards.
-
-  - Hans
