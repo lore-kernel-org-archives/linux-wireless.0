@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:62487 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756313AbaHHJbi (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48098 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938AbaHBGjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 05:31:38 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so700700wib.4
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 02:31:35 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/3] ath10k: ce fixes 2014-08-08
-Date: Fri,  8 Aug 2014 11:22:12 +0200
-Message-Id: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com> (sfid-20140808_113147_302588_B9BDA076)
+	Sat, 2 Aug 2014 02:39:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Joe Perches" <joe@perches.com>
+Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
+References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 2 Aug 2014 09:39:33 +0300
+In-Reply-To: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 29 Jul 2014 12:03:59 +0200")
+Message-ID: <87k36r5ra2.fsf@kamboji.qca.qualcomm.com> (sfid-20140802_083947_837841_ED02EF98)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This removes implicit endianess in some places.
-I'd love to get rid of it from
-ath10k_pci_diag_access* as well but let's fix
-ath10k_pci_diag_mem_* first.
+> The 10.x and main firmware branches have
+> conflicting WMI service bitmap definitions.
+>
+> This also fixes WMI services parsing on big-endian
+> hosts and changes debugfs output to be more human
+> friendly.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-@Kalle, @Ben: As far as I understand this
-conflicts with fw dumping you work on so I'm
-tentatively posting this as an RFC first.
+[...]
 
+> +	SVCSTR(WMI_SERVICE_TX_ENCAP)
+> +	SVCSTR(WMI_SERVICE_BURST)
+> +	SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT)
+> +	SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT)
+>  	default:
+> -		return "UNKNOWN SERVICE\n";
+> +		return NULL;
 
-Michal Kazior (3):
-  ath10k: move pci init structures
-  ath10k: dont duplicate service-pipe mapping
-  ath10k: make target endianess more explicit
+This introduces a new checkpatch warning:
 
- drivers/net/wireless/ath/ath10k/pci.c | 410 +++++++++++++++++-----------------
- drivers/net/wireless/ath/ath10k/pci.h |  18 +-
- 2 files changed, 210 insertions(+), 218 deletions(-)
+drivers/net/wireless/ath/ath10k/wmi.h:214: ERROR: spaces required around that ':' (ctx:VxE)
+
+But I think that's just a false warning and I should ignore it. Any
+other ideas?
 
 -- 
-1.8.5.3
-
+Kalle Valo
