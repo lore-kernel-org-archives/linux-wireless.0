@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56465 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753549AbaHKPOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 11:14:51 -0400
-Message-ID: <1407770081.9844.12.camel@jlt4.sipsolutions.net> (sfid-20140811_171454_769365_46643721)
-Subject: Re: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Date: Mon, 11 Aug 2014 17:14:41 +0200
-In-Reply-To: <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140728_160233_044426_F578F4E5)
-References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20140728_160233_044426_F578F4E5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from forward19.mail.yandex.net ([95.108.253.144]:46020 "EHLO
+	forward19.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbaHCLdT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2014 07:33:19 -0400
+Received: from web18g.yandex.ru (web18g.yandex.ru [95.108.252.118])
+	by forward19.mail.yandex.net (Yandex) with ESMTP id 81BE9112146D
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Aug 2014 15:25:56 +0400 (MSK)
+From: =?koi8-r?B?4c7E0sXF1yDzxdLHxco=?= <flat343@yandex.ru>
+To: linux-wireless@vger.kernel.org
+Subject: Problem with wpasupplicant using nl80211 driver for wi-fi stick with REALTEK 8188 chipset
+MIME-Version: 1.0
+Message-Id: <6570401407065155@web18g.yandex.ru> (sfid-20140803_133333_456419_941BB6E9)
+Date: Sun, 03 Aug 2014 15:25:55 +0400
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
+A lot of folks experience problems with wpa_supplicant using nl80211 driver - tha does not work. 
+The particular problem is experienced on raspberry pi with wi-fi adapter on Realtek 8188 chipset. 
+The syslog shows the following lines:
+ wpa_supplicant[1118]: nl80211: 'nl80211' generic netlink not found
+ raspbmc wpa_supplicant[1118]: Failed to initialize driver 'nl80211'
+ raspbmc wpa_supplicant[1118]: rfkill: Cannot open RFKILL control device
 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index f1db15b..0b2d55d 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1594,6 +1594,9 @@ enum nl80211_commands {
->   * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
->   *	the TDLS link initiator.
->   *
-> + * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
-> + *	algorithm is enabled
+I have tired to modify /etc/wpa_suppicant/functions.sh and remove nl80211 completely from code and leave only wext driver but that does not work. 
+Would appreciate any ideas what the problem could be.
 
-You should probably describe that it's related to the
-NL80211_FEATURE_ACKTO_ESTIMATION feature (and you should document that
-it's a flag) since otherwise nobody will be able to correlate the two
-things easily. :)
+OS version: raspbian 3.12.21 
 
+WPA supplicant version: 1.0-3
 
-> +       if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
-> +               if (!(rdev->wiphy.features &
-> NL80211_FEATURE_ACKTO_ESTIMATION))
-> +                       return -EOPNOTSUPP;
-> +
-> +               changed |= WIPHY_PARAM_DYN_ACK;
-> +       }
-
-that doesn't really seem right, how do you turn it off??
-
-johannes
-
+Thank you for the support.
+Sergei. 
