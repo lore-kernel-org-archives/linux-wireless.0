@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:35135 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750937AbaHNXzz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 19:55:55 -0400
-Date: Fri, 15 Aug 2014 09:55:47 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Johan Hedberg <johan.hedberg@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-08-14
-Message-ID: <20140815095547.75d9e9d4@canb.auug.org.au> (sfid-20140815_015617_508048_9C974AF1)
-In-Reply-To: <20140814145000.GA14226@t440s.P-661HNU-F1>
-References: <20140814145000.GA14226@t440s.P-661HNU-F1>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/BizOQNKk7dPO++rI1T/Yfet"; protocol="application/pgp-signature"
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:63845 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322AbaHCMN7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2014 08:13:59 -0400
+Received: by mail-yh0-f49.google.com with SMTP id b6so3643602yha.8
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 05:13:59 -0700 (PDT)
+Message-ID: <1407068037.29448.12.camel@w7> (sfid-20140803_141403_351439_9766B818)
+Subject: Re: Problems with rtl8192cu driver (disassociated from ... (Reason:
+ 2))
+From: Steve Brown <sbrown@cortland.com>
+To: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 03 Aug 2014 08:13:57 -0400
+In-Reply-To: <lrjs9d$s51$1@ger.gmane.org>
+References: <lrjs9d$s51$1@ger.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/BizOQNKk7dPO++rI1T/Yfet
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, 2014-08-03 at 01:29 +0200, Manuel Reimer wrote:
+> Hello,
+> 
+> I'm trying to get access to a WLAN access point using the following adapter:
+> 
+> <http://www.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/global/wireless_adapters_n150/ew-7811un>
+> 
+> I've used "NetworkManager" to connect to the access point and everything 
+> seemed to work well at first.
+> 
+> But after a few minutes the connection is lost with the following 
+> message in dmesg:
+> 
+> wlan0: disassociated from XX:XX:XX:XX:XX:XX (Reason: 2)
+> 
+> If I restart NetworkManager, then the connection works again, but only 
+> for a few minutes before I get another disconnect.
+> 
+> I even tried to do a permanent ping to a server on the Internet (to have 
+> permanent traffic) but this doesn't change anything. I still get 
+> disconnected with "Reason 2".
+> 
+> Are there known problems with the rtl8192cu driver?
+> 
+> Can someone here recommend a small USB WLAN adapter which is known to 
+> work without problems?
+> 
+> Thank you very much in advance.
+> 
+> Greetings
+> 
+> Manuel
+> 
+I had a similar problem with this driver. After a while, the aggregation
+session seems to hang. If I connect as b/g, no problem. If I disable
+aggregation by patching the driver, again the problem goes away.
 
-Hi Johan,
+That's as far as I got.
 
-On Thu, 14 Aug 2014 17:50:00 +0300 Johan Hedberg <johan.hedberg@gmail.com> =
-wrote:
->
-> Here's our first bluetooth-next pull request for the 3.18 kernel. Our
-> tree is based on net-next so you'd need to pull from there first before
-> pulling from our tree.
+Steve
 
-This is in a branch that will be included in linux-next today.  I guess
-you didn't read my (very often) repeated request that no v3.18 material
-be included until after v3.17-rc1 is released ... Please do not do that.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
 
---Sig_/BizOQNKk7dPO++rI1T/Yfet
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJT7UyIAAoJEMDTa8Ir7ZwVjpYP/1TKmiRpxHutHSX8MRuieAZf
-l9EsZg0ikPdOJft0kSqzCTdw6uNBnNkMCkkHC1oAMwjWJ39oJ/CvNwjj1lqEfd6F
-C4TgF60+1PoKR8iK5Nz8Gf/KvPPJGjEhzAJzTVRL2hgMP4YiWsCegwYpzuq/TibZ
-ZzMIw23U5Neg2aseOBw6jWvPGGKx2Z68Zma/rF6IUHCq4A30gBMk6EfXPyWPTKrW
-kLI97mqKnu+lUF/O4UYB8mewkzVm5ktxeAH5zNYQEo8hYF2p4WkMmM4rf+680vI4
-JZ3vFMIYVkOTN5idTw859IhitQimRFR9zu0uZdhwm3jrnx5OADhc8a+P3D3ORv8J
-iCRQXtZ+sr30FwMQxGSwsTi3tFKBoyKHZNBc8BdACA5uFyEGnXCx9f1tMTnNsLJo
-Z9qauI5tLzblsCNVv93xZaFELnuAs9u0aSVU+FDbnMGvjJUkS/uNTRhLoxDc8mLF
-d6+E0/tz07SB19rNwSm8j3J/nmhpO5DvUoHO7iccKEsOrHDnbc/dkylEhky2vLKO
-g+m/Ap6k+FXpYBm91QPHfrDejpXLORIkkTqW3m5sXksPjQhZZfCntSuTD4D2lqjr
-muEzg/HJSh3M9BwvB3qpGgxtgOT2V+x85JTPR5mYGGOYD7GoIi4CiYs99GAw4NNS
-5sW1qNXHoxgnv62ryX+V
-=Fr+3
------END PGP SIGNATURE-----
-
---Sig_/BizOQNKk7dPO++rI1T/Yfet--
