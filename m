@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50615 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843AbaHYIWw (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:57277 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbaHCPVl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 04:22:52 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix wmi service bitmap
-References: <1408447352-28688-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 25 Aug 2014 11:22:38 +0300
-In-Reply-To: <1408447352-28688-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 19 Aug 2014 13:22:32 +0200")
-Message-ID: <87bnr96ks1.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_102256_048231_6AB60982)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 3 Aug 2014 11:21:41 -0400
+Received: by mail-yk0-f175.google.com with SMTP id q200so3537664ykb.34
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 08:21:40 -0700 (PDT)
+Message-ID: <1407079297.29448.15.camel@w7> (sfid-20140803_172149_687123_FA3AF7F7)
+Subject: Re: Problems with rtl8192cu driver (disassociated from ... (Reason:
+ 2))
+From: Steve Brown <sbrown@cortland.com>
+To: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 03 Aug 2014 11:21:37 -0400
+In-Reply-To: <lrlitq$9na$1@ger.gmane.org>
+References: <lrjs9d$s51$1@ger.gmane.org> <1407068037.29448.12.camel@w7>
+	 <lrlitq$9na$1@ger.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Sun, 2014-08-03 at 17:02 +0200, Manuel Reimer wrote:
+> On 08/03/2014 02:13 PM, Steve Brown wrote:
+> > I had a similar problem with this driver.
+> 
+> Thank you very much for this feedback.
+> 
+> Searching for 'rtl8192cu "Reason 2"' on the net reveals more cases for 
+> such problems. For example:
+> 
+> https://dev.openwrt.org/ticket/15342
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220007
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=661860
 
-> Service mapping for main firmware branch was
-> incorrectly used for 10.x firmware and vice-versa.
-> This caused wmi_services in debugfs to print wrong
-> values.
->
-> This actually fixes a problem with the previous
-> wmi service bitmap patch itself. For some reason
-> there was either a conflict that wasn't resolved
-> properly or git had a bad day.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> 
+> What exactly is "b/g"?
+> 
+I was referring to the 802.11b and 802.11g IEEE lan standards.
 
-Thanks, applied. I just changed the commit log a bit:
-
-    ath10k: fix a conflict bug in wmi service bitmap
-    
-    Service mapping for main firmware branch was incorrectly used for 10.x firmware
-    and vice-versa.  This caused wmi_services in debugfs to print wrong values.
-    
-    This fixes commit cff990ce7ddd6 ("ath10k: fix wmi service bitmap debug") where
-    for some reason there was either a conflict that wasn't resolved properly or
-    git had a bad day.
-    
-    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Greetings,
+> 
+> Manuel
+> 
 
 
--- 
-Kalle Valo
