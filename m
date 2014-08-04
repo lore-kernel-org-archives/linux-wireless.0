@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:36078 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbaH2TXu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41535 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718AbaHDIWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 15:23:50 -0400
+	Mon, 4 Aug 2014 04:22:31 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 05/14] wil6210: check error in wil_target_reset()
+Date: Mon, 4 Aug 2014 11:20:45 +0300
+Message-ID: <1407140454-31639-6-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102234_471915_99013B5F)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <5400C3E8.9040500@broadcom.com>
-References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
-	<5400C3E8.9040500@broadcom.com>
-Date: Fri, 29 Aug 2014 21:23:48 +0200
-Message-ID: <CAMuHMdXahUGQ1-4SvkCnt=BrAn6_Xge7RzieR2K8gDmj_pC-kw@mail.gmail.com> (sfid-20140829_212411_223188_E0241148)
-Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Franky,
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-On Fri, Aug 29, 2014 at 8:18 PM, Franky Lin <frankyl@broadcom.com> wrote:
->>   config BRCMFMAC
->>         tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
->> -       depends on CFG80211
->> +       depends on CFG80211A && HAS_DMA
->>         select BRCMUTIL
->>         ---help---
->>           This module adds support for embedded wireless adapters based on
->
-> Thanks for reporting this. All complaints are from msgbuf code. So the
-> dependency should belong to BRCMFMAC_PCIE not BRCMFMAC.
+When resetting target in wil_target_reset(), error may occur.
+Indicate error via error code. In case of error, don't attempt to further
+interact with card, specifically don't attempt firmware download or
+interrupts enabling.
 
-I have PCI=n, hence BRCMFMAC_PCIE=n.
+Move wil_rx_fini() to be always executed to prevent memory leak.
 
-IIRC, I did try adding the HAS_DMA dependencies to the suboptions,
-but then it still failed to link. Hence I restored to the main BRCMFMAC.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-Besides, msgbuf.o is part of the core.
-I've just tried moving it to brcmfmac-$(CONFIG_BRCMFMAC_PCIE),
-but that doesn't help. Other parts use msgbuf, too.
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index dc22053..5a99342 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -309,7 +309,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 	destroy_workqueue(wil->wmi_wq);
+ }
+ 
+-static void wil_target_reset(struct wil6210_priv *wil)
++static int wil_target_reset(struct wil6210_priv *wil)
+ {
+ 	int delay = 0;
+ 	u32 hw_state;
+@@ -395,7 +395,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		if (delay++ > 100) {
+ 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
+ 				hw_state);
+-			return;
++			return -ETIME;
+ 		}
+ 	} while (hw_state != HW_MACHINE_BOOT_DONE);
+ 
+@@ -407,6 +407,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	wmb(); /* order is important here */
+ 
+ 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
++	return 0;
+ 
+ #undef R
+ #undef W
+@@ -471,10 +472,11 @@ int wil_reset(struct wil6210_priv *wil)
+ 	flush_workqueue(wil->wmi_wq_conn);
+ 	flush_workqueue(wil->wmi_wq);
+ 
+-	/* TODO: put MAC in reset */
+-	wil_target_reset(wil);
+-
++	rc = wil_target_reset(wil);
+ 	wil_rx_fini(wil);
++	if (rc)
++		return rc;
++
+ 
+ 	/* init after reset */
+ 	wil->pending_connect_cid = -1;
+-- 
+1.8.5.2
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
