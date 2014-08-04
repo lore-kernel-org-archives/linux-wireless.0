@@ -1,135 +1,378 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10544 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58280 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755843AbaHEGPK (ORCPT
+	with ESMTP id S1751756AbaHDIWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 02:15:10 -0400
-From: qca_dlansky <qca_dlansky@qualcomm.com>
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	wil6210 <wil6210@qca.qualcomm.com>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>
-Subject: RE: [PATCH 04/14] wil6210: Optimization for Interrupt moderation
- threshold value
-Date: Tue, 5 Aug 2014 06:15:07 +0000
-Message-ID: <65502A17874025489B7D8479C16CFA635C754BB1@nasanexd02f.na.qualcomm.com> (sfid-20140805_081516_721012_35BD8562)
+	Mon, 4 Aug 2014 04:22:36 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 08/14] wil6210: convert debugfs to the table mode
+Date: Mon, 4 Aug 2014 11:20:48 +0300
+Message-ID: <1407140454-31639-9-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102240_372467_39C75C8B)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
- <1407140454-31639-5-git-send-email-qca_dlansky@qca.qualcomm.com>
- <53DFC52A.4030904@gmail.com>
-In-Reply-To: <53DFC52A.4030904@gmail.com>
-Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCldlIHdpbGwgdGFrZSBhIGxvb2sgYXQgZXRodG9vbDo6c2V0X2NvYWxlc2NlIGFuZCBj
-b21lIHVwIHdpdGggYXBwcm9wcmlhdGUgaW1wbGVtZW50YXRpb24gZm9yIHRoaXMgcGF0Y2guDQpJ
-J20gZ29pbmcgdG8gcmUtdXBsb2FkIHRoZSByZW1haW5pbmcgMTMgcGF0Y2hlcyBzaG9ydGx5IGlm
-IHRoYXQncyBPSy4NCg0KVGhhbmtzLA0KIERlZHkuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzps
-aW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBGbG9yaWFu
-IEZhaW5lbGxpDQpTZW50OiBNb25kYXksIEF1Z3VzdCAwNCwgMjAxNCA4OjM5IFBNDQpUbzogcWNh
-X2RsYW5za3k7IEpvaG4gVyAuIExpbnZpbGxlDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnOyB3aWw2MjEwOyBxY2FfdmtvbmRyYXQNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMDQvMTRd
-IHdpbDYyMTA6IE9wdGltaXphdGlvbiBmb3IgSW50ZXJydXB0IG1vZGVyYXRpb24gdGhyZXNob2xk
-IHZhbHVlDQoNCkhlbGxvLA0KDQpPbiAwOC8wNC8yMDE0IDAxOjIwIEFNLCBEZWR5IExhbnNreSB3
-cm90ZToNCj4gRGVmYXVsdCB2YWx1ZSB3YXMgY2hhbmdlZCB0byA1MDAwMCAofjMgSVJRcy9tc2Vj
-KSBpbiBvcmRlciB0byByZWR1Y2UgDQo+IHNpZ25pZmljYW50bHkgQ1BVIHVzYWdlIHdpdGhvdXQg
-ZGVncmFkYXRpb24gaW4gdGhyb3VnaHB1dC4NCj4gQWRkZWQgbW9kdWxlIHBhcmFtZXRlciBuYW1l
-ZCAiaXRyX3Ryc2giIHRoYXQgYWxsb3dzIHRoZSB1c2VyIHRvIGNoYW5nZSANCj4gZGVmYXVsdCB2
-YWx1ZSB0aHJvdWdoIGluc21vZC4NCj4gQWRkZWQgZW50cnkgaW4gZGVidWdmcyAoaXRyX3Ryc2hf
-dmFsKSBmb3IgY2hhbmdpbmcgaW50ZXJydXB0IA0KPiBtb2RlcmF0aW9uIHRocmVzaG9sZCBpbiBh
-IHNpbmdsZSBvcGVyYXRpb24uDQoNClRoaXMgc2hvdWxkIGJlIG1hZGUgY29uZmlndXJhYmxlIHRo
-cm91Z2ggdGhlIGV0aHRvb2w6OnNldF9jb2FsZXNjZSBvcGVyYXRpb25zLCB3aGljaCBhbGxvd3Mg
-eW91IHRvIGhhdmUgc2VwYXJhdGUgUlggYW5kIFRYIGludGVycnVwdHMgY29hbGVzY2luZyBwYXJh
-bWV0ZXJzLg0KDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBEZWR5IExhbnNreSA8cWNhX2RsYW5za3lA
-cWNhLnF1YWxjb21tLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvd2ls
-NjIxMC9kZWJ1Z2ZzLmMgICB8IDUwICsrKysrKysrKysrKysrKysrKysrKysrKysrKy0NCj4gIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2ludGVycnVwdC5jIHwgIDggKysrKy0NCj4g
-IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL3dpbDYyMTAuaCAgIHwgIDIgKy0NCj4g
-IDMgZmlsZXMgY2hhbmdlZCwgNTcgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gDQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvd2lsNjIxMC9kZWJ1Z2ZzLmMg
-DQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL3dpbDYyMTAvZGVidWdmcy5jDQo+IGluZGV4
-IGZiODAyYmQuLjM5OTBhMmQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aC93aWw2MjEwL2RlYnVnZnMuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvd2ls
-NjIxMC9kZWJ1Z2ZzLmMNCj4gQEAgLTI0LDYgKzI0LDEyIEBADQo+ICAjaW5jbHVkZSAid2lsNjIx
-MC5oIg0KPiAgI2luY2x1ZGUgInR4cnguaCINCj4gIA0KPiArLyogTWF4IHRocmVzaG9sZCBzdXBw
-b3J0ZWQgdmFsdWUgYnkgd2lsNjIxMCBpcyA1c2VjLg0KPiArICogVGhlIGludGVycnVwdCBtb2Rl
-cmF0aW9uIGNvdW50ZXIgY291bnRzIGRvd24gZXZlcnkgY2xvY2sgdGljayBvZiA2bnNlYy4NCj4g
-KyAqIFRoZXJlZm9yZSBtYXggdmFsdWUgZm9yIElUUl9DTlRfVFJTSCBjYW4gYmUgNXNlYy82bnNl
-YyA9IDgzMzMzMzMzMyAgDQo+ICsqLyAjZGVmaW5lIFdJTDYyMTBfSVRSX1RSU0hfTUFYIDgzMzMz
-MzMzMw0KPiArDQo+ICAvKiBOYXN0eSBoYWNrLiBCZXR0ZXIgaGF2ZSBwZXIgZGV2aWNlIGluc3Rh
-bmNlcyAqLyAgc3RhdGljIHUzMiANCj4gbWVtX2FkZHI7ICBzdGF0aWMgdTMyIGRiZ190eGRlc2Nf
-aW5kZXg7IEBAIC0yNzAsNiArMjc2LDQ4IEBAIHN0YXRpYyANCj4gc3RydWN0IGRlbnRyeSAqd2ls
-X2RlYnVnZnNfY3JlYXRlX3Vsb25nKGNvbnN0IGNoYXIgKm5hbWUsIHVtb2RlX3QgbW9kZSwNCj4g
-IAlyZXR1cm4gZGVidWdmc19jcmVhdGVfZmlsZShuYW1lLCBtb2RlLCBwYXJlbnQsIHZhbHVlLCAN
-Cj4gJndpbF9mb3BzX3Vsb25nKTsgIH0NCj4gIA0KPiArc3RhdGljIGludCB3aWxfZGVidWdmc19p
-dHJfdHJzaF9zZXQodm9pZCAqZGF0YSwgdTY0IHZhbCkgew0KPiArCXN0cnVjdCB3aWw2MjEwX3By
-aXYgKndpbCA9IGRhdGE7DQo+ICsNCj4gKwkvKiBDaGVjayB2YWx1ZSBpcyBzbWFsbGVyIHRoYW4g
-bWF4IHZhbCBsaW1pdGF0aW9uDQo+ICsJICogKGNvdmVycyBhbHNvIG5lZ2F0aXZlIHZhbHVlcykN
-Cj4gKwkgKi8NCj4gKwlpZiAodmFsID4gV0lMNjIxMF9JVFJfVFJTSF9NQVgpDQo+ICsJCXJldHVy
-biAtRUlOVkFMOw0KPiArDQo+ICsJLyogUGVyZm9ybSBpbnRlcnJ1cHQgbW9kZXJhdGlvbiB0aHJl
-c2hvbGQgdXBkYXRlIHByb2NlZHVyZSAqLw0KPiArCWlvd3JpdGUzMigwLCB3aWwtPmNzciArIEhP
-U1RBRERSKFJHRl9ETUFfSVRSX0NOVF9DUkwpKTsNCj4gKwl3bWIoKTsgLyogbWFrZSBzdXJlIHdy
-aXRlIHByb3BhZ2F0ZWQgdG8gSFcgKi8NCj4gKw0KPiArCWlvd3JpdGUzMigodTMyKXZhbCwgd2ls
-LT5jc3IgKyBIT1NUQUREUihSR0ZfRE1BX0lUUl9DTlRfVFJTSCkpOw0KPiArCXdtYigpOyAvKiBt
-YWtlIHN1cmUgd3JpdGUgcHJvcGFnYXRlZCB0byBIVyAqLw0KPiArDQo+ICsJaW93cml0ZTMyKEJJ
-VF9ETUFfSVRSX0NOVF9DUkxfRU4sDQo+ICsJCSAgd2lsLT5jc3IgKyBIT1NUQUREUihSR0ZfRE1B
-X0lUUl9DTlRfQ1JMKSk7DQo+ICsJd21iKCk7IC8qIG1ha2Ugc3VyZSB3cml0ZSBwcm9wYWdhdGVk
-IHRvIEhXICovDQo+ICsNCj4gKwlyZXR1cm4gMDsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCB3
-aWxfZGVidWdmc19pdHJfdHJzaF9nZXQodm9pZCAqZGF0YSwgdTY0ICp2YWwpIHsNCj4gKwlzdHJ1
-Y3Qgd2lsNjIxMF9wcml2ICp3aWwgPSBkYXRhOw0KPiArCSp2YWwgPSBpb3JlYWQzMih3aWwtPmNz
-ciArIEhPU1RBRERSKFJHRl9ETUFfSVRSX0NOVF9UUlNIKSk7DQo+ICsJcmV0dXJuIDA7DQo+ICt9
-DQo+ICsNCj4gK0RFRklORV9TSU1QTEVfQVRUUklCVVRFKGZvcHNfaXRyX3Ryc2gsIHdpbF9kZWJ1
-Z2ZzX2l0cl90cnNoX2dldCwNCj4gKwkJCXdpbF9kZWJ1Z2ZzX2l0cl90cnNoX3NldCwgIjB4JTA4
-bGx4XG4iKTsNCj4gKw0KPiArc3RhdGljIHN0cnVjdCBkZW50cnkgKmRlYnVnZnNfY3JlYXRlX2l0
-cl90cnNoKGNvbnN0IGNoYXIgKm5hbWUsDQo+ICsJCQkJCSAgICAgIHVtb2RlX3QgbW9kZSwNCj4g
-KwkJCQkJICAgICAgc3RydWN0IGRlbnRyeSAqcGFyZW50LA0KPiArCQkJCQkgICAgICBzdHJ1Y3Qg
-d2lsNjIxMF9wcml2ICp3aWwpDQo+ICt7DQo+ICsJcmV0dXJuIGRlYnVnZnNfY3JlYXRlX2ZpbGUo
-bmFtZSwgbW9kZSwgcGFyZW50LCB3aWwsICZmb3BzX2l0cl90cnNoKTsgDQo+ICt9DQo+ICsNCj4g
-IHN0YXRpYyBpbnQgd2lsNjIxMF9kZWJ1Z2ZzX2NyZWF0ZV9JU1Ioc3RydWN0IHdpbDYyMTBfcHJp
-diAqd2lsLA0KPiAgCQkJCSAgICAgIGNvbnN0IGNoYXIgKm5hbWUsDQo+ICAJCQkJICAgICAgc3Ry
-dWN0IGRlbnRyeSAqcGFyZW50LCB1MzIgb2ZmKSBAQCAtMTAyNCw3ICsxMDcyLDcgQEAgaW50IA0K
-PiB3aWw2MjEwX2RlYnVnZnNfaW5pdChzdHJ1Y3Qgd2lsNjIxMF9wcml2ICp3aWwpDQo+ICAJd2ls
-X2RlYnVnZnNfY3JlYXRlX2lvbWVtX3gzMigiTUFDX01UUkxfQ09VTlRFUl8wIiwgU19JUlVHTywg
-ZGJnLA0KPiAgCQkJCSAgICAgd2lsLT5jc3IgKw0KPiAgCQkJCSAgICAgSE9TVEFERFIoUkdGX01B
-Q19NVFJMX0NPVU5URVJfMCkpOw0KPiAtDQo+ICsJZGVidWdmc19jcmVhdGVfaXRyX3Ryc2goIml0
-cl90cnNoX3ZhbCIsIFNfSVJVR08gfCBTX0lXVVNSLCBkYmcsIA0KPiArd2lsKTsNCj4gIAl3aWxf
-ZGVidWdmc19jcmVhdGVfaW9tZW1feDMyKCJSR0ZfVVNFUl9VU0FHRV8xIiwgU19JUlVHTywgZGJn
-LA0KPiAgCQkJCSAgICAgd2lsLT5jc3IgKw0KPiAgCQkJCSAgICAgSE9TVEFERFIoUkdGX1VTRVJf
-VVNBR0VfMSkpOyBkaWZmIC0tZ2l0IA0KPiBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2
-MjEwL2ludGVycnVwdC5jIA0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2lu
-dGVycnVwdC5jDQo+IGluZGV4IDk4YmZiYjYuLjFmMThlODYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2ludGVycnVwdC5jDQo+ICsrKyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2ludGVycnVwdC5jDQo+IEBAIC0xOCw2ICsxOCwxMiBA
-QA0KPiAgDQo+ICAjaW5jbHVkZSAid2lsNjIxMC5oIg0KPiAgI2luY2x1ZGUgInRyYWNlLmgiDQo+
-ICsjaW5jbHVkZSA8bGludXgvbW9kdWxlcGFyYW0uaD4NCj4gKw0KPiArc3RhdGljIHVuc2lnbmVk
-IGludCBpdHJfdHJzaCA9IFdJTDYyMTBfSVRSX1RSU0g7DQo+ICsNCj4gK21vZHVsZV9wYXJhbShp
-dHJfdHJzaCwgdWludCwgU19JUlVHTyk7IE1PRFVMRV9QQVJNX0RFU0MoaXRyX3Ryc2gsICIgDQo+
-ICtJbnRlcnJ1cHQgbW9kZXJhdGlvbiB0aHJlc2hvbGQgdmFsdWUuIik7DQo+ICANCj4gIC8qKg0K
-PiAgICogVGhlb3J5IG9mIG9wZXJhdGlvbjoNCj4gQEAgLTE2Myw3ICsxNjksNyBAQCB2b2lkIHdp
-bDYyMTBfZW5hYmxlX2lycShzdHJ1Y3Qgd2lsNjIxMF9wcml2ICp3aWwpDQo+ICAJCSAqLw0KPiAg
-CQlpb3dyaXRlMzIoMCwgd2lsLT5jc3IgKyBIT1NUQUREUihSR0ZfRE1BX0lUUl9DTlRfQ1JMKSk7
-DQo+ICAJfSBlbHNlIHsNCj4gLQkJaW93cml0ZTMyKFdJTDYyMTBfSVRSX1RSU0gsDQo+ICsJCWlv
-d3JpdGUzMigodTMyKWl0cl90cnNoLA0KPiAgCQkJICB3aWwtPmNzciArIEhPU1RBRERSKFJHRl9E
-TUFfSVRSX0NOVF9UUlNIKSk7DQo+ICAJCWlvd3JpdGUzMihCSVRfRE1BX0lUUl9DTlRfQ1JMX0VO
-LA0KPiAgCQkJICB3aWwtPmNzciArIEhPU1RBRERSKFJHRl9ETUFfSVRSX0NOVF9DUkwpKTsgZGlm
-ZiAtLWdpdCANCj4gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvd2lsNjIxMC93aWw2MjEwLmgg
-DQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL3dpbDYyMTAvd2lsNjIxMC5oDQo+IGluZGV4
-IDAwOTczMDAuLjQ3ZDY1NmEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aC93aWw2MjEwL3dpbDYyMTAuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvd2ls
-NjIxMC93aWw2MjEwLmgNCj4gQEAgLTQ3LDcgKzQ3LDcgQEAgc3RhdGljIGlubGluZSB1MzIgV0lM
-X0dFVF9CSVRTKHUzMiB4LCBpbnQgYjAsIGludCBiMSkNCj4gICNkZWZpbmUgV0lMNjIxMF9NQVhf
-VFhfUklOR1MJKDI0KSAvKiBIVyBsaW1pdCAqLw0KPiAgI2RlZmluZSBXSUw2MjEwX01BWF9DSUQJ
-CSg4KSAvKiBIVyBsaW1pdCAqLw0KPiAgI2RlZmluZSBXSUw2MjEwX05BUElfQlVER0VUCSgxNikg
-LyogYXJiaXRyYXJ5ICovDQo+IC0jZGVmaW5lIFdJTDYyMTBfSVRSX1RSU0gJKDEwMDAwKSAvKiBh
-cmJpdHJhcnkgLSBhYm91dCAxNSBJUlFzL21zZWMgKi8NCj4gKyNkZWZpbmUgV0lMNjIxMF9JVFJf
-VFJTSAkoNTAwMDApIC8qIGFib3V0IDMgSVJRcy9tc2VjICovDQo+ICAjZGVmaW5lIFdJTDYyMTBf
-RldfUkVDT1ZFUllfUkVUUklFUwkoNSkgLyogdHJ5IHRvIHJlY292ZXIgdGhpcyBtYW55IHRpbWVz
-ICovDQo+ICAjZGVmaW5lIFdJTDYyMTBfRldfUkVDT1ZFUllfVE8JbXNlY3NfdG9famlmZmllcyg1
-MDAwKQ0KPiAgI2RlZmluZSBXSUw2MjEwX1NDQU5fVE8JCW1zZWNzX3RvX2ppZmZpZXMoMTAwMDAp
-DQo+IA0KDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
-bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8v
-dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+
+Define tables for similar file entries, i.e.
+- table for debugfs_create_file
+- table for static parameters
+- table for parameters that are members of "wil" structure
+- table for blobs
+- table for interrupt controllers
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 263 ++++++++++++++++++++---------
+ 1 file changed, 181 insertions(+), 82 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 3990a2d..d55018b 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -35,6 +35,21 @@ static u32 mem_addr;
+ static u32 dbg_txdesc_index;
+ static u32 dbg_vring_index; /* 24+ for Rx, 0..23 for Tx */
+ 
++enum dbg_off_type {
++	doff_u32 = 0,
++	doff_x32 = 1,
++	doff_ulong = 2,
++	doff_io32 = 3,
++};
++
++/* offset to "wil" */
++struct dbg_off {
++	const char *name;
++	umode_t mode;
++	ulong off;
++	enum dbg_off_type type;
++};
++
+ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+ 			    const char *name, struct vring *vring,
+ 			    char _s, char _h)
+@@ -250,9 +265,9 @@ DEFINE_SIMPLE_ATTRIBUTE(fops_iomem_x32, wil_debugfs_iomem_x32_get,
+ static struct dentry *wil_debugfs_create_iomem_x32(const char *name,
+ 						   umode_t mode,
+ 						   struct dentry *parent,
+-						   void __iomem *value)
++						   void *value)
+ {
+-	return debugfs_create_file(name, mode, parent, (void * __force)value,
++	return debugfs_create_file(name, mode, parent, value,
+ 				   &fops_iomem_x32);
+ }
+ 
+@@ -276,6 +291,49 @@ static struct dentry *wil_debugfs_create_ulong(const char *name, umode_t mode,
+ 	return debugfs_create_file(name, mode, parent, value, &wil_fops_ulong);
+ }
+ 
++/**
++ * wil6210_debugfs_init_offset - create set of debugfs files
++ * @wil - driver's context, used for printing
++ * @dbg - directory on the debugfs, where files will be created
++ * @base - base address used in address calculation
++ * @tbl - table with file descriptions. Should be terminated with empty element.
++ *
++ * Creates files accordingly to the @tbl.
++ */
++static void wil6210_debugfs_init_offset(struct wil6210_priv *wil,
++					struct dentry *dbg, void *base,
++					const struct dbg_off * const tbl)
++{
++	int i;
++
++	for (i = 0; tbl[i].name; i++) {
++		struct dentry *f = NULL;
++
++		switch (tbl[i].type) {
++		case doff_u32:
++			f = debugfs_create_u32(tbl[i].name, tbl[i].mode, dbg,
++					       base + tbl[i].off);
++			break;
++		case doff_x32:
++			f = debugfs_create_x32(tbl[i].name, tbl[i].mode, dbg,
++					       base + tbl[i].off);
++			break;
++		case doff_ulong:
++			f = wil_debugfs_create_ulong(tbl[i].name, tbl[i].mode,
++						     dbg, base + tbl[i].off);
++			break;
++		case doff_io32:
++			f = wil_debugfs_create_iomem_x32(tbl[i].name,
++							 tbl[i].mode, dbg,
++							 base + tbl[i].off);
++			break;
++		}
++		if (IS_ERR_OR_NULL(f))
++			wil_err(wil, "Create file \"%s\": err %ld\n",
++				tbl[i].name, PTR_ERR(f));
++	}
++}
++
+ static int wil_debugfs_itr_trsh_set(void *data, u64 val)
+ {
+ 	struct wil6210_priv *wil = data;
+@@ -310,14 +368,16 @@ static int wil_debugfs_itr_trsh_get(void *data, u64 *val)
+ DEFINE_SIMPLE_ATTRIBUTE(fops_itr_trsh, wil_debugfs_itr_trsh_get,
+ 			wil_debugfs_itr_trsh_set, "0x%08llx\n");
+ 
+-static struct dentry *debugfs_create_itr_trsh(const char *name,
+-					      umode_t mode,
+-					      struct dentry *parent,
+-					      struct wil6210_priv *wil)
+-{
+-	return debugfs_create_file(name, mode, parent, wil, &fops_itr_trsh);
+-}
+-
++static const struct dbg_off isr_off[] = {
++	{"ICC", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICC), doff_io32},
++	{"ICR", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICR), doff_io32},
++	{"ICM", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICM), doff_io32},
++	{"ICS",		  S_IWUSR, offsetof(struct RGF_ICR, ICS), doff_io32},
++	{"IMV", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, IMV), doff_io32},
++	{"IMS",		  S_IWUSR, offsetof(struct RGF_ICR, IMS), doff_io32},
++	{"IMC",		  S_IWUSR, offsetof(struct RGF_ICR, IMC), doff_io32},
++	{},
++};
+ static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
+ 				      const char *name,
+ 				      struct dentry *parent, u32 off)
+@@ -327,24 +387,19 @@ static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
+ 	if (IS_ERR_OR_NULL(d))
+ 		return -ENODEV;
+ 
+-	wil_debugfs_create_iomem_x32("ICC", S_IRUGO | S_IWUSR, d,
+-				     wil->csr + off);
+-	wil_debugfs_create_iomem_x32("ICR", S_IRUGO | S_IWUSR, d,
+-				     wil->csr + off + 4);
+-	wil_debugfs_create_iomem_x32("ICM", S_IRUGO | S_IWUSR, d,
+-				     wil->csr + off + 8);
+-	wil_debugfs_create_iomem_x32("ICS", S_IWUSR, d,
+-				     wil->csr + off + 12);
+-	wil_debugfs_create_iomem_x32("IMV", S_IRUGO | S_IWUSR, d,
+-				     wil->csr + off + 16);
+-	wil_debugfs_create_iomem_x32("IMS", S_IWUSR, d,
+-				     wil->csr + off + 20);
+-	wil_debugfs_create_iomem_x32("IMC", S_IWUSR, d,
+-				     wil->csr + off + 24);
++	wil6210_debugfs_init_offset(wil, d, (void * __force)wil->csr + off,
++				    isr_off);
+ 
+ 	return 0;
+ }
+ 
++static const struct dbg_off pseudo_isr_off[] = {
++	{"CAUSE",   S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE), doff_io32},
++	{"MASK_SW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW), doff_io32},
++	{"MASK_FW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW), doff_io32},
++	{},
++};
++
+ static int wil6210_debugfs_create_pseudo_ISR(struct wil6210_priv *wil,
+ 					     struct dentry *parent)
+ {
+@@ -353,16 +408,19 @@ static int wil6210_debugfs_create_pseudo_ISR(struct wil6210_priv *wil,
+ 	if (IS_ERR_OR_NULL(d))
+ 		return -ENODEV;
+ 
+-	wil_debugfs_create_iomem_x32("CAUSE", S_IRUGO, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_PSEUDO_CAUSE));
+-	wil_debugfs_create_iomem_x32("MASK_SW", S_IRUGO, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW));
+-	wil_debugfs_create_iomem_x32("MASK_FW", S_IRUGO, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW));
++	wil6210_debugfs_init_offset(wil, d, (void * __force)wil->csr,
++				    pseudo_isr_off);
+ 
+ 	return 0;
+ }
+ 
++static const struct dbg_off itr_cnt_off[] = {
++	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_TRSH), doff_io32},
++	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_DATA), doff_io32},
++	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_CRL), doff_io32},
++	{},
++};
++
+ static int wil6210_debugfs_create_ITR_CNT(struct wil6210_priv *wil,
+ 					  struct dentry *parent)
+ {
+@@ -371,12 +429,8 @@ static int wil6210_debugfs_create_ITR_CNT(struct wil6210_priv *wil,
+ 	if (IS_ERR_OR_NULL(d))
+ 		return -ENODEV;
+ 
+-	wil_debugfs_create_iomem_x32("TRSH", S_IRUGO | S_IWUSR, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
+-	wil_debugfs_create_iomem_x32("DATA", S_IRUGO | S_IWUSR, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_ITR_CNT_DATA));
+-	wil_debugfs_create_iomem_x32("CTL", S_IRUGO | S_IWUSR, d, wil->csr +
+-				     HOSTADDR(RGF_DMA_ITR_CNT_CRL));
++	wil6210_debugfs_init_offset(wil, d, (void * __force)wil->csr,
++				    itr_cnt_off);
+ 
+ 	return 0;
+ }
+@@ -1033,6 +1087,88 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	}
+ }
+ 
++/* misc files */
++static const struct {
++	const char *name;
++	umode_t mode;
++	const struct file_operations *fops;
++} dbg_files[] = {
++	{"mbox",	S_IRUGO,		&fops_mbox},
++	{"vrings",	S_IRUGO,		&fops_vring},
++	{"stations",	S_IRUGO,		&fops_sta},
++	{"desc",	S_IRUGO,		&fops_txdesc},
++	{"bf",		S_IRUGO,		&fops_bf},
++	{"ssid",	S_IRUGO | S_IWUSR,	&fops_ssid},
++	{"mem_val",	S_IRUGO,		&fops_memread},
++	{"reset",		  S_IWUSR,	&fops_reset},
++	{"rxon",		  S_IWUSR,	&fops_rxon},
++	{"tx_mgmt",		  S_IWUSR,	&fops_txmgmt},
++	{"wmi_send",		  S_IWUSR,	&fops_wmi},
++	{"temp",	S_IRUGO,		&fops_temp},
++	{"freq",	S_IRUGO,		&fops_freq},
++	{"link",	S_IRUGO,		&fops_link},
++	{"info",	S_IRUGO,		&fops_info},
++	{"itr_trsh_val", S_IRUGO | S_IWUSR,	&fops_itr_trsh},
++};
++
++static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
++				       struct dentry *dbg)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dbg_files); i++)
++		debugfs_create_file(dbg_files[i].name, dbg_files[i].mode, dbg,
++				    wil, dbg_files[i].fops);
++}
++
++/* interrupt control blocks */
++static const struct {
++	const char *name;
++	u32 icr_off;
++} dbg_icr[] = {
++	{"USER_ICR",		HOSTADDR(RGF_USER_USER_ICR)},
++	{"DMA_EP_TX_ICR",	HOSTADDR(RGF_DMA_EP_TX_ICR)},
++	{"DMA_EP_RX_ICR",	HOSTADDR(RGF_DMA_EP_RX_ICR)},
++	{"DMA_EP_MISC_ICR",	HOSTADDR(RGF_DMA_EP_MISC_ICR)},
++};
++
++static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
++				     struct dentry *dbg)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dbg_icr); i++)
++		wil6210_debugfs_create_ISR(wil, dbg_icr[i].name, dbg,
++					   dbg_icr[i].icr_off);
++}
++
++#define WIL_FIELD(name, mode, type) { __stringify(name), mode, \
++	offsetof(struct wil6210_priv, name), type}
++
++/* fields in struct wil6210_priv */
++static const struct dbg_off dbg_wil_off[] = {
++	WIL_FIELD(secure_pcp,	S_IRUGO | S_IWUSR,	doff_u32),
++	WIL_FIELD(status,	S_IRUGO | S_IWUSR,	doff_ulong),
++	WIL_FIELD(fw_version,	S_IRUGO,		doff_u32),
++	WIL_FIELD(hw_version,	S_IRUGO,		doff_x32),
++	{},
++};
++
++static const struct dbg_off dbg_wil_regs[] = {
++	{"RGF_MAC_MTRL_COUNTER_0", S_IRUGO, HOSTADDR(RGF_MAC_MTRL_COUNTER_0),
++		doff_io32},
++	{"RGF_USER_USAGE_1", S_IRUGO, HOSTADDR(RGF_USER_USAGE_1), doff_io32},
++	{},
++};
++
++/* static parameters */
++static const struct dbg_off dbg_statics[] = {
++	{"desc_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_txdesc_index, doff_u32},
++	{"vring_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_vring_index, doff_u32},
++	{"mem_addr",	S_IRUGO | S_IWUSR, (ulong)&mem_addr, doff_u32},
++	{},
++};
++
+ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ {
+ 	struct dentry *dbg = wil->debug = debugfs_create_dir(WIL_NAME,
+@@ -1041,54 +1177,17 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 	if (IS_ERR_OR_NULL(dbg))
+ 		return -ENODEV;
+ 
+-	debugfs_create_file("mbox", S_IRUGO, dbg, wil, &fops_mbox);
+-	debugfs_create_file("vrings", S_IRUGO, dbg, wil, &fops_vring);
+-	debugfs_create_file("stations", S_IRUGO, dbg, wil, &fops_sta);
+-	debugfs_create_file("desc", S_IRUGO, dbg, wil, &fops_txdesc);
+-	debugfs_create_u32("desc_index", S_IRUGO | S_IWUSR, dbg,
+-			   &dbg_txdesc_index);
+-	debugfs_create_u32("vring_index", S_IRUGO | S_IWUSR, dbg,
+-			   &dbg_vring_index);
+-
+-	debugfs_create_file("bf", S_IRUGO, dbg, wil, &fops_bf);
+-	debugfs_create_file("ssid", S_IRUGO | S_IWUSR, dbg, wil, &fops_ssid);
+-	debugfs_create_u32("secure_pcp", S_IRUGO | S_IWUSR, dbg,
+-			   &wil->secure_pcp);
+-	wil_debugfs_create_ulong("status", S_IRUGO | S_IWUSR, dbg,
+-				 &wil->status);
+-	debugfs_create_u32("fw_version", S_IRUGO, dbg, &wil->fw_version);
+-	debugfs_create_x32("hw_version", S_IRUGO, dbg, &wil->hw_version);
+-
+-	wil6210_debugfs_create_ISR(wil, "USER_ICR", dbg,
+-				   HOSTADDR(RGF_USER_USER_ICR));
+-	wil6210_debugfs_create_ISR(wil, "DMA_EP_TX_ICR", dbg,
+-				   HOSTADDR(RGF_DMA_EP_TX_ICR));
+-	wil6210_debugfs_create_ISR(wil, "DMA_EP_RX_ICR", dbg,
+-				   HOSTADDR(RGF_DMA_EP_RX_ICR));
+-	wil6210_debugfs_create_ISR(wil, "DMA_EP_MISC_ICR", dbg,
+-				   HOSTADDR(RGF_DMA_EP_MISC_ICR));
++	wil6210_debugfs_init_files(wil, dbg);
++	wil6210_debugfs_init_isr(wil, dbg);
++	wil6210_debugfs_init_blobs(wil, dbg);
++	wil6210_debugfs_init_offset(wil, dbg, wil, dbg_wil_off);
++	wil6210_debugfs_init_offset(wil, dbg, (void * __force)wil->csr,
++				    dbg_wil_regs);
++	wil6210_debugfs_init_offset(wil, dbg, NULL, dbg_statics);
++
+ 	wil6210_debugfs_create_pseudo_ISR(wil, dbg);
+-	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+-	wil_debugfs_create_iomem_x32("MAC_MTRL_COUNTER_0", S_IRUGO, dbg,
+-				     wil->csr +
+-				     HOSTADDR(RGF_MAC_MTRL_COUNTER_0));
+-	debugfs_create_itr_trsh("itr_trsh_val", S_IRUGO | S_IWUSR, dbg, wil);
+-	wil_debugfs_create_iomem_x32("RGF_USER_USAGE_1", S_IRUGO, dbg,
+-				     wil->csr +
+-				     HOSTADDR(RGF_USER_USAGE_1));
+-	debugfs_create_u32("mem_addr", S_IRUGO | S_IWUSR, dbg, &mem_addr);
+-	debugfs_create_file("mem_val", S_IRUGO, dbg, wil, &fops_memread);
+-
+-	debugfs_create_file("reset", S_IWUSR, dbg, wil, &fops_reset);
+-	debugfs_create_file("rxon", S_IWUSR, dbg, wil, &fops_rxon);
+-	debugfs_create_file("tx_mgmt", S_IWUSR, dbg, wil, &fops_txmgmt);
+-	debugfs_create_file("wmi_send", S_IWUSR, dbg, wil, &fops_wmi);
+-	debugfs_create_file("temp", S_IRUGO, dbg, wil, &fops_temp);
+-	debugfs_create_file("freq", S_IRUGO, dbg, wil, &fops_freq);
+-	debugfs_create_file("link", S_IRUGO, dbg, wil, &fops_link);
+-	debugfs_create_file("info", S_IRUGO, dbg, wil, &fops_info);
+ 
+-	wil6210_debugfs_init_blobs(wil, dbg);
++	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
+ 	return 0;
+ }
+-- 
+1.8.5.2
+
