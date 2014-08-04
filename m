@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52658 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750807AbaHRJJr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 05:09:47 -0400
-From: Avinash Patil <patila@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Marc Yang <yangyang@marvell.com>
-Date: Mon, 18 Aug 2014 02:07:10 -0700
-Subject: [PATCH 1/4] mwifiex: avoid processing RX packets with invalid length
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147C21@SC-VEXCH2.marvell.com> (sfid-20140818_110950_727852_0621DDEA)
-Content-Type: text/plain; charset="us-ascii"
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36602 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750860AbaHDQw0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2014 12:52:26 -0400
+Date: Mon, 4 Aug 2014 17:52:02 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Cc: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
+	mcgrof@do-not-panic.com, antonio@open-mesh.com,
+	johannes.berg@intel.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with
+	scanning and connecting
+Message-ID: <20140804165202.GG30282@n2100.arm.linux.org.uk> (sfid-20140804_185250_284580_47F84158)
+References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com> <53DFB6A1.7040900@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53DFB6A1.7040900@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If rx_len received in interface header from FW is more than
-RX buffer size, skb_put for such length results into skb_panic.
-Avoid this by not processing such packets. We just print a warning
-for such packets and free skb.
+On Tue, Aug 05, 2014 at 12:36:49AM +0800, Fu, Zhonghui wrote:
+> Hi, Arend
+> 
+> I investigated this issue, and its root cause is still that sdio
+> controller can't receive interrupts from WiFi chip on sdio bus when
+> sdio controller is in runtime suspend status. I am running 3.16-rc5
+> linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
 
-Reviewed-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+That's the root cause.  I fixed this with the Freescale i.MX SD driver
+which is now able to report pending SDIO interrupts while runtime PM
+suspended.
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index c16dd2c..fbb0550 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1271,12 +1271,20 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
-                 */
-                pkt_len = *((__le16 *)skb_data->data);
-                rx_len = le16_to_cpu(pkt_len);
--               skb_put(skb_data, rx_len);
--               dev_dbg(adapter->dev,
--                       "info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
--                       card->rxbd_rdptr, wrptr, rx_len);
--               skb_pull(skb_data, INTF_HEADER_LEN);
--               mwifiex_handle_rx_packet(adapter, skb_data);
-+               if (WARN_ON(rx_len <= INTF_HEADER_LEN ||
-+                           rx_len > MWIFIEX_RX_DATA_BUF_SIZE)) {
-+                       dev_err(adapter->dev,
-+                               "Invalid RX len %d, Rd=%#x, Wr=%#x\n",
-+                               rx_len, card->rxbd_rdptr, wrptr);
-+                       dev_kfree_skb_any(skb_data);
-+               } else {
-+                       skb_put(skb_data, rx_len);
-+                       dev_dbg(adapter->dev,
-+                               "info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
-+                               card->rxbd_rdptr, wrptr, rx_len);
-+                       skb_pull(skb_data, INTF_HEADER_LEN);
-+                       mwifiex_handle_rx_packet(adapter, skb_data);
-+               }
+Other host drivers probably need fixing too, or having runtime PM
+disabled on them - if you can't receive SDIO interrupts while runtime
+PM suspended, then entering runtime PM while you have a SDIO device
+attached is a bug.
 
-                skb_tmp = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
-                if (!skb_tmp) {
+This is something for the MMC people to deal with rather than Arend.
+
 -- 
-1.8.1.4
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
