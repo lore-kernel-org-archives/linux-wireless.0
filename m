@@ -1,96 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33268 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258AbaHSIWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 04:22:23 -0400
-From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-Subject: [PATCH cfg80211 v2] wireless: core: Reorder wiphy_register() notifications relevantly
-Date: Tue, 19 Aug 2014 11:22:19 +0300
-Message-Id: <1408436539-2130-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20140819_102227_551684_EB6ECB6A)
+Received: from forward11.mail.yandex.net ([95.108.130.93]:38764 "EHLO
+	forward11.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987AbaHDLFE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2014 07:05:04 -0400
+From: =?koi8-r?B?4c7E0sXF1yDzxdLHxco=?= <flat343@yandex.ru>
+To: Larry Finger <larry.finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <53DE6036.1000903@lwfinger.net>
+References: <6570401407065155@web18g.yandex.ru> <53DE6036.1000903@lwfinger.net>
+Subject: Re: Problem with wpasupplicant using nl80211 driver for wi-fi stick with REALTEK 8188 chipset
+MIME-Version: 1.0
+Message-Id: <9590711407149913@web26j.yandex.ru> (sfid-20140804_130508_676843_4EBBD2BF)
+Date: Mon, 04 Aug 2014 14:58:33 +0400
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently it can send regulatory domain change notification before any
-NEW_WIPHY notification. Moreover, if rfill_register() fails, calling
-wiphy_unregister() will send a DEL_WIPHY though no NEW_WIPHY had been
-sent previously.
+Good day to all, 
+Thank you Larry, 
+lsusb gives the following output:
+Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter. 
+There is some problem with wpa_supplicant using nl80211 with this wi-fi dongle. Folks say that WEXT dirver works fine but I can not figure out how to remove usage on nl80211 completely...
 
-Thus reordering so it properly notifies NEW_WIPHY before any other.
-
-Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
----
-
-Reusing "registered" marker to know whether it sent NEW_WIPHY yet or not.
-Thus if wiphy_unregister() is called du to rfkill registration failure, it
-won't send DEL_WIPHY.
-
- net/wireless/core.c | 33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index afee5e0..08162e8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -635,6 +635,21 @@ int wiphy_register(struct wiphy *wiphy)
- 	if (IS_ERR(rdev->wiphy.debugfsdir))
- 		rdev->wiphy.debugfsdir = NULL;
- 
-+	cfg80211_debugfs_rdev_add(rdev);
-+	rtnl_unlock();
-+
-+	res = rfkill_register(rdev->rfkill);
-+	if (res) {
-+		rfkill_destroy(rdev->rfkill);
-+		rdev->rfkill = NULL;
-+		wiphy_unregister(&rdev->wiphy);
-+		return res;
-+	}
-+
-+	rtnl_lock();
-+
-+	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
-+
- 	if (wiphy->regulatory_flags & REGULATORY_CUSTOM_REG) {
- 		struct regulatory_request request;
- 
-@@ -646,21 +661,9 @@ int wiphy_register(struct wiphy *wiphy)
- 		nl80211_send_reg_change_event(&request);
- 	}
- 
--	cfg80211_debugfs_rdev_add(rdev);
--
- 	rdev->wiphy.registered = true;
- 	rtnl_unlock();
- 
--	res = rfkill_register(rdev->rfkill);
--	if (res) {
--		rfkill_destroy(rdev->rfkill);
--		rdev->rfkill = NULL;
--		wiphy_unregister(&rdev->wiphy);
--		return res;
--	}
--
--	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
--
- 	return 0;
- }
- EXPORT_SYMBOL(wiphy_register);
-@@ -699,8 +702,10 @@ void wiphy_unregister(struct wiphy *wiphy)
- 		rfkill_unregister(rdev->rfkill);
- 
- 	rtnl_lock();
--	nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
--	rdev->wiphy.registered = false;
-+	if (rdev->wiphy.registered) {
-+		nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
-+		rdev->wiphy.registered = false;
-+	}
- 
- 	WARN_ON(!list_empty(&rdev->wdev_list));
- 
--- 
-1.8.5.5
-
+03.08.2014, 20:15, "Larry Finger" <Larry.Finger@lwfinger.net>:
+> On 08/03/2014 06:25 AM, áÎÄÒÅÅ× óÅÒÇÅÊ wrote:
+>> šHello,
+>> šA lot of folks experience problems with wpa_supplicant using nl80211 driver - tha does not work.
+>> šThe particular problem is experienced on raspberry pi with wi-fi adapter on Realtek 8188 chipset.
+>> šThe syslog shows the following lines:
+>> ššwpa_supplicant[1118]: nl80211: 'nl80211' generic netlink not found
+>> ššraspbmc wpa_supplicant[1118]: Failed to initialize driver 'nl80211'
+>> ššraspbmc wpa_supplicant[1118]: rfkill: Cannot open RFKILL control device
+>>
+>> šI have tired to modify /etc/wpa_suppicant/functions.sh and remove nl80211 completely from code and leave only wext driver but that does not work.
+>> šWould appreciate any ideas what the problem could be.
+>>
+>> šOS version: raspbian 3.12.21
+>>
+>> šWPA supplicant version: 1.0-3
+>
+> What exactly do you mean by an 8188 chip? There are RTL8188EE, RTL8188CE, and
+> RTL8188EU chips? You likely mean the last one, as the first two PCI chips have
+> mac80211 drivers.
+>
+> If you want to use nl80211/cfg80211 commands with driver r8188eu, you will need
+> to add the necessary code for that driver to support that API. Modifying the
+> supplicant is probably not the way to go.
+>
+> On my x86_64 system, the standard supplicant works with NetworkManager and r8188eu.
+>
+> Larry
