@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:53902 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754572AbaHGJNH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:13:07 -0400
-Received: by mail-we0-f170.google.com with SMTP id w62so3858692wes.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:06 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/6] ath10k: fixes 2014-08-07, part 1
-Date: Thu,  7 Aug 2014 11:03:26 +0200
-Message-Id: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111316_563134_A0F00071)
+Received: from mail-sg1lp0094.outbound.protection.outlook.com ([207.46.51.94]:32445
+	"EHLO APAC01-SG1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751080AbaHDERV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2014 00:17:21 -0400
+From: Krishnankutty Plachikkattle
+	<Krishnankutty_Plachikkattle@mindtree.com>
+To: Avinash Patil <avinashapatil@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: 80211ac support in 88W8897
+Date: Mon, 4 Aug 2014 04:17:15 +0000
+Message-ID: <96c30603b4f34424a3709465c072bca0@SIXPR01MB256.apcprd01.prod.exchangelabs.com> (sfid-20140804_061738_513489_E2614737)
+References: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
+ <CAJwzM1=OC5VQMigJbe5AaYfJMSfhC5VngB6b2tQG=PKjGdyYRw@mail.gmail.com>
+In-Reply-To: <CAJwzM1=OC5VQMigJbe5AaYfJMSfhC5VngB6b2tQG=PKjGdyYRw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-This is part 1 (of 3) of my patches. Split for
-your reviewing pleasure.
-
-This one is mostly non-functional (just cleanups)
-except the removal of soc powersave.
-
-
-Michal Kazior (6):
-  ath10k: embed ar_pci inside ar
-  ath10k: remove target soc ps code
-  ath10k: remove pci features var
-  ath10k: group some pci probing helpers
-  ath10k: remove htc->stopped
-  ath10k: move fw init print
-
- drivers/net/wireless/ath/ath10k/ce.c   |  68 +------
- drivers/net/wireless/ath/ath10k/core.c |  50 ++---
- drivers/net/wireless/ath/ath10k/core.h |   6 +-
- drivers/net/wireless/ath/ath10k/htc.c  |  16 --
- drivers/net/wireless/ath/ath10k/htc.h  |   5 +-
- drivers/net/wireless/ath/ath10k/mac.c  |   4 +-
- drivers/net/wireless/ath/ath10k/mac.h  |   2 +-
- drivers/net/wireless/ath/ath10k/pci.c  | 358 +++++++++++----------------------
- drivers/net/wireless/ath/ath10k/pci.h  |  78 ++-----
- 9 files changed, 163 insertions(+), 424 deletions(-)
-
--- 
-1.8.5.3
-
+SGkgQXZpbmFzaCwNCg0KVGhhbmsgeW91IGZvciB0aGUgZGV0YWlscy4NCg0KV2lsbCBrZWVwIHlv
+dSBwb3N0ZWQgb24gdGhlIG91dGNvbWUuDQoNCg0KUmVnYXJkcywNCktyaXNobmFuLg0KDQotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXZpbmFzaCBQYXRpbCBbbWFpbHRvOmF2aW5h
+c2hhcGF0aWxAZ21haWwuY29tXSANClNlbnQ6IE1vbmRheSwgQXVndXN0IDA0LCAyMDE0IDk6NDMg
+QU0NClRvOiBLcmlzaG5hbmt1dHR5IFBsYWNoaWtrYXR0bGUNCkNjOiBsaW51eC13aXJlbGVzc0B2
+Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiA4MDIxMWFjIHN1cHBvcnQgaW4gODhXODg5Nw0K
+DQpIaSBLcmlzaG5hbiwNCg0KSGVyZSBpcyBzYW1wbGUgMTFhYyBjb25maWcgZmlsZToNCg0KaW50
+ZXJmYWNlPXVhcDANCmRyaXZlcj1ubDgwMjExDQpzc2lkPW13aWZpZXgtMTFhYw0KaHdfbW9kZT1h
+DQpjaGFubmVsPTM2DQpiZWFjb25faW50PTEwMA0KZHRpbV9wZXJpb2Q9MQ0KcnRzX3RocmVzaG9s
+ZD0yMzQ3DQpmcmFnbV90aHJlc2hvbGQ9MjM0Ng0KYXV0aF9hbGdzPTENCnNlbmRfcHJvYmVfcmVz
+cG9uc2U9MA0Kd21tX2VuYWJsZWQ9MQ0KaWVlZTgwMjExbj0xDQpodF9jYXBhYj1bSFQ0MCtdDQpp
+ZWVlODAyMTFhYz0xDQp2aHRfb3Blcl9jaHdpZHRoPTENCnZodF9vcGVyX2NlbnRyX2ZyZXFfc2Vn
+MF9pZHg9NDINCg0KVGhhbmtzLA0KQXZpbmFzaA0KDQpPbiBUaHUsIEp1bCAzMSwgMjAxNCBhdCAx
+MToyNCBBTSwgS3Jpc2huYW5rdXR0eSBQbGFjaGlra2F0dGxlIDxLcmlzaG5hbmt1dHR5X1BsYWNo
+aWtrYXR0bGVAbWluZHRyZWUuY29tPiB3cm90ZToNCj4gSGVsbG8gQmluZywNCj4NCj4gSSBhbSB0
+cnlpbmcgdG8gZW5hYmxlIEhUIHN1cHBvcnQgZm9yIDg4Vzg4OTcgIHVzaW5nIGhvc3RhcGQgMi4y
+Lg0KPiA4MDIxMW4gbW9kZSB3b3JrcyB3ZWxsIC4gTm93IEkgd2FudCB0byBlbmFibGUgQUMgbW9k
+ZSB0byBpbXByb3ZlIHRocm91Z2hwdXQgLg0KPg0KPiBDYW4geW91IHNoYXJlIGEgc2FtcGxlIGhv
+c3RhcGQuY29uZiAgd2l0aCAgODAyMTFhYyBjb25maWd1cmF0aW9uLg0KPg0KPiBUaGFua3MgaW4g
+YWR2YW5jZSwNCj4NCj4gUmVnYXJkcywNCj4gS3Jpc2huYW4uDQo+DQo+IC0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+IEZyb206IEJpbmcgWmhhbyBbbWFpbHRvOmJ6aGFvQG1hcnZlbGwuY29t
+XQ0KPiBTZW50OiBGcmlkYXksIE1heSAzMCwgMjAxNCA2OjE2IEFNDQo+IFRvOiBBdmluYXNoIFBh
+dGlsOyBLcmlzaG5hbmt1dHR5IFBsYWNoaWtrYXR0bGU7IA0KPiBsaW51eC13aXJlbGVzc0B2Z2Vy
+Lmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFN1cHBvcnQgZm9yIDg4Vzg4OTcgaW4gMy4xMC4x
+NyBrZXJuZWwNCj4NCj4NCj4+PklzIHRoZXJlIGFueSBvcGVuIHNvdXJjZSBkcml2ZXIgdGhhdCBz
+dXBwb3J0cyAgTkZDIGFuZCBCbHVldG9vdGggaW4gdGhpcyBTb0M/DQo+PiBZZXM7IGJ0bXJ2bC5r
+byBhbmQgYnR1c2Iua28gd291bGQgc3VwcG9ydCBQQ0llLVVTQjg4OTcgQlQgZnVuY3Rpb25hbGl0
+eS4NCj4+IFBsZWFzZSBjaGVjayBDT05GSUdfQlRfTVJWTCBrZXJuZWwgY29uZmlndXJhdGlvbiBw
+YXJhbWV0ZXIuDQo+DQo+IENsYXJpZmljYXRpb246DQo+IGJ0bXJ2bCBkcml2ZXIgb25seSBzdXBw
+b3J0cyBCbHVldG9vdGggb3ZlciBTRElPIChidG1ydmxfc2RpbykuIFNvIGl0J3MgZm9yIFNEODg5
+NyBjYXJkcyBvbmx5Lg0KPiBUaGUgZ2VuZXJpYyBidHVzYiBkcml2ZXIgd29ya3MgZm9yIFBDSWUt
+VVNCIDg4OTcgY2FyZHMgKEJsdWV0b290aCBpcyBvdmVyIFVTQikuDQo+DQo+IFJlZ2FyZHMsDQo+
+IEJpbmcNCj4NCj4+IEZvciBORkMsICBuZmNtcnZsLmtvICYgbmZjbXJ2bF91c2Iua28gd291bGQg
+c3VwcG9ydCA4ODk3IE5GQyBmdW5jdGlvbmFsaXR5Lg0KPj4gUGxlYXNlIGNoZWNrIGZvciBDT05G
+SUdfTkZDX01SVkwga2VybmVsIGNvbmZpZ3VyYXRpb24gcGFyYW1ldGVyLg0KPj4NCj4+IFRoYW5r
+cywNCj4+IEF2aW5hc2gNCj4NCj4NCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18N
+Cj4NCj4gaHR0cDovL3d3dy5taW5kdHJlZS5jb20vZW1haWwvZGlzY2xhaW1lci5odG1sDQo=
