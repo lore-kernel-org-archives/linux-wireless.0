@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:47288 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498AbaHNSMc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 14:12:32 -0400
-Received: by mail-la0-f48.google.com with SMTP id gl10so1478215lab.21
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2014 11:12:30 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 14 Aug 2014 11:12:30 -0700
-Message-ID: <CANUX_P0LJqMS40k=8jeie3q=nbXsA4qO39TL3G9gkp+cTshMCw@mail.gmail.com> (sfid-20140814_201235_642182_42195257)
-Subject: pull request: iwlwifi-2014-08-14
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s87.loopia.se ([194.9.94.112]:39458 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751622AbaHDA1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2014 20:27:42 -0400
+From: Hans Wennborg <hans@hanshq.net>
+To: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 12/19] rtlwifi: fix %d confusingly prefixed with 0x in format strings
+Date: Sun,  3 Aug 2014 17:20:16 -0700
+Message-Id: <1407111616-15051-1-git-send-email-hans@hanshq.net> (sfid-20140804_022744_975731_98ED6786)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c           | 6 +++---
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c | 8 ++++----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-This is a pull request with one patch that fixes an issue faced by Linus.
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 67d1ee6..74a8ba4 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -646,7 +646,7 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
+ 				== 2) {
+ 
+ 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%d\n",
++				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%x\n",
+ 				 prio, ring->idx,
+ 				 skb_queue_len(&ring->queue));
+ 
+@@ -1469,7 +1469,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
+ 
+ 		if ((own == 1) && (hw_queue != BEACON_QUEUE)) {
+ 			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
++				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
+ 				 hw_queue, ring->idx, idx,
+ 				 skb_queue_len(&ring->queue));
+ 
+@@ -1511,7 +1511,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
+ 	if ((ring->entries - skb_queue_len(&ring->queue)) < 2 &&
+ 	    hw_queue != BEACON_QUEUE) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+-			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
++			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
+ 			 hw_queue, ring->idx, idx,
+ 			 skb_queue_len(&ring->queue));
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+index 592125a..7cfdfc9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+@@ -677,7 +677,7 @@ static void _rtl92d_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+ 
+ 	rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index] = data;
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%ulx\n",
++		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%lx\n",
+ 		 rtlphy->pwrgroup_cnt, index,
+ 		 rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index]);
+ 	if (index == 13)
+@@ -2531,7 +2531,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+ 	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G) {/* Path-A for 5G */
+ 		u4tmp = curveindex_5g[channel-1];
+ 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+-			"ver 1 set RF-A, 5G,	0x28 = 0x%ulx !!\n", u4tmp);
++			"ver 1 set RF-A, 5G,	0x28 = 0x%lx !!\n", u4tmp);
+ 		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
+ 			rtlpriv->rtlhal.interfaceindex == 1) {
+ 			bneed_powerdown_radio =
+@@ -2550,7 +2550,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+ 	} else if (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) {
+ 		u4tmp = curveindex_2g[channel-1];
+ 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+-			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n", u4tmp);
++			"ver 3 set RF-B, 2G, 0x28 = 0x%lx !!\n", u4tmp);
+ 		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
+ 			rtlpriv->rtlhal.interfaceindex == 0) {
+ 			bneed_powerdown_radio =
+@@ -2562,7 +2562,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+ 		}
+ 		rtl_set_rfreg(hw, erfpath, RF_SYN_G4, 0x3f800, u4tmp);
+ 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+-			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n",
++			"ver 3 set RF-B, 2G, 0x28 = 0x%lx !!\n",
+ 			rtl_get_rfreg(hw,  erfpath, RF_SYN_G4, 0x3f800));
+ 		if (bneed_powerdown_radio)
+ 			_rtl92d_phy_restore_rf_env(hw, erfpath, &u4regvalue);
+-- 
+2.0.0.526.g5318336
 
-David Spinadel helped me debugging this and it appears that the
-firmware currently available doesn't support scheduled scan. So we
-disable that for now.
-
-I am sorry - but I am travelling right now and my connection to the
-only computer that has my PGP signature is awfully slow...
-Please pull. I'll try to sign a reply to this message as soon as I can.
-
-Thanks,
-
-The following changes since commit 2da2c5854ed759a64f8a9231a7f544b472c3aa6d:
-
-  net: wireless: ipw2x00: ipw2200.c: Cleaning up missing
-null-terminate after strncpy call (2014-08-11 14:43:51 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
-for-john
-
-for you to fetch changes up to 77b2f2865956b7573f9b040db7a9f808b434acd1:
-
-  iwlwifi: mvm: disable scheduled scan to prevent firmware crash
-(2014-08-14 19:47:41 +0300)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: disable scheduled scan to prevent firmware crash
-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
