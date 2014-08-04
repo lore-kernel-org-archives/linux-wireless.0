@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:40476 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbaHSJoM convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:50098 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366AbaHDR1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:44:12 -0400
-Received: by mail-wi0-f170.google.com with SMTP id f8so4902199wiw.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 02:44:11 -0700 (PDT)
+	Mon, 4 Aug 2014 13:27:17 -0400
+Received: by mail-la0-f50.google.com with SMTP id gf5so5631154lab.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2014 10:27:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmubLrvB1LHquFDNf8W06vePvEk6K3aNV9ngCAAXemY6w@mail.gmail.com>
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>
-	<20140819082300.16842.40769.stgit@potku.adurom.net>
-	<CA+BoTQmubLrvB1LHquFDNf8W06vePvEk6K3aNV9ngCAAXemY6w@mail.gmail.com>
-Date: Tue, 19 Aug 2014 11:44:11 +0200
-Message-ID: <CA+BoTQ=UduqFY6G=sXJR43hQWk-4v09uYvYJYKO7EGuea7L-Xg@mail.gmail.com> (sfid-20140819_114415_423543_27C8542F)
-Subject: Re: [PATCH v7 3/8] ath10k: save firmware debug log messages
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
+References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 4 Aug 2014 10:26:55 -0700
+Message-ID: <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com> (sfid-20140804_192724_283050_71C23FF7)
+Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kathy Giori <kgiori@qca.qualcomm.com>,
+	Sven Eckelmann <sven@narfation.org>,
+	mathias.kretschmer@fokus.fraunhofer.de
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 August 2014 11:39, Michal Kazior <michal.kazior@tieto.com> wrote:
+On Fri, Aug 1, 2014 at 6:17 AM, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> To view the samples, please have a look at the fft_eval tool [1] which
+> now supports both ath9k and ath10k formats.
 
-I miss-clicked, sorry for the noise.
+Can you please edit the ath9k and ath10k wiki about this tool and
+reference to it?
 
-
-> On 19 August 2014 10:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> They may be dumped through the firmware dump debugfs
->> file.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/wmi.c |   10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
->> index 23acbadeb8fa..eafc565240f1 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -1290,6 +1290,16 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
->>
->>         trace_ath10k_wmi_dbglog(skb->data, skb->len);
->>
->> +       spin_lock_bh(&ar->data_lock);
->> +
->> +       /* First 4 bytes are a messages-dropped-due-to-overflow counter,
->> +        * and should not be recorded in the dbglog buffer, so we skip
->> +        * them.
->> +        */
->> +       ath10k_debug_dbglog_add(ar, skb->data + 4, skb->len - 4);
-
-Can't we just:
-
-struct wmi_dbg_msg {
-  __le32 num_dropped_due_to_overflow;
-  u8 payload[0]; // is this an array of u8 or __le32 actually?
-};
-
-
-Michał
+  Luis
