@@ -1,112 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:49259 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019AbaHSM62 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53177 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750973AbaHDGJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 08:58:28 -0400
-From: Vincent Donnefort <vdonnefort@gmail.com>
-To: hughd@google.com, cooloney@gmail.com
-Cc: linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Vincent Donnefort <vdonnefort@gmail.com>
-Subject: [PATCH] leds: make led_blink_set IRQ safe
-Date: Tue, 19 Aug 2014 14:58:21 +0200
-Message-Id: <1408453101-30290-2-git-send-email-vdonnefort@gmail.com> (sfid-20140819_145858_148282_AFE9DBA9)
-In-Reply-To: <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
- <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
+	Mon, 4 Aug 2014 02:09:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: <ath10k@lists.infradead.org>,
+	<mathias.kretschmer@fokus.fraunhofer.de>,
+	<kgiori@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<sven@narfation.org>
+Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
+References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
+Date: Mon, 4 Aug 2014 09:09:29 +0300
+In-Reply-To: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de> (Simon
+	Wunderlich's message of "Fri, 1 Aug 2014 15:17:12 +0200")
+Message-ID: <877g2o6b1i.fsf@kamboji.qca.qualcomm.com> (sfid-20140804_081009_571591_8BBECA4D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a work which take care of reseting the blink workqueue and
-avoid calling the cancel_delayed_work_sync function which may sleep, from an IRQ
-context.
+Simon Wunderlich <sw@simonwunderlich.de> writes:
 
-Signed-off-by: Vincent Donnefort <vdonnefort@gmail.com>
+> This is the fifth "PATCH" patchset iteration for the ath10k spectral
+> scan feature. It includes a small change compared to Kalles PATCHv4
+> series: the parameter initialization has been moved to
+> ath10k_spectral_start() so that the parameters also get reset when the
+> firmware crashes.
+>
+> To view the samples, please have a look at the fft_eval tool [1] which
+> now supports both ath9k and ath10k formats.
+>
+> The count issue is still open: Even when a count is specified, the
+> hardware seems to send endless samples. It seems to work most of the
+> time in VHT80 mode though, but in HT20 and HT40 the count value seems
+> to be ignored. To reproduce this, start hostapd with the desired
+> channel width and do:
+>
+> echo 8 > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_count
+> echo manual > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan_ctl
+> echo trigger > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan_ctl
+> cat /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan0 >> /tmp/fft.dump
+>
+> Repeating the last line and checking the filesize will easily show
+> whether ath10k still sends samples or not. We would expect 8 samples in
+> this configuration.
+>
+> Please see the patches for more information on the changes.
+>
+> Cheers,
+>     Simon
+>
+> [1] https://github.com/simonwunderlich/FFT_eval
+>
+> Simon Wunderlich (1):
+>   ath10k: add spectral scan feature
+>
+> Sven Eckelmann (1):
+>   ath: Move spectral debugfs structs to shared header
 
-diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
-index 129729d..0971554 100644
---- a/drivers/leds/led-class.c
-+++ b/drivers/leds/led-class.c
-@@ -148,6 +148,24 @@ static void led_work_function(struct work_struct *ws)
- 			   msecs_to_jiffies(delay));
- }
- 
-+static void reset_blink_work_delayed(struct work_struct *ws)
-+{
-+	struct led_classdev *led_cdev =
-+		container_of(ws, struct led_classdev, reset_blink_work);
-+
-+	cancel_delayed_work_sync(&led_cdev->blink_work);
-+
-+	if (!led_cdev->blink_delay_on) {
-+		__led_set_brightness(led_cdev, LED_OFF);
-+		return;
-+	} else if (!led_cdev->blink_delay_off) {
-+		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
-+		return;
-+	}
-+
-+	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
-+}
-+
- static void set_brightness_delayed(struct work_struct *ws)
- {
- 	struct led_classdev *led_cdev =
-@@ -234,6 +252,7 @@ int led_classdev_register(struct device *parent, struct led_classdev *led_cdev)
- 	INIT_WORK(&led_cdev->set_brightness_work, set_brightness_delayed);
- 
- 	INIT_DELAYED_WORK(&led_cdev->blink_work, led_work_function);
-+	INIT_WORK(&led_cdev->reset_blink_work, reset_blink_work_delayed);
- 
- #ifdef CONFIG_LEDS_TRIGGERS
- 	led_trigger_set_default(led_cdev);
-diff --git a/drivers/leds/led-core.c b/drivers/leds/led-core.c
-index 4bb1168..959510a 100644
---- a/drivers/leds/led-core.c
-+++ b/drivers/leds/led-core.c
-@@ -40,19 +40,7 @@ static void led_set_software_blink(struct led_classdev *led_cdev,
- 	led_cdev->blink_delay_on = delay_on;
- 	led_cdev->blink_delay_off = delay_off;
- 
--	/* never on - just set to off */
--	if (!delay_on) {
--		__led_set_brightness(led_cdev, LED_OFF);
--		return;
--	}
--
--	/* never off - just set to brightness */
--	if (!delay_off) {
--		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
--		return;
--	}
--
--	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
-+	schedule_work(&led_cdev->reset_blink_work);
- }
- 
- 
-@@ -76,8 +64,6 @@ void led_blink_set(struct led_classdev *led_cdev,
- 		   unsigned long *delay_on,
- 		   unsigned long *delay_off)
- {
--	cancel_delayed_work_sync(&led_cdev->blink_work);
--
- 	led_cdev->flags &= ~LED_BLINK_ONESHOT;
- 	led_cdev->flags &= ~LED_BLINK_ONESHOT_STOP;
- 
-diff --git a/include/linux/leds.h b/include/linux/leds.h
-index 6a599dc..6e5523d 100644
---- a/include/linux/leds.h
-+++ b/include/linux/leds.h
-@@ -69,6 +69,7 @@ struct led_classdev {
- 
- 	unsigned long		 blink_delay_on, blink_delay_off;
- 	struct delayed_work	 blink_work;
-+	struct work_struct	 reset_blink_work;
- 	int			 blink_brightness;
- 
- 	struct work_struct	set_brightness_work;
+Thanks, both patches applied.
+
+And thanks for fixing a bug I introduced!
+
 -- 
-1.9.1
-
+Kalle Valo
