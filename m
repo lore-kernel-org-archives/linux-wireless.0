@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:35368 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbaHWNmR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34704 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaHDIWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 09:42:17 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/4] ath9k: Remove redundant ifdef
-Date: Sat, 23 Aug 2014 19:12:14 +0530
-Message-Id: <1408801336-7626-3-git-send-email-sujith@msujith.org> (sfid-20140823_154229_641965_9B5D3269)
-In-Reply-To: <1408801336-7626-1-git-send-email-sujith@msujith.org>
-References: <1408801336-7626-1-git-send-email-sujith@msujith.org>
+	Mon, 4 Aug 2014 04:22:47 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 13/14] wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
+Date: Mon, 4 Aug 2014 11:20:53 +0300
+Message-ID: <1407140454-31639-14-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102907_673417_A7B9B972)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-This was introduced in an earlier patch to handle
-a compilation warning, but since the channel context
-code has been mostly isolated, this is not required now.
+Internally, cfg80211_rx_mgmt() takes lock:
+spin_lock_bh(&wdev->mgmt_registrations_lock);
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+and therefore one can't use it with GFP_KERNEL allocation flags.
+When called with GFP_KERNEL, "sleep while atomic" warning triggered:
+
+<3>[242645.446224] BUG: sleeping function called from invalid context at kernel/mm/slub.c:926
+<3>[242645.455516] in_atomic(): 1, irqs_disabled(): 0, pid: 18881, name: kworker/u16:0
+<6>[242645.462868] CPU: 0 PID: 18881 Comm: kworker/u16:0 Tainted: G           O 3.10.40-g619a884-00001-g357fa9c #2
+<6>[242645.463044] Workqueue: wil6210_wmi wmi_event_worker [wil6210]
+<6>[242645.463087] Call trace:
+<6>[242645.463157] [<ffffffc000087390>] dump_backtrace+0x0/0x144
+<6>[242645.463205] [<ffffffc0000874e4>] show_stack+0x10/0x1c
+<6>[242645.463259] [<ffffffc0009abc04>] dump_stack+0x1c/0x28
+<6>[242645.463313] [<ffffffc0000c10c0>] __might_sleep+0xe0/0xf0
+<6>[242645.463365] [<ffffffc00015a514>] kmem_cache_alloc+0x48/0x1e4
+<6>[242645.463414] [<ffffffc00080d468>] __alloc_skb+0x48/0x164
+<6>[242645.463466] [<ffffffc00097f2c4>] nl80211_send_mgmt+0x4c/0x1dc
+<6>[242645.463511] [<ffffffc000980268>] cfg80211_rx_mgmt+0x1bc/0x25c
+<6>[242645.463647] [<ffffffbffc005d64>] wmi_evt_rx_mgmt+0x21c/0x23c [wil6210]
+<6>[242645.463783] [<ffffffbffc0073b8>] wmi_event_worker+0x230/0x2f8 [wil6210]
+<6>[242645.463838] [<ffffffc0000afffc>] process_one_work+0x258/0x3d0
+<6>[242645.463887] [<ffffffc0000b0fe0>] worker_thread+0x1f0/0x310
+<6>[242645.463946] [<ffffffc0000b642c>] kthread+0xac/0xb8
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 08bb14c..7aa9535 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -257,9 +257,7 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
- {
- 	struct ath_hw *ah = sc->sc_ah;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 596d6c1..1b64823 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -355,7 +355,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	} else {
+ 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
+-				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
++				 (void *)rx_mgmt_frame, d_len, 0, GFP_ATOMIC);
+ 	}
+ }
  
--#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- 	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, tsf_time, 1000000);
--#endif
- 	tsf_time -= ath9k_hw_gettsf32(ah);
- 	tsf_time = msecs_to_jiffies(tsf_time / 1000) + 1;
- 	mod_timer(&sc->sched.timer, tsf_time);
 -- 
-2.0.4
+1.8.5.2
 
