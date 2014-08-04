@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51472 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaHWNmQ (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:39176 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753597AbaHDR1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 09:42:16 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 0/4] ath9k patches
-Date: Sat, 23 Aug 2014 19:12:12 +0530
-Message-Id: <1408801336-7626-1-git-send-email-sujith@msujith.org> (sfid-20140823_154223_791650_CF7CC4C7)
+	Mon, 4 Aug 2014 13:27:47 -0400
+Received: by mail-la0-f48.google.com with SMTP id gl10so5614442lab.21
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2014 10:27:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
+References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de> <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 4 Aug 2014 10:27:25 -0700
+Message-ID: <CAB=NE6UYz7Q4frOn+cbePkpqTuyAM91katK8z_CZkncFgdP=yQ@mail.gmail.com> (sfid-20140804_192834_256022_1B47EA34)
+Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kathy Giori <kgiori@qca.qualcomm.com>,
+	Sven Eckelmann <sven@narfation.org>,
+	mathias.kretschmer@fokus.fraunhofer.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Aug 4, 2014 at 10:26 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Fri, Aug 1, 2014 at 6:17 AM, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+>> To view the samples, please have a look at the fft_eval tool [1] which
+>> now supports both ath9k and ath10k formats.
+>
+> Can you please edit the ath9k and ath10k wiki about this tool and
+> reference to it?
 
-Third series cleaning up the channel context code. Most of the code
-has been moved inside CONFIG_ATH9K_CHANNEL_CONTEXT. Since the normal
-path also makes use of certain channel context specific variables,
-they have been left unmodified - like 'cur_chan', 'cur_chandef' etc.
+While at it also please update the iw wiki page too.
 
-After this series, just 3 functions in channel.c are outside
-CONFIG_ATH9K_CHANNEL_CONTEXT.
-
-All the pending patches are in:
-http://msujith.org/dir/patches/wl/Aug-23-2014/
-
-Sujith
-
-Sujith Manoharan (4):
-  ath9k: Fix channel context variables in ath_softc
-  ath9k: Remove redundant ifdef
-  ath9k: Move ath9k_beacon_add_noa to channel.c
-  ath9k: Fix ath_chanctx_get()
-
- drivers/net/wireless/ath/ath9k/ath9k.h   | 29 ++++++++++++++----
- drivers/net/wireless/ath/ath9k/beacon.c  | 49 ------------------------------
- drivers/net/wireless/ath/ath9k/channel.c | 51 ++++++++++++++++++++++++++++++--
- 3 files changed, 72 insertions(+), 57 deletions(-)
-
--- 
-2.0.4
-
+  Luis
