@@ -1,82 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:45779 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbaHWRZA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35177 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbaHDPAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 13:25:00 -0400
-Date: Sat, 23 Aug 2014 13:24:56 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Bryan Wu <cooloney@gmail.com>
-Cc: Hugh Dickins <hughd@google.com>,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Valdis.Kletnieks@vt.edu,
-	Linux LED Subsystem <linux-leds@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] leds: make led_blink_set IRQ safe
-Message-ID: <20140823172456.GH13540@mtj.dyndns.org> (sfid-20140823_192505_307329_A67A4081)
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
- <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
- <1408453101-30290-2-git-send-email-vdonnefort@gmail.com>
- <alpine.LSU.2.11.1408191835200.3003@eggly.anvils>
- <CAK5ve-Kc8mjdbN0Nn-pGVjp2pj6ZV_FCBpeOtO5N92CkJZX3=g@mail.gmail.com>
+	Mon, 4 Aug 2014 11:00:12 -0400
+Date: Mon, 4 Aug 2014 10:53:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-08-01
+Message-ID: <20140804145342.GB16658@tuxdriver.com> (sfid-20140804_170046_984368_CD262DF5)
+References: <20140801165738.GA26953@tuxdriver.com>
+ <20140802.193939.2179004210212543536.davem@davemloft.net>
+ <C2EB98EF-6873-4F44-B914-A9F89146914A@holtmann.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK5ve-Kc8mjdbN0Nn-pGVjp2pj6ZV_FCBpeOtO5N92CkJZX3=g@mail.gmail.com>
+In-Reply-To: <C2EB98EF-6873-4F44-B914-A9F89146914A@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On Fri, Aug 22, 2014 at 05:21:30PM -0700, Bryan Wu wrote:
-> On Tue, Aug 19, 2014 at 6:51 PM, Hugh Dickins <hughd@google.com> wrote:
-> > On Tue, 19 Aug 2014, Vincent Donnefort wrote:
-> >
-> >> This patch introduces a work which take care of reseting the blink workqueue and
-> >> avoid calling the cancel_delayed_work_sync function which may sleep, from an IRQ
-> >> context.
-> >>
+On Sun, Aug 03, 2014 at 10:37:16AM -0700, Marcel Holtmann wrote:
+> Hi Dave,
 > 
-> Vincent, I'm just wandering can we use cancel_delayed_work() instead
-> of sync version here.
-> cancel_delayed_work() can be called from IRQ context.
-
-But it doesn't wait for the currently running one to finish.  It
-should wait, right?
-
-> > May I (most ungratefully!) say that your patch doesn't fill me with
-> > confidence that it's the right solution: adding yet another work_struct
-> > to get around the issue seemed dubious to me, I wonder if it might expose
-> > new races.
+> >> Please pull this last(?) batch of wireless change intended for the
+> >> 3.17 stream...
+> > 
+> > When I pull this I get tons of conflicts for:
+> > 
+> > CONFLICT (content): Merge conflict in net/6lowpan/iphc.c
+> > 
+> > I don't feel comfortable fixing these up, where are they coming
+> > from?
 > 
-> I agree with Hugh about this new cancel work_struct. But if we revert
-> it back, I saw led_blink_set() will call del_timer_sync() which might
-> also sleep and can't be used in IRQ context. Looks like we can't call
-> led_blink_set() in any IRQ/atomic context.
-
-del_timer_sync() doesn't block but it does run from bh.  It naturally
-can't be waited from an IRQ context.  It may be sitting on top of a
-running instance.
-
-> > But rest assured that I know nothing about this, and I'm not at all
-> > qualified to review your patch: I hope Bryan and others will do so.
+> I was short on time yesterday, but now I checked up on this in detail. The merge conflicts are actually simple to resolve. You can just rely on John's tree to have the more recent net/6lowpan/ tree. I should have insisted on merging net/6lowpan/ through bluetooth-next and wireless-next way earlier to avoid conflicts.
 > 
-> Let me invite Tejun to give some advice on how to solve this problem.
+> In the future we will avoid this by ensuring that all goes via bluetooth-next first. Sorry for this confusion. John mentioned these merge conflicts in his footnote.
 > 
-> Tejun, Vincent's commit 8b37e1bef5a6b60e949e28a4db3006e4b00bd758
-> convert a timer into work_struct, but Hugh found it will cause
-> sleeping BUGs [1]. Could you give some opinion about that?
+> John, do you just want to resolve the merge conflicts and send Dave a new pull request?
 
-Not knowing the code base, I'm not sure how helpful I can be but if
-something wants to synchronize against another thing which can block,
-that something needs to be able to block too.  There's no way around
-it and it holds the same for timers.  As long as all the work items
-are properly shut down at the end, there's nothing wrong with using
-multiple of them even when they form a dependency chain.
+I'm happy to do that, if Dave wants.  But as you say, once the initial
+shock of all those conflicts passes the resolution really is fairly
+simple. :-)
 
-Heh, I think I need more specific questions to be actually useful. :)
-
-Thanks.
-
+John
 -- 
-tejun
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
