@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay5-d.mail.gandi.net ([217.70.183.197]:45715 "EHLO
-	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbaHWPVQ (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51577 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251AbaHDTL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 11:21:16 -0400
-Date: Sat, 23 Aug 2014 08:21:04 -0700
-From: Josh Triplett <josh@joshtriplett.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: dri-devel@lists.freedesktop.org, kernel-janitors@vger.kernel.org,
-	linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pwm@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-omap@vger.kernel.org,
-	rtc-linux@googlegroups.com
-Subject: Re: [PATCH 0/9] use c99 initializers in structures
-Message-ID: <20140823152104.GC2074@thin> (sfid-20140823_172122_178614_F54C31E9)
-References: <1408792831-25615-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 4 Aug 2014 15:11:29 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so8007641wgh.15
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2014 12:11:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1408792831-25615-1-git-send-email-Julia.Lawall@lip6.fr>
+Date: Mon, 4 Aug 2014 12:11:25 -0700
+Message-ID: <CAAkeqgVTqV5cga8=Xk=PEctNNYXUumxm3U3oV2TtsjtzjhSVPA@mail.gmail.com> (sfid-20140804_211133_400761_66077CF8)
+Subject: scanning only returns results on specified channels (Marvell mwifiex driver)
+From: Andrey Yurovsky <yurovsky@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 23, 2014 at 01:20:22PM +0200, Julia Lawall wrote:
-> These patches add labels in the initializations of structure fields (c99
-> initializers).  The complete semantic patch thta makes this change is shown
-> below.  This rule ignores cases where the initialization is just 0 or NULL,
-> where some of the fields already use labels, and where there are nested
-> structures.
+I am not seeing scan results on my test setup with a Marvell 88W8787
+(mwifiex driver) connected over SDIO to an ARM926.  I traced and found
+that the card and driver do receive results, they do report them via
+cfg80211, and those results are stored as expected (for instance, I
+see every BSSID I expected to find in tmp->pub.bssid
+cfg80211_bss_update()).  iw never gets them, it just acts like there
+were no results.  However specifying a frequency does return results,
+so this doesn't work:
 
-I responded to patches 6 and 8 with comments; for the rest (1-5, 7, 9):
-Reviewed-by: Josh Triplett <josh@joshtriplett.org>
+iw dev mlan0 scan
+
+but this does:
+
+iw dev mlan0 scan 2412
+
+I'm wondering if there's something marked incorrectly in the BSS
+structure from the driver or if there is some other reason that
+results aren't reported unless the frequency is specified.  When doing
+the latter, I do see reasonable results when compared to another
+system scanning in the same room.
+
+Can someone else reproduce this?  Is there anything specific that I
+could look at that would help resolve the problem?
+
+Thanks,
+
+  -Andrey
