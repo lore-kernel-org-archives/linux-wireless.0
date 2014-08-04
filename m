@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48320 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413AbaHVGp3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29395 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaHDIWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 02:45:29 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so9698964wiv.13
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 23:45:28 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: only map wrapper if its address is available
-Date: Fri, 22 Aug 2014 08:44:52 +0200
-Message-Id: <1408689892-7617-1-git-send-email-zajec5@gmail.com> (sfid-20140822_084532_746021_D7609317)
+	Mon, 4 Aug 2014 04:22:45 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 12/14] wil6210: fix free'd memory access in wil_if_free()
+Date: Mon, 4 Aug 2014 11:20:52 +0300
+Message-ID: <1407140454-31639-13-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102907_327393_DC065A0D)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hauke Mehrtens <hauke@hauke-m.de>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-The Chipcommon B core does not have a wrap address and it would fail here.
+In the wil_priv_deinit(), wdev->netdev is accessed, so free_netdev()
+should not be called before mentioned call.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Set wdev->netdev to NULL Make sure no more attempts to use it.
+It is used for debug printk if not NULL.
+
+This fix kernel panic on module unload and in case error on probe;
+if memory allocation debugging enabled.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/bcma/host_soc.c |  4 ++++
- drivers/bcma/scan.c     | 11 +++++++----
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/netdev.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 3475e60..1edd7e0 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -134,12 +134,16 @@ static void bcma_host_soc_block_write(struct bcma_device *core,
- 
- static u32 bcma_host_soc_aread32(struct bcma_device *core, u16 offset)
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 8ee0862..59fd550 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -168,11 +168,15 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
+ void wil_if_free(struct wil6210_priv *wil)
  {
-+	if (WARN_ONCE(!core->io_wrap, "Accessed core has no wrapper/agent\n"))
-+		return ~0;
- 	return readl(core->io_wrap + offset);
+ 	struct net_device *ndev = wil_to_ndev(wil);
++
+ 	if (!ndev)
+ 		return;
+ 
+-	free_netdev(ndev);
+ 	wil_priv_deinit(wil);
++
++	wil_to_ndev(wil) = NULL;
++	free_netdev(ndev);
++
+ 	wil_wdev_free(wil);
  }
  
- static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
- 				  u32 value)
- {
-+	if (WARN_ONCE(!core->io_wrap, "Accessed core has no wrapper/agent\n"))
-+		return;
- 	writel(value, core->io_wrap + offset);
- }
- 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index b4764c6..e9bd772 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -421,10 +421,13 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		core->io_addr = ioremap_nocache(core->addr, BCMA_CORE_SIZE);
- 		if (!core->io_addr)
- 			return -ENOMEM;
--		core->io_wrap = ioremap_nocache(core->wrap, BCMA_CORE_SIZE);
--		if (!core->io_wrap) {
--			iounmap(core->io_addr);
--			return -ENOMEM;
-+		if (core->wrap) {
-+			core->io_wrap = ioremap_nocache(core->wrap,
-+							BCMA_CORE_SIZE);
-+			if (!core->io_wrap) {
-+				iounmap(core->io_addr);
-+				return -ENOMEM;
-+			}
- 		}
- 	}
- 	return 0;
 -- 
-1.8.4.5
+1.8.5.2
 
