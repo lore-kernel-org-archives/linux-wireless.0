@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:56771 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbaHJQz5 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:21210 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbaHDUMk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 12:55:57 -0400
-Received: by mail-ob0-f171.google.com with SMTP id wm4so5421332obc.16
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 09:55:56 -0700 (PDT)
+	Mon, 4 Aug 2014 16:12:40 -0400
+Message-ID: <53DFE933.2080805@broadcom.com> (sfid-20140804_221257_774275_82C0DC5A)
+Date: Mon, 4 Aug 2014 22:12:35 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-From: Jon Nelson <jnelson@jamponi.net>
-Date: Sun, 10 Aug 2014 11:55:36 -0500
-Message-ID: <CAKuK5J2=JLZ3XaZguaD+=mparR4BWXmnNZhU0nryOPvtFz8aOA@mail.gmail.com> (sfid-20140810_185601_696434_54CFCC38)
-Subject: brcmsmac power consumption issues
-To: Linux Kernel <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
+	<pieterpg@broadcom.com>, <dekim@broadcom.com>,
+	<mcgrof@do-not-panic.com>, <antonio@open-mesh.com>,
+	<johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with	scanning
+ and connecting
+References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com> <53DFB6A1.7040900@linux.intel.com> <20140804165202.GG30282@n2100.arm.linux.org.uk>
+In-Reply-To: <20140804165202.GG30282@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported on the Novell and Kernel bugzillas:
-11
-https://bugzilla.novell.com/show_bug.cgi?id=890454
-and
-https://bugzilla.kernel.org/show_bug.cgi?id=81721
+On 08/04/14 18:52, Russell King - ARM Linux wrote:
+> On Tue, Aug 05, 2014 at 12:36:49AM +0800, Fu, Zhonghui wrote:
+>> Hi, Arend
+>>
+>> I investigated this issue, and its root cause is still that sdio
+>> controller can't receive interrupts from WiFi chip on sdio bus when
+>> sdio controller is in runtime suspend status. I am running 3.16-rc5
+>> linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
+>
+> That's the root cause.  I fixed this with the Freescale i.MX SD driver
+> which is now able to report pending SDIO interrupts while runtime PM
+> suspended.
+>
+> Other host drivers probably need fixing too, or having runtime PM
+> disabled on them - if you can't receive SDIO interrupts while runtime
+> PM suspended, then entering runtime PM while you have a SDIO device
+> attached is a bug.
+>
+> This is something for the MMC people to deal with rather than Arend.
 
-Short version: I have a laptop (Lenovo B570) with a built-in Broadcom
-wireless chipset. Using the 'brcmsmac' driver, I observed very high
-power consumption:
+Occasionally, the itch is there to fix mmc code, but this looks a bit 
+tricky. The fun starts in sdio.c:mmc_attach_sdio():
 
-4000-6000mW as compared to 100-200mW for several other drivers.
+	/*
+	 * Enable runtime PM only if supported by host+card+board
+	 */
+	if (host->caps & MMC_CAP_POWER_OFF_CARD) {
+		/*
+		 * Let runtime PM core know our card is active
+		 */
+		err = pm_runtime_set_active(&card->dev);
+		if (err)
+			goto remove;
 
-Trying (openSUSE) kernel 3.16.0-rc7-2-desktop with backports-20140725,
-that appears to have been reduced to 350-3900mW. A nice change but
-still much higher than the rtl8192cu that I tested with the same
-kernel and backports (3-30x higher).
+		/*
+		 * Enable runtime PM for this card
+		 */
+		pm_runtime_enable(&card->dev);
+	}
 
+The comment above the if statement seems to be stating the right idea, 
+but the code only looks at the host controller capability flags.
 
+Regards,
+Arend
 
-
--- 
-Jon
-Software Blacksmith
