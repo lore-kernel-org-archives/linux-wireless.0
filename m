@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58808 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712AbaHLIDK (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:62986 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbaHDENI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 04:03:10 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/6] ath10k: move fw init print
-References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
-	<1407402212-29809-7-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 12 Aug 2014 10:53:04 +0300
-In-Reply-To: <1407402212-29809-7-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:03:32 +0200")
-Message-ID: <87ppg6qh3z.fsf@kamboji.qca.qualcomm.com> (sfid-20140812_100317_423521_BFDD43A6)
+	Mon, 4 Aug 2014 00:13:08 -0400
+Received: by mail-pd0-f174.google.com with SMTP id fp1so8864869pdb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 21:13:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
+References: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
+Date: Mon, 4 Aug 2014 09:43:07 +0530
+Message-ID: <CAJwzM1=OC5VQMigJbe5AaYfJMSfhC5VngB6b2tQG=PKjGdyYRw@mail.gmail.com> (sfid-20140804_061312_672790_B56674B4)
+Subject: Re: 80211ac support in 88W8897
+From: Avinash Patil <avinashapatil@gmail.com>
+To: Krishnankutty Plachikkattle
+	<Krishnankutty_Plachikkattle@mindtree.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi Krishnan,
 
-> Firmware probing is done only once when driver is
-> registered and firmware version is guaranteed to
-> remain the same until driver is unregistered.
+Here is sample 11ac config file:
+
+interface=uap0
+driver=nl80211
+ssid=mwifiex-11ac
+hw_mode=a
+channel=36
+beacon_int=100
+dtim_period=1
+rts_threshold=2347
+fragm_threshold=2346
+auth_algs=1
+send_probe_response=0
+wmm_enabled=1
+ieee80211n=1
+ht_capab=[HT40+]
+ieee80211ac=1
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=42
+
+Thanks,
+Avinash
+
+On Thu, Jul 31, 2014 at 11:24 AM, Krishnankutty Plachikkattle
+<Krishnankutty_Plachikkattle@mindtree.com> wrote:
+> Hello Bing,
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-[...]
-
-> @@ -816,24 +816,6 @@ int ath10k_core_start(struct ath10k *ar)
->  
->  	INIT_LIST_HEAD(&ar->arvifs);
->  
-> -	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
-> -		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
-> -			    ar->hw_params.name,
-> -			    ar->target_version,
-> -			    ar->chip_id,
-> -			    ar->hw->wiphy->fw_version,
-> -			    ar->fw_api,
-> -			    ar->htt.target_version_major,
-> -			    ar->htt.target_version_minor);
-> -		ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
-> -			    config_enabled(CONFIG_ATH10K_DEBUG),
-> -			    config_enabled(CONFIG_ATH10K_DEBUGFS),
-> -			    config_enabled(CONFIG_ATH10K_TRACING),
-> -			    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
-> -	}
-> -
-> -	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
-
-Doesn't this break this print in pci.c:
-
-        if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
-           ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
-                                    irq_mode, ath10k_pci_irq_mode,
-                                                    ath10k_pci_reset_mode);
-
--- 
-Kalle Valo
+> I am trying to enable HT support for 88W8897  using hostapd 2.2.
+> 80211n mode works well . Now I want to enable AC mode to improve throughput .
+>
+> Can you share a sample hostapd.conf  with  80211ac configuration.
+>
+> Thanks in advance,
+>
+> Regards,
+> Krishnan.
+>
+> -----Original Message-----
+> From: Bing Zhao [mailto:bzhao@marvell.com]
+> Sent: Friday, May 30, 2014 6:16 AM
+> To: Avinash Patil; Krishnankutty Plachikkattle; linux-wireless@vger.kernel.org
+> Subject: RE: Support for 88W8897 in 3.10.17 kernel
+>
+>
+>>>Is there any open source driver that supports  NFC and Bluetooth in this SoC?
+>> Yes; btmrvl.ko and btusb.ko would support PCIe-USB8897 BT functionality.
+>> Please check CONFIG_BT_MRVL kernel configuration parameter.
+>
+> Clarification:
+> btmrvl driver only supports Bluetooth over SDIO (btmrvl_sdio). So it's for SD8897 cards only.
+> The generic btusb driver works for PCIe-USB 8897 cards (Bluetooth is over USB).
+>
+> Regards,
+> Bing
+>
+>> For NFC,  nfcmrvl.ko & nfcmrvl_usb.ko would support 8897 NFC functionality.
+>> Please check for CONFIG_NFC_MRVL kernel configuration parameter.
+>>
+>> Thanks,
+>> Avinash
+>
+>
+> ________________________________
+>
+> http://www.mindtree.com/email/disclaimer.html
