@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46107 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbaHTNNd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34704 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaHDIWo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 09:13:33 -0400
-Message-ID: <53F49EFC.5000008@candelatech.com> (sfid-20140820_151336_554903_64A50E75)
-Date: Wed, 20 Aug 2014 06:13:32 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 4 Aug 2014 04:22:44 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/14] wil6210: Limit max number of associated stations
+Date: Mon, 4 Aug 2014 11:20:51 +0300
+Message-ID: <1407140454-31639-12-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102906_998007_CF16804D)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v7 2/8] ath10k: provide firmware crash info via debugfs
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>	<20140819082253.16842.32433.stgit@potku.adurom.net>	<CA+BoTQn2aq5EV4mvTs3Ww4i9gAJsmMM5iDfrFd=YfC0YxMi2WQ@mail.gmail.com>	<53F36C63.8040809@candelatech.com> <CA+BoTQ=ocpY2BDCGhMB7E9s4ykp18uXHMTc7rOn0qb7mDyZ5qw@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=ocpY2BDCGhMB7E9s4ykp18uXHMTc7rOn0qb7mDyZ5qw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add a module parameter to support setting the maximum
+number of stations that can be associated to an AP.
 
->>> Hmm should this really be sizeof()? Not next_idx (which effectively
->>> defines number of bytes of the dbglog)?
->>
->>
->> I haven't tried decoding this yet, but we may need to know the next_idx
->> to decode this properly.
->
-> So basically a (length, payload) encoding would be necessary here
-> instead of a single stream, right?
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-As long as you know the starting point for a message, you can decode the
-rest of the message(s) as a stream of 32 bit ints.  The current code that
-I wrote is a circular buffer, so after first wrap, we lose an idea of where
-to start reading.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 0beb129..596d6c1 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/moduleparam.h>
+ #include <linux/etherdevice.h>
+ #include <linux/if_arp.h>
+ 
+@@ -22,6 +23,10 @@
+ #include "wmi.h"
+ #include "trace.h"
+ 
++static uint max_assoc_sta = 1;
++module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
++
+ /**
+  * WMI event receiving - theory of operations
+  *
+@@ -794,7 +799,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
+ 		.network_type = wmi_nettype,
+ 		.disable_sec_offload = 1,
+ 		.channel = chan - 1,
+-		.pcp_max_assoc_sta = WIL6210_MAX_CID,
++		.pcp_max_assoc_sta = max_assoc_sta,
+ 	};
+ 	struct {
+ 		struct wil6210_mbox_hdr_wmi wmi;
+@@ -804,6 +809,14 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
+ 	if (!wil->secure_pcp)
+ 		cmd.disable_sec = 1;
+ 
++	if ((cmd.pcp_max_assoc_sta > WIL6210_MAX_CID) ||
++	    (cmd.pcp_max_assoc_sta <= 0)) {
++		wil_info(wil,
++			 "Requested connection limit %u, valid values are 1 - %d. Setting to %d\n",
++			 max_assoc_sta, WIL6210_MAX_CID, WIL6210_MAX_CID);
++		cmd.pcp_max_assoc_sta = WIL6210_MAX_CID;
++	}
++
+ 	/*
+ 	 * Processing time may be huge, in case of secure AP it takes about
+ 	 * 3500ms for FW to start AP
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.5.2
+
