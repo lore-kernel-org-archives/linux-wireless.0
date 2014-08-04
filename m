@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:53417 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584AbaHJOsG (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58850 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535AbaHDIWZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 10:48:06 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so7535269wes.28
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 07:48:04 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 8/9] staging: vt6655: device_main Replace DEVICE_INFO with size of pointer
-Date: Sun, 10 Aug 2014 15:47:02 +0100
-Message-Id: <1407682023-2865-8-git-send-email-tvboxspy@gmail.com> (sfid-20140810_164811_140071_1016B36C)
-In-Reply-To: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
-References: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 4 Aug 2014 04:22:25 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 02/14] wil6210: fix race in reset
+Date: Mon, 4 Aug 2014 11:20:42 +0300
+Message-ID: <1407140454-31639-3-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102228_081996_5389D9C0)
+In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 65de6c0..489bfc7 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -839,7 +839,7 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 		return -ENODEV;
+It is important to halt USER CPU first, then MAC CPU
+Otherwise, race happens in the firmware
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 3704d2a..d734283 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -327,6 +327,8 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	/* register clear = read, AND with inverted, write */
+ #define C(a, v) W(a, R(a) & ~v)
+ 
++	wmb(); /* If host reorder writes here -> race in NIC */
++	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	wil->hw_version = R(RGF_USER_FW_REV_ID);
+ 	rev_id = wil->hw_version & 0xff;
+ 
+@@ -343,8 +345,9 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		wmb(); /* order is important here */
  	}
  
--	dev = alloc_etherdev(sizeof(DEVICE_INFO));
-+	dev = alloc_etherdev(sizeof(*pDevice));
+-	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	W(RGF_USER_USER_CPU_0, BIT(1)); /* user_cpu_man_rst */
++	wmb(); /* If host reorder writes here -> race in NIC */
++	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	wmb(); /* order is important here */
  
- 	pDevice = netdev_priv(dev);
- 
-@@ -999,7 +999,7 @@ static void vt6655_init_info(struct pci_dev *pcid,
- {
- 	struct vnt_private *p;
- 
--	memset(*ppDevice, 0, sizeof(DEVICE_INFO));
-+	memset(*ppDevice, 0, sizeof(**ppDevice));
- 
- 	if (pDevice_Infos == NULL) {
- 		pDevice_Infos = *ppDevice;
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
 -- 
-1.9.1
+1.8.5.2
 
