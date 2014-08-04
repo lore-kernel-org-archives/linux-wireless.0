@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58546 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751672AbaH2Kyb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 06:54:31 -0400
-Message-ID: <1409309659.4577.8.camel@jlt4.sipsolutions.net> (sfid-20140829_125434_912102_521677C9)
-Subject: pull-request: mac80211 2014-08-29
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 29 Aug 2014 12:54:19 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:53691 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaHDUOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2014 16:14:48 -0400
+Message-ID: <53DFE9B5.8040706@candelatech.com> (sfid-20140804_221451_516446_8BE0249C)
+Date: Mon, 04 Aug 2014 13:14:45 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Antonio Quartulli <antonio@open-mesh.com>
+CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] ath9k: fix aggregation session lockup
+References: <1406122854-60239-1-git-send-email-nbd@openwrt.org> <53D6B87D.6080007@candelatech.com> <53D6BC7F.2020002@openwrt.org> <53D7C661.2040107@candelatech.com> <53DF8A36.1040402@open-mesh.com>
+In-Reply-To: <53DF8A36.1040402@open-mesh.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Please excuse how late I'm sending this. Hopefully it can still go in.
+On 08/04/2014 06:27 AM, Antonio Quartulli wrote:
+> 
+> 
+> On 29/07/14 18:05, Ben Greear wrote:
+>> On 07/28/2014 02:11 PM, Felix Fietkau wrote:
+>>> Interesting. Maybe you should ask Antonio for an updated version of the patch that he used to debug this issue. If you give me the output of it while
+>>> it's locked up, I might be able to figure out what's going on in your setup.
+>> 
+>> What is the easiest upstream tree for you to debug?
+> 
+> Sorry for the late reply but I was pretty "disconnected" in the last days.
+> 
+> Is the debugging patch still required? If so, I can dig in my buildroot and retrieve it.
 
-Note that the tag is signed :)
+I would appreciate it if you could post the patch.  I'd like to
+see if I can get the bug fixed once and for all.....
 
-johannes
+Thanks,
+Ben
 
-
-The following changes since commit c9d26423e56ce1ab4d786f92aebecf859d419293:
-
-  Merge tag 'pm+acpi-3.17-rc1-2' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm (2014-08-14 18:13:46 -0600)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-08-29
-
-for you to fetch changes up to 14b058bbce9279ee432f0944ca14df69f4a0d170:
-
-  mac80211: fix agg_status debugfs file alignment (2014-08-26 11:13:37 +0200)
-
-----------------------------------------------------------------
-Here are a few fixes for mac80211. One has been discussed for a while
-and adds a terminating NUL-byte to the alpha2 sent to userspace, which
-shouldn't be necessary but since many places treat it as a string we
-couldn't move to just sending two bytes.
-
-In addition to that, we have two VLAN fixes from Felix, a mesh fix, a
-fix for the recently introduced RX aggregation offload, a revert for
-a broken patch (that luckily didn't really cause any harm) and a small
-fix for alignment in debugfs.
-
-----------------------------------------------------------------
-Bob Copeland (1):
-      mac80211: mesh_plink: handle confirm frames with new plid
-
-Denton Gentry (1):
-      mac80211: fix start_seq_num in Rx reorder offload
-
-Eliad Peller (1):
-      regulatory: add NUL to alpha2
-
-Felix Fietkau (2):
-      mac80211: ignore AP_VLAN in ieee80211_recalc_chanctx_chantype
-      mac80211: fix smps mode check for AP_VLAN
-
-Johannes Berg (2):
-      Revert "mac80211: disable uAPSD if all ACs are under ACM"
-      mac80211: fix agg_status debugfs file alignment
-
- include/net/regulatory.h   | 2 +-
- net/mac80211/chan.c        | 2 ++
- net/mac80211/debugfs_sta.c | 2 +-
- net/mac80211/iface.c       | 4 ++--
- net/mac80211/mesh_plink.c  | 7 ++++++-
- net/mac80211/mlme.c        | 3 +--
- net/mac80211/sta_info.c    | 7 +++++--
- 7 files changed, 18 insertions(+), 9 deletions(-)
+> 
+> Cheers,
+> 
+> 
+> 
 
 
+- -- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJT3+m0AAoJELbHqkYeJT4OniwH/1mLfg10xq5CPR5eNKCiM2vY
+Ww38H/fC5N2K0Uyw84uWTHmJTjqvl4IbW2Xhve4i6yqiQa+NSva/ge5ogK6bLiMH
+13AxHysUMnPgu3f9so4wziRuc3izkcs4qgArnXOW03UnVOpAoUbRUVkNPojDzQpM
+zkxmQTYTd61XAW6cvOUlvLJsaY6Eapa9ClbIRtj8SuyoIvrvKzKlww96ibnJ7jFR
+AXDBSt6n0bPy07DpHuvIs5UypbV2rO6JjQ4WFD85tqScP3+ZEs0KcYk3lv06FXnq
+o1SbMSIY24AiLMMhIdIREPadETgft65DGd7wgMarvF8nnqsB7Gnnq0f/YJS32uc=
+=daKD
+-----END PGP SIGNATURE-----
