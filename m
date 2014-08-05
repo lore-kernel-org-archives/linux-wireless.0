@@ -1,104 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53692 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751852AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 05:42:58 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 02/11] lib / string_helpers: refactoring the test suite
-Date: Wed, 20 Aug 2014 12:42:43 +0300
-Message-Id: <1408527772-27224-3-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114431_414936_7E64ABFC)
-In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from merlin.infradead.org ([205.233.59.134]:38728 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753724AbaHET6M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2014 15:58:12 -0400
+Date: Tue, 5 Aug 2014 15:08:20 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Cc: "ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: linux-firmware: pull-request TI wireless firmware
+Message-ID: <20140805190820.GI18548@merlin.infradead.org> (sfid-20140805_215815_942808_2C784B08)
+References: <AE1C82FB3D0EC64DB1F752C81CBD1101263A0EBB@DFRE01.ent.ti.com>
+ <AE1C82FB3D0EC64DB1F752C81CBD1101263A3980@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101263A3980@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch prepares test suite for a following update. It introduces
-test_string_check_buf() helper which checks the result and dumps an error.
+On Sun, Jul 13, 2014 at 02:16:14PM +0000, Machani, Yaniv wrote:
+> Hi,
+> Please see below pull request,
+> It contains an update to the WiLink8 chip.
+> The FW name was changed due to some new API's that was introduced lately.
+> 
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- lib/test-string_helpers.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+I've applied this. Thanks!
 
-diff --git a/lib/test-string_helpers.c b/lib/test-string_helpers.c
-index 6ac48de..ac44c92 100644
---- a/lib/test-string_helpers.c
-+++ b/lib/test-string_helpers.c
-@@ -10,6 +10,26 @@
- #include <linux/string.h>
- #include <linux/string_helpers.h>
- 
-+static __init bool test_string_check_buf(const char *name, unsigned int flags,
-+					 char *in, size_t p,
-+					 char *out_real, size_t q_real,
-+					 char *out_test, size_t q_test)
-+{
-+	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
-+		return true;
-+
-+	pr_warn("Test '%s' failed: flags = %u\n", name, flags);
-+
-+	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
-+		       in, p, true);
-+	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_test, q_test, true);
-+	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
-+		       out_real, q_real, true);
-+
-+	return false;
-+}
-+
- struct test_string {
- 	const char *in;
- 	const char *out;
-@@ -39,7 +59,8 @@ static const struct test_string strings[] __initconst = {
- 	},
- };
- 
--static void __init test_string_unescape(unsigned int flags, bool inplace)
-+static void __init test_string_unescape(const char *name, unsigned int flags,
-+					bool inplace)
- {
- 	char in[256];
- 	char out_test[256];
-@@ -77,15 +98,8 @@ static void __init test_string_unescape(unsigned int flags, bool inplace)
- 		q_real = string_unescape(in, out_real, q_real, flags);
- 	}
- 
--	if (q_real != q_test || memcmp(out_test, out_real, q_test)) {
--		pr_warn("Test failed: flags = %u\n", flags);
--		print_hex_dump(KERN_WARNING, "Input: ",
--			       DUMP_PREFIX_NONE, 16, 1, in, p - 1, true);
--		print_hex_dump(KERN_WARNING, "Expected: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_test, q_test, true);
--		print_hex_dump(KERN_WARNING, "Got: ",
--			       DUMP_PREFIX_NONE, 16, 1, out_real, q_real, true);
--	}
-+	test_string_check_buf(name, flags, in, p - 1, out_real, q_real,
-+			      out_test, q_test);
- }
- 
- static int __init test_string_helpers_init(void)
-@@ -94,8 +108,9 @@ static int __init test_string_helpers_init(void)
- 
- 	pr_info("Running tests...\n");
- 	for (i = 0; i < UNESCAPE_ANY + 1; i++)
--		test_string_unescape(i, false);
--	test_string_unescape(get_random_int() % (UNESCAPE_ANY + 1), true);
-+		test_string_unescape("unescape", i, false);
-+	test_string_unescape("unescape inplace",
-+			     get_random_int() % (UNESCAPE_ANY + 1), true);
- 
- 	return -EINVAL;
- }
--- 
-2.1.0
+regards, Kyle
 
+> Best Regards,
+> Yaniv
+> 
+> 
+> The following changes since commit 7f388b4885cf64d6b7833612052d20d4197af96f:
+> 
+>   Move the s5p-mfc firmware out of its subdirectory (2014-06-04 13:14:13 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.ti.com/wilink8-wlan/linux-firmware.git master
+> 
+> for you to fetch changes up to cbf9f8f506ad6a46818fa61af461aa615fdd4e87:
+> 
+>   wl18xx: add version 4 of the wl18xx firmware (2014-07-10 15:01:58 +0300)
+> 
+> ----------------------------------------------------------------
+> Yaniv Machani (1):
+>       wl18xx: add version 4 of the wl18xx firmware
+> 
+>  WHENCE                          |    2 ++
+>  ti-connectivity/wl18xx-fw-4.bin |  Bin 0 -> 681704 bytes
+>  2 files changed, 2 insertions(+), 0 deletions(-)  create mode 100755 ti-connectivity/wl18xx-fw-4.bin
+> 
+> diff --git a/WHENCE b/WHENCE
+> index a172f5f..f8ab2fb 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -1867,6 +1867,8 @@ File: ti-connectivity/wl18xx-fw-2.bin
+>  Version: 8.5.0.0.55
+>  File: ti-connectivity/wl18xx-fw-3.bin
+>  Version: 8.8.0.0.13
+> +File: ti-connectivity/wl18xx-fw-4.bin
+> +Version: 8.9.0.0.17
+>  File: ti-connectivity/wl18xx-conf.bin
+>  Version: 6/5
+>  
+> diff --git a/ti-connectivity/wl18xx-fw-4.bin b/ti-connectivity/wl18xx-fw-4.bin new file mode 100755 index 0000000..8369a9e Binary files /dev/null and b/ti-connectivity/wl18xx-fw-4.bin differ
+>  
+> 
