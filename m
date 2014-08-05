@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ems.wolfvision.net ([213.33.91.163]:41448 "EHLO
-	ems.wolfvision.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbaHRMqJ convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36221 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753563AbaHEUti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 08:46:09 -0400
-From: Matthias Fend <Matthias.Fend@wolfvision.net>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: rt2x00: Ralink RT5572 (TL-WDN3200) sporadic damages
-Date: Mon, 18 Aug 2014 12:37:44 +0000
-Message-ID: <CC2A85E271C1FB479D9C17305347F69A04C60591@WOLFSERVER19.wolfvision-at.intra> (sfid-20140818_144613_876324_659C4ADE)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 5 Aug 2014 16:49:38 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  improve logging in firmware crash routine.
+Date: Tue,  5 Aug 2014 13:49:32 -0700
+Message-Id: <1407271772-14874-1-git-send-email-greearb@candelatech.com> (sfid-20140805_224947_724429_A15AA61D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Ben Greear <greearb@candelatech.com>
 
-While continuing stability tests after fixing the high current peaks while sending uninitialized beacons [1] we still have occasional cases where suddenly a stick stops working and is getting very hot.
-In this case very hot means that the plastic molding of the dongle shows very clear deformations and the stick won't work properly anymore.
-One can see continuous vendor request failed message in case when a stick stops working or when a damaged stick is inserted.
+Only print error message upon failure, and print more
+details in case it does find an error.
 
-So far we always tested with our custom hardware. To rule out hardware topics we decided to build up a test farm with a more common platform.
-For a test we setup 10 raspberry pi with this setup:
-Kernel: https://github.com/raspberrypi/linux/tree/rpi-3.16.y
-WLAN-Stick Firmware: V0.33
-ap: hostapd 1.0
-ap:config:
-interface=wlan0
-driver=nl80211
-ieee80211n=1
-wmm_enabled=1
-ssid=MyPi1
-channel=36
-disassoc_low_ack=0
-country_code=DE
-ieee80211d=1
-hw_mode=a
-ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
-wpa=2
-wpa_passphrase=raspberry
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP CCMP
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-Within the first 48 hours three of the ten setups failed with the mentioned problems. Since the broken sticks had been replaced the test is now running since five days without further problems.
-At least this test helped to figure out that this issue does not depend on our hardware.
-Unfortunately this bug is really rare and currently I have absolutely no idea what is triggering this damages.
-Has anybody observed similar behavior or has some helpful hints?
+This is on top of the firmware crash reporting patches,
+not sure it would apply clean until those get in.
 
-Thanks,
- ~Matthias
+ drivers/net/wireless/ath/ath10k/pci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
- [1] http://www.spinics.net/lists/linux-wireless/msg123423.html
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 24688b7..085c0c8 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -929,12 +929,11 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 	ret = ath10k_pci_diag_read_mem(ar, host_addr,
+ 				       &reg_dump_area, sizeof(u32));
+ 	if (ret) {
+-		ath10k_err("failed to read FW dump area address: %d\n", ret);
++		ath10k_err("failed to read FW dump area address: %d  (hostaddr 0x%08X  hi-failure-state 0x%08lX)\n",
++			   ret, host_addr, HI_ITEM(hi_failure_state));
+ 		goto exit;
+ 	}
+ 
+-	ath10k_err("target register Dump Location: 0x%08X\n", reg_dump_area);
+-
+ 	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area,
+ 				       &reg_dump_values[0],
+ 				       REG_DUMP_COUNT_QCA988X * sizeof(u32));
+-- 
+1.7.11.7
 
