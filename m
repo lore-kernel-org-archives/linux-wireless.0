@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:55181 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944AbaHZQju (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:59071 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbaHEQvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 12:39:50 -0400
-Received: by mail-ig0-f174.google.com with SMTP id c1so4802475igq.7
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2014 09:39:50 -0700 (PDT)
+	Tue, 5 Aug 2014 12:51:09 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
+Date: Tue, 5 Aug 2014 18:51:06 +0200
+Cc: ath10k@lists.infradead.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Kathy Giori <kgiori@qca.qualcomm.com>,
+	Sven Eckelmann <sven@narfation.org>,
+	mathias.kretschmer@fokus.fraunhofer.de
+References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de> <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
+In-Reply-To: <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2918019.CXq3d6nCM0@debian64>
-References: <CALoNvyuUxX7Wv+nRnPDW_PdO3BsJbTfrF-MU7uoNuUbAXrbZnA@mail.gmail.com>
-	<2918019.CXq3d6nCM0@debian64>
-Date: Tue, 26 Aug 2014 09:39:49 -0700
-Message-ID: <CALoNvysRU5oTXXeR891cb3Up73JLz6vefAMRXe3d0DHo1eQbbg@mail.gmail.com> (sfid-20140826_183954_629886_CA8B0524)
-Subject: Re: rtl8192su driver compatibility with a rtl8188su device
-From: David Madsen <david.madsen@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201408051851.06457.sw@simonwunderlich.de> (sfid-20140805_185114_237401_ABBD7421)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 26, 2014 at 8:19 AM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
 
-> The rtl8192su.git comes with two sets of firmware (for two different
-> driver architectures).
->
-> The rtl8712u firmware is much more integrated and can performs several
-> high-level procedures (high-level for firmware) like scanning, link setup
-> (auth, assoc, reassoc, deassoc, deauth), link monitoring, rate control,
-> crypto, erp, beacon generation, etc... with little to no help from the
-> driver. This firmware is used by the (staging) rtl8712u, v2.6.6.0.20120405
-> and (abandoned) r92su driver.
->
-> the rtl8192su* firmware can't do any of those. The driver +
-> mac80211-stack has to perform the all the necessary procedures
-> (starting from the phy/rf setup). This firmware is used by rtl8192su,
-> AR-7284WnAB, windows and mac osx drivers.
+> On Fri, Aug 1, 2014 at 6:17 AM, Simon Wunderlich <sw@simonwunderlich.de> 
+wrote:
+> > To view the samples, please have a look at the fft_eval tool [1] which
+> > now supports both ath9k and ath10k formats.
+> 
+> Can you please edit the ath9k and ath10k wiki about this tool and
+> reference to it?
 
-Thanks for the clarifications on the differing firmwares.  I think
-this is likely my first issue (using an incorrect firmware with
-rtl8192su driver stack).
+Thanks for pointing that out. I've updated ath9k with some instructions how to 
+actually run the spectral scan. A link to the tool was already included. I've 
+also added an ath10k page with test instructions and description of the 
+debugfs files, including a reference to fft_eval. Feel free to 
+update/improve/edit, everyone. :)
 
-> The monitor mode of the rtl8712/r92su driver is limited by the firmware
-> too. For example it is not possible to set the channel bandwidth to 40MHz.
-> If that is not a problem and you don't need injection, you can try to get
-> the abandoned r92su driver to work. It uses cfg80211 (not the old wireless
-> extension) and has support for the monitor mode.
+I did not update the iw page because there is (no longer) any changes 
+neccesary in iw for running spectral - we had this only in the very first 
+version of the ath9k patch. I've updated the README/usage in fft_eval to 
+reflect that properly, though.
 
-Thanks for the pointer to the r92su driver.  I think this may address
-my immediate needs (basic RX monitoring).
-
->> If not I would be interested in helping out with porting/testing/debugging
->> to aid in getting the chipset functional.
-> That would be: figuring out why the device dies after a random amount of time.
-> This could be caused by a missing watchdog check or the firmware detected a
-> problem and needs a reset. I think this will probably require someone taking
-> USB traffic dumps from both the mac os x or windows driver and check what they
-> do differently. [Not very trivial]
-
-If I can get the device working I should be able to get the traces
-(though analyzing them is another story).
-
-Thanks for the help.
-
---
-David Madsen
+Thanks,
+    Simon
