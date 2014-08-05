@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34810 "EHLO
+Received: from mail2.candelatech.com ([208.74.158.173]:36239 "EHLO
 	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbaHIUud (ORCPT
+	with ESMTP id S1753683AbaHEUvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 16:50:33 -0400
-Message-ID: <53E68995.1020005@candelatech.com> (sfid-20140809_225037_969631_7E72C268)
-Date: Sat, 09 Aug 2014 13:50:29 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6 0/8] ath10k: firmware crash dump
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 5 Aug 2014 16:51:21 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k: fix typo in error message.
+Date: Tue,  5 Aug 2014 13:51:18 -0700
+Message-Id: <1407271878-15230-1-git-send-email-greearb@candelatech.com> (sfid-20140805_225123_903244_132FFF34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 08/09/2014 11:07 AM, Kalle Valo wrote:
-> Next version of ath10k firmware crash dump feature, based on Ben's patches but
-> heavily modified.
->
-> v6:
-
-I see no obvious problems.  If it passes basic testing, poke it upstream
-and I'll start making my decode tool able to parse it (and package my CT
-firmware with the BSS addrs/lengths..it is currently using a slightly
-different IE format.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e67137a..b2e7303 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2004,7 +2004,7 @@ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+ 			     ar->fw_features)) {
+ 			if (skb_queue_len(&ar->wmi_mgmt_tx_queue) >=
+ 			    ATH10K_MAX_NUM_MGMT_PENDING) {
+-				ath10k_warn("reached WMI management tranmist queue limit\n");
++				ath10k_warn("reached WMI management transmit queue limit\n");
+ 				ret = -EBUSY;
+ 				goto exit;
+ 			}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.11.7
+
