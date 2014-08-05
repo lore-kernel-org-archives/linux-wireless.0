@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56816 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302AbaHXJm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2014 05:42:59 -0400
-Message-ID: <1408873339.24483.0.camel@jlt4.sipsolutions.net> (sfid-20140824_114304_023868_9CFE2B51)
-Subject: Re: [PATCH v8 2/4] ath10k: provide firmware crash info via debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Sun, 24 Aug 2014 11:42:19 +0200
-In-Reply-To: <87egw8a8zg.fsf@kamboji.qca.qualcomm.com>
-References: <20140821124705.27159.67898.stgit@potku.adurom.net>
-	 <20140821124907.27159.64620.stgit@potku.adurom.net>
-	 <1408626616.4388.0.camel@jlt4.sipsolutions.net>
-	 <877g21c3dd.fsf@kamboji.qca.qualcomm.com>
-	 <1408670355.4388.4.camel@jlt4.sipsolutions.net>
-	 <87egw8a8zg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:41125 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbaHENFz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2014 09:05:55 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so6869800wib.4
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2014 06:05:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 0/2] ath10k: scan fixes 2014-07-21
+Date: Tue,  5 Aug 2014 14:54:42 +0200
+Message-Id: <1407243284-19803-1-git-send-email-michal.kazior@tieto.com> (sfid-20140805_150559_043177_F5560425)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-08-22 at 17:34 +0300, Kalle Valo wrote:
+This addresses an issue found by Janusz with
+current spectral scan patches from Simon.
 
-> We really would have use for this, that's why I'm hesitant to wait more.
-> Even having this from an "unofficial" location would be a big help. If
-> it's ok for you, I would like to apply this once all review comments are
-> addressed. But naturally if you think it's better to wait, I will do
-> that.
+This goes along patch `ath10k: prevent endless pci rx
+loop` I've posted a few days ago.
 
-No, I don't care what you do. I'm just saying I'm working on a
-framework, so you might want to wait. If you don't, that's perfectly
-fine with me.
+There seems to be a condition in firmware which
+causes some WMI events to be not delivered by
+firmware to host most likely due to CE/PCI pipe
+being full (that's a guess judging by the huge
+amount of phyerrs reported and their behaviour
+while spectral scan is enabled). This also
+suggests some SWBA events may be dropped by
+firmware when spectral scan is running (same goes
+for management rx).
 
-johannes
+v2:
+ * addressed some comments from Kalle
+ * fixed a few more issues
+
+
+Michal Kazior (2):
+  ath10k: simplify scan debug prints
+  ath10k: introduce a stricter scan state machine
+
+ drivers/net/wireless/ath/ath10k/core.c |   5 +-
+ drivers/net/wireless/ath/ath10k/core.h |  27 +++-
+ drivers/net/wireless/ath/ath10k/mac.c  | 238 ++++++++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/mac.h  |   4 +-
+ drivers/net/wireless/ath/ath10k/wmi.c  | 208 +++++++++++++++++++---------
+ 5 files changed, 317 insertions(+), 165 deletions(-)
+
+-- 
+1.8.5.3
 
