@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39455 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752191AbaHERNQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 13:13:16 -0400
-From: Avinash Patil <patila@marvell.com>
-To: Andrey Yurovsky <yurovsky@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 5 Aug 2014 10:11:32 -0700
-Subject: RE: scanning only returns results on specified channels (Marvell
- mwifiex driver)
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147BBC@SC-VEXCH2.marvell.com> (sfid-20140805_191319_592067_B203C25E)
-References: <CAAkeqgVTqV5cga8=Xk=PEctNNYXUumxm3U3oV2TtsjtzjhSVPA@mail.gmail.com>
-In-Reply-To: <CAAkeqgVTqV5cga8=Xk=PEctNNYXUumxm3U3oV2TtsjtzjhSVPA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:59039 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753095AbaHEFiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2014 01:38:12 -0400
+Message-ID: <53E06DB9.2040904@linux.intel.com> (sfid-20140805_073843_131574_B2FE0792)
+Date: Tue, 05 Aug 2014 13:38:01 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
+	mcgrof@do-not-panic.com, antonio@open-mesh.com,
+	johannes.berg@intel.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
+ and connecting
+References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com> <53DFB6A1.7040900@linux.intel.com> <20140804165202.GG30282@n2100.arm.linux.org.uk>
+In-Reply-To: <20140804165202.GG30282@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrey,
 
-What is your kernel version? Also do you have extended scan enabled? You may check init.c for adapter->ext_scan.
+On 2014/8/5 0:52, Russell King - ARM Linux wrote:
+> On Tue, Aug 05, 2014 at 12:36:49AM +0800, Fu, Zhonghui wrote:
+>> Hi, Arend
+>>
+>> I investigated this issue, and its root cause is still that sdio
+>> controller can't receive interrupts from WiFi chip on sdio bus when
+>> sdio controller is in runtime suspend status. I am running 3.16-rc5
+>> linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
+> That's the root cause.  I fixed this with the Freescale i.MX SD driver
+> which is now able to report pending SDIO interrupts while runtime PM
+> suspended.
+>
+> Other host drivers probably need fixing too, or having runtime PM
+> disabled on them - if you can't receive SDIO interrupts while runtime
+> PM suspended, then entering runtime PM while you have a SDIO device
+> attached is a bug.
+>
+> This is something for the MMC people to deal with rather than Arend.
+>
+Yes, this should be sdhci-acpi bug, I will contact MMC people for this issue.
 
-Thanks,
-Avinash.
-
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Andrey Yurovsky [yurovsky@gmail.com]
-Sent: Tuesday, August 05, 2014 12:41 AM
-To: linux-wireless@vger.kernel.org
-Subject: scanning only returns results on specified channels (Marvell mwifiex driver)
-
-I am not seeing scan results on my test setup with a Marvell 88W8787
-(mwifiex driver) connected over SDIO to an ARM926.  I traced and found
-that the card and driver do receive results, they do report them via
-cfg80211, and those results are stored as expected (for instance, I
-see every BSSID I expected to find in tmp->pub.bssid
-cfg80211_bss_update()).  iw never gets them, it just acts like there
-were no results.  However specifying a frequency does return results,
-so this doesn't work:
-
-iw dev mlan0 scan
-
-but this does:
-
-iw dev mlan0 scan 2412
-
-I'm wondering if there's something marked incorrectly in the BSS
-structure from the driver or if there is some other reason that
-results aren't reported unless the frequency is specified.  When doing
-the latter, I do see reasonable results when compared to another
-system scanning in the same room.
-
-Can someone else reproduce this?  Is there anything specific that I
-could look at that would help resolve the problem?
 
 Thanks,
-
-  -Andrey
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Zhonghui
