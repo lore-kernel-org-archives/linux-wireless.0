@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24006 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbaHNI1h (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:64334 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221AbaHFOjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 04:27:37 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 6/6] ath10k: move fw init print
-References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
-	<1407402212-29809-7-git-send-email-michal.kazior@tieto.com>
-	<87ppg6qh3z.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 14 Aug 2014 11:27:29 +0300
-In-Reply-To: <87ppg6qh3z.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 12 Aug 2014 10:53:04 +0300")
-Message-ID: <87egwjo4r2.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_102742_265548_27059BEA)
+	Wed, 6 Aug 2014 10:39:07 -0400
+Message-ID: <53E23DFE.7070209@lwfinger.net> (sfid-20140806_163912_899317_79C384EF)
+Date: Wed, 06 Aug 2014 09:38:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Hans Wennborg <hans@hanshq.net>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/15] rtlwifi: rtl8192de: fix decimal printf format specifiers
+ prefixed with 0x
+References: <1407300186-32673-1-git-send-email-hans@hanshq.net>
+In-Reply-To: <1407300186-32673-1-git-send-email-hans@hanshq.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On 08/05/2014 11:43 PM, Hans Wennborg wrote:
+> The prefix suggests the number should be printed in hex, so use
+> the %x specifier to do that.
+> 
+> Found by using regex suggested by Joe Perches.
+> 
+> Signed-off-by: Hans Wennborg <hans@hanshq.net>
+> ---
+>  drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> index 2317707..66e1760 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> @@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
+>  			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
+>  	}
+>  	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+> -		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
+> +		 "Polling FW ready fail!! REG_MCUFWDL:0x%08lx\n",
+>  		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
+>  	return -1;
+>  }
 
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Firmware probing is done only once when driver is
->> registered and firmware version is guaranteed to
->> remain the same until driver is unregistered.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> -	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
->
-> Doesn't this break this print in pci.c:
->
->         if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
->            ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
->                                     irq_mode, ath10k_pci_irq_mode,
->                                                     ath10k_pci_reset_mode);
+It would be best to actually build with your patches installed. This one yields
+the following warning:
 
-Ah, now I understand. You rework that part in patch "ath10k: setup irq
-method in probe" which was just in a different patchset. Then this extra
-print during interface up is ok, as it just happens between the two
-patches.
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192de/fw.o
+drivers/net/wireless/rtlwifi/rtl8192de/fw.c: In function ‘_rtl92d_fw_init’:
+drivers/net/wireless/rtlwifi/rtl8192de/fw.c:236:2: warning: format ‘%lx’ expects
+argument of type ‘long unsigned int’, but argument 5 has type ‘u32’ [-Wformat=]
+  RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+  ^
 
--- 
-Kalle Valo
+The format specifier should be %04x, not %08lx. I have no idea why gcc did not
+complain as %08ul is also wrong.
+
+Larry
+
