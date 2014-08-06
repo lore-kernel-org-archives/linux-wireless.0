@@ -1,200 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64382 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205AbaHDQg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 12:36:57 -0400
-Message-ID: <53DFB6A1.7040900@linux.intel.com> (sfid-20140804_183727_313118_299BC0B6)
-Date: Tue, 05 Aug 2014 00:36:49 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755191AbaHFHcf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2014 03:32:35 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 08/13] wil6210: fix beamforming data reporting
+Date: Wed, 6 Aug 2014 10:31:56 +0300
+Message-ID: <1407310322-22568-9-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093239_758282_622E3F7A)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
-	mcgrof@do-not-panic.com, antonio@open-mesh.com,
-	johannes.berg@intel.com
-CC: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mmc@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
- and connecting
-References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com>
-In-Reply-To: <53D124B3.7030807@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-On 2014/7/24 23:22, Fu, Zhonghui wrote:
-> On 2014/7/21 15:42, Fu, Zhonghui wrote:
->> On 2014/6/20 0:37, Arend van Spriel wrote:
->>> On 19-06-14 18:28, Fu, Zhonghui wrote:
->>>> On 2014/6/16 16:15, Arend van Spriel wrote:
->>>>> On 16-06-14 07:49, Fu, Zhonghui wrote:
->>>>>>   From 14485894add32aedacb3e486ebb2cc2b73861abf Mon Sep 17 00:00:00 2001
->>>>>> From: Fu zhonghui <zhonghui.fu@linux.intel.com>
->>>>>> Date: Wed, 11 Jun 2014 11:06:55 +0800
->>>>>> Subject: [PATCH] brcmfmac: prevent watchdog from interfering with scanning and connecting
->>>>>>
->>>>>> Watchdog in brcmfmac driver may make WiFi chip enter sleep mode
->>>>>> before completion of scanning or connecting.
->>>>>>
->>>>>> This will lead to scanning or connecting failure.
->>>>>>
->>>>>> Increasing temporarily idle-time threshold during scanning or
->>>>>> connecting can ensure scanning or connecting success without
->>>>>> watchdog interference.
->>>>> Are you sure you are not having runtime PM enabled. That could be your problem as the host controller code disables sdio irqs. Please see this thread [1]. For our device runtime pm should not be enabled, but I am not sure if that is taken into account in mmc_attach_sdio() (see code below).
->>>> I have tried brcmfmac driver with "CONFIG_PM_RUNTIME is not set", and scanning and connecting  always succeeded. This means that CONFIG_PM_RUNTIME should not be set if we use SDIO WiFi device driven by brcmfmac driver, right?
->>> Depends which kernel you are using. In 3.16-rc1 the sdio interrupt issue has been fixed so you should be fine to use CONFIG_PM_RUNTIME. Here is the commit
+When reading 'bf' file on debugfs, query beam forming status from firmware.
+Ignore CID's that return error or return all zeros.
 
-Hi, Arend
+Remove obsolete code that used to maintain statistics on per-device basis,
+as now it is reported be per-CID and current.
 
-I investigated this issue, and its root cause is still that sdio controller can't receive interrupts from WiFi chip on sdio bus when sdio controller is in runtime suspend status. I am running 3.16-rc5 linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 78 +++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/txrx.c    |  1 -
+ drivers/net/wireless/ath/wil6210/wil6210.h | 12 -----
+ drivers/net/wireless/ath/wil6210/wmi.c     | 28 -----------
+ drivers/net/wireless/ath/wil6210/wmi.h     |  2 +-
+ 5 files changed, 72 insertions(+), 49 deletions(-)
 
-
-Thanks,
-Zhonghui
-> Any clues or comments to the following issue?
->> I run 3.16-rc4 and 3.16-rc5 kernel with CONFIG_PM_RUNTIME set, the issue still exists as follows:
->>
->> 1 step: modprobe brcmfmac
->> 2 step: iwlist wlan1 scan         get scanning result successfully.
->> 3 step: wait a while, no any operation
->> 4 step: iwlist wlan1 scan         scanning timeout, can't get scanning result.
->>
->>
->> Thanks,
->> Zhonghui
->>
->>> commit be138554a7923658ded799b0e8794d9c1d08a6e5
->>> Author: Russell King <rmk+kernel@arm.linux.org.uk>
->>> Date:   Fri Apr 25 12:55:56 2014 +0100
->>>
->>>     mmc: sdhci: allow sdio interrupts while sdhci runtime suspended
->>>
->>> Regards,
->>> Arend
->>>
->>>> Thanks,
->>>> Zhonghui
->>>>> Gr. AvS
->>>>>
->>>>> [1] http://www.spinics.net/lists/linux-mmc/msg25978.html
->>>>>
->>>>> --8<----------------------------------------------------------------
->>>>>
->>>>>      /*
->>>>>       * Enable runtime PM only if supported by host+card+board
->>>>>       */
->>>>>      if (host->caps & MMC_CAP_POWER_OFF_CARD) {
->>>>>          /*
->>>>>           * Let runtime PM core know our card is active
->>>>>           */
->>>>>          err = pm_runtime_set_active(&card->dev);
->>>>>          if (err)
->>>>>              goto remove;
->>>>>
->>>>>          /*
->>>>>           * Enable runtime PM for this card
->>>>>           */
->>>>>          pm_runtime_enable(&card->dev);
->>>>>      }
->>>>>
->>>>>> Signed-off-by: Fu zhonghui <zhonghui.fu@linux.intel.com>
->>>>>> ---
->>>>>>    drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 ++++++++++++++++--
->>>>>>    .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
->>>>>>    2 files changed, 18 insertions(+), 3 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>>> index 13c89a0..729deab 100644
->>>>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->>>>>> @@ -34,6 +34,7 @@
->>>>>>    #include <linux/vmalloc.h>
->>>>>>    #include <linux/platform_data/brcmfmac-sdio.h>
->>>>>>    #include <linux/moduleparam.h>
->>>>>> +#include <net/cfg80211.h>
->>>>>>    #include <asm/unaligned.h>
->>>>>>    #include <defs.h>
->>>>>>    #include <brcmu_wifi.h>
->>>>>> @@ -43,6 +44,10 @@
->>>>>>    #include "sdio_host.h"
->>>>>>    #include "chip.h"
->>>>>>    #include "nvram.h"
->>>>>> +#include "dhd.h"
->>>>>> +#include "fwil_types.h"
->>>>>> +#include "p2p.h"
->>>>>> +#include "wl_cfg80211.h"
->>>>>>
->>>>>>    #define DCMD_RESP_TIMEOUT  2000    /* In milli second */
->>>>>>
->>>>>> @@ -307,6 +312,7 @@ struct rte_console {
->>>>>>                         * when idle
->>>>>>                         */
->>>>>>    #define BRCMF_IDLE_INTERVAL    1
->>>>>> +#define BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING    100
->>>>>>
->>>>>>    #define KSO_WAIT_US 50
->>>>>>    #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
->>>>>> @@ -3613,9 +3619,9 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
->>>>>>
->>>>>>    static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
->>>>>>    {
->>>>>> -#ifdef DEBUG
->>>>>>        struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
->>>>>> -#endif    /* DEBUG */
->>>>>> +    struct brcmf_cfg80211_info *cfg = bus_if->drvr->config;
->>>>>> +    struct brcmf_if *ifp = cfg->pub->iflist[0];
->>>>>>
->>>>>>        brcmf_dbg(TIMER, "Enter\n");
->>>>>>
->>>>>> @@ -3678,6 +3684,14 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
->>>>>>
->>>>>>        /* On idle timeout clear activity flag and/or turn off clock */
->>>>>>        if ((bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
->>>>>> +
->>>>>> +        if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status) ||
->>>>>> +            test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
->>>>>> +            bus->idletime = BRCMF_IDLE_INTERVAL_SCANNING_CONNECTING;
->>>>>> +        } else {
->>>>>> +            bus->idletime = BRCMF_IDLE_INTERVAL;
->>>>>> +        }
->>>>>> +
->>>>>>            if (++bus->idlecount >= bus->idletime) {
->>>>>>                bus->idlecount = 0;
->>>>>>                if (bus->activity) {
->>>>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>>> index be19852..e76517e 100644
->>>>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->>>>>> @@ -913,6 +913,8 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
->>>>>>            return -EAGAIN;
->>>>>>        }
->>>>>>
->>>>>> +    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
->>>>>> +
->>>>>>        /* If scan req comes for p2p0, send it over primary I/F */
->>>>>>        if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
->>>>>>            vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
->>>>>> @@ -933,7 +935,6 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
->>>>>>        }
->>>>>>
->>>>>>        cfg->scan_request = request;
->>>>>> -    set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
->>>>>>        if (escan_req) {
->>>>>>            cfg->escan_info.run = brcmf_run_escan;
->>>>>>            err = brcmf_p2p_scan_prep(wiphy, request, vif);
->>>>>> -- 1.7.1
->>>>>>
->>>>> -- 
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> Please read the FAQ at  http://www.tux.org/lkml/
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 95269d2..b1c6a72 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -22,6 +22,7 @@
+ #include <linux/power_supply.h>
+ 
+ #include "wil6210.h"
++#include "wmi.h"
+ #include "txrx.h"
+ 
+ /* Nasty hack. Better have per device instances */
+@@ -728,16 +729,79 @@ static const struct file_operations fops_txdesc = {
+ };
+ 
+ /*---------beamforming------------*/
++static char *wil_bfstatus_str(u32 status)
++{
++	switch (status) {
++	case 0:
++		return "Failed";
++	case 1:
++		return "OK";
++	case 2:
++		return "Retrying";
++	default:
++		return "??";
++	}
++}
++
++static bool is_all_zeros(void * const x_, size_t sz)
++{
++	/* if reply is all-0, ignore this CID */
++	u32 *x = x_;
++	int n;
++
++	for (n = 0; n < sz / sizeof(*x); n++)
++		if (x[n])
++			return false;
++
++	return true;
++}
++
+ static int wil_bf_debugfs_show(struct seq_file *s, void *data)
+ {
++	int rc;
++	int i;
+ 	struct wil6210_priv *wil = s->private;
+-	seq_printf(s,
+-		   "TSF : 0x%016llx\n"
+-		   "TxMCS : %d\n"
+-		   "Sectors(rx:tx) my %2d:%2d peer %2d:%2d\n",
+-		   wil->stats.tsf, wil->stats.bf_mcs,
+-		   wil->stats.my_rx_sector, wil->stats.my_tx_sector,
+-		   wil->stats.peer_rx_sector, wil->stats.peer_tx_sector);
++	struct wmi_notify_req_cmd cmd = {
++		.interval_usec = 0,
++	};
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_notify_req_done_event evt;
++	} __packed reply;
++
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++		u32 status;
++
++		cmd.cid = i;
++		rc = wmi_call(wil, WMI_NOTIFY_REQ_CMDID, &cmd, sizeof(cmd),
++			      WMI_NOTIFY_REQ_DONE_EVENTID, &reply,
++			      sizeof(reply), 20);
++		/* if reply is all-0, ignore this CID */
++		if (rc || is_all_zeros(&reply.evt, sizeof(reply.evt)))
++			continue;
++
++		status = le32_to_cpu(reply.evt.status);
++		seq_printf(s, "CID %d {\n"
++			   "  TSF = 0x%016llx\n"
++			   "  TxMCS = %2d TxTpt = %4d\n"
++			   "  SQI = %4d\n"
++			   "  Status = 0x%08x %s\n"
++			   "  Sectors(rx:tx) my %2d:%2d peer %2d:%2d\n"
++			   "  Goodput(rx:tx) %4d:%4d\n"
++			   "}\n",
++			   i,
++			   le64_to_cpu(reply.evt.tsf),
++			   le16_to_cpu(reply.evt.bf_mcs),
++			   le32_to_cpu(reply.evt.tx_tpt),
++			   reply.evt.sqi,
++			   status, wil_bfstatus_str(status),
++			   le16_to_cpu(reply.evt.my_rx_sector),
++			   le16_to_cpu(reply.evt.my_tx_sector),
++			   le16_to_cpu(reply.evt.other_rx_sector),
++			   le16_to_cpu(reply.evt.other_tx_sector),
++			   le32_to_cpu(reply.evt.rx_goodput),
++			   le32_to_cpu(reply.evt.tx_goodput));
++	}
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 9fcc2e3..9bd920d 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -414,7 +414,6 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 	cid = wil_rxdesc_cid(d);
+ 	stats = &wil->sta[cid].stats;
+ 	stats->last_mcs_rx = wil_rxdesc_mcs(d);
+-	wil->stats.last_mcs_rx = stats->last_mcs_rx;
+ 
+ 	/* use radiotap header only if required */
+ 	if (ndev->type == ARPHRD_IEEE80211_RADIOTAP)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 0097300..f8718fe 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -330,17 +330,6 @@ struct wil_tid_ampdu_rx {
+ 	bool first_time; /* is it 1-st time this buffer used? */
+ };
+ 
+-struct wil6210_stats {
+-	u64 tsf;
+-	u32 snr;
+-	u16 last_mcs_rx;
+-	u16 bf_mcs; /* last BF, used for Tx */
+-	u16 my_rx_sector;
+-	u16 my_tx_sector;
+-	u16 peer_rx_sector;
+-	u16 peer_tx_sector;
+-};
+-
+ enum wil_sta_status {
+ 	wil_sta_unused = 0,
+ 	wil_sta_conn_pending = 1,
+@@ -433,7 +422,6 @@ struct wil6210_priv {
+ 
+ 	struct mutex mutex; /* for wil6210_priv access in wil_{up|down} */
+ 	/* statistics */
+-	struct wil6210_stats stats;
+ 	atomic_t isr_count_rx, isr_count_tx;
+ 	/* debugfs */
+ 	struct dentry *debug;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index b25a62d..0beb129 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -482,33 +482,6 @@ static void wmi_evt_disconnect(struct wil6210_priv *wil, int id,
+ 	mutex_unlock(&wil->mutex);
+ }
+ 
+-static void wmi_evt_notify(struct wil6210_priv *wil, int id, void *d, int len)
+-{
+-	struct wmi_notify_req_done_event *evt = d;
+-
+-	if (len < sizeof(*evt)) {
+-		wil_err(wil, "Short NOTIFY event\n");
+-		return;
+-	}
+-
+-	wil->stats.tsf = le64_to_cpu(evt->tsf);
+-	wil->stats.snr = le32_to_cpu(evt->snr_val);
+-	wil->stats.bf_mcs = le16_to_cpu(evt->bf_mcs);
+-	wil->stats.my_rx_sector = le16_to_cpu(evt->my_rx_sector);
+-	wil->stats.my_tx_sector = le16_to_cpu(evt->my_tx_sector);
+-	wil->stats.peer_rx_sector = le16_to_cpu(evt->other_rx_sector);
+-	wil->stats.peer_tx_sector = le16_to_cpu(evt->other_tx_sector);
+-	wil_dbg_wmi(wil, "Link status, MCS %d TSF 0x%016llx\n"
+-		    "BF status 0x%08x SNR 0x%08x SQI %d%%\n"
+-		    "Tx Tpt %d goodput %d Rx goodput %d\n"
+-		    "Sectors(rx:tx) my %d:%d peer %d:%d\n",
+-		    wil->stats.bf_mcs, wil->stats.tsf, evt->status,
+-		    wil->stats.snr, evt->sqi, le32_to_cpu(evt->tx_tpt),
+-		    le32_to_cpu(evt->tx_goodput), le32_to_cpu(evt->rx_goodput),
+-		    wil->stats.my_rx_sector, wil->stats.my_tx_sector,
+-		    wil->stats.peer_rx_sector, wil->stats.peer_tx_sector);
+-}
+-
+ /*
+  * Firmware reports EAPOL frame using WME event.
+  * Reconstruct Ethernet frame and deliver it via normal Rx
+@@ -651,7 +624,6 @@ static const struct {
+ 	{WMI_SCAN_COMPLETE_EVENTID,	wmi_evt_scan_complete},
+ 	{WMI_CONNECT_EVENTID,		wmi_evt_connect},
+ 	{WMI_DISCONNECT_EVENTID,	wmi_evt_disconnect},
+-	{WMI_NOTIFY_REQ_DONE_EVENTID,	wmi_evt_notify},
+ 	{WMI_EAPOL_RX_EVENTID,		wmi_evt_eapol_rx},
+ 	{WMI_DATA_PORT_OPEN_EVENTID,	wmi_evt_linkup},
+ 	{WMI_WBE_LINKDOWN_EVENTID,	wmi_evt_linkdown},
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 2f51b46..061618c 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -980,7 +980,7 @@ struct wmi_ready_event {
+  * WMI_NOTIFY_REQ_DONE_EVENTID
+  */
+ struct wmi_notify_req_done_event {
+-	__le32 status;
++	__le32 status; /* beamforming status, 0: fail; 1: OK; 2: retrying */
+ 	__le64 tsf;
+ 	__le32 snr_val;
+ 	__le32 tx_tpt;
+-- 
+1.8.5.2
 
