@@ -1,76 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:48973 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbaHKWZ7 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134AbaHFHc1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 18:25:59 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so4994085wiw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 15:25:58 -0700 (PDT)
+	Wed, 6 Aug 2014 03:32:27 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 04/13] wil6210: check error in wil_target_reset()
+Date: Wed, 6 Aug 2014 10:31:52 +0300
+Message-ID: <1407310322-22568-5-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093231_608241_11F29408)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1407770081.9844.12.camel@jlt4.sipsolutions.net>
-References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1407770081.9844.12.camel@jlt4.sipsolutions.net>
-Date: Tue, 12 Aug 2014 00:25:58 +0200
-Message-ID: <CAA2SeNLg3mktDY0u4=ksHr4QvXewx4koeGkCAW8upqrS6gMg0g@mail.gmail.com> (sfid-20140812_002603_494893_7C984666)
-Subject: Re: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
->> index f1db15b..0b2d55d 100644
->> --- a/include/uapi/linux/nl80211.h
->> +++ b/include/uapi/linux/nl80211.h
->> @@ -1594,6 +1594,9 @@ enum nl80211_commands {
->>   * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
->>   *   the TDLS link initiator.
->>   *
->> + * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
->> + *   algorithm is enabled
->
-> You should probably describe that it's related to the
-> NL80211_FEATURE_ACKTO_ESTIMATION feature (and you should document that
-> it's a flag) since otherwise nobody will be able to correlate the two
-> things easily. :)
->
->
->> +       if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
->> +               if (!(rdev->wiphy.features &
->> NL80211_FEATURE_ACKTO_ESTIMATION))
->> +                       return -EOPNOTSUPP;
->> +
->> +               changed |= WIPHY_PARAM_DYN_ACK;
->> +       }
->
-> that doesn't really seem right, how do you turn it off??
->
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-dynack is disable by default at bootstrap and it is automatically
-disabled as soon as you set coverage_class (coverage_class >= 0) after
-dynack has been enabled (coverage_class = -1). E.g:
+When resetting target in wil_target_reset(), error may occur.
+Indicate error via error code. In case of error, don't attempt to further
+interact with card, specifically don't attempt firmware download or
+interrupts enabling.
 
-- iw phy phy0 set distance auto (to enable dynack)
+Move wil_rx_fini() to be always executed to prevent memory leak.
 
-- iw phy phy0 set distance x (to set coverage class and disable dynack)
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-
-This logic is implemented in dynack code. Is it fine for you?
-Anyway documentation should be clearer on that stuff. :)
-
-> johannes
->
-
-Regards,
-Lorenzo
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index dc22053..5a99342 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -309,7 +309,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 	destroy_workqueue(wil->wmi_wq);
+ }
+ 
+-static void wil_target_reset(struct wil6210_priv *wil)
++static int wil_target_reset(struct wil6210_priv *wil)
+ {
+ 	int delay = 0;
+ 	u32 hw_state;
+@@ -395,7 +395,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		if (delay++ > 100) {
+ 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
+ 				hw_state);
+-			return;
++			return -ETIME;
+ 		}
+ 	} while (hw_state != HW_MACHINE_BOOT_DONE);
+ 
+@@ -407,6 +407,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	wmb(); /* order is important here */
+ 
+ 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
++	return 0;
+ 
+ #undef R
+ #undef W
+@@ -471,10 +472,11 @@ int wil_reset(struct wil6210_priv *wil)
+ 	flush_workqueue(wil->wmi_wq_conn);
+ 	flush_workqueue(wil->wmi_wq);
+ 
+-	/* TODO: put MAC in reset */
+-	wil_target_reset(wil);
+-
++	rc = wil_target_reset(wil);
+ 	wil_rx_fini(wil);
++	if (rc)
++		return rc;
++
+ 
+ 	/* init after reset */
+ 	wil->pending_connect_cid = -1;
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.8.5.2
+
