@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29630 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507AbaHLJH6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39187 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134AbaHFHc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 05:07:58 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: remove @gfp parameter from cfg80211_rx_mgmt()
-Date: Tue, 12 Aug 2014 02:07:51 -0700
-Message-ID: <1510813.tvyqjS7Sdn@lx-wigig-72> (sfid-20140812_110807_049591_5275E594)
-In-Reply-To: <53E9CF20.8030500@broadcom.com>
-References: <1407752997-12382-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1407769025.9844.0.camel@jlt4.sipsolutions.net> <53E9CF20.8030500@broadcom.com>
+	Wed, 6 Aug 2014 03:32:29 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 05/13] wil6210: wait longer for hardware reset completion
+Date: Wed, 6 Aug 2014 10:31:53 +0300
+Message-ID: <1407310322-22568-6-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093234_052079_D619442E)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, August 12, 2014 10:24:00 AM Arend van Spriel wrote:
-> the cfg80211_rx_mgmt() call could be done with GFP_KERNEL flag in 
-> brcmfmac.
-No, you can't. In the cfg80211_rx_mgmt(), @gfp used for memory allocation under
-spinlock. So, it is done while in_atomic() is true. One can't use waiting GFP_KERNEL
-in this case. Quote from cfg80211_rx_mgmt() (see net/wireless/mlme.c):
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-	spin_lock_bh(&wdev->mgmt_registrations_lock);
-<skip>
-	list_for_each_entry(reg, &wdev->mgmt_registrations, list) {
-		/* Indicate the received Action frame to user space */
-		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
-				      freq, sig_mbm,
-				      buf, len, flags, gfp))
-			continue;
+Typical time for hardware reset, as measured, is about 200..250 msec.
+Adjust sleeping to use more relaxed msleep, increase sleep interval
+and increase total sleep time to be about 1sec
 
-		result = true;
-		break;
-	}
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-	spin_unlock_bh(&wdev->mgmt_registrations_lock);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 5a99342..b69d90f 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -25,6 +25,9 @@ static bool no_fw_recovery;
+ module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(no_fw_recovery, " disable FW error recovery");
+ 
++#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
++#define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
++
+ /*
+  * Due to a hardware issue,
+  * one has to read/write to/from NIC in 32-bit chunks;
+@@ -388,11 +391,11 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 	wmb(); /* order is important here */
+ 
+-	/* wait until device ready */
++	/* wait until device ready. typical time is 200..250 msec */
+ 	do {
+-		msleep(1);
++		msleep(RST_DELAY);
+ 		hw_state = R(RGF_USER_HW_MACHINE_STATE);
+-		if (delay++ > 100) {
++		if (delay++ > RST_COUNT) {
+ 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
+ 				hw_state);
+ 			return -ETIME;
+@@ -406,7 +409,7 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 	wmb(); /* order is important here */
+ 
+-	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
++	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
+ 	return 0;
+ 
+ #undef R
+-- 
+1.8.5.2
 
