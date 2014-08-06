@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:37381 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbaHJLWv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2556 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbaHFHcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 07:22:51 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so2935339wiw.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:50 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/7] staging: vt6655: CARDbSetBeaconPeriod call CARDbGetCurrentTSF to get TBTT
-Date: Sun, 10 Aug 2014 12:22:00 +0100
-Message-Id: <1407669722-2682-5-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132254_749221_E54ECE09)
-In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
-References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 6 Aug 2014 03:32:24 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 02/13] wil6210: fix race in reset
+Date: Wed, 6 Aug 2014 10:31:50 +0300
+Message-ID: <1407310322-22568-3-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093228_049933_306E2CA8)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is already a function to get next TBTT.
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Replace code with CARDqGetNextTBTT.
+It is important to halt USER CPU first, then MAC CPU
+Otherwise, race happens in the firmware
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6655/card.c | 22 ++--------------------
- 1 file changed, 2 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index a5da3d2..931fca8 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -606,29 +606,11 @@ bool CARDbUpdateTSF(void *pDeviceHandler, unsigned char byRxRate, u64 qwBSSTimes
- bool CARDbSetBeaconPeriod(void *pDeviceHandler, unsigned short wBeaconInterval)
- {
- 	PSDevice    pDevice = (PSDevice) pDeviceHandler;
--	unsigned int uBeaconInterval = 0;
--	unsigned int uLowNextTBTT = 0;
--	unsigned int uHighRemain = 0;
--	unsigned int uLowRemain = 0;
- 	u64 qwNextTBTT = 0;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 3704d2a..d734283 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -327,6 +327,8 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	/* register clear = read, AND with inverted, write */
+ #define C(a, v) W(a, R(a) & ~v)
  
- 	CARDbGetCurrentTSF(pDevice->PortOffset, &qwNextTBTT); //Get Local TSF counter
--	uBeaconInterval = wBeaconInterval * 1024;
--	// Next TBTT = ((local_current_TSF / beacon_interval) + 1) * beacon_interval
--	uLowNextTBTT = ((qwNextTBTT & 0xffffffffULL) >> 10) << 10;
--	uLowRemain = (uLowNextTBTT) % uBeaconInterval;
--	// high dword (mod) bcn
--	uHighRemain = (((0xffffffff % uBeaconInterval) + 1) * (u32)(qwNextTBTT >> 32))
--		% uBeaconInterval;
--	uLowRemain = (uHighRemain + uLowRemain) % uBeaconInterval;
--	uLowRemain = uBeaconInterval - uLowRemain;
--
--	// check if carry when add one beacon interval
--	if ((~uLowNextTBTT) < uLowRemain)
--		qwNextTBTT = ((qwNextTBTT >> 32) + 1) << 32;
--
--	qwNextTBTT = (qwNextTBTT & 0xffffffff00000000ULL) |
--			(u64)(uLowNextTBTT + uLowRemain);
-+
-+	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
++	wmb(); /* If host reorder writes here -> race in NIC */
++	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	wil->hw_version = R(RGF_USER_FW_REV_ID);
+ 	rev_id = wil->hw_version & 0xff;
  
- 	// set HW beacon interval
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_BI, wBeaconInterval);
+@@ -343,8 +345,9 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		wmb(); /* order is important here */
+ 	}
+ 
+-	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	W(RGF_USER_USER_CPU_0, BIT(1)); /* user_cpu_man_rst */
++	wmb(); /* If host reorder writes here -> race in NIC */
++	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	wmb(); /* order is important here */
+ 
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
 -- 
-1.9.1
+1.8.5.2
 
