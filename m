@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54039 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753817AbaHNTaJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 15:30:09 -0400
-Date: Thu, 14 Aug 2014 15:21:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Propose a topic -- Wireless Networking microconference (LPC2014)
-Message-ID: <20140814192127.GG4953@tuxdriver.com> (sfid-20140814_213017_866580_2B854149)
-References: <20140814180943.GD4953@tuxdriver.com>
- <1408043335.4371.2.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1408043335.4371.2.camel@jlt4.sipsolutions.net>
+Received: from s87.loopia.se ([194.9.94.112]:34177 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754758AbaHFEnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2014 00:43:52 -0400
+From: Hans Wennborg <hans@hanshq.net>
+To: akarwar@marvell.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 07/15] mwifiex: fix decimal printf format specifiers prefixed with 0x
+Date: Tue,  5 Aug 2014 21:42:55 -0700
+Message-Id: <1407300175-32635-1-git-send-email-hans@hanshq.net> (sfid-20140806_064653_969153_E4C327A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 14, 2014 at 09:08:55PM +0200, Johannes Berg wrote:
-> On Thu, 2014-08-14 at 14:09 -0400, John W. Linville wrote:
-> > Have you got a discussion proposal for the Wireless Networking
-> > microconference at Linux Plumbers Conference in Düsseldorf?  It is
-> > time to make it known!
-> > 
-> > Click on the "submit a proposal" link on the page below:
-> > 
-> > http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/339
-> 
-> We have a bunch already here:
-> http://wiki.linuxplumbersconf.org/2014:network_wireless
-> 
-> Do we actually have to go and do more "paper"work?
+The prefix suggests the number should be printed in hex, so use
+the %x specifier to do that.
 
-Well, it wouldn't hurt... :-)
+Found by using regex suggested by Joe Perches.
 
-I figured that I would try to sweep the entries from the wiki into the
-submission page, if no one beats me to it.  It would probably be better
-(i.e. more detailed) if the person proposing a topic beat me to it.
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-John
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e2e6bf1..2856f0e 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -246,7 +246,7 @@ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (priv->roc_cfg.cookie) {
+-		wiphy_dbg(wiphy, "info: ongoing ROC, cookie = 0x%llu\n",
++		wiphy_dbg(wiphy, "info: ongoing ROC, cookie = 0x%llx\n",
+ 			  priv->roc_cfg.cookie);
+ 		return -EBUSY;
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.0.0.526.g5318336
+
