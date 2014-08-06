@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36380 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426AbaHLHoU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 03:44:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
-References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 12 Aug 2014 10:44:14 +0300
-In-Reply-To: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 29 Jul 2014 12:03:59 +0200")
-Message-ID: <87y4uuqhip.fsf@kamboji.qca.qualcomm.com> (sfid-20140812_094424_594212_A4642E01)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s87.loopia.se ([194.9.94.112]:34189 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754759AbaHFEnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2014 00:43:53 -0400
+From: Hans Wennborg <hans@hanshq.net>
+To: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 08/15] rtlwifi: rtl8192de: fix decimal printf format specifiers prefixed with 0x
+Date: Tue,  5 Aug 2014 21:43:06 -0700
+Message-Id: <1407300186-32673-1-git-send-email-hans@hanshq.net> (sfid-20140806_064629_956368_5F74EC74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+The prefix suggests the number should be printed in hex, so use
+the %x specifier to do that.
 
-> The 10.x and main firmware branches have
-> conflicting WMI service bitmap definitions.
->
-> This also fixes WMI services parsing on big-endian
-> hosts and changes debugfs output to be more human
-> friendly.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Found by using regex suggested by Joe Perches.
 
-Thanks, applied.
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+index 2317707..66e1760 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+@@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
+ 			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
+ 	}
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
++		 "Polling FW ready fail!! REG_MCUFWDL:0x%08lx\n",
+ 		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
+ 	return -1;
+ }
 -- 
-Kalle Valo
+2.0.0.526.g5318336
+
