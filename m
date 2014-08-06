@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:43256 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756216AbaHVMmG convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755175AbaHFHcb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:42:06 -0400
-Received: by mail-wg0-f49.google.com with SMTP id k14so10341845wgh.8
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:42:04 -0700 (PDT)
+	Wed, 6 Aug 2014 03:32:31 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 06/13] wil6210: Workaround for Sparrow with bad device id
+Date: Wed, 6 Aug 2014 10:31:54 +0300
+Message-ID: <1407310322-22568-7-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093236_097834_4B37E5CB)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
-References: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 22 Aug 2014 14:42:04 +0200
-Message-ID: <CA+BoTQkNsK4m9XGtmgrtQHjLT=erAo9NA66HUEK2E=36xK-51Q@mail.gmail.com> (sfid-20140822_144222_393690_03F529F5)
-Subject: Re: [PATCH v2 0/6] ath10k: ath10k: fixes 2014-08-07, part 2
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 August 2014 14:23, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Hi,
->
-> This is part 2 (of 3) of my patches. Split for
-> your reviewing pleasure.
->
-> This is related to irq handling only. Prepares for
-> more start/restart sequences fixes.
->
-> v2:
->  * patch [1/6] is from part 1
->  * patch [5/6] is new
->  * some fixes, see notes
->  * based on
->    f2c7cb774e3e0a8152b1134015c245ba0abddfc6 and
->    4 crash dump patches (v8) from Kalle
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Forgot to add I also dropped `ath10k: unmask ce irqs after posting rx
-buffers` as it didn't really make much sense to swap the order.
+If firmware broken on the boot time, Sparrow card enumerates as
+device 0x302 instead of 0x310. Allow using this ID
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Michał
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index a6af2bb..cf0b219 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -243,6 +243,8 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
+ 	  .driver_data = (kernel_ulong_t)&wil_board_marlon },
+ 	{ PCI_DEVICE(0x1ae9, 0x0310),
+ 	  .driver_data = (kernel_ulong_t)&wil_board_sparrow },
++	{ PCI_DEVICE(0x1ae9, 0x0302), /* same as above, firmware broken */
++	  .driver_data = (kernel_ulong_t)&wil_board_sparrow },
+ 	{ /* end: all zeroes */	},
+ };
+ MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
+-- 
+1.8.5.2
+
