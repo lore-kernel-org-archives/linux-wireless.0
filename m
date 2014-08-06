@@ -1,139 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:36693 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850AbaHVVfz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755233AbaHFHcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 17:35:55 -0400
-Received: by mail-we0-f171.google.com with SMTP id p10so11187365wes.2
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 14:35:54 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/3] staging: vt6655: rxtx create new structure vnt_tx_short_buf_head for csBeacon_xmit
-Date: Fri, 22 Aug 2014 22:35:11 +0100
-Message-Id: <1408743311-13177-3-git-send-email-tvboxspy@gmail.com> (sfid-20140822_233558_826110_3FFDB900)
-In-Reply-To: <1408743311-13177-1-git-send-email-tvboxspy@gmail.com>
-References: <1408743311-13177-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 6 Aug 2014 03:32:43 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 12/13] wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
+Date: Wed, 6 Aug 2014 10:32:00 +0300
+Message-ID: <1407310322-22568-13-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095908_261612_6B05BF9A)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a merger of PSTxDataHead_ab and PSTxShortBufHead of which typedef struct tagSTxShortBufHead
-is removed.
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-This is formed as fifo_ctl, time_stamp, struct vnt_phy_field, duration and time_stamp_off.
+Internally, cfg80211_rx_mgmt() takes lock:
+spin_lock_bh(&wdev->mgmt_registrations_lock);
 
-Replacing stuctures in csBeacon_xmit and doing endian correction where necessary.
+and therefore one can't use it with GFP_KERNEL allocation flags.
+When called with GFP_KERNEL, "sleep while atomic" warning triggered:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+<3>[242645.446224] BUG: sleeping function called from invalid context at kernel/mm/slub.c:926
+<3>[242645.455516] in_atomic(): 1, irqs_disabled(): 0, pid: 18881, name: kworker/u16:0
+<6>[242645.462868] CPU: 0 PID: 18881 Comm: kworker/u16:0 Tainted: G           O 3.10.40-g619a884-00001-g357fa9c #2
+<6>[242645.463044] Workqueue: wil6210_wmi wmi_event_worker [wil6210]
+<6>[242645.463087] Call trace:
+<6>[242645.463157] [<ffffffc000087390>] dump_backtrace+0x0/0x144
+<6>[242645.463205] [<ffffffc0000874e4>] show_stack+0x10/0x1c
+<6>[242645.463259] [<ffffffc0009abc04>] dump_stack+0x1c/0x28
+<6>[242645.463313] [<ffffffc0000c10c0>] __might_sleep+0xe0/0xf0
+<6>[242645.463365] [<ffffffc00015a514>] kmem_cache_alloc+0x48/0x1e4
+<6>[242645.463414] [<ffffffc00080d468>] __alloc_skb+0x48/0x164
+<6>[242645.463466] [<ffffffc00097f2c4>] nl80211_send_mgmt+0x4c/0x1dc
+<6>[242645.463511] [<ffffffc000980268>] cfg80211_rx_mgmt+0x1bc/0x25c
+<6>[242645.463647] [<ffffffbffc005d64>] wmi_evt_rx_mgmt+0x21c/0x23c [wil6210]
+<6>[242645.463783] [<ffffffbffc0073b8>] wmi_event_worker+0x230/0x2f8 [wil6210]
+<6>[242645.463838] [<ffffffc0000afffc>] process_one_work+0x258/0x3d0
+<6>[242645.463887] [<ffffffc0000b0fe0>] worker_thread+0x1f0/0x310
+<6>[242645.463946] [<ffffffc0000b642c>] kthread+0xac/0xb8
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/vt6655/desc.h |  7 -------
- drivers/staging/vt6655/rxtx.c | 37 ++++++++++++++++++++-----------------
- drivers/staging/vt6655/rxtx.h |  8 ++++++++
- 3 files changed, 28 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 10bd564..b5730df 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -483,13 +483,6 @@ typedef struct tagSTxBufHead {
- STxBufHead, *PSTxBufHead;
- typedef const STxBufHead *PCSTxBufHead;
- 
--typedef struct tagSTxShortBufHead {
--	unsigned short wFIFOCtl;
--	unsigned short wTimeStamp;
--} __attribute__ ((__packed__))
--STxShortBufHead, *PSTxShortBufHead;
--typedef const STxShortBufHead *PCSTxShortBufHead;
--
- //
- // Tx data header
- //
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 04cf9e9..7493db1 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -2334,13 +2334,12 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
- 	unsigned char *pbyBuffer = (unsigned char *)pDevice->tx_beacon_bufs;
- 	unsigned int cbFrameSize = pPacket->cbMPDULen + WLAN_FCS_LEN;
- 	unsigned int cbHeaderSize = 0;
--	unsigned short wTxBufSize = sizeof(STxShortBufHead);
--	PSTxShortBufHead pTxBufHead = (PSTxShortBufHead) pbyBuffer;
--	PSTxDataHead_ab  pTxDataHead = (PSTxDataHead_ab) (pbyBuffer + wTxBufSize);
-+	struct vnt_tx_short_buf_head *short_head =
-+				(struct vnt_tx_short_buf_head *)pbyBuffer;
- 	PS802_11Header   pMACHeader;
- 	unsigned short wCurrentRate;
- 
--	memset(pTxBufHead, 0, wTxBufSize);
-+	memset(short_head, 0, sizeof(*short_head));
- 
- 	if (pDevice->eCurrentPHYType == PHY_TYPE_11A) {
- 		wCurrentRate = RATE_6M;
-@@ -2353,26 +2352,30 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
- 	//Set Preamble type always long
- 	pDevice->byPreambleType = PREAMBLE_LONG;
- 
--	//Set FIFOCTL_GENINT
--
--	pTxBufHead->wFIFOCtl |= FIFOCTL_GENINT;
-+	/* Set FIFOCTL_GENINT */
-+	short_head->fifo_ctl |= cpu_to_le16(FIFOCTL_GENINT);
- 
--	//Set packet type & Get Duration
-+	/* Set packet type & Get Duration */
- 	if (byPktType == PK_TYPE_11A) {//0000 0000 0000 0000
--		pTxDataHead->wDuration = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameSize, byPktType,
--											wCurrentRate, false, 0, 0, 1, AUTO_FB_NONE));
-+		short_head->duration =
-+			cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A,
-+				    cbFrameSize, byPktType, wCurrentRate, false,
-+				    0, 0, 1, AUTO_FB_NONE));
- 	} else if (byPktType == PK_TYPE_11B) {//0000 0001 0000 0000
--		pTxBufHead->wFIFOCtl |= FIFOCTL_11B;
--		pTxDataHead->wDuration = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameSize, byPktType,
--											wCurrentRate, false, 0, 0, 1, AUTO_FB_NONE));
-+		short_head->fifo_ctl |= cpu_to_le16(FIFOCTL_11B);
-+
-+		short_head->duration =
-+			cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B,
-+				    cbFrameSize, byPktType, wCurrentRate, false,
-+				    0, 0, 1, AUTO_FB_NONE));
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 596d6c1..1b64823 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -355,7 +355,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	} else {
+ 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
+-				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
++				 (void *)rx_mgmt_frame, d_len, 0, GFP_ATOMIC);
  	}
+ }
  
- 	vnt_get_phy_field(pDevice, cbFrameSize,
--			  wCurrentRate, byPktType, &pTxDataHead->ab);
-+			  wCurrentRate, byPktType, &short_head->ab);
- 
--	//Get TimeStampOff
--	pTxDataHead->wTimeStampOff = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
--	cbHeaderSize = wTxBufSize + sizeof(STxDataHead_ab);
-+	/* Get TimeStampOff */
-+	short_head->time_stamp_off = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
-+	cbHeaderSize = sizeof(struct vnt_tx_short_buf_head);
- 
- 	//Generate Beacon Header
- 	pMACHeader = (PS802_11Header)(pbyBuffer + cbHeaderSize);
-diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
-index 4accb78..789fae7 100644
---- a/drivers/staging/vt6655/rxtx.h
-+++ b/drivers/staging/vt6655/rxtx.h
-@@ -56,6 +56,14 @@ struct vnt_mic_hdr {
- 	u16 packing; /* packing to 48 bytes */
- } __packed;
- 
-+struct vnt_tx_short_buf_head {
-+	__le16 fifo_ctl;
-+	u16 time_stamp;
-+	struct vnt_phy_field ab;
-+	__le16 duration;
-+	__le16 time_stamp_off;
-+} __packed;
-+
- void
- vGenerateMACHeader(
- 	struct vnt_private *,
 -- 
-1.9.1
+1.8.5.2
 
