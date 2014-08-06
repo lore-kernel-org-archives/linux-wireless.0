@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52661 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbaHSJSF (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36723 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755099AbaHFHcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:18:05 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 1/3] ath9k: Add a debug level for channel context
-Date: Tue, 19 Aug 2014 14:03:31 +0530
-Message-Id: <1408437213-3363-1-git-send-email-sujith@msujith.org> (sfid-20140819_111818_148865_E6D27F6F)
+	Wed, 6 Aug 2014 03:32:45 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 13/13] wil6210: fix access after free in wil_pcie_remove()
+Date: Wed, 6 Aug 2014 10:32:01 +0300
+Message-ID: <1407310322-22568-14-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095908_438532_DCC33B56)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+'wil'  released in wil_if_free(); save iomapped address aside to
+properly unmap it.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath.h        | 1 +
- drivers/net/wireless/ath/ath9k/init.c | 2 ++
- 2 files changed, 3 insertions(+)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index fd9e530..c1a4ade 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -261,6 +261,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_MCI		= 0x00008000,
- 	ATH_DBG_DFS		= 0x00010000,
- 	ATH_DBG_WOW		= 0x00020000,
-+	ATH_DBG_CHAN_CTX	= 0x00040000,
- 	ATH_DBG_ANY		= 0xffffffff
- };
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index cf0b219..38dcbea 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -218,12 +218,13 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ static void wil_pcie_remove(struct pci_dev *pdev)
+ {
+ 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
++	void __iomem *csr = wil->csr;
  
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 39419ea..76771f3 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -778,6 +778,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			hw->chanctx_data_size = sizeof(void *);
- 			hw->extra_beacon_tailroom =
- 				sizeof(struct ieee80211_p2p_noa_attr) + 9;
-+
-+			ath_dbg(common, CHAN_CTX, "Use channel contexts\n");
- 		}
- 	}
- 
+ 	wil6210_debugfs_remove(wil);
+ 	wil_if_pcie_disable(wil);
+ 	wil_if_remove(wil);
+ 	wil_if_free(wil);
+-	pci_iounmap(pdev, wil->csr);
++	pci_iounmap(pdev, csr);
+ 	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
+ }
 -- 
-2.0.4
+1.8.5.2
 
