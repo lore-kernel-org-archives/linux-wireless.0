@@ -1,104 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iron3.routit.net ([89.146.30.1]:13410 "EHLO iron3.routit.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161AbaHGJ3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:29:48 -0400
-From: Ronald Wahl <ronald.wahl@raritan.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Ronald Wahl <ronald.wahl@raritan.com>
-Subject: [PATCH] carl9170: fix sending URBs with wrong type when using full-speed
-Date: Thu,  7 Aug 2014 11:24:02 +0200
-Message-Id: <1407403442-27268-1-git-send-email-ronald.wahl@raritan.com> (sfid-20140807_112951_615293_A8021C4A)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61159 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbaHFHcV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2014 03:32:21 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 00/13] wil6210 misc updates
+Date: Wed, 6 Aug 2014 10:31:48 +0300
+Message-ID: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093224_395927_1FA26B66)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver assumes that endpoint 4 is always an interrupt endpoint.
-Unfortunately the type differs between high-speed and full-speed
-configurations while in the former case it is indeed an interrupt
-endpoint this is not true for the latter case - here it is a bulk
-endpoint. When sending URBs with the wrong type the kernel will
-generate a warning message including backtrace.
+Some updates and bug fixes for wil6210 driver.
 
-To fix this we are now sending URBs to endpoint 4 using the type
-found in the endpoint descriptor.
+Dedy Lansky (1):
+  wil6210: Limit max number of associated stations
 
-A side note: The carl9170 firmware currently specifies endpoint 4 as
-interrupt endpoint even in the full-speed configuration but this has
-no relevance because before this firmware is loaded the endpoint type
-is as described above and after the firmware is running the stick is not
-reenumerated and so the old descriptor is used.
----
- drivers/net/wireless/ath/carl9170/carl9170.h |  1 +
- drivers/net/wireless/ath/carl9170/usb.c      | 27 +++++++++++++++++++++++----
- 2 files changed, 24 insertions(+), 4 deletions(-)
+Vladimir Kondratiev (12):
+  wil6210: map MAC timer for packet lifetime into debugfs
+  wil6210: fix race in reset
+  wil6210: update copyright year 2014
+  wil6210: check error in wil_target_reset()
+  wil6210: wait longer for hardware reset completion
+  wil6210: Workaround for Sparrow with bad device id
+  wil6210: convert debugfs to the table mode
+  wil6210: fix beamforming data reporting
+  wil6210: fix false "scan timeout"
+  wil6210: fix free'd memory access in wil_if_free()
+  wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
+  wil6210: fix access after free in wil_pcie_remove()
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 8596aba..8bc6505 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -256,6 +256,7 @@ struct ar9170 {
- 	atomic_t rx_work_urbs;
- 	atomic_t rx_pool_urbs;
- 	kernel_ulong_t features;
-+	bool usb_ep4_is_bulk;
- 
- 	/* firmware settings */
- 	struct completion fw_load_wait;
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index f35c7f3..e712090 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -621,9 +621,14 @@ int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
- 		goto err_free;
- 	}
- 
--	usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
--		AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
--		carl9170_usb_cmd_complete, ar, 1);
-+	if (ar->usb_ep4_is_bulk)
-+		usb_fill_bulk_urb(urb, ar->udev, usb_sndbulkpipe(ar->udev,
-+			AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-+			carl9170_usb_cmd_complete, ar);
-+	else
-+		usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
-+			AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-+			carl9170_usb_cmd_complete, ar, 1);
- 
- 	if (free_buf)
- 		urb->transfer_flags |= URB_FREE_BUFFER;
-@@ -1032,9 +1037,10 @@ static void carl9170_usb_firmware_step2(const struct firmware *fw,
- static int carl9170_usb_probe(struct usb_interface *intf,
- 			      const struct usb_device_id *id)
- {
-+	struct usb_endpoint_descriptor *ep;
- 	struct ar9170 *ar;
- 	struct usb_device *udev;
--	int err;
-+	int i, err;
- 
- 	err = usb_reset_device(interface_to_usbdev(intf));
- 	if (err)
-@@ -1050,6 +1056,19 @@ static int carl9170_usb_probe(struct usb_interface *intf,
- 	ar->intf = intf;
- 	ar->features = id->driver_info;
- 
-+	/* We need to remember the type of endpoint 4 because it differs
-+	 * between high- and full-speed configuration. The high-speed
-+	 * configuration specifies it as interrupt and the full-speed
-+	 * configuration as bulk endpoint. This information is required
-+	 * later when sending urbs to that endpoint.
-+	 */
-+	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
-+		ep = &intf->cur_altsetting->endpoint[i].desc;
-+
-+		if (usb_endpoint_dir_out(ep) && usb_endpoint_num(ep) == 4)
-+			ar->usb_ep4_is_bulk = true;
-+	}
-+
- 	usb_set_intfdata(intf, ar);
- 	SET_IEEE80211_DEV(ar->hw, &intf->dev);
- 
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |   6 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 331 ++++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/interrupt.c  |   2 +-
+ drivers/net/wireless/ath/wil6210/main.c       |  30 ++-
+ drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |   7 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  16 ++
+ drivers/net/wireless/ath/wil6210/txrx.c       |   3 +-
+ drivers/net/wireless/ath/wil6210/txrx.h       |   2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  17 +-
+ drivers/net/wireless/ath/wil6210/wmi.c        |  47 ++--
+ drivers/net/wireless/ath/wil6210/wmi.h        |   4 +-
+ 12 files changed, 327 insertions(+), 146 deletions(-)
+
 -- 
-1.9.3
+1.8.5.2
 
