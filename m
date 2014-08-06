@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:40072 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbaHOQXa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2556 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbaHFHcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2014 12:23:30 -0400
-Date: Fri, 15 Aug 2014 21:53:24 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] orinoco_usb: use USB API functions rather than constants
-Message-ID: <20140815162324.GA7162@himangi-Dell> (sfid-20140815_182350_092624_F22CEF51)
+	Wed, 6 Aug 2014 03:32:22 -0400
+From: Dedy Lansky <qca_dlansky@qualcomm.com>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Dedy Lansky <qca_dlansky@qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 01/13] wil6210: map MAC timer for packet lifetime into debugfs
+Date: Wed, 6 Aug 2014 10:31:49 +0300
+Message-ID: <1407310322-22568-2-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093226_447872_38B05AA9)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces the use of the functions
-usb_endpoint_is_bulk_in(epd) and usb_endpoint_is_bulk_out(epd).
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-The semantic patch that makes these changes is as follows:
+expose reading RGF_MAC_MTRL_COUNTER_0 in debugfs
 
-@@ struct usb_endpoint_descriptor *epd; @@
-
-- ((epd->bmAttributes & \(USB_ENDPOINT_XFERTYPE_MASK\|3\)) ==
-- \(USB_ENDPOINT_XFER_BULK\|2\))
-+ usb_endpoint_xfer_bulk(epd)
-
-@@ struct usb_endpoint_descriptor *epd; @@
-
-- ((epd->bEndpointAddress & \(USB_ENDPOINT_DIR_MASK\|0x80\)) ==
--  \(USB_DIR_IN\|0x80\))
-+ usb_endpoint_dir_in(epd)
-
-@@ struct usb_endpoint_descriptor *epd; @@
-
-- ((epd->bEndpointAddress & \(USB_ENDPOINT_DIR_MASK\|0x80\)) ==
--  \(USB_DIR_OUT\|0\))
-+ usb_endpoint_dir_out(epd)
-
-@@ struct usb_endpoint_descriptor *epd; @@
-
-- (usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_in(epd))
-+ usb_endpoint_is_bulk_in(epd)
-
-@@ struct usb_endpoint_descriptor *epd; @@
-
-- (usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_out(epd))
-+ usb_endpoint_is_bulk_out(epd)
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 ---
- drivers/net/wireless/orinoco/orinoco_usb.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 3 +++
+ drivers/net/wireless/ath/wil6210/wil6210.h | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index d3cf7c3..f4b784f 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -1605,10 +1605,7 @@ static int ezusb_probe(struct usb_interface *interface,
- 	for (i = 0; i < iface_desc->bNumEndpoints; ++i) {
- 		ep = &interface->altsetting[0].endpoint[i].desc;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 8f66186..dee2380 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1021,6 +1021,9 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 				   HOSTADDR(RGF_DMA_EP_MISC_ICR));
+ 	wil6210_debugfs_create_pseudo_ISR(wil, dbg);
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
++	wil_debugfs_create_iomem_x32("MAC_MTRL_COUNTER_0", S_IRUGO, dbg,
++				     wil->csr +
++				     HOSTADDR(RGF_MAC_MTRL_COUNTER_0));
  
--		if (((ep->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
--		     == USB_DIR_IN) &&
--		    ((ep->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
--		     == USB_ENDPOINT_XFER_BULK)) {
-+		if (usb_endpoint_is_bulk_in(ep)) {
- 			/* we found a bulk in endpoint */
- 			if (upriv->read_urb != NULL) {
- 				pr_warning("Found a second bulk in ep, ignored");
-@@ -1636,10 +1633,7 @@ static int ezusb_probe(struct usb_interface *interface,
- 			}
- 		}
+ 	wil_debugfs_create_iomem_x32("RGF_USER_USAGE_1", S_IRUGO, dbg,
+ 				     wil->csr +
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 67e9624..077e623 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -133,6 +133,9 @@ struct RGF_ICR {
+ #define RGF_HP_CTRL			(0x88265c)
+ #define RGF_PCIE_LOS_COUNTER_CTL	(0x882dc4)
  
--		if (((ep->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
--		     == USB_DIR_OUT) &&
--		    ((ep->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
--		     == USB_ENDPOINT_XFER_BULK)) {
-+		if (usb_endpoint_is_bulk_out(ep)) {
- 			/* we found a bulk out endpoint */
- 			if (upriv->bap_buf != NULL) {
- 				pr_warning("Found a second bulk out ep, ignored");
++/* MAC timer, usec, for packet lifetime */
++#define RGF_MAC_MTRL_COUNTER_0		(0x886aa8)
++
+ /* popular locations */
+ #define HOST_MBOX   HOSTADDR(RGF_USER_USER_SCRATCH_PAD)
+ #define HOST_SW_INT (HOSTADDR(RGF_USER_USER_ICR) + \
 -- 
-1.9.1
+1.8.5.2
 
