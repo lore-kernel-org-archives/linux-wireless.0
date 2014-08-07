@@ -1,64 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:61944 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755594AbaHHKYt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 06:24:49 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so5399039wgg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 03:24:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87d2cbz3wy.fsf@kamboji.qca.qualcomm.com>
-References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-	<87d2cbz3wy.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 8 Aug 2014 12:24:48 +0200
-Message-ID: <CA+BoTQkF3+-1ded_dj63BGH7-bdD_uxLSkTZjGMb654yPzbtnA@mail.gmail.com> (sfid-20140808_122452_727436_F74D5CCB)
-Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx02.posteo.de ([89.146.194.165]:38028 "EHLO posteo.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932263AbaHGRVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2014 13:21:39 -0400
+From: Andreas Schlick <ninox@posteo.net>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Andreas Schlick <ninox@posteo.net>
+Subject: [PATCH 1/2] staging: rtl8723au: Move open braces to the previous line.
+Date: Thu,  7 Aug 2014 19:20:49 +0200
+Message-Id: <1407432050-5624-2-git-send-email-ninox@posteo.net> (sfid-20140807_192158_474476_12146493)
+In-Reply-To: <1407432050-5624-1-git-send-email-ninox@posteo.net>
+References: <1407432050-5624-1-git-send-email-ninox@posteo.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 August 2014 12:11, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> The 10.x and main firmware branches have
->> conflicting WMI service bitmap definitions.
->>
->> This also fixes WMI services parsing on big-endian
->> hosts and changes debugfs output to be more human
->> friendly.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Based on Joe's suggestion, I'm planning to change the macro like below.
-> Are you ok with that?
->
-> It actually adds a new checkpatch warning but I'm going to ignore that
-> for now:
->
-> drivers/net/wireless/ath/ath10k/wmi.h:177: ERROR: Macros with complex values should be enclosed in parenthesis
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-> index 109ea684f88f..e70836586756 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -174,46 +174,48 @@ enum wmi_main_service {
->
->  static inline char *wmi_service_name(int service_id)
->  {
-> -#define SVCSTR(x) { case x: return #x; }
-> +#define SVCSTR(x) case x: return #x
-> +
-[...]
+Correct coding style errors in rtw_efuse.c. checkpatch.pl reported:
+ERROR: that open brace { should be on the previous line
 
-This was the checkpatch warning I originally fixed by using { .. } :-)
+Signed-off-by: Andreas Schlick <ninox@posteo.net>
+---
+ drivers/staging/rtl8723au/core/rtw_efuse.c | 33 ++++++++++--------------------
+ 1 file changed, 11 insertions(+), 22 deletions(-)
 
-Anyway, I don't see a problem with the macro change you suggest.
-Apparently we're doomed to have a checkpatch warning either way unless
-we don't use a macro at all.
+diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
+index fe092c5..0bec131 100644
+--- a/drivers/staging/rtl8723au/core/rtw_efuse.c
++++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
+@@ -157,8 +157,7 @@ ReadEFuseByte23a(struct rtw_adapter *Adapter, u16 _offset, u8 *pbuf)
+ 	retry = 0;
+ 	value32 = rtl8723au_read32(Adapter, EFUSE_CTRL);
+ 	/* while(!(((value32 >> 24) & 0xff) & 0x80)  && (retry<10)) */
+-	while(!(((value32 >> 24) & 0xff) & 0x80)  && (retry<10000))
+-	{
++	while (!(((value32 >> 24) & 0xff) & 0x80) && (retry<10000)) {
+ 		value32 = rtl8723au_read32(Adapter, EFUSE_CTRL);
+ 		retry++;
+ 	}
+@@ -285,8 +284,7 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+ 				 TYPE_EFUSE_REAL_CONTENT_LEN,
+ 				 (void *)&contentLen);
+ 
+-	if (Address < contentLen)	/* E-fuse 512Byte */
+-	{
++	if (Address < contentLen) { /* E-fuse 512Byte */
+ 		/* Write E-fuse Register address bit0~7 */
+ 		temp = Address & 0xFF;
+ 		rtl8723au_write8(Adapter, EFUSE_CTRL+1, temp);
+@@ -302,12 +300,10 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+ 
+ 		/* Wait Write-ready (0x30[31]= 1) */
+ 		Bytetemp = rtl8723au_read8(Adapter, EFUSE_CTRL+3);
+-		while(!(Bytetemp & 0x80))
+-		{
++		while (!(Bytetemp & 0x80)) {
+ 			Bytetemp = rtl8723au_read8(Adapter, EFUSE_CTRL+3);
+ 			k++;
+-			if (k == 1000)
+-			{
++			if (k == 1000) {
+ 				k = 0;
+ 				break;
+ 			}
+@@ -357,8 +353,7 @@ EFUSE_Write1Byte(
+ 				 TYPE_EFUSE_REAL_CONTENT_LEN,
+ 				 (void *)&contentLen);
+ 
+-	if (Address < contentLen)	/* E-fuse 512Byte */
+-	{
++	if (Address < contentLen) { /* E-fuse 512Byte */
+ 		rtl8723au_write8(Adapter, EFUSE_CTRL, Value);
+ 
+ 		/* Write E-fuse Register address bit0~7 */
+@@ -377,12 +372,10 @@ EFUSE_Write1Byte(
+ 
+ 		/* Wait Write-ready (0x30[31]= 0) */
+ 		Bytetemp = rtl8723au_read8(Adapter, EFUSE_CTRL+3);
+-		while(Bytetemp & 0x80)
+-		{
++		while (Bytetemp & 0x80) {
+ 			Bytetemp = rtl8723au_read8(Adapter, EFUSE_CTRL+3);
+ 			k++;
+-			if (k == 100)
+-			{
++			if (k == 100) {
+ 				k = 0;
+ 				break;
+ 			}
+@@ -472,23 +465,19 @@ efuse_WordEnableDataRead23a(u8	word_en,
+ 			 u8	*sourdata,
+ 			 u8	*targetdata)
+ {
+-	if (!(word_en&BIT(0)))
+-	{
++	if (!(word_en&BIT(0))) {
+ 		targetdata[0] = sourdata[0];
+ 		targetdata[1] = sourdata[1];
+ 	}
+-	if (!(word_en&BIT(1)))
+-	{
++	if (!(word_en&BIT(1))) {
+ 		targetdata[2] = sourdata[2];
+ 		targetdata[3] = sourdata[3];
+ 	}
+-	if (!(word_en&BIT(2)))
+-	{
++	if (!(word_en&BIT(2))) {
+ 		targetdata[4] = sourdata[4];
+ 		targetdata[5] = sourdata[5];
+ 	}
+-	if (!(word_en&BIT(3)))
+-	{
++	if (!(word_en&BIT(3))) {
+ 		targetdata[6] = sourdata[6];
+ 		targetdata[7] = sourdata[7];
+ 	}
+-- 
+2.0.4
 
-
-Michał
