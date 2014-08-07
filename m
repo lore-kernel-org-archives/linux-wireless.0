@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42512 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbaHGMpO (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:53395 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202AbaHGJOb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 08:45:14 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH for-3.17 2/2] brcmfmac: fix memory leakage in msgbuf
-Date: Thu, 7 Aug 2014 14:45:09 +0200
-Message-ID: <1407415509-22442-3-git-send-email-arend@broadcom.com> (sfid-20140807_144532_658797_C23A1258)
-In-Reply-To: <1407415509-22442-1-git-send-email-arend@broadcom.com>
-References: <1407415509-22442-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Aug 2014 05:14:31 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so10310082wib.16
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:14:30 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: flush hif buffers before recovery
+Date: Thu,  7 Aug 2014 11:05:08 +0200
+Message-Id: <1407402308-29899-6-git-send-email-michal.kazior@tieto.com> (sfid-20140807_112943_038575_5EB25FCF)
+In-Reply-To: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com>
+References: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kbuild robot came up with the following warning:
+Transport buffers weren't flushed and processed
+before queueing hw recovery request to mac80211.
 
-tree:   .../kernel/git/linville/wireless-next.git master
-head:   dc6be9f54a4ecb0a09765d1f515ed947d86b7528
-commit: 9a1bb60250d2b6b546a62e5b73f55c4f1d22016b
-	 [5/13] brcmfmac: Adding msgbuf protocol.
+This could in theory result in an unwanted htt/wmi
+rx events being processed while mac80211 recovers
+the device and possibly interfere or even crash
+the system.
 
-coccinelle warnings:
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c:1309:1-28:
-   alloc with no test, possible model on line 1318
-
-Looking into the issue, it turned out that the referred allocation
-buffer was not being released in failure path nor upon module
-unload.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 535c7eb..8f8b937 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -1318,6 +1318,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	msgbuf->nrof_flowrings = if_msgbuf->nrof_flowrings;
- 	msgbuf->flowring_dma_handle = kzalloc(msgbuf->nrof_flowrings *
- 		sizeof(*msgbuf->flowring_dma_handle), GFP_ATOMIC);
-+	if (!msgbuf->flowring_dma_handle)
-+		goto fail;
- 
- 	msgbuf->rx_dataoffset = if_msgbuf->rx_dataoffset;
- 	msgbuf->max_rxbufpost = if_msgbuf->max_rxbufpost;
-@@ -1362,6 +1364,7 @@ fail:
- 		kfree(msgbuf->flow_map);
- 		kfree(msgbuf->txstatus_done_map);
- 		brcmf_msgbuf_release_pktids(msgbuf);
-+		kfree(msgbuf->flowring_dma_handle);
- 		if (msgbuf->ioctbuf)
- 			dma_free_coherent(drvr->bus_if->dev,
- 					  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
-@@ -1391,6 +1394,7 @@ void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr)
- 				  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
- 				  msgbuf->ioctbuf, msgbuf->ioctbuf_handle);
- 		brcmf_msgbuf_release_pktids(msgbuf);
-+		kfree(msgbuf->flowring_dma_handle);
- 		kfree(msgbuf);
- 		drvr->proto->pd = NULL;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b5161c8..5c9620b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -667,6 +667,7 @@ static void ath10k_core_restart(struct work_struct *work)
+ 		ar->state = ATH10K_STATE_RESTARTING;
+ 		del_timer_sync(&ar->scan.timeout);
+ 		ath10k_reset_scan((unsigned long)ar);
++		ath10k_hif_stop(ar);
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
 -- 
-1.9.1
+1.8.5.3
 
