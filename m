@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1502 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbaHSML3 (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:38290 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754016AbaHGJO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 08:11:29 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k:  improve logging in firmware crash routine.
-References: <1407271772-14874-1-git-send-email-greearb@candelatech.com>
-Date: Tue, 19 Aug 2014 15:11:21 +0300
-In-Reply-To: <1407271772-14874-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Tue, 5 Aug 2014 13:49:32
-	-0700")
-Message-ID: <87ppfwadcm.fsf@kamboji.qca.qualcomm.com> (sfid-20140819_141132_947547_FEEB6BEF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 7 Aug 2014 05:14:27 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so3849033wgg.12
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:14:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: fixes 2014-08-07, part 3
+Date: Thu,  7 Aug 2014 11:05:03 +0200
+Message-Id: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111430_479490_1043B0AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+Hi,
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> Only print error message upon failure, and print more
-> details in case it does find an error.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->
-> This is on top of the firmware crash reporting patches,
-> not sure it would apply clean until those get in.
+This is part 3 (of 3) of my patches. Split for
+your reviewing pleasure.
 
-Yeah, this does conflict with the firmware crash dump patches.
+This is related to start/restart sequences.
 
->  drivers/net/wireless/ath/ath10k/pci.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index 24688b7..085c0c8 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -929,12 +929,11 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
->  	ret = ath10k_pci_diag_read_mem(ar, host_addr,
->  				       &reg_dump_area, sizeof(u32));
->  	if (ret) {
-> -		ath10k_err("failed to read FW dump area address: %d\n", ret);
-> +		ath10k_err("failed to read FW dump area address: %d  (hostaddr 0x%08X  hi-failure-state 0x%08lX)\n",
-> +			   ret, host_addr, HI_ITEM(hi_failure_state));
->  		goto exit;
->  	}
+This is based on:
+  [PATCH 0/5] ath10k: fixes 2014-08-07, part 2
 
-As I reworked how the diag interface is used, this doesn't directly
-apply anymore. And are these values really that important?
 
-> -	ath10k_err("target register Dump Location: 0x%08X\n", reg_dump_area);
+Michal Kazior (5):
+  ath10k: rework posting pci rx buffers
+  ath10k: dont reset the chip on hif_stop
+  ath10k: ignore ar_pci->started in pipe cleanup
+  ath10k: remove ar_pci->started
+  ath10k: flush hif buffers before recovery
 
-I actually removed this line in the firmware crash dump patchset.
+ drivers/net/wireless/ath/ath10k/ce.c   |  71 +++++----
+ drivers/net/wireless/ath/ath10k/ce.h   |  16 +-
+ drivers/net/wireless/ath/ath10k/core.c |   1 +
+ drivers/net/wireless/ath/ath10k/hif.h  |   3 +-
+ drivers/net/wireless/ath/ath10k/pci.c  | 279 ++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath10k/pci.h  |   4 +-
+ 6 files changed, 185 insertions(+), 189 deletions(-)
 
 -- 
-Kalle Valo
+1.8.5.3
+
