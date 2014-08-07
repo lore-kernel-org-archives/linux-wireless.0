@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:59300 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756108AbaHVNSV (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:45117 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346AbaHGRpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 09:18:21 -0400
-Received: by mail-ig0-f171.google.com with SMTP id l13so14897078iga.10
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 06:18:20 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, mickflemm@gmail.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/3] ath5k: drop useless comparison
-Date: Fri, 22 Aug 2014 09:18:00 -0400
-Message-Id: <1408713482-7917-1-git-send-email-me@bobcopeland.com> (sfid-20140822_151825_297344_0DD36919)
+	Thu, 7 Aug 2014 13:45:06 -0400
+Message-ID: <53E3BB1D.10807@candelatech.com> (sfid-20140807_194511_271894_4021F09B)
+Date: Thu, 07 Aug 2014 10:45:01 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
+References: <5338F1B8.5040305@candelatech.com> <6460230.VGl66UFULp@debian64> <53E16436.2020706@candelatech.com> <1875618.ePecsgGYZf@blech>
+In-Reply-To: <1875618.ePecsgGYZf@blech>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rxs->rate_idx is unsigned, so it will always be >= 0.
-Found by Coverity.
+On 08/07/2014 07:05 AM, Christian Lamparter wrote:
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
-John & Nick,
+> The high overhead (math_state_restore and fpu_save_init) are caused by 
+> the way ccm.c interacts with the aesni implementation when calculating
+> the MAC [1] (in compute_mac). 
+> 
+>>    [ ... ]
+>> 	/* now encrypt rest of data */
+>> 	while (datalen >= 16) {
+>> 		crypto_xor(odata, data, bs);
+>> 		crypto_cipher_encrypt_one(tfm, odata, odata);
+>>
+>> 		datalen -= 16;
+>> 		data += 16;
+>> 	}
+>>   [...]
+> 
+> crypto_cipher_encrypt_one is a wrapper which in your case calls 
+> aesni's aes_encrypt [2].
+> 
+> And aes_encrypt looks like this: 
+> 
+>> 	[...]
+>> 	kernel_fpu_begin();
+>> 	aesni_enc(ctx, dst, src); <-- this is where it goes to _aesni_enc1
+>> 	kernel_fpu_end();
+>> 	[...] 
+> 
+> Or: for every 16 Bytes of payload there is one fpu context save and
+> restore... ouch!
 
-This and the next two patches are some simple cleanups from static
-checkers, but no actual bugs here, so they can wait for 3.18.
+I have never messed with this kind of stuff...
 
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Any idea if it would work to put the fpu_begin/end a bit higher and do all those 16 byte
+chunks in a batch without messing with the FPU for each chunk?
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index ef35da8..03ab134 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1417,7 +1417,7 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 		break;
- 	}
- 
--	if (rxs->rate_idx >= 0 && rs->rs_rate ==
-+	if (rs->rs_rate ==
- 	    ah->sbands[ah->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
- 		rxs->flag |= RX_FLAG_SHORTPRE;
- 
+Thanks,
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
