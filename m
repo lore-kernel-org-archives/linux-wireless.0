@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:59279 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbaHQNSK (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:60453 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750763AbaHGSJA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2014 09:18:10 -0400
-Date: Sun, 17 Aug 2014 16:18:02 +0300
-From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: paulmck@linux.vnet.ibm.com
-Subject: [PATCH] mac80211: Replace rcu_dereference() with rcu_access_pointer()
-Message-ID: <20140817131801.GA24286@ada> (sfid-20140817_151853_103278_1A308BA1)
+	Thu, 7 Aug 2014 14:09:00 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so11164615wib.16
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 11:08:58 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chris C <chris.a.cremer@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Carl9170fw loading error
+Date: Thu, 07 Aug 2014 20:08:50 +0200
+Message-ID: <1535534.mOj91phO2K@blech> (sfid-20140807_200905_413319_5DC5FD20)
+In-Reply-To: <CAMKDnrkHOsLqXz5p8ZjLRL26N14ZByyM5XQ9b=6a0cB5pPmfqw@mail.gmail.com>
+References: <CAMKDnrkHOsLqXz5p8ZjLRL26N14ZByyM5XQ9b=6a0cB5pPmfqw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "rcu_dereference()" calls are used directly in conditions.
-Since their return values are never dereferenced it is recommended to
-use "rcu_access_pointer()" instead of "rcu_dereference()".
-Therefore, this patch makes the replacements.
+Hi,
 
-The following Coccinelle semantic patch was used:
-@@
-@@
+On Thursday, August 07, 2014 11:28:38 AM Chris C wrote:
+> I am working on a project where I need to be able to modify a wireless
+> adapter's firmware. I'm trying to use the Netgear WN111v2 with the
+> carl9170 driver and firmware. Depending on the configurations I set
+> when building the firmware, I get one of two errors when I try using
+> the device: 1)failed to parse or 2)tainted. See below.
+> 
+> Here are the errors:
+> 
+> 1) If I select 'no' to all options during the autogen configuration,
+> this is the error I get when inserting the device:
+> 
+> [505796.810127] usb 1-1.4: driver   API: 1.9.4 2011-08-15 [1-1]
+> [505796.810132] usb 1-1.4: firmware API: 1.9.9 2013-10-25
+> [505796.810135] usb 1-1.4: Unprotected firmware image.
+> [505796.810138] usb 1-1.4: firmware does support mandatory features.
+> [505796.810141] usb 1-1.4: failed to parse firmware (-125).
 
-(
- if(
- (<+...
-- rcu_dereference
-+ rcu_access_pointer
-  (...)
-  ...+>)) {...}
-|
- while(
- (<+...
-- rcu_dereference
-+ rcu_access_pointer
-  (...)
-  ...+>)) {...}
-)
+It's possible to build the firmware without support for
+the radio chip (The radio support is quite big and not 
+needed for firmwares which (load) test the usb phy, ...).
+So, this is expected (as the driver can not initialize the
+radio).
+ 
+> 2) If I select 'yes' to all options except the experimental
+> extensions, this is the error I get when inserting the device:
+> [...]
+> [504006.523276] ------------[ cut here ]------------
+> [504006.523286] WARNING: at
+> /build/buildd/linux-3.2.0/net/wireless/core.c:436
+> wiphy_verify_combinations+0x213/0x240 [cfg80211]()
+> [504006.523289] Hardware name: OptiPlex 790
+> [504006.523291] Modules linked in: carl9170(O) ... mei(C)
+> [504006.523338] Pid: 30107, comm: firmware/carl91 Tainted: G        WC
+> O 3.2.0-67-generic #101-Ubuntu
+> [504006.523434] ---[ end trace df0f0cb5a9397534 ]---
 
-Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
----
- net/mac80211/mesh_pathtbl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This has been fixed by: "carl9170: Only specify interface combinations if
+more than one interface is possible". The patch is dated 2012-12-17, your
+driver is from 2011-08-15. If you are interested (not necessary), you can
+use the latest wireless-drivers as part of the Linux kernel backports
+project [0].
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index cf032a8..a6699dc 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -729,7 +729,7 @@ void mesh_plink_broken(struct sta_info *sta)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, node, i) {
- 		mpath = node->mpath;
--		if (rcu_dereference(mpath->next_hop) == sta &&
-+		if (rcu_access_pointer(mpath->next_hop) == sta &&
- 		    mpath->flags & MESH_PATH_ACTIVE &&
- 		    !(mpath->flags & MESH_PATH_FIXED)) {
- 			spin_lock_bh(&mpath->state_lock);
-@@ -794,7 +794,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	tbl = resize_dereference_mesh_paths();
- 	for_each_mesh_entry(tbl, node, i) {
- 		mpath = node->mpath;
--		if (rcu_dereference(mpath->next_hop) == sta) {
-+		if (rcu_access_pointer(mpath->next_hop) == sta) {
- 			spin_lock(&tbl->hashwlock[i]);
- 			__mesh_path_del(tbl, node);
- 			spin_unlock(&tbl->hashwlock[i]);
--- 
-1.9.1
+The "Crap" flag is set by mei module.
+ 
+> Also, the adapter works when I use the firmware from here:
+> http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary
 
+You didn't specify what you are working on, But if you are just 
+interested in the default options (which were used to build the
+wiki firmware) you can just hit <Enter> instead of answering
+the Y/N prompt for every option.
+
+[Note: You have to delete the .config in the project's root
+directory first. Otherwise the configuration utility will pick
+the previous option instead of starting over].
+
+> Please let me know if there is more useful information I should post.
+
+Regards
+
+Christian
+
+[0] https://backports.wiki.kernel.org/index.php/Documentation
+
+BTW: Thanks, I updated the firmware's README to include a sentence
+about that. The "default" option is not that obvious.
