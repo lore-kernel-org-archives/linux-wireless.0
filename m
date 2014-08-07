@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:46528 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbaHRT3l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 15:29:41 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	paulmck@linux.vnet.ibm.com
-Subject: Re: [PATCH] carl9170: Replace rcu_dereference() with rcu_access_pointer()
-Date: Mon, 18 Aug 2014 21:29:36 +0200
-Message-ID: <3029076.uaUkTd8nru@debian64> (sfid-20140818_213007_877494_53B5DF1C)
-In-Reply-To: <20140817104806.GA14533@ada>
-References: <20140817104806.GA14533@ada>
+Received: from iron1.routit.net ([89.146.30.18]:45891 "EHLO iron1.routit.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757353AbaHGNQV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2014 09:16:21 -0400
+Message-ID: <53E37C09.8070108@raritan.com> (sfid-20140807_151625_015559_16CA332E)
+Date: Thu, 07 Aug 2014 15:15:53 +0200
+From: Ronald Wahl <ronald.wahl@raritan.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] carl9170: fix sending URBs with wrong type when using
+ full-speed
+References: <1407403442-27268-1-git-send-email-ronald.wahl@raritan.com> <9263316.qJ7UgtQDIG@blech> <53E36624.9060905@raritan.com> <7450698.ipAbWqfnUT@blech>
+In-Reply-To: <7450698.ipAbWqfnUT@blech>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, August 17, 2014 01:48:07 PM Andreea-Cristina Bernat wrote:
-> The rcu_dereference() call is used directly in a condition.
-> Since its return value is never dereferenced it is recommended to use
-> "rcu_access_pointer()" instead of "rcu_dereference()".
-> Therefore, this patch makes the replacement.
-> [...]
-> Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-> ---
->  drivers/net/wireless/ath/carl9170/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> index f8ded84..12018ff 100644
-> --- a/drivers/net/wireless/ath/carl9170/main.c
-> +++ b/drivers/net/wireless/ath/carl9170/main.c
-> @@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
->  			return -EOPNOTSUPP;
->  
->  		rcu_read_lock();
-> -		if (rcu_dereference(sta_info->agg[tid])) {
-> +		if (rcu_access_pointer(sta_info->agg[tid])) {
->  			rcu_read_unlock();
->  			return -EBUSY;
->  		}
+On 07.08.2014 15:04, Christian Lamparter wrote:
+> On Thursday, August 07, 2014 01:42:28 PM Ronald Wahl wrote:
+>>> What about this:
+>>>
+>>>                  if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
+>>>                      usb_endpoint_is_bulk_out(ep))
+>>>                          ar->usb_ep_cmd_is_bulk = true;
+>>> (the driver context "ar" is zero'd out - It is not necessary to set
+>>> usb_ep_cmd_is_bulk to false.)
+>>
+>> This is what my first patch has done but we need to check the endpoint
+>> type if its bulk or not. Otherwise it will fail in the high-speed case.
+>> Or did you mean:
+>>
+>> 		if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
+>> 		    usb_endpoint_is_bulk_out(ep) &&
+>> 		    usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK)
+>> 			ar->usb_ep_cmd_is_bulk = true;
+> usb_endpoint_is_bulk_out [0] "checks if the endpoint is bulk OUT".
+> This function should perform both checks (ie.: is bulk? is out?).
 
-There's more. The check does not do a whole lot. I think *it* [the check] and the
-rcu_read_[un]lock [and the return -EBUSY] can be removed completely from the
-IEEE80211_AMPDU_TX_START code-path in carl9170_op_ampdu_action.
+Oh, I overlooked the _bulk_ in the function name. :-)
 
-It would be awesome, if you could you make a patch which removes this 
-unneeded cosmic-ray-protection check :-) .
+Anyway, the v3 patch that I have send out in the meantime did not have 
+this minor optimization but this shouldn't actually really matter I think.
 
-Thanks
-Christian
+- ron
+
+-- 
+Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
+Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
+USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
+Amtsgericht Chemnitz HRB 23605
+Geschäftsführung: Stuart Hopper, Ralf Ploenes
