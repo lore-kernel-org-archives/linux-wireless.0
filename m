@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2556 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069AbaHFHcY (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:63941 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757272AbaHGJNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:24 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 02/13] wil6210: fix race in reset
-Date: Wed, 6 Aug 2014 10:31:50 +0300
-Message-ID: <1407310322-22568-3-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093228_049933_306E2CA8)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Aug 2014 05:13:54 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so3866790wgg.16
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: unmask ce irqs after posting rx buffers
+Date: Thu,  7 Aug 2014 11:04:20 +0200
+Message-Id: <1407402260-29854-6-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111400_548155_E92E7FFB)
+In-Reply-To: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
+References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+It doesn't make much sense to enable the
+interrupts before posting rx buffers.
 
-It is important to halt USER CPU first, then MAC CPU
-Otherwise, race happens in the firmware
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 3704d2a..d734283 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -327,6 +327,8 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 	/* register clear = read, AND with inverted, write */
- #define C(a, v) W(a, R(a) & ~v)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c195a11..c157717 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1039,24 +1039,18 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
  
-+	wmb(); /* If host reorder writes here -> race in NIC */
-+	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
- 	wil->hw_version = R(RGF_USER_FW_REV_ID);
- 	rev_id = wil->hw_version & 0xff;
+ 	ath10k_dbg(ATH10K_DBG_BOOT, "boot hif start\n");
  
-@@ -343,8 +345,9 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 		wmb(); /* order is important here */
+-	ath10k_ce_enable_interrupts(ar);
+-
+ 	/* Post buffers once to start things off. */
+ 	ret = ath10k_pci_post_rx(ar);
+ 	if (ret) {
+ 		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
+ 			    ret);
+-		goto err_stop;
++		return ret;
  	}
  
--	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
- 	W(RGF_USER_USER_CPU_0, BIT(1)); /* user_cpu_man_rst */
-+	wmb(); /* If host reorder writes here -> race in NIC */
-+	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
- 	wmb(); /* order is important here */
++	ath10k_ce_enable_interrupts(ar);
+ 	ar_pci->started = 1;
+-	return 0;
  
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
+-err_stop:
+-	ath10k_ce_disable_interrupts(ar);
+-	ath10k_pci_kill_tasklet(ar);
+-
+-	return ret;
++	return 0;
+ }
+ 
+ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
 -- 
-1.8.5.2
+1.8.5.3
 
