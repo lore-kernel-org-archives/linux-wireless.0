@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:54842 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753435AbaHZUCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 16:02:19 -0400
-Date: Tue, 26 Aug 2014 22:02:08 +0200
-From: Sabrina Dubroca <sd@queasysnail.net>
-To: Valdis.Kletnieks@vt.edu
-Cc: Samuel Thibault <samuel.thibault@ens-lyon.org>,
-	Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH][input-led] Defer input led work to workqueue
-Message-ID: <20140826200208.GA11247@kria> (sfid-20140826_220238_497505_2AA58670)
-References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
- <3942.1409078958@turing-police.cc.vt.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3942.1409078958@turing-police.cc.vt.edu>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51459 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157AbaHGJNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2014 05:13:50 -0400
+Received: by mail-wi0-f172.google.com with SMTP id n3so10348032wiv.5
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:49 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/5] ath10k: fix legacy irq workaround
+Date: Thu,  7 Aug 2014 11:04:16 +0200
+Message-Id: <1407402260-29854-2-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111354_052809_C85A4D77)
+In-Reply-To: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
+References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-08-26, 14:49:18 -0400, Valdis.Kletnieks@vt.edu wrote:
-> On Tue, 26 Aug 2014 03:54:53 +0200, Samuel Thibault said:
-> > This changeset defers the second led_trigger_event call into a
-> > workqueue, which avoids the nested locking altogether.  This does
-> > not prevent the user from shooting himself in the foot by creating a
-> > vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
-> > threads eating some CPU until the user breaks the loop, which is not too
-> > bad.
-> >
-> > Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
-> >
-> > --- a/drivers/input/leds.c
-> > +++ b/drivers/input/leds.c
-> > @@ -100,13 +100,25 @@ static unsigned long vt_led_registered[B
-> 
-> I admit having zero understanding of the code, but I can confirm that
-> next-20140825 still throws the lockdep whine I was seeing, but the same
-> tree with this patch on top of it boots without warning. Soo...
-> 
-> Tested-By: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+Wrong register was being set up. This could
+prevent firmware from booting in some rare cases
+when using legacy interrupts.
 
-Same for me.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Tested-by: Sabrina Dubroca <sd@queasysnail.net>
-
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cfc1da2..54deea3 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2418,9 +2418,10 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
+-					       PCIE_INTR_FIRMWARE_MASK |
+-					       PCIE_INTR_CE_MASK_ALL);
++			ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++					   PCIE_INTR_ENABLE_ADDRESS,
++					   PCIE_INTR_FIRMWARE_MASK |
++					   PCIE_INTR_CE_MASK_ALL);
+ 
+ 		mdelay(10);
+ 	} while (time_before(jiffies, timeout));
 -- 
-Sabrina
+1.8.5.3
+
