@@ -1,185 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43955 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450AbaHKKbJ (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:63739 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757470AbaHGJNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 06:31:09 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: remove @gfp parameter from cfg80211_rx_mgmt()
-Date: Mon, 11 Aug 2014 03:29:57 -0700
-Message-ID: <1407752997-12382-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140811_123113_817825_B2075E32)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Aug 2014 05:13:11 -0400
+Received: by mail-wg0-f47.google.com with SMTP id b13so3828900wgh.18
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:10 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/6] ath10k: group some pci probing helpers
+Date: Thu,  7 Aug 2014 11:03:30 +0200
+Message-Id: <1407402212-29809-5-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111333_047862_CE7911D7)
+In-Reply-To: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the cfg80211_rx_mgmt(), parameter @gfp was used for the memory allocation.
-But, memory get allocated under spin_lock_bh(), this implies atomic context.
-So, one can't use GFP_KERNEL, only variants with no __GFP_WAIT. Actually, in all
-occurrences GFP_ATOMIC is used (wil6210 use GFP_KERNEL by mistake),
-and it should be this way or warning triggered in the memory allocation code.
+Make probe/remove functions shorter and easier to
+understand.
 
-Remove @gfp parameter as no actual choice exist, and use hard coded
-GFP_ATOMIC for memory allocation.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c             | 5 ++---
- drivers/net/wireless/ath/wil6210/wmi.c            | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c     | 6 ++----
- drivers/net/wireless/mwifiex/util.c               | 2 +-
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 3 +--
- include/net/cfg80211.h                            | 3 +--
- net/mac80211/rx.c                                 | 2 +-
- net/wireless/mlme.c                               | 4 ++--
- 8 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 134 +++++++++++++++++++---------------
+ 1 file changed, 77 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 4d7f9e4..eca3014 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -570,8 +570,7 @@ static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi *wmi, u8 *datap, int len,
- 		   dlen, freq, vif->probe_req_report);
- 
- 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
--		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0,
--				 GFP_ATOMIC);
-+		cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0);
- 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c31edb6..cfc1da2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2483,86 +2483,116 @@ static int ath10k_pci_cold_reset(struct ath10k *ar)
  	return 0;
  }
-@@ -610,7 +609,7 @@ static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len,
- 		return -EINVAL;
- 	}
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0, GFP_ATOMIC);
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, ev->data, dlen, 0);
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 1d1d0af..335bc38 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -350,7 +350,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 		}
- 	} else {
- 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
--				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
-+				 (void *)rx_mgmt_frame, d_len, 0);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 588fdbd..31b87d8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1431,8 +1431,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 					      IEEE80211_BAND_5GHZ);
- 
- 	wdev = &ifp->vif->wdev;
--	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0,
--			 GFP_ATOMIC);
-+	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len, 0);
- 
- 	kfree(mgmt_frame);
- 	return 0;
-@@ -1896,8 +1895,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 					      IEEE80211_BAND_2GHZ :
- 					      IEEE80211_BAND_5GHZ);
- 
--	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0,
--			 GFP_ATOMIC);
-+	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
- 
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
- 		  mgmt_frame_len, e->datalen, chanspec, freq);
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index cee0283..ec79c49 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -172,7 +172,7 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 
- 	cfg80211_rx_mgmt(priv->wdev, priv->roc_cfg.chan.center_freq,
- 			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
--			 0, GFP_ATOMIC);
-+			 0);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-index f0839f6..a794bf0 100644
---- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-@@ -3038,8 +3038,7 @@ void rtw_cfg80211_rx_action(struct rtw_adapter *adapter, u8 *frame,
- 		freq = ieee80211_channel_to_frequency(channel,
- 						      IEEE80211_BAND_5GHZ);
- 
--	cfg80211_rx_mgmt(adapter->rtw_wdev, freq, 0, frame, frame_len,
--			 0, GFP_ATOMIC);
-+	cfg80211_rx_mgmt(adapter->rtw_wdev, freq, 0, frame, frame_len, 0);
- }
- 
- static int _cfg80211_rtw_mgmt_tx(struct rtw_adapter *padapter, u8 tx_ch,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0a080c4..7b8dac3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4412,7 +4412,6 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * @buf: Management frame (header + body)
-  * @len: length of the frame data
-  * @flags: flags, as defined in enum nl80211_rxmgmt_flags
-- * @gfp: context flags
-  *
-  * This function is called whenever an Action frame is received for a station
-  * mode interface, but is not processed in kernel.
-@@ -4423,7 +4422,7 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * driver is responsible for rejecting the frame.
-  */
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_dbm,
--		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
-+		      const u8 *buf, size_t len, u32 flags);
- 
- /**
-  * cfg80211_mgmt_tx_status - notification of TX status for management frame
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5f572be..08fd450 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2706,7 +2706,7 @@ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
- 		sig = status->signal;
- 
- 	if (cfg80211_rx_mgmt(&rx->sdata->wdev, status->freq, sig,
--			     rx->skb->data, rx->skb->len, 0, GFP_ATOMIC)) {
-+			     rx->skb->data, rx->skb->len, 0)) {
- 		if (rx->sta)
- 			rx->sta->rx_packets++;
- 		dev_kfree_skb(rx->skb);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 266766b..369fc334 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -605,7 +605,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- }
- 
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
--		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
-+		      const u8 *buf, size_t len, u32 flags)
+-static int ath10k_pci_probe(struct pci_dev *pdev,
+-			    const struct pci_device_id *pci_dev)
++static int ath10k_pci_claim(struct ath10k *ar)
  {
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-@@ -648,7 +648,7 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
- 		/* Indicate the received Action frame to user space */
- 		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
- 				      freq, sig_mbm,
--				      buf, len, flags, gfp))
-+				      buf, len, flags, GFP_ATOMIC))
- 			continue;
+-	void __iomem *mem;
+-	int ret = 0;
+-	struct ath10k *ar;
+-	struct ath10k_pci *ar_pci;
+-	u32 lcr_val, chip_id;
+-
+-	ath10k_dbg(ATH10K_DBG_PCI, "pci probe\n");
+-
+-	ar = ath10k_core_create(sizeof(*ar_pci), &pdev->dev,
+-				&ath10k_pci_hif_ops);
+-	if (!ar) {
+-		ath10k_err("failed to allocate core\n");
+-		return -ENOMEM;
+-	}
+-
+-	ar_pci = ath10k_pci_priv(ar);
+-	ar_pci->pdev = pdev;
+-	ar_pci->dev = &pdev->dev;
+-	ar_pci->ar = ar;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	struct pci_dev *pdev = ar_pci->pdev;
++	u32 lcr_val;
++	int ret;
  
- 		result = true;
+ 	pci_set_drvdata(pdev, ar);
+ 
+ 	ret = pci_enable_device(pdev);
+ 	if (ret) {
+-		ath10k_err("failed to enable PCI device: %d\n", ret);
+-		goto err_core_destroy;
++		ath10k_err("failed to enable pci device: %d\n", ret);
++		return ret;
+ 	}
+ 
+-	/* Request MMIO resources */
+ 	ret = pci_request_region(pdev, BAR_NUM, "ath");
+ 	if (ret) {
+-		ath10k_err("failed to request MMIO region: %d\n", ret);
++		ath10k_err("failed to request region BAR%d: %d\n", BAR_NUM,
++			   ret);
+ 		goto err_device;
+ 	}
+ 
+-	/*
+-	 * Target structures have a limit of 32 bit DMA pointers.
+-	 * DMA pointers can be wider than 32 bits by default on some systems.
+-	 */
++	/* Target expects 32 bit DMA. Enforce it. */
+ 	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 	if (ret) {
+-		ath10k_err("failed to set DMA mask to 32-bit: %d\n", ret);
++		ath10k_err("failed to set dma mask to 32-bit: %d\n", ret);
+ 		goto err_region;
+ 	}
+ 
+ 	ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+ 	if (ret) {
+-		ath10k_err("failed to set consistent DMA mask to 32-bit\n");
++		ath10k_err("failed to set consistent dma mask to 32-bit: %d\n",
++			   ret);
+ 		goto err_region;
+ 	}
+ 
+-	/* Set bus master bit in PCI_COMMAND to enable DMA */
+ 	pci_set_master(pdev);
+ 
+-	/*
+-	 * Temporary FIX: disable ASPM
+-	 * Will be removed after the OTP is programmed
+-	 */
++	/* Workaround: Disable ASPM */
+ 	pci_read_config_dword(pdev, 0x80, &lcr_val);
+ 	pci_write_config_dword(pdev, 0x80, (lcr_val & 0xffffff00));
+ 
+ 	/* Arrange for access to Target SoC registers. */
+-	mem = pci_iomap(pdev, BAR_NUM, 0);
+-	if (!mem) {
+-		ath10k_err("failed to perform IOMAP for BAR%d\n", BAR_NUM);
++	ar_pci->mem = pci_iomap(pdev, BAR_NUM, 0);
++	if (!ar_pci->mem) {
++		ath10k_err("failed to iomap BAR%d\n", BAR_NUM);
+ 		ret = -EIO;
+ 		goto err_master;
+ 	}
+ 
+-	ar_pci->mem = mem;
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot pci_mem 0x%p\n", ar_pci->mem);
++	return 0;
++
++err_master:
++	pci_clear_master(pdev);
++
++err_region:
++	pci_release_region(pdev, BAR_NUM);
++
++err_device:
++	pci_disable_device(pdev);
++
++	return ret;
++}
++
++static void ath10k_pci_release(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	struct pci_dev *pdev = ar_pci->pdev;
++
++	pci_iounmap(pdev, ar_pci->mem);
++	pci_release_region(pdev, BAR_NUM);
++	pci_clear_master(pdev);
++	pci_disable_device(pdev);
++}
++
++static int ath10k_pci_probe(struct pci_dev *pdev,
++			    const struct pci_device_id *pci_dev)
++{
++	int ret = 0;
++	struct ath10k *ar;
++	struct ath10k_pci *ar_pci;
++	u32 chip_id;
++
++	ath10k_dbg(ATH10K_DBG_PCI, "pci probe\n");
++
++	ar = ath10k_core_create(sizeof(*ar_pci), &pdev->dev,
++				&ath10k_pci_hif_ops);
++	if (!ar) {
++		ath10k_err("failed to allocate core\n");
++		return -ENOMEM;
++	}
++
++	ar_pci = ath10k_pci_priv(ar);
++	ar_pci->pdev = pdev;
++	ar_pci->dev = &pdev->dev;
++	ar_pci->ar = ar;
+ 
+ 	spin_lock_init(&ar_pci->ce_lock);
+ 
++	ret = ath10k_pci_claim(ar);
++	if (ret) {
++		ath10k_err("failed to claim device: %d\n", ret);
++		goto err_core_destroy;
++	}
++
+ 	ret = ath10k_pci_wake(ar);
+ 	if (ret) {
+ 		ath10k_err("failed to wake up: %d\n", ret);
+-		goto err_iomap;
++		goto err_release;
+ 	}
+ 
+ 	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
+@@ -2577,8 +2607,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_sleep;
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_BOOT, "boot pci_mem 0x%p\n", ar_pci->mem);
+-
+ 	ret = ath10k_core_register(ar, chip_id);
+ 	if (ret) {
+ 		ath10k_err("failed to register driver core: %d\n", ret);
+@@ -2589,16 +2617,13 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 
+ err_free_ce:
+ 	ath10k_pci_free_ce(ar);
++
+ err_sleep:
+ 	ath10k_pci_sleep(ar);
+-err_iomap:
+-	pci_iounmap(pdev, mem);
+-err_master:
+-	pci_clear_master(pdev);
+-err_region:
+-	pci_release_region(pdev, BAR_NUM);
+-err_device:
+-	pci_disable_device(pdev);
++
++err_release:
++	ath10k_pci_release(ar);
++
+ err_core_destroy:
+ 	ath10k_core_destroy(ar);
+ 
+@@ -2623,12 +2648,7 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	ath10k_core_unregister(ar);
+ 	ath10k_pci_free_ce(ar);
+ 	ath10k_pci_sleep(ar);
+-
+-	pci_iounmap(pdev, ar_pci->mem);
+-	pci_release_region(pdev, BAR_NUM);
+-	pci_clear_master(pdev);
+-	pci_disable_device(pdev);
+-
++	ath10k_pci_release(ar);
+ 	ath10k_core_destroy(ar);
+ }
+ 
 -- 
-1.9.1
+1.8.5.3
 
