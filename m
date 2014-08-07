@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53393 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209AbaHNSaO (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42512 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbaHGMpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 14:30:14 -0400
-Date: Thu, 14 Aug 2014 14:21:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: pull request: iwlwifi-2014-08-14
-Message-ID: <20140814182126.GE4953@tuxdriver.com> (sfid-20140814_203023_073549_C5E79BA8)
-References: <CANUX_P0LJqMS40k=8jeie3q=nbXsA4qO39TL3G9gkp+cTshMCw@mail.gmail.com>
+	Thu, 7 Aug 2014 08:45:14 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH for-3.17 2/2] brcmfmac: fix memory leakage in msgbuf
+Date: Thu, 7 Aug 2014 14:45:09 +0200
+Message-ID: <1407415509-22442-3-git-send-email-arend@broadcom.com> (sfid-20140807_144532_658797_C23A1258)
+In-Reply-To: <1407415509-22442-1-git-send-email-arend@broadcom.com>
+References: <1407415509-22442-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P0LJqMS40k=8jeie3q=nbXsA4qO39TL3G9gkp+cTshMCw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 14, 2014 at 11:12:30AM -0700, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> This is a pull request with one patch that fixes an issue faced by Linus.
-> 
-> David Spinadel helped me debugging this and it appears that the
-> firmware currently available doesn't support scheduled scan. So we
-> disable that for now.
-> 
-> I am sorry - but I am travelling right now and my connection to the
-> only computer that has my PGP signature is awfully slow...
-> Please pull. I'll try to sign a reply to this message as soon as I can.
-> 
-> Thanks,
-> 
-> The following changes since commit 2da2c5854ed759a64f8a9231a7f544b472c3aa6d:
-> 
->   net: wireless: ipw2x00: ipw2200.c: Cleaning up missing
-> null-terminate after strncpy call (2014-08-11 14:43:51 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
-> for-john
-> 
-> for you to fetch changes up to 77b2f2865956b7573f9b040db7a9f808b434acd1:
-> 
->   iwlwifi: mvm: disable scheduled scan to prevent firmware crash
-> (2014-08-14 19:47:41 +0300)
+The kbuild robot came up with the following warning:
 
-Pulling now...
+tree:   .../kernel/git/linville/wireless-next.git master
+head:   dc6be9f54a4ecb0a09765d1f515ed947d86b7528
+commit: 9a1bb60250d2b6b546a62e5b73f55c4f1d22016b
+	 [5/13] brcmfmac: Adding msgbuf protocol.
 
+coccinelle warnings:
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c:1309:1-28:
+   alloc with no test, possible model on line 1318
+
+Looking into the issue, it turned out that the referred allocation
+buffer was not being released in failure path nor upon module
+unload.
+
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 535c7eb..8f8b937 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -1318,6 +1318,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 	msgbuf->nrof_flowrings = if_msgbuf->nrof_flowrings;
+ 	msgbuf->flowring_dma_handle = kzalloc(msgbuf->nrof_flowrings *
+ 		sizeof(*msgbuf->flowring_dma_handle), GFP_ATOMIC);
++	if (!msgbuf->flowring_dma_handle)
++		goto fail;
+ 
+ 	msgbuf->rx_dataoffset = if_msgbuf->rx_dataoffset;
+ 	msgbuf->max_rxbufpost = if_msgbuf->max_rxbufpost;
+@@ -1362,6 +1364,7 @@ fail:
+ 		kfree(msgbuf->flow_map);
+ 		kfree(msgbuf->txstatus_done_map);
+ 		brcmf_msgbuf_release_pktids(msgbuf);
++		kfree(msgbuf->flowring_dma_handle);
+ 		if (msgbuf->ioctbuf)
+ 			dma_free_coherent(drvr->bus_if->dev,
+ 					  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
+@@ -1391,6 +1394,7 @@ void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr)
+ 				  BRCMF_TX_IOCTL_MAX_MSG_SIZE,
+ 				  msgbuf->ioctbuf, msgbuf->ioctbuf_handle);
+ 		brcmf_msgbuf_release_pktids(msgbuf);
++		kfree(msgbuf->flowring_dma_handle);
+ 		kfree(msgbuf);
+ 		drvr->proto->pd = NULL;
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
