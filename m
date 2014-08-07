@@ -1,136 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36768 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883AbaHTBxA (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:37197 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757658AbaHGNEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 21:53:00 -0400
-Received: by mail-pa0-f42.google.com with SMTP id lf10so11296086pab.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 18:53:00 -0700 (PDT)
-Date: Tue, 19 Aug 2014 18:51:14 -0700 (PDT)
-From: Hugh Dickins <hughd@google.com>
-To: Vincent Donnefort <vdonnefort@gmail.com>
-cc: Valdis.Kletnieks@vt.edu, cooloney@gmail.com,
-	linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] leds: make led_blink_set IRQ safe
-In-Reply-To: <1408453101-30290-2-git-send-email-vdonnefort@gmail.com>
-Message-ID: <alpine.LSU.2.11.1408191835200.3003@eggly.anvils> (sfid-20140820_035305_872339_B1F01181)
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils> <1408453101-30290-1-git-send-email-vdonnefort@gmail.com> <1408453101-30290-2-git-send-email-vdonnefort@gmail.com>
+	Thu, 7 Aug 2014 09:04:41 -0400
+Received: by mail-wi0-f173.google.com with SMTP id f8so10581505wiw.0
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 06:04:39 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ronald Wahl <ronald.wahl@raritan.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] carl9170: fix sending URBs with wrong type when using full-speed
+Date: Thu, 07 Aug 2014 15:04:33 +0200
+Message-ID: <7450698.ipAbWqfnUT@blech> (sfid-20140807_150455_301808_A5E78B7E)
+In-Reply-To: <53E36624.9060905@raritan.com>
+References: <1407403442-27268-1-git-send-email-ronald.wahl@raritan.com> <9263316.qJ7UgtQDIG@blech> <53E36624.9060905@raritan.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 19 Aug 2014, Vincent Donnefort wrote:
-
-> This patch introduces a work which take care of reseting the blink workqueue and
-> avoid calling the cancel_delayed_work_sync function which may sleep, from an IRQ
-> context.
+On Thursday, August 07, 2014 01:42:28 PM Ronald Wahl wrote:
+> On 07.08.2014 12:51, Christian Lamparter wrote:
+> > my comments:
+> >   - Patch needs a "signed-off-by: <Your Name> <Your Mail> tag"
+> >     (see Section 12 - Sign your work [0]) for details.
+> >
+> >   - Do you see any improvement on a fullspeed port now?
+> >     (If so, this should be a stable- patch)
 > 
-> Signed-off-by: Vincent Donnefort <vdonnefort@gmail.com>
+> Yes, it actually works now. Before this change you could crash the 
+> system because of the constant logging of the warnings it was almost 
+> dead. My embedded device just rebooted after a while (maybe the
+> watchdog triggered).
 
-Thanks.  It does work for me.  Though the problem was more general than
-stated above: not just a problem in IRQ context, but in any atomic context.
+Ok, this is important then ;).
 
-I don't suppose it has any effect on Valdis's lockdep issue, which I
-didn't get to see myself; but we should let Valdis report back on that.
-
-May I (most ungratefully!) say that your patch doesn't fill me with
-confidence that it's the right solution: adding yet another work_struct
-to get around the issue seemed dubious to me, I wonder if it might expose
-new races.
-
-But rest assured that I know nothing about this, and I'm not at all
-qualified to review your patch: I hope Bryan and others will do so.
-
-Thanks,
-Hugh
-
+> >> @@ -1050,6 +1056,21 @@ static int carl9170_usb_probe(struct usb_interface *intf,
+> >>         ar->intf = intf;
+> >>         ar->features = id->driver_info;
+> >>
+> >> +       /* We need to remember the type of endpoint 4 because it differs
+> >> +        * between high- and full-speed configuration. The high-speed
+> >> +        * configuration specifies it as interrupt and the full-speed
+> >> +        * configuration as bulk endpoint. This information is required
+> >> +        * later when sending urbs to that endpoint.
+> >> +        */
+> >> +       for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
+> >> +               ep = &intf->cur_altsetting->endpoint[i].desc;
+> >> +
+> >> +               if (usb_endpoint_dir_out(ep) &&
+> >> +                   usb_endpoint_num(ep) == AR9170_USB_EP_CMD)
+> >> +                       ar->usb_ep_cmd_is_bulk =
+> >> +                               usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK;
+> > What about this:
+> >
+> >                 if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
+> >                     usb_endpoint_is_bulk_out(ep))
+> >                         ar->usb_ep_cmd_is_bulk = true;
+> > (the driver context "ar" is zero'd out - It is not necessary to set
+> > usb_ep_cmd_is_bulk to false.)
 > 
-> diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
-> index 129729d..0971554 100644
-> --- a/drivers/leds/led-class.c
-> +++ b/drivers/leds/led-class.c
-> @@ -148,6 +148,24 @@ static void led_work_function(struct work_struct *ws)
->  			   msecs_to_jiffies(delay));
->  }
->  
-> +static void reset_blink_work_delayed(struct work_struct *ws)
-> +{
-> +	struct led_classdev *led_cdev =
-> +		container_of(ws, struct led_classdev, reset_blink_work);
-> +
-> +	cancel_delayed_work_sync(&led_cdev->blink_work);
-> +
-> +	if (!led_cdev->blink_delay_on) {
-> +		__led_set_brightness(led_cdev, LED_OFF);
-> +		return;
-> +	} else if (!led_cdev->blink_delay_off) {
-> +		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
-> +		return;
-> +	}
-> +
-> +	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
-> +}
-> +
->  static void set_brightness_delayed(struct work_struct *ws)
->  {
->  	struct led_classdev *led_cdev =
-> @@ -234,6 +252,7 @@ int led_classdev_register(struct device *parent, struct led_classdev *led_cdev)
->  	INIT_WORK(&led_cdev->set_brightness_work, set_brightness_delayed);
->  
->  	INIT_DELAYED_WORK(&led_cdev->blink_work, led_work_function);
-> +	INIT_WORK(&led_cdev->reset_blink_work, reset_blink_work_delayed);
->  
->  #ifdef CONFIG_LEDS_TRIGGERS
->  	led_trigger_set_default(led_cdev);
-> diff --git a/drivers/leds/led-core.c b/drivers/leds/led-core.c
-> index 4bb1168..959510a 100644
-> --- a/drivers/leds/led-core.c
-> +++ b/drivers/leds/led-core.c
-> @@ -40,19 +40,7 @@ static void led_set_software_blink(struct led_classdev *led_cdev,
->  	led_cdev->blink_delay_on = delay_on;
->  	led_cdev->blink_delay_off = delay_off;
->  
-> -	/* never on - just set to off */
-> -	if (!delay_on) {
-> -		__led_set_brightness(led_cdev, LED_OFF);
-> -		return;
-> -	}
-> -
-> -	/* never off - just set to brightness */
-> -	if (!delay_off) {
-> -		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
-> -		return;
-> -	}
-> -
-> -	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
-> +	schedule_work(&led_cdev->reset_blink_work);
->  }
->  
->  
-> @@ -76,8 +64,6 @@ void led_blink_set(struct led_classdev *led_cdev,
->  		   unsigned long *delay_on,
->  		   unsigned long *delay_off)
->  {
-> -	cancel_delayed_work_sync(&led_cdev->blink_work);
-> -
->  	led_cdev->flags &= ~LED_BLINK_ONESHOT;
->  	led_cdev->flags &= ~LED_BLINK_ONESHOT_STOP;
->  
-> diff --git a/include/linux/leds.h b/include/linux/leds.h
-> index 6a599dc..6e5523d 100644
-> --- a/include/linux/leds.h
-> +++ b/include/linux/leds.h
-> @@ -69,6 +69,7 @@ struct led_classdev {
->  
->  	unsigned long		 blink_delay_on, blink_delay_off;
->  	struct delayed_work	 blink_work;
-> +	struct work_struct	 reset_blink_work;
->  	int			 blink_brightness;
->  
->  	struct work_struct	set_brightness_work;
-> -- 
-> 1.9.1
+> This is what my first patch has done but we need to check the endpoint 
+> type if its bulk or not. Otherwise it will fail in the high-speed case.
+> Or did you mean:
 > 
+> 		if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
+> 		    usb_endpoint_is_bulk_out(ep) &&
+> 		    usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK)
+> 			ar->usb_ep_cmd_is_bulk = true;
+usb_endpoint_is_bulk_out [0] "checks if the endpoint is bulk OUT". 
+This function should perform both checks (ie.: is bulk? is out?).
+
+> > BTW: I'll make a patch to carl9170 firmware too.
 > 
+> great!
+> 
+> I will fix the remaining things you mentioned.
+
+great!
+
+Regards
+
+Christian
+
+[0] http://lxr.free-electrons.com/source/include/uapi/linux/usb/ch9.h#L539
