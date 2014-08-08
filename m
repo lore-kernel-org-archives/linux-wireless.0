@@ -1,96 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44049 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750767AbaHSJgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:36:03 -0400
-From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-Subject: [PATCH v3] cfg80211: Reorder wiphy_register/unregister() notifications relevantly
-Date: Tue, 19 Aug 2014 12:35:57 +0300
-Message-Id: <1408440957-3870-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20140819_113607_635942_2A48EC59)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50463 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755435AbaHHJpV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Aug 2014 05:45:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>
+Subject: Re: [RFC 3/3] ath10k: make target endianess more explicit
+References: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
+	<1407489735-28091-4-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 8 Aug 2014 12:45:12 +0300
+In-Reply-To: <1407489735-28091-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 8 Aug 2014 11:22:15 +0200")
+Message-ID: <87lhqzz55j.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_114524_526797_3423DE12)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently it can send regulatory domain change notification before any
-NEW_WIPHY notification. Moreover, if rfill_register() fails, calling
-wiphy_unregister() will send a DEL_WIPHY though no NEW_WIPHY had been
-sent previously.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Thus reordering so it properly notifies NEW_WIPHY before any other.
+> Some copy engine structures are target specific
+> and are uploaded to the device during
+> init/configuration.
+>
+> This also cleans up a bit diag_mem_read/write
+> implicit byteswap mess leaving only
+> diag_access_read/write with an implicit endianess
+> byteswap.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
----
+[...]
 
-Reusing "registered" marker to know whether it sent NEW_WIPHY yet or not.
-Thus if wiphy_unregister() is called du to rfkill registration failure, it
-won't send DEL_WIPHY.
+> @@ -567,8 +562,17 @@ static int ath10k_pci_diag_read_access(struct ath10k *ar, u32 address,
+>  				       u32 *data)
+>  {
+>  	/* Assume range doesn't cross this boundary */
+> -	if (address >= DRAM_BASE_ADDRESS)
+> -		return ath10k_pci_diag_read_mem(ar, address, data, sizeof(u32));
+> +	if (address >= DRAM_BASE_ADDRESS) {
+> +		__le32 val;
+> +		int ret;
 
- net/wireless/core.c | 33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
+For simplicity I would prefer to have variable declaration in the
+beginning of the function.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index afee5e0..08162e8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -635,6 +635,21 @@ int wiphy_register(struct wiphy *wiphy)
- 	if (IS_ERR(rdev->wiphy.debugfsdir))
- 		rdev->wiphy.debugfsdir = NULL;
- 
-+	cfg80211_debugfs_rdev_add(rdev);
-+	rtnl_unlock();
-+
-+	res = rfkill_register(rdev->rfkill);
-+	if (res) {
-+		rfkill_destroy(rdev->rfkill);
-+		rdev->rfkill = NULL;
-+		wiphy_unregister(&rdev->wiphy);
-+		return res;
-+	}
-+
-+	rtnl_lock();
-+
-+	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
-+
- 	if (wiphy->regulatory_flags & REGULATORY_CUSTOM_REG) {
- 		struct regulatory_request request;
- 
-@@ -646,21 +661,9 @@ int wiphy_register(struct wiphy *wiphy)
- 		nl80211_send_reg_change_event(&request);
- 	}
- 
--	cfg80211_debugfs_rdev_add(rdev);
--
- 	rdev->wiphy.registered = true;
- 	rtnl_unlock();
- 
--	res = rfkill_register(rdev->rfkill);
--	if (res) {
--		rfkill_destroy(rdev->rfkill);
--		rdev->rfkill = NULL;
--		wiphy_unregister(&rdev->wiphy);
--		return res;
--	}
--
--	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
--
- 	return 0;
- }
- EXPORT_SYMBOL(wiphy_register);
-@@ -699,8 +702,10 @@ void wiphy_unregister(struct wiphy *wiphy)
- 		rfkill_unregister(rdev->rfkill);
- 
- 	rtnl_lock();
--	nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
--	rdev->wiphy.registered = false;
-+	if (rdev->wiphy.registered) {
-+		nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
-+		rdev->wiphy.registered = false;
-+	}
- 
- 	WARN_ON(!list_empty(&rdev->wdev_list));
- 
 -- 
-1.8.5.5
-
+Kalle Valo
