@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:60977 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751769AbaHLIoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 04:44:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <70001DBA-E1CE-49D6-9A37-6F7CE31B61E6@holtmann.org>
-References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
- <1407789645.28221.68.camel@chimera> <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
- <1407791075.28221.74.camel@chimera> <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org>
- <1407798738.28221.81.camel@chimera> <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org>
- <1407801666.28221.84.camel@chimera> <70001DBA-E1CE-49D6-9A37-6F7CE31B61E6@holtmann.org>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Tue, 12 Aug 2014 10:43:27 +0200
-Message-ID: <CAOiHx=mWkvOf=An=TzWDidK2o4+KGQmz8MAHNo3rSuwbBzUWEg@mail.gmail.com> (sfid-20140812_104419_172578_010B17CA)
-Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48035 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752863AbaHHMlf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Aug 2014 08:41:35 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Hans Wennborg <hans@hanshq.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 8 Aug 2014 05:40:16 -0700
+Subject: RE: [PATCH 07/15] mwifiex: fix decimal printf format specifiers
+ prefixed with 0x
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147BD8@SC-VEXCH2.marvell.com> (sfid-20140808_144152_883325_D034FD2E)
+References: <1407300175-32635-1-git-send-email-hans@hanshq.net>
+In-Reply-To: <1407300175-32635-1-git-send-email-hans@hanshq.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 9:59 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Daniel,
->
->>> the way I read the nl80211 code is that the NL80211_CMD_NEW_INTERFACE
->>> requires a wiphy device to be specified. And that is actually just a
->>> number. So I have no idea what the MAC has to here.
->>>
->> OpenWrt finds a wiphy by its MAC.
->
-> maybe that is the first problem right there. I see that over sysfs you get phy80211/macaddress. However if you do a dump via NL80211_CMD_GET_WIPHY then you do not have the MAC address there.
+Hi Hans,
 
-OpenWrt nowadays uses the device path in sysfs/devices to identify
-wiphys, not the mac anymore (e.g 'pci0000:00/0000:00:01.0/ssb0:0').
+>The prefix suggests the number should be printed in hex, so use the %x specifier to do that.
 
+Acked-by: Avinash Patil <patila@marvell.com>
 
-Jonas
+Thanks,
+Avinash.
+
+________________________________________
+From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Hans Wennborg [hans@hanshq.net]
+Sent: Wednesday, August 06, 2014 10:12 AM
+To: Amitkumar Karwar; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org
+Cc: Hans Wennborg
+Subject: [PATCH 07/15] mwifiex: fix decimal printf format specifiers prefixed with 0x
+
+The prefix suggests the number should be printed in hex, so use
+the %x specifier to do that.
+
+Found by using regex suggested by Joe Perches.
+
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e2e6bf1..2856f0e 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -246,7 +246,7 @@ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
+        }
+
+        if (priv->roc_cfg.cookie) {
+-               wiphy_dbg(wiphy, "info: ongoing ROC, cookie = 0x%llu\n",
++               wiphy_dbg(wiphy, "info: ongoing ROC, cookie = 0x%llx\n",
+                          priv->roc_cfg.cookie);
+                return -EBUSY;
+        }
+--
+2.0.0.526.g5318336
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
