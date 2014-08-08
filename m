@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:53435 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753095AbaHEFje convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36833 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005AbaHHJGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 01:39:34 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: pull request: wireless-next 2014-08-01
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20140804145342.GB16658@tuxdriver.com>
-Date: Mon, 4 Aug 2014 22:39:47 -0700
-Cc: "linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Message-Id: <ED6BF15D-CA1F-4E35-8301-E9A9EEDE3AD6@holtmann.org> (sfid-20140805_073954_121822_5B1AAE9D)
-References: <20140801165738.GA26953@tuxdriver.com> <20140802.193939.2179004210212543536.davem@davemloft.net> <C2EB98EF-6873-4F44-B914-A9F89146914A@holtmann.org> <20140804145342.GB16658@tuxdriver.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
+	Fri, 8 Aug 2014 05:06:25 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Reporting firmware stats to ethtool
+References: <53E3F65D.8080102@candelatech.com>
+Date: Fri, 8 Aug 2014 12:06:15 +0300
+In-Reply-To: <53E3F65D.8080102@candelatech.com> (Ben Greear's message of "Thu,
+	07 Aug 2014 14:57:49 -0700")
+Message-ID: <87wqajz6yg.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_111409_650829_6B948421)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Ben Greear <greearb@candelatech.com> writes:
 
->>>> Please pull this last(?) batch of wireless change intended for the
->>>> 3.17 stream...
->>> 
->>> When I pull this I get tons of conflicts for:
->>> 
->>> CONFLICT (content): Merge conflict in net/6lowpan/iphc.c
->>> 
->>> I don't feel comfortable fixing these up, where are they coming
->>> from?
->> 
->> I was short on time yesterday, but now I checked up on this in detail. The merge conflicts are actually simple to resolve. You can just rely on John's tree to have the more recent net/6lowpan/ tree. I should have insisted on merging net/6lowpan/ through bluetooth-next and wireless-next way earlier to avoid conflicts.
->> 
->> In the future we will avoid this by ensuring that all goes via bluetooth-next first. Sorry for this confusion. John mentioned these merge conflicts in his footnote.
->> 
->> John, do you just want to resolve the merge conflicts and send Dave a new pull request?
-> 
-> I'm happy to do that, if Dave wants.  But as you say, once the initial
-> shock of all those conflicts passes the resolution really is fairly
-> simple. :-)
+> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
+> as ethtool stats, somewhat similar to how ath9k does it.
+>
+> I notice that my user-space tool is reporting huge numbers because
+> the stats are reset to zero when firmware restarts, and so my tool
+> thinks the stats wrapped.
+>
+> I can fix my tool easily enough, but I first wanted to see if
+> anyone had strong feelings about keeping the stats from resetting
+> to zero by storing history and calculating diffs in the driver.
+>
+> I think my preference is to punt this to user-space, but if
+> someone feels otherwise, please let me know sooner than later.
 
-do you want John to just do the merge conflict resolution? They are all trivial.
+I also prefer to have this in user space, but how does user space know
+when the stats have been zeroed?
 
-Regards
-
-Marcel
-
+-- 
+Kalle Valo
