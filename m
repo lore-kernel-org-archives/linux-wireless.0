@@ -1,31 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:46551 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbaH2Tu7 (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:59997 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755194AbaHHLA6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 15:50:59 -0400
-Message-ID: <5400D9A2.4060001@broadcom.com> (sfid-20140829_215102_559424_C7025B37)
-Date: Fri, 29 Aug 2014 12:50:58 -0700
-From: Franky Lin <frankyl@broadcom.com>
+	Fri, 8 Aug 2014 07:00:58 -0400
+Received: by mail-we0-f181.google.com with SMTP id k48so5532083wev.12
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 04:00:56 -0700 (PDT)
 MIME-Version: 1.0
-To: <brcm80211-dev-list@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
-References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>	<5400C3E8.9040500@broadcom.com> <CAMuHMdXahUGQ1-4SvkCnt=BrAn6_Xge7RzieR2K8gDmj_pC-kw@mail.gmail.com>
-In-Reply-To: <CAMuHMdXahUGQ1-4SvkCnt=BrAn6_Xge7RzieR2K8gDmj_pC-kw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <878umzz2d0.fsf@kamboji.qca.qualcomm.com>
+References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+	<1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
+	<878umzz2d0.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 8 Aug 2014 13:00:56 +0200
+Message-ID: <CA+BoTQnvS2C9_C7qkrX5cPLa8weHx_FmS8Gd=d2Pf=EAmf9EiQ@mail.gmail.com> (sfid-20140808_130101_318760_F143CC5C)
+Subject: Re: [PATCH 2/6] ath10k: remove target soc ps code
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/29/2014 12:23 PM, Geert Uytterhoeven wrote:
-> Besides, msgbuf.o is part of the core.
-> I've just tried moving it to brcmfmac-$(CONFIG_BRCMFMAC_PCIE),
-> but that doesn't help. Other parts use msgbuf, too.
+On 8 August 2014 12:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
+>> The soc powersave was disabled by default. It
+>> never was fully tested. Some hw apparently had
+>> problems with it and the implementation itself had
+>> a possible race.
+>>
+>> Just remove the refcounting and simply wake up the
+>> device when probing and put to sleep when
+>> removing.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> This one introduced new warnings:
+>
+> drivers/net/wireless/ath/ath10k/pci.c:646:5: warning: symbol 'ath10k_pci_wake' was not declared. Should it be static?
+> drivers/net/wireless/ath/ath10k/pci.c:653:6: warning: symbol 'ath10k_pci_sleep' was not declared. Should it be static?
 
-I was about to send my ACK but had a second thought. If the dependency 
-is added, SDIO driver may not work on no DMA platform. Shall we separate 
-the protocol as a selectable option that selects by bus option?
+I didn't catch this for some reason. Can you share how you run
+checkpatch, please?
 
-Thanks,
-Franky
+
+> Is it okay if I fix it like this:
+>
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -643,14 +643,14 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+>         return -ETIMEDOUT;
+>  }
+>
+> -int ath10k_pci_wake(struct ath10k *ar)
+> +static int ath10k_pci_wake(struct ath10k *ar)
+>  {
+>         ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
+>                                PCIE_SOC_WAKE_V_MASK);
+>         return ath10k_pci_wake_wait(ar);
+>  }
+>
+> -void ath10k_pci_sleep(struct ath10k *ar)
+> +static void ath10k_pci_sleep(struct ath10k *ar)
+>  {
+>         ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
+>                                PCIE_SOC_WAKE_RESET);
+
+Looks good, thanks.
+
+
+Michał
