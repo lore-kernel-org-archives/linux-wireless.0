@@ -1,77 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54445 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaHHRZC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54655 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889AbaHHLNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 13:25:02 -0400
-Message-ID: <53E507EB.7030703@candelatech.com> (sfid-20140808_192507_827222_460418EB)
-Date: Fri, 08 Aug 2014 10:24:59 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 8 Aug 2014 07:13:15 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
+References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+	<87d2cbz3wy.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQkF3+-1ded_dj63BGH7-bdD_uxLSkTZjGMb654yPzbtnA@mail.gmail.com>
+Date: Fri, 8 Aug 2014 14:13:10 +0300
+In-Reply-To: <CA+BoTQkF3+-1ded_dj63BGH7-bdD_uxLSkTZjGMb654yPzbtnA@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 8 Aug 2014 12:24:48 +0200")
+Message-ID: <87mwbfxmih.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_131318_685663_A6B5A2B0)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Dave Taht <dave.taht@gmail.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: Reporting firmware stats to ethtool
-References: <53E3F65D.8080102@candelatech.com> <87wqajz6yg.fsf@kamboji.qca.qualcomm.com> <53E4EFCB.5090501@candelatech.com> <CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com> <53E4F6B8.50009@candelatech.com> <53E4FEA9.80803@broadcom.com>
-In-Reply-To: <53E4FEA9.80803@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2014 09:45 AM, Arend van Spriel wrote:
-> On 08/08/2014 06:11 PM, Ben Greear wrote:
->> On 08/08/2014 08:55 AM, Dave Taht wrote:
->>> On Fri, Aug 8, 2014 at 8:42 AM, Ben Greear <greearb@candelatech.com> wrote:
->>>> On 08/08/2014 02:06 AM, Kalle Valo wrote:
->>>>> Ben Greear <greearb@candelatech.com> writes:
->>>>>
->>>>>> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
->>>>>> as ethtool stats, somewhat similar to how ath9k does it.
->>>>>>
->>>>>> I notice that my user-space tool is reporting huge numbers because
->>>>>> the stats are reset to zero when firmware restarts, and so my tool
->>>>>> thinks the stats wrapped.
->>>>>>
->>>>>> I can fix my tool easily enough, but I first wanted to see if
->>>>>> anyone had strong feelings about keeping the stats from resetting
->>>>>> to zero by storing history and calculating diffs in the driver.
->>>>>>
->>>>>> I think my preference is to punt this to user-space, but if
->>>>>> someone feels otherwise, please let me know sooner than later.
->>>>>
->>>>> I also prefer to have this in user space, but how does user space know
->>>>> when the stats have been zeroed?
->>>>
->>>> Poll often enough that it cannot increment more than 2 billion (or other large number)
->>>> between polls, and then if polled value is less than previous (and difference is > 2 billion),
->>>> we know we had a reset and not a wrap.
->>>
->>> I do kind of prefer 64 bit counters in the general case. Nuke it from
->>> orbit, it's the only way to be sure.
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+>> Based on Joe's suggestion, I'm planning to change the macro like below.
+>> Are you ok with that?
 >>
->> It's 64-bit to user-space, but that means nothing because firmware
->> uses 32-bit (or even 16 bit in some cases, probably) internally.
->> A great deal of counters are the same, so be very careful when
->> trying to keep long term counters grabbed from firmware/drivers/hardware.
+>> It actually adds a new checkpatch warning but I'm going to ignore that
+>> for now:
 >>
->> And, stations come and go when you re-associate, so all sorts of wifi counters
->> reset themselves all the time...
-> 
-> Does ath driver notify mac80211 about firmware restart, ie. through ieee80211_restart_hw(). If only user-space could get that info.
+>> drivers/net/wireless/ath/ath10k/wmi.h:177: ERROR: Macros with complex values should be enclosed in parenthesis
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 109ea684f88f..e70836586756 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -174,46 +174,48 @@ enum wmi_main_service {
+>>
+>>  static inline char *wmi_service_name(int service_id)
+>>  {
+>> -#define SVCSTR(x) { case x: return #x; }
+>> +#define SVCSTR(x) case x: return #x
+>> +
+> [...]
+>
+> This was the checkpatch warning I originally fixed by using { .. } :-)
 
-We should soon have a udev event on firmware crash (and a way to read that crash log out of
-debugfs).  A simple restart (w/out crash) might not be so interesting?
+Hehe, I was actually thinking maybe that's why you added the braces :)
 
-Might be nice to have a fw restart and fw crash counter in ethtool stats in case something
-wants to poll that instead of dealing with uevents.  I will add those counters.
+> Anyway, I don't see a problem with the macro change you suggest.
+> Apparently we're doomed to have a checkpatch warning either way unless
+> we don't use a macro at all.
 
-Thanks,
-Ben
+Yeah. And it's not like that we need to have 0 checkpatch warnings. For
+example, I already have a long list of errors I ignore:
 
+MSLEEP,USLEEP_RANGE,PRINTK_WITHOUT_KERN_LEVEL,NETWORKING_BLOCK_COMMENT_STYLE,LINUX_VERSION_CODE,COMPLEX_MACRO
+
+checkpatch just a good tool to catch some of the style issues and makes
+my work easier, especially when newbies send patches.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
