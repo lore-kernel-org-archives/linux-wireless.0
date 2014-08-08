@@ -1,47 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:38290 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754016AbaHGJO1 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50579 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756427AbaHHKMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:14:27 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so3849033wgg.12
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:14:26 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/5] ath10k: fixes 2014-08-07, part 3
-Date: Thu,  7 Aug 2014 11:05:03 +0200
-Message-Id: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111430_479490_1043B0AA)
+	Fri, 8 Aug 2014 06:12:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
+References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 8 Aug 2014 13:11:57 +0300
+In-Reply-To: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 29 Jul 2014 12:03:59 +0200")
+Message-ID: <87d2cbz3wy.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_121214_088939_D67355AB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This is part 3 (of 3) of my patches. Split for
-your reviewing pleasure.
+> The 10.x and main firmware branches have
+> conflicting WMI service bitmap definitions.
+>
+> This also fixes WMI services parsing on big-endian
+> hosts and changes debugfs output to be more human
+> friendly.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-This is related to start/restart sequences.
+Based on Joe's suggestion, I'm planning to change the macro like below.
+Are you ok with that?
 
-This is based on:
-  [PATCH 0/5] ath10k: fixes 2014-08-07, part 2
+It actually adds a new checkpatch warning but I'm going to ignore that
+for now:
 
+drivers/net/wireless/ath/ath10k/wmi.h:177: ERROR: Macros with complex values should be enclosed in parenthesis
 
-Michal Kazior (5):
-  ath10k: rework posting pci rx buffers
-  ath10k: dont reset the chip on hif_stop
-  ath10k: ignore ar_pci->started in pipe cleanup
-  ath10k: remove ar_pci->started
-  ath10k: flush hif buffers before recovery
-
- drivers/net/wireless/ath/ath10k/ce.c   |  71 +++++----
- drivers/net/wireless/ath/ath10k/ce.h   |  16 +-
- drivers/net/wireless/ath/ath10k/core.c |   1 +
- drivers/net/wireless/ath/ath10k/hif.h  |   3 +-
- drivers/net/wireless/ath/ath10k/pci.c  | 279 ++++++++++++++++-----------------
- drivers/net/wireless/ath/ath10k/pci.h  |   4 +-
- 6 files changed, 185 insertions(+), 189 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 109ea684f88f..e70836586756 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -174,46 +174,48 @@ enum wmi_main_service {
+ 
+ static inline char *wmi_service_name(int service_id)
+ {
+-#define SVCSTR(x) { case x: return #x; }
++#define SVCSTR(x) case x: return #x
++
+ 	switch (service_id) {
+-	SVCSTR(WMI_SERVICE_BEACON_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_SCAN_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_ROAM_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_BCN_MISS_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_STA_PWRSAVE)
+-	SVCSTR(WMI_SERVICE_STA_ADVANCED_PWRSAVE)
+-	SVCSTR(WMI_SERVICE_AP_UAPSD)
+-	SVCSTR(WMI_SERVICE_AP_DFS)
+-	SVCSTR(WMI_SERVICE_11AC)
+-	SVCSTR(WMI_SERVICE_BLOCKACK)
+-	SVCSTR(WMI_SERVICE_PHYERR)
+-	SVCSTR(WMI_SERVICE_BCN_FILTER)
+-	SVCSTR(WMI_SERVICE_RTT)
+-	SVCSTR(WMI_SERVICE_RATECTRL)
+-	SVCSTR(WMI_SERVICE_WOW)
+-	SVCSTR(WMI_SERVICE_RATECTRL_CACHE)
+-	SVCSTR(WMI_SERVICE_IRAM_TIDS)
+-	SVCSTR(WMI_SERVICE_ARPNS_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_NLO)
+-	SVCSTR(WMI_SERVICE_GTK_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_SCAN_SCH)
+-	SVCSTR(WMI_SERVICE_CSA_OFFLOAD)
+-	SVCSTR(WMI_SERVICE_CHATTER)
+-	SVCSTR(WMI_SERVICE_COEX_FREQAVOID)
+-	SVCSTR(WMI_SERVICE_PACKET_POWER_SAVE)
+-	SVCSTR(WMI_SERVICE_FORCE_FW_HANG)
+-	SVCSTR(WMI_SERVICE_GPIO)
+-	SVCSTR(WMI_SERVICE_STA_DTIM_PS_MODULATED_DTIM)
+-	SVCSTR(WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG)
+-	SVCSTR(WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG)
+-	SVCSTR(WMI_SERVICE_STA_KEEP_ALIVE)
+-	SVCSTR(WMI_SERVICE_TX_ENCAP)
+-	SVCSTR(WMI_SERVICE_BURST)
+-	SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT)
+-	SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT)
++	SVCSTR(WMI_SERVICE_BEACON_OFFLOAD);
++	SVCSTR(WMI_SERVICE_SCAN_OFFLOAD);
++	SVCSTR(WMI_SERVICE_ROAM_OFFLOAD);
++	SVCSTR(WMI_SERVICE_BCN_MISS_OFFLOAD);
++	SVCSTR(WMI_SERVICE_STA_PWRSAVE);
++	SVCSTR(WMI_SERVICE_STA_ADVANCED_PWRSAVE);
++	SVCSTR(WMI_SERVICE_AP_UAPSD);
++	SVCSTR(WMI_SERVICE_AP_DFS);
++	SVCSTR(WMI_SERVICE_11AC);
++	SVCSTR(WMI_SERVICE_BLOCKACK);
++	SVCSTR(WMI_SERVICE_PHYERR);
++	SVCSTR(WMI_SERVICE_BCN_FILTER);
++	SVCSTR(WMI_SERVICE_RTT);
++	SVCSTR(WMI_SERVICE_RATECTRL);
++	SVCSTR(WMI_SERVICE_WOW);
++	SVCSTR(WMI_SERVICE_RATECTRL_CACHE);
++	SVCSTR(WMI_SERVICE_IRAM_TIDS);
++	SVCSTR(WMI_SERVICE_ARPNS_OFFLOAD);
++	SVCSTR(WMI_SERVICE_NLO);
++	SVCSTR(WMI_SERVICE_GTK_OFFLOAD);
++	SVCSTR(WMI_SERVICE_SCAN_SCH);
++	SVCSTR(WMI_SERVICE_CSA_OFFLOAD);
++	SVCSTR(WMI_SERVICE_CHATTER);
++	SVCSTR(WMI_SERVICE_COEX_FREQAVOID);
++	SVCSTR(WMI_SERVICE_PACKET_POWER_SAVE);
++	SVCSTR(WMI_SERVICE_FORCE_FW_HANG);
++	SVCSTR(WMI_SERVICE_GPIO);
++	SVCSTR(WMI_SERVICE_STA_DTIM_PS_MODULATED_DTIM);
++	SVCSTR(WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG);
++	SVCSTR(WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG);
++	SVCSTR(WMI_SERVICE_STA_KEEP_ALIVE);
++	SVCSTR(WMI_SERVICE_TX_ENCAP);
++	SVCSTR(WMI_SERVICE_BURST);
++	SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT);
++	SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT);
+ 	default:
+ 		return NULL;
+ 	}
++
+ #undef SVCSTR
+ }
 
 -- 
-1.8.5.3
-
+Kalle Valo
