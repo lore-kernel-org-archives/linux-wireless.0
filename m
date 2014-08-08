@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:61058 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754660AbaHYHwl (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:62487 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756313AbaHHJbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 03:52:41 -0400
-Message-ID: <1408953158.8665.15.camel@umadbro> (sfid-20140825_095304_884999_A6F84487)
-Subject: Re: [PATCH] mac80211: Parse IEEE80211_RADIOTAP_RATE on TX
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Mon, 25 Aug 2014 09:52:38 +0200
-In-Reply-To: <1405938028.32255.17.camel@jlt4.sipsolutions.net>
-References: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140710_142756_935664_A8B88F97) <1405938028.32255.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Aug 2014 05:31:38 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hi2so700700wib.4
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 02:31:35 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/3] ath10k: ce fixes 2014-08-08
+Date: Fri,  8 Aug 2014 11:22:12 +0200
+Message-Id: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com> (sfid-20140808_113147_302588_B9BDA076)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-07-21 at 12:20 +0200, Johannes Berg wrote:
-> On Thu, 2014-07-10 at 14:27 +0200, Rostislav Lisovy wrote:
-> > Add support for parsing radiotap field IEEE80211_RADIOTAP_RATE
-> > for transmitted frames. Use the provided datarate value in
-> > info->control.rates[] array so it will be used for transmission.
-> > 
-> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-> > ---
-> > This feature is essential for Transmit Datarate Control (TDC)
-> > in future implementation of IEEE 802.11-2012 "Wireless Access
-> > for the Vehicular Environment" support.
-> 
-> It seems like an extremely bad idea to base your implementation of WAVE
-> on monitor mode with injection.
-> 
-> Why can't you add a proper datapath?
-> 
+Hi,
 
-You are right. I was overthinking the per-packet datarate setting a
-little bit.
-If I am not mistaken it is not possible to say that this feature may be
-useful as the general method for monitor-mode injection with datarate
-until there is some user-space utility really using/needing it?
+This removes implicit endianess in some places.
+I'd love to get rid of it from
+ath10k_pci_diag_access* as well but let's fix
+ath10k_pci_diag_mem_* first.
 
-Best regards;
-Rostislav
+@Kalle, @Ben: As far as I understand this
+conflicts with fw dumping you work on so I'm
+tentatively posting this as an RFC first.
 
+
+Michal Kazior (3):
+  ath10k: move pci init structures
+  ath10k: dont duplicate service-pipe mapping
+  ath10k: make target endianess more explicit
+
+ drivers/net/wireless/ath/ath10k/pci.c | 410 +++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath10k/pci.h |  18 +-
+ 2 files changed, 210 insertions(+), 218 deletions(-)
+
+-- 
+1.8.5.3
 
