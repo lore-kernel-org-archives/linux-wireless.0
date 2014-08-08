@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44562 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932914AbaH0J6M (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53566 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaHHPmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 05:58:12 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Fri, 8 Aug 2014 11:42:07 -0400
+Message-ID: <53E4EFCB.5090501@candelatech.com> (sfid-20140808_174211_937886_9BC40373)
+Date: Fri, 08 Aug 2014 08:42:03 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21501.43966.806614.922280@gargle.gargle.HOWL> (sfid-20140827_115815_998368_492F6C3F)
-Date: Wed, 27 Aug 2014 15:28:22 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 2/4] ath9k: Disable fastcc for channel context mode
-In-Reply-To: <53FD9958.90806@openwrt.org>
-References: <1409121445-11484-1-git-send-email-sujith@msujith.org>
-	<1409121445-11484-3-git-send-email-sujith@msujith.org>
-	<53FD9958.90806@openwrt.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Reporting firmware stats to ethtool
+References: <53E3F65D.8080102@candelatech.com> <87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> > +	if (ath9k_is_chanctx_enabled())
-> > +		fastcc = false;
-> > +
-> Why?
+On 08/08/2014 02:06 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
+>> as ethtool stats, somewhat similar to how ath9k does it.
+>>
+>> I notice that my user-space tool is reporting huge numbers because
+>> the stats are reset to zero when firmware restarts, and so my tool
+>> thinks the stats wrapped.
+>>
+>> I can fix my tool easily enough, but I first wanted to see if
+>> anyone had strong feelings about keeping the stats from resetting
+>> to zero by storing history and calculating diffs in the driver.
+>>
+>> I think my preference is to punt this to user-space, but if
+>> someone feels otherwise, please let me know sooner than later.
+> 
+> I also prefer to have this in user space, but how does user space know
+> when the stats have been zeroed?
 
-Constant switching of HW channels (and bgscan) appear to make things
-go deaf after some time. We have never really tested fastcc and as
-a preemptive measure, it can be disabled for MCC.
+Poll often enough that it cannot increment more than 2 billion (or other large number)
+between polls, and then if polled value is less than previous (and difference is > 2 billion),
+we know we had a reset and not a wrap.
 
-Sujith
+User-space stats will not be perfect in the case of firmware resets, or resets
+after the 'large number', but nothing is going to make it perfect, and in
+practice, this seems good enough.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
