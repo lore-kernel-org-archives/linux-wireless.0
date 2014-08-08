@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755134AbaHFHc1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1562 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989AbaHHLEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:27 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 04/13] wil6210: check error in wil_target_reset()
-Date: Wed, 6 Aug 2014 10:31:52 +0300
-Message-ID: <1407310322-22568-5-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093231_608241_11F29408)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+	Fri, 8 Aug 2014 07:04:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/6] ath10k: remove target soc ps code
+References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+	<1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
+	<878umzz2d0.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnvS2C9_C7qkrX5cPLa8weHx_FmS8Gd=d2Pf=EAmf9EiQ@mail.gmail.com>
+Date: Fri, 8 Aug 2014 14:04:13 +0300
+In-Reply-To: <CA+BoTQnvS2C9_C7qkrX5cPLa8weHx_FmS8Gd=d2Pf=EAmf9EiQ@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 8 Aug 2014 13:00:56 +0200")
+Message-ID: <87zjffxmxe.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_130424_765434_0D434062)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-When resetting target in wil_target_reset(), error may occur.
-Indicate error via error code. In case of error, don't attempt to further
-interact with card, specifically don't attempt firmware download or
-interrupts enabling.
+> On 8 August 2014 12:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> The soc powersave was disabled by default. It
+>>> never was fully tested. Some hw apparently had
+>>> problems with it and the implementation itself had
+>>> a possible race.
+>>>
+>>> Just remove the refcounting and simply wake up the
+>>> device when probing and put to sleep when
+>>> removing.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> This one introduced new warnings:
+>>
+>> drivers/net/wireless/ath/ath10k/pci.c:646:5: warning: symbol 'ath10k_pci_wake' was not declared. Should it be static?
+>> drivers/net/wireless/ath/ath10k/pci.c:653:6: warning: symbol 'ath10k_pci_sleep' was not declared. Should it be static?
+>
+> I didn't catch this for some reason. Can you share how you run
+> checkpatch, please?
 
-Move wil_rx_fini() to be always executed to prevent memory leak.
+I think these are coming from sparse, in essence I run this:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+make drivers/net/wireless/ath/ath10k/ C=2 CF="-D__CHECK_ENDIAN__"
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index dc22053..5a99342 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -309,7 +309,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
- 	destroy_workqueue(wil->wmi_wq);
- }
- 
--static void wil_target_reset(struct wil6210_priv *wil)
-+static int wil_target_reset(struct wil6210_priv *wil)
- {
- 	int delay = 0;
- 	u32 hw_state;
-@@ -395,7 +395,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 		if (delay++ > 100) {
- 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
- 				hw_state);
--			return;
-+			return -ETIME;
- 		}
- 	} while (hw_state != HW_MACHINE_BOOT_DONE);
- 
-@@ -407,6 +407,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 	wmb(); /* order is important here */
- 
- 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
-+	return 0;
- 
- #undef R
- #undef W
-@@ -471,10 +472,11 @@ int wil_reset(struct wil6210_priv *wil)
- 	flush_workqueue(wil->wmi_wq_conn);
- 	flush_workqueue(wil->wmi_wq);
- 
--	/* TODO: put MAC in reset */
--	wil_target_reset(wil);
--
-+	rc = wil_target_reset(wil);
- 	wil_rx_fini(wil);
-+	if (rc)
-+		return rc;
-+
- 
- 	/* init after reset */
- 	wil->pending_connect_cid = -1;
+Which reminds me that I should add -D__CHECK_ENDIAN__ to the makefile.
+
 -- 
-1.8.5.2
-
+Kalle Valo
