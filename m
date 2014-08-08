@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46789 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbaH1SpR (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:60523 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756427AbaHHQXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 14:45:17 -0400
-Date: Thu, 28 Aug 2014 14:40:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Marc Yang <yangyang@marvell.com>
-Subject: Re: [PATCH 1/4] mwifiex: avoid processing RX packets with invalid
- length
-Message-ID: <20140828184036.GO13758@tuxdriver.com> (sfid-20140828_204550_797504_B8A198EC)
-References: <CBACCFA0AEB13A41977475BCF3E896FC4781147C21@SC-VEXCH2.marvell.com>
+	Fri, 8 Aug 2014 12:23:13 -0400
+Received: by mail-wi0-f170.google.com with SMTP id f8so2775250wiw.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 09:23:12 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chris C <chris.a.cremer@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Carl9170fw loading error
+Date: Fri, 08 Aug 2014 18:22:56 +0200
+Message-ID: <1956876.Pi2xLkHlKO@blech> (sfid-20140808_182321_963186_611CF05A)
+In-Reply-To: <CAMKDnrnZweYxca6UxKhTa9B-kMfFmea2EN=qSypkdA+8mX=n-A@mail.gmail.com>
+References: <CAMKDnrkHOsLqXz5p8ZjLRL26N14ZByyM5XQ9b=6a0cB5pPmfqw@mail.gmail.com> <1535534.mOj91phO2K@blech> <CAMKDnrnZweYxca6UxKhTa9B-kMfFmea2EN=qSypkdA+8mX=n-A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC4781147C21@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch does not apply...
+On Friday, August 08, 2014 11:19:32 AM Chris C wrote:
+> I am trying to very quickly stop/interrupt the transmission of packets
+> then be able to restart the transmission.
+> By 'very quickly' I mean faster then the time it takes to transmit a
+> packet. So if a packet is being transmitted, the transmission should
+> be interrupted before the packet is finished transmitting.
+> I have tried setting the AR9170_PHY_REG_ACTIVE register to 0 then back
+> to 1. Is there a better way?
 
-On Mon, Aug 18, 2014 at 02:07:10AM -0700, Avinash Patil wrote:
-> If rx_len received in interface header from FW is more than
-> RX buffer size, skb_put for such length results into skb_panic.
-> Avoid this by not processing such packets. We just print a warning
-> for such packets and free skb.
-> 
-> Reviewed-by: Paul Stewart <pstew@chromium.org>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Marc Yang <yangyang@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/pcie.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index c16dd2c..fbb0550 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -1271,12 +1271,20 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
->                  */
->                 pkt_len = *((__le16 *)skb_data->data);
->                 rx_len = le16_to_cpu(pkt_len);
-> -               skb_put(skb_data, rx_len);
-> -               dev_dbg(adapter->dev,
-> -                       "info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
-> -                       card->rxbd_rdptr, wrptr, rx_len);
-> -               skb_pull(skb_data, INTF_HEADER_LEN);
-> -               mwifiex_handle_rx_packet(adapter, skb_data);
-> +               if (WARN_ON(rx_len <= INTF_HEADER_LEN ||
-> +                           rx_len > MWIFIEX_RX_DATA_BUF_SIZE)) {
-> +                       dev_err(adapter->dev,
-> +                               "Invalid RX len %d, Rd=%#x, Wr=%#x\n",
-> +                               rx_len, card->rxbd_rdptr, wrptr);
-> +                       dev_kfree_skb_any(skb_data);
-> +               } else {
-> +                       skb_put(skb_data, rx_len);
-> +                       dev_dbg(adapter->dev,
-> +                               "info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
-> +                               card->rxbd_rdptr, wrptr, rx_len);
-> +                       skb_pull(skb_data, INTF_HEADER_LEN);
-> +                       mwifiex_handle_rx_packet(adapter, skb_data);
-> +               }
-> 
->                 skb_tmp = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
->                 if (!skb_tmp) {
-> -- 
-> 1.8.1.4
-> 
+I don't know the "ins and outs" of the baseband and mac logic to interrupt
+a transmission in progress. But the datasheet mentions that it is possible
+to prevent any queue from transmitting (Doesn't say it will interrupt it
+though). The register which controls this is located at 0x1c3b40
+(AR9170_MAC_REG_QOS_PRIORITY_VIRTUAL_CCA). In order to stop the transmission
+of a queue 0, you have to set BIT(15). For queue 1 it's BIT(16) and so on.
+To enable the transmission again, clear the bit of the queue.
+ 
+> I am also trying to establish communications between the firmware and
+> the driver so that the firmware can output some timing information.
+> I have tried passing information through the registers. From the
+> driver I use the functions carl9170_read_reg and carl9170_write_reg.
+> From the firmware I use the functions get and set.
+That's fine.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> The problem is that reading and writing to registers often crashes
+> the computer. What's the better way of doing this?
+Crashing your PC? Do you have an BUGs, PANIC or WARNING logs to 
+trace the culprit? The driver shouldn't crash the computer.
+(Note: Check if you can reproduce the crashes in a virtual machine [0]).
+ 
+Regards
+Christian
+
+[0] <https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/>
+
