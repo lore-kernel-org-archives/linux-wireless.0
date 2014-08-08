@@ -1,189 +1,496 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:43941 "EHLO test.hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753419AbaHXVZd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2014 17:25:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org
-Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC 4/7] bcma: register bcma as device tree driver
-Date: Sun, 24 Aug 2014 23:24:42 +0200
-Message-Id: <1408915485-8078-6-git-send-email-hauke@hauke-m.de> (sfid-20140824_232537_359921_DCFECA7A)
-In-Reply-To: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:49092 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756320AbaHHJbk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Aug 2014 05:31:40 -0400
+Received: by mail-wg0-f48.google.com with SMTP id x13so5369489wgg.7
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 02:31:39 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 3/3] ath10k: make target endianess more explicit
+Date: Fri,  8 Aug 2014 11:22:15 +0200
+Message-Id: <1407489735-28091-4-git-send-email-michal.kazior@tieto.com> (sfid-20140808_113150_524522_F51D25FD)
+In-Reply-To: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
+References: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-give the address of the chipcommon core in device tree and bcma will
-search for all the other cores.
+Some copy engine structures are target specific
+and are uploaded to the device during
+init/configuration.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This also cleans up a bit diag_mem_read/write
+implicit byteswap mess leaving only
+diag_access_read/write with an implicit endianess
+byteswap.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- Documentation/devicetree/bindings/bus/bcma.txt | 46 +++++++++++++++++
- drivers/bcma/host_soc.c                        | 70 ++++++++++++++++++++++++++
- include/linux/bcma/bcma.h                      |  2 +
- 3 files changed, 118 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
+ drivers/net/wireless/ath/ath10k/pci.c | 255 +++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath10k/pci.h |  18 +--
+ 2 files changed, 138 insertions(+), 135 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-new file mode 100644
-index 0000000..52fb929
---- /dev/null
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -0,0 +1,46 @@
-+Broadcom AIX bcma bus driver
-+
-+
-+Required properties:
-+
-+- compatible : brcm,bus-aix
-+
-+- reg : iomem address range of chipcommon core
-+
-+Optional properties:
-+
-+- sprom: reference to a sprom driver. This is needed for sprom less devices.
-+	 Use bcm47xx_sprom for example.
-+
-+
-+The cores on the AIX bus are auto detected by bcma. Detection of the
-+IRQ number is not supported on BCM47xx/BCM53xx ARM SoCs, so it is
-+possible to provide the IRQ number over device tree. The IRQ number and
-+the device tree child entry will be added to the core with the matching
-+reg address.
-+
-+Example:
-+
-+	aix@18000000 {
-+		compatible = "brcm,bus-aix";
-+		reg = <0x18000000 0x1000>;
-+		ranges = <0x00000000 0x18000000 0x00100000>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		sprom = <&sprom0>;
-+
-+		gmac@0 {
-+			reg = <0x18024000 0x1000>;
-+			interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		gmac@1 {
-+			reg = <0x18025000 0x1000>;
-+			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@0 {
-+			reg = <0x18012000 0x1000>;
-+			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+	};
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 3475e60..d009bc9 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -7,6 +7,9 @@
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index fee875b..1de85cb 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -156,74 +156,74 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+ 	{
+-		.pipenum = 0,
+-		.pipedir = PIPEDIR_OUT,
+-		.nentries = 32,
+-		.nbytes_max = 256,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(0),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(256),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
  
- #include "bcma_private.h"
- #include "scan.h"
-+#include <linux/slab.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
- #include <linux/bcma/bcma.h>
- #include <linux/bcma/bcma_soc.h>
+ 	/* CE1: target->host HTT + HTC control */
+ 	{
+-		.pipenum = 1,
+-		.pipedir = PIPEDIR_IN,
+-		.nentries = 32,
+-		.nbytes_max = 512,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(1),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(512),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
  
-@@ -173,6 +176,7 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
- 	/* Host specific */
- 	bus->hosttype = BCMA_HOSTTYPE_SOC;
- 	bus->ops = &bcma_host_soc_ops;
-+	bus->host_pdev = NULL;
+ 	/* CE2: target->host WMI */
+ 	{
+-		.pipenum = 2,
+-		.pipedir = PIPEDIR_IN,
+-		.nentries = 32,
+-		.nbytes_max = 2048,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(2),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
  
- 	/* Register */
- 	err = bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
-@@ -181,3 +185,69 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
+ 	/* CE3: host->target WMI */
+ 	{
+-		.pipenum = 3,
+-		.pipedir = PIPEDIR_OUT,
+-		.nentries = 32,
+-		.nbytes_max = 2048,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(3),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
  
- 	return err;
+ 	/* CE4: host->target HTT */
+ 	{
+-		.pipenum = 4,
+-		.pipedir = PIPEDIR_OUT,
+-		.nentries = 256,
+-		.nbytes_max = 256,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(4),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(256),
++		.nbytes_max = __cpu_to_le32(256),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
+ 
+ 	/* NB: 50% of src nentries, since tx has 2 frags */
+ 
+ 	/* CE5: unused */
+ 	{
+-		.pipenum = 5,
+-		.pipedir = PIPEDIR_OUT,
+-		.nentries = 32,
+-		.nbytes_max = 2048,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(5),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
+ 
+ 	/* CE6: Reserved for target autonomous hif_memcpy */
+ 	{
+-		.pipenum = 6,
+-		.pipedir = PIPEDIR_INOUT,
+-		.nentries = 32,
+-		.nbytes_max = 4096,
+-		.flags = CE_ATTR_FLAGS,
+-		.reserved = 0,
++		.pipenum = __cpu_to_le32(6),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(4096),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
+ 	},
+ 
+ 	/* CE7 used only by Host */
+@@ -236,92 +236,92 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+  */
+ static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(3),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(2),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(3),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(2),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(3),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(2),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(3),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(2),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(3),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(2),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 0,		/* could be moved to 3 (share with WMI) */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(0),		/* could be moved to 3 (share with WMI) */
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(1),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 0,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),	/* not currently used */
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(0),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),	/* not currently used */
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(1),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 4,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_OUT),		/* out = UL = host -> target */
++		__cpu_to_le32(4),
+ 	},
+ 	{
+-		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_IN),		/* in = DL = target -> host */
++		__cpu_to_le32(1),
+ 	},
+ 
+ 	/* (Additions here) */
+ 
+ 	{				/* Must be last */
+-		 0,
+-		 0,
+-		 0,
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
+ 	},
+ };
+ 
+@@ -544,14 +544,9 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 	}
+ 
+ done:
+-	if (ret == 0) {
+-		/* Copy data from allocated DMA buf to caller's buf */
+-		WARN_ON_ONCE(orig_nbytes & 3);
+-		for (i = 0; i < orig_nbytes / sizeof(__le32); i++) {
+-			((u32 *)data)[i] =
+-				__le32_to_cpu(((__le32 *)data_buf)[i]);
+-		}
+-	} else
++	if (ret == 0)
++		memcpy(data, data_buf, orig_nbytes);
++	else
+ 		ath10k_warn("failed to read diag value at 0x%x: %d\n",
+ 			    address, ret);
+ 
+@@ -567,8 +562,17 @@ static int ath10k_pci_diag_read_access(struct ath10k *ar, u32 address,
+ 				       u32 *data)
+ {
+ 	/* Assume range doesn't cross this boundary */
+-	if (address >= DRAM_BASE_ADDRESS)
+-		return ath10k_pci_diag_read_mem(ar, address, data, sizeof(u32));
++	if (address >= DRAM_BASE_ADDRESS) {
++		__le32 val;
++		int ret;
++
++		ret = ath10k_pci_diag_read_mem(ar, address, &val, sizeof(val));
++		if (ret)
++			return ret;
++
++		*data = __le32_to_cpu(val);
++		return 0;
++	}
+ 
+ 	ath10k_pci_wake(ar);
+ 	*data = ath10k_pci_read32(ar, address);
+@@ -610,9 +614,7 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 	}
+ 
+ 	/* Copy caller's data to allocated DMA buf */
+-	WARN_ON_ONCE(orig_nbytes & 3);
+-	for (i = 0; i < orig_nbytes / sizeof(__le32); i++)
+-		((__le32 *)data_buf)[i] = __cpu_to_le32(((u32 *)data)[i]);
++	memcpy(data_buf, data, orig_nbytes);
+ 
+ 	/*
+ 	 * The address supplied by the caller is in the
+@@ -715,9 +717,11 @@ static int ath10k_pci_diag_write_access(struct ath10k *ar, u32 address,
+ 					u32 data)
+ {
+ 	/* Assume range doesn't cross this boundary */
+-	if (address >= DRAM_BASE_ADDRESS)
+-		return ath10k_pci_diag_write_mem(ar, address, &data,
+-						 sizeof(u32));
++	if (address >= DRAM_BASE_ADDRESS) {
++		__le32 val = __cpu_to_le32(data);
++		return ath10k_pci_diag_write_mem(ar, address, &val,
++						 sizeof(val));
++	}
+ 
+ 	ath10k_pci_wake(ar);
+ 	ath10k_pci_write32(ar, address, data);
+@@ -933,7 +937,7 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ {
+ 	u32 reg_dump_area = 0;
+-	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X] = {};
++	__le32 reg_dump_values[REG_DUMP_COUNT_QCA988X] = {};
+ 	u32 host_addr;
+ 	int ret;
+ 	u32 i;
+@@ -944,8 +948,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
+ 
+ 	host_addr = host_interest_item_address(HI_ITEM(hi_failure_state));
+-	ret = ath10k_pci_diag_read_mem(ar, host_addr,
+-				       &reg_dump_area, sizeof(u32));
++	ret = ath10k_pci_diag_read_access(ar, host_addr, &reg_dump_area);
+ 	if (ret) {
+ 		ath10k_err("failed to read FW dump area address: %d\n", ret);
+ 		return;
+@@ -955,7 +958,8 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 
+ 	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area,
+ 				       &reg_dump_values[0],
+-				       REG_DUMP_COUNT_QCA988X * sizeof(u32));
++				       REG_DUMP_COUNT_QCA988X *
++				       sizeof(__le32));
+ 	if (ret != 0) {
+ 		ath10k_err("failed to read FW dump area: %d\n", ret);
+ 		return;
+@@ -967,10 +971,10 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 	for (i = 0; i < REG_DUMP_COUNT_QCA988X; i += 4)
+ 		ath10k_err("[%02d]: 0x%08X 0x%08X 0x%08X 0x%08X\n",
+ 			   i,
+-			   reg_dump_values[i],
+-			   reg_dump_values[i + 1],
+-			   reg_dump_values[i + 2],
+-			   reg_dump_values[i + 3]);
++			   __le32_to_cpu(reg_dump_values[i]),
++			   __le32_to_cpu(reg_dump_values[i + 1]),
++			   __le32_to_cpu(reg_dump_values[i + 2]),
++			   __le32_to_cpu(reg_dump_values[i + 3]));
+ 
+ 	queue_work(ar->workqueue, &ar->restart_work);
  }
-+
-+#ifdef CONFIG_OF
-+static int bcma_host_soc_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct bcma_bus *bus;
-+	int err;
-+
-+	/* Alloc */
-+	bus = devm_kzalloc(dev, sizeof(*bus), GFP_KERNEL);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+	/* Map MMIO */
-+	bus->mmio = of_iomap(np, 0);
-+	if (!bus->mmio)
-+		return -ENOMEM;
-+
-+	/* Host specific */
-+	bus->hosttype = BCMA_HOSTTYPE_SOC;
-+	bus->ops = &bcma_host_soc_ops;
-+	bus->host_pdev = pdev;
-+
-+	/* Register */
-+	err = bcma_bus_register(bus);
-+	if (err)
-+		goto err_unmap_mmio;
-+
-+	platform_set_drvdata(pdev, bus);
-+
-+	return err;
-+
-+err_unmap_mmio:
-+	iounmap(bus->mmio);
-+	return err;
-+}
-+
-+static int bcma_host_soc_remove(struct platform_device *pdev)
-+{
-+	struct bcma_bus *bus = platform_get_drvdata(pdev);
-+
-+	bcma_bus_unregister(bus);
-+	iounmap(bus->mmio);
-+	platform_set_drvdata(pdev, NULL);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id bcma_host_soc_of_match[] = {
-+	{ .compatible = "brcm,bus-aix", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
-+
-+static struct platform_driver bcma_host_soc_driver = {
-+	.driver = {
-+		.name = "bcma-host-soc",
-+		.owner = THIS_MODULE,
-+		.of_match_table = bcma_host_soc_of_match,
-+	},
-+	.probe		= bcma_host_soc_probe,
-+	.remove		= bcma_host_soc_remove,
-+};
-+module_platform_driver(bcma_host_soc_driver);
-+#endif /* CONFIG_OF */
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 0272e49..7a10d6d 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -323,6 +323,8 @@ struct bcma_bus {
- 		struct pci_dev *host_pci;
- 		/* Pointer to the SDIO device (only for BCMA_HOSTTYPE_SDIO) */
- 		struct sdio_func *host_sdio;
-+		/* Pointer to platform device (only for BCMA_HOSTTYPE_SOC) */
-+		struct platform_device *host_pdev;
- 	};
+@@ -1073,27 +1077,27 @@ static int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar,
+ 	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
+ 		entry = &target_service_to_ce_map_wlan[i];
  
- 	struct bcma_chipinfo chipinfo;
+-		if (entry->service_id != service_id)
++		if (__le32_to_cpu(entry->service_id) != service_id)
+ 			continue;
+ 
+-		switch (entry->pipedir) {
++		switch (__le32_to_cpu(entry->pipedir)) {
+ 		case PIPEDIR_NONE:
+ 			break;
+ 		case PIPEDIR_IN:
+ 			WARN_ON(dl_set);
+-			*dl_pipe = entry->pipenum;
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
+ 			dl_set = true;
+ 			break;
+ 		case PIPEDIR_OUT:
+ 			WARN_ON(ul_set);
+-			*ul_pipe = entry->pipenum;
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
+ 			ul_set = true;
+ 			break;
+ 		case PIPEDIR_INOUT:
+ 			WARN_ON(dl_set);
+ 			WARN_ON(ul_set);
+-			*dl_pipe = entry->pipenum;
+-			*ul_pipe = entry->pipenum;
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
+ 			dl_set = true;
+ 			ul_set = true;
+ 			break;
+@@ -1662,10 +1666,9 @@ static int ath10k_pci_init_config(struct ath10k *ar)
+ 
+ 	pcie_config_flags &= ~PCIE_CONFIG_FLAG_ENABLE_L1;
+ 
+-	ret = ath10k_pci_diag_write_mem(ar, pcie_state_targ_addr +
++	ret = ath10k_pci_diag_write_access(ar, pcie_state_targ_addr +
+ 				 offsetof(struct pcie_state, config_flags),
+-				 &pcie_config_flags,
+-				 sizeof(pcie_config_flags));
++				 pcie_config_flags);
+ 	if (ret != 0) {
+ 		ath10k_err("Failed to write pcie config_flags: %d\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 9401292..44eede3 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -103,12 +103,12 @@ struct pcie_state {
+  * NOTE: Structure is shared between Host software and Target firmware!
+  */
+ struct ce_pipe_config {
+-	u32 pipenum;
+-	u32 pipedir;
+-	u32 nentries;
+-	u32 nbytes_max;
+-	u32 flags;
+-	u32 reserved;
++	__le32 pipenum;
++	__le32 pipedir;
++	__le32 nentries;
++	__le32 nbytes_max;
++	__le32 flags;
++	__le32 reserved;
+ };
+ 
+ /*
+@@ -130,9 +130,9 @@ struct ce_pipe_config {
+ 
+ /* Establish a mapping between a service/direction and a pipe. */
+ struct service_to_pipe {
+-	u32 service_id;
+-	u32 pipedir;
+-	u32 pipenum;
++	__le32 service_id;
++	__le32 pipedir;
++	__le32 pipenum;
+ };
+ 
+ enum ath10k_pci_features {
 -- 
-1.9.1
+1.8.5.3
 
