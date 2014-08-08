@@ -1,61 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50190 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbaHRHqp (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:40191 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756314AbaHHJbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 03:46:45 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 00/13] wil6210 misc updates
-Date: Mon, 18 Aug 2014 10:46:39 +0300
-Message-ID: <3159817.tZ1i7iY0M1@lx-wigig-72> (sfid-20140818_094648_706430_D3C93622)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 8 Aug 2014 05:31:38 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so700769wib.8
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 02:31:36 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/3] ath10k: move pci init structures
+Date: Fri,  8 Aug 2014 11:22:13 +0200
+Message-Id: <1407489735-28091-2-git-send-email-michal.kazior@tieto.com> (sfid-20140808_113152_569760_70FCEDB6)
+In-Reply-To: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
+References: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, August 06, 2014 10:31:48 AM Dedy Lansky wrote:
-> Some updates and bug fixes for wil6210 driver.
-> 
-> Dedy Lansky (1):
->   wil6210: Limit max number of associated stations
-> 
-> Vladimir Kondratiev (12):
->   wil6210: map MAC timer for packet lifetime into debugfs
->   wil6210: fix race in reset
->   wil6210: update copyright year 2014
->   wil6210: check error in wil_target_reset()
->   wil6210: wait longer for hardware reset completion
->   wil6210: Workaround for Sparrow with bad device id
->   wil6210: convert debugfs to the table mode
->   wil6210: fix beamforming data reporting
->   wil6210: fix false "scan timeout"
->   wil6210: fix free'd memory access in wil_if_free()
->   wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
->   wil6210: fix access after free in wil_pcie_remove()
-> 
->  drivers/net/wireless/ath/wil6210/cfg80211.c   |   6 +-
->  drivers/net/wireless/ath/wil6210/debugfs.c    | 331 ++++++++++++++++++++------
->  drivers/net/wireless/ath/wil6210/interrupt.c  |   2 +-
->  drivers/net/wireless/ath/wil6210/main.c       |  30 ++-
->  drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
->  drivers/net/wireless/ath/wil6210/pcie_bus.c   |   7 +-
->  drivers/net/wireless/ath/wil6210/rx_reorder.c |  16 ++
->  drivers/net/wireless/ath/wil6210/txrx.c       |   3 +-
->  drivers/net/wireless/ath/wil6210/txrx.h       |   2 +-
->  drivers/net/wireless/ath/wil6210/wil6210.h    |  17 +-
->  drivers/net/wireless/ath/wil6210/wmi.c        |  47 ++--
->  drivers/net/wireless/ath/wil6210/wmi.h        |   4 +-
->  12 files changed, 327 insertions(+), 146 deletions(-)
-> 
-> 
-Hi John,
+It doesn't make much sense to have copy engine
+configuration structures spread across the whole
+source file.
 
-Could you please merge these patches? Somehow, it was forgotten.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 192 +++++++++++++++++-----------------
+ 1 file changed, 96 insertions(+), 96 deletions(-)
 
-Thanks, Vladimir
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 2d340cc..38a9546 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -229,6 +229,102 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 	/* CE7 used only by Host */
+ };
+ 
++/*
++ * Map from service/endpoint to Copy Engine.
++ * This table is derived from the CE_PCI TABLE, above.
++ * It is passed to the Target at startup for use by firmware.
++ */
++static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 3,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 2,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 3,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 2,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 3,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 2,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 3,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 2,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 3,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 2,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 0,		/* could be moved to 3 (share with WMI) */
++	},
++	{
++		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 1,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 0,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 1,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
++		 PIPEDIR_OUT,		/* out = UL = host -> target */
++		 4,
++	},
++	{
++		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
++		 PIPEDIR_IN,		/* in = DL = target -> host */
++		 1,
++	},
++
++	/* (Additions here) */
++
++	{				/* Must be last */
++		 0,
++		 0,
++		 0,
++	},
++};
++
+ static bool ath10k_pci_irq_pending(struct ath10k *ar)
+ {
+ 	u32 cause;
+@@ -1457,102 +1553,6 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ }
+ 
+ /*
+- * Map from service/endpoint to Copy Engine.
+- * This table is derived from the CE_PCI TABLE, above.
+- * It is passed to the Target at startup for use by firmware.
+- */
+-static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VO,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BK,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_BE,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_DATA_VI,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 3,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_WMI_CONTROL,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 2,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 0,		/* could be moved to 3 (share with WMI) */
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_RSVD_CTRL,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 0,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS,	/* not currently used */
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
+-		 PIPEDIR_OUT,		/* out = UL = host -> target */
+-		 4,
+-	},
+-	{
+-		 ATH10K_HTC_SVC_ID_HTT_DATA_MSG,
+-		 PIPEDIR_IN,		/* in = DL = target -> host */
+-		 1,
+-	},
+-
+-	/* (Additions here) */
+-
+-	{				/* Must be last */
+-		 0,
+-		 0,
+-		 0,
+-	},
+-};
+-
+-/*
+  * Send an interrupt to the device to wake up the Target CPU
+  * so it has an opportunity to notice any changed state.
+  */
+-- 
+1.8.5.3
 
