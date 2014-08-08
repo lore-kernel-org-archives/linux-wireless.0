@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:38725 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755850AbaHVGtg convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61468 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755194AbaHHLBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 02:49:36 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so9981063wgh.34
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 23:49:35 -0700 (PDT)
+	Fri, 8 Aug 2014 07:01:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/6] ath10k: remove pci features var
+References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+	<1407402212-29809-4-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 8 Aug 2014 14:01:03 +0300
+In-Reply-To: <1407402212-29809-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 7 Aug 2014 11:03:29 +0200")
+Message-ID: <874mxnz1n4.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_130116_450481_6CAE4A20)
 MIME-Version: 1.0
-In-Reply-To: <20140821124907.27159.64620.stgit@potku.adurom.net>
-References: <20140821124705.27159.67898.stgit@potku.adurom.net>
-	<20140821124907.27159.64620.stgit@potku.adurom.net>
-Date: Fri, 22 Aug 2014 08:49:35 +0200
-Message-ID: <CA+BoTQk6wvXMEWnfFvASJwzj2AC0VB=Zby+zLO-tJ3NN_eA2mg@mail.gmail.com> (sfid-20140822_084942_460826_DE948626)
-Subject: Re: [PATCH v8 2/4] ath10k: provide firmware crash info via debugfs
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 August 2014 14:49, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> The ATH10K_PCI_FEATURE_MSI_X was originally
+> introduced to support both chips QCA988Xv1 and
+> QCA988Xv2. Since v1 isn't supported anymore it
+> doesn't make sense to keep the feature flag
+> around. Since this is the last one remove the
+> whole thing.
 >
-> Store the firmware registers and other relevant data to a firmware crash dump
-> file and provide it to user-space via debugfs. Should help with figuring out
-> why the firmware crashed.
->
-> kvalo: remove dbglog support, rework and refactor the code to avoid ifdefs and
-> otherwise simplify it as well
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
 [...]
-> +static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
-> +{
-> +       struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
-> +       struct ath10k_dump_file_data *dump_data;
-> +       struct ath10k_tlv_dump_data *dump_tlv;
-> +       int hdr_len = sizeof(*dump_data);
-> +       unsigned int len, sofar = 0;
-> +       unsigned char *buf;
-> +
-> +       lockdep_assert_held(&ar->conf_mutex);
-[...]
-> +static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
-> +{
-> +       struct ath10k *ar = inode->i_private;
-> +       struct ath10k_dump_file_data *dump;
-> +       int ret;
-> +
-> +       mutex_lock(&ar->conf_mutex);
 
-I don't think we need conf_mutex here at all, do we? I'm sorry, I
-should've spotted this earlier. Feel free to just ignore me :-)
+> --- a/drivers/net/wireless/ath/ath10k/pci.h
+> +++ b/drivers/net/wireless/ath/ath10k/pci.h
+> @@ -135,13 +135,6 @@ struct service_to_pipe {
+>  	u32 pipenum;
+>  };
+>  
+> -enum ath10k_pci_features {
+> -	ATH10K_PCI_FEATURE_MSI_X		= 0,
+> -
+> -	/* keep last */
+> -	ATH10K_PCI_FEATURE_COUNT
+> -};
 
-Other than that this looks fine.
+I wouldn't be too surprised if we need this again at some point. But we
+can then add it back.
 
-
-Michał
+-- 
+Kalle Valo
