@@ -1,60 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:42239 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbaHYJ0e convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:34404 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbaHIQq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 05:26:34 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so2230730wiw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 02:26:33 -0700 (PDT)
+	Sat, 9 Aug 2014 12:46:29 -0400
+Date: Sat, 9 Aug 2014 22:16:23 +0530
+From: Himangi Saraogi <himangi774@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH] airo_cs: Remove typedef local_info_t
+Message-ID: <20140809164623.GA21522@himangi-Dell> (sfid-20140809_184633_902796_0BB5A116)
 MIME-Version: 1.0
-In-Reply-To: <87tx5153lw.fsf@kamboji.qca.qualcomm.com>
-References: <1408952456-3121-1-git-send-email-michal.kazior@tieto.com>
-	<87tx5153lw.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 25 Aug 2014 11:26:33 +0200
-Message-ID: <CA+BoTQnJYK0Sf6jy+tXHrTM06gXCjTxv_JKdK=01+jz5RgZ+tQ@mail.gmail.com> (sfid-20140825_112639_215856_07A5CB42)
-Subject: Re: [RFC] ath10k: improve logging to include dev id
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 August 2014 11:18, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> This makes it a lot easier to log and debug
->> messages if there's more than 1 ath10k device on a
->> system.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Did only a quick review and test but looks good to me except one problem
-> in pci.c, see below. But there are some conflicts now, can you rebase
-> please? I hope it's not too much work to fix them.
+The Linux kernel coding style guidelines suggest not using typedefs
+for structure types. This patch gets rid of the typedef for
+local_info_t. Also, the name of the struct is changed to drop the _t,
+to make the name look less typedef-like.
 
-I've rebased this in my internal tree already.
+The following Coccinelle semantic patch detects the case:
 
+@tn@
+identifier i;
+type td;
+@@
 
-> I'll also summarise the "meat" of the changes so that it's easier for
-> others to review:
->
-[...]
->> @@ -2566,12 +2576,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->>       struct ath10k_pci *ar_pci;
->>       u32 chip_id;
->>
->> -     ath10k_dbg(ATH10K_DBG_PCI, "pci probe\n");
->> +     dev_printk(KERN_DEBUG, &pdev->dev, "pci probe\n");
->
-> But this doesn't look right. A leftover from testing, perhaps?
+-typedef
+ struct i { ... }
+-td
+ ;
 
-At this point there's no "ar" yet. The "ar" is allocated a few lines
-below. If the allocation fails then there's no "ar" so dev_err() is
-used explicitly in the failpath.
+@@
+type tn.td;
+identifier tn.i;
+@@
 
-I think these are just 2 exceptions we can't do differently, can we?
+-td
++ struct i
 
+Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+---
+ drivers/net/wireless/airo_cs.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index 7e9ede6..d9ed22b 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -56,18 +56,18 @@ static void airo_release(struct pcmcia_device *link);
+ 
+ static void airo_detach(struct pcmcia_device *p_dev);
+ 
+-typedef struct local_info_t {
++struct local_info {
+ 	struct net_device *eth_dev;
+-} local_info_t;
++};
+ 
+ static int airo_probe(struct pcmcia_device *p_dev)
+ {
+-	local_info_t *local;
++	struct local_info *local;
+ 
+ 	dev_dbg(&p_dev->dev, "airo_attach()\n");
+ 
+ 	/* Allocate space for private device-specific data */
+-	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
++	local = kzalloc(sizeof(*local), GFP_KERNEL);
+ 	if (!local)
+ 		return -ENOMEM;
+ 
+@@ -82,10 +82,11 @@ static void airo_detach(struct pcmcia_device *link)
+ 
+ 	airo_release(link);
+ 
+-	if (((local_info_t *)link->priv)->eth_dev) {
+-		stop_airo_card(((local_info_t *)link->priv)->eth_dev, 0);
++	if (((struct local_info *)link->priv)->eth_dev) {
++		stop_airo_card(((struct local_info *)link->priv)->eth_dev,
++			       0);
+ 	}
+-	((local_info_t *)link->priv)->eth_dev = NULL;
++	((struct local_info *)link->priv)->eth_dev = NULL;
+ 
+ 	kfree(link->priv);
+ } /* airo_detach */
+@@ -101,7 +102,7 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev, void *priv_data)
+ 
+ static int airo_config(struct pcmcia_device *link)
+ {
+-	local_info_t *dev;
++	struct local_info *dev;
+ 	int ret;
+ 
+ 	dev = link->priv;
+@@ -121,10 +122,10 @@ static int airo_config(struct pcmcia_device *link)
+ 	ret = pcmcia_enable_device(link);
+ 	if (ret)
+ 		goto failed;
+-	((local_info_t *)link->priv)->eth_dev =
++	((struct local_info *)link->priv)->eth_dev =
+ 		init_airo_card(link->irq,
+ 			       link->resource[0]->start, 1, &link->dev);
+-	if (!((local_info_t *)link->priv)->eth_dev)
++	if (!((struct local_info *)link->priv)->eth_dev)
+ 		goto failed;
+ 
+ 	return 0;
+@@ -142,7 +143,7 @@ static void airo_release(struct pcmcia_device *link)
+ 
+ static int airo_suspend(struct pcmcia_device *link)
+ {
+-	local_info_t *local = link->priv;
++	struct local_info *local = link->priv;
+ 
+ 	netif_device_detach(local->eth_dev);
+ 
+@@ -151,7 +152,7 @@ static int airo_suspend(struct pcmcia_device *link)
+ 
+ static int airo_resume(struct pcmcia_device *link)
+ {
+-	local_info_t *local = link->priv;
++	struct local_info *local = link->priv;
+ 
+ 	if (link->open) {
+ 		reset_airo_card(local->eth_dev);
+-- 
+1.9.1
+
