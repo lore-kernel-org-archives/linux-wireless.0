@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:63669 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345AbaHHPzg convert rfc822-to-8bit (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37601 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbaHISIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 11:55:36 -0400
-Received: by mail-oi0-f48.google.com with SMTP id h136so3744909oig.7
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 08:55:35 -0700 (PDT)
+	Sat, 9 Aug 2014 14:08:51 -0400
+Subject: [PATCH v6 7/8] ath10k: rename ath10k_pci_hif_dump_area() to
+ ath10k_pci_firmware_crashed()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 09 Aug 2014 21:08:46 +0300
+Message-ID: <20140809180846.29215.34726.stgit@potku.adurom.net> (sfid-20140809_200853_535335_8164E1DF)
+In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
+References: <20140809180552.29215.58612.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <53E4EFCB.5090501@candelatech.com>
-References: <53E3F65D.8080102@candelatech.com>
-	<87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
-	<53E4EFCB.5090501@candelatech.com>
-Date: Fri, 8 Aug 2014 08:55:35 -0700
-Message-ID: <CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com> (sfid-20140808_175541_285113_5B5C8755)
-Subject: Re: Reporting firmware stats to ethtool
-From: Dave Taht <dave.taht@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 8, 2014 at 8:42 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 08/08/2014 02:06 AM, Kalle Valo wrote:
->> Ben Greear <greearb@candelatech.com> writes:
->>
->>> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
->>> as ethtool stats, somewhat similar to how ath9k does it.
->>>
->>> I notice that my user-space tool is reporting huge numbers because
->>> the stats are reset to zero when firmware restarts, and so my tool
->>> thinks the stats wrapped.
->>>
->>> I can fix my tool easily enough, but I first wanted to see if
->>> anyone had strong feelings about keeping the stats from resetting
->>> to zero by storing history and calculating diffs in the driver.
->>>
->>> I think my preference is to punt this to user-space, but if
->>> someone feels otherwise, please let me know sooner than later.
->>
->> I also prefer to have this in user space, but how does user space know
->> when the stats have been zeroed?
->
-> Poll often enough that it cannot increment more than 2 billion (or other large number)
-> between polls, and then if polled value is less than previous (and difference is > 2 billion),
-> we know we had a reset and not a wrap.
+Better to have a clear name for the function. While at it, clear up the title
+for the register dump.
 
-I do kind of prefer 64 bit counters in the general case. Nuke it from
-orbit, it's the only way to be sure.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> User-space stats will not be perfect in the case of firmware resets, or resets
-> after the 'large number', but nothing is going to make it perfect, and in
-> practice, this seems good enough.
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index deebd30aa182..7fc2f02f53c4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1040,7 +1040,7 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 
+ 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
+ 
+-	ath10k_err("target Register Dump\n");
++	ath10k_err("firmware register dump:\n");
+ 	for (i = 0; i < REG_DUMP_COUNT_QCA988X; i += 4)
+ 		ath10k_err("[%02d]: 0x%08X 0x%08X 0x%08X 0x%08X\n",
+ 			   i,
+@@ -1053,7 +1053,7 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 	       sizeof(crash_data->reg_dump_values));
+ }
+ 
+-static void ath10k_pci_hif_dump_area(struct ath10k *ar)
++static void ath10k_pci_firmware_crashed(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data;
+ 	char uuid[50];
+@@ -2007,7 +2007,7 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
+ 				   fw_indicator & ~FW_IND_EVENT_PENDING);
+ 
+ 		if (ar_pci->started) {
+-			ath10k_pci_hif_dump_area(ar);
++			ath10k_pci_firmware_crashed(ar);
+ 		} else {
+ 			/*
+ 			 * Probable Target failure before we're prepared
+@@ -2458,7 +2458,7 @@ static void ath10k_pci_early_irq_tasklet(unsigned long data)
+ 	if (fw_ind & FW_IND_EVENT_PENDING) {
+ 		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
+ 				   fw_ind & ~FW_IND_EVENT_PENDING);
+-		ath10k_pci_hif_dump_area(ar);
++		ath10k_pci_firmware_crashed(ar);
+ 	}
+ 
+ 	ath10k_pci_sleep(ar);
+@@ -2737,7 +2737,7 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		ath10k_warn("device has crashed during init\n");
+ 		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
+ 				   val & ~FW_IND_EVENT_PENDING);
+-		ath10k_pci_hif_dump_area(ar);
++		ath10k_pci_firmware_crashed(ar);
+ 		ret = -ECOMM;
+ 		goto out;
+ 	}
 
-
-
--- 
-Dave Täht
-
-NSFW: https://w2.eff.org/Censorship/Internet_censorship_bills/russell_0296_indecent.article
