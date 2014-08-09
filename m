@@ -1,47 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35758 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbaHLKqQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45052 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbaHISV0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 06:46:16 -0400
-Received: by mail-pa0-f44.google.com with SMTP id eu11so12889174pac.3
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2014 03:46:15 -0700 (PDT)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH] ath6kl: Add SDIO device ID for QCA6234X Support
-Date: Tue, 12 Aug 2014 11:45:59 +0100
-Message-Id: <1407840359-6658-1-git-send-email-srinivas.kandadgatla@linaro.org> (sfid-20140812_124625_574157_2C4901A9)
+	Sat, 9 Aug 2014 14:21:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/6] ath10k: remove target soc ps code
+References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+	<1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 9 Aug 2014 21:21:18 +0300
+In-Reply-To: <1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 7 Aug 2014 11:03:28 +0200")
+Message-ID: <87ha1lttgh.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_202131_619012_69774D13)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This patch adds device ID 402 to support QCA6234X found in APQ8064 SOC
-in IFC6410 board.
+> The soc powersave was disabled by default. It
+> never was fully tested. Some hw apparently had
+> problems with it and the implementation itself had
+> a possible race.
+>
+> Just remove the refcounting and simply wake up the
+> device when probing and put to sleep when
+> removing.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Tested with mainline mmci sdio driver.
+[...]
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
- drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+> @@ -1838,12 +1799,6 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+>  
+>  	ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset\n");
+>  
+> -	ret = ath10k_do_pci_wake(ar);
+> -	if (ret) {
+> -		ath10k_err("failed to wake up target: %d\n", ret);
+> -		return ret;
+> -	}
+> -
+>  	/* debug */
+>  	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+>  				PCIE_INTR_CAUSE_ADDRESS);
+> @@ -1915,7 +1870,6 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+>  
+>  	ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset complete\n");
+>  
+> -	ath10k_do_pci_sleep(ar);
+>  	return ret;
+>  }
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 339d89f..eab0ab9 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1400,6 +1400,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6003_BASE | 0x1))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
-+	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
- 	{},
- };
+For some reason I don't get all kbuild emails, and I don't know if you
+got it either, but smatch found a style error here:
+
+>> drivers/net/wireless/ath/ath10k/pci.c:1797:5-8: Unneeded variable: "ret". Return "0" on line 1873
+
+I made this change:
+
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1794,7 +1794,6 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
  
--- 
-1.9.1
+ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ {
+-       int ret = 0;
+        u32 val;
+ 
+        ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset\n");
+@@ -1870,7 +1869,7 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ 
+        ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset complete\n");
+ 
+-       return ret;
++       return 0;
+ }
+ 
+ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
 
+-- 
+Kalle Valo
