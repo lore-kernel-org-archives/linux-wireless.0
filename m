@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:37949 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936487AbaH1LIg (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:39629 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380AbaHIXiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 07:08:36 -0400
-Received: by mail-la0-f44.google.com with SMTP id hz20so712720lab.31
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 04:08:35 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: stop monitor vdev for sta assoc
-Date: Thu, 28 Aug 2014 12:58:17 +0200
-Message-Id: <1409223497-19946-3-git-send-email-michal.kazior@tieto.com> (sfid-20140828_130841_202755_2554D1BA)
-In-Reply-To: <1409223497-19946-1-git-send-email-michal.kazior@tieto.com>
-References: <1409223497-19946-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 9 Aug 2014 19:38:01 -0400
+Received: by mail-la0-f48.google.com with SMTP id gl10so5596260lab.21
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Aug 2014 16:37:59 -0700 (PDT)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: ipw2x00: ipw2200.c:  Cleaning up missing null-terminate after strncpy call
+Date: Sun, 10 Aug 2014 01:39:28 +0200
+Message-Id: <1407627568-24125-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20140810_013845_322948_C3D2E7C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents some fw revisions from crashing in
-many cases when user is trying to run a
-promiscuous station interface (e.g. sniffing,
-4addr bridge).
+Added a guaranteed null-terminate after call to strncpy.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ipw2x00/ipw2200.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 19562a7..bf8a402 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3169,8 +3169,16 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index c5aa404..389656b 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -9853,6 +9853,7 @@ static int ipw_wx_get_wireless_mode(struct net_device *dev,
+ 		strncpy(extra, "unknown", MAX_WX_STRING);
+ 		break;
  	}
++	extra[MAX_WX_STRING - 1] = '\0';
  
- 	if (changed & BSS_CHANGED_ASSOC) {
--		if (info->assoc)
-+		if (info->assoc) {
-+			/* Workaround: Make sure monitor vdev is not running
-+			 * when associating to prevent some firmware revisions
-+			 * (e.g. 10.1 and 10.2) from crashing.
-+			 */
-+			if (ar->monitor_started)
-+				ath10k_monitor_stop(ar);
- 			ath10k_bss_assoc(hw, vif, info);
-+			ath10k_monitor_recalc(ar);
-+		}
- 	}
+ 	IPW_DEBUG_WX("PRIV GET MODE: %s\n", extra);
  
- exit:
 -- 
-1.8.5.3
+1.7.10.4
 
