@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:37685 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751928AbaHSLcX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2641 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbaHIGda (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 07:32:23 -0400
-Received: by mail-la0-f45.google.com with SMTP id ty20so5779414lab.18
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 04:32:21 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix wmi service bitmap
-Date: Tue, 19 Aug 2014 13:22:32 +0200
-Message-Id: <1408447352-28688-1-git-send-email-michal.kazior@tieto.com> (sfid-20140819_133227_263226_40516361)
+	Sat, 9 Aug 2014 02:33:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: Reporting firmware stats to ethtool
+References: <53E3F65D.8080102@candelatech.com>
+	<87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
+	<53E4EFCB.5090501@candelatech.com>
+	<CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com>
+	<53E4F6B8.50009@candelatech.com> <53E4FEA9.80803@broadcom.com>
+	<53E507EB.7030703@candelatech.com>
+Date: Sat, 9 Aug 2014 09:32:56 +0300
+In-Reply-To: <53E507EB.7030703@candelatech.com> (Ben Greear's message of "Fri,
+	8 Aug 2014 10:24:59 -0700")
+Message-ID: <87r40quq93.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_083333_293580_B3B94B3D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Service mapping for main firmware branch was
-incorrectly used for 10.x firmware and vice-versa.
-This caused wmi_services in debugfs to print wrong
-values.
+Ben Greear <greearb@candelatech.com> writes:
 
-This actually fixes a problem with the previous
-wmi service bitmap patch itself. For some reason
-there was either a conflict that wasn't resolved
-properly or git had a bad day.
+>> Does ath driver notify mac80211 about firmware restart, ie. through
+>> ieee80211_restart_hw(). If only user-space could get that info.
+>
+> We should soon have a udev event on firmware crash
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Who should send the event, the driver or mac80211? I'm not very familiar
+with udev stuff, what kind of rules there are for udev events?
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 23acbad..ec3bf4e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2194,7 +2194,7 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 	ar->ath_common.regulatory.current_rd =
- 		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
- 
--	wmi_10x_svc_map(ev->wmi_service_bitmap, svc_bmap);
-+	wmi_main_svc_map(ev->wmi_service_bitmap, svc_bmap);
- 	ath10k_debug_read_service_map(ar, svc_bmap, sizeof(svc_bmap));
- 	ath10k_dbg_dump(ATH10K_DBG_WMI, NULL, "ath10k: wmi svc: ",
- 			ev->wmi_service_bitmap, sizeof(ev->wmi_service_bitmap));
-@@ -2264,7 +2264,7 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
- 	ar->ath_common.regulatory.current_rd =
- 		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
- 
--	wmi_main_svc_map(ev->wmi_service_bitmap, svc_bmap);
-+	wmi_10x_svc_map(ev->wmi_service_bitmap, svc_bmap);
- 	ath10k_debug_read_service_map(ar, svc_bmap, sizeof(svc_bmap));
- 	ath10k_dbg_dump(ATH10K_DBG_WMI, NULL, "ath10k: wmi svc: ",
- 			ev->wmi_service_bitmap, sizeof(ev->wmi_service_bitmap));
+> A simple restart (w/out crash) might not be so interesting?
+
+Yeah, we should not report that. ath10k stops the firmware on interface
+down and starts it again on interface up which is business as usual.
+
+> Might be nice to have a fw restart and fw crash counter in ethtool
+> stats in case something wants to poll that instead of dealing with
+> uevents. I will add those counters.
+
+Yeah, those would be great to have.
+
 -- 
-1.8.5.3
-
+Kalle Valo
