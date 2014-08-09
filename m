@@ -1,88 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:61872 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750767AbaHSI0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 04:26:08 -0400
-Message-ID: <53F309F5.4020101@gmx.net> (sfid-20140819_102620_166955_8E3E6F20)
-Date: Tue, 19 Aug 2014 10:25:25 +0200
-From: Oleksij Rempel <fishor@gmx.net>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:33472 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbaHISI7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Aug 2014 14:08:59 -0400
+Subject: [PATCH v6 8/8] ath10k: print more driver info when firmware crashes
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 09 Aug 2014 21:08:54 +0300
+Message-ID: <20140809180854.29215.17531.stgit@potku.adurom.net> (sfid-20140809_200901_564693_7C5FCA5B)
+In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
+References: <20140809180552.29215.58612.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: Csaba Kiraly <csaba.kiraly@gmail.com>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: advertise support for TDLS
-References: <1408319614-16041-1-git-send-email-csaba.kiraly@gmail.com>
-In-Reply-To: <1408319614-16041-1-git-send-email-csaba.kiraly@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="Vbg41GBcj4rdHRSuWupmxIKlC7caP22Jc"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---Vbg41GBcj4rdHRSuWupmxIKlC7caP22Jc
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c  |   17 ++---------------
+ drivers/net/wireless/ath/ath10k/debug.c |   18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c   |    4 +---
+ 4 files changed, 22 insertions(+), 18 deletions(-)
 
-Am 18.08.2014 um 01:53 schrieb Csaba Kiraly:
-> Based on a quick test with AR9271, TDLS seems to be working fine.
->=20
-> Tests were done with 2 Atheros AR9271 based devices with firmware
-> 1.3 (sha1 8d49f928aa40ac53c729189bff1333cd373a7fb5), associated
-> with a WAP54G access point.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 39b7383b395c..a34066b85b65 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -870,21 +870,8 @@ int ath10k_core_start(struct ath10k *ar)
+ 
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
+-	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
+-		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
+-			    ar->hw_params.name,
+-			    ar->target_version,
+-			    ar->chip_id,
+-			    ar->hw->wiphy->fw_version,
+-			    ar->fw_api,
+-			    ar->htt.target_version_major,
+-			    ar->htt.target_version_minor);
+-		ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
+-			    config_enabled(CONFIG_ATH10K_DEBUG),
+-			    config_enabled(CONFIG_ATH10K_DEBUGFS),
+-			    config_enabled(CONFIG_ATH10K_TRACING),
+-			    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
+-	}
++	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
++		ath10k_print_driver_info(ar);
+ 
+ 	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index a335d29f3528..96f85a542514 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -154,6 +154,24 @@ int ath10k_info(const char *fmt, ...)
+ }
+ EXPORT_SYMBOL(ath10k_info);
+ 
++void ath10k_print_driver_info(struct ath10k *ar)
++{
++	ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
++		    ar->hw_params.name,
++		    ar->target_version,
++		    ar->chip_id,
++		    ar->hw->wiphy->fw_version,
++		    ar->fw_api,
++		    ar->htt.target_version_major,
++		    ar->htt.target_version_minor);
++	ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
++		    config_enabled(CONFIG_ATH10K_DEBUG),
++		    config_enabled(CONFIG_ATH10K_DEBUGFS),
++		    config_enabled(CONFIG_ATH10K_TRACING),
++		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
++}
++EXPORT_SYMBOL(ath10k_print_driver_info);
++
+ int ath10k_err(const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 80ff14e4db9b..494044a89226 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -42,6 +42,7 @@ extern unsigned int ath10k_debug_mask;
+ __printf(1, 2) int ath10k_info(const char *fmt, ...);
+ __printf(1, 2) int ath10k_err(const char *fmt, ...);
+ __printf(1, 2) int ath10k_warn(const char *fmt, ...);
++void ath10k_print_driver_info(struct ath10k *ar);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ int ath10k_debug_start(struct ath10k *ar);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 7fc2f02f53c4..a17cb8d103be 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1068,9 +1068,7 @@ static void ath10k_pci_firmware_crashed(struct ath10k *ar)
+ 		scnprintf(uuid, sizeof(uuid), "n/a");
+ 
+ 	ath10k_err("firmware crashed! (uuid %s)\n", uuid);
+-	ath10k_err("hardware name %s version 0x%x\n",
+-		   ar->hw_params.name, ar->target_version);
+-	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
++	ath10k_print_driver_info(ar);
+ 
+ 	if (!crash_data)
+ 		goto exit;
 
-please, don't use firmware 1.3. Use git source, or you can get
-precompiled version here:
-https://github.com/olerem/ath9k-htc-firmware-blob
-
-> TDLS worked fine both in WPA2 mode and
-> without encryption. Stations maintained ping flood traffic between
-> each other and towards the AP without significant losses.
->=20
-> Not tested with AR7010.
-
-Seems ok for me. How can i reproduce testing environment?
-
-> TDLS was enabled in earlier patches the same way for other
-> Atheros drivers:
-> ath9k (fd6562344dea2b8b2a5d644cf971f4e56004500a),
-> and carl9170 (d1f3de71a584a82ee4e84505fce9acccf40215ff).
->=20
-> Signed-off-by: Csaba Kiraly <csaba.kiraly@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/ne=
-t/wireless/ath/ath9k/htc_drv_init.c
-> index 8a3bd5f..d779f4f 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> @@ -592,6 +592,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_pri=
-v *priv,
->  	hw->wiphy->flags |=3D WIPHY_FLAG_IBSS_RSN |
->  			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-> =20
-> +	hw->wiphy->flags |=3D WIPHY_FLAG_SUPPORTS_TDLS;
-> +
->  	hw->queues =3D 4;
->  	hw->max_listen_interval =3D 1;
-> =20
->=20
-
-
-
---Vbg41GBcj4rdHRSuWupmxIKlC7caP22Jc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlPzCfUACgkQHwImuRkmbWmzwgD/XMmk5nm0IP6OalpJTeAmsKWV
-SyT4HjEZD1iiWQRiNA4A/2OKCog0ksro1Dv7VK93P44xoL2KfjdQHn6614vAoYmD
-=S+Kv
------END PGP SIGNATURE-----
-
---Vbg41GBcj4rdHRSuWupmxIKlC7caP22Jc--
