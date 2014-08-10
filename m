@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40984 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753771AbaHUTAN (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37381 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbaHJLWv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 15:00:13 -0400
-Date: Thu, 21 Aug 2014 14:46:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH v2 00/13] wil6210 misc updates
-Message-ID: <20140821184630.GC3577@tuxdriver.com> (sfid-20140821_210024_651129_BE495E13)
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
- <3159817.tZ1i7iY0M1@lx-wigig-72>
- <20140820030458.GA4813@tuxdriver.com>
- <10208936.lVQyOEupV0@lx-wigig-72>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10208936.lVQyOEupV0@lx-wigig-72>
+	Sun, 10 Aug 2014 07:22:51 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so2935339wiw.0
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:50 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 5/7] staging: vt6655: CARDbSetBeaconPeriod call CARDbGetCurrentTSF to get TBTT
+Date: Sun, 10 Aug 2014 12:22:00 +0100
+Message-Id: <1407669722-2682-5-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132254_749221_E54ECE09)
+In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 20, 2014 at 05:01:57PM +0300, Vladimir Kondratiev wrote:
-> On Tuesday, August 19, 2014 11:04:58 PM John W. Linville wrote:
-> > This pull request missed the merge window.
-> > 
-> 
-> Do I need to perform any action about this, or will you merge these patches later?
+There is already a function to get next TBTT.
 
-I will handle them, once net-next and wireless-next start moving again...
+Replace code with CARDqGetNextTBTT.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c | 22 ++--------------------
+ 1 file changed, 2 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index a5da3d2..931fca8 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -606,29 +606,11 @@ bool CARDbUpdateTSF(void *pDeviceHandler, unsigned char byRxRate, u64 qwBSSTimes
+ bool CARDbSetBeaconPeriod(void *pDeviceHandler, unsigned short wBeaconInterval)
+ {
+ 	PSDevice    pDevice = (PSDevice) pDeviceHandler;
+-	unsigned int uBeaconInterval = 0;
+-	unsigned int uLowNextTBTT = 0;
+-	unsigned int uHighRemain = 0;
+-	unsigned int uLowRemain = 0;
+ 	u64 qwNextTBTT = 0;
+ 
+ 	CARDbGetCurrentTSF(pDevice->PortOffset, &qwNextTBTT); //Get Local TSF counter
+-	uBeaconInterval = wBeaconInterval * 1024;
+-	// Next TBTT = ((local_current_TSF / beacon_interval) + 1) * beacon_interval
+-	uLowNextTBTT = ((qwNextTBTT & 0xffffffffULL) >> 10) << 10;
+-	uLowRemain = (uLowNextTBTT) % uBeaconInterval;
+-	// high dword (mod) bcn
+-	uHighRemain = (((0xffffffff % uBeaconInterval) + 1) * (u32)(qwNextTBTT >> 32))
+-		% uBeaconInterval;
+-	uLowRemain = (uHighRemain + uLowRemain) % uBeaconInterval;
+-	uLowRemain = uBeaconInterval - uLowRemain;
+-
+-	// check if carry when add one beacon interval
+-	if ((~uLowNextTBTT) < uLowRemain)
+-		qwNextTBTT = ((qwNextTBTT >> 32) + 1) << 32;
+-
+-	qwNextTBTT = (qwNextTBTT & 0xffffffff00000000ULL) |
+-			(u64)(uLowNextTBTT + uLowRemain);
++
++	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
+ 
+ 	// set HW beacon interval
+ 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_BI, wBeaconInterval);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
