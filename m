@@ -1,86 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45052 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaHISV0 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:63594 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbaHJLWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:21:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/6] ath10k: remove target soc ps code
-References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
-	<1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
-Date: Sat, 9 Aug 2014 21:21:18 +0300
-In-Reply-To: <1407402212-29809-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:03:28 +0200")
-Message-ID: <87ha1lttgh.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_202131_619012_69774D13)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 10 Aug 2014 07:22:54 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so7317157wgh.27
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:53 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 7/7] staging: vt6655: upc.h replace read and write memory functions
+Date: Sun, 10 Aug 2014 12:22:02 +0100
+Message-Id: <1407669722-2682-7-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132258_752100_5576B0D4)
+In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Update to the newer memory functions
+readb -> ioread8
+readw -> ioread16
+readl -> ioread32
+writeb -> iowrite8
+writew -> iowrite16
+writel -> iowrite32
 
-> The soc powersave was disabled by default. It
-> never was fully tested. Some hw apparently had
-> problems with it and the implementation itself had
-> a possible race.
->
-> Just remove the refcounting and simply wake up the
-> device when probing and put to sleep when
-> removing.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/upc.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-[...]
-
-> @@ -1838,12 +1799,6 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
->  
->  	ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset\n");
->  
-> -	ret = ath10k_do_pci_wake(ar);
-> -	if (ret) {
-> -		ath10k_err("failed to wake up target: %d\n", ret);
-> -		return ret;
-> -	}
-> -
->  	/* debug */
->  	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
->  				PCIE_INTR_CAUSE_ADDRESS);
-> @@ -1915,7 +1870,6 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
->  
->  	ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset complete\n");
->  
-> -	ath10k_do_pci_sleep(ar);
->  	return ret;
->  }
-
-For some reason I don't get all kbuild emails, and I don't know if you
-got it either, but smatch found a style error here:
-
->> drivers/net/wireless/ath/ath10k/pci.c:1797:5-8: Unneeded variable: "ret". Return "0" on line 1873
-
-I made this change:
-
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1794,7 +1794,6 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
+diff --git a/drivers/staging/vt6655/upc.h b/drivers/staging/vt6655/upc.h
+index 00e5a00..c5c889ca 100644
+--- a/drivers/staging/vt6655/upc.h
++++ b/drivers/staging/vt6655/upc.h
+@@ -40,32 +40,32 @@
  
- static int ath10k_pci_warm_reset(struct ath10k *ar)
- {
--       int ret = 0;
-        u32 val;
+ #define VNSvInPortB(dwIOAddress, pbyData)				\
+ do {									\
+-	*(pbyData) = readb(dwIOAddress);				\
++	*(pbyData) = ioread8(dwIOAddress);				\
+ } while (0)
  
-        ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset\n");
-@@ -1870,7 +1869,7 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ #define VNSvInPortW(dwIOAddress, pwData)				\
+ do {									\
+-	*(pwData) = readw(dwIOAddress);					\
++	*(pwData) = ioread16(dwIOAddress);				\
+ } while (0)
  
-        ath10k_dbg(ATH10K_DBG_BOOT, "boot warm reset complete\n");
+ #define VNSvInPortD(dwIOAddress, pdwData)				\
+ do {									\
+-	*(pdwData) = readl(dwIOAddress);				\
++	*(pdwData) = ioread32(dwIOAddress);				\
+ } while (0)
  
--       return ret;
-+       return 0;
- }
+ #define VNSvOutPortB(dwIOAddress, byData)				\
+ do {									\
+-	writeb((unsigned char)byData, dwIOAddress);			\
++	iowrite8((u8)byData, dwIOAddress);				\
+ } while (0)
  
- static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
-
+ #define VNSvOutPortW(dwIOAddress, wData)				\
+ do {									\
+-	writew((unsigned short)wData, dwIOAddress);			\
++	iowrite16((u16)wData, dwIOAddress);				\
+ } while (0)
+ 
+ #define VNSvOutPortD(dwIOAddress, dwData)				\
+ do {									\
+-	writel((unsigned long)dwData, dwIOAddress);			\
++	iowrite32((u32)dwData, dwIOAddress);				\
+ } while (0)
+ 
+ #define PCAvDelayByIO(uDelayUnit)				\
 -- 
-Kalle Valo
+1.9.1
+
