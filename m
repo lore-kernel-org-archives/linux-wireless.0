@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38703 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754581AbaHZICs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 04:02:48 -0400
-Message-ID: <1409040095.2489.3.camel@jlt4.sipsolutions.net> (sfid-20140826_100405_348519_47B836DC)
-Subject: Re: [PATCH][input-led] Defer input led work to workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Thibault <samuel.thibault@ens-lyon.org>
-Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
-	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Tue, 26 Aug 2014 10:01:35 +0200
-In-Reply-To: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr> (sfid-20140826_040254_816162_A52F1B31)
-References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
-	 (sfid-20140826_040254_816162_A52F1B31)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f176.google.com ([74.125.82.176]:62345 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751387AbaHJLWw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Aug 2014 07:22:52 -0400
+Received: by mail-we0-f176.google.com with SMTP id q58so7358477wes.21
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:51 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/7] staging: vt6655: upc.h: Remove unused macros
+Date: Sun, 10 Aug 2014 12:22:01 +0100
+Message-Id: <1407669722-2682-6-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132300_314314_303FE2F6)
+In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-08-26 at 03:54 +0200, Samuel Thibault wrote:
+PCBv* are not used
 
-> +	vt_led_wq = alloc_workqueue("input_leds", WQ_UNBOUND, 0);
-> +	if (!vt_led_wq)
-> +		return -ENOMEM;
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/upc.h | 27 ---------------------------
+ 1 file changed, 27 deletions(-)
 
-Does this really need a separate workqueue rather than just using
-schedule_work()? There doesn't seem to be much point in having its own
-workqueue really, to me.
-
-johannes
+diff --git a/drivers/staging/vt6655/upc.h b/drivers/staging/vt6655/upc.h
+index e262f1b0..00e5a00 100644
+--- a/drivers/staging/vt6655/upc.h
++++ b/drivers/staging/vt6655/upc.h
+@@ -68,33 +68,6 @@ do {									\
+ 	writel((unsigned long)dwData, dwIOAddress);			\
+ } while (0)
+ 
+-//
+-// ALWAYS IO-Mapped IO when in 16-bit/32-bit environment
+-//
+-#define PCBvInPortB(dwIOAddress, pbyData)	\
+-do {						\
+-	*(pbyData) = inb(dwIOAddress);		\
+-} while (0)
+-
+-#define PCBvInPortW(dwIOAddress, pwData)	\
+-do {						\
+-	*(pwData) = inw(dwIOAddress);		\
+-} while (0)
+-
+-#define PCBvInPortD(dwIOAddress, pdwData)	\
+-do {						\
+-	*(pdwData) = inl(dwIOAddress);		\
+-} while (0)
+-
+-#define PCBvOutPortB(dwIOAddress, byData)	\
+-	outb(byData, dwIOAddress)
+-
+-#define PCBvOutPortW(dwIOAddress, wData)	\
+-	outw(wData, dwIOAddress)
+-
+-#define PCBvOutPortD(dwIOAddress, dwData)	\
+-	outl(dwData, dwIOAddress)
+-
+ #define PCAvDelayByIO(uDelayUnit)				\
+ do {								\
+ 	unsigned char byData;					\
+-- 
+1.9.1
 
