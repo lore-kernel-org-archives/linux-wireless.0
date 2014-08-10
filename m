@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39909 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaHOVAL (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:36098 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbaHJUBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2014 17:00:11 -0400
-Date: Fri, 15 Aug 2014 16:50:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Wireless Networking microconference scheduled (LPC2014)
-Message-ID: <20140815205039.GR4953@tuxdriver.com> (sfid-20140815_230015_690534_642519B3)
-References: <20140815200957.GQ4953@tuxdriver.com>
- <1408133898.15705.5.camel@jlt4.sipsolutions.net>
+	Sun, 10 Aug 2014 16:01:13 -0400
+Date: Mon, 11 Aug 2014 01:31:08 +0530
+From: Himangi Saraogi <himangi774@gmail.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH] NFC: st21nfcb: drop kfree of devm_kzalloc's data
+Message-ID: <20140810200107.GA4170@himangi-Dell> (sfid-20140810_220130_892560_2B286310)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1408133898.15705.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 15, 2014 at 10:18:18PM +0200, Johannes Berg wrote:
-> On Fri, 2014-08-15 at 16:09 -0400, John W. Linville wrote:
-> > We have a time schedule for our microconference at LPC2014:
-> > 
-> > Thursday, October 16, 2014 from 1:30 – 7:30pm
-> > 
-> > This spans two microconference blocks, representing a generous
-> > allocation of time from the LPC schedule.
-> > 
-> > Only limited schedule changes can be proposed at this time.  If you
-> > need to be a participant in both this microconf and another one with
-> > an overlapping schedule, then please let me know as soon as possible!
-> 
-> Ok but .. when are the other ones? :)
+Using kfree to free data allocated with devm_kzalloc causes double frees.
 
-I couldn't find a concise list, but the times are available under
-each listed microconference:
+The Coccinelle semantic patch that fixes this problem is as follows:
 
-	http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks
+// <smpl>
+@@
+expression x;
+@@
 
-Hth!
+x = devm_kzalloc(...)
+...
+?-kfree(x);
+// </smpl>
 
-John
+Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+---
+ drivers/nfc/st21nfcb/st21nfcb.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/nfc/st21nfcb/st21nfcb.c b/drivers/nfc/st21nfcb/st21nfcb.c
+index 4d95863..b0c4a0f9 100644
+--- a/drivers/nfc/st21nfcb/st21nfcb.c
++++ b/drivers/nfc/st21nfcb/st21nfcb.c
+@@ -94,8 +94,7 @@ int st21nfcb_nci_probe(struct llt_ndlc *ndlc, int phy_headroom,
+ 					phy_headroom, phy_tailroom);
+ 	if (!ndlc->ndev) {
+ 		pr_err("Cannot allocate nfc ndev\n");
+-		r = -ENOMEM;
+-		goto err_alloc_ndev;
++		return -ENOMEM;
+ 	}
+ 	info->ndlc = ndlc;
+ 
+@@ -109,19 +108,14 @@ int st21nfcb_nci_probe(struct llt_ndlc *ndlc, int phy_headroom,
+ err_regdev:
+ 	nci_free_device(ndlc->ndev);
+ 
+-err_alloc_ndev:
+-	kfree(info);
+ 	return r;
+ }
+ EXPORT_SYMBOL_GPL(st21nfcb_nci_probe);
+ 
+ void st21nfcb_nci_remove(struct nci_dev *ndev)
+ {
+-	struct st21nfcb_nci_info *info = nci_get_drvdata(ndev);
+-
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
+-	kfree(info);
+ }
+ EXPORT_SYMBOL_GPL(st21nfcb_nci_remove);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
