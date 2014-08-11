@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:64334 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbaHFOjH (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:57079 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbaHKUZJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 10:39:07 -0400
-Message-ID: <53E23DFE.7070209@lwfinger.net> (sfid-20140806_163912_899317_79C384EF)
-Date: Wed, 06 Aug 2014 09:38:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hans Wennborg <hans@hanshq.net>, linux-wireless@vger.kernel.org,
+	Mon, 11 Aug 2014 16:25:09 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1407780269.28221.63.camel@chimera>
+Date: Mon, 11 Aug 2014 13:25:40 -0700
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/15] rtlwifi: rtl8192de: fix decimal printf format specifiers
- prefixed with 0x
-References: <1407300186-32673-1-git-send-email-hans@hanshq.net>
-In-Reply-To: <1407300186-32673-1-git-send-email-hans@hanshq.net>
-Content-Type: text/plain; charset=windows-1252
+Message-Id: <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org> (sfid-20140811_222537_877973_4B475995)
+References: <1407780269.28221.63.camel@chimera>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/05/2014 11:43 PM, Hans Wennborg wrote:
-> The prefix suggests the number should be printed in hex, so use
-> the %x specifier to do that.
+Hi Daniel,
+
+> On embedded devices, often the BSSID of an access point must be set from
+> userspace during the boot process. This provides a relatively clean way
+> of doing that without major side effects.
 > 
-> Found by using regex suggested by Joe Perches.
+> Signed-off-by: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+> --- 
+> --- a/net/wireless/sysfs.c	2014-04-19 08:36:52.048511623 -0700
+> +++ b/net/wireless/sysfs.c	2014-04-19 08:38:09.196894176 -0700
+> @@ -24,18 +24,30 @@
+> 	return container_of(dev, struct cfg80211_registered_device, wiphy.dev);
+> }
 > 
-> Signed-off-by: Hans Wennborg <hans@hanshq.net>
-> ---
->  drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> -#define SHOW_FMT(name, fmt, member)					\
+> +#define SHOW_FMT(name, fmt, member, perm)				\
+> static ssize_t name ## _show(struct device *dev,			\
+> 			      struct device_attribute *attr,		\
+> 			      char *buf)				\
+> {									\
+> 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
+> }									\
+> -static DEVICE_ATTR_RO(name)
+> +static DEVICE_ATTR_ ## perm(name)
 > 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> index 2317707..66e1760 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> @@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
->  			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
->  	}
->  	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
-> -		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
-> +		 "Polling FW ready fail!! REG_MCUFWDL:0x%08lx\n",
->  		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
->  	return -1;
->  }
+> -SHOW_FMT(index, "%d", wiphy_idx);
+> -SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+> -SHOW_FMT(address_mask, "%pM", wiphy.addr_mask);
+> +static ssize_t macaddress_store(struct device *dev,
+> +			      struct device_attribute *attr,
+> +			      const char *buf, size_t count)
+> +{
+> +	u8 temp[ETH_ALEN];
+> +
+> +	if (sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", temp, temp + 1,
+> +			temp + 2, temp + 3, temp + 4, temp + 5) == ETH_ALEN)
+> +		memcpy(dev_to_rdev(dev)->wiphy.perm_addr, temp, ETH_ALEN);
+> +	return count;
+> +}
+> +
+> +SHOW_FMT(index, "%d", wiphy_idx, RO);
+> +SHOW_FMT(macaddress, "%pM", wiphy.perm_addr, RW);
+> +SHOW_FMT(address_mask, "%pM", wiphy.addr_mask, RO);
 
-It would be best to actually build with your patches installed. This one yields
-the following warning:
+isn't this dangerous to just allow writing to wiphy.perm_addr via sysfs. We ran into the same issue with Bluetooth and ROM only devices that have to unique address. Doing this via sysfs seems the wrong approach. It is messy and full of potential race conditions. I clearly opted against the sysfs solution for Bluetooth. Instead we build an infrastructure that allowed doing it cleanly via the Bluetooth mgmt API. Controllers that have no unique address are brought up as unconfigured and userspace clearly knows that it has to take steps to get an address programmed into the controller.
 
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192de/fw.o
-drivers/net/wireless/rtlwifi/rtl8192de/fw.c: In function ‘_rtl92d_fw_init’:
-drivers/net/wireless/rtlwifi/rtl8192de/fw.c:236:2: warning: format ‘%lx’ expects
-argument of type ‘long unsigned int’, but argument 5 has type ‘u32’ [-Wformat=]
-  RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
-  ^
+And I think something similar should be done for WiFi. It might be better to not create the initial wlan0 netdev interface if the hardware has not a single unique address available. That way the supplicant can just either get one from the flash filesystem or make up a proper random one before creating the netdev interface.
 
-The format specifier should be %04x, not %08lx. I have no idea why gcc did not
-complain as %08ul is also wrong.
+Regards
 
-Larry
+Marcel
 
