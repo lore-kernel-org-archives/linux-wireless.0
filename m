@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60163 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751842AbaHTJm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 05:42:57 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36078 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754897AbaHKVEi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2014 17:04:38 -0400
+Received: by mail-pa0-f46.google.com with SMTP id lj1so11822028pab.33
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 14:04:37 -0700 (PDT)
+Message-ID: <1407791075.28221.74.camel@chimera> (sfid-20140811_230459_434484_072527F6)
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 05/11] wireless: libertas: print esaped string via %*pE
-Date: Wed, 20 Aug 2014 12:42:46 +0300
-Message-Id: <1408527772-27224-6-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114537_802251_E6733FB7)
-In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Mon, 11 Aug 2014 14:04:35 -0700
+In-Reply-To: <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
+References: <1407780269.28221.63.camel@chimera>
+	 <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
+	 <1407789645.28221.68.camel@chimera>
+	 <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of custom approach this allows to print escaped strings via recently
-added kernel extension: %*pE.
+On Mon, 2014-08-11 at 13:56 -0700, Marcel Holtmann wrote:
+> The initial wlan0 can be removed as every other netdev attached to the
+> wiphy. It can also be as easily re-created.
+> 
+> Since the wiphy does not have a valid MAC address, my proposal here
+> would be to just not create the wlan0 in the first place. This means
+> that the wiphy can be still discovered via nl80211.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/libertas/cfg.c  | 8 ++------
- drivers/net/wireless/libertas/mesh.c | 7 +++----
- 2 files changed, 5 insertions(+), 10 deletions(-)
+I repeat, currently wlan0 is *not* created.
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 47a998d..1188814 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -590,7 +590,6 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 		int chan_no = -1;
- 		const u8 *ssid = NULL;
- 		u8 ssid_len = 0;
--		DECLARE_SSID_BUF(ssid_buf);
- 
- 		int len = get_unaligned_le16(pos);
- 		pos += 2;
-@@ -644,10 +643,8 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 			struct ieee80211_channel *channel =
- 				ieee80211_get_channel(wiphy, freq);
- 
--			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %s, "
--				     "%d dBm\n",
--				     bssid, capa, chan_no,
--				     print_ssid(ssid_buf, ssid, ssid_len),
-+			lbs_deb_scan("scan: %pM, capa %04x, chan %2d, %*pE, %d dBm\n",
-+				     bssid, capa, chan_no, ssid_len, ssid,
- 				     LBS_SCAN_RSSI_TO_MBM(rssi)/100);
- 
- 			if (channel &&
-@@ -1982,7 +1979,6 @@ static int lbs_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 	struct lbs_private *priv = wiphy_priv(wiphy);
- 	int ret = 0;
- 	struct cfg80211_bss *bss;
--	DECLARE_SSID_BUF(ssid_buf);
- 
- 	if (dev == priv->mesh_dev)
- 		return -EOPNOTSUPP;
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index 01a67f6..d0c881d 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -93,7 +93,6 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
- {
- 	struct cmd_ds_mesh_config cmd;
- 	struct mrvl_meshie *ie;
--	DECLARE_SSID_BUF(ssid);
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.channel = cpu_to_le16(chan);
-@@ -122,9 +121,9 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
- 	default:
- 		return -1;
- 	}
--	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
--		    action, priv->mesh_tlv, chan,
--		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
-+	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %*pE\n",
-+		    action, priv->mesh_tlv, chan, priv->mesh_ssid_len,
-+		    priv->mesh_ssid);
- 
- 	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
- }
--- 
-2.1.0
+> It also means that the wlan0 netdev needs to be created by userspace
+> now. And a valid NL80211_ATTR_MAC be provided. Similar to what is
+> already done for P2P devices at the moment. That should just solve the
+> problem.
+
+The creation of wlan0 already comes from userspace, but the PHY has its
+own MAC.
+
+> We really do not want to announce a netdev when registering the wiphy
+> device and then having to mess with its MAC address via sysfs somehow.
+> This all needs to be properly reflected over RTNL.
+> 
+Again, no netdev is announced. There just isn't a way to set the MAC of
+the wiphy device itself.
+
+How about this: What if the driver were to leave the MAC at all zeros
+initially, and sysfs could set that if and only if it's all zeros at the
+time?
 
