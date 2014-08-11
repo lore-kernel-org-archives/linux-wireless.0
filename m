@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56252 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635AbaHWH7u (ORCPT
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:40134 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857AbaHKRwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 03:59:50 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 18/18] ath9k: Fix 'offchannel' in ath_softc
-Date: Sat, 23 Aug 2014 13:29:23 +0530
-Message-Id: <1408780763-27974-19-git-send-email-sujith@msujith.org> (sfid-20140823_101534_018486_B0520A8F)
-In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
-References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+	Mon, 11 Aug 2014 13:52:32 -0400
+Received: by mail-qc0-f181.google.com with SMTP id x13so1883865qcv.40
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 10:52:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <bug-82121-41252@https.bugzilla.kernel.org/>
+References: <bug-82121-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 11 Aug 2014 11:52:11 -0600
+Message-ID: <CAErSpo4SSeaNJ4RLVVA9wJjsFdUs+0ktXBrFRTsQEi9m=R7fkA@mail.gmail.com> (sfid-20140811_195241_956252_91AD5A64)
+Subject: Re: [Bug 82121] New: Network controller: Intel Corporation Wireless
+ 3160 (rev 83) experiences low signal and poor performance
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+[+cc iwlwifi maintainers, lists]
 
-Finally move the 'offchannel' instance in ath_softc
-inside a CONFIG_ATH9K_CHANNEL_CONTEXT cage. The offchannel
-usage in ath9k_calculate_iter_data() is closed off with
-an ifdef for now, since the state/opmode calculation is
-common for both the channel context mode and the normal mode.
+On Sun, Aug 10, 2014 at 4:34 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=82121
+>
+>             Bug ID: 82121
+>            Summary: Network controller: Intel Corporation Wireless 3160
+>                     (rev 83) experiences low signal and poor performance
+> ...
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
- drivers/net/wireless/ath/ath9k/main.c  | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+> I had Ubuntu 13.10 with (3.11.0-12.19) and the card worked fine. Upon upgrading
+> to 14.04 the card had extremely low signal strength. If I was close enough to
+> the router to make a connection it also had poor performance and wood get
+> kicked off intermittently. I then installed arch and experienced the same
+> problem on all of the kernel versions mentioned in the kernel version section.
+> Thank you to who ever looks into this. This is my first post in this community.
+> So hi!
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8767aa7..02664b3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -925,6 +925,7 @@ struct ath_softc {
- 	struct ath_gen_timer *p2p_ps_timer;
- 	struct ath_vif *p2p_ps_vif;
- 	struct ath_chanctx_sched sched;
-+	struct ath_offchannel offchannel;
- #endif
- 
- 	unsigned long driver_data;
-@@ -948,7 +949,6 @@ struct ath_softc {
- 	struct ath_chanctx *cur_chan;
- 	struct ath_chanctx *next_chan;
- 	spinlock_t chan_lock;
--	struct ath_offchannel offchannel;
- 
- #ifdef CONFIG_MAC80211_LEDS
- 	bool led_registered;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bc7a780..da63487 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -958,6 +958,7 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
- 	list_for_each_entry(avp, &ctx->vifs, list)
- 		ath9k_vif_iter(iter_data, avp->vif->addr, avp->vif);
- 
-+#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- 	if (ctx == &sc->offchannel.chan) {
- 		struct ieee80211_vif *vif;
- 
-@@ -970,6 +971,7 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
- 			ath9k_vif_iter(iter_data, vif->addr, vif);
- 		iter_data->beacons = false;
- 	}
-+#endif
- }
- 
- static void ath9k_set_assoc_state(struct ath_softc *sc,
--- 
-2.0.4
-
+Thanks for the report.  This device uses the iwlwifi driver, and the
+issue is likely with that driver, not with the PCI core, so I'm going
+to reassign the bug accordingly and copy the iwlwifi maintainers.
