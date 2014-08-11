@@ -1,80 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:47998 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199AbaHYIY7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 04:24:59 -0400
-Received: by mail-we0-f172.google.com with SMTP id x48so12932247wes.17
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 01:24:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYL3d0GPTeR1omxFi7XXUm2-Zq92AzgZnoLvLL1k1Cs8zQ@mail.gmail.com>
-References: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
- <20140822091409.GA3263@w1.fi> <CABPxzYL3d0GPTeR1omxFi7XXUm2-Zq92AzgZnoLvLL1k1Cs8zQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 25 Aug 2014 13:54:38 +0530
-Message-ID: <CABPxzYJB5iXDNaFdW6j4GbN3hhGSC6grhHyb3JWJdWUnDjXtsQ@mail.gmail.com> (sfid-20140825_102504_067043_66DB18B4)
-Subject: Re: [mac80211] Enforce protected check for unicast robust management frames.
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56465 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753549AbaHKPOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2014 11:14:51 -0400
+Message-ID: <1407770081.9844.12.camel@jlt4.sipsolutions.net> (sfid-20140811_171454_769365_46643721)
+Subject: Re: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Date: Mon, 11 Aug 2014 17:14:41 +0200
+In-Reply-To: <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140728_160233_044426_F578F4E5)
+References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com>
+	 (sfid-20140728_160233_044426_F578F4E5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 23, 2014 at 9:02 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Fri, Aug 22, 2014 at 2:44 PM, Jouni Malinen <j@w1.fi> wrote:
->>
->> On Tue, Aug 12, 2014 at 12:21:54AM +0530, chaitanya.mgit@gmail.com wrote:
->> > Enforce the check for protected field for all unicast
->> > robust management frames.
->>
->> Why? This function is supposed to indicate whether the frame is a robust
->> action frame and as such, has to have Protected bit set to one. If the
->> sender (attacker) tries to send the frame unprotected, it will still
->> need to be caught here.
->>
->> Rather than enforcing anything, this would add a significant security
->> vulnerability by breaking PMF more or less completely.
->
-> I agree jouni, we were using this API to figure out the length of the
-> crypto header (IV) to pass it to the HW crypto, so even for
-> unencrypted frames during the initial connection we were treating as
-> robust mgmt frames causing us trouble.
->>
->>
->> > This removed the dependency on the driver to check for protected
->> > bit, especially for those drivers who believed the API :-).
->>
->> Huh.. What is this driver referring to or what do you think the API is
->> supposed to be doing? ieee80211_is_unicast_robust_mgmt_frame() is a
->> static function within net/mac80211/rx.c and has only a single caller,
->> so it cannot really be used by any driver..
->
-> Sorry, i overlooked the static in git, we have a custom kernel without
-> the static.
->
->>
->> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> > @@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
->> >       if (is_multicast_ether_addr(hdr->addr1))
->> >               return 0;
->> >
->> > +     if (!ieee80211_has_protected(hdr->frame_control))
->> > +             return 0;
->> > +
->> >       return ieee80211_is_robust_mgmt_frame(skb);
->>
->> This looks very incorrect. This would completely break
->> ieee80211_drop_unencrypted_mgmt() and allow unprotected robust
->> management frames to be processed.
->
-> Ok i see it. robust mgmt and protected robust mgmt checks are
-> independently handled, but as the name suggested unicast robust mgmt
-> isn't it better to club those 2 checks together?
->
-Johannes,
 
-Please drop this patch, i did not see that the function is static.
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index f1db15b..0b2d55d 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1594,6 +1594,9 @@ enum nl80211_commands {
+>   * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+>   *	the TDLS link initiator.
+>   *
+> + * @NL80211_ATTR_WIPHY_DYN_ACK: whether dynamic ack timeout estimation
+> + *	algorithm is enabled
 
-Thanks.
+You should probably describe that it's related to the
+NL80211_FEATURE_ACKTO_ESTIMATION feature (and you should document that
+it's a flag) since otherwise nobody will be able to correlate the two
+things easily. :)
+
+
+> +       if (info->attrs[NL80211_ATTR_WIPHY_DYN_ACK]) {
+> +               if (!(rdev->wiphy.features &
+> NL80211_FEATURE_ACKTO_ESTIMATION))
+> +                       return -EOPNOTSUPP;
+> +
+> +               changed |= WIPHY_PARAM_DYN_ACK;
+> +       }
+
+that doesn't really seem right, how do you turn it off??
+
+johannes
+
