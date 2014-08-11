@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:37110 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756301AbaHVMnM (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:46637 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbaHKIfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:43:12 -0400
-Received: by mail-lb0-f179.google.com with SMTP id v6so9330483lbi.38
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:43:11 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 5/5] ath10k: flush hif buffers before recovery
-Date: Fri, 22 Aug 2014 14:33:18 +0200
-Message-Id: <1408710798-25198-6-git-send-email-michal.kazior@tieto.com> (sfid-20140822_144318_175215_167ADFE2)
-In-Reply-To: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
-References: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 11 Aug 2014 04:35:53 -0400
+Received: by mail-we0-f181.google.com with SMTP id k48so8059675wev.26
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 01:35:52 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 11 Aug 2014 16:35:52 +0800
+Message-ID: <CAD8Lp47RrOtTKqKQirUwSbfsvqzuStc4TOWc8OXUYBzdjhJ_JA@mail.gmail.com> (sfid-20140811_103556_885636_D02108D9)
+Subject: brcmfmac: command request size is determined by expected response size?
+From: Daniel Drake <drake@endlessm.com>
+To: brcm80211-dev-list@broadcom.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Transport buffers weren't flushed and processed
-before queueing hw recovery request to mac80211.
+Hi,
 
-This could in theory result in an unwanted htt/wmi
-rx events being processed while mac80211 recovers
-the device and possibly interfere or even crash
-the system.
+Looking at brcmfmac in Linux 3.16 with a BCM43241 SDIO card, I noticed that
+brcmf_construct_reginfo() constructs and submits a really large
+(1.5kb) request to the card. However, the actual request seems really
+small and trivial (a header, the word "chanspecs" and not much more),
+and we end up sending a whole lot of zeroes to fill the 1.5kb
+allocation (MEDLEN).
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+I can understand that the card may wish to send 1.5kb in response, but
+does the request itself really need to be the same size?
 
-Notes:
-    v2:
-     * rebased with scan fixes
-     * move hif_stop() before scan_finish()
-
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 23ba321..157dcf9 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -665,6 +665,7 @@ static void ath10k_core_restart(struct work_struct *work)
- 	switch (ar->state) {
- 	case ATH10K_STATE_ON:
- 		ar->state = ATH10K_STATE_RESTARTING;
-+		ath10k_hif_stop(ar);
- 		ath10k_scan_finish(ar);
- 		ieee80211_restart_hw(ar->hw);
- 		break;
--- 
-1.8.5.3
-
+Thanks
+Daniel
