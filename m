@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35638 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752760AbaHSPQg (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:48327 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753954AbaHKSwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 11:16:36 -0400
-Message-ID: <53F36A4F.5050505@candelatech.com> (sfid-20140819_171701_742153_CD6D2DCC)
-Date: Tue, 19 Aug 2014 08:16:31 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v7 3/8] ath10k: save firmware debug log messages
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>	<20140819082300.16842.40769.stgit@potku.adurom.net>	<CA+BoTQmubLrvB1LHquFDNf8W06vePvEk6K3aNV9ngCAAXemY6w@mail.gmail.com> <CA+BoTQ=UduqFY6G=sXJR43hQWk-4v09uYvYJYKO7EGuea7L-Xg@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=UduqFY6G=sXJR43hQWk-4v09uYvYJYKO7EGuea7L-Xg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 11 Aug 2014 14:52:09 -0400
+Received: by mail-we0-f176.google.com with SMTP id q58so8963339wes.7
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 11:52:08 -0700 (PDT)
+From: chaitanya.mgit@gmail.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [mac80211] Enforce protected check for unicast robust management frames.
+Date: Tue, 12 Aug 2014 00:21:54 +0530
+Message-Id: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140811_205215_652447_3F2B8A2B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
 
->>> +       spin_lock_bh(&ar->data_lock);
->>> +
->>> +       /* First 4 bytes are a messages-dropped-due-to-overflow counter,
->>> +        * and should not be recorded in the dbglog buffer, so we skip
->>> +        * them.
->>> +        */
->>> +       ath10k_debug_dbglog_add(ar, skb->data + 4, skb->len - 4);
->
-> Can't we just:
->
-> struct wmi_dbg_msg {
->    __le32 num_dropped_due_to_overflow;
->    u8 payload[0]; // is this an array of u8 or __le32 actually?
-> };
+Enforce the check for protected field for all unicast 
+robust management frames. 
 
-When I wrote this, I was more paranoid about exposing
-any possible details of firmware.  It is an array of 32-bit ints in firmware,
-and it decodes as ints instead of bytes, so probably u32 payload instead of u8.
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
 
-Thanks,
-Ben
+This removed the dependency on the driver to check for protected
+bit, especially for those drivers who believed the API :-).
 
+---
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+ net/mac80211/rx.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a8d862f..63e8f3d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
+ 	if (is_multicast_ether_addr(hdr->addr1))
+ 		return 0;
+ 
++	if (!ieee80211_has_protected(hdr->frame_control))
++		return 0;
++
+ 	return ieee80211_is_robust_mgmt_frame(skb);
+ }
+ 
