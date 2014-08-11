@@ -1,76 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28843 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbaHYJnZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 05:43:25 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath10k: improve logging to include dev id
-References: <1408952456-3121-1-git-send-email-michal.kazior@tieto.com>
-	<87tx5153lw.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnJYK0Sf6jy+tXHrTM06gXCjTxv_JKdK=01+jz5RgZ+tQ@mail.gmail.com>
-Date: Mon, 25 Aug 2014 12:43:20 +0300
-In-Reply-To: <CA+BoTQnJYK0Sf6jy+tXHrTM06gXCjTxv_JKdK=01+jz5RgZ+tQ@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 25 Aug 2014 11:26:33 +0200")
-Message-ID: <87mwas6h1j.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_114328_968318_EED50196)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56658 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753549AbaHKPeU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2014 11:34:20 -0400
+Message-ID: <1407771253.9844.27.camel@jlt4.sipsolutions.net> (sfid-20140811_173424_167156_2E61B5AF)
+Subject: Re: [PATCH v2] cfg80211: Changes to support key management offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chet Lanctot <clanctot@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com
+Date: Mon, 11 Aug 2014 17:34:13 +0200
+In-Reply-To: <1406076875-8549-1-git-send-email-clanctot@qca.qualcomm.com>
+References: <1406076875-8549-1-git-send-email-clanctot@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi Chet,
 
-> On 25 August 2014 11:18, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> This makes it a lot easier to log and debug
->>> messages if there's more than 1 ath10k device on a
->>> system.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> Did only a quick review and test but looks good to me except one problem
->> in pci.c, see below. But there are some conflicts now, can you rebase
->> please? I hope it's not too much work to fix them.
->
-> I've rebased this in my internal tree already.
+I apologise that it basically took me forever to really review this.
 
-Nice :)
+In general, this seems like a reasonable feature. I'd like to know which
+driver is planning to use this, maybe ath6kl? It's a complicated enough
+feature that I think a reference implementation would be good in
+addition to the review.
 
->> I'll also summarise the "meat" of the changes so that it's easier for
->> others to review:
->>
-> [...]
->>> @@ -2566,12 +2576,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->>>       struct ath10k_pci *ar_pci;
->>>       u32 chip_id;
->>>
->>> -     ath10k_dbg(ATH10K_DBG_PCI, "pci probe\n");
->>> +     dev_printk(KERN_DEBUG, &pdev->dev, "pci probe\n");
->>
->> But this doesn't look right. A leftover from testing, perhaps?
->
-> At this point there's no "ar" yet. The "ar" is allocated a few lines
-> below. If the allocation fails then there's no "ar" so dev_err() is
-> used explicitly in the failpath.
+> On a successful key management offload, the driver will invoke
+> cfg80211_authorization_event with status NL80211_AUTHORIZED.  If the
+> key management offload is not successful, then NL80211_CONNECTED is
+> passed as the status in cfg80211_authorization_event and it is expected
+> the supplicant will take over key management.
 
-Ah, of course.
+You should probably document (in the header file, not just the commit
+log) what happens with the EAPOL frames otherwise. Are they passed up to
+the supplicant even if they're parsed?
 
-> I think these are just 2 exceptions we can't do differently, can we?
+Maybe this event is even not really needed in the case that the firmware
+can't process the EAPOL frame correctly and needs to pass it up - it
+could just do so and otherwise "swallow" it while processing? Or is
+there any need for it to go up after it has been processed? It seems you
+capture the relevant information:
 
-Using dev_err() is okay, but this debug print has the problem that it's
-now always printed. I see few options:
+> The last used EAPOL key reply counter value is passed to the supplicant
+> in cfg80211_authorization_event.
 
-1) we create __ath10k_dbg(dev, mask, fmt, ...)
 
-2) we move the debug print after ar is created
 
-3) we remove the debug print entirely
+> In the case of key management offload after roaming,
+> cfg80211_authorization_event will always be called immediately after a
+> call to cfg80211_roamed.
 
-I vote for 2)
+Would it make sense to include this in the roamed event? Maybe not since
+these are two completely separate things though. Similar here of course
+for my above note regarding the EAPOL frames.
 
--- 
-Kalle Valo
+> In the case of PTK rekeying, cfg80211_authorization_event is called
+> after the device has handled rekeying.  This allows the supplicant
+> to recieve an updated EAPOL key reply counter value.
+
+(typo: receive)
+What use does wpa_supplicant have for the replay counter btw, if
+everything is handled in the device? Are there some situations/options
+that the device may decide not to handle, and pass up the frame instead
+of responding?
+
+I also assume that this is not going to be usable with mac80211 devices,
+in fact only with devices that assign the TX sequence number in firmware
+(otherwise you can't TX data frames from there)
+
+>    1. The driver advertises general key management offload capability
+>       with the wiphy flag WIPHY_FLAG_HAS_KEY_MGMT_OFFLOAD.  Device
+>       attributes NL80211_KEY_MGMT_OFFLOAD_SUPPORT_PSK and
+>       NL80211_KEY_DERIVE_OFFLOAD_SUPPORT_IGTK are advertised.
+> 
+>    2. Using existing mechanisms, the supplicant decides that a
+>       connection should be made to a network.  The network is an RSN
+>       supporting WPA2 and Protected Management Frames.  Seeing that the
+>       device supports key management offload for WPA2 and key derivation
+>       for IGTK, it signals to the driver that it wants to take advantage
+>       of key management offload by specifying ASSOC_REQ_OFFLOAD_KEY_MGMT
+>       in cfg80211_assoc_req_flags in the cfg80211_connect command.  The
+>       PSK for the connection is also included in cfg80211_connect.
+
+What if the supplicant decides not to request the offload? Would the
+firmware continue working as is (passing EAPOL frame up) or would there
+be any issues? I guess it can't really even do anything else.
+
+OTOH, why even then bother having the ASSOC_REQ_OFFLOAD_KEY_MGMT instead
+of just having wpa_supplicant pass the necessary key material for all
+cases, and letting the driver treat it as potential for optimisation? It
+seems that if the supplicant listens to the event and/or EAPOL frame (as
+discussed above) then there's not really any need to explicitly enable
+this feature.
+
+In fact, even if it is explicitly enabled the device may still decide
+not to do it, so I'm not sure what that really buys us?
+
+>    5. Immediately, the supplicant gets a cfg80211_authorization_event
+>       with success status, indicating that the key management has been
+>       done by the device.  The supplicant enters "authorized" state for
+>       the connection and allows transmission and reception of data
+>       frames on the network.  Here, during roaming, the key management
+>       was offloaded to the device and did not need to be handled by the
+>       supplicant.
+
+I assume the device is also going to enable the port, so setting the
+port control would not be done by the supplicant? This would presumably
+be visible in "iw wlan0 station dump" (or whatever)
+
+> + * @psk:  The Preshared Key to be used for the connection.
+> + *	(only valid if ASSOC_REQ_OFFLOAD_KEY_MGMT is set)
+>   */
+>  struct cfg80211_connect_params {
+>  	struct ieee80211_channel *channel;
+> @@ -1767,6 +1773,7 @@ struct cfg80211_connect_params {
+>  	struct ieee80211_ht_cap ht_capa_mask;
+>  	struct ieee80211_vht_cap vht_capa;
+>  	struct ieee80211_vht_cap vht_capa_mask;
+> +	const u8 *psk;
+
+The length is implied?
+
+>  enum wiphy_flags {
+>  	/* use hole at 0 */
+> @@ -2615,6 +2638,7 @@ enum wiphy_flags {
+>  	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
+>  	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+>  	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+> +	WIPHY_FLAG_HAS_KEY_MGMT_OFFLOAD		= BIT(24),
+
+Wouldn't that make sense as an nl80211 feature flag directly?
+
+> +	u32 key_mgmt_offload_support;
+> +	u32 key_derive_offload_support;
+
+or is it only used to control the appearance of these in nl80211?
+(I guess I'll find out below)
+
+> +/**
+> + * enum nl80211_authorization_status - key management offload status
+> + *
+> + * Status of key management offload.  Provided as part of
+> + * NL80211_CMD_AUTHORIZATION_EVENT.
+> + *
+> + * @NL80211_CONNECTED: Device did not successfully offload key
+> + *	management.  Supplicant should expect to do the security
+> + *	exchange necessary to establish the temporal keys for the
+> + *	connection.
+
+What I was thinking is that in this case you could just pass the EAPOL
+frame (if it is otherwise swallowed) so you don't even need this whole
+enum/attribute.
+
+> +	[NL80211_ATTR_AUTHORIZATION_STATUS] = { .type = NLA_U8 },
+> +	[NL80211_ATTR_KEY_REPLAY_CTR] = { .type = NLA_BINARY,
+> +				   .len = NL80211_KEY_REPLAY_CTR_LEN },
+> +	[NL80211_ATTR_PSK] = { .type = NLA_BINARY,
+> +				   .len = NL80211_KEY_LEN_PSK },
+> +	[NL80211_ATTR_OFFLOAD_KEY_MGMT] = { .type = NLA_FLAG },
+> +	[NL80211_ATTR_KEY_MGMT_OFFLOAD_SUPPORT] = { .type = NLA_U32 },
+> +	[NL80211_ATTR_KEY_DERIVE_OFFLOAD_SUPPORT] = { .type = NLA_U32 },
+> +	[NL80211_ATTR_PMK] = { .type = NLA_BINARY,
+> +				   .len = NL80211_KEY_LEN_PMK },
+
+are all of these even input (to the kernel?) we don't usually list the
+output-only ones, though obviously it doesn't hurt, but they all should
+be documented in the header file too
+
+>  /* policy for the key attributes */
+> @@ -1293,6 +1303,13 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+>  		if ((rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP) &&
+>  		    nla_put_flag(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP))
+>  			goto nla_put_failure;
+> +		if ((dev->wiphy.flags & WIPHY_FLAG_HAS_KEY_MGMT_OFFLOAD) &&
+> +		    (nla_put_u32(msg, NL80211_ATTR_KEY_MGMT_OFFLOAD_SUPPORT,
+> +				 dev->wiphy.key_mgmt_offload_support) ||
+> +		     nla_put_u32(msg, NL80211_ATTR_KEY_DERIVE_OFFLOAD_SUPPORT,
+> +				 dev->wiphy.key_derive_offload_support)))
+> +			goto nla_put_failure;
+
+Ok so you're using the flag here - that's reasonable.
+
+>  		state->split_start++;
+>  		if (state->split)
+>  			break;
+> @@ -7191,6 +7208,12 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+>  		       sizeof(connect.vht_capa));
+>  	}
+>  
+> +	if (nla_get_flag(info->attrs[NL80211_ATTR_OFFLOAD_KEY_MGMT]))
+> +		connect.flags |= ASSOC_REQ_OFFLOAD_KEY_MGMT;
+> +
+> +	if (info->attrs[NL80211_ATTR_PSK])
+> +		connect.psk = nla_data(info->attrs[NL80211_ATTR_PSK]);
+
+Would it make sense to only do the latter if the former is true?
+
+> +static int nl80211_key_mgmt_set_pmk(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct net_device *dev = info->user_ptr[1];
+> +	u8 *pmk;
+> +
+> +	if (info->attrs[NL80211_ATTR_PMK])
+> +		pmk = nla_data(info->attrs[NL80211_ATTR_PMK]);
+> +	else
+> +		return -EINVAL;
+> +
+> +	if (!rdev->ops->key_mgmt_set_pmk)
+> +		return -EOPNOTSUPP;
+> +
+> +	return rdev_key_mgmt_set_pmk(rdev, dev, pmk);
+> +}
+
+Should this check that the network is connected or something? Maybe not
+really needed?
+
+Well, overall, looks reasonable. :-)
+
+johannes
+
