@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53391 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046AbaHNSaO (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48749 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879AbaHKULG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 14:30:14 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1XHzmt-0001r0-Du
-	for linux-wireless@vger.kernel.org; Thu, 14 Aug 2014 14:30:11 -0400
-Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
-	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s7EI9j9i019459
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2014 14:09:45 -0400
-Received: (from linville@localhost)
-	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s7EI9jdA019458
-	for linux-wireless@vger.kernel.org; Thu, 14 Aug 2014 14:09:45 -0400
-Date: Thu, 14 Aug 2014 14:09:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Propose a topic -- Wireless Networking microconference (LPC2014)
-Message-ID: <20140814180943.GD4953@tuxdriver.com> (sfid-20140814_203018_929999_951CE954)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Mon, 11 Aug 2014 16:11:06 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: [PATCH 2/2] iwlwifi: Remove module build requirement for Intel Wireless WiFi MVM
+Date: Mon, 11 Aug 2014 22:11:36 +0200
+Message-Id: <1407787896-52455-2-git-send-email-marcel@holtmann.org> (sfid-20140811_221112_092925_F6B9A40E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Have you got a discussion proposal for the Wireless Networking
-microconference at Linux Plumbers Conference in Düsseldorf?  It is
-time to make it known!
+The CONFIG_IWLMVM currently has a "depends on m" as its requirement
+forcing it to be build as module. This is not needed and thus just
+remove it.
 
-Click on the "submit a proposal" link on the page below:
+Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+---
+ drivers/net/wireless/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/339
-
-For more info, you can also go here:
-
-http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
-
-If you haven't already registered for Linux Plumbers Conference,
-it may already be too late -- get moving!
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 9cc33e13690b..824f5e287783 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -59,7 +59,6 @@ config IWLDVM
+ 
+ config IWLMVM
+ 	tristate "Intel Wireless WiFi MVM Firmware support"
+-	depends on m
+ 	help
+ 	  This is the driver that supports the MVM firmware which is
+ 	  currently only available for 7260 and 3160 devices.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.3
+
