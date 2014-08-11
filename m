@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:57737 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbaHWH7T (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:58363 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202AbaHKUku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 03:59:19 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 00/18] ath9k patches
-Date: Sat, 23 Aug 2014 13:29:05 +0530
-Message-Id: <1408780763-27974-1-git-send-email-sujith@msujith.org> (sfid-20140823_095936_227283_F9164937)
+	Mon, 11 Aug 2014 16:40:50 -0400
+Received: by mail-pa0-f41.google.com with SMTP id rd3so11796418pab.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 13:40:50 -0700 (PDT)
+Message-ID: <1407789645.28221.68.camel@chimera> (sfid-20140811_224116_233088_4E2557D6)
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Mon, 11 Aug 2014 13:40:45 -0700
+In-Reply-To: <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
+References: <1407780269.28221.63.camel@chimera>
+	 <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, 2014-08-11 at 13:25 -0700, Marcel Holtmann wrote:
+> isn't this dangerous to just allow writing to wiphy.perm_addr via
+> sysfs. We ran into the same issue with Bluetooth and ROM only devices
+> that have to unique address. Doing this via sysfs seems the wrong
+> approach. It is messy and full of potential race conditions. I clearly
+> opted against the sysfs solution for Bluetooth. Instead we build an
+> infrastructure that allowed doing it cleanly via the Bluetooth mgmt
+> API. Controllers that have no unique address are brought up as
+> unconfigured and userspace clearly knows that it has to take steps to
+> get an address programmed into the controller.
 
-This series continues to cleanup the channel context code,
-trying to make a clear separation between the two modes of operation.
+My inclination is to agree; however, this does not exist for WiFi and
+implementing it would require modifying every single driver.
 
-All the pending patches (including the earlier series) are here:
-http://msujith.org/dir/patches/wl/Aug-23-2014/
-
-Sujith
-
-Sujith Manoharan (18):
-  ath9k: Add a routine for initializing channel contexts
-  ath9k: Add a routine to tear down channel contexts
-  ath9k: Make ath_chanctx_work static
-  ath9k: Cleanup mgd_prepare_tx callback
-  ath9k: Conditionally compile a few functions
-  ath9k: Exclude more functions
-  ath9k: Conditionally compile more functions
-  ath9k: Make ath_chanctx_offchan_switch static
-  ath9k: Make ath_chanctx_get_oper_chan static
-  ath9k: Make ath_chanctx_switch static
-  ath9k: Fix channel context events
-  ath9k: Fix function declarations
-  ath9k: Add wrappers for beacon events
-  ath9k: Add ath9k_chanctx_wake_queues
-  ath9k: Add ath9k_offchannel_init
-  ath9k: Use ath_chanctx_check_active properly
-  ath9k: Fix function argument type
-  ath9k: Fix 'offchannel' in ath_softc
-
- drivers/net/wireless/ath/ath9k/ath9k.h   |  68 ++-
- drivers/net/wireless/ath/ath9k/beacon.c  |  10 +-
- drivers/net/wireless/ath/ath9k/channel.c | 839 ++++++++++++++++---------------
- drivers/net/wireless/ath/ath9k/init.c    |   7 +-
- drivers/net/wireless/ath/ath9k/main.c    |  64 ++-
- drivers/net/wireless/ath/ath9k/recv.c    |   7 +-
- drivers/net/wireless/ath/ath9k/wow.c     |   3 +-
- drivers/net/wireless/ath/ath9k/xmit.c    |   7 +-
- 8 files changed, 556 insertions(+), 449 deletions(-)
-
--- 
-2.0.4
+> And I think something similar should be done for WiFi. It might be
+> better to not create the initial wlan0 netdev interface if the
+> hardware has not a single unique address available. That way the
+> supplicant can just either get one from the flash filesystem or make
+> up a proper random one before creating the netdev interface.
+> 
+The initial wlan0 netdev interface is *not* created, but the PHY records
+a MAC address that cannot be overriden at the level that this sysfs node
+reads. Perhaps a compromise would be to create a single new syscall to
+write to it?
 
