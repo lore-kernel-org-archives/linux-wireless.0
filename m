@@ -1,115 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37787 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754404AbaHUMt3 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48722 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754750AbaHKULG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 08:49:29 -0400
-Subject: [PATCH v8 4/4] ath10k: print more driver info when firmware crashes
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 21 Aug 2014 15:49:24 +0300
-Message-ID: <20140821124924.27159.81041.stgit@potku.adurom.net> (sfid-20140821_144931_577382_D53FBF43)
-In-Reply-To: <20140821124705.27159.67898.stgit@potku.adurom.net>
-References: <20140821124705.27159.67898.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 11 Aug 2014 16:11:06 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: [PATCH 1/2] iwlwifi: Remove module build requirement for Intel Wireless WiFi DVM
+Date: Mon, 11 Aug 2014 22:11:35 +0200
+Message-Id: <1407787896-52455-1-git-send-email-marcel@holtmann.org> (sfid-20140811_221110_509815_D2F2B8E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes users forget to include important info like firmware version,
-so better to print all the info.
+The CONFIG_IWLDVM currently has a "depends on m" as its requirement
+forcing it to be build as module. This is not needed and thus just
+remove it.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c  |   17 ++---------------
- drivers/net/wireless/ath/ath10k/debug.c |   18 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/debug.h |    1 +
- drivers/net/wireless/ath/ath10k/pci.c   |    4 +---
- 4 files changed, 22 insertions(+), 18 deletions(-)
+ drivers/net/wireless/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index ba2e87ab19bd..28f0adea73b6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -815,21 +815,8 @@ int ath10k_core_start(struct ath10k *ar)
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 6451d2b6abcf..9cc33e13690b 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -51,7 +51,6 @@ config IWLWIFI_LEDS
  
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
--	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
--		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
--			    ar->hw_params.name,
--			    ar->target_version,
--			    ar->chip_id,
--			    ar->hw->wiphy->fw_version,
--			    ar->fw_api,
--			    ar->htt.target_version_major,
--			    ar->htt.target_version_minor);
--		ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
--			    config_enabled(CONFIG_ATH10K_DEBUG),
--			    config_enabled(CONFIG_ATH10K_DEBUGFS),
--			    config_enabled(CONFIG_ATH10K_TRACING),
--			    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
--	}
-+	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
-+		ath10k_print_driver_info(ar);
- 
- 	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index b30dba661c07..bf08f026b202 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -142,6 +142,24 @@ int ath10k_info(const char *fmt, ...)
- }
- EXPORT_SYMBOL(ath10k_info);
- 
-+void ath10k_print_driver_info(struct ath10k *ar)
-+{
-+	ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
-+		    ar->hw_params.name,
-+		    ar->target_version,
-+		    ar->chip_id,
-+		    ar->hw->wiphy->fw_version,
-+		    ar->fw_api,
-+		    ar->htt.target_version_major,
-+		    ar->htt.target_version_minor);
-+	ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
-+		    config_enabled(CONFIG_ATH10K_DEBUG),
-+		    config_enabled(CONFIG_ATH10K_DEBUGFS),
-+		    config_enabled(CONFIG_ATH10K_TRACING),
-+		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
-+}
-+EXPORT_SYMBOL(ath10k_print_driver_info);
-+
- int ath10k_err(const char *fmt, ...)
- {
- 	struct va_format vaf = {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 416c62bbbb26..47ee4a623af6 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -42,6 +42,7 @@ extern unsigned int ath10k_debug_mask;
- __printf(1, 2) int ath10k_info(const char *fmt, ...);
- __printf(1, 2) int ath10k_err(const char *fmt, ...);
- __printf(1, 2) int ath10k_warn(const char *fmt, ...);
-+void ath10k_print_driver_info(struct ath10k *ar);
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
- int ath10k_debug_start(struct ath10k *ar);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index bc8c3e3345c1..bb1e4738add4 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -879,9 +879,7 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
- 		scnprintf(uuid, sizeof(uuid), "n/a");
- 
- 	ath10k_err("firmware crashed! (uuid %s)\n", uuid);
--	ath10k_err("hardware name %s version 0x%x\n",
--		   ar->hw_params.name, ar->target_version);
--	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
-+	ath10k_print_driver_info(ar);
- 
- 	if (!crash_data)
- 		goto exit;
+ config IWLDVM
+ 	tristate "Intel Wireless WiFi DVM Firmware support"
+-	depends on m
+ 	default IWLWIFI
+ 	help
+ 	  This is the driver that supports the DVM firmware which is
+-- 
+1.9.3
 
