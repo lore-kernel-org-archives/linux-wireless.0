@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53093 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751546AbaHWT1m (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:57701 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbaHKW6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 15:27:42 -0400
-Message-ID: <1408822054.4672.113.camel@deadeye.wl.decadent.org.uk> (sfid-20140823_212745_096867_C0797711)
-Subject: [PATCH v2 crda] crda: Do not run ldconfig if DESTDIR is set
-From: Ben Hutchings <ben@decadent.org.uk>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sat, 23 Aug 2014 12:27:34 -0700
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-oIt5nDFhfgUdmlI1Mavn"
-Mime-Version: 1.0
+	Mon, 11 Aug 2014 18:58:36 -0400
+Received: by mail-qc0-f174.google.com with SMTP id l6so2189004qcy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 15:58:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC4781147BD9@SC-VEXCH2.marvell.com>
+References: <CALtMJEDfVr1UxExOsiGK4G54BHB54wLt8co_98yZpFzH7NY9VA@mail.gmail.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC4781147BD9@SC-VEXCH2.marvell.com>
+Date: Tue, 12 Aug 2014 00:58:36 +0200
+Message-ID: <CALtMJECey7bykvHp03-r1N=d774bOUyUagJqZAbZEeHwDPstew@mail.gmail.com> (sfid-20140812_005840_380335_5AAAE7AA)
+Subject: Re: mwifiex: switching from adhoc to 5GHz managed fails
+From: Andreas Fenkart <afenkart@gmail.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Avinash,
 
---=-oIt5nDFhfgUdmlI1Mavn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+2014-08-08 14:51 GMT+02:00 Avinash Patil <patila@marvell.com>:
+> Are you setting type back to managed after leaving ibss?
+yes
 
-ldconfig should only be run for a local installation, and will fail when
-building as an unprivileged user.
+> I quickly tried this in my setup and after setting type to managed before connection to 5GHz AP, association is successful.
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
-v2: Add 'crda:' prefix to subject
+15ba2236f3556fc01b9ca91394465152b5ea74b6 Merge
+git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
+9a3c4145af32125c5ee39c0272662b47307a8323 Linux 3.16-rc6
 
---- a/Makefile
-+++ b/Makefile
-@@ -132,7 +132,9 @@ install-libreg:
- 	$(NQ) '  INSTALL  libreg'
- 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
- 	$(Q)cp $(LIBREG) $(DESTDIR)/$(LIBDIR)/
-+ifndef DESTDIR
- 	$(Q)ldconfig
-+endif
-=20
- %.o: %.c regdb.h $(LIBREG)
- 	$(NQ) '  CC  ' $@
+and latest commit in driver/net/wireless/mwifiex:
+701a9e619347ac06d59481db14bbc4df99763270 mwifiex: initialize Tx/Rx
+info of a packet correctly
 
+Am I missing some patches?
 
---=20
-Ben Hutchings
-One of the nice things about standards is that there are so many of them.
+> If I dont set type, I see error from iw itself "operation not supported".
+I receive "ASSOC_RESP: failed:"
 
---=-oIt5nDFhfgUdmlI1Mavn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAU/jrJ+e/yOyVhhEJAQqKjA/+MRkkfGe3wg9/wXFyHRxVT69GsyTll6mX
-GnAFEV7etoVYVEbzYQ/9N8no+J8DrAuF2h+rw2XbDnlTRBD8yi3I9KgVd90FOAE2
-oFeNmFfNJEpSbl19wngp6oRzQpgNTQc39I+7JK7X/SL4jDs0GexnCzosviNPzk2F
-tyCcSTMv+W6qHwmNrQ7tO5ydalNxPAr8LM0nYf6oUfy8IbJm+/JnPAOqFMXu/PmC
-Ov6tuOBdojWgdpDVlBKtQ2FqT/m4+mp7lP+I/PxPTZZLztdl9MBqK4f2QFjvpnAC
-XNV8C0cAbVRR1GGyU1MbYiL8E6wLUjpAiCxN/8iHJ+hk2UupRB0E/kHTtqDeeMeI
-Qv0agyj3U64Rs7Hvx773YPGAuN3a5MhKhX/BTq6AOAnRRAD/QAkYhurIINUjq/3t
-P7J7uKqORvxqrJCKQPgVMExOMIGwV0G5+dX0i23Ii6NHRCYru/sFotopcuVpjZBC
-UFAE/pwyKoKXLowjmey/kZwA5Jh3Hj2gLRQCFXmRDFlVy9NJik3ZaKXvk1ITl9qz
-/DyZV/3S12ko83FCvbaFXNCnY/kgbk6r6ITJbVYm54c2Uhr5iY8bi/gPOvN/ATCv
-NVCoYKRlXg7BPoJZf6yXm+W9TJt5dUy4pNMEXeYhaTJpVNZX/EZlLW+CZuw1Eeks
-pZJOVBErCuQ=
-=XNrv
------END PGP SIGNATURE-----
-
---=-oIt5nDFhfgUdmlI1Mavn--
+iw version : 3.13
