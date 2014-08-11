@@ -1,141 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:47454 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640AbaH3TQJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2014 15:16:09 -0400
-Received: by mail-ig0-f177.google.com with SMTP id r10so4106804igi.10
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 12:16:08 -0700 (PDT)
-Date: Sat, 30 Aug 2014 15:14:14 -0400
-From: Jade Bilkey <herself@thefumon.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k: added debugfs file for dumping eeprom
-Message-ID: <20140830191414.GA21355@apiculture.lan> (sfid-20140830_211621_292897_2DDC04BD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:56409 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753438AbaHKPFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2014 11:05:08 -0400
+Message-ID: <1407769505.9844.8.camel@jlt4.sipsolutions.net> (sfid-20140811_170513_342149_E9E33D4F)
+Subject: Re: [PATCH] mac80211: fix chantype recalc warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Aug 2014 17:05:05 +0200
+In-Reply-To: <1406553419-16196-1-git-send-email-michal.kazior@tieto.com> (sfid-20140728_152602_275094_B446F46C)
+References: <1406553419-16196-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140728_152602_275094_B446F46C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jade Bilkey <herself@thefumon.com>
----
- drivers/net/wireless/ath/ath5k/debug.c | 96 ++++++++++++++++++++++++++++++++++
- 1 file changed, 96 insertions(+)
+On Mon, 2014-07-28 at 15:16 +0200, Michal Kazior wrote:
+> When a device driver is unloaded local->interfaces
+> list is cleared. If there was more than 1
+> interface running and connected (bound to a
+> chanctx) then chantype recalc was called and it
+> ended up with compat being NULL causing a call
+> trace warning.
+> 
+> Warn if compat becomes NULL as a result of
+> incompatible bss_conf.chandef of interfaces bound
+> to a given channel context only.
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index b8d031a..30e4e1f 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -894,6 +894,100 @@ static const struct file_operations fops_queue = {
- 	.llseek = default_llseek,
- };
- 
-+/* debugfs: eeprom */
-+
-+struct eeprom_private {
-+	u16 *buf;
-+	int len;
-+};
-+
-+static int open_file_eeprom(struct inode *inode, struct file *file)
-+{
-+	struct eeprom_private *ep;
-+	struct ath5k_hw *ah = inode->i_private;
-+	bool res;
-+	int i, ret;
-+	u32 eesize;
-+	u16 val, *buf;
-+
-+	/* Get eeprom size */
-+
-+	res = ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_UPPER, &val);
-+	if (!res)
-+		return -EACCES;
-+
-+	if (val == 0) {
-+		eesize = AR5K_EEPROM_INFO_MAX + AR5K_EEPROM_INFO_BASE;
-+	} else {
-+		eesize = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
-+			AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
-+		ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_LOWER, &val);
-+		eesize = eesize | val;
-+	}
-+
-+	if (eesize > 4096)
-+		return -EINVAL;
-+
-+	/* Create buffer and read in eeprom */
-+
-+	buf = vmalloc(eesize);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	for (i = 0; i < eesize; ++i) {
-+		AR5K_EEPROM_READ(i, val);
-+		buf[i] = val;
-+	}
-+
-+	/* Create private struct and assign to file */
-+
-+	ep = kmalloc(sizeof(*ep), GFP_KERNEL);
-+	if (!ep) {
-+		ret = -ENOMEM;
-+		goto freebuf;
-+	}
-+
-+	ep->buf = buf;
-+	ep->len = i;
-+
-+	file->private_data = (void *)ep;
-+
-+	return 0;
-+
-+freebuf:
-+	vfree(buf);
-+err:
-+	return ret;
-+
-+}
-+
-+static ssize_t read_file_eeprom(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct eeprom_private *ep = file->private_data;
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, ep->buf, ep->len);
-+}
-+
-+static int release_file_eeprom(struct inode *inode, struct file *file)
-+{
-+	struct eeprom_private *ep = file->private_data;
-+
-+	vfree(ep->buf);
-+	kfree(ep);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations fops_eeprom = {
-+	.open = open_file_eeprom,
-+	.read = read_file_eeprom,
-+	.release = release_file_eeprom,
-+	.owner = THIS_MODULE,
-+};
-+
- 
- void
- ath5k_debug_init_device(struct ath5k_hw *ah)
-@@ -921,6 +1015,8 @@ ath5k_debug_init_device(struct ath5k_hw *ah)
- 
- 	debugfs_create_file("misc", S_IRUSR, phydir, ah, &fops_misc);
- 
-+	debugfs_create_file("eeprom", S_IRUSR, phydir, ah, &fops_eeprom);
-+
- 	debugfs_create_file("frameerrors", S_IWUSR | S_IRUSR, phydir, ah,
- 			    &fops_frameerrors);
- 
--- 
-2.1.0
+Err, this slipped my radar - where does this need to go?
+
+Also - is this really the right thing? Why does this happen in this
+situation? Shouldn't they all be not connected or not have a chanctx or
+be compatible?
+
+johannes
 
