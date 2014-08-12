@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54655 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889AbaHHLNP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 07:13:15 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
-References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-	<87d2cbz3wy.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQkF3+-1ded_dj63BGH7-bdD_uxLSkTZjGMb654yPzbtnA@mail.gmail.com>
-Date: Fri, 8 Aug 2014 14:13:10 +0300
-In-Reply-To: <CA+BoTQkF3+-1ded_dj63BGH7-bdD_uxLSkTZjGMb654yPzbtnA@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 8 Aug 2014 12:24:48 +0200")
-Message-ID: <87mwbfxmih.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_131318_685663_A6B5A2B0)
+Received: from arrakis.dune.hu ([78.24.191.176]:60977 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751769AbaHLIoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Aug 2014 04:44:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <70001DBA-E1CE-49D6-9A37-6F7CE31B61E6@holtmann.org>
+References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
+ <1407789645.28221.68.camel@chimera> <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
+ <1407791075.28221.74.camel@chimera> <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org>
+ <1407798738.28221.81.camel@chimera> <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org>
+ <1407801666.28221.84.camel@chimera> <70001DBA-E1CE-49D6-9A37-6F7CE31B61E6@holtmann.org>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Tue, 12 Aug 2014 10:43:27 +0200
+Message-ID: <CAOiHx=mWkvOf=An=TzWDidK2o4+KGQmz8MAHNo3rSuwbBzUWEg@mail.gmail.com> (sfid-20140812_104419_172578_010B17CA)
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
->> Based on Joe's suggestion, I'm planning to change the macro like below.
->> Are you ok with that?
->>
->> It actually adds a new checkpatch warning but I'm going to ignore that
->> for now:
->>
->> drivers/net/wireless/ath/ath10k/wmi.h:177: ERROR: Macros with complex values should be enclosed in parenthesis
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
->> index 109ea684f88f..e70836586756 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -174,46 +174,48 @@ enum wmi_main_service {
->>
->>  static inline char *wmi_service_name(int service_id)
->>  {
->> -#define SVCSTR(x) { case x: return #x; }
->> +#define SVCSTR(x) case x: return #x
->> +
-> [...]
+On Tue, Aug 12, 2014 at 9:59 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Daniel,
 >
-> This was the checkpatch warning I originally fixed by using { .. } :-)
+>>> the way I read the nl80211 code is that the NL80211_CMD_NEW_INTERFACE
+>>> requires a wiphy device to be specified. And that is actually just a
+>>> number. So I have no idea what the MAC has to here.
+>>>
+>> OpenWrt finds a wiphy by its MAC.
+>
+> maybe that is the first problem right there. I see that over sysfs you get phy80211/macaddress. However if you do a dump via NL80211_CMD_GET_WIPHY then you do not have the MAC address there.
 
-Hehe, I was actually thinking maybe that's why you added the braces :)
+OpenWrt nowadays uses the device path in sysfs/devices to identify
+wiphys, not the mac anymore (e.g 'pci0000:00/0000:00:01.0/ssb0:0').
 
-> Anyway, I don't see a problem with the macro change you suggest.
-> Apparently we're doomed to have a checkpatch warning either way unless
-> we don't use a macro at all.
 
-Yeah. And it's not like that we need to have 0 checkpatch warnings. For
-example, I already have a long list of errors I ignore:
-
-MSLEEP,USLEEP_RANGE,PRINTK_WITHOUT_KERN_LEVEL,NETWORKING_BLOCK_COMMENT_STYLE,LINUX_VERSION_CODE,COMPLEX_MACRO
-
-checkpatch just a good tool to catch some of the style issues and makes
-my work easier, especially when newbies send patches.
-
--- 
-Kalle Valo
+Jonas
