@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:58559 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755959AbaHVMd0 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47892 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162AbaHLH6n convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:33:26 -0400
-Received: by mail-la0-f47.google.com with SMTP id mc6so9783064lab.6
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:33:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/6] ath10k: move fw init print
-Date: Fri, 22 Aug 2014 14:23:29 +0200
-Message-Id: <1408710214-24894-2-git-send-email-michal.kazior@tieto.com> (sfid-20140822_143329_567905_748EF803)
-In-Reply-To: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
-References: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 12 Aug 2014 03:58:43 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1407801666.28221.84.camel@chimera>
+Date: Tue, 12 Aug 2014 00:59:14 -0700
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Message-Id: <70001DBA-E1CE-49D6-9A37-6F7CE31B61E6@holtmann.org> (sfid-20140812_095902_944118_6458A9FC)
+References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org> <1407789645.28221.68.camel@chimera> <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org> <1407791075.28221.74.camel@chimera> <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org> <1407798738.28221.81.camel@chimera> <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org> <1407801666.28221.84.camel@chimera>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware probing is done only once when driver is
-registered and firmware version is guaranteed to
-remain the same until driver is unregistered.
+Hi Daniel,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+>> the way I read the nl80211 code is that the NL80211_CMD_NEW_INTERFACE
+>> requires a wiphy device to be specified. And that is actually just a
+>> number. So I have no idea what the MAC has to here.
+>> 
+> OpenWrt finds a wiphy by its MAC.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 28f0ade..23ba321 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -815,11 +815,6 @@ int ath10k_core_start(struct ath10k *ar)
- 
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
--	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
--		ath10k_print_driver_info(ar);
--
--	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
--
- 	return 0;
- 
- err_hif_stop:
-@@ -924,6 +919,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	ath10k_print_driver_info(ar);
- 	ath10k_core_stop(ar);
- 
- 	mutex_unlock(&ar->conf_mutex);
--- 
-1.8.5.3
+maybe that is the first problem right there. I see that over sysfs you get phy80211/macaddress. However if you do a dump via NL80211_CMD_GET_WIPHY then you do not have the MAC address there.
+
+>> Why does the wiphy need to know the MAC if it is always specified from
+>> userspace when actually creating the new netdev interface. Works for
+>> P2P devices, so why wouldn't it work for access point and station
+>> mode?
+>> 
+> A MAC can be specified for the netdev, but it is assigned to a wiphy
+> identified by its MAC.
+
+That you find the wiphy device by its MAC address seems to be your problem. As I said, on nl80211 you are using the wiphy unique number and not a MAC address.
+
+If you want to use some sort of device discovery via sysfs, then use phy80211/index and other attributes to uniquely identify the device. Basing this on the MAC address seems dangerous. Especially since it might be not valid or an identical default for all cards.
+
+Regards
+
+Marcel
 
