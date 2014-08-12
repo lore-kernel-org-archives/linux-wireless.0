@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61468 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755194AbaHHLBK (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:64785 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbaHLGwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 07:01:10 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/6] ath10k: remove pci features var
-References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
-	<1407402212-29809-4-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 8 Aug 2014 14:01:03 +0300
-In-Reply-To: <1407402212-29809-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:03:29 +0200")
-Message-ID: <874mxnz1n4.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_130116_450481_6CAE4A20)
+	Tue, 12 Aug 2014 02:52:42 -0400
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <dsd@gentoo.org>, <kune@deine-taler.de>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+Date: Tue, 12 Aug 2014 12:35:33 +0530
+Message-ID: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20140812_085325_305254_E642EA42)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+on some architecture spin_is_locked() always return false in
+uniprocessor configuration and therefore it would be advise
+to replace with lockdep_assert_held().
 
-> The ATH10K_PCI_FEATURE_MSI_X was originally
-> introduced to support both chips QCA988Xv1 and
-> QCA988Xv2. Since v1 isn't supported anymore it
-> doesn't make sense to keep the feature flag
-> around. Since this is the last one remove the
-> whole thing.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[...]
-
-> --- a/drivers/net/wireless/ath/ath10k/pci.h
-> +++ b/drivers/net/wireless/ath/ath10k/pci.h
-> @@ -135,13 +135,6 @@ struct service_to_pipe {
->  	u32 pipenum;
->  };
->  
-> -enum ath10k_pci_features {
-> -	ATH10K_PCI_FEATURE_MSI_X		= 0,
-> -
-> -	/* keep last */
-> -	ATH10K_PCI_FEATURE_COUNT
-> -};
-
-I wouldn't be too surprised if we need this again at some point. But we
-can then add it back.
-
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index e7af261..72c0bc2 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -235,7 +235,7 @@ void zd_mac_clear(struct zd_mac *mac)
+ {
+ 	flush_workqueue(zd_workqueue);
+ 	zd_chip_clear(&mac->chip);
+-	ZD_ASSERT(!spin_is_locked(&mac->lock));
++	lockdep_assert_held(!spin_is_locked(&mac->lock));
+ 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));
+ }
+ 
 -- 
-Kalle Valo
+1.7.11.7
+
