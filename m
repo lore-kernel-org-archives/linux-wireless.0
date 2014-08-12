@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35697 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752275AbaHYIuZ (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:42518 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754AbaHLABv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 04:50:25 -0400
-Date: Mon, 25 Aug 2014 10:50:20 +0200
-From: Vincent Donnefort <vdonnefort@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Bryan Wu <cooloney@gmail.com>, Hugh Dickins <hughd@google.com>,
-	Valdis.Kletnieks@vt.edu,
-	Linux LED Subsystem <linux-leds@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] leds: make led_blink_set IRQ safe
-Message-ID: <20140825085020.GA5071@ns3274321.ip-5-39-88.eu> (sfid-20140825_105045_468117_19BFBD7E)
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
- <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
- <1408453101-30290-2-git-send-email-vdonnefort@gmail.com>
- <alpine.LSU.2.11.1408191835200.3003@eggly.anvils>
- <CAK5ve-Kc8mjdbN0Nn-pGVjp2pj6ZV_FCBpeOtO5N92CkJZX3=g@mail.gmail.com>
- <20140823172456.GH13540@mtj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140823172456.GH13540@mtj.dyndns.org>
+	Mon, 11 Aug 2014 20:01:51 -0400
+Received: by mail-pa0-f45.google.com with SMTP id eu11so11881668pac.4
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 17:01:51 -0700 (PDT)
+Message-ID: <1407801666.28221.84.camel@chimera> (sfid-20140812_020156_060132_7FEAEBC3)
+Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Mon, 11 Aug 2014 17:01:06 -0700
+In-Reply-To: <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org>
+References: <1407780269.28221.63.camel@chimera>
+	 <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
+	 <1407789645.28221.68.camel@chimera>
+	 <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
+	 <1407791075.28221.74.camel@chimera>
+	 <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org>
+	 <1407798738.28221.81.camel@chimera>
+	 <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 23, 2014 at 01:24:56PM -0400, Tejun Heo wrote:
-> Hello,
+On Mon, 2014-08-11 at 16:56 -0700, Marcel Holtmann wrote:
+> the way I read the nl80211 code is that the NL80211_CMD_NEW_INTERFACE
+> requires a wiphy device to be specified. And that is actually just a
+> number. So I have no idea what the MAC has to here.
 > 
-> On Fri, Aug 22, 2014 at 05:21:30PM -0700, Bryan Wu wrote:
-> > On Tue, Aug 19, 2014 at 6:51 PM, Hugh Dickins <hughd@google.com> wrote:
-> > > On Tue, 19 Aug 2014, Vincent Donnefort wrote:
-> > >
-> > >> This patch introduces a work which take care of reseting the blink workqueue and
-> > >> avoid calling the cancel_delayed_work_sync function which may sleep, from an IRQ
-> > >> context.
-> > >>
-> > 
-> > Vincent, I'm just wandering can we use cancel_delayed_work() instead
-> > of sync version here.
-> > cancel_delayed_work() can be called from IRQ context.
-> 
-> But it doesn't wait for the currently running one to finish.  It
-> should wait, right?
-> 
+OpenWrt finds a wiphy by its MAC.
 
-It should indeed wait. Using the cancel_delayed_work() function was my first
-thought, however as described into the function header, when calling
-cancel_delayed_work(), the work may be running and since it re-arms
-itself, the next work may still be queued.
+> Why does the wiphy need to know the MAC if it is always specified from
+> userspace when actually creating the new netdev interface. Works for
+> P2P devices, so why wouldn't it work for access point and station
+> mode?
+> 
+A MAC can be specified for the netdev, but it is assigned to a wiphy
+identified by its MAC.
 
-> > > May I (most ungratefully!) say that your patch doesn't fill me with
-> > > confidence that it's the right solution: adding yet another work_struct
-> > > to get around the issue seemed dubious to me, I wonder if it might expose
-> > > new races.
-> > 
-> > I agree with Hugh about this new cancel work_struct. But if we revert
-> > it back, I saw led_blink_set() will call del_timer_sync() which might
-> > also sleep and can't be used in IRQ context. Looks like we can't call
-> > led_blink_set() in any IRQ/atomic context.
-> 
-> del_timer_sync() doesn't block but it does run from bh.  It naturally
-> can't be waited from an IRQ context.  It may be sitting on top of a
-> running instance.
-> 
-> > > But rest assured that I know nothing about this, and I'm not at all
-> > > qualified to review your patch: I hope Bryan and others will do so.
-> > 
-> > Let me invite Tejun to give some advice on how to solve this problem.
-> > 
-> > Tejun, Vincent's commit 8b37e1bef5a6b60e949e28a4db3006e4b00bd758
-> > convert a timer into work_struct, but Hugh found it will cause
-> > sleeping BUGs [1]. Could you give some opinion about that?
-> 
-> Not knowing the code base, I'm not sure how helpful I can be but if
-> something wants to synchronize against another thing which can block,
-> that something needs to be able to block too.  There's no way around
-> it and it holds the same for timers.  As long as all the work items
-> are properly shut down at the end, there's nothing wrong with using
-> multiple of them even when they form a dependency chain.
-> 
-> Heh, I think I need more specific questions to be actually useful. :)
-> 
-> Thanks.
-> 
-> -- 
-> tejun
