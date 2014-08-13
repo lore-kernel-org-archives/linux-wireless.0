@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:36105 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932920AbaH0Fyf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 01:54:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <1408915485-8078-4-git-send-email-hauke@hauke-m.de>
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
-	<1408915485-8078-4-git-send-email-hauke@hauke-m.de>
-Date: Wed, 27 Aug 2014 07:54:34 +0200
-Message-ID: <CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com> (sfid-20140827_075439_187889_7F09D250)
-Subject: Re: [RFC 2/7] bcm47xx-nvram: add new broadcom nvram driver with dt support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:38688 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752449AbaHMKFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2014 06:05:15 -0400
+Message-ID: <1407924311.21220.28.camel@jlt4.sipsolutions.net> (sfid-20140813_120526_003700_E25D7033)
+Subject: Re: About the TSFT field
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 13 Aug 2014 12:05:11 +0200
+In-Reply-To: <53EB355E.6090508@create-net.org> (sfid-20140813_120259_727542_9924FF23)
+References: <53EB355E.6090508@create-net.org>
+	 (sfid-20140813_120259_727542_9924FF23)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 August 2014 23:24, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> +On NorthStar ARM SoCs the NAND flash is available at 0x1c000000 and the
-> +NOR flash is at 0x1e000000
-> +
-> +Example:
-> +
-> +nvram0: nvram@0 {
-> +       compatible = "brcm,bcm47xx-nvram";
-> +       reg = <0x1c000000 0x01000000>;
-> +};
+On Wed, 2014-08-13 at 11:52 +0200, Roberto Riggio wrote:
 
-Could we avoid that? Type of flash can easily be checked in the code.
-All we need to do is to read BCMA_IOST register of BCMA_CORE_NS_ROM
-core.
+> As far as I've understood the TSFT is generated from the MAC,
+> however I do not know to which instant the TSFT is relative,
+> the first bit of the MAC payload, the beginning of the PLCP,
+> etc.
+
+It's documented in the radiotap spec, but not all drivers are really
+doing the right thing here.
+
+> Also I do not know from which reference the TSFT is generated,
+> I mean two AP synchronized using NTP will have consistent
+> TSFT, which kind of error should I expect?
+
+It's purely local time - no synchronisation happens.
+
+johannes
+
