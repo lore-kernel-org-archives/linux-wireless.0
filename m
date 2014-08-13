@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:15568
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757781AbaHZNck (ORCPT
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:52173 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbaHMLN3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 09:32:40 -0400
-Date: Tue, 26 Aug 2014 15:32:38 +0200
-From: Samuel Thibault <samuel.thibault@ens-lyon.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
-	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2][input-led] Defer input led work to workqueue
-Message-ID: <20140826133238.GA28108@type.bordeaux.inria.fr> (sfid-20140826_153245_073204_51EC8797)
-References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
- <20140826091725.GA23293@type.youpi.perso.aquilenet.fr>
- <1409059327.22232.0.camel@jlt4.sipsolutions.net>
- <20140826132410.GD3186@type.bordeaux.inria.fr>
+	Wed, 13 Aug 2014 07:13:29 -0400
+Received: by mail-ig0-f169.google.com with SMTP id r2so10814214igi.4
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2014 04:13:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20140826132410.GD3186@type.bordeaux.inria.fr>
+In-Reply-To: <1407928122.21220.31.camel@jlt4.sipsolutions.net>
+References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net>
+	<CAB3XZEckyoDVShskF8rRe7DFuVMO-LBdhFDejiJ63SjhsEvmAA@mail.gmail.com>
+	<1407928122.21220.31.camel@jlt4.sipsolutions.net>
+Date: Wed, 13 Aug 2014 14:13:29 +0300
+Message-ID: <CAB3XZEdOC1ERUm1HDK03qWQti35Z66EHL+0gD9=oBpcPfK2r4w@mail.gmail.com> (sfid-20140813_131336_058223_4FDAB2F8)
+Subject: Re: [PATCH 1/2] cfg80211: clarify BSS probe response vs. beacon data
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@adurom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Samuel Thibault, le Tue 26 Aug 2014 15:24:10 +0200, a écrit :
-> Johannes Berg, le Tue 26 Aug 2014 15:22:07 +0200, a écrit :
-> > On Tue, 2014-08-26 at 11:17 +0200, Samuel Thibault wrote:
-> > 
-> > > -	led_trigger_event(&vt_led_triggers[led], !!brightness);
-> > > +	vt_led_state[led] = !!brightness;
-> > > +	schedule_work(&vt_led_work[led]);
-> > 
-> > 
-> > > +static int __init input_led_init(void)
-> > > +{
-> > > +	unsigned i;
-> > > +
-> > > +	for (i = 0; i < LED_CNT; i++)
-> > > +		INIT_WORK(&vt_led_work[i], vt_led_cb);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static void __exit input_led_exit(void)
-> > > +{
-> > > +}
-> > 
-> > Come to think of it - don't you need to cancel_work_sync() in exit so
-> > the work struct can't be queued while the module is being unloaded?
-> 
-> Well, this is never built as a module ATM, so it's not a problem.
+On Wed, Aug 13, 2014 at 2:08 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-08-13 at 13:57 +0300, Eliad Peller wrote:
+>
+>
+>> > @@ -1011,6 +1018,9 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
+>> >         if (res->pub.capability & WLAN_CAPABILITY_ESS)
+>> >                 regulatory_hint_found_beacon(wiphy, channel, gfp);
+>> >
+>> > +       /* assume drivers don't mix and match too badly */
+>> > +       res->known_frame_type = true;
+>> > +
+>>
+>> i think you should set the flag only in case of a beacon.
+>> otherwise, you might "validate" res->ies although it contains probe
+>> response data.
+>
+> Hm, what do you mean? If we have known frametype and we have beacon_ies,
+> then IEs in nl80211 are certain to be proberesp_ies ...
+>
+sorry, i meant res->beacon_ies.
 
-(but I have changed that for future versions of the whole patch, yes)
+consider the following flow:
+cfg80211_inform_bss_width(presp1):
+ * beacon_ies = presp1
+ * known_frame_type = false
 
-Samuel
+cfg80211_inform_bss_width_frame(presp2):
+ * proberesp_ies = presp2
+ * beacon_ies = presp1
+ * known_frame_type = true
+
+Eliad.
