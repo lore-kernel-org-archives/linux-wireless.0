@@ -1,55 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61159 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069AbaHFHcV (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:54912 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171AbaHMJRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:21 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 00/13] wil6210 misc updates
-Date: Wed, 6 Aug 2014 10:31:48 +0300
-Message-ID: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_093224_395927_1FA26B66)
+	Wed, 13 Aug 2014 05:17:19 -0400
+Date: Wed, 13 Aug 2014 14:47:13 +0530
+From: Himangi Saraogi <himangi774@gmail.com>
+To: Simon Kelley <simon@thekelleys.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH] drivers/net/wireless: Remove typedef local_info_t
+Message-ID: <20140813091713.GA2995@himangi-Dell> (sfid-20140813_111739_557784_8666B9A4)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some updates and bug fixes for wil6210 driver.
+The Linux kernel coding style guidelines suggest not using typedefs
+for structure types. This patch gets rid of the typedef for
+local_info_t. Also, the name of the struct is changed to drop the _t,
+to make the name look less typedef-like.
 
-Dedy Lansky (1):
-  wil6210: Limit max number of associated stations
+The following Coccinelle semantic patch detects the case:
 
-Vladimir Kondratiev (12):
-  wil6210: map MAC timer for packet lifetime into debugfs
-  wil6210: fix race in reset
-  wil6210: update copyright year 2014
-  wil6210: check error in wil_target_reset()
-  wil6210: wait longer for hardware reset completion
-  wil6210: Workaround for Sparrow with bad device id
-  wil6210: convert debugfs to the table mode
-  wil6210: fix beamforming data reporting
-  wil6210: fix false "scan timeout"
-  wil6210: fix free'd memory access in wil_if_free()
-  wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
-  wil6210: fix access after free in wil_pcie_remove()
+@tn@
+identifier i;
+type td;
+@@
 
- drivers/net/wireless/ath/wil6210/cfg80211.c   |   6 +-
- drivers/net/wireless/ath/wil6210/debugfs.c    | 331 ++++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/interrupt.c  |   2 +-
- drivers/net/wireless/ath/wil6210/main.c       |  30 ++-
- drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |   7 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |  16 ++
- drivers/net/wireless/ath/wil6210/txrx.c       |   3 +-
- drivers/net/wireless/ath/wil6210/txrx.h       |   2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  17 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |  47 ++--
- drivers/net/wireless/ath/wil6210/wmi.h        |   4 +-
- 12 files changed, 327 insertions(+), 146 deletions(-)
+-typedef
+ struct i { ... }
+-td
+ ;
 
+@@
+type tn.td;
+identifier tn.i;
+@@
+
+-td
++ struct i
+
+Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+---
+ drivers/net/wireless/atmel_cs.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel_cs.c
+index 4cfb4d9..7afc9c5 100644
+--- a/drivers/net/wireless/atmel_cs.c
++++ b/drivers/net/wireless/atmel_cs.c
+@@ -66,18 +66,18 @@ static void atmel_release(struct pcmcia_device *link);
+ 
+ static void atmel_detach(struct pcmcia_device *p_dev);
+ 
+-typedef struct local_info_t {
++struct local_info {
+ 	struct net_device *eth_dev;
+-} local_info_t;
++};
+ 
+ static int atmel_probe(struct pcmcia_device *p_dev)
+ {
+-	local_info_t *local;
++	struct local_info *local;
+ 
+ 	dev_dbg(&p_dev->dev, "atmel_attach()\n");
+ 
+ 	/* Allocate space for private device-specific data */
+-	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
++	local = kzalloc(sizeof(*local), GFP_KERNEL);
+ 	if (!local)
+ 		return -ENOMEM;
+ 
+@@ -117,7 +117,7 @@ static int atmel_config_check(struct pcmcia_device *p_dev, void *priv_data)
+ 
+ static int atmel_config(struct pcmcia_device *link)
+ {
+-	local_info_t *dev;
++	struct local_info *dev;
+ 	int ret;
+ 	const struct pcmcia_device_id *did;
+ 
+@@ -141,14 +141,14 @@ static int atmel_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	((local_info_t*)link->priv)->eth_dev =
++	((struct local_info *)link->priv)->eth_dev =
+ 		init_atmel_card(link->irq,
+ 				link->resource[0]->start,
+ 				did ? did->driver_info : ATMEL_FW_TYPE_NONE,
+ 				&link->dev,
+ 				card_present,
+ 				link);
+-	if (!((local_info_t*)link->priv)->eth_dev)
++	if (!((struct local_info *)link->priv)->eth_dev)
+ 			goto failed;
+ 
+ 
+@@ -161,20 +161,20 @@ static int atmel_config(struct pcmcia_device *link)
+ 
+ static void atmel_release(struct pcmcia_device *link)
+ {
+-	struct net_device *dev = ((local_info_t*)link->priv)->eth_dev;
++	struct net_device *dev = ((struct local_info *)link->priv)->eth_dev;
+ 
+ 	dev_dbg(&link->dev, "atmel_release\n");
+ 
+ 	if (dev)
+ 		stop_atmel_card(dev);
+-	((local_info_t*)link->priv)->eth_dev = NULL;
++	((struct local_info *)link->priv)->eth_dev = NULL;
+ 
+ 	pcmcia_disable_device(link);
+ }
+ 
+ static int atmel_suspend(struct pcmcia_device *link)
+ {
+-	local_info_t *local = link->priv;
++	struct local_info *local = link->priv;
+ 
+ 	netif_device_detach(local->eth_dev);
+ 
+@@ -183,7 +183,7 @@ static int atmel_suspend(struct pcmcia_device *link)
+ 
+ static int atmel_resume(struct pcmcia_device *link)
+ {
+-	local_info_t *local = link->priv;
++	struct local_info *local = link->priv;
+ 
+ 	atmel_open(local->eth_dev);
+ 	netif_device_attach(local->eth_dev);
 -- 
-1.8.5.2
+1.9.1
 
