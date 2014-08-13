@@ -1,117 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52576 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560AbaHZVOS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 17:14:18 -0400
-Message-ID: <53FCF8A7.4090807@broadcom.com> (sfid-20140826_231421_544000_A119AA66)
-Date: Tue, 26 Aug 2014 23:14:15 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <53FCEECA.8090308@hauke-m.de>
-In-Reply-To: <53FCEECA.8090308@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:39184 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbaHMLUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2014 07:20:13 -0400
+Message-ID: <1407928809.21220.33.camel@jlt4.sipsolutions.net> (sfid-20140813_132018_748303_7579F559)
+Subject: Re: [PATCH 1/2] cfg80211: clarify BSS probe response vs. beacon data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@adurom.com>
+Date: Wed, 13 Aug 2014 13:20:09 +0200
+In-Reply-To: <CAB3XZEdOC1ERUm1HDK03qWQti35Z66EHL+0gD9=oBpcPfK2r4w@mail.gmail.com> (sfid-20140813_131330_615891_557AC86F)
+References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEckyoDVShskF8rRe7DFuVMO-LBdhFDejiJ63SjhsEvmAA@mail.gmail.com>
+	 <1407928122.21220.31.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEdOC1ERUm1HDK03qWQti35Z66EHL+0gD9=oBpcPfK2r4w@mail.gmail.com>
+	 (sfid-20140813_131330_615891_557AC86F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/14 22:32, Hauke Mehrtens wrote:
-> On 08/26/2014 06:42 PM, Rafał Miłecki wrote:
->> [cross-list: linux-mips@ and linux-wireless@]
->>
->> We're working on another Broadcom platform, SoC with an ARM CPU,
->> platform called bcm53xx. It shares many things with the older (MIPS
->> based) bcm47xx, so we need to figure out how to modify some of the
->> drivers.
->>
->> Hauke recently proposed sharing code for NVRAM support as a separated
->> driver. In his RFC patch it was added as a new platform driver. I
->> liked this idea (I'd simply prefer to modify existing code instead of
->> duplicating it), so I played with it a bit today.
->
-> I will also make mips bcm47xx uses that code in the next version of the
-> patch. (move the code from mips)
->
->>
->> My plan was to modify bcm47xx code to make nvram.c a separated driver
->> and update bcm47xx/bcma to use it. Well, it didn't work out. The
->> problem is that we need access to the NVRAM pretty early. Please take
->> a look at my description of bcm47xx booting process (it's simply a
->> summary of start_kernel and bcm47xx code):
->>
->> 1) prom_init / plat_mem_setup
->> These two functions are called in pretty much the same phase from the
->> setup_arch (arch/mips/kernel/setup.c).
->> Task: detect&  register memory
->> Requires: CPU type, maybe Broadcom chip ID (highmem support)
->> Available: CPU type
->> Not available: kmalloc, device_add (kobject)
->>
->> 2) arch_init_irq
->> Called from the arch specific init_IRQ (arch/mips/kernel/irq.c)
->> Task: setup bcma's MIPS core
->> Requires: bcma bus MIPS core
->> Available: kmalloc
->> Not available: device_add (kobject)
->>
->> 3) plat_time_init
->> Called from the arch specific time_init (arch/mips/kernel/time.c)
->> Task: set frequency
->> Requires: bcma bus ChipCommon core, nvram
->> Available: kmalloc
->> Not available: device_add (kobject)
->>
->> 4) At some point we need to register bcma devices, device_initcall can
->> be used for that
->>
->> As you can see, we need access to the NVRAM quite early (step 3,
->> plat_time_init, or even earlier), but device_add (platform
->> devices/drivers) is not available then yet. So I'm afraid we won't be
->> able to use this common way to write NVRAM driver.
->>
->>
->> So there I want to present my plan for the NVRAM improvements. If you
->> don't agree with any part of it, or you can see any better solution,
->> please speak up!
->>
->> 1) I won't make nvram.c a platform driver. Instead I would like to
->> make it less bcm47xx specific. I don't want to touch bcm47xx_bus in
->> this file. Instead I want to add a generic function that will accept
->> address and size of memory where NVRAM should be found. Then I'd like
->> to move this file out of "mips" arch (drivers/misc/?
->> drivers/bcma/nvram/?) and allow using it for bcm53xx.
->
-> I would make this nvram.c a platform driver in addition so it can get
-> registered to device tree. this part would only get activated when
-> CONFIG_OF is set which is not on MIPS bcm47xx.
->
->> 2) I was also thinking about cleaning bcm47xx init. Right now we do a
->> lot of hacks in plat_mem_setup&  bcma to register the bus and scan its
->> cores. It's so early (before mm_init) that we can't alloc memory!
->> Doing all this stuff slightly later (e.g. arch_init_irq) would allow
->> us to simply use "kmalloc" and drop all current hacks in bcma.
->>
->> 3) Above change (point 2) would require some small change in bcma. We
->> would need 2-stages init: detecting (with kmalloc!) bus cores,
->> registering cores. This is required, because we can't register cores
->> too early, device_add (and the underlying kobject) would oops/WARN in
->> kobject_get.
->>
->
-> This sound good to me, but I still have some questions.
->
-> Do you also want to change ssb registration?
-> Is it worth the effort? I think MIPS bcm47xx will be EOL and replaced by
-> the ARM versions completely in the next years. (I do not have any
-> private information about Broadcom product politics)
+On Wed, 2014-08-13 at 14:13 +0300, Eliad Peller wrote:
+> On Wed, Aug 13, 2014 at 2:08 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2014-08-13 at 13:57 +0300, Eliad Peller wrote:
+> >
+> >
+> >> > @@ -1011,6 +1018,9 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
+> >> >         if (res->pub.capability & WLAN_CAPABILITY_ESS)
+> >> >                 regulatory_hint_found_beacon(wiphy, channel, gfp);
+> >> >
+> >> > +       /* assume drivers don't mix and match too badly */
+> >> > +       res->known_frame_type = true;
+> >> > +
+> >>
+> >> i think you should set the flag only in case of a beacon.
+> >> otherwise, you might "validate" res->ies although it contains probe
+> >> response data.
+> >
+> > Hm, what do you mean? If we have known frametype and we have beacon_ies,
+> > then IEs in nl80211 are certain to be proberesp_ies ...
+> >
+> sorry, i meant res->beacon_ies.
+> 
+> consider the following flow:
+> cfg80211_inform_bss_width(presp1):
+>  * beacon_ies = presp1
+>  * known_frame_type = false
+> 
+> cfg80211_inform_bss_width_frame(presp2):
+>  * proberesp_ies = presp2
+>  * beacon_ies = presp1
+>  * known_frame_type = true
 
-I am not a (product) politician as well, but I think it is a safe 
-assumption.
+Yeah, well, I'm hoping that drivers wouldn't be so stupid? :)
 
-Regards,
-Arend
+Maybe we should just get rid of the requirement to assign beacon_ies
+with the bss_width() call and make free() smarter?
+
+johannes
+
