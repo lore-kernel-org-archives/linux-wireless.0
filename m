@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4060 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbaHMNsJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 09:48:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/5] ath10k: setup irq method in probe
-References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
-	<1407402260-29854-3-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 13 Aug 2014 16:48:03 +0300
-In-Reply-To: <1407402260-29854-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:04:17 +0200")
-Message-ID: <87d2c4pkks.fsf@kamboji.qca.qualcomm.com> (sfid-20140813_154821_204395_126CD352)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:49291 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752698AbaHMNLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2014 09:11:25 -0400
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Subject: [PATCH] event: Handle NEW_WIPHY/DEL_WIPHY events properly
+Date: Wed, 13 Aug 2014 16:10:13 +0300
+Message-Id: <1407935413-19600-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20140813_151128_106201_AD1DBE10)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+A NEW_WIPHY event can be either a new device event or a renaming event
+thus precising it in the output. A proper differenciation would require
+iw to dump all the existing wiphy devices first to be able to know when
+NEW_WIPHY is a newly created device or just a rename, but that's out of
+the scope of event.c
+Besides that, DEL_WIPHY is a known event, thus handling it as it should.
 
-> It doesn't make sense to re-init irqs completely
-> whenever transport is started/stopped. Do it just
-> once upon probing/removing.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+---
+ event.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-[...]
-
-> @@ -1905,22 +1915,10 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
->  		goto err;
->  	}
->  
-> -	ret = ath10k_ce_disable_interrupts(ar);
-> -	if (ret) {
-> -		ath10k_err("failed to disable CE interrupts: %d\n", ret);
-> -		goto err_ce;
-> -	}
-> -
-> -	ret = ath10k_pci_init_irq(ar);
-> -	if (ret) {
-> -		ath10k_err("failed to init irqs: %d\n", ret);
-> -		goto err_ce;
-> -	}
-> -
->  	ret = ath10k_pci_request_early_irq(ar);
->  	if (ret) {
->  		ath10k_err("failed to request early irq: %d\n", ret);
-> -		goto err_deinit_irq;
-> +		goto err_ce;
->  	}
-
-You add ath10k_pci_ce_init() to probe() and respective
-ath10k_pci_ce_deinit() to remove(), and you remove
-ath10k_pci_ce_deinit() from hif_power_down(). But why do you leave
-ath10k_pci_ce_init() to hif_power_up()? Isn't that unnecessary as we
-already do that in probe()?
-
-> +	ath10k_info("pci irq %s (num %d) irq_mode %d reset_mode %d\n",
-> +		    ath10k_pci_get_irq_method(ar), ar_pci->num_msi_intrs,
-> +		    ath10k_pci_irq_mode, ath10k_pci_reset_mode);
-
-"pci irq %s interrupts %d irq_mode %d ..."
-
+diff --git a/event.c b/event.c
+index 6775eb2..4dab241 100644
+--- a/event.c
++++ b/event.c
+@@ -310,7 +310,10 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 
+ 	switch (gnlh->cmd) {
+ 	case NL80211_CMD_NEW_WIPHY:
+-		printf("renamed to %s\n", nla_get_string(tb[NL80211_ATTR_WIPHY_NAME]));
++		printf("new or renamed device: %s\n", nla_get_string(tb[NL80211_ATTR_WIPHY_NAME]));
++		break;
++	case NL80211_CMD_DEL_WIPHY:
++		printf("%s deleted\n", nla_get_string(tb[NL80211_ATTR_WIPHY_NAME]));
+ 		break;
+ 	case NL80211_CMD_TRIGGER_SCAN:
+ 		printf("scan started\n");
 -- 
-Kalle Valo
+1.8.5.5
+
