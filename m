@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:50164 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaHOXnG (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:56567 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbaHMLWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2014 19:43:06 -0400
-Received: by mail-wi0-f176.google.com with SMTP id bs8so1461440wib.3
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2014 16:43:04 -0700 (PDT)
+	Wed, 13 Aug 2014 07:22:12 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ho1so7226022wib.14
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2014 04:22:11 -0700 (PDT)
 MIME-Version: 1.0
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Fri, 15 Aug 2014 19:42:44 -0400
-Message-ID: <CAHqTa-10bc+AtFbifObfqHXwzfcbrA5w9Z6LL53kUdDWeq=7ig@mail.gmail.com> (sfid-20140816_014317_976760_2D497371)
-Subject: Best choice of primary channels when using 40- or 80 MHz wide channels
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
+References: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 13 Aug 2014 16:51:51 +0530
+Message-ID: <CABPxzYK9s=YQZwKEhSiL2st9NPUiPH7i4HhpHXQc8TapONtz9A@mail.gmail.com> (sfid-20140813_132217_202012_A1C07ED5)
+Subject: Re: [mac80211] Enforce protected check for unicast robust management frames.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chaitanya T K <chaitanya.mgit@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Tue, Aug 12, 2014 at 12:21 AM,  <chaitanya.mgit@gmail.com> wrote:
+> From: Chaitanya T K <chaitanya.mgit@gmail.com>
+>
+> Enforce the check for protected field for all unicast
+> robust management frames.
+>
+> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> ---
+>
+> This removed the dependency on the driver to check for protected
+> bit, especially for those drivers who believed the API :-).
+>
+> ---
+>
+>  net/mac80211/rx.c |    3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a8d862f..63e8f3d 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
+>         if (is_multicast_ether_addr(hdr->addr1))
+>                 return 0;
+>
+> +       if (!ieee80211_has_protected(hdr->frame_control))
+> +               return 0;
+> +
+>         return ieee80211_is_robust_mgmt_frame(skb);
+>  }
+>
 
-I'm pretty confused about how to select the "primary" channel when
-using wide channels with 802.11ac (and also 802.11n, really).  My
-hostapd contains a section like this:
+Johannes,
 
-hw_mode=a
-channel=149
-country_code=US
-ieee80211d=1
-ieee80211h=1
-ieee80211n=1
-ieee80211ac=1
-ht_capab=[HT20][HT40+][RX-STBC1]
-vht_capab=[MAX-A-MPDU-LEN-EXP4]
-vht_oper_chwidth=1
-vht_oper_centr_freq_seg0_idx=155
-
-If I understand correctly, this will have the following results:
-- at 20 MHz, it will use channel 149
-- at 40 MHz, it will use channels 149+153 (HT40+)
-- at 80 MHz, it will use channels 149+153+157+161 (centr_freq_seg0_idx)
-
-This is fine when I'm the only AP around.  But let's imagine I'm in a
-crowded apartment building with lots of APs, and various clients
-support only 20 MHz channel width (increasingly rare), or 20/40, or
-20/40/80.  In such a situation, we'd like to spread around the APs so
-that clients that can only do 20 or 40 don't always fall back to
-channel 149 or 149+153; otherwise we're just wasting tons of empty
-space on channels 157 and 161.
-
-The obvious way to do this would be to try a configuration like this (HT40-):
-
-channel=153
-ht_capab=[HT20][HT40-][RX-STBC1]
-vht_capab=[MAX-A-MPDU-LEN-EXP4]
-vht_oper_chwidth=1
-vht_oper_centr_freq_seg0_idx=155
-
-or perhaps this (40 Mhz uses upper half instead of lower half):
-
-channel=157
-ht_capab=[HT20][HT40+][RX-STBC1]
-vht_capab=[MAX-A-MPDU-LEN-EXP4]
-vht_oper_chwidth=1
-vht_oper_centr_freq_seg0_idx=155
-
-But when I try to do this, hostapd seems to abort and claim it can't
-register to use the channels.  Am I doing something wrong?  Is it
-hostapd version related?
-
-Also, hostapd contains code to swap the primary/secondary 20 MHz
-channels in the 40 MHz channel, based on what other APs are around.
-If I read correctly, it seems to want to use the same primary channel
-as everyone else.  Wouldn't it be better to equailze things to try to
-get about half the APs using each sub channel?
-
-Any advice on this topic is very welcome.  Thanks!
-
-Have fun,
-
-Avery
+Subject is wrong it should be [PATCH] mac8021:, so should i resend it again?
