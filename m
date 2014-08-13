@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:50581 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753497AbaHALf7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2014 07:35:59 -0400
-From: Miguel Oliveira <cmroliv@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	cmroliv@gmail.com
-Subject: [PATCH] staging: rtl8723au: Fix static symbol sparse warning
-Date: Fri,  1 Aug 2014 14:06:27 +0100
-Message-Id: <1406898387-13987-1-git-send-email-cmroliv@gmail.com> (sfid-20140801_133621_432944_E462438C)
+Received: from s3.sipsolutions.net ([5.9.151.49]:41921 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbaHMS3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2014 14:29:11 -0400
+Message-ID: <1407954545.21220.40.camel@jlt4.sipsolutions.net> (sfid-20140813_202914_228202_95C4CC21)
+Subject: Re: About the TSFT field
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 13 Aug 2014 20:29:05 +0200
+In-Reply-To: <53EBA16F.9070305@create-net.org>
+References: <53EB355E.6090508@create-net.org>
+		 (sfid-20140813_120259_727542_9924FF23) <1407924311.21220.28.camel@jlt4.sipsolutions.net>
+	 <53EBA16F.9070305@create-net.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse warning:
-drivers/staging/rtl8723au/core/rtw_efuse.c:579:5: warning: symbol 'efuse_GetCurrentSize23a' was not declared. Should it be static?
+On Wed, 2014-08-13 at 19:33 +0200, Roberto Riggio wrote:
 
-Signed-off-by: Miguel Oliveira <cmroliv@gmail.com>
----
- drivers/staging/rtl8723au/include/rtw_efuse.h |    1 +
- 1 file changed, 1 insertion(+)
+> > It's purely local time - no synchronisation happens.
+> 
+> Meaning that is the system time. right?
 
-diff --git a/drivers/staging/rtl8723au/include/rtw_efuse.h b/drivers/staging/rtl8723au/include/rtw_efuse.h
-index 07bdc34..304cc71 100644
---- a/drivers/staging/rtl8723au/include/rtw_efuse.h
-+++ b/drivers/staging/rtl8723au/include/rtw_efuse.h
-@@ -82,6 +82,7 @@ struct pg_pkt_struct {
- /*------------------------Export global variable----------------------------*/
- 
- u16	efuse_GetMaxSize23a(struct rtw_adapter *padapter);
-+int	efuse_GetCurrentSize23a(struct rtw_adapter *padapter, u16 *size);
- int	rtw_efuse_access23a(struct rtw_adapter *padapter, u8 bRead, u16 start_addr, u16 cnts, u8 *data);
- int	rtw_efuse_map_read23a(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
- u8	rtw_efuse_map_write(struct rtw_adapter *padapter, u16 addr, u16 cnts, u8 *data);
--- 
-1.7.10.4
+No, it's wifi time. TSF in TUs. Whatever that means. It may or may not
+even have a fixed reference, and it's not even guaranteed to sync with
+the network.
+
+> What if I create an adhoc
+> interface together with the AP? According to the standard devices
+> in IBSS shall synch with each other using the tsf info in the beacon
+> frames. Is this behavior implemented by mac80211?
+
+That behaviour is implemented, but it's not guaranteed that the TSF will
+be used for the radiotap timestamp field. In fact radiotap isn't really
+specified to be used while operating, so it seems to me that any
+free-running clock with the right frequency (TUs) would be acceptable.
+
+In that sense, the only real use for the timestamp field (barring
+external information, like knowing what your driver does) would be for
+relative time inside a single capture file.
+
+johannes
 
