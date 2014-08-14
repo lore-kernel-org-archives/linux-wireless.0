@@ -1,101 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:60558 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbaHQTnL (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243AbaHNJYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2014 15:43:11 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/5] staging: vt6655: remove PLICE_DEBUG where it is defined
-Date: Sun, 17 Aug 2014 20:42:27 +0100
-Message-Id: <1408304549-22363-3-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214412_938048_8D8A17C9)
-In-Reply-To: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
-References: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 14 Aug 2014 05:24:02 -0400
+Message-ID: <53EC802F.3020805@broadcom.com> (sfid-20140814_112407_233502_D3546987)
+Date: Thu, 14 Aug 2014 11:23:59 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+CC: <kvalo@adurom.com>, Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/2] cfg80211: allow passing frame type to cfg80211_inform_bss()
+References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net> <1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove macro and directive leaving the code.
+On 08/12/2014 09:03 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> When using the cfg80211_inform_bss[_width]() functions drivers
+> cannot currently indicate whether the data was received in a
+> beacon or probe response. Fix that by passing a new enum that
+> indicates such (or unknown).
+>
+> For good measure, use it in ath6kl.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>   drivers/net/wireless/ath/ath6kl/cfg80211.c         |  1 +
+>   drivers/net/wireless/ath/ath6kl/wmi.c              | 43 +++++-----------------
+>   drivers/net/wireless/ath/wil6210/wmi.c             |  2 +-
+>   .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 18 ++++++---
+>   drivers/net/wireless/libertas/cfg.c                |  2 +
+>   drivers/net/wireless/mwifiex/cfg80211.c            |  1 +
+>   drivers/net/wireless/mwifiex/scan.c                |  3 +-
+>   drivers/net/wireless/orinoco/scan.c                | 14 ++++---
+>   drivers/net/wireless/rndis_wlan.c                  | 14 ++++---
+>   drivers/staging/wlan-ng/cfg80211.c                 |  1 +
+>   include/net/cfg80211.h                             | 20 +++++++++-
+>   net/wireless/scan.c                                | 21 ++++++++---
+>   12 files changed, 78 insertions(+), 62 deletions(-)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c |  4 +---
- drivers/staging/vt6655/wmgr.c | 12 ++++--------
- 2 files changed, 5 insertions(+), 11 deletions(-)
+[...]
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 869555a..635e88c 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -68,7 +68,6 @@
- /*---------------------  Static Classes  ----------------------------*/
- 
- /*---------------------  Static Variables  --------------------------*/
--#define	PLICE_DEBUG
- 
- /*---------------------  Static Functions  --------------------------*/
- 
-@@ -1969,9 +1968,8 @@ vGenerateFIFOHeader(struct vnt_private *pDevice, unsigned char byPktType,
- 		}
- 	}
- 
--#ifdef	PLICE_DEBUG
- 	RFbSetPower(pDevice, pDevice->wCurrentRate, pDevice->byCurrentCh);
--#endif
-+
- 	pTxBufHead->byTxPower = pDevice->byCurPwr;
- 
- 	*pcbHeaderSize = s_cbFillTxBufHead(pDevice, byPktType, pbyTxBufferAddr, cbPayloadSize,
-diff --git a/drivers/staging/vt6655/wmgr.c b/drivers/staging/vt6655/wmgr.c
-index c998a16..c3de107 100644
---- a/drivers/staging/vt6655/wmgr.c
-+++ b/drivers/staging/vt6655/wmgr.c
-@@ -80,8 +80,6 @@
- #include "rf.h"
- #include "iowpa.h"
- 
--#define	PLICE_DEBUG
--
- /*---------------------  Static Definitions -------------------------*/
- 
- /*---------------------  Static Classes  ----------------------------*/
-@@ -692,9 +690,9 @@ s_vMgrRxAssocRequest(
- 		// set max tx rate
- 		pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
- 			pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
--#ifdef	PLICE_DEBUG
-+
- 		pr_debug("RxAssocRequest:wTxDataRate is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate);
--#endif
-+
- 		// Todo: check sta preamble, if ap can't support, set status code
- 		pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
- 			WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
-@@ -840,9 +838,9 @@ s_vMgrRxReAssocRequest(
- 		// set max tx rate
- 		pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
- 			pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
--#ifdef	PLICE_DEBUG
-+
- 		pr_debug("RxReAssocRequest:TxDataRate is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate);
--#endif
-+
- 		// Todo: check sta preamble, if ap can't support, set status code
- 		pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
- 			WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
-@@ -2097,11 +2095,9 @@ s_vMgrRxBeacon(
- 				memcpy(pMgmt->sNodeDBTable[uNodeIndex].abyMACAddr, sFrame.pHdr->sA3.abyAddr2, WLAN_ADDR_LEN);
- 				pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble = WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
- 				pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate = pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
--#ifdef	PLICE_DEBUG
- 				{
- 					pr_debug("s_vMgrRxBeacon:TxDataRate is %d,Index is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate, uNodeIndex);
- 				}
--#endif
- 			}
- 
- 			// if other stations joined, indicate connection to upper layer..
--- 
-1.9.1
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> index d8fa276e368b..9a45ef064dd9 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -2429,9 +2429,13 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+>   	brcmf_dbg(CONN, "Beacon interval: %d\n", notify_interval);
+>   	brcmf_dbg(CONN, "Signal: %d\n", notify_signal);
+>
+> -	bss = cfg80211_inform_bss(wiphy, notify_channel, (const u8 *)bi->BSSID,
+> -		0, notify_capability, notify_interval, notify_ie,
+> -		notify_ielen, notify_signal, GFP_KERNEL);
+> +	bss = cfg80211_inform_bss(wiphy, notify_channel,
+> +				  CFG80211_BSS_FTYPE_UNKNOWN,
 
+Checked the firmware API and it does not provide this info.
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+
+Regards,
+Arend
