@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16047 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbaHFHcl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8776 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760AbaHNMjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:41 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 11/13] wil6210: fix free'd memory access in wil_if_free()
-Date: Wed, 6 Aug 2014 10:31:59 +0300
-Message-ID: <1407310322-22568-12-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095908_043477_6CE57C95)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+	Thu, 14 Aug 2014 08:39:01 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Hans Wennborg <hans@hanshq.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath6kl@lists.infradead.org>
+Subject: Re: [PATCH 10/19] ath6kl: fix %d confusingly prefixed with 0x in format strings
+References: <1407111596-14944-1-git-send-email-hans@hanshq.net>
+Date: Thu, 14 Aug 2014 15:38:54 +0300
+In-Reply-To: <1407111596-14944-1-git-send-email-hans@hanshq.net> (Hans
+	Wennborg's message of "Sun, 3 Aug 2014 17:19:56 -0700")
+Message-ID: <8738czmejl.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_143906_806703_07A21CF3)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Hans Wennborg <hans@hanshq.net> writes:
 
-In the wil_priv_deinit(), wdev->netdev is accessed, so free_netdev()
-should not be called before mentioned call.
+> Signed-off-by: Hans Wennborg <hans@hanshq.net>
+> ---
+>  drivers/net/wireless/ath/ath6kl/init.c | 2 +-
+>  drivers/net/wireless/ath/ath6kl/main.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index fffd523..91af845 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -1049,7 +1049,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+>  			ar->hw.reserved_ram_size = le32_to_cpup(val);
+>  
+>  			ath6kl_dbg(ATH6KL_DBG_BOOT,
+> -				   "found reserved ram size ie 0x%d\n",
+> +				   "found reserved ram size ie 0x%x\n",
+>  				   ar->hw.reserved_ram_size);
 
-Set wdev->netdev to NULL Make sure no more attempts to use it.
-It is used for debug printk if not NULL.
+Actually the original intent here was to use %d.
 
-This fix kernel panic on module unload and in case error on probe;
-if memory allocation debugging enabled.
+> diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+> index 21516bc..933aef0 100644
+> --- a/drivers/net/wireless/ath/ath6kl/main.c
+> +++ b/drivers/net/wireless/ath/ath6kl/main.c
+> @@ -225,7 +225,7 @@ int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
+>  	ret = ath6kl_hif_diag_write32(ar, address, value);
+>  
+>  	if (ret) {
+> -		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
+> +		ath6kl_err("failed to write 0x%x during diagnose window to 0x%x\n",
+>  			   address, value);
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/netdev.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+This is ok.
 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 8ee0862..59fd550 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -168,11 +168,15 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
- void wil_if_free(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
-+
- 	if (!ndev)
- 		return;
- 
--	free_netdev(ndev);
- 	wil_priv_deinit(wil);
-+
-+	wil_to_ndev(wil) = NULL;
-+	free_netdev(ndev);
-+
- 	wil_wdev_free(wil);
- }
- 
 -- 
-1.8.5.2
-
+Kalle Valo
