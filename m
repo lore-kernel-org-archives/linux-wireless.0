@@ -1,74 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:58722 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbaHAPYN (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:53699 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509AbaHNIwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2014 11:24:13 -0400
-From: Miguel Oliveira <cmroliv@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	cmroliv@gmail.com
-Subject: [PATCH] staging: rtl8723au: Fix static symbol sparse warning
-Date: Fri,  1 Aug 2014 17:54:39 +0100
-Message-Id: <1406912079-3115-1-git-send-email-cmroliv@gmail.com> (sfid-20140801_172430_671042_1EECE765)
-In-Reply-To: <53DBA840.6050804@lwfinger.net>
-References: <53DBA840.6050804@lwfinger.net>
+	Thu, 14 Aug 2014 04:52:21 -0400
+Received: by mail-pd0-f173.google.com with SMTP id w10so1222240pde.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2014 01:52:20 -0700 (PDT)
+MIME-Version: 1.0
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Thu, 14 Aug 2014 10:52:00 +0200
+Message-ID: <CAGm1_ks4kzRaPXHpMRui0wo5jOmXx5PtBZo5EMjQ2fwcZXBofw@mail.gmail.com> (sfid-20140814_105233_004250_188A47E9)
+Subject: wl12xx: latest firmware/utils
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: eyalr@ti.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse warning:
-drivers/staging/rtl8723au/core/rtw_efuse.c:579:5: warning: symbol 'efuse_GetCurrentSize23a' was not declared. Should it be static?
-by removing efuse_GetCurrentSize23a since its never used
+Wireless wiki (http://wireless.kernel.org/en/users/Drivers/wl12xx/calibrator)
+recommends to use following repo to get the latest ti-utils:
+https://github.com/gxk/ti-utils
+This repo was once forked and got some updates:
+https://github.com/idor/ti-utils, then there occurred another fork
+(https://github.com/TI-OpenLink/ti-utils) with even more changes.
 
-Signed-off-by: Miguel Oliveira <cmroliv@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_efuse.c |   25 -------------------------
- 1 file changed, 25 deletions(-)
+Yesterday I've sent a patch to the TI-OpenLink/ti-utils
+(https://github.com/TI-OpenLink/ti-utils/pull/4) and got an answer,
+that this repo won't be supported anymore. So where is the upstream
+version then?
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
-index 345bff8..fe092c5 100644
---- a/drivers/staging/rtl8723au/core/rtw_efuse.c
-+++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
-@@ -100,22 +100,6 @@ static void Efuse_PowerSwitch(struct rtw_adapter *padapter,
- 	}
- }
- 
--/*-----------------------------------------------------------------------------
-- * Function:	efuse_GetCurrentSize23a
-- *
-- * Overview:	Get current efuse size!!!
-- *
-- * Input:       NONE
-- *
-- * Output:      NONE
-- *
-- * Return:      NONE
-- *
-- * Revised History:
-- * When			Who		Remark
-- * 11/16/2008	MHC		Create Version 0.
-- *
-- *---------------------------------------------------------------------------*/
- u16
- Efuse_GetCurrentSize23a(struct rtw_adapter *pAdapter, u8 efuseType)
- {
-@@ -576,15 +560,6 @@ u16 efuse_GetMaxSize23a(struct rtw_adapter *padapter)
- 	return max_size;
- }
- /*  */
--int efuse_GetCurrentSize23a(struct rtw_adapter *padapter, u16 *size)
--{
--	Efuse_PowerSwitch(padapter, false, true);
--	*size = Efuse_GetCurrentSize23a(padapter, EFUSE_WIFI);
--	Efuse_PowerSwitch(padapter, false, false);
--
--	return _SUCCESS;
--}
--/*  */
- int rtw_efuse_map_read23a(struct rtw_adapter *padapter,
- 			  u16 addr, u16 cnts, u8 *data)
- {
--- 
-1.7.10.4
+TI-OpenLink/ti-utils also provides wl127x firmware version
+6.3.10.0.137, but the latest official fw
+(https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/ti-connectivity)
+has version 6.3.10.0.133. Is the firmware version 6.3.10.0.137 ready
+for upstreaming?
 
+Regards,
+Yegor
