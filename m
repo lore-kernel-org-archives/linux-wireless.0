@@ -1,54 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44572 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753310AbaH0JFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 05:05:18 -0400
-Message-ID: <1409130313.2505.3.camel@jlt4.sipsolutions.net> (sfid-20140827_110530_877579_7BC2F467)
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hannes Frederic Sowa <hannes@stressinduktion.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 27 Aug 2014 11:05:13 +0200
-In-Reply-To: <1409125114.11976.14.camel@localhost>
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20140821_192515_304437_37E734D5) <1408642331.4388.2.camel@jlt4.sipsolutions.net>
-	 <1409125114.11976.14.camel@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24542 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753902AbaHNMYN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2014 08:24:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix typo in error message.
+References: <1407271878-15230-1-git-send-email-greearb@candelatech.com>
+Date: Thu, 14 Aug 2014 15:24:04 +0300
+In-Reply-To: <1407271878-15230-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Tue, 5 Aug 2014 13:51:18
+	-0700")
+Message-ID: <87bnrnmf8b.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_142416_780599_8CAD68EF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-08-27 at 09:38 +0200, Hannes Frederic Sowa wrote:
+greearb@candelatech.com writes:
 
-> > And if it's *not* in the IPv6 RFCs, how should we implement this?
-> 
-> I haven't found anything, too. Should I bring this up with IETF?
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-I don't know if that's really useful? OTOH, there surely must have been
-a reason for this to be in the IPv4 RFC, so maybe for that same reason
-it should also be in the IPv6 RFC?
+Thanks, applied with a simple commit log.
 
-However, in our particular case, it's really meant only to close the
-so-called "hole-196" vulnerability where rogue clients in your network
-can abuse the GTK to do some attacks. Those attacks are also always
-possible on non-managed ethernet segments, but those can be segregated
-more easily by client than shared medium wireless.
-
-This is only one building block for addressing the vulnerability. The
-idea here was that in the wireless stack we already check
-
-frame encrypted with GTK => must have multicast destination address
-
-and in the IPv4 stack we can check
-
-frame has multicast destination address => must have multicast/broadcast
-IP addr
-
-This would address this point.
-
-The question now is, in the absence of such a latter required check (and
-indeed, in the case of CLUSTERIP), how we implement such a check.
-Perhaps a sysctl is needed after all?
-
-johannes
-
+-- 
+Kalle Valo
