@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:50619 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617AbaHaSto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Aug 2014 14:49:44 -0400
-Message-ID: <54036D77.6040708@maya.org> (sfid-20140831_205014_153363_46DC3176)
-Date: Sun, 31 Aug 2014 20:46:15 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:54866 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134AbaHNPmK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2014 11:42:10 -0400
+Message-ID: <53ECD8D0.4050709@lwfinger.net> (sfid-20140814_174220_633606_C09A5614)
+Date: Thu, 14 Aug 2014 10:42:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Matthias Fend <Matthias.Fend@wolfvision.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [rt2x00-users] rt2x00: Ralink RT5572 (TL-WDN3200) sporadic damages
-References: <CC2A85E271C1FB479D9C17305347F69A04C60591@WOLFSERVER19.wolfvision-at.intra>
-In-Reply-To: <CC2A85E271C1FB479D9C17305347F69A04C60591@WOLFSERVER19.wolfvision-at.intra>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: Intel wireless microcode problem..
+References: <CA+55aFxdt-9e9X0EYCu2Ku8sSTspUGPk5qKa72XH63zrkdPthw@mail.gmail.com>
+In-Reply-To: <CA+55aFxdt-9e9X0EYCu2Ku8sSTspUGPk5qKa72XH63zrkdPthw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Matthias.
-
-Matthias Fend wrote:
-> Hello,
+On 08/14/2014 10:05 AM, Linus Torvalds wrote:
+> Ok, so it seems the current merge window introduces some horrid intel
+> microcode problem, because I don't seem to see this with 3.16. But
+> maybe that's just happenstance.
 > 
-> While continuing stability tests after fixing the high current peaks while sending uninitialized beacons [1] we still have occasional cases where suddenly a stick stops working and is getting very hot.
-> In this case very hot means that the plastic molding of the dongle shows very clear deformations and the stick won't work properly anymore.
-> One can see continuous vendor request failed message in case when a stick stops working or when a damaged stick is inserted.
+> Any ideas? This fills up all the logs etc.
 > 
-> So far we always tested with our custom hardware. To rule out hardware topics we decided to build up a test farm with a more common platform.
-> For a test we setup 10 raspberry pi with this setup:
-> Kernel: https://github.com/raspberrypi/linux/tree/rpi-3.16.y
-> WLAN-Stick Firmware: V0.33
-> ap: hostapd 1.0
-> ap:config:
-> interface=wlan0
-> driver=nl80211
-> ieee80211n=1
-> wmm_enabled=1
-> ssid=MyPi1
-> channel=36
-> disassoc_low_ack=0
-> country_code=DE
-> ieee80211d=1
-> hw_mode=a
-> ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
-> wpa=2
-> wpa_passphrase=raspberry
-> wpa_key_mgmt=WPA-PSK
-> wpa_pairwise=TKIP CCMP
-> 
-> Within the first 48 hours three of the ten setups failed with the mentioned problems. Since the broken sticks had been replaced the test is now running since five days without further problems.
-> At least this test helped to figure out that this issue does not depend on our hardware.
-> Unfortunately this bug is really rare and currently I have absolutely no idea what is triggering this damages.
-> Has anybody observed similar behavior or has some helpful hints?
+>                       Linus
+
+Linus,
+
+There is a new firmware that seems to help the problem. You can get it from
+Emmanuel's git clone. As he wrote earlier
+
+==========================
+
+We released an experimental firmware for 3160 / 7260 / 7265.
+
+It is available from my linux-firmware.git clone:
+
+3160:
+https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/plain/iwlwifi-3160-9.ucode?h=Core6
+7260:
+https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/plain/iwlwifi-7260-9.ucode?h=Core6
+7265:
+https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/plain/iwlwifi-7265-9.ucode?h=Core6
+
+We had an issue with the version number in this stream, so I can't release it
+officially, nor can I send a pull request to integrate it to linux-firmware.git.
+I am working with the firmware team to fix the version issue.
+I still would be glad to have more testing on this firmware, so any feedback
+would be greatly appreciated.
+It has gone through our regular testing cycles, but "field" feedback is always
+valuable.
+
+Thanks in advance to anyone who will test it.
+
+New (temporary) version number: 25.223.9.0
+
+============================================
 
 
-Your problem with hardware getting extremely hot is old and is not
-specific to your device. I wrote about this problem long ago. This is
-one more reason why I'm not using rt2800usb but the original Ralink
-drivers from manufacturer.
+Larry
 
-The reason from my point of view is the different USB handling:
-rt2800usb uses a lot of small USB packages and therefore needs a lot of
-more interrupts compared to the original driver, which uses big USB
-packages.
-
-See:
-http://news.gmane.org/find-root.php?group=gmane.linux.drivers.rt2x00.user&article=615
-
-
-Regards,
-Andreas
