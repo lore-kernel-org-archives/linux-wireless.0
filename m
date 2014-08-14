@@ -1,114 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iron3.routit.net ([89.146.30.1]:21098 "EHLO iron3.routit.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754900AbaHGMQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 08:16:36 -0400
-From: Ronald Wahl <ronald.wahl@raritan.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	stable@vger.kernel.org, Ronald Wahl <ronald.wahl@raritan.com>
-Subject: [PATCH v3] carl9170: fix sending URBs with wrong type when using full-speed
-Date: Thu,  7 Aug 2014 14:15:50 +0200
-Message-Id: <1407413750-21642-1-git-send-email-ronald.wahl@raritan.com> (sfid-20140807_141639_728958_ABA66515)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:16535 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751243AbaHNIYV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2014 04:24:21 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Andreas Fenkart <afenkart@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Aug 2014 01:23:15 -0700
+Subject: RE: mwifiex: switching from adhoc to 5GHz managed fails
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147C18@SC-VEXCH2.marvell.com> (sfid-20140814_102434_573345_BF689198)
+References: <CALtMJEDfVr1UxExOsiGK4G54BHB54wLt8co_98yZpFzH7NY9VA@mail.gmail.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC4781147BD9@SC-VEXCH2.marvell.com>,<CALtMJECey7bykvHp03-r1N=d774bOUyUagJqZAbZEeHwDPstew@mail.gmail.com>
+In-Reply-To: <CALtMJECey7bykvHp03-r1N=d774bOUyUagJqZAbZEeHwDPstew@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_CBACCFA0AEB13A41977475BCF3E896FC4781147C18SCVEXCH2marve_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver assumes that endpoint 4 is always an interrupt endpoint.
-Unfortunately the type differs between high-speed and full-speed
-configurations while in the former case it is indeed an interrupt
-endpoint this is not true for the latter case - here it is a bulk
-endpoint. When sending URBs with the wrong type the kernel will
-generate a warning message including backtrace. In this specific
-case there will be a huge amount of warnings which can bring the system
-to freeze.
+--_002_CBACCFA0AEB13A41977475BCF3E896FC4781147C18SCVEXCH2marve_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-To fix this we are now sending URBs to endpoint 4 using the type
-found in the endpoint descriptor.
+Hi Andreas,
 
-A side note: The carl9170 firmware currently specifies endpoint 4 as
-interrupt endpoint even in the full-speed configuration but this has
-no relevance because before this firmware is loaded the endpoint type
-is as described above and after the firmware is running the stick is not
-reenumerated and so the old descriptor is used.
+Please check if this diff file helps to resolve ibss issue.
 
-Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/net/wireless/ath/carl9170/carl9170.h |  1 +
- drivers/net/wireless/ath/carl9170/usb.c      | 31 ++++++++++++++++++++++++----
- 2 files changed, 28 insertions(+), 4 deletions(-)
+Thanks,
+Avinash.
+________________________________________
+From: Andreas Fenkart [afenkart@gmail.com]
+Sent: Tuesday, August 12, 2014 4:28 AM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mwifiex: switching from adhoc to 5GHz managed fails
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 8596aba..237d0cd 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -256,6 +256,7 @@ struct ar9170 {
- 	atomic_t rx_work_urbs;
- 	atomic_t rx_pool_urbs;
- 	kernel_ulong_t features;
-+	bool usb_ep_cmd_is_bulk;
- 
- 	/* firmware settings */
- 	struct completion fw_load_wait;
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index f35c7f3..c9f9331 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -621,9 +621,16 @@ int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
- 		goto err_free;
- 	}
- 
--	usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
--		AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
--		carl9170_usb_cmd_complete, ar, 1);
-+	if (ar->usb_ep_cmd_is_bulk)
-+		usb_fill_bulk_urb(urb, ar->udev,
-+				  usb_sndbulkpipe(ar->udev, AR9170_USB_EP_CMD),
-+				  cmd, cmd->hdr.len + 4,
-+				  carl9170_usb_cmd_complete, ar);
-+	else
-+		usb_fill_int_urb(urb, ar->udev,
-+				 usb_sndintpipe(ar->udev, AR9170_USB_EP_CMD),
-+				 cmd, cmd->hdr.len + 4,
-+				 carl9170_usb_cmd_complete, ar, 1);
- 
- 	if (free_buf)
- 		urb->transfer_flags |= URB_FREE_BUFFER;
-@@ -1032,9 +1039,10 @@ static void carl9170_usb_firmware_step2(const struct firmware *fw,
- static int carl9170_usb_probe(struct usb_interface *intf,
- 			      const struct usb_device_id *id)
- {
-+	struct usb_endpoint_descriptor *ep;
- 	struct ar9170 *ar;
- 	struct usb_device *udev;
--	int err;
-+	int i, err;
- 
- 	err = usb_reset_device(interface_to_usbdev(intf));
- 	if (err)
-@@ -1050,6 +1058,21 @@ static int carl9170_usb_probe(struct usb_interface *intf,
- 	ar->intf = intf;
- 	ar->features = id->driver_info;
- 
-+	/* We need to remember the type of endpoint 4 because it differs
-+	 * between high- and full-speed configuration. The high-speed
-+	 * configuration specifies it as interrupt and the full-speed
-+	 * configuration as bulk endpoint. This information is required
-+	 * later when sending urbs to that endpoint.
-+	 */
-+	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
-+		ep = &intf->cur_altsetting->endpoint[i].desc;
-+
-+		if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
-+		    usb_endpoint_dir_out(ep) &&
-+		    usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK)
-+			ar->usb_ep_cmd_is_bulk = true;
-+	}
-+
- 	usb_set_intfdata(intf, ar);
- 	SET_IEEE80211_DEV(ar->hw, &intf->dev);
- 
--- 
-1.9.3
+Hi Avinash,
 
+2014-08-08 14:51 GMT+02:00 Avinash Patil <patila@marvell.com>:
+> Are you setting type back to managed after leaving ibss?
+yes
+
+> I quickly tried this in my setup and after setting type to managed before=
+ connection to 5GHz AP, association is successful.
+
+15ba2236f3556fc01b9ca91394465152b5ea74b6 Merge
+git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
+9a3c4145af32125c5ee39c0272662b47307a8323 Linux 3.16-rc6
+
+and latest commit in driver/net/wireless/mwifiex:
+701a9e619347ac06d59481db14bbc4df99763270 mwifiex: initialize Tx/Rx
+info of a packet correctly
+
+Am I missing some patches?
+
+> If I dont set type, I see error from iw itself "operation not supported".
+I receive "ASSOC_RESP: failed:"
+
+iw version : 3.13
+
+--_002_CBACCFA0AEB13A41977475BCF3E896FC4781147C18SCVEXCH2marve_
+Content-Type: text/x-patch; name="mwifiex_ibss_issue.diff"
+Content-Description: mwifiex_ibss_issue.diff
+Content-Disposition: attachment; filename="mwifiex_ibss_issue.diff"; size=746;
+	creation-date="Thu, 14 Aug 2014 08:24:05 GMT";
+	modification-date="Thu, 14 Aug 2014 08:24:05 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc3RhX2lvY3RsLmMgYi9k
+cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jCmluZGV4IGNhYWU5NzMuLjgw
+MTZiYzIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc3RhX2lvY3Rs
+LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYwpAQCAtMjg5
+LDggKzI4OSwxMSBAQCBpbnQgbXdpZmlleF9ic3Nfc3RhcnQoc3RydWN0IG13aWZpZXhfcHJpdmF0
+ZSAqcHJpdiwgc3RydWN0IGNmZzgwMjExX2JzcyAqYnNzLAogCQlpZiAobXdpZmlleF9iYW5kX3Rv
+X3JhZGlvX3R5cGUoYnNzX2Rlc2MtPmJzc19iYW5kKSA9PQogCQkJCQkJSG9zdENtZF9TQ0FOX1JB
+RElPX1RZUEVfQkcpCiAJCQljb25maWdfYmFuZHMgPSBCQU5EX0IgfCBCQU5EX0cgfCBCQU5EX0dO
+OwotCQllbHNlCi0JCQljb25maWdfYmFuZHMgPSBCQU5EX0EgfCBCQU5EX0FOIHwgQkFORF9BQUM7
+CisJCWVsc2UgeworCQkJY29uZmlnX2JhbmRzID0gQkFORF9BIHwgQkFORF9BTjsKKwkJCWlmIChh
+ZGFwdGVyLT5md19iYW5kcyAmIEJBTkRfQUFDKQorCQkJCWNvbmZpZ19iYW5kcyB8PSBCQU5EX0FB
+QzsKKwkJfQogCiAJCWlmICghKChjb25maWdfYmFuZHMgfCBhZGFwdGVyLT5md19iYW5kcykgJiB+
+YWRhcHRlci0+ZndfYmFuZHMpKQogCQkJYWRhcHRlci0+Y29uZmlnX2JhbmRzID0gY29uZmlnX2Jh
+bmRzOwo=
+
+--_002_CBACCFA0AEB13A41977475BCF3E896FC4781147C18SCVEXCH2marve_--
