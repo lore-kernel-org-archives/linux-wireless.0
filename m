@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:60480 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727AbaHTS5B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 14:57:01 -0400
-Received: by mail-vc0-f180.google.com with SMTP id ij19so9624595vcb.39
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 11:57:00 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 20 Aug 2014 13:57:00 -0500
-Message-ID: <CAFZT-j+2U4gfjtOSHrZqt1F1AEKwEv-CJUzjVAAfK9BgwNh6Eg@mail.gmail.com> (sfid-20140820_205719_200113_82D70E0A)
-Subject: Missing mutex_unlock and possible race scenraio in function
- (wl1271_remove) in file (linux3.2/drivers/net/wireless/wl12xx/sdio.c)
-From: Ahmed Tamrawi <ahmedtamrawi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.ispras.ru ([83.149.199.45]:33032 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932217AbaHNXAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2014 19:00:19 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Andrea Merello <andrea.merello@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] at76c50x-usb: fix use after free on failure path in at76_probe()
+Date: Fri, 15 Aug 2014 03:00:06 +0400
+Message-Id: <1408057206-8854-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140815_010040_338038_801A8C93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bug Report Filed: https://bugzilla.kernel.org/show_bug.cgi?id=82901
-Linux Version [3.2] and [android-omap-3.0]
+After commit 174beab7d445 ("at76c50x-usb: Don't perform DMA from stack memory")
+at76_delete_device() and usb_put_dev() are called both
+if at76_init_new_device() fails in at76_probe().
+But at76_delete_device() does usb_put_dev(priv->dev) itself
+that means double usb_put_dev().
 
-Function's Source Code:
-http://lxr.free-electrons.com/source/drivers/net/wireless/wl12xx/sdio.c?v=3.2#L313
+The patch avoids the problem by moving usb_put_dev() from
+at76_delete_device() to at76_disconnect().
 
-function (wl1271_remove) in file (linux3.2/drivers/net/wireless/wl12xx/sdio.c):
+Found by Linux Driver Verification project (linuxtesting.org).
 
-The mutex object (&wl->mutex) may get locked upon exit of function
-(wl1271_unregister_hw) through the call to function
-(__wl1271_plt_stop). However, the lock is never released upon exit of
-function (wl1271_unregister_hw).
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/at76c50x-usb.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-The buggy scenario happens as follows:
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 334c2ece855a..da92bfa76b7c 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -2423,8 +2423,6 @@ static void at76_delete_device(struct at76_priv *priv)
+ 
+ 	kfree_skb(priv->rx_skb);
+ 
+-	usb_put_dev(priv->udev);
+-
+ 	at76_dbg(DBG_PROC_ENTRY, "%s: before freeing priv/ieee80211_hw",
+ 		 __func__);
+ 	ieee80211_free_hw(priv->hw);
+@@ -2558,6 +2556,7 @@ static void at76_disconnect(struct usb_interface *interface)
+ 
+ 	wiphy_info(priv->hw->wiphy, "disconnecting\n");
+ 	at76_delete_device(priv);
++	usb_put_dev(priv->udev);
+ 	dev_info(&interface->dev, "disconnected\n");
+ }
+ 
+-- 
+1.9.1
 
-(wl1271_remove) calls (wl1271_unregister_hw) which acquires the locks.
-Then, (wl1271_remove) calls (wl1271_free_hw) which tries to lock the
-object the already locked in (wl1271_unregister_hw) which causes a
-race scenario.
-
-Possible fix is to call (wl1271_plt_stop) instead of
-(__wl1271_plt_stop) in function (wl1271_unregister_hw) in file
-(http://lxr.free-electrons.com/source/drivers/net/wireless/wl12xx/main.c?v=3.2#L4650).
-
-The bug also occurs in Android Linux kernel:
-https://android.googlesource.com/kernel/omap/+/android-omap-3.0/drivers/net/wireless/wl12xx/sdio.c
-@ line 319
-
-Bug found via C-Atlas tool [http://www.ensoftcorp.com/]
