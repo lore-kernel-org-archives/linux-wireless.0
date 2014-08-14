@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:47145 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbaHRNxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 09:53:12 -0400
+Received: from ozlabs.org ([103.22.144.67]:35135 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbaHNXzz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2014 19:55:55 -0400
+Date: Fri, 15 Aug 2014 09:55:47 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johan Hedberg <johan.hedberg@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-08-14
+Message-ID: <20140815095547.75d9e9d4@canb.auug.org.au> (sfid-20140815_015617_508048_9C974AF1)
+In-Reply-To: <20140814145000.GA14226@t440s.P-661HNU-F1>
+References: <20140814145000.GA14226@t440s.P-661HNU-F1>
 MIME-Version: 1.0
-In-Reply-To: <1408360749-10233-1-git-send-email-michal.kazior@tieto.com>
-References: <1408351816.29649.8.camel@dubbel>
-	<1408360749-10233-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 18 Aug 2014 08:53:11 -0500
-Message-ID: <CA+55aFy4X9+o3u=gPcsVfO8VHLcdzifefdjMDoH+uB0xKzym9Q@mail.gmail.com> (sfid-20140818_155321_672771_335E5EAD)
-Subject: Re: [PATCH] mac80211: fix channel switch for chanctx-based drivers
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Luca Coelho <luca@coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/BizOQNKk7dPO++rI1T/Yfet"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 18, 2014 at 6:19 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+--Sig_/BizOQNKk7dPO++rI1T/Yfet
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+Hi Johan,
+
+On Thu, 14 Aug 2014 17:50:00 +0300 Johan Hedberg <johan.hedberg@gmail.com> =
+wrote:
 >
-> I've verified this fix with iwlmvm & 7260.
+> Here's our first bluetooth-next pull request for the 3.18 kernel. Our
+> tree is based on net-next so you'd need to pull from there first before
+> pulling from our tree.
 
-So I'm running a kernel with this manually applied, and so far so
-good. But I don't know what actually triggered the problem, and it
-definitely didn't happen all the time, so my testing of this is
-dubious. But the patch certainly seems to match the symptoms. Thanks,
+This is in a branch that will be included in linux-next today.  I guess
+you didn't read my (very often) repeated request that no v3.18 material
+be included until after v3.17-rc1 is released ... Please do not do that.
 
-          Linus
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Sig_/BizOQNKk7dPO++rI1T/Yfet
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJT7UyIAAoJEMDTa8Ir7ZwVjpYP/1TKmiRpxHutHSX8MRuieAZf
+l9EsZg0ikPdOJft0kSqzCTdw6uNBnNkMCkkHC1oAMwjWJ39oJ/CvNwjj1lqEfd6F
+C4TgF60+1PoKR8iK5Nz8Gf/KvPPJGjEhzAJzTVRL2hgMP4YiWsCegwYpzuq/TibZ
+ZzMIw23U5Neg2aseOBw6jWvPGGKx2Z68Zma/rF6IUHCq4A30gBMk6EfXPyWPTKrW
+kLI97mqKnu+lUF/O4UYB8mewkzVm5ktxeAH5zNYQEo8hYF2p4WkMmM4rf+680vI4
+JZ3vFMIYVkOTN5idTw859IhitQimRFR9zu0uZdhwm3jrnx5OADhc8a+P3D3ORv8J
+iCRQXtZ+sr30FwMQxGSwsTi3tFKBoyKHZNBc8BdACA5uFyEGnXCx9f1tMTnNsLJo
+Z9qauI5tLzblsCNVv93xZaFELnuAs9u0aSVU+FDbnMGvjJUkS/uNTRhLoxDc8mLF
+d6+E0/tz07SB19rNwSm8j3J/nmhpO5DvUoHO7iccKEsOrHDnbc/dkylEhky2vLKO
+g+m/Ap6k+FXpYBm91QPHfrDejpXLORIkkTqW3m5sXksPjQhZZfCntSuTD4D2lqjr
+muEzg/HJSh3M9BwvB3qpGgxtgOT2V+x85JTPR5mYGGOYD7GoIi4CiYs99GAw4NNS
+5sW1qNXHoxgnv62ryX+V
+=Fr+3
+-----END PGP SIGNATURE-----
+
+--Sig_/BizOQNKk7dPO++rI1T/Yfet--
