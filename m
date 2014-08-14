@@ -1,81 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43482 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbaHRMx7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47789 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675AbaHNRJV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 08:53:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v6 2/8] ath10k: provide firmware crash info via debugfs
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
-	<20140809180805.29215.45232.stgit@potku.adurom.net>
-	<CA+BoTQ=dO0kr+0tnXpJRoPd7iwGDtPj_cWM=vvMsRgGn1we5ow@mail.gmail.com>
-	<878ummdo2l.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=0sigYGooKwqy6LtTQXrkg2kP1htofgPRfryiUcwTyrA@mail.gmail.com>
-Date: Mon, 18 Aug 2014 15:53:49 +0300
-In-Reply-To: <CA+BoTQ=0sigYGooKwqy6LtTQXrkg2kP1htofgPRfryiUcwTyrA@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 18 Aug 2014 14:36:59 +0200")
-Message-ID: <874mxadkma.fsf@kamboji.qca.qualcomm.com> (sfid-20140818_145402_492909_AF652AA0)
+	Thu, 14 Aug 2014 13:09:21 -0400
+Message-ID: <53ECED3E.4080907@candelatech.com> (sfid-20140814_190932_932766_0530C999)
+Date: Thu, 14 Aug 2014 10:09:18 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
+References: <5338F1B8.5040305@candelatech.com> <1518134.xFh23iA8q1@blech> <53EA5E53.9010704@candelatech.com> <8289144.MKHmP0uSFO@debian64>
+In-Reply-To: <8289144.MKHmP0uSFO@debian64>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 18 August 2014 13:39, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> On 9 August 2014 20:08, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+On 08/14/2014 05:39 AM, Christian Lamparter wrote:
+> On Tuesday, August 12, 2014 11:34:59 AM Ben Greear wrote:
+>> On 08/10/2014 06:44 AM, Christian Lamparter wrote:
+>>> On Thursday, August 07, 2014 10:45:01 AM Ben Greear wrote:
+>>>> On 08/07/2014 07:05 AM, Christian Lamparter wrote:
+>>>>> Or: for every 16 Bytes of payload there is one fpu context save and
+>>>>> restore... ouch!
+>>>>
+>>>> Any idea if it would work to put the fpu_begin/end a bit higher
+>>>> and do all those 16 byte chunks in a batch without messing with
+>>>> the FPU for each chunk?
 >>>
->>>> +struct ath10k_dump_file_data {
->>>> +       /* dump file information */
->>>> +
->>>> +       /* "ATH10K-FW-DUMP" */
->>>> +       char df_magic[16];
->>>> +
->>>> +       u32 len;
->>>> +
->>>> +       /* 0x1 if host is big-endian */
->>>> +       u32 big_endian;
+>>> It sort of works - see sample feature patch for aesni-intel-glue 
+>>> (taken from 3.16-wl). Older kernels (like 3.15, 3.14) need:
+>>> "crypto: allow blkcipher walks over AEAD data" [0] (and maybe more).
 >>>
->>> This isn't entirely correct. Depending on host endianess you'll end up
->>> with 0x1 or 0x1000000. This will still work if you do a boolean
->>> evaluation of it in userspace or compare it to 0, but god forbid to
->>> compare it with 0x1.
+>>> The FPU save/restore overhead should be gone. Also, if the aesni
+>>> instructions can't be used, the implementation will fall back
+>>> to the original ccm(aes) code. Calculating the MAC is still much
+>>> more expensive than the payload encryption or decryption. However,
+>>> I can't see a way of making this more efficient without rewriting
+>>> and combining the parts I took from crypto/ccm.c into an several, 
+>>> dedicated assembler functions.
 >>
->> That's true. Didn't you at one point suggest just always using little
->> endian? I think that's simplest approach here.
->
-> Yes. I did point that out at some time ago.
-
-Ok. I started converting to use little endian already.
-
->>>> +       /* some info we can get from ath10k struct that might help */
->>>> +
->>>> +       u8 uuid[16];
->>>> +
->>>> +       u32 chip_id;
->>>> +
->>>> +       /* 0 for now, in place for later hardware */
->>>> +       u32 bus_type;
->>>
->>> Maybe we should have an enum for that instead of using a hardcoded 0?
+>> Without encryption, I see download rate of around 400 - 420Mbps.
 >>
->> We had that but you removed it in 3a0861fffd223 =)
->
-> .. right :-) 
+>> So, your patch looks like a good improvement to me, and I'll be
+>> happy to test further patches if you happen to do those assembler
+>> optimizations you talk about above.
+> 
+> Maybe, that will depend on what the results for: "wpa2, *HW*-crypt,
+> download, udp" are.
 
-Sorry, I couldn't resist :)
+I'll do that test sometime soon and post the results.
 
-> I suppose we could just remove the bus_type then? We do have an
-> unused[128] for future expansion, don't we?
+>> Let me know if you would like more/different performance
+>> stats. 
+> 
+> There's a test bench tool (tcrypt) to measure the performance 
+> of any cipher. It would be interesting to know what the 
+> performance/throughput it can produce without the overhead
+> of any application. [Yep, I'm making a small patch to test that,
+> but not before Saturday next week].
+>   
+>> Here is perf top of open authentication, download, UDP:
+>>
+>> Using WPA2, sw-crypt, download, UDP:
+>>
+>> Samples: 52K of event 'cycles', Event count (approx.): 13162827574
+>>  24.78%  btserver              [.] 0x00000000000c598c
+> Is btserver your "udp download" test application? What does it do, as
+> it is accounting for nearly 25%?
 
-We could, but then we would have to modify the crash dump tools. I would
-rather be prepared for this, it's only a u32 anyway. If we have to do
-something, I would prefer to get back the enum.
+btserver is our traffic generator.  In this case, it is mostly just
+receiving UDP frames using non-blocking IO (using recvmmsg, in this case),
+but it does a fair bit of stats gathering and
+such.  It typically compares well with iperf as far as throughput goes,
+but I'm sure it uses at least a bit more CPU as compared to iperf.
+
+Thanks,
+Ben
+
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
