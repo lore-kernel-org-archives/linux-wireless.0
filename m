@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sg1lp0094.outbound.protection.outlook.com ([207.46.51.94]:32445
-	"EHLO APAC01-SG1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbaHDERV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 00:17:21 -0400
-From: Krishnankutty Plachikkattle
-	<Krishnankutty_Plachikkattle@mindtree.com>
-To: Avinash Patil <avinashapatil@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: 80211ac support in 88W8897
-Date: Mon, 4 Aug 2014 04:17:15 +0000
-Message-ID: <96c30603b4f34424a3709465c072bca0@SIXPR01MB256.apcprd01.prod.exchangelabs.com> (sfid-20140804_061738_513489_E2614737)
-References: <2443fe2b84a649f8888072e45cea53e1@SIXPR01MB256.apcprd01.prod.exchangelabs.com>
- <CAJwzM1=OC5VQMigJbe5AaYfJMSfhC5VngB6b2tQG=PKjGdyYRw@mail.gmail.com>
-In-Reply-To: <CAJwzM1=OC5VQMigJbe5AaYfJMSfhC5VngB6b2tQG=PKjGdyYRw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39549 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138AbaHOUPL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Aug 2014 16:15:11 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1XINu0-0002cZ-GO
+	for linux-wireless@vger.kernel.org; Fri, 15 Aug 2014 16:15:08 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s7FK9w2P027654
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2014 16:09:58 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s7FK9wqX027653
+	for linux-wireless@vger.kernel.org; Fri, 15 Aug 2014 16:09:58 -0400
+Date: Fri, 15 Aug 2014 16:09:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Wireless Networking microconference scheduled (LPC2014)
+Message-ID: <20140815200957.GQ4953@tuxdriver.com> (sfid-20140815_221516_663481_4589D2C6)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXZpbmFzaCwNCg0KVGhhbmsgeW91IGZvciB0aGUgZGV0YWlscy4NCg0KV2lsbCBrZWVwIHlv
-dSBwb3N0ZWQgb24gdGhlIG91dGNvbWUuDQoNCg0KUmVnYXJkcywNCktyaXNobmFuLg0KDQotLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXZpbmFzaCBQYXRpbCBbbWFpbHRvOmF2aW5h
-c2hhcGF0aWxAZ21haWwuY29tXSANClNlbnQ6IE1vbmRheSwgQXVndXN0IDA0LCAyMDE0IDk6NDMg
-QU0NClRvOiBLcmlzaG5hbmt1dHR5IFBsYWNoaWtrYXR0bGUNCkNjOiBsaW51eC13aXJlbGVzc0B2
-Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiA4MDIxMWFjIHN1cHBvcnQgaW4gODhXODg5Nw0K
-DQpIaSBLcmlzaG5hbiwNCg0KSGVyZSBpcyBzYW1wbGUgMTFhYyBjb25maWcgZmlsZToNCg0KaW50
-ZXJmYWNlPXVhcDANCmRyaXZlcj1ubDgwMjExDQpzc2lkPW13aWZpZXgtMTFhYw0KaHdfbW9kZT1h
-DQpjaGFubmVsPTM2DQpiZWFjb25faW50PTEwMA0KZHRpbV9wZXJpb2Q9MQ0KcnRzX3RocmVzaG9s
-ZD0yMzQ3DQpmcmFnbV90aHJlc2hvbGQ9MjM0Ng0KYXV0aF9hbGdzPTENCnNlbmRfcHJvYmVfcmVz
-cG9uc2U9MA0Kd21tX2VuYWJsZWQ9MQ0KaWVlZTgwMjExbj0xDQpodF9jYXBhYj1bSFQ0MCtdDQpp
-ZWVlODAyMTFhYz0xDQp2aHRfb3Blcl9jaHdpZHRoPTENCnZodF9vcGVyX2NlbnRyX2ZyZXFfc2Vn
-MF9pZHg9NDINCg0KVGhhbmtzLA0KQXZpbmFzaA0KDQpPbiBUaHUsIEp1bCAzMSwgMjAxNCBhdCAx
-MToyNCBBTSwgS3Jpc2huYW5rdXR0eSBQbGFjaGlra2F0dGxlIDxLcmlzaG5hbmt1dHR5X1BsYWNo
-aWtrYXR0bGVAbWluZHRyZWUuY29tPiB3cm90ZToNCj4gSGVsbG8gQmluZywNCj4NCj4gSSBhbSB0
-cnlpbmcgdG8gZW5hYmxlIEhUIHN1cHBvcnQgZm9yIDg4Vzg4OTcgIHVzaW5nIGhvc3RhcGQgMi4y
-Lg0KPiA4MDIxMW4gbW9kZSB3b3JrcyB3ZWxsIC4gTm93IEkgd2FudCB0byBlbmFibGUgQUMgbW9k
-ZSB0byBpbXByb3ZlIHRocm91Z2hwdXQgLg0KPg0KPiBDYW4geW91IHNoYXJlIGEgc2FtcGxlIGhv
-c3RhcGQuY29uZiAgd2l0aCAgODAyMTFhYyBjb25maWd1cmF0aW9uLg0KPg0KPiBUaGFua3MgaW4g
-YWR2YW5jZSwNCj4NCj4gUmVnYXJkcywNCj4gS3Jpc2huYW4uDQo+DQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IEJpbmcgWmhhbyBbbWFpbHRvOmJ6aGFvQG1hcnZlbGwuY29t
-XQ0KPiBTZW50OiBGcmlkYXksIE1heSAzMCwgMjAxNCA2OjE2IEFNDQo+IFRvOiBBdmluYXNoIFBh
-dGlsOyBLcmlzaG5hbmt1dHR5IFBsYWNoaWtrYXR0bGU7IA0KPiBsaW51eC13aXJlbGVzc0B2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFN1cHBvcnQgZm9yIDg4Vzg4OTcgaW4gMy4xMC4x
-NyBrZXJuZWwNCj4NCj4NCj4+PklzIHRoZXJlIGFueSBvcGVuIHNvdXJjZSBkcml2ZXIgdGhhdCBz
-dXBwb3J0cyAgTkZDIGFuZCBCbHVldG9vdGggaW4gdGhpcyBTb0M/DQo+PiBZZXM7IGJ0bXJ2bC5r
-byBhbmQgYnR1c2Iua28gd291bGQgc3VwcG9ydCBQQ0llLVVTQjg4OTcgQlQgZnVuY3Rpb25hbGl0
-eS4NCj4+IFBsZWFzZSBjaGVjayBDT05GSUdfQlRfTVJWTCBrZXJuZWwgY29uZmlndXJhdGlvbiBw
-YXJhbWV0ZXIuDQo+DQo+IENsYXJpZmljYXRpb246DQo+IGJ0bXJ2bCBkcml2ZXIgb25seSBzdXBw
-b3J0cyBCbHVldG9vdGggb3ZlciBTRElPIChidG1ydmxfc2RpbykuIFNvIGl0J3MgZm9yIFNEODg5
-NyBjYXJkcyBvbmx5Lg0KPiBUaGUgZ2VuZXJpYyBidHVzYiBkcml2ZXIgd29ya3MgZm9yIFBDSWUt
-VVNCIDg4OTcgY2FyZHMgKEJsdWV0b290aCBpcyBvdmVyIFVTQikuDQo+DQo+IFJlZ2FyZHMsDQo+
-IEJpbmcNCj4NCj4+IEZvciBORkMsICBuZmNtcnZsLmtvICYgbmZjbXJ2bF91c2Iua28gd291bGQg
-c3VwcG9ydCA4ODk3IE5GQyBmdW5jdGlvbmFsaXR5Lg0KPj4gUGxlYXNlIGNoZWNrIGZvciBDT05G
-SUdfTkZDX01SVkwga2VybmVsIGNvbmZpZ3VyYXRpb24gcGFyYW1ldGVyLg0KPj4NCj4+IFRoYW5r
-cywNCj4+IEF2aW5hc2gNCj4NCj4NCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18N
-Cj4NCj4gaHR0cDovL3d3dy5taW5kdHJlZS5jb20vZW1haWwvZGlzY2xhaW1lci5odG1sDQo=
+We have a time schedule for our microconference at LPC2014:
+
+Thursday, October 16, 2014 from 1:30 – 7:30pm
+
+This spans two microconference blocks, representing a generous
+allocation of time from the LPC schedule.
+
+Only limited schedule changes can be proposed at this time.  If you
+need to be a participant in both this microconf and another one with
+an overlapping schedule, then please let me know as soon as possible!
+
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
