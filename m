@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:33627 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753168AbaHLWOd (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51394 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbaHOBaU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 18:14:33 -0400
-Message-ID: <53EA91C7.5010103@lwfinger.net> (sfid-20140813_001453_228527_2A813C25)
-Date: Tue, 12 Aug 2014 17:14:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Himangi Saraogi <himangi774@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Thu, 14 Aug 2014 21:30:20 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: pull request: bluetooth-next 2014-08-14
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20140815095547.75d9e9d4@canb.auug.org.au>
+Date: Thu, 14 Aug 2014 18:30:54 -0700
+Cc: Johan Hedberg <johan.hedberg@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
 	linux-kernel@vger.kernel.org
-CC: julia.lawall@lip6.fr
-Subject: Re: [PATCH] rtlwifi: btcoexist: adjust double test
-References: <20140812193929.GA4233@himangi-Dell>
-In-Reply-To: <20140812193929.GA4233@himangi-Dell>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <027436B7-E5DF-4AFB-B43C-65AB41D0200D@holtmann.org> (sfid-20140815_033038_260741_81D6FB21)
+References: <20140814145000.GA14226@t440s.P-661HNU-F1> <20140815095547.75d9e9d4@canb.auug.org.au>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2014 02:39 PM, Himangi Saraogi wrote:
-> Rewrite a duplicated test to test the correct value
-> 
-> The Coccinelle semantic patch that finds this problem is:
-> 
-> // <smpl>
-> @@
-> expression E;
-> @@
-> 
-> (
-> * E
->   || ... || E
-> |
-> * E
->   && ... && E
-> )
-> // </smpl>
-> 
-> Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-> ---
-> In file drivers/staging/rtl8192ee/btcoexist/halbtcoutsrc.c, there is a
-> similar function that tests for WIRELESS_MODE_G and WIRELESS_MODE_B.
-> I have not tested the code, so you am not sure whether it is the
-> correct solution.
-> 
->  drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 33da3df..d4bd550 100644
-> --- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -101,7 +101,7 @@ static bool halbtc_legacy(struct rtl_priv *adapter)
->  
->  	bool is_legacy = false;
->  
-> -	if ((mac->mode == WIRELESS_MODE_B) || (mac->mode == WIRELESS_MODE_B))
-> +	if ((mac->mode == WIRELESS_MODE_B) || (mac->mode == WIRELESS_MODE_G))
->  		is_legacy = true;
->  
->  	return is_legacy;
+Hi Stephen,
 
-The latest version of the vendor driver has this change already applied.
+>> Here's our first bluetooth-next pull request for the 3.18 kernel. Our
+>> tree is based on net-next so you'd need to pull from there first before
+>> pulling from our tree.
+> 
+> This is in a branch that will be included in linux-next today.  I guess
+> you didn't read my (very often) repeated request that no v3.18 material
+> be included until after v3.17-rc1 is released ... Please do not do that.
 
-Acked-by: Larry.Finger <Larry.Finger@lwfinger.net>
+to be honest I did not know about this rule. Next time, I will create a special tree for the time during the merge window so that we can continue pushing out patches for the next release. For us the world is not standing still just because we have a 2 week merge window.
 
-Larry
+Regards
 
+Marcel
 
