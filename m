@@ -1,79 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755229AbaHFHcj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:39 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 10/13] wil6210: Limit max number of associated stations
-Date: Wed, 6 Aug 2014 10:31:58 +0300
-Message-ID: <1407310322-22568-11-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095907_798560_6BF695D4)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from platinum.linx.net ([195.66.234.3]:48076 "EHLO platinum.linx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753418AbaHOKbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Aug 2014 06:31:40 -0400
+From: Tony Vroon <tony@linx.net>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: Correctly deal with monolithic kernels
+Message-Id: <20140815102354.96039202E9@platinum.linx.net> (sfid-20140815_123144_452939_F23B0784)
+Date: Fri, 15 Aug 2014 11:23:54 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a module parameter to support setting the maximum
-number of stations that can be associated to an AP.
+Post 3.16 any non-modular kernel ends up with IWLWIFI selectable but neither of the 
+underlying required DVM or MVM drivers. This violates the principle of least 
+astonishment.
+If IWLWIFI only supports a modular system the main IWLWIFI should depend on m as well. 
+Otherwise, removing the "depends on m" allows monolithic kernels to work once again.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+Signed-off-by: Tony Vroon <tony@linx.net>
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 0beb129..596d6c1 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 6451d2b..824f5e2 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -51,7 +51,6 @@ config IWLWIFI_LEDS
  
-+#include <linux/moduleparam.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
+ config IWLDVM
+ 	tristate "Intel Wireless WiFi DVM Firmware support"
+-	depends on m
+ 	default IWLWIFI
+ 	help
+ 	  This is the driver that supports the DVM firmware which is
+@@ -60,7 +59,6 @@ config IWLDVM
  
-@@ -22,6 +23,10 @@
- #include "wmi.h"
- #include "trace.h"
- 
-+static uint max_assoc_sta = 1;
-+module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
-+
- /**
-  * WMI event receiving - theory of operations
-  *
-@@ -794,7 +799,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
- 		.network_type = wmi_nettype,
- 		.disable_sec_offload = 1,
- 		.channel = chan - 1,
--		.pcp_max_assoc_sta = WIL6210_MAX_CID,
-+		.pcp_max_assoc_sta = max_assoc_sta,
- 	};
- 	struct {
- 		struct wil6210_mbox_hdr_wmi wmi;
-@@ -804,6 +809,14 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
- 	if (!wil->secure_pcp)
- 		cmd.disable_sec = 1;
- 
-+	if ((cmd.pcp_max_assoc_sta > WIL6210_MAX_CID) ||
-+	    (cmd.pcp_max_assoc_sta <= 0)) {
-+		wil_info(wil,
-+			 "Requested connection limit %u, valid values are 1 - %d. Setting to %d\n",
-+			 max_assoc_sta, WIL6210_MAX_CID, WIL6210_MAX_CID);
-+		cmd.pcp_max_assoc_sta = WIL6210_MAX_CID;
-+	}
-+
- 	/*
- 	 * Processing time may be huge, in case of secure AP it takes about
- 	 * 3500ms for FW to start AP
--- 
-1.8.5.2
-
+ config IWLMVM
+ 	tristate "Intel Wireless WiFi MVM Firmware support"
+-	depends on m
+ 	help
+ 	  This is the driver that supports the MVM firmware which is
+ 	  currently only available for 7260 and 3160 devices.
