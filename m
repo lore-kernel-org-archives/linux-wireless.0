@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51577 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbaHDTL3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34688 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbaHOOpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 15:11:29 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so8007641wgh.15
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2014 12:11:26 -0700 (PDT)
+	Fri, 15 Aug 2014 10:45:13 -0400
+Date: Fri, 15 Aug 2014 10:30:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@redhat.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless 2014-08-14
+Message-ID: <20140815143014.GK4953@tuxdriver.com> (sfid-20140815_164524_059344_EE92AC67)
+References: <20140814183253.GF4953@tuxdriver.com>
+ <20140814.151809.1355093138463959620.davem@redhat.com>
 MIME-Version: 1.0
-Date: Mon, 4 Aug 2014 12:11:25 -0700
-Message-ID: <CAAkeqgVTqV5cga8=Xk=PEctNNYXUumxm3U3oV2TtsjtzjhSVPA@mail.gmail.com> (sfid-20140804_211133_400761_66077CF8)
-Subject: scanning only returns results on specified channels (Marvell mwifiex driver)
-From: Andrey Yurovsky <yurovsky@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140814.151809.1355093138463959620.davem@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am not seeing scan results on my test setup with a Marvell 88W8787
-(mwifiex driver) connected over SDIO to an ARM926.  I traced and found
-that the card and driver do receive results, they do report them via
-cfg80211, and those results are stored as expected (for instance, I
-see every BSSID I expected to find in tmp->pub.bssid
-cfg80211_bss_update()).  iw never gets them, it just acts like there
-were no results.  However specifying a frequency does return results,
-so this doesn't work:
+On Thu, Aug 14, 2014 at 03:18:09PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Thu, 14 Aug 2014 14:32:53 -0400
+> 
+> > Please pull this batch of fixes intended for the 3.17 stream...
+> > 
+> > Arend van Spriel brings two brcmfmac fixes, one which fixes a memory
+> > leak and one which corrects some merge damage.
+> > 
+> > Emmanuel Grumbach fixes Linus's iwlwifi firmware-related log spam.
+> > 
+> > Rickard Strandqvist does some proper NULL termination after a call
+> > to strncpy.
+> > 
+> > Ronald Wahl corrects a carl9170 problem with sending URBs with the
+> > wrong endpoint type (resulting in log spam).
+> > 
+> > Please let me know if there are problems!
+> 
+> Pulled, thanks John.
+> 
+> I'm really happy that you send the iwlwifi regression fix so quickly!
 
-iw dev mlan0 scan
+One-liners with a "Tested-by: Linus Torvalds" get a lot of respect... :-)
 
-but this does:
-
-iw dev mlan0 scan 2412
-
-I'm wondering if there's something marked incorrectly in the BSS
-structure from the driver or if there is some other reason that
-results aren't reported unless the frequency is specified.  When doing
-the latter, I do see reasonable results when compared to another
-system scanning in the same room.
-
-Can someone else reproduce this?  Is there anything specific that I
-could look at that would help resolve the problem?
-
-Thanks,
-
-  -Andrey
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
