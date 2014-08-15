@@ -1,64 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:62080 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753562AbaHUUlt (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:40072 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbaHOQXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 16:41:49 -0400
-Received: by mail-wg0-f41.google.com with SMTP id z12so9836424wgg.24
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 13:41:47 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/3] staging: vt6655: remove multiple instances of netdevice.
-Date: Thu, 21 Aug 2014 21:40:49 +0100
-Message-Id: <1408653650-9049-2-git-send-email-tvboxspy@gmail.com> (sfid-20140821_224152_580216_A4011BD7)
-In-Reply-To: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
-References: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 15 Aug 2014 12:23:30 -0400
+Date: Fri, 15 Aug 2014 21:53:24 +0530
+From: Himangi Saraogi <himangi774@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH] orinoco_usb: use USB API functions rather than constants
+Message-ID: <20140815162324.GA7162@himangi-Dell> (sfid-20140815_182350_092624_F22CEF51)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-netdevice can only be created once.
+This patch introduces the use of the functions
+usb_endpoint_is_bulk_in(epd) and usb_endpoint_is_bulk_out(epd).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+The semantic patch that makes these changes is as follows:
+
+@@ struct usb_endpoint_descriptor *epd; @@
+
+- ((epd->bmAttributes & \(USB_ENDPOINT_XFERTYPE_MASK\|3\)) ==
+- \(USB_ENDPOINT_XFER_BULK\|2\))
++ usb_endpoint_xfer_bulk(epd)
+
+@@ struct usb_endpoint_descriptor *epd; @@
+
+- ((epd->bEndpointAddress & \(USB_ENDPOINT_DIR_MASK\|0x80\)) ==
+-  \(USB_DIR_IN\|0x80\))
++ usb_endpoint_dir_in(epd)
+
+@@ struct usb_endpoint_descriptor *epd; @@
+
+- ((epd->bEndpointAddress & \(USB_ENDPOINT_DIR_MASK\|0x80\)) ==
+-  \(USB_DIR_OUT\|0\))
++ usb_endpoint_dir_out(epd)
+
+@@ struct usb_endpoint_descriptor *epd; @@
+
+- (usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_in(epd))
++ usb_endpoint_is_bulk_in(epd)
+
+@@ struct usb_endpoint_descriptor *epd; @@
+
+- (usb_endpoint_xfer_bulk(epd) && usb_endpoint_dir_out(epd))
++ usb_endpoint_is_bulk_out(epd)
+
+Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
 ---
- drivers/staging/vt6655/device.h      | 1 -
- drivers/staging/vt6655/device_main.c | 3 ---
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/orinoco/orinoco_usb.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index bc16ece..8ac7901 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -339,7 +339,6 @@ struct vnt_private {
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index d3cf7c3..f4b784f 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1605,10 +1605,7 @@ static int ezusb_probe(struct usb_interface *interface,
+ 	for (i = 0; i < iface_desc->bNumEndpoints; ++i) {
+ 		ep = &interface->altsetting[0].endpoint[i].desc;
  
- // netdev
- 	struct net_device *dev;
--	struct net_device *next_module;
- 	struct net_device_stats     stats;
+-		if (((ep->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
+-		     == USB_DIR_IN) &&
+-		    ((ep->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
+-		     == USB_ENDPOINT_XFER_BULK)) {
++		if (usb_endpoint_is_bulk_in(ep)) {
+ 			/* we found a bulk in endpoint */
+ 			if (upriv->read_urb != NULL) {
+ 				pr_warning("Found a second bulk in ep, ignored");
+@@ -1636,10 +1633,7 @@ static int ezusb_probe(struct usb_interface *interface,
+ 			}
+ 		}
  
- //dma addr, rx/tx pool
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index a441a5c..ffbe64f 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -247,7 +247,6 @@ DEVICE_PARAM(bDiversityANTEnable, "ANT diversity mode");
- //
- 
- static int          device_nics             = 0;
--static struct net_device *root_device_dev = NULL;
- 
- static CHIP_INFO chip_info_table[] = {
- 	{ VT3253,       "VIA Networking Solomon-A/B/G Wireless LAN Adapter ",
-@@ -851,8 +850,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 
- 	vt6655_init_info(pcid, &pDevice, pChip_info);
- 	pDevice->dev = dev;
--	pDevice->next_module = root_device_dev;
--	root_device_dev = dev;
- 
- 	if (pci_enable_device(pcid)) {
- 		device_free_info(pDevice);
+-		if (((ep->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
+-		     == USB_DIR_OUT) &&
+-		    ((ep->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
+-		     == USB_ENDPOINT_XFER_BULK)) {
++		if (usb_endpoint_is_bulk_out(ep)) {
+ 			/* we found a bulk out endpoint */
+ 			if (upriv->bap_buf != NULL) {
+ 				pr_warning("Found a second bulk out ep, ignored");
 -- 
 1.9.1
 
