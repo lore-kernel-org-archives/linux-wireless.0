@@ -1,132 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34280 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615AbaHERou (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:45159 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaHQTnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 13:44:50 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] ath10k:  improve vdev map handling.
-Date: Tue,  5 Aug 2014 10:44:44 -0700
-Message-Id: <1407260684-22624-1-git-send-email-greearb@candelatech.com> (sfid-20140805_194453_730638_819EE117)
+	Sun, 17 Aug 2014 15:43:08 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/5] staging: vt6655: Use ether_crc in kernel.
+Date: Sun, 17 Aug 2014 20:42:25 +0100
+Message-Id: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214314_128203_37E558B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+ether_crc is already in kernel remove local code and
+include linux/crc32.h
 
-Check vdev map has space before calling ffs,
-fix invalid cleanup in failure to create vdev
-case.
-
-Open-code the BIT() logic since BIT does not properly
-handle 64-bit bitfields and future patches will make
-use of larger bitfields.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
+ drivers/staging/vt6655/device.h      |  1 +
+ drivers/staging/vt6655/device_main.c | 17 -----------------
+ 2 files changed, 1 insertion(+), 17 deletions(-)
 
-v2:  Use == 0, remove some un-needed parens.
-
- drivers/net/wireless/ath/ath10k/mac.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3c794203..33a66b9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -597,14 +597,14 @@ static int ath10k_monitor_vdev_create(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	bit = ffs(ar->free_vdev_map);
--	if (bit == 0) {
-+	if (ar->free_vdev_map == 0) {
- 		ath10k_warn("failed to find free vdev id for monitor vdev\n");
- 		return -ENOMEM;
- 	}
- 
-+	bit = ffs(ar->free_vdev_map);
-+
- 	ar->monitor_vdev_id = bit - 1;
--	ar->free_vdev_map &= ~(1 << ar->monitor_vdev_id);
- 
- 	ret = ath10k_wmi_vdev_create(ar, ar->monitor_vdev_id,
- 				     WMI_VDEV_TYPE_MONITOR,
-@@ -612,20 +612,14 @@ static int ath10k_monitor_vdev_create(struct ath10k *ar)
- 	if (ret) {
- 		ath10k_warn("failed to request monitor vdev %i creation: %d\n",
- 			    ar->monitor_vdev_id, ret);
--		goto vdev_fail;
-+		return ret;
- 	}
- 
-+	ar->free_vdev_map &= ~(1 << ar->monitor_vdev_id);
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor vdev %d created\n",
- 		   ar->monitor_vdev_id);
- 
- 	return 0;
--
--vdev_fail:
--	/*
--	 * Restore the ID to the global map.
--	 */
--	ar->free_vdev_map |= 1 << (ar->monitor_vdev_id);
--	return ret;
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index e4c5292..fadebe9 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -49,6 +49,7 @@
+ #include <linux/sched.h>
+ #include <linux/io.h>
+ #include <linux/if.h>
++#include <linux/crc32.h>
+ //#include <linux/config.h>
+ #include <linux/uaccess.h>
+ #include <linux/proc_fs.h>
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index a44233c..95460d4 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -2561,23 +2561,6 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 	return IRQ_RETVAL(handled);
  }
  
- static int ath10k_monitor_vdev_delete(struct ath10k *ar)
-@@ -641,7 +635,7 @@ static int ath10k_monitor_vdev_delete(struct ath10k *ar)
- 		return ret;
- 	}
- 
--	ar->free_vdev_map |= 1 << (ar->monitor_vdev_id);
-+	ar->free_vdev_map |= 1 << ar->monitor_vdev_id;
- 
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor vdev %d deleted\n",
- 		   ar->monitor_vdev_id);
-@@ -2743,11 +2737,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
- 	INIT_LIST_HEAD(&arvif->list);
- 
--	bit = ffs(ar->free_vdev_map);
--	if (bit == 0) {
-+	if (ar->free_vdev_map == 0) {
-+		ath10k_warn("Free vdev map is empty, no more interfaces allowed.\n");
- 		ret = -EBUSY;
- 		goto err;
- 	}
-+	bit = ffs(ar->free_vdev_map);
- 
- 	arvif->vdev_id = bit - 1;
- 	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
-@@ -2790,7 +2785,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err;
- 	}
- 
--	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
- 	list_add(&arvif->list, &ar->arvifs);
- 
- 	vdev_param = ar->wmi.vdev_param->def_keyid;
-@@ -2883,7 +2878,7 @@ err_peer_delete:
- 
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
--	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	ar->free_vdev_map |= 1 << arvif->vdev_id;
- 	list_del(&arvif->list);
- 
- err:
-@@ -2919,7 +2914,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 		ath10k_warn("failed to stop spectral for vdev %i: %d\n",
- 			    arvif->vdev_id, ret);
- 
--	ar->free_vdev_map |= 1 << (arvif->vdev_id);
-+	ar->free_vdev_map |= 1 << arvif->vdev_id;
- 	list_del(&arvif->list);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+-static unsigned const ethernet_polynomial = 0x04c11db7U;
+-static inline u32 ether_crc(int length, unsigned char *data)
+-{
+-	int crc = -1;
+-
+-	while (--length >= 0) {
+-		unsigned char current_octet = *data++;
+-		int bit;
+-
+-		for (bit = 0; bit < 8; bit++, current_octet >>= 1) {
+-			crc = (crc << 1) ^
+-				((crc < 0) ^ (current_octet & 1) ? ethernet_polynomial : 0);
+-		}
+-	}
+-	return crc;
+-}
+-
+ //2008-8-4 <add> by chester
+ static int Config_FileGetParameter(unsigned char *string,
+ 				   unsigned char *dest, unsigned char *source)
 -- 
-1.7.11.7
+1.9.1
 
