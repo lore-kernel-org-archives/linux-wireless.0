@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28810 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476AbaH2Oh5 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:51651 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793AbaHQXyV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 10:37:57 -0400
-Message-ID: <54009042.6070309@broadcom.com> (sfid-20140829_163800_570655_6846F742)
-Date: Fri, 29 Aug 2014 16:37:54 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] ath10k: add testmode
-References: <20140828072642.14691.44313.stgit@potku.adurom.net>	<20140828073041.14691.15099.stgit@potku.adurom.net>	<878um9ujn1.fsf@kamboji.qca.qualcomm.com>	<53FEFEDE.5030505@broadcom.com> <87y4u7suhu.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87y4u7suhu.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sun, 17 Aug 2014 19:54:21 -0400
+From: Csaba Kiraly <csaba.kiraly@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, Csaba Kiraly <csaba.kiraly@gmail.com>
+Subject: [PATCH] ath9k_htc: advertise support for TDLS
+Date: Mon, 18 Aug 2014 01:53:34 +0200
+Message-Id: <1408319614-16041-1-git-send-email-csaba.kiraly@gmail.com> (sfid-20140818_015429_414744_DC5F2EC3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/14 08:03, Kalle Valo wrote:
-> Arend van Spriel<arend@broadcom.com>  writes:
->
->> On 08/28/14 10:02, Kalle Valo wrote:
->>> Kalle Valo<kvalo@qca.qualcomm.com>   writes:
->>
->>> Johannes suggested to put this to a separate file as that way it's
->>> easier for the user space. In v3 I'm planning to create testmode_uapi.h
->>> for this.
->>
->> I suppose that file will/should end up in include/uapi/...
->
-> I was thinking not to put this to the include directory. This is just a
-> testmode interface used only by few people, not a proper driver
-> interface.
+Based on a quick test with AR9271, TDLS seems to be working fine.
 
-I see. In that case I would avoid the term 'uapi'. I think it will 
-impose certain expectations.
+Tests were done with 2 Atheros AR9271 based devices with firmware
+1.3 (sha1 8d49f928aa40ac53c729189bff1333cd373a7fb5), associated
+with a WAP54G access point. TDLS worked fine both in WPA2 mode and
+without encryption. Stations maintained ping flood traffic between
+each other and towards the AP without significant losses.
 
->> so wouldn't it be better to call it ath10k_testmode.h?
->
-> We already have testmode.h so having ath10k_testmode.h in the same
-> directory would be confusing. Would testmode_i.h be any better?
+Not tested with AR7010.
 
-What does it contain? Looks like command and attribute definitions for 
-your testmode support. Maybe testmode_defs.h? As long as it is not uapi.
+TDLS was enabled in earlier patches the same way for other
+Atheros drivers:
+ath9k (fd6562344dea2b8b2a5d644cf971f4e56004500a),
+and carl9170 (d1f3de71a584a82ee4e84505fce9acccf40215ff).
 
-Regards,
-Arend
+Signed-off-by: Csaba Kiraly <csaba.kiraly@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 8a3bd5f..d779f4f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -592,6 +592,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
++
+ 	hw->queues = 4;
+ 	hw->max_listen_interval = 1;
+ 
+-- 
+1.9.1
+
