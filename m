@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39625 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518AbaHMLqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 07:46:37 -0400
-Message-ID: <1407930393.21220.34.camel@jlt4.sipsolutions.net> (sfid-20140813_134640_389677_35697091)
-Subject: Re: [PATCH 1/2] cfg80211: clarify BSS probe response vs. beacon data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@adurom.com>
-Date: Wed, 13 Aug 2014 13:46:33 +0200
-In-Reply-To: <CAB3XZEd0h_aPQSHr900+VWxdRw014QUP01-qj5rjsKsd+dhBsQ@mail.gmail.com> (sfid-20140813_133906_201204_D1C3F83B)
-References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEckyoDVShskF8rRe7DFuVMO-LBdhFDejiJ63SjhsEvmAA@mail.gmail.com>
-	 <1407928122.21220.31.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEdOC1ERUm1HDK03qWQti35Z66EHL+0gD9=oBpcPfK2r4w@mail.gmail.com>
-	 <1407928809.21220.33.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEd0h_aPQSHr900+VWxdRw014QUP01-qj5rjsKsd+dhBsQ@mail.gmail.com>
-	 (sfid-20140813_133906_201204_D1C3F83B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f51.google.com ([209.85.215.51]:56611 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbaHQDRj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Aug 2014 23:17:39 -0400
+Received: by mail-la0-f51.google.com with SMTP id pn19so3432793lab.38
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2014 20:17:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140816221505.5420b21e@neptune.home>
+References: <20140816221505.5420b21e@neptune.home>
+Date: Sat, 16 Aug 2014 23:17:37 -0400
+Message-ID: <CANUX_P3vPfOov++XAEdb67J-vrWY+FCLhGVwJ3sWt98avDcm5g@mail.gmail.com> (sfid-20140817_051742_679425_7D4E8E54)
+Subject: Re: iwlwifi: fix Kconfig issues breaks CONFIG_MODULES=n
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-08-13 at 14:39 +0300, Eliad Peller wrote:
+On Sat, Aug 16, 2014 at 4:15 PM, Bruno Prémont
+<bonbons@linux-vserver.org> wrote:
+> Hi,
+>
+> The commit ae7486a2b734ee03 (iwlwifi: fix Kconfig issues) in 3.17-rc1
+> breaks iwlwifi for kernels built without support for modules
+> (CONFIG_MODULES=n).
+>
+> It changes the dependencies of IWLDVM and IWLMVM from
+>   depends on IWLWIFI
+> to
+>   depends on m
+> (while enclosing the whole set of options in 'if IWLWIFI').
+>
+>
+> Why that dependency on 'm' for apparently mandatory feature of the driver
+> (without DVM and MVM, Kconfig comment says
+>   "WARNING: iwlwifi is useless without IWLDVM or IWLMVM"
+>
+>
+> Up until 3.16 it was very well possible to operate iwlwifi built-in
+> in a kernel without support for modules, either by building firmware
+> into the kernel, or as needed re-binding the driver to the PCI device
+> once filesystems were mounted.
+>
+> Removing those two 'depend on m' iwlwifi works fine for a 7260
+> wireless card.
+>
 
-> > Maybe we should just get rid of the requirement to assign beacon_ies
-> > with the bss_width() call and make free() smarter?
-> 
-> this will also require changing cfg80211_bss_update() to take care of
-> this case, etc.
-> not sure we really want to complicate it further more.
-
-Good point. So let's say we change this to "known_from_beacon", is that
-enough?
-
-Debugging now - guess I'll poke again later.
-
-johannes
-
+I know - you are not the first to report that - I have already 2
+versions of the exact same patch fixing this.
+But I am currently travelling and I'll handle later.
