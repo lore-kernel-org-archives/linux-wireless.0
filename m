@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38645 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933860AbaHZHqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 03:46:54 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.17] Revert "mac80211: disable uAPSD if all ACs are under ACM"
-Date: Tue, 26 Aug 2014 09:46:09 +0200
-Message-Id: <1409039169-9112-1-git-send-email-johannes@sipsolutions.net> (sfid-20140826_094659_974342_FA0B437B)
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:48478 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbaHQKsQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2014 06:48:16 -0400
+Date: Sun, 17 Aug 2014 13:48:07 +0300
+From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+To: chunkeey@googlemail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: paulmck@linux.vnet.ibm.com
+Subject: [PATCH] carl9170: Replace rcu_dereference() with rcu_access_pointer()
+Message-ID: <20140817104806.GA14533@ada> (sfid-20140817_124855_409586_DBE994E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The rcu_dereference() call is used directly in a condition.
+Since its return value is never dereferenced it is recommended to use
+"rcu_access_pointer()" instead of "rcu_dereference()".
+Therefore, this patch makes the replacement.
 
-This reverts commit 24aa11ab8ae03292d38ec0dbd9bc2ac49fe8a6dd.
+The following Coccinelle semantic patch was used:
+@@
+@@
 
-That commit was wrong since it uses data that hasn't even been set
-up yet, but might be a hold-over from a previous connection.
+(
+ if(
+ (<+...
+- rcu_dereference
++ rcu_access_pointer
+  (...)
+  ...+>)) {...}
+|
+  while(
+  (<+...
+- rcu_dereference
++ rcu_access_pointer
+  (...)
+  ...+>)) {...}
+)
 
-Additionally, it seems like a driver-specific workaround that
-shouldn't have been in mac80211 to start with.
-
-Cc: stable@vger.kernel.org
-Fixes: 24aa11ab8ae0 ("mac80211: disable uAPSD if all ACs are under ACM")
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
 ---
- net/mac80211/mlme.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/carl9170/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 31a8afaf7332..b82a12a9f0f1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4376,8 +4376,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	rcu_read_unlock();
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index f8ded84..12018ff 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+ 			return -EOPNOTSUPP;
  
- 	if (bss->wmm_used && bss->uapsd_supported &&
--	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD) &&
--	    sdata->wmm_acm != 0xff) {
-+	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
- 		assoc_data->uapsd = true;
- 		ifmgd->flags |= IEEE80211_STA_UAPSD_ENABLED;
- 	} else {
+ 		rcu_read_lock();
+-		if (rcu_dereference(sta_info->agg[tid])) {
++		if (rcu_access_pointer(sta_info->agg[tid])) {
+ 			rcu_read_unlock();
+ 			return -EBUSY;
+ 		}
 -- 
-2.0.0
+1.9.1
 
