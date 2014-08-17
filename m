@@ -1,49 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:48885 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbaHXPqN (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:60558 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbaHQTnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2014 11:46:13 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 3/4] ath9k: Fix interface limits
-Date: Sun, 24 Aug 2014 21:16:12 +0530
-Message-Id: <1408895173-3732-4-git-send-email-sujith@msujith.org> (sfid-20140824_174617_099517_4C71720D)
-In-Reply-To: <1408895173-3732-1-git-send-email-sujith@msujith.org>
-References: <1408895173-3732-1-git-send-email-sujith@msujith.org>
+	Sun, 17 Aug 2014 15:43:11 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/5] staging: vt6655: remove PLICE_DEBUG where it is defined
+Date: Sun, 17 Aug 2014 20:42:27 +0100
+Message-Id: <1408304549-22363-3-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214412_938048_8D8A17C9)
+In-Reply-To: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
+References: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Remove macro and directive leaving the code.
 
-There is no reason why managed/p2p interfaces have to
-be limited to one. IBSS is the only type that needs
-a restriction.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/staging/vt6655/rxtx.c |  4 +---
+ drivers/staging/vt6655/wmgr.c | 12 ++++--------
+ 2 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 5887499..ca10a8b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -679,9 +679,11 @@ static const struct ieee80211_iface_limit wds_limits[] = {
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 869555a..635e88c 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -68,7 +68,6 @@
+ /*---------------------  Static Classes  ----------------------------*/
  
- static const struct ieee80211_iface_limit if_limits_multi[] = {
--	{ .max = 1,	.types = BIT(NL80211_IFTYPE_STATION) },
--	{ .max = 1,	.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				 BIT(NL80211_IFTYPE_P2P_GO) },
-+	{ .max = 1,	.types = BIT(NL80211_IFTYPE_ADHOC) },
- };
+ /*---------------------  Static Variables  --------------------------*/
+-#define	PLICE_DEBUG
  
- static const struct ieee80211_iface_combination if_comb_multi[] = {
+ /*---------------------  Static Functions  --------------------------*/
+ 
+@@ -1969,9 +1968,8 @@ vGenerateFIFOHeader(struct vnt_private *pDevice, unsigned char byPktType,
+ 		}
+ 	}
+ 
+-#ifdef	PLICE_DEBUG
+ 	RFbSetPower(pDevice, pDevice->wCurrentRate, pDevice->byCurrentCh);
+-#endif
++
+ 	pTxBufHead->byTxPower = pDevice->byCurPwr;
+ 
+ 	*pcbHeaderSize = s_cbFillTxBufHead(pDevice, byPktType, pbyTxBufferAddr, cbPayloadSize,
+diff --git a/drivers/staging/vt6655/wmgr.c b/drivers/staging/vt6655/wmgr.c
+index c998a16..c3de107 100644
+--- a/drivers/staging/vt6655/wmgr.c
++++ b/drivers/staging/vt6655/wmgr.c
+@@ -80,8 +80,6 @@
+ #include "rf.h"
+ #include "iowpa.h"
+ 
+-#define	PLICE_DEBUG
+-
+ /*---------------------  Static Definitions -------------------------*/
+ 
+ /*---------------------  Static Classes  ----------------------------*/
+@@ -692,9 +690,9 @@ s_vMgrRxAssocRequest(
+ 		// set max tx rate
+ 		pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
+ 			pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
+-#ifdef	PLICE_DEBUG
++
+ 		pr_debug("RxAssocRequest:wTxDataRate is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate);
+-#endif
++
+ 		// Todo: check sta preamble, if ap can't support, set status code
+ 		pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
+ 			WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
+@@ -840,9 +838,9 @@ s_vMgrRxReAssocRequest(
+ 		// set max tx rate
+ 		pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
+ 			pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
+-#ifdef	PLICE_DEBUG
++
+ 		pr_debug("RxReAssocRequest:TxDataRate is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate);
+-#endif
++
+ 		// Todo: check sta preamble, if ap can't support, set status code
+ 		pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
+ 			WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
+@@ -2097,11 +2095,9 @@ s_vMgrRxBeacon(
+ 				memcpy(pMgmt->sNodeDBTable[uNodeIndex].abyMACAddr, sFrame.pHdr->sA3.abyAddr2, WLAN_ADDR_LEN);
+ 				pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble = WLAN_GET_CAP_INFO_SHORTPREAMBLE(*sFrame.pwCapInfo);
+ 				pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate = pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
+-#ifdef	PLICE_DEBUG
+ 				{
+ 					pr_debug("s_vMgrRxBeacon:TxDataRate is %d,Index is %d\n", pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate, uNodeIndex);
+ 				}
+-#endif
+ 			}
+ 
+ 			// if other stations joined, indicate connection to upper layer..
 -- 
-2.0.4
+1.9.1
 
