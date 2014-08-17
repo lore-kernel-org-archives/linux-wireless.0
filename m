@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:47758 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbaH2J24 (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:63756 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaHQTnN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 05:28:56 -0400
-Received: by mail-lb0-f180.google.com with SMTP id w7so2231747lbi.25
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 02:28:54 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: don't access tx_info while overwriting it
-Date: Fri, 29 Aug 2014 11:19:03 +0200
-Message-Id: <1409303943-1452-1-git-send-email-michal.kazior@tieto.com> (sfid-20140829_112859_700795_A97C3DC8)
+	Sun, 17 Aug 2014 15:43:13 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/5] staging: vt6655: vntwifi.c remove unused directive PLICE_DEBUG
+Date: Sun, 17 Aug 2014 20:42:28 +0100
+Message-Id: <1408304549-22363-4-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214318_980240_B81914BB)
+In-Reply-To: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
+References: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nothing important was being overwritten so it
-didn't yield any bugs yet.
+PLICE_DEBUG is not defined remove dead code.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/vt6655/vntwifi.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b858c82..cdadfef 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1863,11 +1863,10 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
- 	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
- }
+diff --git a/drivers/staging/vt6655/vntwifi.c b/drivers/staging/vt6655/vntwifi.c
+index 4d425e0..59f66fe 100644
+--- a/drivers/staging/vt6655/vntwifi.c
++++ b/drivers/staging/vt6655/vntwifi.c
+@@ -543,10 +543,6 @@ VNTWIFIvGetTxRate(
+ 	} else { /* Infrastructure: rate decided from AP Node, index = 0 */
  
--static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar,
--				  struct ieee80211_tx_info *info)
-+static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
- {
--	if (info->control.vif)
--		return ath10k_vif_to_arvif(info->control.vif)->vdev_id;
-+	if (vif)
-+		return ath10k_vif_to_arvif(vif)->vdev_id;
+ 		wTxDataRate = (pMgmt->sNodeDBTable[0].wTxDataRate);
+-#ifdef	PLICE_DEBUG
+-		pr_debug("GetTxRate:AP MAC is %pM,TxRate is %d\n",
+-		       pMgmt->sNodeDBTable[0].abyMACAddr, wTxDataRate);
+-#endif
  
- 	if (ar->monitor_started)
- 		return ar->monitor_vdev_id;
-@@ -2323,7 +2322,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
--	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, info);
-+	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
- 
- 	/* it makes no sense to process injected frames like that */
- 	if (vif && vif->type != NL80211_IFTYPE_MONITOR) {
+ 		pSupportRateIEs = (PWLAN_IE_SUPP_RATES) pMgmt->abyCurrSuppRates;
+ 		pExtSupportRateIEs = (PWLAN_IE_SUPP_RATES) pMgmt->abyCurrExtSuppRates;
 -- 
-1.8.5.3
+1.9.1
 
