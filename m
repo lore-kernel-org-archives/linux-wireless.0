@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:63066 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbaHAPAh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2014 11:00:37 -0400
-Received: by mail-ob0-f173.google.com with SMTP id vb8so2690630obc.32
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2014 08:00:34 -0700 (PDT)
-Message-ID: <53DBAB90.3040401@lwfinger.net> (sfid-20140801_170041_212618_A853E893)
-Date: Fri, 01 Aug 2014 10:00:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Rohit Kumar <rkthebest@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Fwd: cross compiling realtek 8188 (RTL8188EU)
-References: <CABzetm2Af-_WD29MrejTUQOH9pqDzCGCj8JC9LqyuTp5dyrT9Q@mail.gmail.com> <CABzetm3EgZrvaL370TnCFgDfoeFKqJ-LfhnExSjNwPnW6-HM=Q@mail.gmail.com>
-In-Reply-To: <CABzetm3EgZrvaL370TnCFgDfoeFKqJ-LfhnExSjNwPnW6-HM=Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s87.loopia.se ([194.9.94.111]:15839 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbaHQV5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2014 17:57:38 -0400
+From: Hans Wennborg <hans@hanshq.net>
+To: kvalo@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath6kl@lists.infradead.org
+Cc: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 1/1] ath6kl: fix %d confusingly prefixed with 0x in format strings
+Date: Sun, 17 Aug 2014 14:57:11 -0700
+Message-Id: <1408312631-5619-1-git-send-email-hans@hanshq.net> (sfid-20140817_235754_853976_9039977B)
+In-Reply-To: <8738czmejl.fsf@kamboji.qca.qualcomm.com>
+References: <8738czmejl.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2014 12:55 AM, Rohit Kumar wrote:
-> Hello,
-> 
-> i have compiled the driver for USB to wifi dongle which uses realtek
-> 8188 chipset for ARM11.
-> it works fine but
-> 
-> iw wlan0 info
-> shows "no device found"
-> 
-> but iwconfig works fine.
-> 
-> also how can i add nl80211 support for the driver?
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/net/wireless/ath/ath6kl/init.c | 2 +-
+ drivers/net/wireless/ath/ath6kl/main.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-When you post about a particular piece of hardware, please use the full name.
-There are at least 3 different Realtek chips that have 8188 in their name.
-Please do not make us have to assume what you mean.
-
-If you want nl80211 support, you will need to add the necessary structures and
-callbacks to the driver. Driver r8723au in the staging tree could serve as
-sample code. If you do make these changes, they should be made as patches to the
-driver in drivers/staging/rtl8188eu/.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index fffd523..6e473fa 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1049,7 +1049,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 			ar->hw.reserved_ram_size = le32_to_cpup(val);
+ 
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT,
+-				   "found reserved ram size ie 0x%d\n",
++				   "found reserved ram size ie %d\n",
+ 				   ar->hw.reserved_ram_size);
+ 			break;
+ 		case ATH6KL_FW_IE_CAPABILITIES:
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 21516bc..933aef0 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -225,7 +225,7 @@ int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
+ 	ret = ath6kl_hif_diag_write32(ar, address, value);
+ 
+ 	if (ret) {
+-		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
++		ath6kl_err("failed to write 0x%x during diagnose window to 0x%x\n",
+ 			   address, value);
+ 		return ret;
+ 	}
+-- 
+2.1.0.rc2.206.gedb03e5
 
