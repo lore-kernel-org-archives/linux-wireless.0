@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9590 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754827AbaHNWSV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 18:18:21 -0400
-Date: Thu, 14 Aug 2014 15:18:09 -0700 (PDT)
-Message-Id: <20140814.151809.1355093138463959620.davem@redhat.com> (sfid-20140815_001829_957683_2ACB0252)
+Received: from dedo.coelho.fi ([88.198.205.34]:41542 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750906AbaHRJCR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 05:02:17 -0400
+Message-ID: <1408352502.29649.10.camel@dubbel> (sfid-20140818_110228_363438_A72538B2)
+From: Luca Coelho <luca@coelho.fi>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless 2014-08-14
-From: David Miller <davem@redhat.com>
-In-Reply-To: <20140814183253.GF4953@tuxdriver.com>
-References: <20140814183253.GF4953@tuxdriver.com>
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	torvalds@linux-foundation.org, emmanuel.grumbach@intel.com,
+	linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+	netdev@vger.kernel.org
+Date: Mon, 18 Aug 2014 12:01:42 +0300
+In-Reply-To: <1408352303-8354-1-git-send-email-luca@coelho.fi>
+References: <1408352303-8354-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: Re: [PATCH] mac80211: disable CSA client with channel contexts for
+ all drivers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 14 Aug 2014 14:32:53 -0400
+Hi John,
 
-> Please pull this batch of fixes intended for the 3.17 stream...
-> 
-> Arend van Spriel brings two brcmfmac fixes, one which fixes a memory
-> leak and one which corrects some merge damage.
-> 
-> Emmanuel Grumbach fixes Linus's iwlwifi firmware-related log spam.
-> 
-> Rickard Strandqvist does some proper NULL termination after a call
-> to strncpy.
-> 
-> Ronald Wahl corrects a carl9170 problem with sending URBs with the
-> wrong endpoint type (resulting in log spam).
-> 
-> Please let me know if there are problems!
+I sent this directly to you because everyone (but me :P) is traveling
+and it's intended for the current wireless tree.  This should solve the
+OOPS that Linus has experienced with the CSA client code.
 
-Pulled, thanks John.
+--
+Cheers,
+Luca.
 
-I'm really happy that you send the iwlwifi regression fix so quickly!
+
+On Mon, 2014-08-18 at 11:58 +0300, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> The channel switch announcement code has some serious problems at the
+> moment.  Disable it for all drivers until it has been tested and
+> finalized properly.
+> 
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>  net/mac80211/main.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index e0ab432..4b8eee8 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -758,6 +758,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  	netdev_features_t feature_whitelist;
+>  	struct cfg80211_chan_def dflt_chandef = {};
+>  
+> +	/* The CSA client code is not very stable yet and seems to be
+> +	 * causing trouble.  Disable it for all drivers until
+> +	 * everything has been fixed and tested properly.
+> +	 */
+> +	hw->flags &= ~IEEE80211_HW_CHANCTX_STA_CSA;
+> +
+>  	if (hw->flags & IEEE80211_HW_QUEUE_CONTROL &&
+>  	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
+>  	     local->hw.offchannel_tx_hw_queue >= local->hw.queues))
+
+
