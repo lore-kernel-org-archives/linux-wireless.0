@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40911 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153AbaHWNmS (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55699 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbaHRLbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 09:42:18 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 4/4] ath9k: Fix ath_chanctx_get()
-Date: Sat, 23 Aug 2014 19:12:16 +0530
-Message-Id: <1408801336-7626-5-git-send-email-sujith@msujith.org> (sfid-20140823_154224_426204_CB86D0FC)
-In-Reply-To: <1408801336-7626-1-git-send-email-sujith@msujith.org>
-References: <1408801336-7626-1-git-send-email-sujith@msujith.org>
+	Mon, 18 Aug 2014 07:31:16 -0400
+Received: by mail-lb0-f174.google.com with SMTP id c11so4072593lbj.33
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 04:31:13 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] mac80211: fix channel switch for chanctx-based drivers
+Date: Mon, 18 Aug 2014 13:19:09 +0200
+Message-Id: <1408360749-10233-1-git-send-email-michal.kazior@tieto.com> (sfid-20140818_133128_101975_274B8FB6)
+In-Reply-To: <1408351816.29649.8.camel@dubbel>
+References: <1408351816.29649.8.camel@dubbel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The new_ctx pointer is set only for non-chanctx
+drivers. This yielded a crash for chanctx-based
+drivers during channel switch finalization:
 
-Move it inside a CONFIG_ATH9K_CHANNEL_CONTEXT ifdef
-since it is not needed otherwise.
+  BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+  IP: ieee80211_vif_use_reserved_switch+0x71c/0xb00 [mac80211]
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Use an adequate chanctx pointer to fix this.
+
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Note: This is based on mac80211-next/master albeit
+it should apply cleanly on wireless-next/master
+and v3.17-rc1.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9e61679..acbe2b7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -413,16 +413,19 @@ struct ath_offchannel {
- 	     ctx <= &sc->chanctx[ARRAY_SIZE(sc->chanctx) - 1];      \
- 	     ctx++)
+I've verified this fix with iwlmvm & 7260.
+
+
+ net/mac80211/chan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f3317fa..7367e66 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1353,7 +1353,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
  
-+void ath_chanctx_init(struct ath_softc *sc);
-+void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
-+			     struct cfg80211_chan_def *chandef);
-+
-+#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
-+
- static inline struct ath_chanctx *
- ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
- {
- 	struct ath_chanctx **ptr = (void *) ctx->drv_priv;
- 	return *ptr;
- }
--void ath_chanctx_init(struct ath_softc *sc);
--void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
--			     struct cfg80211_chan_def *chandef);
--#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
-+
- bool ath9k_is_chanctx_enabled(void);
- void ath9k_fill_chanctx_ops(void);
- void ath9k_init_channel_context(struct ath_softc *sc);
-@@ -451,7 +454,9 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force);
- void ath_offchannel_next(struct ath_softc *sc);
- void ath_scan_complete(struct ath_softc *sc, bool abort);
- void ath_roc_complete(struct ath_softc *sc, bool abort);
-+
- #else
-+
- static inline bool ath9k_is_chanctx_enabled(void)
- {
- 	return false;
-@@ -513,6 +518,7 @@ static inline void ath_chanctx_check_active(struct ath_softc *sc,
- 					    struct ath_chanctx *ctx)
- {
- }
-+
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
+ 			list_del(&sdata->reserved_chanctx_list);
+ 			list_move(&sdata->assigned_chanctx_list,
+-				  &new_ctx->assigned_vifs);
++				  &ctx->assigned_vifs);
+ 			sdata->reserved_chanctx = NULL;
  
- int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ 			ieee80211_vif_chanctx_reservation_complete(sdata);
 -- 
-2.0.4
+1.8.5.3
 
