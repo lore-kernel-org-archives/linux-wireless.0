@@ -1,47 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34880 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbaHNIkv (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:51100 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaHRIyh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 04:40:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/5] ath10k: split ce irq/handler setup
-References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
-	<1407402260-29854-5-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 14 Aug 2014 11:40:43 +0300
-In-Reply-To: <1407402260-29854-5-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:04:19 +0200")
-Message-ID: <87a977o450.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_104056_728891_CCE4961F)
+	Mon, 18 Aug 2014 04:54:37 -0400
+Received: by mail-wi0-f176.google.com with SMTP id bs8so3337402wib.9
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 01:54:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20140809180805.29215.45232.stgit@potku.adurom.net>
+References: <20140809180552.29215.58612.stgit@potku.adurom.net>
+	<20140809180805.29215.45232.stgit@potku.adurom.net>
+Date: Mon, 18 Aug 2014 10:54:35 +0200
+Message-ID: <CA+BoTQ=dO0kr+0tnXpJRoPd7iwGDtPj_cWM=vvMsRgGn1we5ow@mail.gmail.com> (sfid-20140818_105441_138879_D05A0584)
+Subject: Re: [PATCH v6 2/8] ath10k: provide firmware crash info via debugfs
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> It doesn't make much sense to overwrite send_cb
-> and recv_cb callbacks over and over again whenever
-> transport starts. Just make sure to unmask copy
-> engine interrupts when starting.
+On 9 August 2014 20:08, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Store the firmware crash registers and last 128 or so
+> firmware debug-log ids and present them to user-space
+> via debugfs.
+>
+> Should help with figuring out why the firmware crashed.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.h  |   27 +++
+>  drivers/net/wireless/ath/ath10k/debug.c |  273 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/debug.h |   22 ++
+>  drivers/net/wireless/ath/ath10k/hw.h    |   30 +++
+>  drivers/net/wireless/ath/ath10k/pci.c   |  133 ++++++++++++++-
+>  drivers/net/wireless/ath/ath10k/pci.h   |    3
+>  6 files changed, 478 insertions(+), 10 deletions(-)
+[...]
 
-The patch looks, just a followup question for the future:
+> +struct ath10k_dump_file_data {
+> +       /* dump file information */
+> +
+> +       /* "ATH10K-FW-DUMP" */
+> +       char df_magic[16];
+> +
+> +       u32 len;
+> +
+> +       /* 0x1 if host is big-endian */
+> +       u32 big_endian;
 
-> @@ -1674,7 +1639,9 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
->  		pipe_info->hif_ce_state = ar;
->  		attr = &host_ce_config_wlan[pipe_num];
->  
-> -		ret = ath10k_ce_init_pipe(ar, pipe_num, attr);
-> +		ret = ath10k_ce_init_pipe(ar, pipe_num, attr,
-> +					  ath10k_pci_ce_send_done,
-> +					  ath10k_pci_ce_recv_data);
+This isn't entirely correct. Depending on host endianess you'll end up
+with 0x1 or 0x1000000. This will still work if you do a boolean
+evaluation of it in userspace or compare it to 0, but god forbid to
+compare it with 0x1.
 
-As we call ath10k_ce_init_pipe() only once and seem to have only one set
-of functions, why even bother bother with function pointers? What if we
-just call the functions directly?
 
--- 
-Kalle Valo
+> +
+> +       /* file dump version, 1 for now. */
+> +       u32 version;
+
+I think this should have a #define instead of the comment. You'll need
+to update 2 values when you bump the version with comment+hardcode
+approach.
+
+> +
+> +       /* some info we can get from ath10k struct that might help */
+> +
+> +       u8 uuid[16];
+> +
+> +       u32 chip_id;
+> +
+> +       /* 0 for now, in place for later hardware */
+> +       u32 bus_type;
+
+Maybe we should have an enum for that instead of using a hardcoded 0?
+
+
+> +       /* time-of-day stamp, nano-seconds */
+> +       u64 tv_nsec;
+> +
+> +
+> +       /* LINUX_VERSION_CODE */
+> +       u32 kernel_ver_code;
+
+2 empty newlines?
+
+
+> +static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+> +{
+> +       struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
+> +       struct ath10k_dump_file_data *dump_data;
+> +       struct ath10k_tlv_dump_data *dump_tlv;
+> +       int hdr_len = sizeof(*dump_data);
+> +       unsigned int len, sofar = 0;
+> +       unsigned char *buf;
+> +
+> +       lockdep_assert_held(&ar->conf_mutex);
+> +
+> +       spin_lock_bh(&ar->data_lock);
+> +
+> +       if (!crash_data->crashed_since_read) {
+> +               spin_unlock_bh(&ar->data_lock);
+> +               return NULL;
+> +       }
+> +
+> +       spin_unlock_bh(&ar->data_lock);
+> +
+> +       len = hdr_len;
+> +       len += sizeof(*dump_tlv) + sizeof(crash_data->reg_dump_values);
+> +       len += sizeof(*dump_tlv) + sizeof(crash_data->dbglog_entry_data);
+> +
+> +       sofar += hdr_len;
+> +
+> +       /* This is going to get big when we start dumping FW RAM and such,
+> +        * so go ahead and use vmalloc.
+> +        */
+> +       buf = vmalloc(len);
+> +       if (!buf)
+> +               return NULL;
+> +
+> +       spin_lock_bh(&ar->data_lock);
+
+The current code doesn't seem to allow it, but according to comments
+crashed_since_read is protected by data_lock only. As such it might've
+changed while the lock was released.
+
+Current code, however, guarantees it remains true while conf_mutex is held.
+
+Perhaps the vmalloc() should be done before spin_lock is acquired
+and/or the memory should be allocated outside this function completely
+and make it consume the crashed_since_read (i.e. set it to false) once
+it's done (while the data_lock is still held).
+
+
+> +
+> +       memset(buf, 0, len);
+> +       dump_data = (struct ath10k_dump_file_data *)(buf);
+> +       strlcpy(dump_data->df_magic, "ATH10K-FW-DUMP",
+> +               sizeof(dump_data->df_magic));
+> +       dump_data->len = len;
+> +
+> +#ifdef __BIG_ENDIAN
+> +       dump_data->big_endian = 1;
+> +#else
+> +       dump_data->big_endian = 0;
+> +#endif
+
+Yuck.
+
+
+> +static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
+> +{
+> +       struct ath10k *ar = inode->i_private;
+> +       struct ath10k_dump_file_data *dump;
+> +       int ret;
+> +
+> +       mutex_lock(&ar->conf_mutex);
+> +
+> +       dump = ath10k_build_dump_file(ar);
+> +       if (!dump) {
+> +               ret = -ENODATA;
+> +               goto out;
+> +       }
+> +
+> +       file->private_data = dump;
+
+> +       ar->debug.fw_crash_data->crashed_since_read = false;
+
+According to comments this should be protected by data_lock, but isn't.
+
+> +       ret = 0;
+> +
+> +out:
+> +       mutex_unlock(&ar->conf_mutex);
+> +       return ret;
+> +}
+
+
+>  static int ath10k_debug_htt_stats_req(struct ath10k *ar)
+>  {
+>         u64 cookie;
+> @@ -913,6 +1178,10 @@ static const struct file_operations fops_dfs_stats = {
+>
+>  int ath10k_debug_create(struct ath10k *ar)
+>  {
+> +       ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+> +       if (!ar->debug.fw_crash_data)
+> +               return -ENOMEM;
+> +
+>         ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+>                                                    ar->hw->wiphy->debugfsdir);
+
+I think there's a check if debug_phy is NULL. If it is it does return
+-ENOMEM. This means you leak fw_crash_data.
+
+
+> +/* Target debug log related defines and structs */
+> +
+> +/* Target is 32-bit CPU, so we just use u32 for
+> + * the pointers.  The memory space is relative to the
+> + * target, not the host.
+> + */
+> +struct ath10k_fw_dbglog_buf {
+> +       /* pointer to dblog_buf_s */
+> +       u32 next;
+> +
+> +       /* pointer to u8 buffer */
+> +       u32 buffer;
+> +
+> +       u32 bufsize;
+> +       u32 length;
+> +       u32 count;
+> +       u32 free;
+> +} __packed;
+> +
+> +struct ath10k_fw_dbglog_hdr {
+> +       /* pointer to dbglog_buf_s */
+> +       u32 dbuf;
+> +
+> +       u32 dropped;
+> +} __packed;
+This is confusing.
+
+Target is a 32-bit *Little-Endian* CPU but due to implicit byteswap in
+ath10k_pci_diag_* functions everything is already in host endianess.
+
+
+Michał
