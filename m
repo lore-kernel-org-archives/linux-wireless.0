@@ -1,86 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:37197 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757658AbaHGNEl (ORCPT
+Received: from mail-vc0-f181.google.com ([209.85.220.181]:49607 "EHLO
+	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbaHREBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 09:04:41 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so10581505wiw.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 06:04:39 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ronald Wahl <ronald.wahl@raritan.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] carl9170: fix sending URBs with wrong type when using full-speed
-Date: Thu, 07 Aug 2014 15:04:33 +0200
-Message-ID: <7450698.ipAbWqfnUT@blech> (sfid-20140807_150455_301808_A5E78B7E)
-In-Reply-To: <53E36624.9060905@raritan.com>
-References: <1407403442-27268-1-git-send-email-ronald.wahl@raritan.com> <9263316.qJ7UgtQDIG@blech> <53E36624.9060905@raritan.com>
+	Mon, 18 Aug 2014 00:01:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 18 Aug 2014 00:01:30 -0400
+Message-ID: <CA+55aFwTGDFgRuPS5DaQ9-XMLgbZ0y6ZtvXLsZhFkM6P_kXQHw@mail.gmail.com> (sfid-20140818_060304_421402_1A263B81)
+Subject: More wireless problems..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=089e013cba22088d2b0500df6d2a
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, August 07, 2014 01:42:28 PM Ronald Wahl wrote:
-> On 07.08.2014 12:51, Christian Lamparter wrote:
-> > my comments:
-> >   - Patch needs a "signed-off-by: <Your Name> <Your Mail> tag"
-> >     (see Section 12 - Sign your work [0]) for details.
-> >
-> >   - Do you see any improvement on a fullspeed port now?
-> >     (If so, this should be a stable- patch)
-> 
-> Yes, it actually works now. Before this change you could crash the 
-> system because of the constant logging of the warnings it was almost 
-> dead. My embedded device just rebooted after a while (maybe the
-> watchdog triggered).
+--089e013cba22088d2b0500df6d2a
+Content-Type: text/plain; charset=UTF-8
 
-Ok, this is important then ;).
+So there's still something seriously wrong with the wireless changes
+in the current merge window. Maybe it's not new, and is triggered by
+something with the hotel wireless here at the kernel summit, but I
+just got a NULL pointer dereference:
 
-> >> @@ -1050,6 +1056,21 @@ static int carl9170_usb_probe(struct usb_interface *intf,
-> >>         ar->intf = intf;
-> >>         ar->features = id->driver_info;
-> >>
-> >> +       /* We need to remember the type of endpoint 4 because it differs
-> >> +        * between high- and full-speed configuration. The high-speed
-> >> +        * configuration specifies it as interrupt and the full-speed
-> >> +        * configuration as bulk endpoint. This information is required
-> >> +        * later when sending urbs to that endpoint.
-> >> +        */
-> >> +       for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
-> >> +               ep = &intf->cur_altsetting->endpoint[i].desc;
-> >> +
-> >> +               if (usb_endpoint_dir_out(ep) &&
-> >> +                   usb_endpoint_num(ep) == AR9170_USB_EP_CMD)
-> >> +                       ar->usb_ep_cmd_is_bulk =
-> >> +                               usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK;
-> > What about this:
-> >
-> >                 if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
-> >                     usb_endpoint_is_bulk_out(ep))
-> >                         ar->usb_ep_cmd_is_bulk = true;
-> > (the driver context "ar" is zero'd out - It is not necessary to set
-> > usb_ep_cmd_is_bulk to false.)
-> 
-> This is what my first patch has done but we need to check the endpoint 
-> type if its bulk or not. Otherwise it will fail in the high-speed case.
-> Or did you mean:
-> 
-> 		if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
-> 		    usb_endpoint_is_bulk_out(ep) &&
-> 		    usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK)
-> 			ar->usb_ep_cmd_is_bulk = true;
-usb_endpoint_is_bulk_out [0] "checks if the endpoint is bulk OUT". 
-This function should perform both checks (ie.: is bulk? is out?).
+  BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+  IP: ieee80211_vif_use_reserved_switch+0x71c/0xb00 [mac80211]
 
-> > BTW: I'll make a patch to carl9170 firmware too.
-> 
-> great!
-> 
-> I will fix the remaining things you mentioned.
+this may not be iwl-specific at all, but the second oops (which is
+likely just a result of the first one) does end up having iwl-related
+functions on the stack , so I'm cc'ing both generic wireless people
+and intel wireless people. It's the same machine that showed the intel
+wireless scanning microcode problem, but the oops looks very
+different.
 
-great!
+The end result is a dead machine (when kworkers die, things tend to go
+downhill fast), so it would be good to have people give this a good
+look.
 
-Regards
+Attached is the more complete oops details. I don't know what
+triggered it, the machine was largely idle.
 
-Christian
+Ideas?
 
-[0] http://lxr.free-electrons.com/source/include/uapi/linux/usb/ch9.h#L539
+               Linus
+
+--089e013cba22088d2b0500df6d2a
+Content-Type: application/octet-stream; name=oops
+Content-Disposition: attachment; filename=oops
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hyz9xl9r0
+
+CiAgQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2Ug
+YXQgMDAwMDAwMDAwMDAwMDAyMAogIElQOiBbPGZmZmZmZmZmYzAzZmU5N2M+XSBpZWVlODAyMTFf
+dmlmX3VzZV9yZXNlcnZlZF9zd2l0Y2grMHg3MWMvMHhiMDAgW21hYzgwMjExXQogIFBHRCAwIAog
+IE9vcHM6IDAwMDAgWyMxXSBTTVAgCiAgTW9kdWxlcyBsaW5rZWQgaW46IGZ0ZGlfc2lvIHJmY29t
+bSBmdXNlIGlwNnRfcnBmaWx0ZXIgaXA2dF9SRUpFQ1QgeHRfY29ubnRyYWNrIGVidGFibGVfbmF0
+IGVidGFibGVfYnJvdXRlIGJyaWRnZSBzdHAgbGxjIGVidGFibGVfZmlsdGVyIGVidGFibGVzIGlw
+NnRhYmxlX25hdCBuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiBuZl9uYXRfaXB2NiBp
+cDZ0YWJsZV9tYW5nbGUgaXA2dGFibGVfc2VjdXJpdHkgaXA2dGFibGVfcmF3IGlwNnRhYmxlX2Zp
+bHRlciBpcDZfdGFibGVzIGlwdGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19p
+cHY0IG5mX25hdF9pcHY0IG5mX25hdCBuZl9jb25udHJhY2sgaXB0YWJsZV9tYW5nbGUgaXB0YWJs
+ZV9zZWN1cml0eSBpcHRhYmxlX3JhdyBibmVwIG1tY19ibG9jayBhcmM0IHZmYXQgZmF0IHBuNTQ0
+X21laSBtZWlfcGh5IHBuNTQ0IGhjaSBzbmRfaGRhX2NvZGVjX3JlYWx0ZWsgbmZjIHJ0c3hfcGNp
+X3NkbW1jIHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRfaGRhX2NvZGVjX2hkbWkgbW1jX2NvcmUg
+aVRDT193ZHQgaVRDT192ZW5kb3Jfc3VwcG9ydCBzbmRfaGRhX2ludGVsIGl3bG12bSBzbmRfaGRh
+X2NvbnRyb2xsZXIgdXZjdmlkZW8gc25kX2hkYV9jb2RlYyBtYWM4MDIxMSB4ODZfcGtnX3RlbXBf
+dGhlcm1hbCBzbmRfaHdkZXAgY29yZXRlbXAgdmlkZW9idWYyX3ZtYWxsb2Mgc25kX3NlcSB2aWRl
+b2J1ZjJfbWVtb3BzIHZpZGVvYnVmMl9jb3JlIHNuZF9zZXFfZGV2aWNlIHY0bDJfY29tbW9uIHZp
+ZGVvZGV2IHNuZF9wY20gbWljcm9jb2RlCiAgIGl3bHdpZmkgam95ZGV2IG1lZGlhIGhpZF9tdWx0
+aXRvdWNoIHJ0c3hfcGNpIGNmZzgwMjExIGJ0dXNiIGxwY19pY2ggc2VyaW9fcmF3IGJsdWV0b290
+aCBzbmRfdGltZXIgc25kIHNocGNocCBtZWlfbWUgc291bmRjb3JlIGkyY19pODAxIG1mZF9jb3Jl
+IHNvbnlfbGFwdG9wIG1laSByZmtpbGwgZG1fY3J5cHQgY3JjdDEwZGlmX3BjbG11bCBjcmMzMl9w
+Y2xtdWwgaTkxNSBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCBpMmNfYWxnb19iaXQg
+ZHJtX2ttc19oZWxwZXIgZHJtIHZpZGVvCiAgQ1BVOiAyIFBJRDogMTI5MzYgQ29tbToga3dvcmtl
+ci91ODowIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgICAzLjE2LjAtMTEzODMtZ2M5ZDI2NDIzZTU2
+YyAjNQogIEhhcmR3YXJlIG5hbWU6IFNvbnkgQ29ycG9yYXRpb24gU1ZQMTEyMTNDWEIvVkFJTywg
+QklPUyBSMDI3MFY3IDA1LzE3LzIwMTMKICBXb3JrcXVldWU6IHBoeTAgaWVlZTgwMjExX2Noc3dp
+dGNoX3dvcmsgW21hYzgwMjExXQogIHRhc2s6IGZmZmY4ODAwYmE1MWQwNzAgdGk6IGZmZmY4ODAw
+MGJjNTgwMDAgdGFzay50aTogZmZmZjg4MDAwYmM1ODAwMAogIFJJUDogMDAxMDpbPGZmZmZmZmZm
+YzAzZmU5N2M+XSAgWzxmZmZmZmZmZmMwM2ZlOTdjPl0gaWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2
+ZWRfc3dpdGNoKzB4NzFjLzB4YjAwIFttYWM4MDIxMV0KICBSU1A6IDAwMTg6ZmZmZjg4MDAwYmM1
+YmQ4MCAgRUZMQUdTOiAwMDAxMDI0NgogIFJBWDogZmZmZjg4MDBkMjE3NmUwOCBSQlg6IGZmZmY4
+ODAwOThlMGM5YzAgUkNYOiAwMDAwMDAwMDAwMDAwMDIwCiAgUkRYOiBmZmZmODgwMDFlZTI4N2Ew
+IFJTSTogMDAwMDAwMDAwMDAwMDAwMCBSREk6IGZmZmY4ODAwZDIxNzY4ODAKICBSQlA6IGZmZmY4
+ODAwOThlMGM5ZjAgUjA4OiBmZmZmODgwMDBiYzU4MDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMAog
+IFIxMDogMDAwMDAwMDAwMDAwMDAwNCBSMTE6IDAwMDAwMDAwMDAwMDAwMDUgUjEyOiAwMDAwMDAw
+MDAwMDAwMDAwCiAgUjEzOiBmZmZmODgwMDk4ZTBjNDU4IFIxNDogZmZmZjg4MDBkMzY4MTc1OCBS
+MTU6IGZmZmY4ODAwZDM2ODA2NjAKICBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZm
+Zjg4MDExZmIwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCiAgQ1M6ICAwMDEwIERT
+OiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwogIENSMjogMDAwMDAwMDAwMDAw
+MDAyMCBDUjM6IDAwMDAwMDAwMDFhMTEwMDAgQ1I0OiAwMDAwMDAwMDAwMTQwN2UwCiAgQ2FsbCBU
+cmFjZToKICAgIGllZWU4MDIxMV92aWZfdXNlX3Jlc2VydmVkX2NvbnRleHQrMHg4OC8weDExMCBb
+bWFjODAyMTFdCiAgICBpZWVlODAyMTFfY2hzd2l0Y2hfd29yaysweGI4LzB4MTgwIFttYWM4MDIx
+MV0KICAgIHByb2Nlc3Nfb25lX3dvcmsrMHgxNjAvMHgzNzAKICAgIHdvcmtlcl90aHJlYWQrMHgx
+MTQvMHg0NzAKICAgIHJlc2N1ZXJfdGhyZWFkKzB4MmEwLzB4MmEwCiAgICBrdGhyZWFkKzB4Yjgv
+MHhkMAogICAga3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDE3MC8weDE3MAogICAgcmV0X2Zyb21f
+Zm9yaysweDdjLzB4YjAKICAgIGt0aHJlYWRfY3JlYXRlX29uX25vZGUrMHgxNzAvMHgxNzAKICBD
+b2RlOiA0OCBiOCAwMCAwMiAyMCAwMCAwMCAwMCBhZCBkZSA0OCA4YiA5NyA5MCAwNSAwMCAwMCA0
+OCA4OSA4NyBhMCAwNSAwMCAwMCA0OCA4ZCA4NyA4OCAwNSAwMCAwMCA0OCA4OSA1MSAwOCA0OCA4
+OSAwYSA0OCA4YiA0YyAyNCAwOCA8NDg+IDhiIDU2IDIwIDQ4IDg5IDQyIDA4IDQ4IDg5IDk3IDg4
+IDA1IDAwIDAwIDQ4IDg5IDhmIDkwIDA1IDAwIAogIFJJUCAgWzxmZmZmZmZmZmMwM2ZlOTdjPl0g
+aWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2ZWRfc3dpdGNoKzB4NzFjLzB4YjAwIFttYWM4MDIxMV0K
+ICAgUlNQIDxmZmZmODgwMDBiYzViZDgwPgogIENSMjogMDAwMDAwMDAwMDAwMDAyMAogIC0tLVsg
+ZW5kIHRyYWNlIDExODQ5ZmFjMTRhOWMxMjkgXS0tLQoKICBCVUc6IHVuYWJsZSB0byBoYW5kbGUg
+a2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IGZmZmZmZmZmZmZmZmZmZDgKICBJUDogWzxmZmZmZmZm
+ZjgxMDdlYmY3Pl0ga3RocmVhZF9kYXRhKzB4Ny8weDEwCiAgUEdEIDFhMTIwNjcgUFVEIDFhMTQw
+NjcgUE1EIDAgCiAgT29wczogMDAwMCBbIzJdIFNNUCAKICBNb2R1bGVzIGxpbmtlZCBpbjogZnRk
+aV9zaW8gcmZjb21tIGZ1c2UgaXA2dF9ycGZpbHRlciBpcDZ0X1JFSkVDVCB4dF9jb25udHJhY2sg
+ZWJ0YWJsZV9uYXQgZWJ0YWJsZV9icm91dGUgYnJpZGdlIHN0cCBsbGMgZWJ0YWJsZV9maWx0ZXIg
+ZWJ0YWJsZXMgaXA2dGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY2IG5mX2RlZnJhZ19pcHY2IG5m
+X25hdF9pcHY2IGlwNnRhYmxlX21hbmdsZSBpcDZ0YWJsZV9zZWN1cml0eSBpcDZ0YWJsZV9yYXcg
+aXA2dGFibGVfZmlsdGVyIGlwNl90YWJsZXMgaXB0YWJsZV9uYXQgbmZfY29ubnRyYWNrX2lwdjQg
+bmZfZGVmcmFnX2lwdjQgbmZfbmF0X2lwdjQgbmZfbmF0IG5mX2Nvbm50cmFjayBpcHRhYmxlX21h
+bmdsZSBpcHRhYmxlX3NlY3VyaXR5IGlwdGFibGVfcmF3IGJuZXAgbW1jX2Jsb2NrIGFyYzQgdmZh
+dCBmYXQgcG41NDRfbWVpIG1laV9waHkgcG41NDQgaGNpIHNuZF9oZGFfY29kZWNfcmVhbHRlayBu
+ZmMgcnRzeF9wY2lfc2RtbWMgc25kX2hkYV9jb2RlY19nZW5lcmljIHNuZF9oZGFfY29kZWNfaGRt
+aSBtbWNfY29yZSBpVENPX3dkdCBpVENPX3ZlbmRvcl9zdXBwb3J0IHNuZF9oZGFfaW50ZWwgaXds
+bXZtIHNuZF9oZGFfY29udHJvbGxlciB1dmN2aWRlbyBzbmRfaGRhX2NvZGVjIG1hYzgwMjExIHg4
+Nl9wa2dfdGVtcF90aGVybWFsIHNuZF9od2RlcCBjb3JldGVtcCB2aWRlb2J1ZjJfdm1hbGxvYyBz
+bmRfc2VxIHZpZGVvYnVmMl9tZW1vcHMgdmlkZW9idWYyX2NvcmUgc25kX3NlcV9kZXZpY2UgdjRs
+Ml9jb21tb24gdmlkZW9kZXYgc25kX3BjbSBtaWNyb2NvZGUKICAgaXdsd2lmaSBqb3lkZXYgbWVk
+aWEgaGlkX211bHRpdG91Y2ggcnRzeF9wY2kgY2ZnODAyMTEgYnR1c2IgbHBjX2ljaCBzZXJpb19y
+YXcgYmx1ZXRvb3RoIHNuZF90aW1lciBzbmQgc2hwY2hwIG1laV9tZSBzb3VuZGNvcmUgaTJjX2k4
+MDEgbWZkX2NvcmUgc29ueV9sYXB0b3AgbWVpIHJma2lsbCBkbV9jcnlwdCBjcmN0MTBkaWZfcGNs
+bXVsIGNyYzMyX3BjbG11bCBpOTE1IGNyYzMyY19pbnRlbCBnaGFzaF9jbG11bG5pX2ludGVsIGky
+Y19hbGdvX2JpdCBkcm1fa21zX2hlbHBlciBkcm0gdmlkZW8KICBDUFU6IDIgUElEOiAxMjkzNiBD
+b21tOiBrd29ya2VyL3U4OjAgVGFpbnRlZDogRyAgICAgIEQgVyAgICAgIDMuMTYuMC0xMTM4My1n
+YzlkMjY0MjNlNTZjICM1CiAgSGFyZHdhcmUgbmFtZTogU29ueSBDb3Jwb3JhdGlvbiBTVlAxMTIx
+M0NYQi9WQUlPLCBCSU9TIFIwMjcwVjcgMDUvMTcvMjAxMwogIHRhc2s6IGZmZmY4ODAwYmE1MWQw
+NzAgdGk6IGZmZmY4ODAwMGJjNTgwMDAgdGFzay50aTogZmZmZjg4MDAwYmM1ODAwMAogIFJJUDog
+MDAxMDpbPGZmZmZmZmZmODEwN2ViZjc+XSAgWzxmZmZmZmZmZjgxMDdlYmY3Pl0ga3RocmVhZF9k
+YXRhKzB4Ny8weDEwCiAgUlNQOiAwMDE4OmZmZmY4ODAwMGJjNWJhOTggIEVGTEFHUzogMDAwMTAw
+MDIKICBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiAwMDAwMDAwMDAwMDAwMDAyIFJDWDogMDAw
+MDAwMDAwMDAwMDAwNgogIFJEWDogMDAwMDAwMDAwMDAwMDAwMSBSU0k6IDAwMDAwMDAwMDAwMDAw
+MDIgUkRJOiBmZmZmODgwMGJhNTFkMDcwCiAgUkJQOiBmZmZmODgwMGJhNTFkMDcwIFIwODogZmZm
+Zjg4MDExZmIwMDAwMCBSMDk6IDAwMDAwMDAxODAyYTAwMTMKICBSMTA6IGZmZmZmZmZmODEwNjg1
+ZTUgUjExOiBmZmZmZWEwMDAyNjE5MzAwIFIxMjogZmZmZjg4MDBiYTUxZDRhMAogIFIxMzogMDAw
+MDAwMDAwMDAwMDAwMiBSMTQ6IDAwMDAwMDAwMDAwMDAwMDAgUjE1OiBmZmZmODgwMGJhNTFkMDcw
+CiAgRlM6ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAxMWZiMDAwMDAoMDAwMCkg
+a25sR1M6MDAwMDAwMDAwMDAwMDAwMAogIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6
+IDAwMDAwMDAwODAwNTAwMzMKICBDUjI6IDAwMDAwMDAwMDAwMDAwMjggQ1IzOiAwMDAwMDAwMDAx
+YTExMDAwIENSNDogMDAwMDAwMDAwMDE0MDdlMAogIENhbGwgVHJhY2U6CiAgICB3cV93b3JrZXJf
+c2xlZXBpbmcrMHg4LzB4OTAKICAgIF9fc2NoZWR1bGUrMHgzZDMvMHg2YjAKICAgIGRvX2V4aXQr
+MHg2YzIvMHhhMjAKICAgIG9vcHNfZW5kKzB4NjMvMHg5MAogICAgbm9fY29udGV4dCsweDJkMS8w
+eDMyZQogICAgX19kb19wYWdlX2ZhdWx0KzB4NzIvMHg0NDAKICAgIHByZXBhcmVfdG9fd2FpdF9l
+dmVudCsweGYwLzB4ZjAKICAgIGl3bF9tdm1fc2VuZF9jbWQrMHgzOC8weGIwIFtpd2xtdm1dCiAg
+ICBpd2xfbXZtX3NlbmRfY21kX3BkdSsweDNjLzB4NTAgW2l3bG12bV0KICAgIHBhZ2VfZmF1bHQr
+MHgyMi8weDMwCiAgICBpZWVlODAyMTFfdmlmX3VzZV9yZXNlcnZlZF9zd2l0Y2grMHg3MWMvMHhi
+MDAgW21hYzgwMjExXQogICAgaWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2ZWRfY29udGV4dCsweDg4
+LzB4MTEwIFttYWM4MDIxMV0KICAgIGllZWU4MDIxMV9jaHN3aXRjaF93b3JrKzB4YjgvMHgxODAg
+W21hYzgwMjExXQogICAgcHJvY2Vzc19vbmVfd29yaysweDE2MC8weDM3MAogICAgd29ya2VyX3Ro
+cmVhZCsweDExNC8weDQ3MAogICAgcmVzY3Vlcl90aHJlYWQrMHgyYTAvMHgyYTAKICAgIGt0aHJl
+YWQrMHhiOC8weGQwCiAgICBrdGhyZWFkX2NyZWF0ZV9vbl9ub2RlKzB4MTcwLzB4MTcwCiAgICBy
+ZXRfZnJvbV9mb3JrKzB4N2MvMHhiMAogICAga3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDE3MC8w
+eDE3MAogIENvZGU6IDAwIDAwIDAwIDAwIDY1IDQ4IDhiIDA0IDI1IGMwIGI4IDAwIDAwIDQ4IDhi
+IDgwIGQ4IDAzIDAwIDAwIDQ4IDhiIDQwIGM4IDQ4IGMxIGU4IDAyIDgzIGUwIDAxIGMzIDBmIDFm
+IDQwIDAwIDQ4IDhiIDg3IGQ4IDAzIDAwIDAwIDw0OD4gOGIgNDAgZDggYzMgMGYgMWYgNDAgMDAg
+NDggODMgZWMgMDggYmEgMDggMDAgMDAgMDAgNDggOGIgYjcgCiAgUklQICBbPGZmZmZmZmZmODEw
+N2ViZjc+XSBrdGhyZWFkX2RhdGErMHg3LzB4MTAKICAgUlNQIDxmZmZmODgwMDBiYzViYTk4Pgog
+IENSMjogZmZmZmZmZmZmZmZmZmZkOAogIC0tLVsgZW5kIHRyYWNlIDExODQ5ZmFjMTRhOWMxMmEg
+XS0tLQo=
+--089e013cba22088d2b0500df6d2a--
