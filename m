@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:59297 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935477AbaH0S3g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 14:29:36 -0400
-Message-ID: <53FE217B.7000401@gmail.com> (sfid-20140827_202939_724255_03248168)
-Date: Wed, 27 Aug 2014 11:20:43 -0700
-From: Florian Fainelli <f.fainelli@gmail.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: devicetree@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
-Subject: Re: [RFC 2/7] bcm47xx-nvram: add new broadcom nvram driver with dt
- support
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de> <1408915485-8078-4-git-send-email-hauke@hauke-m.de> <CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com>
-In-Reply-To: <CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from dedo.coelho.fi ([88.198.205.34]:41529 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752677AbaHRI6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 04:58:49 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	torvalds@linux-foundation.org, emmanuel.grumbach@intel.com,
+	linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+	netdev@vger.kernel.org
+Date: Mon, 18 Aug 2014 11:58:23 +0300
+Message-Id: <1408352303-8354-1-git-send-email-luca@coelho.fi> (sfid-20140818_105910_266377_36D41233)
+Subject: [PATCH] mac80211: disable CSA client with channel contexts for all drivers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/2014 10:54 PM, Rafał Miłecki wrote:
-> On 24 August 2014 23:24, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> +On NorthStar ARM SoCs the NAND flash is available at 0x1c000000 and the
->> +NOR flash is at 0x1e000000
->> +
->> +Example:
->> +
->> +nvram0: nvram@0 {
->> +       compatible = "brcm,bcm47xx-nvram";
->> +       reg = <0x1c000000 0x01000000>;
->> +};
-> 
-> Could we avoid that? Type of flash can easily be checked in the code.
-> All we need to do is to read BCMA_IOST register of BCMA_CORE_NS_ROM
-> core.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-So there is a boot status register you can read to tell what type of
-flash you booted from, but does that also give you the resource ranges
-for these type of flashes? Presumably they will be mapped into different
-addresses (at least bcm63xx is like that), that information needs to be
-listed somewhere.
---
-Florian
+The channel switch announcement code has some serious problems at the
+moment.  Disable it for all drivers until it has been tested and
+finalized properly.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/main.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index e0ab432..4b8eee8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -758,6 +758,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	netdev_features_t feature_whitelist;
+ 	struct cfg80211_chan_def dflt_chandef = {};
+ 
++	/* The CSA client code is not very stable yet and seems to be
++	 * causing trouble.  Disable it for all drivers until
++	 * everything has been fixed and tested properly.
++	 */
++	hw->flags &= ~IEEE80211_HW_CHANCTX_STA_CSA;
++
+ 	if (hw->flags & IEEE80211_HW_QUEUE_CONTROL &&
+ 	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
+ 	     local->hw.offchannel_tx_hw_queue >= local->hw.queues))
+-- 
+2.0.1
 
