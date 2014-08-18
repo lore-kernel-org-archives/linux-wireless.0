@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22290 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756271AbaHVOe7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 10:34:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v8 2/4] ath10k: provide firmware crash info via debugfs
-References: <20140821124705.27159.67898.stgit@potku.adurom.net>
-	<20140821124907.27159.64620.stgit@potku.adurom.net>
-	<1408626616.4388.0.camel@jlt4.sipsolutions.net>
-	<877g21c3dd.fsf@kamboji.qca.qualcomm.com>
-	<1408670355.4388.4.camel@jlt4.sipsolutions.net>
-Date: Fri, 22 Aug 2014 17:34:43 +0300
-In-Reply-To: <1408670355.4388.4.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Fri, 22 Aug 2014 03:19:15 +0200")
-Message-ID: <87egw8a8zg.fsf@kamboji.qca.qualcomm.com> (sfid-20140822_163506_679537_52B57321)
-MIME-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54141 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750951AbaHRJUw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 05:20:52 -0400
+From: Avinash Patil <patila@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marc Yang <yangyang@marvell.com>, Xinming Hu <huxm@marvell.com>
+Date: Mon, 18 Aug 2014 02:19:34 -0700
+Subject: [PATCH 4/4] mwifiex: fix association failure in 5G after leaving
+ 2.4G IBSS
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147C24@SC-VEXCH2.marvell.com> (sfid-20140818_112056_116430_120CBDE6)
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+When assocaiting to an AP , mwifiex set supported data rates
+based on target AP's capability. For 5G AP(11a mode), a/n/ac mode
+would possibly be set.
+However, for some chips which dont support 11AC mode current config_bands
+will be used instead.
 
-> On Thu, 2014-08-21 at 17:40 +0300, Kalle Valo wrote:
->
->> Heh, this has been a pretty long review period. To be honest I really
->> would like to get this just out of my hands :) And we do have a need for
->> this. When are you planning to implement that generic framework?
->
-> Soon (TM). We need it, so really, I should do it soon.
->
->> What I understood is that this is already pretty close what you are
->> planning. Instead of creating a debugfs file of our own and allocating a
->> vmalloc buffer (which we do now), we would just use the buffer provided
->> by cfg80211 (or whatever component that would be) and use the sysfs file
->> the framework provides. So hopefully it would be pretty easy to convert
->> this to use your framework.
->
-> I'm thinking now that since vmalloc space is limited on some
-> architectures, we should just have a list of pages, but of course we
-> could copy it there from vmalloc area.
->
-> Anyway, yes, it should be fairly simple to convert - but is it worth it
-> for you to have it now? Depends how you use it, I guess.
+For example, if we join an IBSS in 11b mode ,adapter->config_bands
+will be set to 1(11b mode). Then we leave IBSS ,and try to connect
+5G a/n mode AP. At this time , only 11b mode data rates will be
+supported in assoc request , which result in assoc failure with
+reason code 18: Association denied due to requesting station not 
+supporting all rates.
 
-We really would have use for this, that's why I'm hesitant to wait more.
-Even having this from an "unofficial" location would be a big help. If
-it's ok for you, I would like to apply this once all review comments are
-addressed. But naturally if you think it's better to wait, I will do
-that.
+This patch fix such a cornel case, by adding additional check for 
+current chip's 11ac capability.
 
+Reported-by: Andreas Fenkart <afenkart@gmail.com>                                                                                                                                                                                                                             
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index caae973..0b998fd 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -287,10 +287,13 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+                        return -1; 
+ 
+                if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
+-                                               HostCmd_SCAN_RADIO_TYPE_BG)
++                                               HostCmd_SCAN_RADIO_TYPE_BG) {
+                        config_bands = BAND_B | BAND_G | BAND_GN;
+-               else
+-                       config_bands = BAND_A | BAND_AN | BAND_AAC;
++               } else {
++                       config_bands = BAND_A | BAND_AN;
++                       if (adapter->fw_bands & BAND_AAC)
++                               config_bands |= BAND_AAC;
++               }
+ 
+                if (!((config_bands | adapter->fw_bands) & ~adapter->fw_bands))
+                        adapter->config_bands = config_bands;
 -- 
-Kalle Valo
+1.8.1.4
