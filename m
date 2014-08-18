@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mimamau.de ([62.75.248.232]:43252 "EHLO mimamau.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751318AbaHLRUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 13:20:49 -0400
-Received: from [192.168.0.74] (p5B221BEB.dip0.t-ipconnect.de [91.34.27.235])
-	by mimamau.de (Postfix) with ESMTPA id 80030146838C
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2014 19:12:04 +0200 (CEST)
-Message-ID: <53EA4AE4.8040204@mimamau.de> (sfid-20140812_192052_368269_EC544903)
-Date: Tue, 12 Aug 2014 19:12:04 +0200
-From: =?UTF-8?B?TWFyaXVzIFNjaMOkZmVy?= <mschaefer@mimamau.de>
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:51845 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762AbaHREhM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 00:37:12 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: hostapd not working any more
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CA+55aFwTGDFgRuPS5DaQ9-XMLgbZ0y6ZtvXLsZhFkM6P_kXQHw@mail.gmail.com>
+References: <CA+55aFwTGDFgRuPS5DaQ9-XMLgbZ0y6ZtvXLsZhFkM6P_kXQHw@mail.gmail.com>
+Date: Sun, 17 Aug 2014 23:37:11 -0500
+Message-ID: <CA+55aFwUJLZUi4wDKwiX1XAht=H9exmvUD5P_aNHK9=XBSixjA@mail.gmail.com> (sfid-20140818_063725_542530_B901C39A)
+Subject: Re: More wireless problems..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, Aug 17, 2014 at 11:01 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+>   BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+>   IP: ieee80211_vif_use_reserved_switch+0x71c/0xb00 [mac80211]
 
-I'm developing an embedded system and I don't know what I've changed but 
-now hostapd doesn't work any more. It has been working the last time I 
-worked on that system. Hardware is a usb stick with rt2770 chip.
+Looking at the Code: line and the code generation for that function,
+this *looks* to be this code:
 
-# hostapd -dd /etc/hostapd.conf
-random: Trying to read entropy from /dev/random
-Configuration file: /etc/hostapd.conf
-rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
-nl80211: Supported cipher 00-0f-ac:1
-nl80211: Supported cipher 00-0f-ac:5
-nl80211: Supported cipher 00-0f-ac:2
-nl80211: Supported cipher 00-0f-ac:4
-nl80211: Using driver-based off-channel TX
-nl80211: interface wlan0 in phy phy1
-nl80211: Set mode ifindex 3 iftype 3 (AP)
-nl80211: Failed to set interface 3 to mode 3: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Set mode ifindex 3 iftype 3 (AP)
-nl80211: Mode change succeeded while interface is down
-nl80211: Setup AP(wlan0) - device_ap_sme=0 use_monitor=0
-nl80211: Subscribe to mgmt frames with AP handle 0x843dfc8
-nl80211: Register frame type=0xb0 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0x0 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0x20 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0xa0 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0xc0 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0xd0 nl_handle=0x843dfc8 match=
-nl80211: Register frame type=0x40 nl_handle=0x843dfc8 match=
-nl80211: Remove monitor interface: refcount=0
-nl80211: Remove beacon (ifindex=3)
-netlink: Operstate: ifindex=3 linkmode=0 (kernel-control), operstate=6 
-(IF_OPER_UP)
-nl80211: Set mode ifindex 3 iftype 2 (STATION)
-nl80211: Failed to set interface 3 to mode 2: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Set mode ifindex 3 iftype 2 (STATION)
-nl80211: Mode change succeeded while interface is down
-nl80211: Teardown AP(wlan0) - device_ap_sme=0 use_monitor=0
-nl80211: Unsubscribe mgmt frames handle 0x80cb5741 (AP teardown)
-nl80211 driver initialization failed.
-hostapd_interface_deinit_free(0x843c3c8)
-hostapd_interface_deinit_free: num_bss=1 conf->num_bss=1
-hostapd_interface_deinit(0x843c3c8)
-hostapd_bss_deinit: deinit bss wlan0
-hostapd_cleanup(hapd=0x843c8c0 (wlan0))
-hostapd_free_hapd_data: Interface wlan0 wasn't started
-hostapd_interface_deinit_free: driver=(nil) drv_priv=(nil) -> hapd_deinit
-hostapd_interface_free(0x843c3c8)
-hostapd_interface_free: free hapd 0x843c8c0
-hostapd_cleanup_iface(0x843c3c8)
-hostapd_cleanup_iface_partial(0x843c3c8)
-hostapd_cleanup_iface: free iface=0x843c3c8
+                        list_del(&sdata->reserved_chanctx_list);
+                        list_move(&sdata->assigned_chanctx_list,
+                                  &new_ctx->assigned_vifs);
+                        sdata->reserved_chanctx = NULL;
 
+in ieee80211_vif_use_reserved_switch(), where "new_ctx" is NULL, so
+the "list_move()" ends up oopsing. But maybe I screwed up the
+analysis, I don't know the code.
 
-Thank you
-Marius Schäfer
+Looks like that is all-new code introduced by commit 5bcae31d9cb1
+("mac80211: implement multi-vif in-place reservations")
+
+And doesn't look at all IWL-specific. Adding Michal Kazior to the list
+of people.
+
+                Linus
