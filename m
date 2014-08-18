@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:41264 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaHCQPw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2014 12:15:52 -0400
-Received: by mail-oa0-f46.google.com with SMTP id m1so4330607oag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 09:15:51 -0700 (PDT)
-Message-ID: <53DE6036.1000903@lwfinger.net> (sfid-20140803_181555_198758_64623AF0)
-Date: Sun, 03 Aug 2014 11:15:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13489 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750957AbaHRJQn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 05:16:43 -0400
+From: Avinash Patil <patila@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 18 Aug 2014 02:15:35 -0700
+Subject: [PATCH 3/4] mwifiex: support for event done interrupt
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147C23@SC-VEXCH2.marvell.com> (sfid-20140818_111741_111942_2D8152F2)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: =?UTF-8?B?0JDQvdC00YDQtdC10LIg0KHQtdGA0LPQtdC5?=
-	<flat343@yandex.ru>, linux-wireless@vger.kernel.org
-Subject: Re: Problem with wpasupplicant using nl80211 driver for wi-fi stick
- with REALTEK 8188 chipset
-References: <6570401407065155@web18g.yandex.ru>
-In-Reply-To: <6570401407065155@web18g.yandex.ru>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/03/2014 06:25 AM, Андреев Сергей wrote:
-> Hello,
-> A lot of folks experience problems with wpa_supplicant using nl80211 driver - tha does not work. 
-> The particular problem is experienced on raspberry pi with wi-fi adapter on Realtek 8188 chipset. 
-> The syslog shows the following lines:
->  wpa_supplicant[1118]: nl80211: 'nl80211' generic netlink not found
->  raspbmc wpa_supplicant[1118]: Failed to initialize driver 'nl80211'
->  raspbmc wpa_supplicant[1118]: rfkill: Cannot open RFKILL control device
-> 
-> I have tired to modify /etc/wpa_suppicant/functions.sh and remove nl80211 completely from code and leave only wext driver but that does not work. 
-> Would appreciate any ideas what the problem could be.
-> 
-> OS version: raspbian 3.12.21 
-> 
-> WPA supplicant version: 1.0-3
+This patch adds support for writing CPU event interrupt done back
+to device.
+Patch also increases interrupt buffer ring size from 4 to 8.
 
-What exactly do you mean by an 8188 chip? There are RTL8188EE, RTL8188CE, and
-RTL8188EU chips? You likely mean the last one, as the first two PCI chips have
-mac80211 drivers.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>                                                                                                                                                                                                                                   
+---
+ drivers/net/wireless/mwifiex/pcie.c | 7 +++++++
+ drivers/net/wireless/mwifiex/pcie.h | 5 +++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-If you want to use nl80211/cfg80211 commands with driver r8188eu, you will need
-to add the necessary code for that driver to support that API. Modifying the
-supplicant is probably not the way to go.
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index fbb0550..1f6e687 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1726,6 +1726,13 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+                   buffer is released. This is just to make things simpler,
+                   we need to find a better method of managing these buffers.
+                */
++       } else {
++               if (mwifiex_write_reg(adapter, PCIE_CPU_INT_EVENT,
++                                     CPU_INTR_EVENT_DONE)) {
++                       dev_warn(adapter->dev,
++                                "Write register failed\n");
++                       return -1;
++               }
+        }
 
-On my x86_64 system, the standard supplicant works with NetworkManager and r8188eu.
+        return 0;
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index a1a8fd3..200e8b0 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -40,8 +40,8 @@
+ #define MWIFIEX_TXBD_MASK                      0x3F
+ #define MWIFIEX_RXBD_MASK                      0x3F
 
-Larry
+-#define MWIFIEX_MAX_EVT_BD                     0x04
+-#define MWIFIEX_EVTBD_MASK                     0x07
++#define MWIFIEX_MAX_EVT_BD                     0x08
++#define MWIFIEX_EVTBD_MASK                     0x0f
 
+ /* PCIE INTERNAL REGISTERS */
+ #define PCIE_SCRATCH_0_REG                             0xC10
+@@ -69,6 +69,7 @@
+ #define CPU_INTR_DOOR_BELL                             BIT(1)
+ #define CPU_INTR_SLEEP_CFM_DONE                        BIT(2)
+ #define CPU_INTR_RESET                                 BIT(3)
++#define CPU_INTR_EVENT_DONE                            BIT(5)
+
+ #define HOST_INTR_DNLD_DONE                            BIT(0)
+ #define HOST_INTR_UPLD_RDY                             BIT(1)
+-- 
+1.8.1.4
