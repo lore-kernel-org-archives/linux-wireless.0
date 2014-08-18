@@ -1,140 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:54912 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbaHMJRT (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:35932 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007AbaHRU6T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 05:17:19 -0400
-Date: Wed, 13 Aug 2014 14:47:13 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: Simon Kelley <simon@thekelleys.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] drivers/net/wireless: Remove typedef local_info_t
-Message-ID: <20140813091713.GA2995@himangi-Dell> (sfid-20140813_111739_557784_8666B9A4)
+	Mon, 18 Aug 2014 16:58:19 -0400
+Received: by mail-we0-f182.google.com with SMTP id k48so5632887wev.27
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 13:58:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+BoTQnY1wV2DFrs4P6F+oz2vPH+tbziSGc-Gq=QOQfsrbf6wQ@mail.gmail.com>
+References: <CAHqTa-10bc+AtFbifObfqHXwzfcbrA5w9Z6LL53kUdDWeq=7ig@mail.gmail.com>
+ <CA+BoTQnY1wV2DFrs4P6F+oz2vPH+tbziSGc-Gq=QOQfsrbf6wQ@mail.gmail.com>
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Mon, 18 Aug 2014 16:57:57 -0400
+Message-ID: <CAHqTa-3e4qeutKPaZ--s2kiwBWjsz=j71tPPJDp9vUJdRK+qsw@mail.gmail.com> (sfid-20140818_225831_287868_CBC3FD51)
+Subject: Re: Best choice of primary channels when using 40- or 80 MHz wide channels
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linux kernel coding style guidelines suggest not using typedefs
-for structure types. This patch gets rid of the typedef for
-local_info_t. Also, the name of the struct is changed to drop the _t,
-to make the name look less typedef-like.
+On Mon, Aug 18, 2014 at 5:14 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 16 August 2014 01:42, Avery Pennarun <apenwarr@gmail.com> wrote:
+>> or perhaps this (40 Mhz uses upper half instead of lower half):
+>>
+>> channel=157
+>> ht_capab=[HT20][HT40+][RX-STBC1]
+>> vht_capab=[MAX-A-MPDU-LEN-EXP4]
+>> vht_oper_chwidth=1
+>> vht_oper_centr_freq_seg0_idx=155
+>>
+>> But when I try to do this, hostapd seems to abort and claim it can't
+>> register to use the channels.  Am I doing something wrong?  Is it
+>> hostapd version related?
+>
+> All following configs work for me:
+>
+> http://pastebin.com/w1LKTDGn
+> http://pastebin.com/McquAcCf
+> http://pastebin.com/1RNWHAAS
+> http://pastebin.com/kDd2RybJ
+>
+> My hostapd is at 6d00ab04302df257cb3092b2b31b4eac42e77569.
 
-The following Coccinelle semantic patch detects the case:
+Hmm, let me try your configurations and see what happens.  Maybe I
+just did something silly.  That would be good news :)
 
-@tn@
-identifier i;
-type td;
-@@
+>> Also, hostapd contains code to swap the primary/secondary 20 MHz
+>> channels in the 40 MHz channel, based on what other APs are around.
+>> If I read correctly, it seems to want to use the same primary channel
+>> as everyone else.  Wouldn't it be better to equailze things to try to
+>> get about half the APs using each sub channel?
+>
+> That would break 20/40 coex, wouldn't it?
 
--typedef
- struct i { ... }
--td
- ;
+I'm certainly not the expert on this, but here's what I *think* I read
+about it: in 40 MHz mode, you have to send an (identical I guess)
+802.11g-compatible frame-start header on both 20 MHz subchannels at
+the beginning of the frame.  You also have to do carrier detection on
+both subchannels before transmitting, of course.  Then you can
+transmit the actual content on the single 40 MHz wide channel now that
+you know it's clear.
 
-@@
-type tn.td;
-identifier tn.i;
-@@
+If it doesn't work this way, then if you have 802.11g APs on, say,
+channels 1 and 5, and you set up a 40 MHz AP on channels 1+5 (with
+either one being the primary), you will cause problems for anyone on
+the secondary channel.
 
--td
-+ struct i
+Am I misremembering/misunderstanding what I read?  Or maybe devices
+aren't actually implemented like that?
 
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/net/wireless/atmel_cs.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+I guess the best approach is to actually benchmark it with/without the
+channel swap and find out how bad the interference is.
 
-diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel_cs.c
-index 4cfb4d9..7afc9c5 100644
---- a/drivers/net/wireless/atmel_cs.c
-+++ b/drivers/net/wireless/atmel_cs.c
-@@ -66,18 +66,18 @@ static void atmel_release(struct pcmcia_device *link);
- 
- static void atmel_detach(struct pcmcia_device *p_dev);
- 
--typedef struct local_info_t {
-+struct local_info {
- 	struct net_device *eth_dev;
--} local_info_t;
-+};
- 
- static int atmel_probe(struct pcmcia_device *p_dev)
- {
--	local_info_t *local;
-+	struct local_info *local;
- 
- 	dev_dbg(&p_dev->dev, "atmel_attach()\n");
- 
- 	/* Allocate space for private device-specific data */
--	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
-+	local = kzalloc(sizeof(*local), GFP_KERNEL);
- 	if (!local)
- 		return -ENOMEM;
- 
-@@ -117,7 +117,7 @@ static int atmel_config_check(struct pcmcia_device *p_dev, void *priv_data)
- 
- static int atmel_config(struct pcmcia_device *link)
- {
--	local_info_t *dev;
-+	struct local_info *dev;
- 	int ret;
- 	const struct pcmcia_device_id *did;
- 
-@@ -141,14 +141,14 @@ static int atmel_config(struct pcmcia_device *link)
- 	if (ret)
- 		goto failed;
- 
--	((local_info_t*)link->priv)->eth_dev =
-+	((struct local_info *)link->priv)->eth_dev =
- 		init_atmel_card(link->irq,
- 				link->resource[0]->start,
- 				did ? did->driver_info : ATMEL_FW_TYPE_NONE,
- 				&link->dev,
- 				card_present,
- 				link);
--	if (!((local_info_t*)link->priv)->eth_dev)
-+	if (!((struct local_info *)link->priv)->eth_dev)
- 			goto failed;
- 
- 
-@@ -161,20 +161,20 @@ static int atmel_config(struct pcmcia_device *link)
- 
- static void atmel_release(struct pcmcia_device *link)
- {
--	struct net_device *dev = ((local_info_t*)link->priv)->eth_dev;
-+	struct net_device *dev = ((struct local_info *)link->priv)->eth_dev;
- 
- 	dev_dbg(&link->dev, "atmel_release\n");
- 
- 	if (dev)
- 		stop_atmel_card(dev);
--	((local_info_t*)link->priv)->eth_dev = NULL;
-+	((struct local_info *)link->priv)->eth_dev = NULL;
- 
- 	pcmcia_disable_device(link);
- }
- 
- static int atmel_suspend(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	netif_device_detach(local->eth_dev);
- 
-@@ -183,7 +183,7 @@ static int atmel_suspend(struct pcmcia_device *link)
- 
- static int atmel_resume(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	atmel_open(local->eth_dev);
- 	netif_device_attach(local->eth_dev);
--- 
-1.9.1
+Thanks,
 
+Avery
