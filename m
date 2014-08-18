@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:37255 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbaHSJiM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:38:12 -0400
-Received: by mail-we0-f171.google.com with SMTP id p10so6155237wes.30
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 02:38:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140819082316.16842.85085.stgit@potku.adurom.net>
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>
-	<20140819082316.16842.85085.stgit@potku.adurom.net>
-Date: Tue, 19 Aug 2014 11:38:10 +0200
-Message-ID: <CA+BoTQk5pm9GoS41YGtE7VPdsNiuX294KgiR5aXH0WWBPVq4SA@mail.gmail.com> (sfid-20140819_113815_317224_729D109C)
-Subject: Re: [PATCH v7 5/8] ath10k: dump exception stack contents on firmware crash
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:41858 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750806AbaHRNkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 09:40:47 -0400
+Message-ID: <1408369228.20137.6.camel@dubbel> (sfid-20140818_154056_346498_4C5ADF32)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Date: Mon, 18 Aug 2014 16:40:28 +0300
+In-Reply-To: <1408360749-10233-1-git-send-email-michal.kazior@tieto.com>
+References: <1408351816.29649.8.camel@dubbel>
+	 <1408360749-10233-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] mac80211: fix channel switch for chanctx-based drivers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 August 2014 10:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Firmware developers can decode this and maybe figure out
-> why the firmware crashed.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On Mon, 2014-08-18 at 13:19 +0200, Michal Kazior wrote:
+> The new_ctx pointer is set only for non-chanctx
+> drivers. This yielded a crash for chanctx-based
+> drivers during channel switch finalization:
+> 
+>   BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+>   IP: ieee80211_vif_use_reserved_switch+0x71c/0xb00 [mac80211]
+> 
+> Use an adequate chanctx pointer to fix this.
+> 
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 > ---
-[...]
-> +/* Save the firmware exception stack */
-> +static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
-> +                                     struct ath10k_fw_crash_data *crash_data)
-> +{
-> +       lockdep_assert_held(&ar->data_lock);
-> +
-> +       BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
-> +
-> +       ath10k_pci_diag_read_hi(ar, crash_data->exc_stack_buf,
-> +                               hi_err_stack, ATH10K_FW_STACK_SIZE);
+> Note: This is based on mac80211-next/master albeit
+> it should apply cleanly on wireless-next/master
+> and v3.17-rc1.
+> 
+> I've verified this fix with iwlmvm & 7260.
 
-Current master tree performs an implicit byte swap so the stack read
-from target will be in host endianess. IOW on big-endian host you'll
-messed up data and there's no indication of endianess anymore.
+Cool!  I've also tested this (with P2P client) and it works fine.  You
+can add my:
 
+Tested-by: Luciano Coelho <luciano.coelho@intel.com>
 
-Michał
+The reason I haven't seen this before is because I've been using 2
+channels support with iwlmvm, so we never get an in-place channel
+switch. :( The normal case is to have single channel support...
+
+--
+Cheers,
+Luca.
+
