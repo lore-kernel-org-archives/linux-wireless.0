@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40570 "EHLO plane.gmane.org"
+Received: from mga01.intel.com ([192.55.52.88]:52144 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750733AbaHBXfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2014 19:35:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1XDipL-00070O-Kv
-	for linux-wireless@vger.kernel.org; Sun, 03 Aug 2014 01:35:03 +0200
-Received: from p54946fa4.dip0.t-ipconnect.de ([84.148.111.164])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 01:35:03 +0200
-Received: from Manuel.Spam by p54946fa4.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 01:35:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Subject: Problems with rtl8192cu driver (disassociated from ... (Reason: 2))
-Date: Sun, 03 Aug 2014 01:29:49 +0200
-Message-ID: <lrjs9d$s51$1@ger.gmane.org> (sfid-20140803_013520_316353_6CD43BA0)
-Mime-Version: 1.0
+	id S1751292AbaHRHXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2014 03:23:14 -0400
+Message-ID: <53F1A9DE.7070701@linux.intel.com> (sfid-20140818_092317_500302_A7B43C9D)
+Date: Mon, 18 Aug 2014 10:23:10 +0300
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: core: Reorder wiphy_register() notifications
+ relevantly
+References: <1407935091-28516-1-git-send-email-tomasz.bursztyka@linux.intel.com>	 (sfid-20140813_150457_552550_15CAEAC1) <1408107825.15705.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1408107825.15705.3.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Johannes,
 
-I'm trying to get access to a WLAN access point using the following adapter:
+> Subject should say cfg80211.
 
-<http://www.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/global/wireless_adapters_n150/ew-7811un>
+Ok
 
-I've used "NetworkManager" to connect to the access point and everything 
-seemed to work well at first.
+>> >Currently it can send regulatory domain change notification before any
+>> >NEW_WIPHY notification. Moreover, if rfill_register() fails, calling
+>> >wiphy_unregister() will send a DEL_WIPHY though no NEW_WIPHY had been
+>> >sent previously.
+>> >
+>> >Thus reordering so it properly notifies NEW_WIPHY before any other.
+> This also isn't actually true - now rfkill is*after*  NEW_WIPHY.
 
-But after a few minutes the connection is lost with the following 
-message in dmesg:
+I will prepare another patch.
 
-wlan0: disassociated from XX:XX:XX:XX:XX:XX (Reason: 2)
+> This code had a bunch of sequencing issues in the past - please look
+> through the history and check that this doesn't re-introduce any of
+> them.
 
-If I restart NetworkManager, then the connection works again, but only 
-for a few minutes before I get another disconnect.
+Sure
 
-I even tried to do a permanent ping to a server on the Internet (to have 
-permanent traffic) but this doesn't change anything. I still get 
-disconnected with "Reason 2".
-
-Are there known problems with the rtl8192cu driver?
-
-Can someone here recommend a small USB WLAN adapter which is known to 
-work without problems?
-
-Thank you very much in advance.
-
-Greetings
-
-Manuel
-
+Tomasz
