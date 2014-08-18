@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50636 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbaHIP5L (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50190 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbaHRHqp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 11:57:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Franky Lin <frankyl@broadcom.com>
-Subject: Re: Reporting firmware stats to ethtool
-References: <53E3F65D.8080102@candelatech.com>
-	<87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
-	<53E4EFCB.5090501@candelatech.com>
-	<CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com>
-	<53E4F6B8.50009@candelatech.com> <53E4FEA9.80803@broadcom.com>
-	<87vbq2uqdt.fsf@kamboji.qca.qualcomm.com>
-	<53E5CDF9.4010008@broadcom.com>
-Date: Sat, 9 Aug 2014 18:56:55 +0300
-In-Reply-To: <53E5CDF9.4010008@broadcom.com> (Arend van Spriel's message of
-	"Sat, 9 Aug 2014 09:30:01 +0200")
-Message-ID: <87y4uxu054.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_175731_098151_C796ABC3)
+	Mon, 18 Aug 2014 03:46:45 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 00/13] wil6210 misc updates
+Date: Mon, 18 Aug 2014 10:46:39 +0300
+Message-ID: <3159817.tZ1i7iY0M1@lx-wigig-72> (sfid-20140818_094648_706430_D3C93622)
+In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+On Wednesday, August 06, 2014 10:31:48 AM Dedy Lansky wrote:
+> Some updates and bug fixes for wil6210 driver.
+> 
+> Dedy Lansky (1):
+>   wil6210: Limit max number of associated stations
+> 
+> Vladimir Kondratiev (12):
+>   wil6210: map MAC timer for packet lifetime into debugfs
+>   wil6210: fix race in reset
+>   wil6210: update copyright year 2014
+>   wil6210: check error in wil_target_reset()
+>   wil6210: wait longer for hardware reset completion
+>   wil6210: Workaround for Sparrow with bad device id
+>   wil6210: convert debugfs to the table mode
+>   wil6210: fix beamforming data reporting
+>   wil6210: fix false "scan timeout"
+>   wil6210: fix free'd memory access in wil_if_free()
+>   wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
+>   wil6210: fix access after free in wil_pcie_remove()
+> 
+>  drivers/net/wireless/ath/wil6210/cfg80211.c   |   6 +-
+>  drivers/net/wireless/ath/wil6210/debugfs.c    | 331 ++++++++++++++++++++------
+>  drivers/net/wireless/ath/wil6210/interrupt.c  |   2 +-
+>  drivers/net/wireless/ath/wil6210/main.c       |  30 ++-
+>  drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
+>  drivers/net/wireless/ath/wil6210/pcie_bus.c   |   7 +-
+>  drivers/net/wireless/ath/wil6210/rx_reorder.c |  16 ++
+>  drivers/net/wireless/ath/wil6210/txrx.c       |   3 +-
+>  drivers/net/wireless/ath/wil6210/txrx.h       |   2 +-
+>  drivers/net/wireless/ath/wil6210/wil6210.h    |  17 +-
+>  drivers/net/wireless/ath/wil6210/wmi.c        |  47 ++--
+>  drivers/net/wireless/ath/wil6210/wmi.h        |   4 +-
+>  12 files changed, 327 insertions(+), 146 deletions(-)
+> 
+> 
+Hi John,
 
->>> Does ath driver notify mac80211 about firmware restart, ie. through
->>> ieee80211_restart_hw().
->>
->> ath10k does use ieee80211_restart_hw().
->>
->>> If only user-space could get that info.
->>
->> Yeah, that would be nice to have for ath10k firmware crash dump
->> functionality. And doesn't Android also need something similar?
->
-> Probably. bcmdhd seems to send a "firmware hang" event up to wpa_supp,
-> which probably ends up in the android wifi framework through the
-> control interface. Currently, this is a driver private event handled
-> by wpa_supplicant_lib, but it seems trivial to me to add a nl80211
-> event to trigger that.
->
-> I am not sure what infrastructure your "ath10k firmware crash dump" is
-> going to use.
+Could you please merge these patches? Somehow, it was forgotten.
 
-Currently we are planning to just provide a debugfs file to retrieve the
-latest dump.
+Thanks, Vladimir
 
-> I have seen similar thing from Marvell recently [1] which relies on
-> udev and ethtool to do the work. I guess aligning the solutions is why
-> this topic is listed for the wireless breakout session at kernel
-> summit in Chicago.
-
-Yeah, we did talk about that a bit in the mailing list few months back.
-
--- 
-Kalle Valo
