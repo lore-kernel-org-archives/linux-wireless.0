@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:46522 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594AbaHTUrg (ORCPT
+Received: from ems.wolfvision.net ([213.33.91.163]:41448 "EHLO
+	ems.wolfvision.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbaHRMqJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 16:47:36 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so7504462wiv.13
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 13:47:35 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
-Date: Wed, 20 Aug 2014 22:47:32 +0200
-Message-ID: <1478683.D306USvBEk@debian64> (sfid-20140820_224740_262490_7FF1D158)
-In-Reply-To: <53F394FF.7050209@candelatech.com>
-References: <5338F1B8.5040305@candelatech.com> <53ECED3E.4080907@candelatech.com> <53F394FF.7050209@candelatech.com>
-MIME-Version: 1.0
+	Mon, 18 Aug 2014 08:46:09 -0400
+From: Matthias Fend <Matthias.Fend@wolfvision.net>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: rt2x00: Ralink RT5572 (TL-WDN3200) sporadic damages
+Date: Mon, 18 Aug 2014 12:37:44 +0000
+Message-ID: <CC2A85E271C1FB479D9C17305347F69A04C60591@WOLFSERVER19.wolfvision-at.intra> (sfid-20140818_144613_876324_659C4ADE)
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, August 19, 2014 11:18:39 AM Ben Greear wrote:
-> On 08/14/2014 10:09 AM, Ben Greear wrote:
-> > On 08/14/2014 05:39 AM, Christian Lamparter wrote:
-> >> On Tuesday, August 12, 2014 11:34:59 AM Ben Greear wrote:
-> >>>
-> >>> Without encryption, I see download rate of around 400 - 420Mbps.
-> >>>
-> >>> So, your patch looks like a good improvement to me, and I'll be
-> >>> happy to test further patches if you happen to do those assembler
-> >>> optimizations you talk about above.
-> >>
-> >> Maybe, that will depend on what the results for: "wpa2, *HW*-crypt,
-> >> download, udp" are.
-> > 
-> > I'll do that test sometime soon and post the results.
-> 
-> I ran that today, and I get about the same throughput with hw-crypt or
-> sw-crypt (350-355Mbps UDP download goodput).
-> 
-> I still see 400+Mbps with Open authentication.
-> 
-> So, maybe the bottleneck now is elsewhere...
-Can you rule out that the "udp generator" (either the application
-or the hardware) is now the bottleneck for this test? [Does the
-datasheet mention the throughput of the hw-crypto? Or do you know
-someone at QCA which can tell you if the hardware is filling up
-the aggregates with additional padding to meet the MPDU start
-spacing]
+Hello,
 
-I'll look into the assembler implementation of aes-ccm. But I'm
-afraid that this won't increase the throughput (and only decrease
-the load on the CPU a bit).
+While continuing stability tests after fixing the high current peaks while sending uninitialized beacons [1] we still have occasional cases where suddenly a stick stops working and is getting very hot.
+In this case very hot means that the plastic molding of the dongle shows very clear deformations and the stick won't work properly anymore.
+One can see continuous vendor request failed message in case when a stick stops working or when a damaged stick is inserted.
 
-Also, just for fun: what goodput can you achieve over gbit ethernet?
-[Because ethernet is also affected by filtering, bridging, 
-pcie-throughput... if it is setup in the same way so you could
-rule out that iptables, its friends or the pcie-port is a
-bottleneck].
+So far we always tested with our custom hardware. To rule out hardware topics we decided to build up a test farm with a more common platform.
+For a test we setup 10 raspberry pi with this setup:
+Kernel: https://github.com/raspberrypi/linux/tree/rpi-3.16.y
+WLAN-Stick Firmware: V0.33
+ap: hostapd 1.0
+ap:config:
+interface=wlan0
+driver=nl80211
+ieee80211n=1
+wmm_enabled=1
+ssid=MyPi1
+channel=36
+disassoc_low_ack=0
+country_code=DE
+ieee80211d=1
+hw_mode=a
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+wpa=2
+wpa_passphrase=raspberry
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP CCMP
 
-Regards
-Christian
+Within the first 48 hours three of the ten setups failed with the mentioned problems. Since the broken sticks had been replaced the test is now running since five days without further problems.
+At least this test helped to figure out that this issue does not depend on our hardware.
+Unfortunately this bug is really rare and currently I have absolutely no idea what is triggering this damages.
+Has anybody observed similar behavior or has some helpful hints?
+
+Thanks,
+ ~Matthias
+
+ [1] http://www.spinics.net/lists/linux-wireless/msg123423.html
+
+
