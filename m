@@ -1,265 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56336 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbaHJOsE (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37007 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867AbaHSIWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 10:48:04 -0400
-Received: by mail-we0-f174.google.com with SMTP id x48so7600831wes.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 07:48:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/9] staging: vt6655: rf/wpactl/wroute use struct vnt_private
-Date: Sun, 10 Aug 2014 15:47:01 +0100
-Message-Id: <1407682023-2865-7-git-send-email-tvboxspy@gmail.com> (sfid-20140810_164808_330958_0BEDB0E1)
-In-Reply-To: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
-References: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 19 Aug 2014 04:22:50 -0400
+Subject: [PATCH v7 1/8] ath10k: add ath10k_pci_diag_* helpers
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 Aug 2014 11:22:46 +0300
+Message-ID: <20140819082245.16842.10751.stgit@potku.adurom.net> (sfid-20140819_102254_048245_7839FB0E)
+In-Reply-To: <20140819082038.16842.46876.stgit@potku.adurom.net>
+References: <20140819082038.16842.46876.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing PSDevice.
+ath10k_pci_diag_read32() is for reading u32 from a device and ath10k_pci_diag_read_hi()
+is a helper for reading data using "host interest" table.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/vt6655/rf.c     |  8 ++++----
- drivers/staging/vt6655/rf.h     |  8 ++++----
- drivers/staging/vt6655/wpactl.c | 28 ++++++++++++++--------------
- drivers/staging/vt6655/wpactl.h |  6 +++---
- drivers/staging/vt6655/wroute.c |  2 +-
- drivers/staging/vt6655/wroute.h |  3 ++-
- 6 files changed, 28 insertions(+), 27 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c |   55 +++++++++++++++++++++++----------
+ 1 file changed, 38 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index 42b257f..e505af9 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -746,7 +746,7 @@ static bool RFbAL2230SelectChannel(void __iomem *dwIoBase, unsigned char byChann
-  *
-  */
- bool RFbInit(
--	PSDevice  pDevice
-+	struct vnt_private *pDevice
- )
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 98c029b7d0ab..b4ae4bb3fc09 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -460,13 +460,46 @@ done:
+ 	return ret;
+ }
+ 
++static int ath10k_pci_diag_read32(struct ath10k *ar, u32 address, u32 *value)
++{
++	return ath10k_pci_diag_read_mem(ar, address, value, sizeof(u32));
++}
++
++static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
++				     u32 src, u32 len)
++{
++	u32 host_addr, addr;
++	int ret;
++
++	host_addr = host_interest_item_address(src);
++
++	ret = ath10k_pci_diag_read32(ar, host_addr, &addr);
++	if (ret != 0) {
++		ath10k_warn("failed to get memcpy hi address for firmware address %d: %d\n",
++			    src, ret);
++		return ret;
++	}
++
++	ret = ath10k_pci_diag_read_mem(ar, addr, dest, len);
++	if (ret != 0) {
++		ath10k_warn("failed to memcpy firmware memory from %d (%d B): %d\n",
++			    addr, len, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++#define ath10k_pci_diag_read_hi(ar, dest, src, len)		\
++	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len);
++
+ /* Read 4-byte aligned data from Target memory or register */
+ static int ath10k_pci_diag_read_access(struct ath10k *ar, u32 address,
+ 				       u32 *data)
  {
- 	bool bResult = true;
-@@ -897,7 +897,7 @@ bool RFvWriteWakeProgSyn(void __iomem *dwIoBase, unsigned char byRFType, unsigne
-  *
-  */
- bool RFbSetPower(
--	PSDevice  pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned int uRATE,
- 	unsigned int uCH
- )
-@@ -978,7 +978,7 @@ bool RFbSetPower(
-  */
+ 	/* Assume range doesn't cross this boundary */
+ 	if (address >= DRAM_BASE_ADDRESS)
+-		return ath10k_pci_diag_read_mem(ar, address, data, sizeof(u32));
++		return ath10k_pci_diag_read32(ar, address, data);
  
- bool RFbRawSetPower(
--	PSDevice  pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPwr,
- 	unsigned int uRATE
- )
-@@ -1042,7 +1042,7 @@ bool RFbRawSetPower(
-  -*/
- void
- RFvRSSITodBm(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byCurrRSSI,
- 	long *pldBm
- 	)
-diff --git a/drivers/staging/vt6655/rf.h b/drivers/staging/vt6655/rf.h
-index ba55561..be4ef88 100644
---- a/drivers/staging/vt6655/rf.h
-+++ b/drivers/staging/vt6655/rf.h
-@@ -77,19 +77,19 @@
- bool IFRFbWriteEmbedded(void __iomem *dwIoBase, unsigned long dwData);
- bool RFbSelectChannel(void __iomem *dwIoBase, unsigned char byRFType, unsigned char byChannel);
- bool RFbInit(
--	PSDevice  pDevice
-+	struct vnt_private *
- );
- bool RFvWriteWakeProgSyn(void __iomem *dwIoBase, unsigned char byRFType, unsigned int uChannel);
--bool RFbSetPower(PSDevice pDevice, unsigned int uRATE, unsigned int uCH);
-+bool RFbSetPower(struct vnt_private *, unsigned int uRATE, unsigned int uCH);
- bool RFbRawSetPower(
--	PSDevice  pDevice,
-+	struct vnt_private *,
- 	unsigned char byPwr,
- 	unsigned int uRATE
- );
+ 	*data = ath10k_pci_read32(ar, address);
+ 	return 0;
+@@ -801,9 +834,7 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
  
- void
- RFvRSSITodBm(
--	PSDevice pDevice,
-+	struct vnt_private *,
- 	unsigned char byCurrRSSI,
- 	long    *pldBm
- );
-diff --git a/drivers/staging/vt6655/wpactl.c b/drivers/staging/vt6655/wpactl.c
-index 6f29a69..c0c46a7 100644
---- a/drivers/staging/vt6655/wpactl.c
-+++ b/drivers/staging/vt6655/wpactl.c
-@@ -83,13 +83,13 @@ static void wpadev_setup(struct net_device *dev)
-  *
-  */
- 
--static int wpa_init_wpadev(PSDevice pDevice)
-+static int wpa_init_wpadev(struct vnt_private *pDevice)
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
  {
--	PSDevice wpadev_priv;
-+	struct vnt_private *wpadev_priv;
- 	struct net_device *dev = pDevice->dev;
- 	int ret = 0;
+-	u32 reg_dump_area = 0;
+ 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X] = {};
+-	u32 host_addr;
+ 	int ret;
+ 	u32 i;
  
--	pDevice->wpadev = alloc_netdev(sizeof(PSDevice), "vntwpa", wpadev_setup);
-+	pDevice->wpadev = alloc_netdev(sizeof(*wpadev_priv), "vntwpa", wpadev_setup);
- 	if (pDevice->wpadev == NULL)
- 		return -ENOMEM;
+@@ -812,21 +843,11 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 		   ar->hw_params.name, ar->target_version);
+ 	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
  
-@@ -133,7 +133,7 @@ static int wpa_init_wpadev(PSDevice pDevice)
-  *
-  */
+-	host_addr = host_interest_item_address(HI_ITEM(hi_failure_state));
+-	ret = ath10k_pci_diag_read_mem(ar, host_addr,
+-				       &reg_dump_area, sizeof(u32));
++	ret = ath10k_pci_diag_read_hi(ar, &reg_dump_values[0],
++				      hi_failure_state,
++				      REG_DUMP_COUNT_QCA988X * sizeof(u32));
+ 	if (ret) {
+-		ath10k_err("failed to read FW dump area address: %d\n", ret);
+-		return;
+-	}
+-
+-	ath10k_err("target register Dump Location: 0x%08X\n", reg_dump_area);
+-
+-	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area,
+-				       &reg_dump_values[0],
+-				       REG_DUMP_COUNT_QCA988X * sizeof(u32));
+-	if (ret != 0) {
+-		ath10k_err("failed to read FW dump area: %d\n", ret);
++		ath10k_err("failed to read firmware dump area: %d\n", ret);
+ 		return;
+ 	}
  
--static int wpa_release_wpadev(PSDevice pDevice)
-+static int wpa_release_wpadev(struct vnt_private *pDevice)
- {
- 	if (pDevice->skb) {
- 		dev_kfree_skb(pDevice->skb);
-@@ -165,7 +165,7 @@ static int wpa_release_wpadev(PSDevice pDevice)
-  *
-  */
- 
--int wpa_set_wpadev(PSDevice pDevice, int val)
-+int wpa_set_wpadev(struct vnt_private *pDevice, int val)
- {
- 	if (val)
- 		return wpa_init_wpadev(pDevice);
-@@ -187,7 +187,7 @@ int wpa_set_wpadev(PSDevice pDevice, int val)
-  *
-  */
- 
--int wpa_set_keys(PSDevice pDevice, void *ctx,
-+int wpa_set_keys(struct vnt_private *pDevice, void *ctx,
- 		 bool fcpfkernel) __must_hold(&pDevice->lock)
- {
- 	struct viawget_wpa_param *param = ctx;
-@@ -407,7 +407,7 @@ int wpa_set_keys(PSDevice pDevice, void *ctx,
-  *
-  */
- 
--static int wpa_set_wpa(PSDevice pDevice,
-+static int wpa_set_wpa(struct vnt_private *pDevice,
- 		       struct viawget_wpa_param *param)
- {
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
-@@ -432,7 +432,7 @@ static int wpa_set_wpa(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_set_disassociate(PSDevice pDevice,
-+static int wpa_set_disassociate(struct vnt_private *pDevice,
- 				struct viawget_wpa_param *param)
- {
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
-@@ -461,7 +461,7 @@ static int wpa_set_disassociate(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_set_scan(PSDevice pDevice,
-+static int wpa_set_scan(struct vnt_private *pDevice,
- 			struct viawget_wpa_param *param)
- {
- 	spin_lock_irq(&pDevice->lock);
-@@ -486,7 +486,7 @@ static int wpa_set_scan(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_get_bssid(PSDevice pDevice,
-+static int wpa_get_bssid(struct vnt_private *pDevice,
- 			 struct viawget_wpa_param *param)
- {
- 	PSMgmtObject        pMgmt = pDevice->pMgmt;
-@@ -510,7 +510,7 @@ static int wpa_get_bssid(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_get_ssid(PSDevice pDevice,
-+static int wpa_get_ssid(struct vnt_private *pDevice,
- 			struct viawget_wpa_param *param)
- {
- 	PSMgmtObject        pMgmt = pDevice->pMgmt;
-@@ -538,7 +538,7 @@ static int wpa_get_ssid(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_get_scan(PSDevice pDevice,
-+static int wpa_get_scan(struct vnt_private *pDevice,
- 			struct viawget_wpa_param *param)
- {
- 	struct viawget_scan_result *scan_buf;
-@@ -655,7 +655,7 @@ static int wpa_get_scan(PSDevice pDevice,
-  *
-  */
- 
--static int wpa_set_associate(PSDevice pDevice,
-+static int wpa_set_associate(struct vnt_private *pDevice,
- 			     struct viawget_wpa_param *param)
- {
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
-@@ -799,7 +799,7 @@ static int wpa_set_associate(PSDevice pDevice,
-  *
-  */
- 
--int wpa_ioctl(PSDevice pDevice, struct iw_point *p)
-+int wpa_ioctl(struct vnt_private *pDevice, struct iw_point *p)
- {
- 	struct viawget_wpa_param *param;
- 	int ret = 0;
-diff --git a/drivers/staging/vt6655/wpactl.h b/drivers/staging/vt6655/wpactl.h
-index f7638ba..c1b4a72 100644
---- a/drivers/staging/vt6655/wpactl.h
-+++ b/drivers/staging/vt6655/wpactl.h
-@@ -57,8 +57,8 @@ enum wpa_key_mgmt { KEY_MGMT_802_1X, KEY_MGMT_CCKM, KEY_MGMT_PSK, KEY_MGMT_NONE,
- 
- /*---------------------  Export Functions  --------------------------*/
- 
--int wpa_set_wpadev(PSDevice pDevice, int val);
--int wpa_ioctl(PSDevice pDevice, struct iw_point *p);
--int wpa_set_keys(PSDevice pDevice, void *ctx, bool fcpfkernel);
-+int wpa_set_wpadev(struct vnt_private *, int val);
-+int wpa_ioctl(struct vnt_private *, struct iw_point *p);
-+int wpa_set_keys(struct vnt_private *, void *ctx, bool fcpfkernel);
- 
- #endif // __WPACL_H__
-diff --git a/drivers/staging/vt6655/wroute.c b/drivers/staging/vt6655/wroute.c
-index 4da3fef..44ce6e2 100644
---- a/drivers/staging/vt6655/wroute.c
-+++ b/drivers/staging/vt6655/wroute.c
-@@ -62,7 +62,7 @@ static int msglevel = MSG_LEVEL_INFO;
-  * Return Value: true if packet duplicate; otherwise false
-  *
-  */
--bool ROUTEbRelay(PSDevice pDevice, unsigned char *pbySkbData,
-+bool ROUTEbRelay(struct vnt_private *pDevice, unsigned char *pbySkbData,
- 		 unsigned int uDataLen, unsigned int uNodeIndex)
- {
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
-diff --git a/drivers/staging/vt6655/wroute.h b/drivers/staging/vt6655/wroute.h
-index 3abc1d3..e59eec9 100644
---- a/drivers/staging/vt6655/wroute.h
-+++ b/drivers/staging/vt6655/wroute.h
-@@ -39,6 +39,7 @@
- 
- /*---------------------  Export Functions  --------------------------*/
- 
--bool ROUTEbRelay(PSDevice pDevice, unsigned char *pbySkbData, unsigned int uDataLen, unsigned int uNodeIndex);
-+bool ROUTEbRelay(struct vnt_private *pDevice, unsigned char *pbySkbData,
-+		 unsigned int uDataLen, unsigned int uNodeIndex);
- 
- #endif /* __WROUTE_H__ */
--- 
-1.9.1
 
