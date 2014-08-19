@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41535 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756AbaHDIWe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 04:22:34 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 07/14] wil6210: Workaround for Sparrow with bad device id
-Date: Mon, 4 Aug 2014 11:20:47 +0300
-Message-ID: <1407140454-31639-8-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102238_473961_470552E0)
-In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:35024 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752019AbaHSMmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 08:42:18 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: rfkill: gpio: Add more Broadcom bluetooth ACPI IDs
+Date: Tue, 19 Aug 2014 15:41:32 +0300
+Message-Id: <1408452092-13664-1-git-send-email-mika.westerberg@linux.intel.com> (sfid-20140819_144249_691713_8ABDE08F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+This adds one more ACPI ID of a Broadcom bluetooth chip.
 
-If firmware broken on the boot time, Sparrow card enumerates as
-device 0x302 instead of 0x310. Allow using this ID
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index a6af2bb..cf0b219 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -243,6 +243,8 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
- 	  .driver_data = (kernel_ulong_t)&wil_board_marlon },
- 	{ PCI_DEVICE(0x1ae9, 0x0310),
- 	  .driver_data = (kernel_ulong_t)&wil_board_sparrow },
-+	{ PCI_DEVICE(0x1ae9, 0x0302), /* same as above, firmware broken */
-+	  .driver_data = (kernel_ulong_t)&wil_board_sparrow },
- 	{ /* end: all zeroes */	},
- };
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 14c98e48f261..02a86a27fd84 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -158,6 +158,7 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
+ 	{ "BCM2E39", RFKILL_TYPE_BLUETOOTH },
+ 	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
++	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
+ 	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
 -- 
-1.8.5.2
+2.1.0
 
