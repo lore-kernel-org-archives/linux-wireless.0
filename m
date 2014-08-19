@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13489 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750957AbaHRJQn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 05:16:43 -0400
-From: Avinash Patil <patila@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 18 Aug 2014 02:15:35 -0700
-Subject: [PATCH 3/4] mwifiex: support for event done interrupt
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147C23@SC-VEXCH2.marvell.com> (sfid-20140818_111741_111942_2D8152F2)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-we0-f171.google.com ([74.125.82.171]:37255 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbaHSJiM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 05:38:12 -0400
+Received: by mail-we0-f171.google.com with SMTP id p10so6155237wes.30
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 02:38:10 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20140819082316.16842.85085.stgit@potku.adurom.net>
+References: <20140819082038.16842.46876.stgit@potku.adurom.net>
+	<20140819082316.16842.85085.stgit@potku.adurom.net>
+Date: Tue, 19 Aug 2014 11:38:10 +0200
+Message-ID: <CA+BoTQk5pm9GoS41YGtE7VPdsNiuX294KgiR5aXH0WWBPVq4SA@mail.gmail.com> (sfid-20140819_113815_317224_729D109C)
+Subject: Re: [PATCH v7 5/8] ath10k: dump exception stack contents on firmware crash
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for writing CPU event interrupt done back
-to device.
-Patch also increases interrupt buffer ring size from 4 to 8.
+On 19 August 2014 10:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Firmware developers can decode this and maybe figure out
+> why the firmware crashed.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+[...]
+> +/* Save the firmware exception stack */
+> +static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
+> +                                     struct ath10k_fw_crash_data *crash_data)
+> +{
+> +       lockdep_assert_held(&ar->data_lock);
+> +
+> +       BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
+> +
+> +       ath10k_pci_diag_read_hi(ar, crash_data->exc_stack_buf,
+> +                               hi_err_stack, ATH10K_FW_STACK_SIZE);
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>                                                                                                                                                                                                                                   
----
- drivers/net/wireless/mwifiex/pcie.c | 7 +++++++
- drivers/net/wireless/mwifiex/pcie.h | 5 +++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+Current master tree performs an implicit byte swap so the stack read
+from target will be in host endianess. IOW on big-endian host you'll
+messed up data and there's no indication of endianess anymore.
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index fbb0550..1f6e687 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1726,6 +1726,13 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
-                   buffer is released. This is just to make things simpler,
-                   we need to find a better method of managing these buffers.
-                */
-+       } else {
-+               if (mwifiex_write_reg(adapter, PCIE_CPU_INT_EVENT,
-+                                     CPU_INTR_EVENT_DONE)) {
-+                       dev_warn(adapter->dev,
-+                                "Write register failed\n");
-+                       return -1;
-+               }
-        }
 
-        return 0;
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index a1a8fd3..200e8b0 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -40,8 +40,8 @@
- #define MWIFIEX_TXBD_MASK                      0x3F
- #define MWIFIEX_RXBD_MASK                      0x3F
-
--#define MWIFIEX_MAX_EVT_BD                     0x04
--#define MWIFIEX_EVTBD_MASK                     0x07
-+#define MWIFIEX_MAX_EVT_BD                     0x08
-+#define MWIFIEX_EVTBD_MASK                     0x0f
-
- /* PCIE INTERNAL REGISTERS */
- #define PCIE_SCRATCH_0_REG                             0xC10
-@@ -69,6 +69,7 @@
- #define CPU_INTR_DOOR_BELL                             BIT(1)
- #define CPU_INTR_SLEEP_CFM_DONE                        BIT(2)
- #define CPU_INTR_RESET                                 BIT(3)
-+#define CPU_INTR_EVENT_DONE                            BIT(5)
-
- #define HOST_INTR_DNLD_DONE                            BIT(0)
- #define HOST_INTR_UPLD_RDY                             BIT(1)
--- 
-1.8.1.4
+Michał
