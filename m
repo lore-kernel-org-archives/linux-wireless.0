@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61061 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754064AbaHNI5I (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:51215 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbaHSGjg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 04:57:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	<ath6kl@lists.infradead.org>
-Subject: Re: [PATCH 2/2] cfg80211: allow passing frame type to cfg80211_inform_bss()
-References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net>
-	<1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
-Date: Thu, 14 Aug 2014 11:57:00 +0300
-In-Reply-To: <1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Tue, 12 Aug 2014 21:03:39 +0200")
-Message-ID: <8761hvo3dv.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_105718_944561_B271E0B3)
-MIME-Version: 1.0
+	Tue, 19 Aug 2014 02:39:36 -0400
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>,
+	"dsd@gentoo.org" <dsd@gentoo.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+Date: Tue, 19 Aug 2014 06:39:29 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com> (sfid-20140819_083957_833442_DEE44B0A)
+References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
+In-Reply-To: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Ping for review the patch.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When using the cfg80211_inform_bss[_width]() functions drivers
-> cannot currently indicate whether the data was received in a
-> beacon or probe response. Fix that by passing a new enum that
-> indicates such (or unknown).
->
-> For good measure, use it in ath6kl.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/cfg80211.c         |  1 +
->  drivers/net/wireless/ath/ath6kl/wmi.c              | 43 +++++-----------------
+thanks,
 
-Thanks. For the ath6kl part:
+Sanjeev Sharma
+-----Original Message-----
+From: Sanjeev Sharma [mailto:sanjeev_sharma@mentor.com] 
+Sent: Tuesday, August 12, 2014 12:36 PM
+To: dsd@gentoo.org; kune@deine-taler.de
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; Sharma, Sanjeev; Sharma, Sanjeev
+Subject: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
 
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+on some architecture spin_is_locked() always return false in uniprocessor configuration and therefore it would be advise to replace with lockdep_assert_held().
 
--- 
-Kalle Valo
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index e7af261..72c0bc2 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -235,7 +235,7 @@ void zd_mac_clear(struct zd_mac *mac)  {
+ 	flush_workqueue(zd_workqueue);
+ 	zd_chip_clear(&mac->chip);
+-	ZD_ASSERT(!spin_is_locked(&mac->lock));
++	lockdep_assert_held(!spin_is_locked(&mac->lock));
+ 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));  }
+ 
+--
+1.7.11.7
+
