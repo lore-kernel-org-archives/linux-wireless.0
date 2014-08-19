@@ -1,96 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7675 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755AbaHZVhd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 17:37:33 -0400
-Message-ID: <53FCFE1A.3060508@broadcom.com> (sfid-20140826_233742_552885_5F28F5EE)
-Date: Tue, 26 Aug 2014 23:37:30 +0200
-From: Arend van Spriel <arend@broadcom.com>
+Received: from mout.gmx.net ([212.227.17.20]:55058 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbaHSI2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 04:28:07 -0400
+Message-ID: <53F30A8B.6000202@rempel-privat.de> (sfid-20140819_102820_020569_1AB94091)
+Date: Tue, 19 Aug 2014 10:27:55 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: <brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru>
-In-Reply-To: <53FCB2A3.1050605@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Csaba Kiraly <csaba.kiraly@gmail.com>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: advertise support for TDLS
+References: <1408319614-16041-1-git-send-email-csaba.kiraly@gmail.com> <53F309F5.4020101@gmx.net>
+In-Reply-To: <53F309F5.4020101@gmx.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="CcumbSQrWVagTR3p3vdKkP05U6osaV7kr"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/14 18:15, Michael Tokarev wrote:
-> 26.08.2014 18:56, Arend van Spriel wrote:
->> On 08/26/14 07:13, Michael Tokarev wrote:
-> []
->>> So, I'm curious -- why this driver is found in regular section of kernel?
->>> It looks like it should be in staging at least, or better yet, in a new section
->>> titled "toy drivers" or something like this.  Does it work for any device at
->>> all?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--CcumbSQrWVagTR3p3vdKkP05U6osaV7kr
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Oppss... wrong email address.
+
+Am 19.08.2014 um 10:25 schrieb Oleksij Rempel:
+> Am 18.08.2014 um 01:53 schrieb Csaba Kiraly:
+>> Based on a quick test with AR9271, TDLS seems to be working fine.
 >>
->> Hi Michael,
+>> Tests were done with 2 Atheros AR9271 based devices with firmware
+>> 1.3 (sha1 8d49f928aa40ac53c729189bff1333cd373a7fb5), associated
+>> with a WAP54G access point.
+>=20
+> please, don't use firmware 1.3. Use git source, or you can get
+> precompiled version here:
+> https://github.com/olerem/ath9k-htc-firmware-blob
+>=20
+>> TDLS worked fine both in WPA2 mode and
+>> without encryption. Stations maintained ping flood traffic between
+>> each other and towards the AP without significant losses.
 >>
->> Thanks for your encouraging suggestions.
->
-> You might be a good politician :)  These are blames, quite strong...
->
-> Seriously. As you revisited this thread, I had quite some issues and
-> money loss after all this, -- after initially especially choosing a
-> model with a supported wifi card which turned out to be non-working,
-> which I tried to fix by buying a new wifi NIC (which didn't work
-> thanks to Lenovo), and which I finally broke due to usb wifi dongle
-> I used.
->
-> But that's all "poetry", the main source of my blames is you reaction -
-> your first reply was really ecoraging, I hoped we can have some solution
-> together (I have strong programming background, just not as good with
-> kernel and drivers as you).  But after your single reply, you never
-> spoke again until now.  That's 8 months.  _That_ is where my frustration
-> comes from.
+>> Not tested with AR7010.
+>=20
+> Seems ok for me. How can i reproduce testing environment?
+>=20
+>> TDLS was enabled in earlier patches the same way for other
+>> Atheros drivers:
+>> ath9k (fd6562344dea2b8b2a5d644cf971f4e56004500a),
+>> and carl9170 (d1f3de71a584a82ee4e84505fce9acccf40215ff).
+>>
+>> Signed-off-by: Csaba Kiraly <csaba.kiraly@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/n=
+et/wireless/ath/ath9k/htc_drv_init.c
+>> index 8a3bd5f..d779f4f 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> @@ -592,6 +592,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_pr=
+iv *priv,
+>>  	hw->wiphy->flags |=3D WIPHY_FLAG_IBSS_RSN |
+>>  			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+>> =20
+>> +	hw->wiphy->flags |=3D WIPHY_FLAG_SUPPORTS_TDLS;
+>> +
+>>  	hw->queues =3D 4;
+>>  	hw->max_listen_interval =3D 1;
+>> =20
+>>
+>=20
+>=20
 
-Well, sorry about that. I did see the other messages fly by and noticed 
-you were using the wl driver so assumed you were fine with that. 
-Admittedly the brcmsmac got very little attention as all our resources 
-were put on brcmfmac.
 
-> And the actual facts are true - by now I have had 2 entirely different
-> devices (my original laptop which is now thrown away and another, given
-> by me by a friend because I needed something) - I dunno if that's
-> exactly the same wifi card or not (lspci output looks similar, and
-> this one is also bt/wifi combo), but they both doesn't work in a
-> quite similar way.  So, the driver doesn't work with 2 out of 2 devices
-> which I've seen.  Not a good statistics generally, but that's 100%
-> "hit" ratio for me.  So I really am curious if this driver works at
-> all.
->
->>     I revisited the threads you referred to. In the boardflags it shows you
->> have a bt+wifi card. It could be that is an issue. The brcmsmac supports other
->> devices, ie. bcm43224/5 and the bcm4313 comes in a number of varieties.
->>  From what you tell here it seems you have trouble in rx path so I will look
->> into that area if there is any specifically done for your variant of the bcm4313.
->
-> I tested this "new" laptop with 3.16 kernel just briefly.  I may try more
-> complete analysis.  I can participate with the debugging/dumping (I already
-> mentioned my strong programming background - but I'm really not into drivers
-> and hardware internals).  So, basically, I'm all yours ;)  Not that I really
-> need this driver anymore (since I will avoid these cards like a plague, for
-> obvious reasons :), but I want to have some good outcome out of all this
-> story :)
-
-Ok. Let's put frustration aside and make an effort. So could you make a 
-trace using trace-cmd utility. The log can get quite big. The brcmsmac 
-driver needs to be built with CONFIG_BRCM_TRACING enabled. Please 
-execute the following commands (assuming you use ubuntu with 
-network-manager):
-
-$ sudo stop network-manager
-$ sudo insmod brcmfmac.ko
-$ sudo trace-cmd record -e brcmsmac:*
-
-In another terminal:
-
-$ sudo start network-manager
-
-The trace-cmd must be stopped using ctrl-c.
-
+--=20
 Regards,
-Arend
+Oleksij
+
+
+--CcumbSQrWVagTR3p3vdKkP05U6osaV7kr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlPzCosACgkQHwImuRkmbWkGiwD+JmpQeFraPmVedMYNhFRXdlhZ
+HS40puJ46UHMI1iM+70BAIyKt/q/rQGpwTzAgLUNqfFYjnHdCJ6ZMY7wNBoaLkwY
+=k1gj
+-----END PGP SIGNATURE-----
+
+--CcumbSQrWVagTR3p3vdKkP05U6osaV7kr--
