@@ -1,68 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46796 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753750AbaH1SpV (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:49259 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbaHSM62 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 14:45:21 -0400
-Date: Thu, 28 Aug 2014 14:37:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org,
-	ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20140827
-Message-ID: <20140828183706.GN13758@tuxdriver.com> (sfid-20140828_204536_825424_F3CFEFE5)
-References: <87egw2w01r.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87egw2w01r.fsf@kamboji.qca.qualcomm.com>
+	Tue, 19 Aug 2014 08:58:28 -0400
+From: Vincent Donnefort <vdonnefort@gmail.com>
+To: hughd@google.com, cooloney@gmail.com
+Cc: linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Vincent Donnefort <vdonnefort@gmail.com>
+Subject: [PATCH] leds: make led_blink_set IRQ safe
+Date: Tue, 19 Aug 2014 14:58:21 +0200
+Message-Id: <1408453101-30290-2-git-send-email-vdonnefort@gmail.com> (sfid-20140819_145858_148282_AFE9DBA9)
+In-Reply-To: <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
+References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
+ <1408453101-30290-1-git-send-email-vdonnefort@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 27, 2014 at 04:10:24PM +0300, Kalle Valo wrote:
-> Hi John,
-> 
-> here's a new pull request containing latest ath10k and ath6kl patches
-> accumulated during the merge window, changelog below. Please let me know
-> if there are any problems.
-> 
-> Please note that commit 7aa7a72a2367 ("ath10k: improve logging to
-> include dev id") is huge but still a simple patch adding 'ar' variable
-> to every logging function we have.
-> 
-> Also note that 95752b759e2e ("ath: Move spectral debugfs structs to
-> shared header") moves code from ath9k to the generic ath.ko module.
-> 
-> ----------------------------------------------------------------------
-> For ath6kl we had two small fixes and a new SDIO device id.
-> 
-> For ath10k the bigger changes are:
-> 
->  * support for new firmware version 10.2 (Michal)
-> 
->  * spectral scan support (Simon, Sven & Mathias)
-> 
->  * export a firmware crash dump file (Ben & me)
-> 
->  * cleaning up of pci.c (Michal)
-> 
->  * print pci id in all messages, which causes most of the churn (Michal)
-> 
-> ----------------------------------------------------------------------
-> 
-> The following changes since commit 0ccb7a3485e5526dca69f036b0d6c5148c78b3f8:
-> 
->   ath10k: handle attention flags correctly when using A-MSDU (2014-07-25 11:51:07 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath.git for-linville
-> 
-> for you to fetch changes up to 0fdc14e42b40ecd7115cc670981d39a89eeee6c3:
-> 
->   ath10k: make target endianess more explicit (2014-08-27 15:03:32 +0300)
+This patch introduces a work which take care of reseting the blink workqueue and
+avoid calling the cancel_delayed_work_sync function which may sleep, from an IRQ
+context.
 
-Pulling now...
+Signed-off-by: Vincent Donnefort <vdonnefort@gmail.com>
 
+diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
+index 129729d..0971554 100644
+--- a/drivers/leds/led-class.c
++++ b/drivers/leds/led-class.c
+@@ -148,6 +148,24 @@ static void led_work_function(struct work_struct *ws)
+ 			   msecs_to_jiffies(delay));
+ }
+ 
++static void reset_blink_work_delayed(struct work_struct *ws)
++{
++	struct led_classdev *led_cdev =
++		container_of(ws, struct led_classdev, reset_blink_work);
++
++	cancel_delayed_work_sync(&led_cdev->blink_work);
++
++	if (!led_cdev->blink_delay_on) {
++		__led_set_brightness(led_cdev, LED_OFF);
++		return;
++	} else if (!led_cdev->blink_delay_off) {
++		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
++		return;
++	}
++
++	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
++}
++
+ static void set_brightness_delayed(struct work_struct *ws)
+ {
+ 	struct led_classdev *led_cdev =
+@@ -234,6 +252,7 @@ int led_classdev_register(struct device *parent, struct led_classdev *led_cdev)
+ 	INIT_WORK(&led_cdev->set_brightness_work, set_brightness_delayed);
+ 
+ 	INIT_DELAYED_WORK(&led_cdev->blink_work, led_work_function);
++	INIT_WORK(&led_cdev->reset_blink_work, reset_blink_work_delayed);
+ 
+ #ifdef CONFIG_LEDS_TRIGGERS
+ 	led_trigger_set_default(led_cdev);
+diff --git a/drivers/leds/led-core.c b/drivers/leds/led-core.c
+index 4bb1168..959510a 100644
+--- a/drivers/leds/led-core.c
++++ b/drivers/leds/led-core.c
+@@ -40,19 +40,7 @@ static void led_set_software_blink(struct led_classdev *led_cdev,
+ 	led_cdev->blink_delay_on = delay_on;
+ 	led_cdev->blink_delay_off = delay_off;
+ 
+-	/* never on - just set to off */
+-	if (!delay_on) {
+-		__led_set_brightness(led_cdev, LED_OFF);
+-		return;
+-	}
+-
+-	/* never off - just set to brightness */
+-	if (!delay_off) {
+-		__led_set_brightness(led_cdev, led_cdev->blink_brightness);
+-		return;
+-	}
+-
+-	queue_delayed_work(system_wq, &led_cdev->blink_work, 1);
++	schedule_work(&led_cdev->reset_blink_work);
+ }
+ 
+ 
+@@ -76,8 +64,6 @@ void led_blink_set(struct led_classdev *led_cdev,
+ 		   unsigned long *delay_on,
+ 		   unsigned long *delay_off)
+ {
+-	cancel_delayed_work_sync(&led_cdev->blink_work);
+-
+ 	led_cdev->flags &= ~LED_BLINK_ONESHOT;
+ 	led_cdev->flags &= ~LED_BLINK_ONESHOT_STOP;
+ 
+diff --git a/include/linux/leds.h b/include/linux/leds.h
+index 6a599dc..6e5523d 100644
+--- a/include/linux/leds.h
++++ b/include/linux/leds.h
+@@ -69,6 +69,7 @@ struct led_classdev {
+ 
+ 	unsigned long		 blink_delay_on, blink_delay_off;
+ 	struct delayed_work	 blink_work;
++	struct work_struct	 reset_blink_work;
+ 	int			 blink_brightness;
+ 
+ 	struct work_struct	set_brightness_work;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
