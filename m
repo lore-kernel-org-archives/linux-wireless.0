@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:15907 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755663AbaHVGet convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 02:34:49 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Date: Thu, 21 Aug 2014 23:34:39 -0700
-Subject: RE: [PATCH 1/3] mwifiex: fix left_len calculation issue
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595181989DDB7@SC-VEXCH1.marvell.com> (sfid-20140822_083452_872025_6A0B6D25)
-References: <1408451758-22463-1-git-send-email-akarwar@marvell.com>
-In-Reply-To: <1408451758-22463-1-git-send-email-akarwar@marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:56982 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbaHSJkA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 05:40:00 -0400
+Received: by mail-wi0-f173.google.com with SMTP id f8so5088136wiw.12
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 02:39:59 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20140819082300.16842.40769.stgit@potku.adurom.net>
+References: <20140819082038.16842.46876.stgit@potku.adurom.net>
+	<20140819082300.16842.40769.stgit@potku.adurom.net>
+Date: Tue, 19 Aug 2014 11:39:59 +0200
+Message-ID: <CA+BoTQmubLrvB1LHquFDNf8W06vePvEk6K3aNV9ngCAAXemY6w@mail.gmail.com> (sfid-20140819_114005_160585_3CBEAAC1)
+Subject: Re: [PATCH v7 3/8] ath10k: save firmware debug log messages
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-> -----Original Message-----
-> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
-> Sent: 19 August 2014 18:06
-> To: linux-wireless@vger.kernel.org
-> Cc: linville@tuxdriver.com; Amitkumar Karwar; Avinash Patil; Cathy Luo
-> Subject: [PATCH 1/3] mwifiex: fix left_len calculation issue
-> 
-> While updating 'left_len' in each iteration, we should subtract last
-> TLV length not the accumulated length of TLVs parsed till now.
-> This bug in parsing logic is exposed by newer firmware which adds two
-> TLVs in GET_HW_SPEC command response. Earlier firmwares used to add
-> only one TLV.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+On 19 August 2014 10:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> They may be dumped through the firmware dump debugfs
+> file.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 > ---
->  drivers/net/wireless/mwifiex/cmdevt.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-
-Somehow I don't see these patches on the list. Should I resend them?
-
-Thanks,
-Amitkumar Karwar
+>  drivers/net/wireless/ath/ath10k/wmi.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index 23acbadeb8fa..eafc565240f1 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -1290,6 +1290,16 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+>
+>         trace_ath10k_wmi_dbglog(skb->data, skb->len);
+>
+> +       spin_lock_bh(&ar->data_lock);
+> +
+> +       /* First 4 bytes are a messages-dropped-due-to-overflow counter,
+> +        * and should not be recorded in the dbglog buffer, so we skip
+> +        * them.
+> +        */
+> +       ath10k_debug_dbglog_add(ar, skb->data + 4, skb->len - 4);
+> +
+> +       spin_unlock_bh(&ar->data_lock);
+> +
+>         return 0;
+>  }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
