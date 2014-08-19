@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59039 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753095AbaHEFiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 01:38:12 -0400
-Message-ID: <53E06DB9.2040904@linux.intel.com> (sfid-20140805_073843_131574_B2FE0792)
-Date: Tue, 05 Aug 2014 13:38:01 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60755 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbaHSHi2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 03:38:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+CC: <ath6kl@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>
+Subject: Re: ath6kl DT support and multiple instances.
+References: <53F2FB31.3090802@linaro.org>
+Date: Tue, 19 Aug 2014 10:38:19 +0300
+In-Reply-To: <53F2FB31.3090802@linaro.org> (Srinivas Kandagatla's message of
+	"Tue, 19 Aug 2014 08:22:25 +0100")
+Message-ID: <87oavhapzo.fsf@kamboji.qca.qualcomm.com> (sfid-20140819_093853_542833_A3FD38CA)
 MIME-Version: 1.0
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
-	mcgrof@do-not-panic.com, antonio@open-mesh.com,
-	johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with scanning
- and connecting
-References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com> <53DFB6A1.7040900@linux.intel.com> <20140804165202.GG30282@n2100.arm.linux.org.uk>
-In-Reply-To: <20140804165202.GG30282@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Srinivas,
 
-On 2014/8/5 0:52, Russell King - ARM Linux wrote:
-> On Tue, Aug 05, 2014 at 12:36:49AM +0800, Fu, Zhonghui wrote:
->> Hi, Arend
->>
->> I investigated this issue, and its root cause is still that sdio
->> controller can't receive interrupts from WiFi chip on sdio bus when
->> sdio controller is in runtime suspend status. I am running 3.16-rc5
->> linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
-> That's the root cause.  I fixed this with the Freescale i.MX SD driver
-> which is now able to report pending SDIO interrupts while runtime PM
-> suspended.
->
-> Other host drivers probably need fixing too, or having runtime PM
-> disabled on them - if you can't receive SDIO interrupts while runtime
-> PM suspended, then entering runtime PM while you have a SDIO device
-> attached is a bug.
->
-> This is something for the MMC people to deal with rather than Arend.
->
-Yes, this should be sdhci-acpi bug, I will contact MMC people for this issue.
+Srinivas Kandagatla <srinivas.kandagatla@linaro.org> writes:
 
+> I noticed that ath6kl partially supports Device trees, via
+> check_device_tree() function in init.c.
 
-Thanks,
-Zhonghui
+That's really old code. Sam Leffler wrote that back in 2011 and IIRC
+nobody has touched it since.
+
+> I have a use case for adding reset line and pinctrl properties to this
+> dt bindings, but soon realized that this function would not work for
+> multiple instances of the driver, as there is no direct
+> association/binding of dt node and driver instance.
+>
+> Just wondering if this is a know limitation and there will be no
+> possible multiple instances of this driver?
+>
+> is check_device_tree function obsolete?
+
+I'm not familiar with the device tree at all so I can't really comment
+much, except that I'm happy to take patches :)
+
+> should I care about multiple instances?
+
+Yes, I think you should.
+
+> Other than adding static code in the board file, are there any other
+> options to pass platform data like reset gpio lines and pinctrl
+> properties to the driver?
+
+Few years back we talked about adding function pointers to the board
+files for that, but there never were any patches.
+
+-- 
+Kalle Valo
