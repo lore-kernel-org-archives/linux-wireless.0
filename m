@@ -1,155 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44747 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480AbaHWH7X (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22756 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbaHSLry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 03:59:23 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 04/18] ath9k: Cleanup mgd_prepare_tx callback
-Date: Sat, 23 Aug 2014 13:29:09 +0530
-Message-Id: <1408780763-27974-5-git-send-email-sujith@msujith.org> (sfid-20140823_095937_431056_35CEF203)
-In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
-References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+	Tue, 19 Aug 2014 07:47:54 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/5] ath10k: setup irq method in probe
+References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
+	<1407402260-29854-3-git-send-email-michal.kazior@tieto.com>
+	<87d2c4pkks.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmTiEaZ03Nu-UiOn2ObW8e-m7it7_Th2KKCn+byFP+mPg@mail.gmail.com>
+Date: Tue, 19 Aug 2014 14:47:44 +0300
+In-Reply-To: <CA+BoTQmTiEaZ03Nu-UiOn2ObW8e-m7it7_Th2KKCn+byFP+mPg@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 18 Aug 2014 15:47:03 +0200")
+Message-ID: <8738csbt0f.fsf@kamboji.qca.qualcomm.com> (sfid-20140819_134826_077600_B5FD94A1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Rename the callback from ath9k_chanctx_force_active()
-to ath9k_mgd_prepare_tx(). Also, move it to main.c and
-group it with the other callbacks.
+>>> @@ -1905,22 +1915,10 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+>>>               goto err;
+>>>       }
+>>>
+>>> -     ret = ath10k_ce_disable_interrupts(ar);
+>>> -     if (ret) {
+>>> -             ath10k_err("failed to disable CE interrupts: %d\n", ret);
+>>> -             goto err_ce;
+>>> -     }
+>>> -
+>>> -     ret = ath10k_pci_init_irq(ar);
+>>> -     if (ret) {
+>>> -             ath10k_err("failed to init irqs: %d\n", ret);
+>>> -             goto err_ce;
+>>> -     }
+>>> -
+>>>       ret = ath10k_pci_request_early_irq(ar);
+>>>       if (ret) {
+>>>               ath10k_err("failed to request early irq: %d\n", ret);
+>>> -             goto err_deinit_irq;
+>>> +             goto err_ce;
+>>>       }
+>>
+>> You add ath10k_pci_ce_init() to probe() and respective
+>> ath10k_pci_ce_deinit() to remove(), and you remove
+>> ath10k_pci_ce_deinit() from hif_power_down(). But why do you leave
+>> ath10k_pci_ce_init() to hif_power_up()? Isn't that unnecessary as we
+>> already do that in probe()?
+>
+> Hmm.. I didn't check if copy engine register state (notable ring index
+> values) is guaranteed to be usable in all cases yet and decided it's
+> safer to just re-init it on each power up until it is proven it is not
+> necessary.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  4 ++--
- drivers/net/wireless/ath/ath9k/channel.c | 32 +-------------------------------
- drivers/net/wireless/ath/ath9k/main.c    | 32 +++++++++++++++++++++++++++++++-
- 3 files changed, 34 insertions(+), 34 deletions(-)
+So I have been trying to follow this naming scheme for initilisation:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f3455ce..f9863e6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -408,8 +408,6 @@ struct ath_offchannel {
- 	     ctx <= &sc->chanctx[ARRAY_SIZE(sc->chanctx) - 1];      \
- 	     ctx++)
- 
--void ath9k_chanctx_force_active(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif);
- static inline struct ath_chanctx *
- ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
- {
-@@ -446,6 +444,8 @@ void ath9k_p2p_beacon_sync(struct ath_softc *sc);
- void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
- 				struct ieee80211_vif *vif);
- void ath9k_p2p_ps_timer(void *priv);
-+
-+void ath_chanctx_set_next(struct ath_softc *sc, bool force);
- #else
- static inline bool ath9k_is_chanctx_enabled(void)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 0b84917..4525fc0 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -243,7 +243,7 @@ static bool ath_chanctx_defer_switch(struct ath_softc *sc)
- 	return true;
- }
- 
--static void ath_chanctx_set_next(struct ath_softc *sc, bool force)
-+void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- {
- 	struct timespec ts;
- 	bool measure_time = false;
-@@ -336,36 +336,6 @@ void ath_chanctx_init(struct ath_softc *sc)
- 
- }
- 
--void ath9k_chanctx_force_active(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif)
--{
--	struct ath_softc *sc = hw->priv;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
--	bool changed = false;
--
--	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
--		return;
--
--	if (!avp->chanctx)
--		return;
--
--	mutex_lock(&sc->mutex);
--
--	spin_lock_bh(&sc->chan_lock);
--	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
--		sc->next_chan = avp->chanctx;
--		changed = true;
--	}
--	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
--	spin_unlock_bh(&sc->chan_lock);
--
--	if (changed)
--		ath_chanctx_set_next(sc, true);
--
--	mutex_unlock(&sc->mutex);
--}
--
- void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 			struct cfg80211_chan_def *chandef)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e5c523a..4659168 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2340,6 +2340,36 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	mutex_unlock(&sc->mutex);
- }
- 
-+static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
-+	bool changed = false;
-+
-+	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
-+		return;
-+
-+	if (!avp->chanctx)
-+		return;
-+
-+	mutex_lock(&sc->mutex);
-+
-+	spin_lock_bh(&sc->chan_lock);
-+	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
-+		sc->next_chan = avp->chanctx;
-+		changed = true;
-+	}
-+	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
-+	spin_unlock_bh(&sc->chan_lock);
-+
-+	if (changed)
-+		ath_chanctx_set_next(sc, true);
-+
-+	mutex_unlock(&sc->mutex);
-+}
-+
- void ath9k_fill_chanctx_ops(void)
- {
- 	if (!ath9k_is_chanctx_enabled())
-@@ -2354,7 +2384,7 @@ void ath9k_fill_chanctx_ops(void)
- 	ath9k_ops.change_chanctx           = ath9k_change_chanctx;
- 	ath9k_ops.assign_vif_chanctx       = ath9k_assign_vif_chanctx;
- 	ath9k_ops.unassign_vif_chanctx     = ath9k_unassign_vif_chanctx;
--	ath9k_ops.mgd_prepare_tx           = ath9k_chanctx_force_active;
-+	ath9k_ops.mgd_prepare_tx           = ath9k_mgd_prepare_tx;
- }
- 
- #endif
+_create() - called during device probe time
+_start() - if up / power up
+_stop() - if down / power down
+_destroy() - called when device is removed
+
+If you call ce_init() both in create() and start() time there has to be
+some redundant code and I think the function should be split. This isn't
+a concern now, but something for the future.
+
 -- 
-2.0.4
-
+Kalle Valo
