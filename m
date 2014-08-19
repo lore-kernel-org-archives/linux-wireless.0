@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52144 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751292AbaHRHXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 03:23:14 -0400
-Message-ID: <53F1A9DE.7070701@linux.intel.com> (sfid-20140818_092317_500302_A7B43C9D)
-Date: Mon, 18 Aug 2014 10:23:10 +0300
-From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48246 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbaHSHqI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 03:46:08 -0400
+Received: by mail-wi0-f180.google.com with SMTP id n3so4829977wiv.7
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 00:46:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: core: Reorder wiphy_register() notifications
- relevantly
-References: <1407935091-28516-1-git-send-email-tomasz.bursztyka@linux.intel.com>	 (sfid-20140813_150457_552550_15CAEAC1) <1408107825.15705.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1408107825.15705.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87y4uuqhip.fsf@kamboji.qca.qualcomm.com>
+References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
+	<87y4uuqhip.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 19 Aug 2014 09:46:07 +0200
+Message-ID: <CA+BoTQmTvcLDWeKnRXKnAVh27DGrvk+xgr_9DFmuZ3gA6yedYw@mail.gmail.com> (sfid-20140819_094612_863749_DE4F142F)
+Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 12 August 2014 09:44, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> The 10.x and main firmware branches have
+>> conflicting WMI service bitmap definitions.
+>>
+>> This also fixes WMI services parsing on big-endian
+>> hosts and changes debugfs output to be more human
+>> friendly.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Thanks, applied.
 
-> Subject should say cfg80211.
+Your tree has wmi_10x_svc_map() and wmi_main_svc_map() swapped[1][2].
+This results in invalid wmi service mappings. Did you have a conflict
+on this patch?
 
-Ok
+[1] https://github.com/kvalo/ath/commit/cff990ce7ddd6a43f86757867399a8a64aa29af9#diff-d74831f35d359092fadf570b3d4efa90R2117
+[2] https://github.com/kvalo/ath/commit/cff990ce7ddd6a43f86757867399a8a64aa29af9#diff-d74831f35d359092fadf570b3d4efa90R2187
 
->> >Currently it can send regulatory domain change notification before any
->> >NEW_WIPHY notification. Moreover, if rfill_register() fails, calling
->> >wiphy_unregister() will send a DEL_WIPHY though no NEW_WIPHY had been
->> >sent previously.
->> >
->> >Thus reordering so it properly notifies NEW_WIPHY before any other.
-> This also isn't actually true - now rfkill is*after*  NEW_WIPHY.
 
-I will prepare another patch.
-
-> This code had a bunch of sequencing issues in the past - please look
-> through the history and check that this doesn't re-introduce any of
-> them.
-
-Sure
-
-Tomasz
+Michał
