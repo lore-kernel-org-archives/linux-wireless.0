@@ -1,53 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58415 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:33268 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbaH2KTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 06:19:11 -0400
-Message-ID: <1409307544.4577.5.camel@jlt4.sipsolutions.net> (sfid-20140829_121914_420323_2D610032)
-Subject: Re: [PATCH] mac80211: fix offloaded BA session traffic after hw
- restart
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 29 Aug 2014 12:19:04 +0200
-In-Reply-To: <CA+BoTQ=W7Aokeg3XGTxbr5dRZxu5bNYht_xbSVpaKLfwKcH+0Q@mail.gmail.com> (sfid-20140829_120314_604117_4A0D4F7D)
-References: <1409225636-23923-1-git-send-email-michal.kazior@tieto.com>
-	 <1409256330.2505.13.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=W7Aokeg3XGTxbr5dRZxu5bNYht_xbSVpaKLfwKcH+0Q@mail.gmail.com>
-	 (sfid-20140829_120314_604117_4A0D4F7D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751258AbaHSIWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2014 04:22:23 -0400
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Subject: [PATCH cfg80211 v2] wireless: core: Reorder wiphy_register() notifications relevantly
+Date: Tue, 19 Aug 2014 11:22:19 +0300
+Message-Id: <1408436539-2130-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20140819_102227_551684_EB6ECB6A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-08-29 at 12:03 +0200, Michal Kazior wrote:
-> On 28 August 2014 22:05, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Thu, 2014-08-28 at 13:33 +0200, Michal Kazior wrote:
-> >
-> >> Instead of last_seq pick seqno of a first Rxed
-> >> frame of a given BA session.
-> >
-> > Any way to do this without touching the RX path? It's kinda a hotpath :)
-> 
-> Perhaps we could push this to the driver, i.e. export
-> ieee80211_set_rx_ba_session_ssn() so a driver can update the
-> ssn/head_seq_num on its own. It would then first request an offloaded
-> BA and when it sees first frame for that BA it would update the ssn
-> before calling ieee80211_rx(). This way other drivers won't be
-> bothered with cruft on the Rx path. The function would have to be
-> called within a softirq/tasklet/timer unless reorder_lock locking goes
-> _bh.
-> 
-> I'm worried how a driver would map Rxed frames to a vifs though. I
-> could probably do it in ath10k indirectly via peer ids mapping but
-> that would involve more resources than the current approach does.
-> 
-> Is putting an extra if() in the Rx path really worth the concern? I'd
-> expect branch prediction to take care of this nicely. I guess I could
-> add an unlikely() too.
+Currently it can send regulatory domain change notification before any
+NEW_WIPHY notification. Moreover, if rfill_register() fails, calling
+wiphy_unregister() will send a DEL_WIPHY though no NEW_WIPHY had been
+sent previously.
 
-Yeah, fair enough, I thought I'd ask. unlikely() seems like a good idea
-though.
+Thus reordering so it properly notifies NEW_WIPHY before any other.
 
-johannes
+Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+---
+
+Reusing "registered" marker to know whether it sent NEW_WIPHY yet or not.
+Thus if wiphy_unregister() is called du to rfkill registration failure, it
+won't send DEL_WIPHY.
+
+ net/wireless/core.c | 33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index afee5e0..08162e8 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -635,6 +635,21 @@ int wiphy_register(struct wiphy *wiphy)
+ 	if (IS_ERR(rdev->wiphy.debugfsdir))
+ 		rdev->wiphy.debugfsdir = NULL;
+ 
++	cfg80211_debugfs_rdev_add(rdev);
++	rtnl_unlock();
++
++	res = rfkill_register(rdev->rfkill);
++	if (res) {
++		rfkill_destroy(rdev->rfkill);
++		rdev->rfkill = NULL;
++		wiphy_unregister(&rdev->wiphy);
++		return res;
++	}
++
++	rtnl_lock();
++
++	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
++
+ 	if (wiphy->regulatory_flags & REGULATORY_CUSTOM_REG) {
+ 		struct regulatory_request request;
+ 
+@@ -646,21 +661,9 @@ int wiphy_register(struct wiphy *wiphy)
+ 		nl80211_send_reg_change_event(&request);
+ 	}
+ 
+-	cfg80211_debugfs_rdev_add(rdev);
+-
+ 	rdev->wiphy.registered = true;
+ 	rtnl_unlock();
+ 
+-	res = rfkill_register(rdev->rfkill);
+-	if (res) {
+-		rfkill_destroy(rdev->rfkill);
+-		rdev->rfkill = NULL;
+-		wiphy_unregister(&rdev->wiphy);
+-		return res;
+-	}
+-
+-	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL(wiphy_register);
+@@ -699,8 +702,10 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 		rfkill_unregister(rdev->rfkill);
+ 
+ 	rtnl_lock();
+-	nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
+-	rdev->wiphy.registered = false;
++	if (rdev->wiphy.registered) {
++		nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
++		rdev->wiphy.registered = false;
++	}
+ 
+ 	WARN_ON(!list_empty(&rdev->wdev_list));
+ 
+-- 
+1.8.5.5
 
