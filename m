@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:48965 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbaHMKCz (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:37685 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbaHSLcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 06:02:55 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by aurora.create-net.org (Postfix) with ESMTP id 0C05C2C08193
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2014 11:52:32 +0200 (CEST)
-Received: from aurora.create-net.org ([127.0.0.1])
-	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id NoP2IC0CJwop for <linux-wireless@vger.kernel.org>;
-	Wed, 13 Aug 2014 11:52:31 +0200 (CEST)
-Received: from [192.168.1.8] (net-37-116-90-224.cust.vodafonedsl.it [37.116.90.224])
-	by aurora.create-net.org (Postfix) with ESMTPSA id 76B652C0818F
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2014 11:52:31 +0200 (CEST)
-Message-ID: <53EB355E.6090508@create-net.org> (sfid-20140813_120259_727542_9924FF23)
-Date: Wed, 13 Aug 2014 11:52:30 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: About the TSFT field
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Aug 2014 07:32:23 -0400
+Received: by mail-la0-f45.google.com with SMTP id ty20so5779414lab.18
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 04:32:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix wmi service bitmap
+Date: Tue, 19 Aug 2014 13:22:32 +0200
+Message-Id: <1408447352-28688-1-git-send-email-michal.kazior@tieto.com> (sfid-20140819_133227_263226_40516361)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Service mapping for main firmware branch was
+incorrectly used for 10.x firmware and vice-versa.
+This caused wmi_services in debugfs to print wrong
+values.
 
-I'm planning to use the TSFT field present in the radiotap
-header in order to reconstruct a timeline of packet
-reception at different AP.
+This actually fixes a problem with the previous
+wmi service bitmap patch itself. For some reason
+there was either a conflict that wasn't resolved
+properly or git had a bad day.
 
-As far as I've understood the TSFT is generated from the MAC,
-however I do not know to which instant the TSFT is relative,
-the first bit of the MAC payload, the beginning of the PLCP,
-etc.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Also I do not know from which reference the TSFT is generated,
-I mean two AP synchronized using NTP will have consistent
-TSFT, which kind of error should I expect?
-
-R.
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 23acbad..ec3bf4e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2194,7 +2194,7 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
+ 	ar->ath_common.regulatory.current_rd =
+ 		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
+ 
+-	wmi_10x_svc_map(ev->wmi_service_bitmap, svc_bmap);
++	wmi_main_svc_map(ev->wmi_service_bitmap, svc_bmap);
+ 	ath10k_debug_read_service_map(ar, svc_bmap, sizeof(svc_bmap));
+ 	ath10k_dbg_dump(ATH10K_DBG_WMI, NULL, "ath10k: wmi svc: ",
+ 			ev->wmi_service_bitmap, sizeof(ev->wmi_service_bitmap));
+@@ -2264,7 +2264,7 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
+ 	ar->ath_common.regulatory.current_rd =
+ 		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
+ 
+-	wmi_main_svc_map(ev->wmi_service_bitmap, svc_bmap);
++	wmi_10x_svc_map(ev->wmi_service_bitmap, svc_bmap);
+ 	ath10k_debug_read_service_map(ar, svc_bmap, sizeof(svc_bmap));
+ 	ath10k_dbg_dump(ATH10K_DBG_WMI, NULL, "ath10k: wmi svc: ",
+ 			ev->wmi_service_bitmap, sizeof(ev->wmi_service_bitmap));
 -- 
---------------------------------------------------------
-Roberto Riggio, Ph.D.
-CREATE-NET
-Future Networks (FuN)
-Senior Researcher
-Via alla Cascata 56/D - 38123 Povo Trento (Italy)
-e-mail: roberto.riggio@create-net.org
-Tel: (+39) 0461 408400 - interno/extension 1708
-Fax: (+39) 0461 421157
-http://www.create-net.org/~rriggio/
---------------------------------------------------------
+1.8.5.3
 
-The information transmitted is intended only for the person or entity to
-which it is addressed and may contain confidential and/or privileged
-material. Any review, retransmission, dissemination or other use of, or
-taking of any action in reliance upon, this information by persons or
-entities other than the intended recipient is prohibited according to
-the Italian Law 196/2003 of the Legislature. If you received this in
-error, please contact the sender and delete the material from any
-computer.
-
-Le informazioni contenute in questo messaggio di posta elettronica e nei
-file allegati sono da considerarsi strettamente riservate. Il loro
-utilizzo e' consentito esclusivamente al destinatario del messaggio, per
-le finalita' indicate nel messaggio stesso. Qualora riceveste questo
-messaggio senza esserne il destinatario, Vi preghiamo cortesemente di
-darcene notizia via e-mail e di procedere alla cancellazione del
-messaggio stesso dal Vostro sistema. Trattenere il messaggio stesso,
-divulgarlo anche in parte, distribuirlo ad altri soggetti, copiarlo,
-od utilizzarlo per finalita' diverse, costituisce comportamento
-contrario ai principi dettati dal D. Lgs. 196/2003.
