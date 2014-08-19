@@ -1,165 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:59500 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307AbaHSTBI (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:41506 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808AbaHSMak convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 15:01:08 -0400
-Message-ID: <53F39EEB.9060107@gmail.com> (sfid-20140819_210119_820573_BB684543)
-Date: Tue, 19 Aug 2014 21:00:59 +0200
-From: Csaba Kiraly <csaba.kiraly@gmail.com>
+	Tue, 19 Aug 2014 08:30:40 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so5200752wiw.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 05:30:39 -0700 (PDT)
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: advertise support for TDLS
-References: <1408319614-16041-1-git-send-email-csaba.kiraly@gmail.com> <53F309F5.4020101@gmx.net> <53F30A8B.6000202@rempel-privat.de>
-In-Reply-To: <53F30A8B.6000202@rempel-privat.de>
-Content-Type: multipart/mixed;
- boundary="------------040700010504050201050400"
+In-Reply-To: <87a977o450.fsf@kamboji.qca.qualcomm.com>
+References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
+	<1407402260-29854-5-git-send-email-michal.kazior@tieto.com>
+	<87a977o450.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 19 Aug 2014 14:30:39 +0200
+Message-ID: <CA+BoTQmgcBKfNKrAH5jKsehemx7rTxHHXMr8Qf+ctgfZpVj0Dg@mail.gmail.com> (sfid-20140819_143044_007243_F177B7F7)
+Subject: Re: [PATCH 4/5] ath10k: split ce irq/handler setup
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040700010504050201050400
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-On 19/08/2014 10:27, Oleksij Rempel wrote:
-> Oppss... wrong email address.
+On 14 August 2014 10:40, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
-> Am 19.08.2014 um 10:25 schrieb Oleksij Rempel:
->> Am 18.08.2014 um 01:53 schrieb Csaba Kiraly:
->>> Based on a quick test with AR9271, TDLS seems to be working fine.
->>>
->>> Tests were done with 2 Atheros AR9271 based devices with firmware
->>> 1.3 (sha1 8d49f928aa40ac53c729189bff1333cd373a7fb5), associated
->>> with a WAP54G access point.
+>> It doesn't make much sense to overwrite send_cb
+>> and recv_cb callbacks over and over again whenever
+>> transport starts. Just make sure to unmask copy
+>> engine interrupts when starting.
 >>
->> please, don't use firmware 1.3. Use git source, or you can get
->> precompiled version here:
->> https://github.com/olerem/ath9k-htc-firmware-blob
-
-I have just tried it with the latest firmware from git 
-(dc465e811c0272df7ec93b67de393129ff614173). Works fine.
-
->>
->>> TDLS worked fine both in WPA2 mode and
->>> without encryption. Stations maintained ping flood traffic between
->>> each other and towards the AP without significant losses.
->>>
->>> Not tested with AR7010.
->>
->> Seems ok for me. How can i reproduce testing environment?
-
-Here it comes. I try to give a detailed description, although I suppose
-you don't need most of it :)
-I have used two laptops, two TP-Link TL-WN722N USB devices, and a
-Linksys WAP54g AP.
-
-# 0) stop conflicting services, clean up files
-service network-manager stop
-killall wpa_supplicant
-killall dhclient
-rm -rf /run/wpa_supplicant
-
-# 1) on both nodes, start wpa_supplicant and connect to the same AP.
-# Conf files attached
-hostap/wpa_supplicant/wpa_supplicant -D nl80211 -i wlan2 -c wpa_supplicant_wap54g_WPA2.conf
-
-# 2) on each node, configure IP addresses (or start dhclient)
-ifconfig wlan2 $IP1
-ifconfig wlan2 $IP2
-
-# 3) start pinging the other node
-ping $IP2
-
-# 4) start pinging the AP
-ping $IPAP
-
-# 5) get MAC of node2's Atheros card
-# get it on node2, or directly on node1 from the arp cache
-arp -n
-
-# 6) on node1, start wpa_cli
-hostap/wpa_supplicant/wpa_cli -i wlan2
-
-# 7) on node1, in wpa_cli, start the TDLS setup
-tdls_setup <MAC2>
-
-# 8) verify that TDLS works
-# - ping time will reduce (in my case it went from 1.6 ms to 1 ms)
-# - ping time to the AP should remain the same
-# - node2's MAC will appear in ath9k_htc debugfs
-ls /sys/kernel/debug/ieee80211/phy1/netdev:wlan2/stations
-# - look inside the debugfs folder for more details
-
-# 9) stress test
-ping -f $IP2
-
-# 10) disable encryption in the AP and repeat the same with the "open" config file
-
-# pitfalls and notes
-- APs could interfere in various ways with the test. Some models could
-set the TDLS prohibit flag. Others (like my Huawei E587) could
-work at the beginning but deauthenticate the nodes after 20-30 seconds.
-- I didn't check 802.11n
-- I have used the stock 3.16.0 kernel as the base, since 
-wireless-testing with tag master-2014-08-11 gave kernel panic
-during wlan scan, even without my patch (but this is for another mail)
-- use wpa_passphrase to generate the wpa_supplicant WPA2 config file
-
-Csaba
-
->>
->>> TDLS was enabled in earlier patches the same way for other
->>> Atheros drivers:
->>> ath9k (fd6562344dea2b8b2a5d644cf971f4e56004500a),
->>> and carl9170 (d1f3de71a584a82ee4e84505fce9acccf40215ff).
->>>
->>> Signed-off-by: Csaba Kiraly <csaba.kiraly@gmail.com>
->>> ---
->>>   drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 ++
->>>   1 file changed, 2 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->>> index 8a3bd5f..d779f4f 100644
->>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->>> @@ -592,6 +592,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
->>>   	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
->>>   			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
->>>
->>> +	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
->>> +
->>>   	hw->queues = 4;
->>>   	hw->max_listen_interval = 1;
->>>
->>>
->>
->>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 >
+> The patch looks, just a followup question for the future:
 >
+>> @@ -1674,7 +1639,9 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
+>>               pipe_info->hif_ce_state = ar;
+>>               attr = &host_ce_config_wlan[pipe_num];
+>>
+>> -             ret = ath10k_ce_init_pipe(ar, pipe_num, attr);
+>> +             ret = ath10k_ce_init_pipe(ar, pipe_num, attr,
+>> +                                       ath10k_pci_ce_send_done,
+>> +                                       ath10k_pci_ce_recv_data);
+>
+> As we call ath10k_ce_init_pipe() only once and seem to have only one set
+> of functions, why even bother bother with function pointers? What if we
+> just call the functions directly?
+
+Yeah, we can remove this abstraction later. I don't there's anything
+depending on it anymore.
 
 
---------------040700010504050201050400
-Content-Type: text/plain; charset=UTF-8;
- name="wpa_supplicant_wap54g_open.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="wpa_supplicant_wap54g_open.conf"
-
-Y3RybF9pbnRlcmZhY2U9L3J1bi93cGFfc3VwcGxpY2FudAojIHJlYWRpbmcgcGFzc3BocmFz
-ZSBmcm9tIHN0ZGluCm5ldHdvcms9ewoJc3NpZD0id2FwNTRnIgoJa2V5X21nbXQ9Tk9ORQp9
-Cg==
---------------040700010504050201050400
-Content-Type: text/plain; charset=UTF-8;
- name="wpa_supplicant_wap54g_WPA2.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="wpa_supplicant_wap54g_WPA2.conf"
-
-Y3RybF9pbnRlcmZhY2U9L3J1bi93cGFfc3VwcGxpY2FudAojIHJlYWRpbmcgcGFzc3BocmFz
-ZSBmcm9tIHN0ZGluCm5ldHdvcms9ewoJc3NpZD0id2FwNTRnIgoJI3Bzaz0iYXRoZXJvczky
-NzEiCglwc2s9ZDViNjZlNWQyOTVhZmI1ODkyZjJhOGFkNzlkOGE4MmIzNWY0NTU0ZjhjYzkx
-N2IwNjA4NWY4YjdmZmI1ZGQxMwp9Cg==
---------------040700010504050201050400--
+Michał
