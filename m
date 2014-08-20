@@ -1,111 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2315 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751188AbaH2ENX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 00:13:23 -0400
-From: Avinash Patil <patila@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Thu, 28 Aug 2014 21:13:06 -0700
-Subject: RE: [PATCH 2/4] mwifiex: rework internal scan for association
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC47817B1F76@SC-VEXCH2.marvell.com> (sfid-20140829_061326_774097_282E1A91)
-References: <CBACCFA0AEB13A41977475BCF3E896FC4781147C22@SC-VEXCH2.marvell.com>
- <20140828184143.GP13758@tuxdriver.com>
-In-Reply-To: <20140828184143.GP13758@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:53692 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751923AbaHTJm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:59 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 09/11] staging: wlan-ng: use %*pEhp to print SN
+Date: Wed, 20 Aug 2014 12:42:50 +0300
+Message-Id: <1408527772-27224-10-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114538_385651_F3EE8EE5)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+This is a generic specifier to print an escaped buffer by given criteria. Let's
+use it instead of custom approach.
 
-Thanks for the information.
-I will rebase these patches on top of 3.17rc2 and resend them.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/staging/wlan-ng/prism2sta.c | 28 ++--------------------------
+ 1 file changed, 2 insertions(+), 26 deletions(-)
 
-Thanks,
-Avinash
-
------Original Message-----
-From: John W. Linville [mailto:linville@tuxdriver.com] 
-Sent: Friday, August 29, 2014 12:12 AM
-To: Avinash Patil
-Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang; Xinming Hu
-Subject: Re: [PATCH 2/4] mwifiex: rework internal scan for association
-
-This one either, nor the rest in the series.
-
-Please rebase as necessary and repost the series.  I'm dropping these patches.
-
-John
-
-On Mon, Aug 18, 2014 at 02:12:50AM -0700, Avinash Patil wrote:
-> There was an issue with internal scan during association wherein we 
-> would complete internal scan on first scan command response.
-> This would cause association failure if AP is not found in first scan 
-> response e.g. APs from A band.
-> This patch fixes this issue by completing internal scan only when all 
-> scan commands from scan pending queue and command pending queue are 
-> sent to FW and response to last scan command is received.
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Tested-by: Xinmin Hu <huxm@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/scan.c | 27 ++++++++++++++++++++++++++-
->  1 file changed, 26 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/scan.c 
-> b/drivers/net/wireless/mwifiex/scan.c
-> index dee717a..bec48cc 100644
-> --- a/drivers/net/wireless/mwifiex/scan.c
-> +++ b/drivers/net/wireless/mwifiex/scan.c
-> @@ -1970,9 +1970,34 @@ int mwifiex_cmd_802_11_scan_ext(struct 
-> mwifiex_private *priv,
->  /* This function handles the command response of extended scan */  
-> int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv)  {
-> +       struct mwifiex_adapter *adapter = priv->adapter;
-> +       struct host_cmd_ds_command *cmd_ptr;
-> +       struct cmd_ctrl_node *cmd_node;
-> +       unsigned long cmd_flags, scan_flags;
-> +       bool complete_scan = false;
-> +
->         dev_dbg(priv->adapter->dev, "info: EXT scan returns 
-> successfully\n");
-> 
-> -       mwifiex_complete_scan(priv);
-> +       spin_lock_irqsave(&adapter->cmd_pending_q_lock, cmd_flags);
-> +       spin_lock_irqsave(&adapter->scan_pending_q_lock, scan_flags);
-> +       if (list_empty(&adapter->scan_pending_q)) {
-> +               complete_scan = true;
-> +               list_for_each_entry(cmd_node, &adapter->cmd_pending_q, list) {
-> +                       cmd_ptr = (void *)cmd_node->cmd_skb->data;
-> +                       if (le16_to_cpu(cmd_ptr->command) ==
-> +                           HostCmd_CMD_802_11_SCAN_EXT) {
-> +                               dev_dbg(priv->adapter->dev,
-> +                                       "Scan pending in command pending list");
-> +                               complete_scan = false;
-> +                               break;
-> +                       }
-> +               }
-> +       }
-> +       spin_unlock_irqrestore(&adapter->scan_pending_q_lock, scan_flags);
-> +       spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, 
-> + cmd_flags);
-> +
-> +       if (complete_scan)
-> +               mwifiex_complete_scan(priv);
-> 
->         return 0;
->  }
-> --
-> 1.8.1.4
-> 
-
+diff --git a/drivers/staging/wlan-ng/prism2sta.c b/drivers/staging/wlan-ng/prism2sta.c
+index 799ce8a..df577df 100644
+--- a/drivers/staging/wlan-ng/prism2sta.c
++++ b/drivers/staging/wlan-ng/prism2sta.c
+@@ -60,7 +60,6 @@
+ #include <linux/netdevice.h>
+ #include <linux/workqueue.h>
+ #include <linux/byteorder/generic.h>
+-#include <linux/ctype.h>
+ 
+ #include <linux/io.h>
+ #include <linux/delay.h>
+@@ -81,27 +80,6 @@
+ #include "hfa384x.h"
+ #include "prism2mgmt.h"
+ 
+-/* Create a string of printable chars from something that might not be */
+-/* It's recommended that the str be 4*len + 1 bytes long */
+-#define wlan_mkprintstr(buf, buflen, str, strlen) \
+-{ \
+-	int i = 0; \
+-	int j = 0; \
+-	memset(str, 0, (strlen)); \
+-	for (i = 0; i < (buflen); i++) { \
+-		if (isprint((buf)[i])) { \
+-			(str)[j] = (buf)[i]; \
+-			j++; \
+-		} else { \
+-			(str)[j] = '\\'; \
+-			(str)[j+1] = 'x'; \
+-			(str)[j+2] = hex_asc_hi((buf)[i]); \
+-			(str)[j+3] = hex_asc_lo((buf)[i]); \
+-			j += 4; \
+-		} \
+-	} \
+-}
+-
+ static char *dev_info = "prism2_usb";
+ static wlandevice_t *create_wlan(void);
+ 
+@@ -607,7 +585,6 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
+ 	hfa384x_t *hw = (hfa384x_t *) wlandev->priv;
+ 	u16 temp;
+ 	u8 snum[HFA384x_RID_NICSERIALNUMBER_LEN];
+-	char pstr[(HFA384x_RID_NICSERIALNUMBER_LEN * 4) + 1];
+ 
+ 	/* Collect version and compatibility info */
+ 	/*  Some are critical, some are not */
+@@ -862,9 +839,8 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
+ 	result = hfa384x_drvr_getconfig(hw, HFA384x_RID_NICSERIALNUMBER,
+ 					snum, HFA384x_RID_NICSERIALNUMBER_LEN);
+ 	if (!result) {
+-		wlan_mkprintstr(snum, HFA384x_RID_NICSERIALNUMBER_LEN,
+-				pstr, sizeof(pstr));
+-		netdev_info(wlandev->netdev, "Prism2 card SN: %s\n", pstr);
++		netdev_info(wlandev->netdev, "Prism2 card SN: %*pEhp\n",
++			    HFA384x_RID_NICSERIALNUMBER_LEN, snum);
+ 	} else {
+ 		netdev_err(wlandev->netdev, "Failed to retrieve Prism2 Card SN\n");
+ 		goto failed;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.0
+
