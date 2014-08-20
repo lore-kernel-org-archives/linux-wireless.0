@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53177 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973AbaHDGJi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 02:09:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: <ath10k@lists.infradead.org>,
-	<mathias.kretschmer@fokus.fraunhofer.de>,
-	<kgiori@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<sven@narfation.org>
-Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
-References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
-Date: Mon, 4 Aug 2014 09:09:29 +0300
-In-Reply-To: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de> (Simon
-	Wunderlich's message of "Fri, 1 Aug 2014 15:17:12 +0200")
-Message-ID: <877g2o6b1i.fsf@kamboji.qca.qualcomm.com> (sfid-20140804_081009_571591_8BBECA4D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:60159 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751844AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 11/11] staging: rtl8192u: use %*pEn to escape buffer
+Date: Wed, 20 Aug 2014 12:42:52 +0300
+Message-Id: <1408527772-27224-12-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114537_211777_482E4E75)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich <sw@simonwunderlich.de> writes:
+Let's use kernel's native specifier to escape a buffer.
 
-> This is the fifth "PATCH" patchset iteration for the ath10k spectral
-> scan feature. It includes a small change compared to Kalles PATCHv4
-> series: the parameter initialization has been moved to
-> ath10k_spectral_start() so that the parameters also get reset when the
-> firmware crashes.
->
-> To view the samples, please have a look at the fft_eval tool [1] which
-> now supports both ath9k and ath10k formats.
->
-> The count issue is still open: Even when a count is specified, the
-> hardware seems to send endless samples. It seems to work most of the
-> time in VHT80 mode though, but in HT20 and HT40 the count value seems
-> to be ignored. To reproduce this, start hostapd with the desired
-> channel width and do:
->
-> echo 8 > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_count
-> echo manual > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan_ctl
-> echo trigger > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan_ctl
-> cat /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan0 >> /tmp/fft.dump
->
-> Repeating the last line and checking the filesize will easily show
-> whether ath10k still sends samples or not. We would expect 8 samples in
-> this configuration.
->
-> Please see the patches for more information on the changes.
->
-> Cheers,
->     Simon
->
-> [1] https://github.com/simonwunderlich/FFT_eval
->
-> Simon Wunderlich (1):
->   ath10k: add spectral scan feature
->
-> Sven Eckelmann (1):
->   ath: Move spectral debugfs structs to shared header
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/staging/rtl8192u/ieee80211/ieee80211.h | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-Thanks, both patches applied.
-
-And thanks for fixing a bug I introduced!
-
+diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211.h b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+index c118551..078333b 100644
+--- a/drivers/staging/rtl8192u/ieee80211/ieee80211.h
++++ b/drivers/staging/rtl8192u/ieee80211/ieee80211.h
+@@ -2580,25 +2580,13 @@ static inline int ieee80211_get_scans(struct ieee80211_device *ieee)
+ 
+ static inline const char *escape_essid(const char *essid, u8 essid_len) {
+ 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+-	char *d = escaped;
+ 
+ 	if (ieee80211_is_empty_essid(essid, essid_len)) {
+ 		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
+ 		return escaped;
+ 	}
+ 
+-	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
+-			*d++ = *s++;
+-		}
+-	}
+-	*d = '\0';
++	snprintf(escaped, sizeof(escaped), "%*pEn", essid_len, essid);
+ 	return escaped;
+ }
+ 
 -- 
-Kalle Valo
+2.1.0
+
