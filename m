@@ -1,235 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:50642 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932147AbaHANRu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2014 09:17:50 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	sven@narfation.org, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCHv5 1/2] ath: Move spectral debugfs structs to shared header
-Date: Fri,  1 Aug 2014 15:17:13 +0200
-Message-Id: <1406899034-13473-2-git-send-email-sw@simonwunderlich.de> (sfid-20140801_151756_169937_7D4D918D)
-In-Reply-To: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
-References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de>
+Received: from mga02.intel.com ([134.134.136.20]:37021 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752129AbaHTJnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:43:03 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 08/11] lib80211: remove unused print_ssid()
+Date: Wed, 20 Aug 2014 12:42:49 +0300
+Message-Id: <1408527772-27224-9-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114432_018361_1DB50784)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sven Eckelmann <sven@narfation.org>
+In kernel we have %*pE specifier to print an escaped buffer. All users now
+switched to that approach.
 
-The ath9k and ath10k will share the definitions of the debugfs spectral
-structures and enums. Having them in the same place helps to avoid conflicts.
+This fixes a bug as well. The current implementation wrongly prints octal
+numbers: only two first digits are used in case when 3 are required and the
+rest of the string ends up cut off.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Additionally by default the \f, \v, \a, and \e are escaped to their alphabetic
+representation. It's safe to do since it is currently used for messaging only.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/spectral.h  | 71 +-----------------------
- drivers/net/wireless/ath/spectral_common.h | 88 ++++++++++++++++++++++++++++++
- 2 files changed, 90 insertions(+), 69 deletions(-)
- create mode 100644 drivers/net/wireless/ath/spectral_common.h
+ include/net/lib80211.h  |  5 -----
+ net/wireless/lib80211.c | 32 --------------------------------
+ 2 files changed, 37 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index ead6341..7b410c6 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -17,6 +17,8 @@
- #ifndef SPECTRAL_H
- #define SPECTRAL_H
+diff --git a/include/net/lib80211.h b/include/net/lib80211.h
+index be95b92..aab0f42 100644
+--- a/include/net/lib80211.h
++++ b/include/net/lib80211.h
+@@ -32,11 +32,6 @@
+ #include <linux/timer.h>
+ #include <linux/seq_file.h>
  
-+#include "../spectral_common.h"
-+
- /* enum spectral_mode:
-  *
-  * @SPECTRAL_DISABLED: spectral mode is disabled
-@@ -54,8 +56,6 @@ struct ath_ht20_mag_info {
- 	u8 max_exp;
- } __packed;
+-/* print_ssid() is intended to be used in debug (and possibly error)
+- * messages. It should never be used for passing ssid to user space. */
+-const char *print_ssid(char *buf, const char *ssid, u8 ssid_len);
+-#define DECLARE_SSID_BUF(var) char var[IEEE80211_MAX_SSID_LEN * 4 + 1] __maybe_unused
+-
+ #define NUM_WEP_KEYS	4
  
--#define SPECTRAL_HT20_NUM_BINS		56
--
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data by -1/+2. This struct is for reference only.
-  */
-@@ -83,8 +83,6 @@ struct ath_ht20_40_mag_info {
- 	u8 max_exp;
- } __packed;
+ enum {
+diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+index a55c27b..4596115 100644
+--- a/net/wireless/lib80211.c
++++ b/net/wireless/lib80211.c
+@@ -46,38 +46,6 @@ static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
+ static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
+ static void lib80211_crypt_deinit_handler(unsigned long data);
  
--#define SPECTRAL_HT20_40_NUM_BINS		128
+-const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
+-{
+-	const char *s = ssid;
+-	char *d = buf;
 -
- /* WARNING: don't actually use this struct! MAC may vary the amount of
-  * data. This struct is for reference only.
-  */
-@@ -125,71 +123,6 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- 	return bins[0] & 0x3f;
- }
- 
--/* FFT sample format given to userspace via debugfs.
-- *
-- * Please keep the type/length at the front position and change
-- * other fields after adding another sample type
-- *
-- * TODO: this might need rework when switching to nl80211-based
-- * interface.
-- */
--enum ath_fft_sample_type {
--	ATH_FFT_SAMPLE_HT20 = 1,
--	ATH_FFT_SAMPLE_HT20_40,
--};
+-	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
+-	while (ssid_len--) {
+-		if (isprint(*s)) {
+-			*d++ = *s++;
+-			continue;
+-		}
 -
--struct fft_sample_tlv {
--	u8 type;	/* see ath_fft_sample */
--	__be16 length;
--	/* type dependent data follows */
--} __packed;
+-		*d++ = '\\';
+-		if (*s == '\0')
+-			*d++ = '0';
+-		else if (*s == '\n')
+-			*d++ = 'n';
+-		else if (*s == '\r')
+-			*d++ = 'r';
+-		else if (*s == '\t')
+-			*d++ = 't';
+-		else if (*s == '\\')
+-			*d++ = '\\';
+-		else
+-			d += snprintf(d, 3, "%03o", *s);
+-		s++;
+-	}
+-	*d = '\0';
+-	return buf;
+-}
+-EXPORT_SYMBOL(print_ssid);
 -
--struct fft_sample_ht20 {
--	struct fft_sample_tlv tlv;
--
--	u8 max_exp;
--
--	__be16 freq;
--	s8 rssi;
--	s8 noise;
--
--	__be16 max_magnitude;
--	u8 max_index;
--	u8 bitmap_weight;
--
--	__be64 tsf;
--
--	u8 data[SPECTRAL_HT20_NUM_BINS];
--} __packed;
--
--struct fft_sample_ht20_40 {
--	struct fft_sample_tlv tlv;
--
--	u8 channel_type;
--	__be16 freq;
--
--	s8 lower_rssi;
--	s8 upper_rssi;
--
--	__be64 tsf;
--
--	s8 lower_noise;
--	s8 upper_noise;
--
--	__be16 lower_max_magnitude;
--	__be16 upper_max_magnitude;
--
--	u8 lower_max_index;
--	u8 upper_max_index;
--
--	u8 lower_bitmap_weight;
--	u8 upper_bitmap_weight;
--
--	u8 max_exp;
--
--	u8 data[SPECTRAL_HT20_40_NUM_BINS];
--} __packed;
--
- void ath9k_spectral_init_debug(struct ath_softc *sc);
- void ath9k_spectral_deinit_debug(struct ath_softc *sc);
- 
-diff --git a/drivers/net/wireless/ath/spectral_common.h b/drivers/net/wireless/ath/spectral_common.h
-new file mode 100644
-index 0000000..b9ab722
---- /dev/null
-+++ b/drivers/net/wireless/ath/spectral_common.h
-@@ -0,0 +1,88 @@
-+/*
-+ * Copyright (c) 2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef SPECTRAL_COMMON_H
-+#define SPECTRAL_COMMON_H
-+
-+#define SPECTRAL_HT20_NUM_BINS		56
-+#define SPECTRAL_HT20_40_NUM_BINS		128
-+
-+/* FFT sample format given to userspace via debugfs.
-+ *
-+ * Please keep the type/length at the front position and change
-+ * other fields after adding another sample type
-+ *
-+ * TODO: this might need rework when switching to nl80211-based
-+ * interface.
-+ */
-+enum ath_fft_sample_type {
-+	ATH_FFT_SAMPLE_HT20 = 1,
-+	ATH_FFT_SAMPLE_HT20_40,
-+};
-+
-+struct fft_sample_tlv {
-+	u8 type;	/* see ath_fft_sample */
-+	__be16 length;
-+	/* type dependent data follows */
-+} __packed;
-+
-+struct fft_sample_ht20 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 max_exp;
-+
-+	__be16 freq;
-+	s8 rssi;
-+	s8 noise;
-+
-+	__be16 max_magnitude;
-+	u8 max_index;
-+	u8 bitmap_weight;
-+
-+	__be64 tsf;
-+
-+	u8 data[SPECTRAL_HT20_NUM_BINS];
-+} __packed;
-+
-+struct fft_sample_ht20_40 {
-+	struct fft_sample_tlv tlv;
-+
-+	u8 channel_type;
-+	__be16 freq;
-+
-+	s8 lower_rssi;
-+	s8 upper_rssi;
-+
-+	__be64 tsf;
-+
-+	s8 lower_noise;
-+	s8 upper_noise;
-+
-+	__be16 lower_max_magnitude;
-+	__be16 upper_max_magnitude;
-+
-+	u8 lower_max_index;
-+	u8 upper_max_index;
-+
-+	u8 lower_bitmap_weight;
-+	u8 upper_bitmap_weight;
-+
-+	u8 max_exp;
-+
-+	u8 data[SPECTRAL_HT20_40_NUM_BINS];
-+} __packed;
-+
-+#endif /* SPECTRAL_COMMON_H */
+ int lib80211_crypt_info_init(struct lib80211_crypt_info *info, char *name,
+ 				spinlock_t *lock)
+ {
 -- 
-1.9.1
+2.1.0
 
