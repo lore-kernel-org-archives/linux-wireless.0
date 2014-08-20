@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:65410 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362AbaHVNdA (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:60480 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727AbaHTS5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 09:33:00 -0400
-Received: by mail-la0-f43.google.com with SMTP id gi9so7555109lab.30
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 06:32:59 -0700 (PDT)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: net: wireless: Add include guards
-References: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk>
-Date: Fri, 22 Aug 2014 15:32:58 +0200
-In-Reply-To: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk>
-	(Rasmus Villemoes's message of "Fri, 22 Aug 2014 14:26:54 +0200")
-Message-ID: <87egw8sl85.fsf@rasmusvillemoes.dk> (sfid-20140822_153326_782040_CDFDDF33)
+	Wed, 20 Aug 2014 14:57:01 -0400
+Received: by mail-vc0-f180.google.com with SMTP id ij19so9624595vcb.39
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 11:57:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 20 Aug 2014 13:57:00 -0500
+Message-ID: <CAFZT-j+2U4gfjtOSHrZqt1F1AEKwEv-CJUzjVAAfK9BgwNh6Eg@mail.gmail.com> (sfid-20140820_205719_200113_82D70E0A)
+Subject: Missing mutex_unlock and possible race scenraio in function
+ (wl1271_remove) in file (linux3.2/drivers/net/wireless/wl12xx/sdio.c)
+From: Ahmed Tamrawi <ahmedtamrawi@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
+Bug Report Filed: https://bugzilla.kernel.org/show_bug.cgi?id=82901
+Linux Version [3.2] and [android-omap-3.0]
 
-> The files ray_cs.h and rayctl.h both contain two thirds of what
-> appears to be an include guard using the macro name RAYLINK_H (both
-> lack the #define). Since RAYLINK_H is not defined anywhere, the
-> guards using different macro names.
->
+Function's Source Code:
+http://lxr.free-electrons.com/source/drivers/net/wireless/wl12xx/sdio.c?v=3.2#L313
 
-I need to stop using the # character in my commit messages, or at least
-check that git didn't eat any of my lines.
+function (wl1271_remove) in file (linux3.2/drivers/net/wireless/wl12xx/sdio.c):
 
-This was supposed to be something like "... defined anywhere, the
-#ifndefs are simply confusing no-ops. Add proper include guards using
-different macro names".
+The mutex object (&wl->mutex) may get locked upon exit of function
+(wl1271_unregister_hw) through the call to function
+(__wl1271_plt_stop). However, the lock is never released upon exit of
+function (wl1271_unregister_hw).
 
-Rasmus
+The buggy scenario happens as follows:
+
+(wl1271_remove) calls (wl1271_unregister_hw) which acquires the locks.
+Then, (wl1271_remove) calls (wl1271_free_hw) which tries to lock the
+object the already locked in (wl1271_unregister_hw) which causes a
+race scenario.
+
+Possible fix is to call (wl1271_plt_stop) instead of
+(__wl1271_plt_stop) in function (wl1271_unregister_hw) in file
+(http://lxr.free-electrons.com/source/drivers/net/wireless/wl12xx/main.c?v=3.2#L4650).
+
+The bug also occurs in Android Linux kernel:
+https://android.googlesource.com/kernel/omap/+/android-omap-3.0/drivers/net/wireless/wl12xx/sdio.c
+@ line 319
+
+Bug found via C-Atlas tool [http://www.ensoftcorp.com/]
