@@ -1,93 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:44903 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796AbaH2PVT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 11:21:19 -0400
-Received: by mail-ie0-f179.google.com with SMTP id tr6so2936672ieb.38
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 08:21:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53FF9D9B.30106@hauke-m.de>
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
-	<3921668.sgOLRYjGUr@wuerfel>
-	<CACna6rwnz0TGZ8QgW39o4MPfXTp1a1h8naDJqEGVV4UqtkgaWw@mail.gmail.com>
-	<2859425.94ptgpItD3@wuerfel>
-	<53FF9D9B.30106@hauke-m.de>
-Date: Fri, 29 Aug 2014 17:21:18 +0200
-Message-ID: <CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com> (sfid-20140829_172122_818611_2754A01B)
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:37021 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751844AbaHTJnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:43:01 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 04/11] lib/vsprintf: add %*pE[achnops] format specifier
+Date: Wed, 20 Aug 2014 12:42:45 +0300
+Message-Id: <1408527772-27224-5-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114432_628983_6F744822)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 August 2014 23:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 08/28/2014 01:56 PM, Arnd Bergmann wrote:
->> On Thursday 28 August 2014 13:39:55 Rafał Miłecki wrote:
->>> Well, that depends. Hauke was planning to put info about flash in DT.
->>>> I think it would make sense to have a common driver that has both
->>>> an 'early' init part used by MIPS and a regular init part used by
->>>> ARM and potentially also on MIPS if we want. Most of the code can
->>>> still be shared.
->>>
->>> OK, now it's clear what you meant.
->>> The thing is that we may want to call probe function from
->>> drivers/bcma/main.c. I think we never meant to call it directly from
->>> arch code. This code in drivers/bcma/main.c is used on both: MIPS and
->>> ARM. So I wonder if there is much sense in doing it like
->>> #ifdev MIPS
->>> bcm47xx_nvram_init(nvram_address);
->>> #endif
->>> #ifdef ARM
->>> nvram_device.resource[0].start = nvram_address;
->>> platform_device_register(nvram_device);
->>> #endif
->>>
->>> What do you think about this?
->>
->> I definitely don't want to see any manual platform_device_register()
->> calls on ARM, any device should be either a platform_device probed
->> from DT, or a bcma_device that comes from the bcma bus.
->>
->> I suspect I'm still missing part of the story here. How is the
->> nvram chip actually connected?
->
-> I think we have to provide an own device tree for every board, like it
-> is done for other arm boards. If we do so I do not see a problem to
-> specify the nvram address space in device tree.
+This allows user to print a given buffer as an escaped string. The rules are
+applied according to an optional mix of flags provided by additional format
+letters.
 
-Alright, I think we should try to answer one main question at this
-point: how much data we want to put in DTS? It's still not clear to
-me.
+For example, if the given buffer is:
 
-What about this flash memory mapping? You added this in your RFC:
-reg = <0x1c000000 0x01000000>;
+	1b 62 20 5c 43 07 22 90 0d 5d
 
-As I described, the first part (address 0x1c000000) could be extracted
-on runtime. For that you need my patch:
-[PATCH] bcma: get & store info about flash type SoC booted from
-http://www.spinics.net/lists/linux-wireless/msg126163.html
+The result strings would be:
+	%*pE            "\eb \C\a"\220\r]"
+	%*pEhp          "\x1bb \C\x07"\x90\x0d]"
+	%*pEa           "\e\142\040\\\103\a\042\220\r\135"
 
-And then add some simple "swtich" like:
-switch (boot_device) {
-case BCMA_BOOT_DEV_NAND:
-    nvram_address = 0x1c000000;
-    break;
-case BCMA_BOOT_DEV_SERIAL:
-    nvram_address = 0x1e000000;
-    break;
-}
+Please, read Documentation/printk-formats.txt and lib/string_helpers.c kernel
+documentation to get further information.
 
-So... should we handle it on runtime? Or do we really want this in DTS?
-I was thinking about doing this on runtime. This would limit amount of
-DTS entries and this is what makes more sense to me. The same way
-don't hardcode many other hardware details. For example we don't store
-flash size, block size, erase size in DTS. We simply use JEDEC and
-mtd's spi-nor framework database.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Suggested-by: Joe Perches <joe@perches.com>
+---
+ Documentation/printk-formats.txt | 32 ++++++++++++++++++
+ lib/vsprintf.c                   | 72 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 104 insertions(+)
 
+diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+index 3b56a99..8858db8 100644
+--- a/Documentation/printk-formats.txt
++++ b/Documentation/printk-formats.txt
+@@ -70,6 +70,38 @@ DMA addresses types dma_addr_t:
+ 	For printing a dma_addr_t type which can vary based on build options,
+ 	regardless of the width of the CPU data path. Passed by reference.
+ 
++Raw buffer as an escaped string:
++
++	%*pE[achnops]
++
++	For printing raw buffer as an escaped string. For the following buffer
++
++		1b 62 20 5c 43 07 22 90 0d 5d
++
++	few examples show how the conversion would be done (the result string
++	without surrounding quotes):
++
++		%*pE		"\eb \C\a"\220\r]"
++		%*pEhp		"\x1bb \C\x07"\x90\x0d]"
++		%*pEa		"\e\142\040\\\103\a\042\220\r\135"
++
++	The conversion rules are applied according to an optional combination
++	of flags (see string_escape_mem() kernel documentation for the
++	details):
++		a - ESCAPE_ANY
++		c - ESCAPE_SPECIAL
++		h - ESCAPE_HEX
++		n - ESCAPE_NULL
++		o - ESCAPE_OCTAL
++		p - ESCAPE_NP
++		s - ESCAPE_SPACE
++	By default ESCAPE_ANY_NP is used.
++
++	ESCAPE_ANY_NP is the sane choice for many cases, in particularly for
++	printing SSIDs.
++
++	If field width is omitted the 1 byte only will be escaped.
++
+ Raw buffer as a hex string:
+ 	%*ph	00 01 02  ...  3f
+ 	%*phC	00:01:02: ... :3f
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index 0eced40..6913046 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -33,6 +33,7 @@
+ #include <asm/page.h>		/* for PAGE_SIZE */
+ #include <asm/sections.h>	/* for dereference_function_descriptor() */
+ 
++#include <linux/string_helpers.h>
+ #include "kstrtox.h"
+ 
+ /**
+@@ -1101,6 +1102,63 @@ char *ip4_addr_string_sa(char *buf, char *end, const struct sockaddr_in *sa,
+ }
+ 
+ static noinline_for_stack
++char *escaped_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
++		     const char *fmt)
++{
++	bool found = true;
++	int count = 1;
++	unsigned int flags = 0;
++	int len;
++
++	if (spec.field_width == 0)
++		/* nothing to print */
++		return buf;
++
++	if (ZERO_OR_NULL_PTR(addr))
++		/* NULL pointer */
++		return string(buf, end, NULL, spec);
++
++	do {
++		switch (fmt[count++]) {
++		case 'a':
++			flags |= ESCAPE_ANY;
++			break;
++		case 'c':
++			flags |= ESCAPE_SPECIAL;
++			break;
++		case 'h':
++			flags |= ESCAPE_HEX;
++			break;
++		case 'n':
++			flags |= ESCAPE_NULL;
++			break;
++		case 'o':
++			flags |= ESCAPE_OCTAL;
++			break;
++		case 'p':
++			flags |= ESCAPE_NP;
++			break;
++		case 's':
++			flags |= ESCAPE_SPACE;
++			break;
++		default:
++			found = false;
++			break;
++		}
++	} while (found);
++
++	if (!flags)
++		flags = ESCAPE_ANY_NP;
++
++	len = spec.field_width < 0 ? 1 : spec.field_width;
++
++	/* Ignore the error. We print as many characters as we can */
++	string_escape_mem(addr, len, &buf, end - buf, flags, NULL);
++
++	return buf;
++}
++
++static noinline_for_stack
+ char *uuid_string(char *buf, char *end, const u8 *addr,
+ 		  struct printf_spec spec, const char *fmt)
+ {
+@@ -1236,6 +1294,17 @@ int kptr_restrict __read_mostly;
+  * - '[Ii][4S][hnbl]' IPv4 addresses in host, network, big or little endian order
+  * - 'I[6S]c' for IPv6 addresses printed as specified by
+  *       http://tools.ietf.org/html/rfc5952
++ * - 'E[achnops]' For an escaped buffer, where rules are defined by combination
++ *                of the following flags (see string_escape_mem() for the
++ *                details):
++ *                  a - ESCAPE_ANY
++ *                  c - ESCAPE_SPECIAL
++ *                  h - ESCAPE_HEX
++ *                  n - ESCAPE_NULL
++ *                  o - ESCAPE_OCTAL
++ *                  p - ESCAPE_NP
++ *                  s - ESCAPE_SPACE
++ *                By default ESCAPE_ANY_NP is used.
+  * - 'U' For a 16 byte UUID/GUID, it prints the UUID/GUID in the form
+  *       "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  *       Options for %pU are:
+@@ -1337,6 +1406,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
+ 			}}
+ 		}
+ 		break;
++	case 'E':
++		return escaped_string(buf, end, ptr, spec, fmt);
+ 	case 'U':
+ 		return uuid_string(buf, end, ptr, spec, fmt);
+ 	case 'V':
+@@ -1651,6 +1722,7 @@ qualifier:
+  * %piS depending on sa_family of 'struct sockaddr *' print IPv4/IPv6 address
+  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
+  *   case.
++ * %*pE[achnops] print an escaped buffer
+  * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
+  *           bytes of the input)
+  * %n is ignored
 -- 
-Rafał
+2.1.0
+
