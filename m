@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:35013 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbaHKNaR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 09:30:17 -0400
-Received: by mail-wg0-f49.google.com with SMTP id k14so8568339wgh.20
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 06:30:16 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH try2] wireless-regdb: change to 200mW Max_EIRP in 5150-5250 for ES (Spain)
-Date: Mon, 11 Aug 2014 15:29:55 +0200
-Message-Id: <1407763795-8571-1-git-send-email-xose.vazquez@gmail.com> (sfid-20140811_153022_789988_D3B5A182)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+Received: from mga01.intel.com ([192.55.52.88]:60163 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751885AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 07/11] wireless: hostap: proc: print properly escaped SSID
+Date: Wed, 20 Aug 2014 12:42:48 +0300
+Message-Id: <1408527772-27224-8-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114709_544055_ED885BC9)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-4845
-http://www.boe.es/boe/dias/2013/05/09/pdfs/BOE-A-2013-4845.pdf
+Instead of substituting non-printable characters by '_' let's print SSID
+properly escaped by using recently added %*pE specifier.
 
---cut--
-UN – 128 RLANs en 5 GHz
-
-[...]
-Banda 5150 – 5350 MHz: En esta banda el uso por el servicio móvil en sistemas de
-acceso inalámbrico incluyendo comunicaciones electrónicas y redes de área local, se
-restringe para su utilización únicamente en el interior de recintos. La potencia isotrópica
-radiada equivalente máxima será de 200 mW (p.i.r.e.), siendo la densidad máxima de
-p.i.r.e. media de 10 mW/MHz en cualquier banda de 1 MHz. Este valor se refiere a la
-potencia promediada sobre una ráfaga de transmisión ajustada a la máxima potencia.
-
-Adicionalmente, en la banda 5250-5350 MHz el transmisor deberá emplear técnicas de
-control de potencia (TPC) que permitan como mínimo un factor de reducción de 3 dB de la
-potencia de salida. En caso de no usar estas técnicas, la potencia isotrópica radiada
-equivalente máxima deberá ser de 100 mW (p.i.r.e). Resto de características técnicas han
-de ajustarse a las indicadas en la Decisión de la CEPT ECC/DEC(04)08.
-Estas utilizaciones son de uso común, por lo que no se garantiza la protección frente a
-otros servicios legalmente autorizados ni puede causar perturbaciones a los mismos.
-[...]
---end--
-
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Luis R. Rodriguez <mcgrof@frijolero.org>
-Cc: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- db.txt | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/hostap/hostap_proc.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 3d15930..92573d1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -316,9 +316,16 @@ country EG: DFS-ETSI
- 	(5170 - 5250 @ 80), (20)
- 	(5250 - 5330 @ 80), (20), DFS
+diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
+index 4e5c0f8..16a06b6 100644
+--- a/drivers/net/wireless/hostap/hostap_proc.c
++++ b/drivers/net/wireless/hostap/hostap_proc.c
+@@ -181,9 +181,7 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
+ 		   bss->bssid, bss->last_update,
+ 		   bss->count, bss->capab_info);
  
-+# Orden IET/787/2013, de 25 de abril, por la que se aprueba
-+# el cuadro nacional de atribución de frecuencias.
-+# http://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-4845
-+#
-+# more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
-+# http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
-+
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
--	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
-+	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 80), (500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+-	for (i = 0; i < bss->ssid_len; i++)
+-		seq_putc(m,bss->ssid[i] >= 32 && bss->ssid[i] < 127 ?
+-			   bss->ssid[i] : '_');
++	seq_printf(m, "%*pE", bss->ssid_len, bss->ssid);
+ 
+ 	seq_putc(m, '\t');
+ 	for (i = 0; i < bss->ssid_len; i++)
 -- 
-1.9.3
+2.1.0
 
