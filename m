@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:38025 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbaHJLWq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 07:22:46 -0400
-Received: by mail-we0-f175.google.com with SMTP id t60so7461396wes.34
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:44 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/7] staging: vt6655: BSSvSecondTxData remove #if 1 else directive
-Date: Sun, 10 Aug 2014 12:21:57 +0100
-Message-Id: <1407669722-2682-2-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132250_444441_269F12CA)
-In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
-References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:7684 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 10/11] staging: rtl8192e: use %*pEn to escape buffer
+Date: Wed, 20 Aug 2014 12:42:51 +0300
+Message-Id: <1408527772-27224-11-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114710_239757_0C69F17D)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a code alignment error after this directive realign
-code
+Let's use kernel's native specifier to escape a buffer.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/staging/vt6655/wcmd.c | 26 ++++++++++++--------------
- 1 file changed, 12 insertions(+), 14 deletions(-)
+ drivers/staging/rtl8192e/rtllib.h | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/drivers/staging/vt6655/wcmd.c b/drivers/staging/vt6655/wcmd.c
-index 16ed097..b7e68a0 100644
---- a/drivers/staging/vt6655/wcmd.c
-+++ b/drivers/staging/vt6655/wcmd.c
-@@ -1001,19 +1001,17 @@ BSSvSecondTxData(
+diff --git a/drivers/staging/rtl8192e/rtllib.h b/drivers/staging/rtl8192e/rtllib.h
+index 83f5f57..9840be0 100644
+--- a/drivers/staging/rtl8192e/rtllib.h
++++ b/drivers/staging/rtl8192e/rtllib.h
+@@ -2956,25 +2956,13 @@ extern inline int rtllib_get_scans(struct rtllib_device *ieee)
+ static inline const char *escape_essid(const char *essid, u8 essid_len)
+ {
+ 	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+-	char *d = escaped;
+ 
+ 	if (rtllib_is_empty_essid(essid, essid_len)) {
+ 		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
+ 		return escaped;
  	}
  
- 	spin_lock_irq(&pDevice->lock);
--#if 1
--	if ((pDevice->bLinkPass && (pMgmt->eAuthenMode < WMAC_AUTH_WPA)) ||  //open && sharekey linking
--	    pDevice->fWPA_Authened) {   //wpa linking
--#else
--		if (pDevice->bLinkPass == true) {
--#endif
--			pDevice->fTxDataInSleep = true;
--			PSbSendNullPacket(pDevice);      //send null packet
--			pDevice->fTxDataInSleep = false;
+-	essid_len = min(essid_len, (u8)IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else {
+-			*d++ = *s++;
 -		}
--		spin_unlock_irq(&pDevice->lock);
+-	}
+-	*d = '\0';
++	snprintf(escaped, sizeof(escaped), "%*pEn", essid_len, essid);
+ 	return escaped;
+ }
  
--		pDevice->sTimerTxData.expires = RUN_AT(10*HZ);      //10s callback
--		add_timer(&pDevice->sTimerTxData);
--		return;
-+	/* open && sharekey linking */
-+	if ((pDevice->bLinkPass && (pMgmt->eAuthenMode < WMAC_AUTH_WPA)) ||
-+	    pDevice->fWPA_Authened) {   /* wpa linking */
-+		pDevice->fTxDataInSleep = true;
-+		PSbSendNullPacket(pDevice);	/* send null packet */
-+		pDevice->fTxDataInSleep = false;
- 	}
-+
-+	spin_unlock_irq(&pDevice->lock);
-+
-+	pDevice->sTimerTxData.expires = RUN_AT(10*HZ); /* 10s callback */
-+	add_timer(&pDevice->sTimerTxData);
-+}
 -- 
-1.9.1
+2.1.0
 
