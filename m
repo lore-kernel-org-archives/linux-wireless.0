@@ -1,120 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:48028 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbaHKIgx (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:50384 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151AbaHTVb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 04:36:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAKfDRXgSg5Dpz=Ubv9=V6uGVOKYD1+nckFvep+M=vM8nNJGZqw@mail.gmail.com>
-References: <CAKfDRXgSg5Dpz=Ubv9=V6uGVOKYD1+nckFvep+M=vM8nNJGZqw@mail.gmail.com>
-Date: Mon, 11 Aug 2014 10:36:52 +0200
-Message-ID: <CAKfDRXg6q2+MO8aY7Ayt4rmph3NS5PNJrNsYze9D0UAmBaMSgA@mail.gmail.com> (sfid-20140811_103659_665082_66B3594D)
-Subject: Re: ar71xx: Problems with USB WIFI dongles
-From: Kristian Evensen <kristian.evensen@gmail.com>
-To: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Aug 2014 17:31:57 -0400
+Received: by mail-wi0-f170.google.com with SMTP id f8so7261595wiw.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 14:31:56 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/6] staging: vt6655: device.h dead code remove bCCK
+Date: Wed, 20 Aug 2014 22:30:26 +0100
+Message-Id: <1408570231-10320-1-git-send-email-tvboxspy@gmail.com> (sfid-20140820_233201_102666_CD146C36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+bCCK is always set to true, the only place it is used is in
+BBvCalculateParameter which nots the value to false.
 
-On Sat, Aug 9, 2014 at 12:03 PM, Kristian Evensen
-<kristian.evensen@gmail.com> wrote:
-> 2) When disconnecting any WIFI dongle, I always get a kernel oops.
-> This happens irrespective of if the dongle is active (for example
-> connected to network) or if I have just connected it to the router.
-> The kernel oops looks like the following (the crash happens at the
-> same place independent of device):
->
-> [  429.730000] usb 1-1.1.5.4: USB disconnect, device number 10
-> [  429.760000] CPU 0 Unable to handle kernel paging request at virtual
-> address 00100104, epc == 86e93018, ra == 86e93010
-> [  429.770000] Oops[#1]:
-> [  429.770000] CPU: 0 PID: 292 Comm: khubd Not tainted 3.14.12 #4
-> [  429.770000] task: 878ad770 ti: 87b0c000 task.ti: 87b0c000
-> [  429.770000] $ 0   : 00000000 00000000 00200200 00100100
-> [  429.770000] $ 4   : 87b0dce0 87b0dee0 80350000 00000008
-> [  429.770000] $ 8   : 00090040 86a6a080 00000020 00090040
-> [  429.770000] $12   : 00000013 0000000e 00000007 00000001
-> [  429.770000] $16   : 85cc91a0 87b0dcd8 00100100 85cc91a8
-> [  429.770000] $20   : 85cc91a0 00200200 86948000 87b41838
-> [  429.770000] $24   : 80327df0 8010fe04
-> [  429.770000] $28   : 87b0c000 87b0dcc8 00000000 86e93010
-> [  429.770000] Hi    : 00000350
-> [  429.770000] Lo    : 00000006
-> [  429.770000] epc   : 86e93018
-> ieee80211_remove_interfaces+0x128/0x1b4 [mac80211]
-> [  429.770000]     Not tainted
-> [  429.770000] ra    : 86e93010
-> ieee80211_remove_interfaces+0x120/0x1b4 [mac80211]
-> [  429.770000] Status: 1100dc03 KERNEL EXL IE
-> [  429.770000] Cause : 0080000c
-> [  429.770000] BadVA : 00100104
-> [  429.770000] PrId  : 0001974c (MIPS 74Kc)
-> [  429.770000] Modules linked in: ath9k rtl8192se rtl8192de rtl8192cu
-> rtl8192ce ath9k_htc ath9k_common rtl_usb rtl_pci pppoe ppp_async
-> option iptable_nat ath9k_hw ath usb_wwan smsc95xx rtlwifi rtl8187
-> rt73usb rt2x00usb rt2x00lib rndis_host qmi_wwan pppox ppp_generic
-> nf_nat_ipv4 nf_conntrack_ipv4 mac80211 ipt_MASQUERADE huawei_cdc_ncm
-> cfg80211 cdc_ncm cdc_ether ax88179_178a asix xt_time xt_tcpudp
-> xt_tcpmss xt_string xt_statistic xt_state xt_recent xt_quota
-> xt_pkttype xt_owner xt_nfacct xt_nat xt_multiport xt_mark xt_mac
-> xt_limit xt_length xt_id xt_hl xt_helper xt_ecn xt_dscp xt_conntrack
-> xt_connmark xt_connlimit xt_connbytes xt_comment xt_addrtype xt_TCPMSS
-> xt_REDIRECT xt_NFQUEUE xt_LOG xt_HL xt_DSCP xt_CT xt_CLASSIFY
-> usbserial usbnet ts_kmp ts_fsm ts_bm slhc rtl8192c_common
-> nfnetlink_queue nfnetlink_acct nf_nat_irc nf_nat_ftp nf_nat
-> nf_defrag_ipv4 nf_conntrack_irc nf_conntrack_ftp iptable_raw
-> iptable_mangle iptable_filter ipt_REJECT ipt_ECN ipheth ip_tables
-> crc16 crc_itu_t crc_ccitt compat cdc_wdm cdc_acm act_connmark
-> act_skbedit act_mirred em_u32 cls_u32 cls_tcindex cls_flow cls_route
-> cls_fw sch_hfsc sch_ingress ledtrig_usbdev ip6t_REJECT ip6table_raw
-> ip6table_mangle ip6table_filter ip6_tables x_tables nf_conntrack_ipv6
-> nf_defrag_ipv6 ifb ipv6 eeprom_93cx6 arc4 crypto_blkcipher
-> ehci_platform ehci_hcd gpio_button_hotplug usbcore nls_base usb_common
-> mii
-> [  429.770000] Process khubd (pid: 292, threadinfo=87b0c000,
-> task=878ad770, tls=00000000)
-> [  429.770000] Stack : 85cc93a0 86f69350 00000000 00000000 87b0dcd8
-> 87b0dcd8 00100100 00200200
-> [  429.770000]  86948000 85cc8ae0 85cc9460 86b9fa20 86f69350 00000000
-> 00000000 86e80fac
-> [  429.770000]  00000004 85cc8ae0 85cc9460 86b9fa20 85cc8ae0 86e14ddc
-> 87b0dd1c 87b0bbd0
-> [  429.770000]  86b9fa20 86948000 86b9fa20 86948000 86b9fa00 87b2c580
-> 879ff000 800def9c
-> [  429.770000]  87b39180 80131108 86b9fa20 86f69350 87b39180 879ff000
-> 86b9fa00 8008d734
-> [  429.770000]  ...
-> [  429.770000] Call Trace:
-> [  429.770000] [<86e93018>] ieee80211_remove_interfaces+0x128/0x1b4 [mac80211]
-> [  429.770000] [<86e80fac>] ieee80211_unregister_hw+0x3c/0xe4 [mac80211]
-> [  429.770000] [<86e14ddc>] rtl_usb_disconnect+0x4c/0xf4 [rtl_usb]
-> [  429.770000] [<87b2c580>] usb_deregister+0x228/0x2ec [usbcore]
-> [  429.770000] [<8008d734>] __device_release_driver+0x6c/0xd0
-> [  429.770000] [<80117f64>] device_release_driver+0x28/0x40
-> [  429.770000] [<800edffc>] bus_remove_device+0xec/0x120
-> [  429.770000] [<801176fc>] device_del+0x110/0x170
-> [  429.770000] [<87b2ad58>] usb_disable_device+0xb0/0x1d8 [usbcore]
-> [  429.770000] [<87b22920>] usb_disconnect+0xac/0x408 [usbcore]
-> [  429.770000] [<87b24a68>] usb_reset_device+0xd28/0x15c8 [usbcore]
-> [  429.770000] [<80121c0c>] do_exit+0x72c/0x744
-> [  429.770000]
-> [  429.770000]
-> [  429.770000] Code: 27a40018  8fa2001c  8fa30018 <ac620004> ac430000
-> 8fb00010  3c030010  3c020020  24630100
-> [  430.110000] ---[ end trace 6ca2573cb8fc44d5 ]---
->
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/baseband.c    | 6 ------
+ drivers/staging/vt6655/device.h      | 1 -
+ drivers/staging/vt6655/device_main.c | 2 --
+ drivers/staging/vt6655/wmgr.c        | 1 -
+ 4 files changed, 10 deletions(-)
 
-I did some more looking into and testing of this kernel panic and it
-is fixed by the following commit
-https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/net/mac80211/iface.c?id=87757a917b0b3c0787e0563c679762152be81312.
-This commit is included in 3.10-stable and the latest compat-wireless,
-but not in the current compat-wireless (22-5-2014) used by OpenWRT. So
-the problem is already solved, sorry for the noise.
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index c1025ff..7dd866e 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -1837,7 +1837,6 @@ BBvCalculateParameter(
+ 	unsigned int cbTmp;
+ 	bool bExtBit;
+ 	unsigned char byPreambleType = pDevice->byPreambleType;
+-	bool bCCK = pDevice->bCCK;
+ 
+ 	cbBitCount = cbFrameLength * 8;
+ 	bExtBit = false;
+@@ -1857,8 +1856,6 @@ BBvCalculateParameter(
+ 		break;
+ 
+ 	case RATE_5M:
+-		if (!bCCK)
+-			cbBitCount++;
+ 		cbUsCount = (cbBitCount * 10) / 55;
+ 		cbTmp = (cbUsCount * 55) / 10;
+ 		if (cbTmp != cbBitCount)
+@@ -1870,9 +1867,6 @@ BBvCalculateParameter(
+ 		break;
+ 
+ 	case RATE_11M:
+-
+-		if (!bCCK)
+-			cbBitCount++;
+ 		cbUsCount = cbBitCount / 11;
+ 		cbTmp = cbUsCount * 11;
+ 		if (cbTmp != cbBitCount) {
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 1abad5d..2434a37 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -488,7 +488,6 @@ struct vnt_private {
+ 
+ 	unsigned long dwMaxReceiveLifetime;       // dot11MaxReceiveLifetime
+ 
+-	bool bCCK;
+ 	bool bEncryptionEnable;
+ 	bool bLongHeader;
+ 	bool bShortSlotTime;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 3a2fd29..1a94d4f 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -469,8 +469,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	/* Do MACbSoftwareReset in MACvInitialize */
+ 	MACbSoftwareReset(pDevice->PortOffset);
+ 
+-	/* force CCK */
+-	pDevice->bCCK = true;
+ 	pDevice->bAES = false;
+ 
+ 	/* Only used in 11g type, sync with ERP IE */
+diff --git a/drivers/staging/vt6655/wmgr.c b/drivers/staging/vt6655/wmgr.c
+index c3de107..ba273c7 100644
+--- a/drivers/staging/vt6655/wmgr.c
++++ b/drivers/staging/vt6655/wmgr.c
+@@ -2663,7 +2663,6 @@ s_vMgrSynchBSS(
+ 	}
+ 
+ 	// Init the BSS informations
+-	pDevice->bCCK = true;
+ 	pDevice->bProtectMode = false;
+ 	MACvDisableProtectMD(pDevice->PortOffset);
+ 	pDevice->bBarkerPreambleMd = false;
+-- 
+1.9.1
 
-I have not found the reason for the problems with mixing wifi drivers.
-So if anyone has a hint here, it would be great.
-
--Kristian
