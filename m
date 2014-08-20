@@ -1,93 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53692 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751923AbaHTJm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 05:42:59 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 09/11] staging: wlan-ng: use %*pEhp to print SN
-Date: Wed, 20 Aug 2014 12:42:50 +0300
-Message-Id: <1408527772-27224-10-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114538_385651_F3EE8EE5)
-In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11099 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbaHTH3r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 03:29:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v7 2/8] ath10k: provide firmware crash info via debugfs
+References: <20140819082038.16842.46876.stgit@potku.adurom.net>
+	<20140819082253.16842.32433.stgit@potku.adurom.net>
+	<CA+BoTQn2aq5EV4mvTs3Ww4i9gAJsmMM5iDfrFd=YfC0YxMi2WQ@mail.gmail.com>
+	<53F36C63.8040809@candelatech.com>
+Date: Wed, 20 Aug 2014 10:29:27 +0300
+In-Reply-To: <53F36C63.8040809@candelatech.com> (Ben Greear's message of "Tue,
+	19 Aug 2014 08:25:23 -0700")
+Message-ID: <87tx5762lk.fsf@kamboji.qca.qualcomm.com> (sfid-20140820_093008_688977_E8AFF510)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a generic specifier to print an escaped buffer by given criteria. Let's
-use it instead of custom approach.
+Ben Greear <greearb@candelatech.com> writes:
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/staging/wlan-ng/prism2sta.c | 28 ++--------------------------
- 1 file changed, 2 insertions(+), 26 deletions(-)
+>>> +       /* Gather dbg-log */
+>>> +       dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+>>> +       dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_DBGLOG);
+>>> +       dump_tlv->tlv_len = cpu_to_le32(sizeof(crash_data->dbglog_entry_data));
+>>
+>> Hmm should this really be sizeof()? Not next_idx (which effectively
+>> defines number of bytes of the dbglog)?
+>
+> I haven't tried decoding this yet, but we may need to know the next_idx
+> to decode this properly.
 
-diff --git a/drivers/staging/wlan-ng/prism2sta.c b/drivers/staging/wlan-ng/prism2sta.c
-index 799ce8a..df577df 100644
---- a/drivers/staging/wlan-ng/prism2sta.c
-+++ b/drivers/staging/wlan-ng/prism2sta.c
-@@ -60,7 +60,6 @@
- #include <linux/netdevice.h>
- #include <linux/workqueue.h>
- #include <linux/byteorder/generic.h>
--#include <linux/ctype.h>
- 
- #include <linux/io.h>
- #include <linux/delay.h>
-@@ -81,27 +80,6 @@
- #include "hfa384x.h"
- #include "prism2mgmt.h"
- 
--/* Create a string of printable chars from something that might not be */
--/* It's recommended that the str be 4*len + 1 bytes long */
--#define wlan_mkprintstr(buf, buflen, str, strlen) \
--{ \
--	int i = 0; \
--	int j = 0; \
--	memset(str, 0, (strlen)); \
--	for (i = 0; i < (buflen); i++) { \
--		if (isprint((buf)[i])) { \
--			(str)[j] = (buf)[i]; \
--			j++; \
--		} else { \
--			(str)[j] = '\\'; \
--			(str)[j+1] = 'x'; \
--			(str)[j+2] = hex_asc_hi((buf)[i]); \
--			(str)[j+3] = hex_asc_lo((buf)[i]); \
--			j += 4; \
--		} \
--	} \
--}
--
- static char *dev_info = "prism2_usb";
- static wlandevice_t *create_wlan(void);
- 
-@@ -607,7 +585,6 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
- 	hfa384x_t *hw = (hfa384x_t *) wlandev->priv;
- 	u16 temp;
- 	u8 snum[HFA384x_RID_NICSERIALNUMBER_LEN];
--	char pstr[(HFA384x_RID_NICSERIALNUMBER_LEN * 4) + 1];
- 
- 	/* Collect version and compatibility info */
- 	/*  Some are critical, some are not */
-@@ -862,9 +839,8 @@ static int prism2sta_getcardinfo(wlandevice_t *wlandev)
- 	result = hfa384x_drvr_getconfig(hw, HFA384x_RID_NICSERIALNUMBER,
- 					snum, HFA384x_RID_NICSERIALNUMBER_LEN);
- 	if (!result) {
--		wlan_mkprintstr(snum, HFA384x_RID_NICSERIALNUMBER_LEN,
--				pstr, sizeof(pstr));
--		netdev_info(wlandev->netdev, "Prism2 card SN: %s\n", pstr);
-+		netdev_info(wlandev->netdev, "Prism2 card SN: %*pEhp\n",
-+			    HFA384x_RID_NICSERIALNUMBER_LEN, snum);
- 	} else {
- 		netdev_err(wlandev->netdev, "Failed to retrieve Prism2 Card SN\n");
- 		goto failed;
+I really don't like the idea of having untested code in ath10k. Buggy
+code is okay (preferably document the known bugs when submitting code),
+but untested code is not.
+
 -- 
-2.1.0
-
+Kalle Valo
