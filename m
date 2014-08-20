@@ -1,39 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:37093 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbaHSM61 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 08:58:27 -0400
-From: Vincent Donnefort <vdonnefort@gmail.com>
-To: hughd@google.com, cooloney@gmail.com
-Cc: linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Vincent Donnefort <vdonnefort@gmail.com>
-Subject: [PATCH] leds: make led_blink_set IRQ safe
-Date: Tue, 19 Aug 2014 14:58:20 +0200
-Message-Id: <1408453101-30290-1-git-send-email-vdonnefort@gmail.com> (sfid-20140819_145858_790862_65FA3E06)
-In-Reply-To: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
+Received: from mga09.intel.com ([134.134.136.24]:53692 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751852AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 02/11] lib / string_helpers: refactoring the test suite
+Date: Wed, 20 Aug 2014 12:42:43 +0300
+Message-Id: <1408527772-27224-3-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114431_414936_7E64ABFC)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hugh,
+This patch prepares test suite for a following update. It introduces
+test_string_check_buf() helper which checks the result and dumps an error.
 
-Here's a patch which must fix your problem. It allows to call led_blink_set()
-from on IRQ handler by adding a work to take care of the scheduling function 
-cancel_delayed_work_sync().
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ lib/test-string_helpers.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-Regards,
-Vincent.
-
-Vincent Donnefort (1):
-  leds: make led_blink_set IRQ safe
-
- drivers/leds/led-class.c | 19 +++++++++++++++++++
- drivers/leds/led-core.c  | 16 +---------------
- include/linux/leds.h     |  1 +
- 3 files changed, 21 insertions(+), 15 deletions(-)
-
+diff --git a/lib/test-string_helpers.c b/lib/test-string_helpers.c
+index 6ac48de..ac44c92 100644
+--- a/lib/test-string_helpers.c
++++ b/lib/test-string_helpers.c
+@@ -10,6 +10,26 @@
+ #include <linux/string.h>
+ #include <linux/string_helpers.h>
+ 
++static __init bool test_string_check_buf(const char *name, unsigned int flags,
++					 char *in, size_t p,
++					 char *out_real, size_t q_real,
++					 char *out_test, size_t q_test)
++{
++	if (q_real == q_test && !memcmp(out_test, out_real, q_test))
++		return true;
++
++	pr_warn("Test '%s' failed: flags = %u\n", name, flags);
++
++	print_hex_dump(KERN_WARNING, "Input: ", DUMP_PREFIX_NONE, 16, 1,
++		       in, p, true);
++	print_hex_dump(KERN_WARNING, "Expected: ", DUMP_PREFIX_NONE, 16, 1,
++		       out_test, q_test, true);
++	print_hex_dump(KERN_WARNING, "Got: ", DUMP_PREFIX_NONE, 16, 1,
++		       out_real, q_real, true);
++
++	return false;
++}
++
+ struct test_string {
+ 	const char *in;
+ 	const char *out;
+@@ -39,7 +59,8 @@ static const struct test_string strings[] __initconst = {
+ 	},
+ };
+ 
+-static void __init test_string_unescape(unsigned int flags, bool inplace)
++static void __init test_string_unescape(const char *name, unsigned int flags,
++					bool inplace)
+ {
+ 	char in[256];
+ 	char out_test[256];
+@@ -77,15 +98,8 @@ static void __init test_string_unescape(unsigned int flags, bool inplace)
+ 		q_real = string_unescape(in, out_real, q_real, flags);
+ 	}
+ 
+-	if (q_real != q_test || memcmp(out_test, out_real, q_test)) {
+-		pr_warn("Test failed: flags = %u\n", flags);
+-		print_hex_dump(KERN_WARNING, "Input: ",
+-			       DUMP_PREFIX_NONE, 16, 1, in, p - 1, true);
+-		print_hex_dump(KERN_WARNING, "Expected: ",
+-			       DUMP_PREFIX_NONE, 16, 1, out_test, q_test, true);
+-		print_hex_dump(KERN_WARNING, "Got: ",
+-			       DUMP_PREFIX_NONE, 16, 1, out_real, q_real, true);
+-	}
++	test_string_check_buf(name, flags, in, p - 1, out_real, q_real,
++			      out_test, q_test);
+ }
+ 
+ static int __init test_string_helpers_init(void)
+@@ -94,8 +108,9 @@ static int __init test_string_helpers_init(void)
+ 
+ 	pr_info("Running tests...\n");
+ 	for (i = 0; i < UNESCAPE_ANY + 1; i++)
+-		test_string_unescape(i, false);
+-	test_string_unescape(get_random_int() % (UNESCAPE_ANY + 1), true);
++		test_string_unescape("unescape", i, false);
++	test_string_unescape("unescape inplace",
++			     get_random_int() % (UNESCAPE_ANY + 1), true);
+ 
+ 	return -EINVAL;
+ }
 -- 
-1.9.1
+2.1.0
 
