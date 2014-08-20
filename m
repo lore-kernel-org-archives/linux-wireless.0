@@ -1,96 +1,599 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:55449 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbaHNQe6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 12:34:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B266E67@hasmsx107.ger.corp.intel.com>
-References: <CA+55aFxdt-9e9X0EYCu2Ku8sSTspUGPk5qKa72XH63zrkdPthw@mail.gmail.com>
-	<53ECD8D0.4050709@lwfinger.net>
-	<CA+55aFw1LWO+zxePYtUBi9YOWHPX+98xbM2h3j4pcN+6V0G1zA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B266E67@hasmsx107.ger.corp.intel.com>
-Date: Thu, 14 Aug 2014 09:34:56 -0700
-Message-ID: <CANUX_P2KXKO9UcJbF1TniP64uY6ZJY2SqbKsoEsNqDTT0KFhdw@mail.gmail.com> (sfid-20140814_183509_136574_2628F787)
-Subject: Re: Intel wireless microcode problem..
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:60159 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751910AbaHTJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2014 05:42:58 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 03/11] lib / string_helpers: introduce string_escape_mem()
+Date: Wed, 20 Aug 2014 12:42:44 +0300
+Message-Id: <1408527772-27224-4-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114708_851010_AC6833FA)
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> >
->> > There is a new firmware that seems to help the problem. You can get it
->> > from Emmanuel's git clone. As he wrote earlier
->>
->> So quite frankly, this is *not* acceptable. We have regression policies for the
->> kernel, and this seems to be a kernel regression with the currently released
->> firmware. And I'm not downloading experimental firmware while traveling
->> with this laptop being my only way to work.
->>
->> The warnings cause *so* much message log spam that the machine is
->> occasionally spending 5% of CPU time on systemd journaling, and
->> presumably filling up disk space too.
->>
->> And the same way we don't tell people "update your buggy user space"
->> when we introduce kernel regressions, we don't tell people "try a new
->> firmware".
->>
->> People who have old systems (old distributions, old firmware, old hardware,
->> old *anything*) that works with their previous kernel, are supposed to be
->> able to upgrade their kernel with no regressions.
->> That's the rules for the kernel, and that's what the rules have been for a long
->> time. Kernel developers - including wireless driver writers
->> - had better understand that rule. It's the absolute #1 rule when it comes to
->> kernel development. This is not something new and surprosing.
->>
->> The insane amount of logging needs to be fixed. The wireless *works*, but
->> the logging is too verbose.
->>
->> Now, maybe this isn't actually a kernel regression at all - maybe triggered by
->> the horrid internet I have while traveling - but I tried twice, and when I
->> booted into the regular Fedora kernel for testing (oh, just noticed that it's
->> 3.15.8, not 3.16-based), I didn't see this kind of log spamming. So it looks like
->> a regression to me, and we have rules about regressions. And they are just
->> about the ONLY hard rules we have. But that regression rule really is very
->> very important indeed.
->>
->> The wireless *works* with the current firmware, so all that is required is to
->> make sure that the kernel stops spamming the logs so heavily. It would
->> obviously be better to try to figure out *why* the microcode error happens,
->> and what changed in the kernel to trigger it, but the "don't make the
->> machine have trouble with the insane amount of logs" is at least an
->> acceptable workaround.
->>
->> Ok?
->>
-> As I said, I am tyring to repro right now - you are 100% right we are fully committed to make the current firmware work. The "experimental" firmware is just a firmware with a version problem - this is why I didn't release it formally. You can safely use it until we fix the problem.
-> And we will fix it.
-> And no - it is not related to the internet - this is surely a bug in our driver / firmware interface. I am currently trying to see how I can fix it - but I am also travelling...
+This is almost the opposite function to string_unescape(). Nevertheless it
+handles \0 and could be used for any byte buffer.
 
-Ok - I think I have a fix. I could reproduce your problem and I verified my fix.
+The documentation is supplied together with the function prototype.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 0d6a8b7..66ef6a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -396,7 +396,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
-        else
-                hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+The test cases covers most of the scenarios and would be expanded later on.
 
--       hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
-+       /* TODO: enable that for firmwares that don't crash only... */
-+       /* hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN; */
-        hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
-        hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
-        /* we create the 802.11 header and zero length SSID IE. */
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/string_helpers.h |  31 +++++
+ lib/string_helpers.c           | 274 +++++++++++++++++++++++++++++++++++++++++
+ lib/test-string_helpers.c      | 213 ++++++++++++++++++++++++++++++++
+ 3 files changed, 518 insertions(+)
 
-pull request on the way...
+diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
+index 5a30f2a..6eb567a 100644
+--- a/include/linux/string_helpers.h
++++ b/include/linux/string_helpers.h
+@@ -37,4 +37,35 @@ static inline int string_unescape_any_inplace(char *buf)
+ 	return string_unescape_any(buf, buf, 0);
+ }
+ 
++#define ESCAPE_SPACE		0x01
++#define ESCAPE_SPECIAL		0x02
++#define ESCAPE_NULL		0x04
++#define ESCAPE_OCTAL		0x08
++#define ESCAPE_ANY		\
++	(ESCAPE_SPACE | ESCAPE_OCTAL | ESCAPE_SPECIAL | ESCAPE_NULL)
++#define ESCAPE_NP		0x10
++#define ESCAPE_ANY_NP		(ESCAPE_ANY | ESCAPE_NP)
++#define ESCAPE_HEX		0x20
++
++int string_escape_mem(const char *src, size_t isz, char **dst, size_t osz,
++		unsigned int flags, const char *esc);
++
++static inline int string_escape_mem_any_np(const char *src, size_t isz,
++		char **dst, size_t osz, const char *esc)
++{
++	return string_escape_mem(src, isz, dst, osz, ESCAPE_ANY_NP, esc);
++}
++
++static inline int string_escape_str(const char *src, char **dst, size_t sz,
++		unsigned int flags, const char *esc)
++{
++	return string_escape_mem(src, strlen(src), dst, sz, flags, esc);
++}
++
++static inline int string_escape_str_any_np(const char *src, char **dst,
++		size_t sz, const char *esc)
++{
++	return string_escape_str(src, dst, sz, ESCAPE_ANY_NP, esc);
++}
++
+ #endif
+diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+index 74ec604..58b78ba 100644
+--- a/lib/string_helpers.c
++++ b/lib/string_helpers.c
+@@ -8,6 +8,8 @@
+ #include <linux/math64.h>
+ #include <linux/export.h>
+ #include <linux/ctype.h>
++#include <linux/errno.h>
++#include <linux/string.h>
+ #include <linux/string_helpers.h>
+ 
+ /**
+@@ -240,3 +242,275 @@ int string_unescape(char *src, char *dst, size_t size, unsigned int flags)
+ 	return out - dst;
+ }
+ EXPORT_SYMBOL(string_unescape);
++
++static int escape_passthrough(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++
++	if (*osz < 1)
++		return -ENOMEM;
++
++	*out++ = c;
++
++	*dst = out;
++	*osz -= 1;
++
++	return 1;
++}
++
++static int escape_space(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++	unsigned char to;
++
++	if (*osz < 2)
++		return -ENOMEM;
++
++	switch (c) {
++	case '\n':
++		to = 'n';
++		break;
++	case '\r':
++		to = 'r';
++		break;
++	case '\t':
++		to = 't';
++		break;
++	case '\v':
++		to = 'v';
++		break;
++	case '\f':
++		to = 'f';
++		break;
++	default:
++		return 0;
++	}
++
++	*out++ = '\\';
++	*out++ = to;
++
++	*dst = out;
++	*osz -= 2;
++
++	return 1;
++}
++
++static int escape_special(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++	unsigned char to;
++
++	if (*osz < 2)
++		return -ENOMEM;
++
++	switch (c) {
++	case '\\':
++		to = '\\';
++		break;
++	case '\a':
++		to = 'a';
++		break;
++	case '\e':
++		to = 'e';
++		break;
++	default:
++		return 0;
++	}
++
++	*out++ = '\\';
++	*out++ = to;
++
++	*dst = out;
++	*osz -= 2;
++
++	return 1;
++}
++
++static int escape_null(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++
++	if (*osz < 2)
++		return -ENOMEM;
++
++	if (c)
++		return 0;
++
++	*out++ = '\\';
++	*out++ = '0';
++
++	*dst = out;
++	*osz -= 2;
++
++	return 1;
++}
++
++static int escape_octal(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++
++	if (*osz < 4)
++		return -ENOMEM;
++
++	*out++ = '\\';
++	*out++ = ((c >> 6) & 0x07) + '0';
++	*out++ = ((c >> 3) & 0x07) + '0';
++	*out++ = ((c >> 0) & 0x07) + '0';
++
++	*dst = out;
++	*osz -= 4;
++
++	return 1;
++}
++
++static int escape_hex(unsigned char c, char **dst, size_t *osz)
++{
++	char *out = *dst;
++
++	if (*osz < 4)
++		return -ENOMEM;
++
++	*out++ = '\\';
++	*out++ = 'x';
++	*out++ = hex_asc_hi(c);
++	*out++ = hex_asc_lo(c);
++
++	*dst = out;
++	*osz -= 4;
++
++	return 1;
++}
++
++/**
++ * string_escape_mem - quote characters in the given memory buffer
++ * @src:	source buffer (unescaped)
++ * @isz:	source buffer size
++ * @dst:	destination buffer (escaped)
++ * @osz:	destination buffer size
++ * @flags:	combination of the flags (bitwise OR):
++ *	%ESCAPE_SPACE:
++ *		'\f' - form feed
++ *		'\n' - new line
++ *		'\r' - carriage return
++ *		'\t' - horizontal tab
++ *		'\v' - vertical tab
++ *	%ESCAPE_SPECIAL:
++ *		'\\' - backslash
++ *		'\a' - alert (BEL)
++ *		'\e' - escape
++ *	%ESCAPE_NULL:
++ *		'\0' - null
++ *	%ESCAPE_OCTAL:
++ *		'\NNN' - byte with octal value NNN (3 digits)
++ *	%ESCAPE_ANY:
++ *		all previous together
++ *	%ESCAPE_NP:
++ *		escape only non-printable characters (checked by isprint)
++ *	%ESCAPE_ANY_NP:
++ *		all previous together
++ *	%ESCAPE_HEX:
++ *		'\xHH' - byte with hexadecimal value HH (2 digits)
++ * @esc:	NULL-terminated string of characters any of which, if found in
++ *		the source, has to be escaped
++ *
++ * Description:
++ * The process of escaping byte buffer includes several parts. They are applied
++ * in the following sequence.
++ *	1. The character is matched to the printable class, if asked, and in
++ *	   case of match it passes through to the output.
++ *	2. The character is not matched to the one from @esc string and thus
++ *	   must go as is to the output.
++ *	3. The character is checked if it falls into the class given by @flags.
++ *	   %ESCAPE_OCTAL and %ESCAPE_HEX are going last since they cover any
++ *	   character. Note that they actually can't go together, otherwise
++ *	   %ESCAPE_HEX will be ignored.
++ *
++ * Caller must provide valid source and destination pointers. Be aware that
++ * destination buffer will not be NULL-terminated, thus caller have to append
++ * it if needs.
++ *
++ * Return:
++ * The amount of the characters processed to the destination buffer, or
++ * %-ENOMEM if the size of buffer is not enough to put an escaped character is
++ * returned.
++ *
++ * Even in the case of error @dst pointer will be updated to point to the byte
++ * after the last processed character.
++ */
++int string_escape_mem(const char *src, size_t isz, char **dst, size_t osz,
++		      unsigned int flags, const char *esc)
++{
++	char *out = *dst, *p = out;
++	bool is_dict = esc && *esc;
++	int ret = 0;
++
++	while (isz--) {
++		unsigned char c = *src++;
++
++		/*
++		 * Apply rules in the following sequence:
++		 *	- the character is printable, when @flags has
++		 *	  %ESCAPE_NP bit set
++		 *	- the @esc string is supplied and does not contain a
++		 *	  character under question
++		 *	- the character doesn't fall into a class of symbols
++		 *	  defined by given @flags
++		 * In these cases we just pass through a character to the
++		 * output buffer.
++		 */
++		if ((flags & ESCAPE_NP && isprint(c)) ||
++		    (is_dict && !strchr(esc, c))) {
++			/* do nothing */
++		} else {
++			if (flags & ESCAPE_SPACE) {
++				ret = escape_space(c, &p, &osz);
++				if (ret < 0)
++					break;
++				if (ret > 0)
++					continue;
++			}
++
++			if (flags & ESCAPE_SPECIAL) {
++				ret = escape_special(c, &p, &osz);
++				if (ret < 0)
++					break;
++				if (ret > 0)
++					continue;
++			}
++
++			if (flags & ESCAPE_NULL) {
++				ret = escape_null(c, &p, &osz);
++				if (ret < 0)
++					break;
++				if (ret > 0)
++					continue;
++			}
++
++			/* ESCAPE_OCTAL and ESCAPE_HEX always go last */
++			if (flags & ESCAPE_OCTAL) {
++				ret = escape_octal(c, &p, &osz);
++				if (ret < 0)
++					break;
++				continue;
++			}
++			if (flags & ESCAPE_HEX) {
++				ret = escape_hex(c, &p, &osz);
++				if (ret < 0)
++					break;
++				continue;
++			}
++		}
++
++		ret = escape_passthrough(c, &p, &osz);
++		if (ret < 0)
++			break;
++	}
++
++	*dst = p;
++
++	if (ret < 0)
++		return ret;
++
++	return p - out;
++}
++EXPORT_SYMBOL(string_escape_mem);
+diff --git a/lib/test-string_helpers.c b/lib/test-string_helpers.c
+index ac44c92..1e6fb85 100644
+--- a/lib/test-string_helpers.c
++++ b/lib/test-string_helpers.c
+@@ -102,6 +102,209 @@ static void __init test_string_unescape(const char *name, unsigned int flags,
+ 			      out_test, q_test);
+ }
+ 
++struct test_string_1 {
++	const char *out;
++	unsigned int flags;
++};
++
++#define	TEST_STRING_2_MAX_S1		32
++struct test_string_2 {
++	const char *in;
++	struct test_string_1 s1[TEST_STRING_2_MAX_S1];
++};
++
++#define	TEST_STRING_2_DICT_0		NULL
++static const struct test_string_2 escape0[] __initconst = {{
++	.in = "\f\\ \n\r\t\v",
++	.s1 = {{
++		.out = "\\f\\ \\n\\r\\t\\v",
++		.flags = ESCAPE_SPACE,
++	},{
++		.out = "\\f\\134\\040\\n\\r\\t\\v",
++		.flags = ESCAPE_SPACE | ESCAPE_OCTAL,
++	},{
++		.out = "\\f\\x5c\\x20\\n\\r\\t\\v",
++		.flags = ESCAPE_SPACE | ESCAPE_HEX,
++	},{
++		/* terminator */
++	}},
++},{
++	.in = "\\h\\\"\a\e\\",
++	.s1 = {{
++		.out = "\\\\h\\\\\"\\a\\e\\\\",
++		.flags = ESCAPE_SPECIAL,
++	},{
++		.out = "\\\\\\150\\\\\\042\\a\\e\\\\",
++		.flags = ESCAPE_SPECIAL | ESCAPE_OCTAL,
++	},{
++		.out = "\\\\\\x68\\\\\\x22\\a\\e\\\\",
++		.flags = ESCAPE_SPECIAL | ESCAPE_HEX,
++	},{
++		/* terminator */
++	}},
++},{
++	.in = "\eb \\C\007\"\x90\r]",
++	.s1 = {{
++		.out = "\eb \\C\007\"\x90\\r]",
++		.flags = ESCAPE_SPACE,
++	},{
++		.out = "\\eb \\\\C\\a\"\x90\r]",
++		.flags = ESCAPE_SPECIAL,
++	},{
++		.out = "\\eb \\\\C\\a\"\x90\\r]",
++		.flags = ESCAPE_SPACE | ESCAPE_SPECIAL,
++	},{
++		.out = "\\033\\142\\040\\134\\103\\007\\042\\220\\015\\135",
++		.flags = ESCAPE_OCTAL,
++	},{
++		.out = "\\033\\142\\040\\134\\103\\007\\042\\220\\r\\135",
++		.flags = ESCAPE_SPACE | ESCAPE_OCTAL,
++	},{
++		.out = "\\e\\142\\040\\\\\\103\\a\\042\\220\\015\\135",
++		.flags = ESCAPE_SPECIAL | ESCAPE_OCTAL,
++	},{
++		.out = "\\e\\142\\040\\\\\\103\\a\\042\\220\\r\\135",
++		.flags = ESCAPE_SPACE | ESCAPE_SPECIAL | ESCAPE_OCTAL,
++	},{
++		.out = "\eb \\C\007\"\x90\r]",
++		.flags = ESCAPE_NP,
++	},{
++		.out = "\eb \\C\007\"\x90\\r]",
++		.flags = ESCAPE_SPACE | ESCAPE_NP,
++	},{
++		.out = "\\eb \\C\\a\"\x90\r]",
++		.flags = ESCAPE_SPECIAL | ESCAPE_NP,
++	},{
++		.out = "\\eb \\C\\a\"\x90\\r]",
++		.flags = ESCAPE_SPACE | ESCAPE_SPECIAL | ESCAPE_NP,
++	},{
++		.out = "\\033b \\C\\007\"\\220\\015]",
++		.flags = ESCAPE_OCTAL | ESCAPE_NP,
++	},{
++		.out = "\\033b \\C\\007\"\\220\\r]",
++		.flags = ESCAPE_SPACE | ESCAPE_OCTAL | ESCAPE_NP,
++	},{
++		.out = "\\eb \\C\\a\"\\220\\r]",
++		.flags = ESCAPE_SPECIAL | ESCAPE_SPACE | ESCAPE_OCTAL |
++			 ESCAPE_NP,
++	},{
++		.out = "\\x1bb \\C\\x07\"\\x90\\x0d]",
++		.flags = ESCAPE_NP | ESCAPE_HEX,
++	},{
++		/* terminator */
++	}},
++},{
++	/* terminator */
++}};
++
++#define	TEST_STRING_2_DICT_1		"b\\ \t\r"
++static const struct test_string_2 escape1[] __initconst = {{
++	.in = "\f\\ \n\r\t\v",
++	.s1 = {{
++		.out = "\f\\134\\040\n\\015\\011\v",
++		.flags = ESCAPE_OCTAL,
++	},{
++		.out = "\f\\x5c\\x20\n\\x0d\\x09\v",
++		.flags = ESCAPE_HEX,
++	},{
++		/* terminator */
++	}},
++},{
++	.in = "\\h\\\"\a\e\\",
++	.s1 = {{
++		.out = "\\134h\\134\"\a\e\\134",
++		.flags = ESCAPE_OCTAL,
++	},{
++		/* terminator */
++	}},
++},{
++	.in = "\eb \\C\007\"\x90\r]",
++	.s1 = {{
++		.out = "\e\\142\\040\\134C\007\"\x90\\015]",
++		.flags = ESCAPE_OCTAL,
++	},{
++		/* terminator */
++	}},
++},{
++	/* terminator */
++}};
++
++static __init const char *test_string_find_match(const struct test_string_2 *s2,
++						 unsigned int flags)
++{
++	const struct test_string_1 *s1 = s2->s1;
++	unsigned int i;
++
++	if (!flags)
++		return s2->in;
++
++	/* Test cases are NULL-aware */
++	flags &= ~ESCAPE_NULL;
++
++	/* ESCAPE_OCTAL has a higher priority */
++	if (flags & ESCAPE_OCTAL)
++		flags &= ~ESCAPE_HEX;
++
++	for (i = 0; i < TEST_STRING_2_MAX_S1 && s1->out; i++, s1++)
++		if (s1->flags == flags)
++			return s1->out;
++	return NULL;
++}
++
++static __init void test_string_escape(const char *name,
++				      const struct test_string_2 *s2,
++				      unsigned int flags, const char *esc)
++{
++	char in[256];
++	char out_test[512];
++	char out_real[512], *buf = out_real;
++	int p = 0, q_test = 0, q_real = sizeof(out_real);
++
++	for (; s2->in; s2++) {
++		const char *out;
++		int len;
++
++		/* NULL injection */
++		if (flags & ESCAPE_NULL) {
++			in[p++] = '\0';
++			out_test[q_test++] = '\\';
++			out_test[q_test++] = '0';
++		}
++
++		/* Don't try strings that have no output */
++		out = test_string_find_match(s2, flags);
++		if (!out)
++			continue;
++
++		/* Copy string to in buffer */
++		len = strlen(s2->in);
++		memcpy(&in[p], s2->in, len);
++		p += len;
++
++		/* Copy expected result for given flags */
++		len = strlen(out);
++		memcpy(&out_test[q_test], out, len);
++		q_test += len;
++	}
++
++	q_real = string_escape_mem(in, p, &buf, q_real, flags, esc);
++
++	test_string_check_buf(name, flags, in, p, out_real, q_real, out_test, q_test);
++}
++
++static __init void test_string_escape_nomem(void)
++{
++	char *in = "\eb \\C\007\"\x90\r]";
++	char out[64], *buf = out;
++	int rc = -ENOMEM, ret;
++
++	ret = string_escape_str_any_np(in, &buf, strlen(in), NULL);
++	if (ret == rc)
++		return;
++
++	pr_err("Test 'escape nomem' failed: got %d instead of %d\n", ret, rc);
++}
++
+ static int __init test_string_helpers_init(void)
+ {
+ 	unsigned int i;
+@@ -112,6 +315,16 @@ static int __init test_string_helpers_init(void)
+ 	test_string_unescape("unescape inplace",
+ 			     get_random_int() % (UNESCAPE_ANY + 1), true);
+ 
++	/* Without dictionary */
++	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
++		test_string_escape("escape 0", escape0, i, TEST_STRING_2_DICT_0);
++
++	/* With dictionary */
++	for (i = 0; i < (ESCAPE_ANY_NP | ESCAPE_HEX) + 1; i++)
++		test_string_escape("escape 1", escape1, i, TEST_STRING_2_DICT_1);
++
++	test_string_escape_nomem();
++
+ 	return -EINVAL;
+ }
+ module_init(test_string_helpers_init);
+-- 
+2.1.0
+
