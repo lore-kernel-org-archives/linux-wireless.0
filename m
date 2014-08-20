@@ -1,379 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58134 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaHVERp (ORCPT
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:52074 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbaHTN5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 00:17:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2] ath9k: Add debug information
-Date: Fri, 22 Aug 2014 09:47:48 +0530
-Message-Id: <1408681068-14633-1-git-send-email-sujith@msujith.org> (sfid-20140822_061749_401168_685F52EB)
+	Wed, 20 Aug 2014 09:57:53 -0400
+Received: by mail-qg0-f52.google.com with SMTP id f51so7191850qge.25
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 06:57:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53F4A59C.60403@zonque.org>
+References: <53F4A59C.60403@zonque.org>
+Date: Wed, 20 Aug 2014 15:57:49 +0200
+Message-ID: <CAPDyKFoEDg7H5uMrw-hVCbKcY6LHBdKJq9uwSLz1F3C1f3u0=w@mail.gmail.com> (sfid-20140820_155756_938629_C969E536)
+Subject: Re: libertas_sdio and pxamci suspend issue
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	libertas-dev@lists.infradead.org,
+	Linux MMC List <linux-mmc@vger.kernel.org>,
+	James Cameron <quozl@laptop.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 20 August 2014 15:41, Daniel Mack <daniel@zonque.org> wrote:
+> Hi,
+>
+> I'm currently updating the kernel of a PXA3xx platform that used to be
+> bases on 3.0. On that, a libertas is connected to the PXA mci controller
+> via SDIO.
+>
+> The card itself works fine on both the old version and 3.16, but on
+> 3.16, I see the following error when trying to put the system to suspend:
+>
+> [   13.459502] mmc0: new SDIO card at address 0001
+> [   15.103333] libertas_sdio: Libertas SDIO driver
+> [   15.107864] libertas_sdio: Copyright Pierre Ossman
+> [   15.660291] libertas_sdio mmc0:0001:1 (unregistered net_device):
+> 00:19:88:21:f6:22, fw 9.70.20p0, cap 0x00000303
+> [   15.675960] libertas_sdio mmc0:0001:1 wlan0: Marvell WLAN 802.11 adapter
+> [   15.684075] cfg80211: Calling CRDA to update world regulatory domain
+>
+> # echo mem >/sys/power/state
+> [   18.617456] PM: Syncing filesystems ... done.
+> [   18.634231] Freezing user space processes ... (elapsed 0.000 seconds)
+> done.
+> [   18.641312] Freezing remaining freezable tasks ... (elapsed 0.007
+> seconds) done.
+> [   18.658322] dpm_run_callback(): pm_generic_suspend+0x0/0x38 returns -38
+> [   18.665136] PM: Device mmc0:0001:1 failed to suspend: error -38
+> [   18.671035] PM: Some devices failed to suspend, or early wake event
+> detected
+>
+>
+> The problem is caused by libertas' if_sdio_suspend() returning -ENOSYS here:
+>
+>        /* If we're powered off anyway, just let the mmc layer remove the
+>          * card. */
+>         if (!lbs_iface_active(card->priv))
+>                 return -ENOSYS;
 
-Add a few statements to debug channel context operation.
+This has changed. All sdio func driver's must not return an error code
+from it's ->suspend callback, unless it actually found an error and
+thus want to prevent suspend.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
-v2: Changes based on Joe Perches' comments.
+What's important for sdio func drivers is to flush any outstanding
+requests and prevent further request from being sent using the SDIO
+API. At resume, those shall start to allow requests again.
 
- drivers/net/wireless/ath/ath9k/channel.c | 61 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/main.c    | 73 +++++++++++++++++++++++++++-----
- 2 files changed, 122 insertions(+), 12 deletions(-)
+I thought I sent a patches for the few affected sdio drivers that
+needed to adopt, but it seems like I missed it, sorry!
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 0ce9e40..2f10b0c 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -16,6 +16,23 @@
- 
- #include "ath9k.h"
- 
-+static const char *offchannel_state_string(enum ath_offchannel_state state)
-+{
-+#define case_rtn_string(val) case val: return #val
-+
-+	switch (state) {
-+		case_rtn_string(ATH_OFFCHANNEL_IDLE);
-+		case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
-+		case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
-+		case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
-+		case_rtn_string(ATH_OFFCHANNEL_ROC_START);
-+		case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
-+		case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
-+	default:
-+		return "unknown";
-+	}
-+}
-+
- /* Set/change channels.  If the channel is really being changed, it's done
-  * by reseting the chip.  To accomplish this we must first cleanup any pending
-  * DMA, then restart stuff.
-@@ -373,13 +390,23 @@ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 	}
- 
- 	sc->next_chan = ctx;
--	if (chandef)
-+	if (chandef) {
- 		ctx->chandef = *chandef;
-+		ath_dbg(common, CHAN_CTX,
-+			"Assigned next_chan to %d MHz\n", chandef->center_freq1);
-+	}
- 
- 	if (sc->next_chan == &sc->offchannel.chan) {
- 		sc->sched.offchannel_duration =
- 			TU_TO_USEC(sc->offchannel.duration) +
- 			sc->sched.channel_switch_time;
-+
-+		if (chandef) {
-+			ath_dbg(common, CHAN_CTX,
-+				"Offchannel duration for chan %d MHz : %u\n",
-+				chandef->center_freq1,
-+				sc->sched.offchannel_duration);
-+		}
- 	}
- 	spin_unlock_bh(&sc->chan_lock);
- 	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
-@@ -422,9 +449,12 @@ struct ath_chanctx *ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active)
- void ath_chanctx_offchan_switch(struct ath_softc *sc,
- 				struct ieee80211_channel *chan)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct cfg80211_chan_def chandef;
- 
- 	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
-+	ath_dbg(common, CHAN_CTX,
-+		"Channel definition created: %d MHz\n", chandef.center_freq1);
- 
- 	ath_chanctx_switch(sc, &sc->offchannel.chan, &chandef);
- }
-@@ -698,19 +728,30 @@ static int ath_scan_channel_duration(struct ath_softc *sc,
- static void
- ath_scan_next_channel(struct ath_softc *sc)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct cfg80211_scan_request *req = sc->offchannel.scan_req;
- 	struct ieee80211_channel *chan;
- 
- 	if (sc->offchannel.scan_idx >= req->n_channels) {
-+		ath_dbg(common, CHAN_CTX,
-+			"Moving to ATH_OFFCHANNEL_IDLE state, scan_idx: %d, n_channels: %d\n",
-+			sc->offchannel.scan_idx,
-+			req->n_channels);
-+
- 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
- 		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false),
- 				   NULL);
- 		return;
- 	}
- 
-+	ath_dbg(common, CHAN_CTX,
-+		"Moving to ATH_OFFCHANNEL_PROBE_SEND state, scan_idx: %d\n",
-+		sc->offchannel.scan_idx);
-+
- 	chan = req->channels[sc->offchannel.scan_idx++];
- 	sc->offchannel.duration = ath_scan_channel_duration(sc, chan);
- 	sc->offchannel.state = ATH_OFFCHANNEL_PROBE_SEND;
-+
- 	ath_chanctx_offchan_switch(sc, chan);
- }
- 
-@@ -751,6 +792,11 @@ void ath_scan_complete(struct ath_softc *sc, bool abort)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
-+	if (abort)
-+		ath_dbg(common, CHAN_CTX, "HW scan aborted\n");
-+	else
-+		ath_dbg(common, CHAN_CTX, "HW scan complete\n");
-+
- 	sc->offchannel.scan_req = NULL;
- 	sc->offchannel.scan_vif = NULL;
- 	sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
-@@ -800,6 +846,7 @@ error:
- 
- static void ath_scan_channel_start(struct ath_softc *sc)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct cfg80211_scan_request *req = sc->offchannel.scan_req;
- 	int i;
- 
-@@ -810,12 +857,20 @@ static void ath_scan_channel_start(struct ath_softc *sc)
- 
- 	}
- 
-+	ath_dbg(common, CHAN_CTX,
-+		"Moving to ATH_OFFCHANNEL_PROBE_WAIT state\n");
-+
- 	sc->offchannel.state = ATH_OFFCHANNEL_PROBE_WAIT;
- 	mod_timer(&sc->offchannel.timer, jiffies + sc->offchannel.duration);
- }
- 
- void ath_offchannel_channel_change(struct ath_softc *sc)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_dbg(common, CHAN_CTX, "%s: state: %s\n",
-+		__func__, offchannel_state_string(sc->offchannel.state));
-+
- 	switch (sc->offchannel.state) {
- 	case ATH_OFFCHANNEL_PROBE_SEND:
- 		if (!sc->offchannel.scan_req)
-@@ -854,6 +909,10 @@ void ath_offchannel_timer(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
- 	struct ath_chanctx *ctx;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_dbg(common, CHAN_CTX, "%s: state: %s\n",
-+		__func__, offchannel_state_string(sc->offchannel.state));
- 
- 	switch (sc->offchannel.state) {
- 	case ATH_OFFCHANNEL_PROBE_WAIT:
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b1d15f3..194895b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2228,8 +2228,13 @@ static int ath9k_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	sc->offchannel.scan_req = req;
- 	sc->offchannel.scan_idx = 0;
- 
--	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE)
-+	ath_dbg(common, CHAN_CTX, "HW scan request received on vif: %pM\n",
-+		vif->addr);
-+
-+	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE) {
-+		ath_dbg(common, CHAN_CTX, "Starting HW scan\n");
- 		ath_offchannel_next(sc);
-+	}
- 
- out:
- 	mutex_unlock(&sc->mutex);
-@@ -2241,6 +2246,9 @@ static void ath9k_cancel_hw_scan(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_dbg(common, CHAN_CTX, "Cancel HW scan on vif: %pM\n", vif->addr);
- 
- 	mutex_lock(&sc->mutex);
- 	del_timer_sync(&sc->offchannel.timer);
-@@ -2254,6 +2262,7 @@ static int ath9k_remain_on_channel(struct ieee80211_hw *hw,
- 				   enum ieee80211_roc_type type)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
- 
- 	mutex_lock(&sc->mutex);
-@@ -2268,8 +2277,14 @@ static int ath9k_remain_on_channel(struct ieee80211_hw *hw,
- 	sc->offchannel.roc_chan = chan;
- 	sc->offchannel.roc_duration = duration;
- 
--	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE)
-+	ath_dbg(common, CHAN_CTX,
-+		"RoC request on vif: %pM, type: %d duration: %d\n",
-+		vif->addr, type, duration);
-+
-+	if (sc->offchannel.state == ATH_OFFCHANNEL_IDLE) {
-+		ath_dbg(common, CHAN_CTX, "Starting RoC period\n");
- 		ath_offchannel_next(sc);
-+	}
- 
- out:
- 	mutex_unlock(&sc->mutex);
-@@ -2280,9 +2295,11 @@ out:
- static int ath9k_cancel_remain_on_channel(struct ieee80211_hw *hw)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
- 	mutex_lock(&sc->mutex);
- 
-+	ath_dbg(common, CHAN_CTX, "Cancel RoC\n");
- 	del_timer_sync(&sc->offchannel.timer);
- 
- 	if (sc->offchannel.roc_vif) {
-@@ -2299,6 +2316,7 @@ static int ath9k_add_chanctx(struct ieee80211_hw *hw,
- 			     struct ieee80211_chanctx_conf *conf)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_chanctx *ctx, **ptr;
- 	int pos;
- 
-@@ -2313,10 +2331,16 @@ static int ath9k_add_chanctx(struct ieee80211_hw *hw,
- 		ctx->assigned = true;
- 		pos = ctx - &sc->chanctx[0];
- 		ctx->hw_queue_base = pos * IEEE80211_NUM_ACS;
-+
-+		ath_dbg(common, CHAN_CTX,
-+			"Add channel context: %d MHz\n",
-+			conf->def.chan->center_freq);
-+
- 		ath_chanctx_set_channel(sc, ctx, &conf->def);
- 		mutex_unlock(&sc->mutex);
- 		return 0;
- 	}
-+
- 	mutex_unlock(&sc->mutex);
- 	return -ENOSPC;
- }
-@@ -2326,12 +2350,19 @@ static void ath9k_remove_chanctx(struct ieee80211_hw *hw,
- 				 struct ieee80211_chanctx_conf *conf)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
- 
- 	mutex_lock(&sc->mutex);
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"Remove channel context: %d MHz\n",
-+		conf->def.chan->center_freq);
-+
- 	ctx->assigned = false;
- 	ctx->hw_queue_base = -1;
- 	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_UNASSIGN);
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
-@@ -2340,9 +2371,13 @@ static void ath9k_change_chanctx(struct ieee80211_hw *hw,
- 				 u32 changed)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
- 
- 	mutex_lock(&sc->mutex);
-+	ath_dbg(common, CHAN_CTX,
-+		"Change channel context: %d MHz\n",
-+		conf->def.chan->center_freq);
- 	ath_chanctx_set_channel(sc, ctx, &conf->def);
- 	mutex_unlock(&sc->mutex);
- }
-@@ -2352,16 +2387,24 @@ static int ath9k_assign_vif_chanctx(struct ieee80211_hw *hw,
- 				    struct ieee80211_chanctx_conf *conf)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
- 	int i;
- 
- 	mutex_lock(&sc->mutex);
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"Assign VIF (addr: %pM, type: %d, p2p: %d) to channel context: %d MHz\n",
-+		vif->addr, vif->type, vif->p2p,
-+		conf->def.chan->center_freq);
-+
- 	avp->chanctx = ctx;
- 	list_add_tail(&avp->list, &ctx->vifs);
- 	ath9k_calculate_summary_state(sc, ctx);
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++)
- 		vif->hw_queue[i] = ctx->hw_queue_base + i;
-+
- 	mutex_unlock(&sc->mutex);
- 
- 	return 0;
-@@ -2372,16 +2415,24 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 				       struct ieee80211_chanctx_conf *conf)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_chanctx *ctx = ath_chanctx_get(conf);
- 	int ac;
- 
- 	mutex_lock(&sc->mutex);
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"Remove VIF (addr: %pM, type: %d, p2p: %d) from channel context: %d MHz\n",
-+		vif->addr, vif->type, vif->p2p,
-+		conf->def.chan->center_freq);
-+
- 	avp->chanctx = NULL;
- 	list_del(&avp->list);
- 	ath9k_calculate_summary_state(sc, ctx);
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
- 		vif->hw_queue[ac] = IEEE80211_INVAL_HW_QUEUE;
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
-@@ -2390,16 +2441,16 @@ void ath9k_fill_chanctx_ops(void)
- 	if (!ath9k_use_chanctx)
- 		return;
- 
--	ath9k_ops.hw_scan = ath9k_hw_scan;
--	ath9k_ops.cancel_hw_scan = ath9k_cancel_hw_scan;
--	ath9k_ops.remain_on_channel  = ath9k_remain_on_channel;
-+	ath9k_ops.hw_scan                  = ath9k_hw_scan;
-+	ath9k_ops.cancel_hw_scan           = ath9k_cancel_hw_scan;
-+	ath9k_ops.remain_on_channel        = ath9k_remain_on_channel;
- 	ath9k_ops.cancel_remain_on_channel = ath9k_cancel_remain_on_channel;
--	ath9k_ops.add_chanctx        = ath9k_add_chanctx;
--	ath9k_ops.remove_chanctx     = ath9k_remove_chanctx;
--	ath9k_ops.change_chanctx     = ath9k_change_chanctx;
--	ath9k_ops.assign_vif_chanctx = ath9k_assign_vif_chanctx;
--	ath9k_ops.unassign_vif_chanctx = ath9k_unassign_vif_chanctx;
--	ath9k_ops.mgd_prepare_tx = ath9k_chanctx_force_active;
-+	ath9k_ops.add_chanctx              = ath9k_add_chanctx;
-+	ath9k_ops.remove_chanctx           = ath9k_remove_chanctx;
-+	ath9k_ops.change_chanctx           = ath9k_change_chanctx;
-+	ath9k_ops.assign_vif_chanctx       = ath9k_assign_vif_chanctx;
-+	ath9k_ops.unassign_vif_chanctx     = ath9k_unassign_vif_chanctx;
-+	ath9k_ops.mgd_prepare_tx           = ath9k_chanctx_force_active;
- }
- 
- struct ieee80211_ops ath9k_ops = {
--- 
-2.0.4
+I will have a look at it the next few days, appreciate if you are able
+to help out testing, I don't have any HW using libertas_sdio.
 
+Kind regards
+Uffe
+
+>
+>
+> According to the comment, the code assumes the function is called from
+> the mmc layer, which isn't the case - the stack trace leading to this
+> function looks like this:
+>
+> [   15.767603] [<bf019048>] (if_sdio_suspend [libertas_sdio]) from
+> [<c0285980>] (pm_generic_suspend+0x2c/0x38)
+> [   15.779843] [<c0285980>] (pm_generic_suspend) from [<c0286c1c>]
+> (dpm_run_callback.isra.21+0x18/0x44)
+> [   15.790863] [<c0286c1c>] (dpm_run_callback.isra.21) from [<c0287cdc>]
+> (__device_suspend+0x148/0x220)
+> [   15.800039] [<c0287cdc>] (__device_suspend) from [<c0288478>]
+> (dpm_suspend+0xa8/0x204)
+> [   15.808464] [<c0288478>] (dpm_suspend) from [<c00410c8>]
+> (suspend_devices_and_enter+0x3c/0x300)
+> [   15.817858] [<c00410c8>] (suspend_devices_and_enter) from
+> [<c0041458>] (pm_suspend+0xcc/0x1b0)
+> [   15.827037] [<c0041458>] (pm_suspend) from [<c0040360>]
+> (state_store+0xb8/0xdc)
+> [   15.834678] [<c0040360>] (state_store) from [<c022891c>]
+> (kobj_attr_store+0x14/0x20)
+> [   15.842664] [<c022891c>] (kobj_attr_store) from [<c00ebcc0>]
+> (sysfs_kf_write+0x3c/0x48)
+> [   15.851209] [<c00ebcc0>] (sysfs_kf_write) from [<c00eaed8>]
+> (kernfs_fop_write+0x100/0x158)
+> [   15.860039] [<c00eaed8>] (kernfs_fop_write) from [<c009766c>]
+> (vfs_write+0xb4/0x188)
+> [   15.868335] [<c009766c>] (vfs_write) from [<c0097bec>]
+> (SyS_write+0x3c/0x7c)
+> [   15.875949] [<c0097bec>] (SyS_write) from [<c00092e0>]
+> (ret_fast_syscall+0x0/0x2c)
+>
+>
+> Bisecting is tricky due to other details unfortunately.
+>
+> Any ideas?
+>
+>
+> Thanks,
+> Daniel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
