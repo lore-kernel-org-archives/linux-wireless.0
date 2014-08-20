@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48098 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbaHBGjo (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:47941 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbaHTRcU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2014 02:39:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Joe Perches" <joe@perches.com>
-Subject: Re: [PATCH] ath10k: fix wmi service bitmap debug
-References: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-Date: Sat, 2 Aug 2014 09:39:33 +0300
-In-Reply-To: <1406628239-31322-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 29 Jul 2014 12:03:59 +0200")
-Message-ID: <87k36r5ra2.fsf@kamboji.qca.qualcomm.com> (sfid-20140802_083947_837841_ED02EF98)
+	Wed, 20 Aug 2014 13:32:20 -0400
+Date: Wed, 20 Aug 2014 20:32:11 +0300
+From: Andreea Bernat <bernat.ada@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	paulmck@linux.vnet.ibm.com
+Subject: Re: [PATCH] carl9170: Replace rcu_dereference() with
+ rcu_access_pointer()
+Message-ID: <20140820173210.GA18892@ada> (sfid-20140820_193240_556204_BC2F4BA5)
+References: <20140817104806.GA14533@ada>
+ <3029076.uaUkTd8nru@debian64>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3029076.uaUkTd8nru@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, Aug 18, 2014 at 09:29:36PM +0200, Christian Lamparter wrote:
+> On Sunday, August 17, 2014 01:48:07 PM Andreea-Cristina Bernat wrote:
+> > The rcu_dereference() call is used directly in a condition.
+> > Since its return value is never dereferenced it is recommended to use
+> > "rcu_access_pointer()" instead of "rcu_dereference()".
+> > Therefore, this patch makes the replacement.
+> > [...]
+> > Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+> > ---
+> >  drivers/net/wireless/ath/carl9170/main.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+> > index f8ded84..12018ff 100644
+> > --- a/drivers/net/wireless/ath/carl9170/main.c
+> > +++ b/drivers/net/wireless/ath/carl9170/main.c
+> > @@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+> >  			return -EOPNOTSUPP;
+> >  
+> >  		rcu_read_lock();
+> > -		if (rcu_dereference(sta_info->agg[tid])) {
+> > +		if (rcu_access_pointer(sta_info->agg[tid])) {
+> >  			rcu_read_unlock();
+> >  			return -EBUSY;
+> >  		}
+> 
+> There's more. The check does not do a whole lot. I think *it* [the check] and the
+> rcu_read_[un]lock [and the return -EBUSY] can be removed completely from the
+> IEEE80211_AMPDU_TX_START code-path in carl9170_op_ampdu_action.
+> 
+> It would be awesome, if you could you make a patch which removes this 
+> unneeded cosmic-ray-protection check :-) .
 
-> The 10.x and main firmware branches have
-> conflicting WMI service bitmap definitions.
->
-> This also fixes WMI services parsing on big-endian
-> hosts and changes debugfs output to be more human
-> friendly.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Could you tell me why you think that those lines have to be removed?
+I would like to fully understand this before I remove them.
 
-[...]
+Thank you,
+Andreea
 
-> +	SVCSTR(WMI_SERVICE_TX_ENCAP)
-> +	SVCSTR(WMI_SERVICE_BURST)
-> +	SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT)
-> +	SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT)
->  	default:
-> -		return "UNKNOWN SERVICE\n";
-> +		return NULL;
-
-This introduces a new checkpatch warning:
-
-drivers/net/wireless/ath/ath10k/wmi.h:214: ERROR: spaces required around that ':' (ctx:VxE)
-
-But I think that's just a false warning and I should ignore it. Any
-other ideas?
-
--- 
-Kalle Valo
+> 
+> Thanks
+> Christian
