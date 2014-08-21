@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:36578 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbaHKWlM convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:62080 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753562AbaHUUlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 18:41:12 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1407791075.28221.74.camel@chimera>
-Date: Mon, 11 Aug 2014 15:41:38 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org> (sfid-20140812_004148_910737_5CD7F8BF)
-References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org> <1407789645.28221.68.camel@chimera> <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org> <1407791075.28221.74.camel@chimera>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+	Thu, 21 Aug 2014 16:41:49 -0400
+Received: by mail-wg0-f41.google.com with SMTP id z12so9836424wgg.24
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 13:41:47 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/3] staging: vt6655: remove multiple instances of netdevice.
+Date: Thu, 21 Aug 2014 21:40:49 +0100
+Message-Id: <1408653650-9049-2-git-send-email-tvboxspy@gmail.com> (sfid-20140821_224152_580216_A4011BD7)
+In-Reply-To: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
+References: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+netdevice can only be created once.
 
->> The initial wlan0 can be removed as every other netdev attached to the
->> wiphy. It can also be as easily re-created.
->> 
->> Since the wiphy does not have a valid MAC address, my proposal here
->> would be to just not create the wlan0 in the first place. This means
->> that the wiphy can be still discovered via nl80211.
-> 
-> I repeat, currently wlan0 is *not* created.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h      | 1 -
+ drivers/staging/vt6655/device_main.c | 3 ---
+ 2 files changed, 4 deletions(-)
 
-what kind of hardware are you actually using here?
-
->> It also means that the wlan0 netdev needs to be created by userspace
->> now. And a valid NL80211_ATTR_MAC be provided. Similar to what is
->> already done for P2P devices at the moment. That should just solve the
->> problem.
-> 
-> The creation of wlan0 already comes from userspace, but the PHY has its
-> own MAC.
-> 
->> We really do not want to announce a netdev when registering the wiphy
->> device and then having to mess with its MAC address via sysfs somehow.
->> This all needs to be properly reflected over RTNL.
->> 
-> Again, no netdev is announced. There just isn't a way to set the MAC of
-> the wiphy device itself.
-> 
-> How about this: What if the driver were to leave the MAC at all zeros
-> initially, and sysfs could set that if and only if it's all zeros at the
-> time?
-
-Internally it might do that, but I do not see it exposing the NL80211_ATTR_MAC when you get the attributes for wiphy.
-
-So I am still saying that when you do NL80211_CMD_NEW_INTERFACE allow providing NL80211_ATTR_MAC to set the MAC address to be used. It might be useful that the wiphy exposes an attribute saying that it does not have a default MAC address, but that should be it. I do not like these magic 00:00:00:00:00:00 games. As I mentioned earlier, in Bluetooth we just deal with allowing the driver to set a flag that it does not have a valid address. And then the core takes care of dealing with it.
-
-Regards
-
-Marcel
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index bc16ece..8ac7901 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -339,7 +339,6 @@ struct vnt_private {
+ 
+ // netdev
+ 	struct net_device *dev;
+-	struct net_device *next_module;
+ 	struct net_device_stats     stats;
+ 
+ //dma addr, rx/tx pool
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index a441a5c..ffbe64f 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -247,7 +247,6 @@ DEVICE_PARAM(bDiversityANTEnable, "ANT diversity mode");
+ //
+ 
+ static int          device_nics             = 0;
+-static struct net_device *root_device_dev = NULL;
+ 
+ static CHIP_INFO chip_info_table[] = {
+ 	{ VT3253,       "VIA Networking Solomon-A/B/G Wireless LAN Adapter ",
+@@ -851,8 +850,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 
+ 	vt6655_init_info(pcid, &pDevice, pChip_info);
+ 	pDevice->dev = dev;
+-	pDevice->next_module = root_device_dev;
+-	root_device_dev = dev;
+ 
+ 	if (pci_enable_device(pcid)) {
+ 		device_free_info(pDevice);
+-- 
+1.9.1
 
