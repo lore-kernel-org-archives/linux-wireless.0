@@ -1,112 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:37843 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaH0H6v (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37787 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754404AbaHUMt3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 03:58:51 -0400
-Received: by mail-la0-f46.google.com with SMTP id b8so16275602lan.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2014 00:58:49 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/2] iw: add vendor send command
-Date: Wed, 27 Aug 2014 09:58:29 +0200
-Message-Id: <1409126309-4052-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140827_095911_961431_459CE407)
-In-Reply-To: <1409126309-4052-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1409126309-4052-1-git-send-email-janusz.dziedzic@tieto.com>
+	Thu, 21 Aug 2014 08:49:29 -0400
+Subject: [PATCH v8 4/4] ath10k: print more driver info when firmware crashes
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 21 Aug 2014 15:49:24 +0300
+Message-ID: <20140821124924.27159.81041.stgit@potku.adurom.net> (sfid-20140821_144931_577382_D53FBF43)
+In-Reply-To: <20140821124705.27159.67898.stgit@potku.adurom.net>
+References: <20140821124705.27159.67898.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allow to send vendor data to the driver.
-This command required OUI and SUBCMD parameters.
+Sometimes users forget to include important info like firmware version,
+so better to print all the info.
 
-Also optional DATA parameter could be used:
-
-cat data.bin | iw wlan0 send oui subcmd
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- Makefile |    2 +-
- vendor.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 57 insertions(+), 1 deletion(-)
- create mode 100644 vendor.c
+ drivers/net/wireless/ath/ath10k/core.c  |   17 ++---------------
+ drivers/net/wireless/ath/ath10k/debug.c |   18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c   |    4 +---
+ 4 files changed, 22 insertions(+), 18 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index f042e30..802f87a 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,7 +16,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o \
- 	mesh.o mpath.o scan.o reg.o version.o \
- 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
--	bitrate.o wowlan.o coalesce.o roc.o p2p.o
-+	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
- OBJS += sections.o
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index ba2e87ab19bd..28f0adea73b6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -815,21 +815,8 @@ int ath10k_core_start(struct ath10k *ar)
  
- OBJS-$(HWSIM) += hwsim.o
-diff --git a/vendor.c b/vendor.c
-new file mode 100644
-index 0000000..9c51cb9
---- /dev/null
-+++ b/vendor.c
-@@ -0,0 +1,56 @@
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(vendor);
-+
-+static int handle_vendor(struct nl80211_state *state, struct nl_cb *cb,
-+			 struct nl_msg *msg, int argc, char **argv,
-+			 enum id_input id)
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
+-	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags)) {
+-		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
+-			    ar->hw_params.name,
+-			    ar->target_version,
+-			    ar->chip_id,
+-			    ar->hw->wiphy->fw_version,
+-			    ar->fw_api,
+-			    ar->htt.target_version_major,
+-			    ar->htt.target_version_minor);
+-		ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
+-			    config_enabled(CONFIG_ATH10K_DEBUG),
+-			    config_enabled(CONFIG_ATH10K_DEBUGFS),
+-			    config_enabled(CONFIG_ATH10K_TRACING),
+-			    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
+-	}
++	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
++		ath10k_print_driver_info(ar);
+ 
+ 	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index b30dba661c07..bf08f026b202 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -142,6 +142,24 @@ int ath10k_info(const char *fmt, ...)
+ }
+ EXPORT_SYMBOL(ath10k_info);
+ 
++void ath10k_print_driver_info(struct ath10k *ar)
 +{
-+	unsigned int oui;
-+	unsigned int subcmd;
-+	char buf[2048] = {};
-+	int res, count = 0;
-+
-+	if (argc < 2)
-+		return -EINVAL;
-+
-+	res = sscanf(argv[0], "0x%x", &oui);
-+	if (res != 1)
-+		return -EINVAL;
-+
-+	res = sscanf(argv[1], "0x%x", &subcmd);
-+	if (res != 1)
-+		return -EINVAL;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_ID, oui);
-+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_SUBCMD, subcmd);
-+
-+	while ((res = fgetc(stdin)) != EOF) {
-+		if (count >= sizeof(buf))
-+			return -EINVAL;
-+
-+		buf[count] = res;
-+		count++;
-+	}
-+
-+	if (count > 0)
-+		NLA_PUT(msg, NL80211_ATTR_VENDOR_DATA, count, buf);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
++	ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
++		    ar->hw_params.name,
++		    ar->target_version,
++		    ar->chip_id,
++		    ar->hw->wiphy->fw_version,
++		    ar->fw_api,
++		    ar->htt.target_version_major,
++		    ar->htt.target_version_minor);
++	ath10k_info("debug %d debugfs %d tracing %d dfs %d\n",
++		    config_enabled(CONFIG_ATH10K_DEBUG),
++		    config_enabled(CONFIG_ATH10K_DEBUGFS),
++		    config_enabled(CONFIG_ATH10K_TRACING),
++		    config_enabled(CONFIG_ATH10K_DFS_CERTIFIED));
 +}
++EXPORT_SYMBOL(ath10k_print_driver_info);
 +
-+COMMAND(vendor, send, "<oui> <subcmd> [stdin data]", NL80211_CMD_VENDOR, 0, CIB_NETDEV, handle_vendor, "");
--- 
-1.7.9.5
+ int ath10k_err(const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 416c62bbbb26..47ee4a623af6 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -42,6 +42,7 @@ extern unsigned int ath10k_debug_mask;
+ __printf(1, 2) int ath10k_info(const char *fmt, ...);
+ __printf(1, 2) int ath10k_err(const char *fmt, ...);
+ __printf(1, 2) int ath10k_warn(const char *fmt, ...);
++void ath10k_print_driver_info(struct ath10k *ar);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ int ath10k_debug_start(struct ath10k *ar);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index bc8c3e3345c1..bb1e4738add4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -879,9 +879,7 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 		scnprintf(uuid, sizeof(uuid), "n/a");
+ 
+ 	ath10k_err("firmware crashed! (uuid %s)\n", uuid);
+-	ath10k_err("hardware name %s version 0x%x\n",
+-		   ar->hw_params.name, ar->target_version);
+-	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
++	ath10k_print_driver_info(ar);
+ 
+ 	if (!crash_data)
+ 		goto exit;
 
