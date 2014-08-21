@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56085 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbaHOOFn (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50057 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbaHUOkz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2014 10:05:43 -0400
-Message-ID: <53EE13B4.3030304@candelatech.com> (sfid-20140815_160547_166766_5ECCA111)
-Date: Fri, 15 Aug 2014 07:05:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 21 Aug 2014 10:40:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v8 2/4] ath10k: provide firmware crash info via debugfs
+References: <20140821124705.27159.67898.stgit@potku.adurom.net>
+	<20140821124907.27159.64620.stgit@potku.adurom.net>
+	<1408626616.4388.0.camel@jlt4.sipsolutions.net>
+Date: Thu, 21 Aug 2014 17:40:46 +0300
+In-Reply-To: <1408626616.4388.0.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Thu, 21 Aug 2014 15:10:16 +0200")
+Message-ID: <877g21c3dd.fsf@kamboji.qca.qualcomm.com> (sfid-20140821_164058_978758_F2E787FE)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: extra logging for core-restart state change logic.
-References: <1407272099-6271-1-git-send-email-greearb@candelatech.com> <87egwij6x0.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87egwij6x0.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-
-On 08/15/2014 05:04 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
->
+> On Thu, 2014-08-21 at 15:49 +0300, Kalle Valo wrote:
 >> From: Ben Greear <greearb@candelatech.com>
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
+>> 
+>> Store the firmware registers and other relevant data to a firmware crash dump
+>> file and provide it to user-space via debugfs. Should help with figuring out
+>> why the firmware crashed.
 >
-> [...]
->
->> --- a/drivers/net/wireless/ath/ath10k/core.c
->> +++ b/drivers/net/wireless/ath/ath10k/core.c
->> @@ -700,6 +700,7 @@ static void ath10k_core_restart(struct work_struct *work)
->>   	switch (ar->state) {
->>   	case ATH10K_STATE_ON:
->>   		ar->state = ATH10K_STATE_RESTARTING;
->> +		ath10k_warn("core-restart, going to state RESTARTING from ON\n");
->>   		del_timer_sync(&ar->scan.timeout);
->>   		ath10k_reset_scan((unsigned long)ar);
->>   		ieee80211_restart_hw(ar->hw);
->> @@ -713,10 +714,11 @@ static void ath10k_core_restart(struct work_struct *work)
->>   		/* hw restart might be requested from multiple places */
->>   		break;
->>   	case ATH10K_STATE_RESTARTED:
->> -		ar->state = ATH10K_STATE_WEDGED;
->>   		/* fall through */
->>   	case ATH10K_STATE_WEDGED:
->> -		ath10k_warn("device is wedged, will not restart\n");
->> +		ath10k_warn("device is wedged, will not restart (state %d)\n",
->> +			ar->state);
->> +		ar->state = ATH10K_STATE_WEDGED;
->>   		break;
->>   	}
->
-> I think state prints should be debug messages, not part of error
-> messages. For example, we could add new debug level ATH10K_DBG_CORE or
-> something like that.
+> So we just discussed Tuesday/yesterday that I'll be writing a generic
+> framework to provide this data to userspace, maybe you want to wait for
+> that.
 
-I'll respin the patch accordingly when I get a chance.
+Heh, this has been a pretty long review period. To be honest I really
+would like to get this just out of my hands :) And we do have a need for
+this. When are you planning to implement that generic framework?
 
-Thanks,
-Ben
+What I understood is that this is already pretty close what you are
+planning. Instead of creating a debugfs file of our own and allocating a
+vmalloc buffer (which we do now), we would just use the buffer provided
+by cfg80211 (or whatever component that would be) and use the sysfs file
+the framework provides. So hopefully it would be pretty easy to convert
+this to use your framework.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
