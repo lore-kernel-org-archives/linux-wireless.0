@@ -1,65 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:51772 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbaH2UqJ (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:48495 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351AbaHUUKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 16:46:09 -0400
-Received: by mail-wg0-f41.google.com with SMTP id l18so2728718wgh.24
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 13:46:07 -0700 (PDT)
+	Thu, 21 Aug 2014 16:10:37 -0400
+Date: Thu, 21 Aug 2014 23:10:26 +0300
+From: Andreea Bernat <bernat.ada@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	paulmck@linux.vnet.ibm.com
+Subject: Re: [PATCH] carl9170: Replace rcu_dereference() with
+ rcu_access_pointer()
+Message-ID: <20140821201026.GA26428@ada> (sfid-20140821_221059_696877_86CB5E5C)
+References: <20140817104806.GA14533@ada>
+ <3029076.uaUkTd8nru@debian64>
+ <20140820173210.GA18892@ada>
+ <3042528.E5hT1D5bWz@debian64>
 MIME-Version: 1.0
-In-Reply-To: <1409310171.4577.13.camel@jlt4.sipsolutions.net>
-References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1407770081.9844.12.camel@jlt4.sipsolutions.net>
-	<CAA2SeNLg3mktDY0u4=ksHr4QvXewx4koeGkCAW8upqrS6gMg0g@mail.gmail.com>
-	<1409310171.4577.13.camel@jlt4.sipsolutions.net>
-Date: Fri, 29 Aug 2014 22:46:07 +0200
-Message-ID: <CAA2SeNKcF37iC0e+n8nrtabT8qwYE9tqD3RCGsSeiBmyxJjhjQ@mail.gmail.com> (sfid-20140829_224613_399894_3FAA76BB)
-Subject: Re: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3042528.E5hT1D5bWz@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi,
->
-> Sorry for the delay.
->
->> dynack is disable by default at bootstrap and it is automatically
->> disabled as soon as you set coverage_class (coverage_class >= 0) after
->> dynack has been enabled (coverage_class = -1). E.g:
->>
->> - iw phy phy0 set distance auto (to enable dynack)
->>
->> - iw phy phy0 set distance x (to set coverage class and disable dynack)
->>
->>
->> This logic is implemented in dynack code. Is it fine for you?
->
-> Ok, I guess that's reasonable. The default coverage class is 0 I guess?
+On Wed, Aug 20, 2014 at 01:20:02PM -0700, Christian Lamparter wrote:
+> On Wednesday, August 20, 2014 08:32:11 PM Andreea Bernat wrote:
+> > On Mon, Aug 18, 2014 at 09:29:36PM +0200, Christian Lamparter wrote:
+> > > On Sunday, August 17, 2014 01:48:07 PM Andreea-Cristina Bernat wrote:
+> > > > The rcu_dereference() call is used directly in a condition.
+> > > > Since its return value is never dereferenced it is recommended to use
+> > > > "rcu_access_pointer()" instead of "rcu_dereference()".
+> > > > Therefore, this patch makes the replacement.
+> > > > [...]
+> > > > Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+> > > > ---
+> > > >  drivers/net/wireless/ath/carl9170/main.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+> > > > index f8ded84..12018ff 100644
+> > > > --- a/drivers/net/wireless/ath/carl9170/main.c
+> > > > +++ b/drivers/net/wireless/ath/carl9170/main.c
+> > > > @@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+> > > >  			return -EOPNOTSUPP;
+> > > >  
+> > > >  		rcu_read_lock();
+> > > > -		if (rcu_dereference(sta_info->agg[tid])) {
+> > > > +		if (rcu_access_pointer(sta_info->agg[tid])) {
+> > > >  			rcu_read_unlock();
+> > > >  			return -EBUSY;
+> > > >  		}
+> > > 
+> > > There's more. The check does not do a whole lot. I think *it* [the check] and the
+> > > rcu_read_[un]lock [and the return -EBUSY] can be removed completely from the
+> > > IEEE80211_AMPDU_TX_START code-path in carl9170_op_ampdu_action.
+> > > 
+> > > It would be awesome, if you could you make a patch which removes this 
+> > > unneeded cosmic-ray-protection check :-) .
+> > 
+> > Could you tell me why you think that those lines have to be removed?
+> The carl9170_op_ampdu_action callback is used exclusively by the mac80211
+> framework to notify the driver about setup and tear down of TX and RX 
+> aggregation sessions. Hence, mac80211 takes great care of performing
+> sanity checks and properly serializing calls to the driver's ampdu_action
+> callback.
+> 
+> Specifically mac80211 already prevents the START of an TX aggregation session,
+> if the aggregation session is already active [0]. Therefore the driver doesn't
+> need to perform a similar check as well. This is why:
+>  - the expression (rcu_dereference(sta_info->agg[tid])) never evaluates to true
+>  -> the -EBUSY exit path is "dead code"
+> 
+> And without the rcu_dereference(...) the rcu_read protection is not needed
+> either. So it can be removed for this case as well.
+> 
+> > I would like to fully understand this before I remove them.
+> Let me know if the explanation above answers sufficient :).
+> If not, I need some *pointers* to what needs further 
+> explanation.
 
-Yes, dynack is disabled at bootstrap and default coverage class is 0
+Your explanation is clear. I will send a version two of the patch with
+those lines removed.
 
->
->> Anyway documentation should be clearer on that stuff. :)
->
-> Please extend it then? :)
->
+Thank you,
+Andreea
 
-I will send a new patchset with more comments on that stuff :)
-
-> johannes
->
-
-Regards,
-Lorenzo
-
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+> 
+> Regards
+> Christian
+> 
+> [0] <http://lxr.free-electrons.com/source/net/mac80211/agg-tx.c#L583>
+> 
