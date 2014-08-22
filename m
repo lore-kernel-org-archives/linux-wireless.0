@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.161]:61222 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbaHWTGw (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:57229 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750854AbaHVJON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 15:06:52 -0400
-Received: from [192.168.178.25] (p5DDE7ABD.dip0.t-ipconnect.de [93.222.122.189])
-	by smtp.strato.de (RZmta 35.8 DYNA|AUTH)
-	with ESMTPSA id 502eebq7NJ0jZ3t
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	for <linux-wireless@vger.kernel.org>;
-	Sat, 23 Aug 2014 21:00:45 +0200 (CEST)
-Message-ID: <53F8E4DC.60406@matthias-kastner.de> (sfid-20140823_210655_685657_354A08F6)
-Date: Sat, 23 Aug 2014 21:00:44 +0200
-From: Matthias Kastner <mail@matthias-kastner.de>
+	Fri, 22 Aug 2014 05:14:13 -0400
+Date: Fri, 22 Aug 2014 12:14:09 +0300
+From: Jouni Malinen <j@w1.fi>
+To: chaitanya.mgit@gmail.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] Enforce protected check for unicast robust management
+ frames.
+Message-ID: <20140822091409.GA3263@w1.fi> (sfid-20140822_111416_569301_ACC9EFBB)
+References: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Atheros AR9001U
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
-I'm having issues with my wireless usb stick. The model is supposed to 
-be supportet, but breaks communication evry 10-20 min.
-lsusb says about the stick:
-  Bus 001 Device 007: ID 057c:8401 AVM GmbH Fritz!WLAN N [Atheros AR9001U]
-The stick supports 11abgn networks. in 2.4 and 5 GHz range.
-I'm using kernel 3.13.0-34-generic.
+On Tue, Aug 12, 2014 at 12:21:54AM +0530, chaitanya.mgit@gmail.com wrote:
+> Enforce the check for protected field for all unicast 
+> robust management frames. 
 
-At the time I was using the built in version of carl.
+Why? This function is supposed to indicate whether the frame is a robust
+action frame and as such, has to have Protected bit set to one. If the
+sender (attacker) tries to send the frame unprotected, it will still
+need to be caught here.
 
-Aug 23 20:02:43 uk-pc kernel: [ 4889.891261] usbcore: registered new 
-interface driver carl9170
-Aug 23 20:02:43 uk-pc kernel: [ 4889.895369] usb 1-4: driver   API: 
-1.9.7 2012-12-15 [1-1]
-Aug 23 20:02:43 uk-pc kernel: [ 4889.895376] usb 1-4: firmware API: 
-1.9.6 2012-07-07
+Rather than enforcing anything, this would add a significant security
+vulnerability by breaking PMF more or less completely.
 
-I updated manually to carl9170-1.fw-1.9.9 (I simply renamed the old fw 
-and copyed the new one to /lib/firmware/carl9170-1.fw
+> This removed the dependency on the driver to check for protected
+> bit, especially for those drivers who believed the API :-).
 
-The Syslog says about the crash:
-Aug 23 20:23:37 uk-pc kernel: [ 6144.616517] usb 1-4: restart device (4)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.820619] usb 1-4: firmware upload 
-failed (-110).
-Aug 23 20:23:39 uk-pc kernel: [ 6145.821320] usb 1-4: Failed to restart 
-device (-110).
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828552] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828561] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828568] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828575] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828582] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828588] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828594] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828601] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
-Aug 23 20:23:39 uk-pc kernel: [ 6145.828607] ieee80211 phy1: writing reg 
-0x1c36f0 (val 0x2400) failed (-5)
+Huh.. What is this driver referring to or what do you think the API is
+supposed to be doing? ieee80211_is_unicast_robust_mgmt_frame() is a
+static function within net/mac80211/rx.c and has only a single caller,
+so it cannot really be used by any driver..
 
-Is there someone out there who can help me?
-Regards,
-Matthias
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> @@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
+>  	if (is_multicast_ether_addr(hdr->addr1))
+>  		return 0;
+>  
+> +	if (!ieee80211_has_protected(hdr->frame_control))
+> +		return 0;
+> +
+>  	return ieee80211_is_robust_mgmt_frame(skb);
+
+This looks very incorrect. This would completely break
+ieee80211_drop_unencrypted_mgmt() and allow unprotected robust
+management frames to be processed.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
