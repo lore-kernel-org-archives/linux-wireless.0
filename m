@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49462 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755569AbaHEF5a (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:48927 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756069AbaHVMd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 01:57:30 -0400
-Date: Mon, 04 Aug 2014 22:57:29 -0700 (PDT)
-Message-Id: <20140804.225729.663353171881658413.davem@davemloft.net> (sfid-20140805_075749_946108_BA3EA6FC)
-To: marcel@holtmann.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-08-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <ED6BF15D-CA1F-4E35-8301-E9A9EEDE3AD6@holtmann.org>
-References: <C2EB98EF-6873-4F44-B914-A9F89146914A@holtmann.org>
-	<20140804145342.GB16658@tuxdriver.com>
-	<ED6BF15D-CA1F-4E35-8301-E9A9EEDE3AD6@holtmann.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 22 Aug 2014 08:33:28 -0400
+Received: by mail-la0-f45.google.com with SMTP id ty20so9955760lab.4
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:33:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/6] ath10k: fix legacy irq workaround
+Date: Fri, 22 Aug 2014 14:23:30 +0200
+Message-Id: <1408710214-24894-3-git-send-email-michal.kazior@tieto.com> (sfid-20140822_143332_454098_496620F8)
+In-Reply-To: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
+References: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marcel Holtmann <marcel@holtmann.org>
-Date: Mon, 4 Aug 2014 22:39:47 -0700
+Wrong register was being set up. This could
+prevent firmware from booting in some rare cases
+when using legacy interrupts.
 
-> Hi Dave,
-> 
->>>>> Please pull this last(?) batch of wireless change intended for the
->>>>> 3.17 stream...
->>>> 
->>>> When I pull this I get tons of conflicts for:
->>>> 
->>>> CONFLICT (content): Merge conflict in net/6lowpan/iphc.c
->>>> 
->>>> I don't feel comfortable fixing these up, where are they coming
->>>> from?
->>> 
->>> I was short on time yesterday, but now I checked up on this in detail. The merge conflicts are actually simple to resolve. You can just rely on John's tree to have the more recent net/6lowpan/ tree. I should have insisted on merging net/6lowpan/ through bluetooth-next and wireless-next way earlier to avoid conflicts.
->>> 
->>> In the future we will avoid this by ensuring that all goes via bluetooth-next first. Sorry for this confusion. John mentioned these merge conflicts in his footnote.
->>> 
->>> John, do you just want to resolve the merge conflicts and send Dave a new pull request?
->> 
->> I'm happy to do that, if Dave wants.  But as you say, once the initial
->> shock of all those conflicts passes the resolution really is fairly
->> simple. :-)
-> 
-> do you want John to just do the merge conflict resolution? They are all trivial.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-I am going to try and do it myself, I just haven't gotten around to it.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index bb1e473..4a7a5fe 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2465,9 +2465,10 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
+-					       PCIE_INTR_FIRMWARE_MASK |
+-					       PCIE_INTR_CE_MASK_ALL);
++			ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++					   PCIE_INTR_ENABLE_ADDRESS,
++					   PCIE_INTR_FIRMWARE_MASK |
++					   PCIE_INTR_CE_MASK_ALL);
+ 
+ 		mdelay(10);
+ 	} while (time_before(jiffies, timeout));
+-- 
+1.8.5.3
 
-Thanks for asking.
