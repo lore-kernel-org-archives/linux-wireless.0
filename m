@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37784 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058AbaHSSSp (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:44543 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756122AbaHVNSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 14:18:45 -0400
-Message-ID: <53F394FF.7050209@candelatech.com> (sfid-20140819_201852_665382_94C4D241)
-Date: Tue, 19 Aug 2014 11:18:39 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
-References: <5338F1B8.5040305@candelatech.com> <1518134.xFh23iA8q1@blech> <53EA5E53.9010704@candelatech.com> <8289144.MKHmP0uSFO@debian64> <53ECED3E.4080907@candelatech.com>
-In-Reply-To: <53ECED3E.4080907@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 22 Aug 2014 09:18:22 -0400
+Received: by mail-ig0-f174.google.com with SMTP id c1so14922937igq.7
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 06:18:21 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, mickflemm@gmail.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/3] ath5k: ensure led name is null terminated
+Date: Fri, 22 Aug 2014 09:18:01 -0400
+Message-Id: <1408713482-7917-2-git-send-email-me@bobcopeland.com> (sfid-20140822_151828_193741_30267E60)
+In-Reply-To: <1408713482-7917-1-git-send-email-me@bobcopeland.com>
+References: <1408713482-7917-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2014 10:09 AM, Ben Greear wrote:
-> On 08/14/2014 05:39 AM, Christian Lamparter wrote:
->> On Tuesday, August 12, 2014 11:34:59 AM Ben Greear wrote:
->>> On 08/10/2014 06:44 AM, Christian Lamparter wrote:
->>>> On Thursday, August 07, 2014 10:45:01 AM Ben Greear wrote:
->>>>> On 08/07/2014 07:05 AM, Christian Lamparter wrote:
->>>>>> Or: for every 16 Bytes of payload there is one fpu context save and
->>>>>> restore... ouch!
->>>>>
->>>>> Any idea if it would work to put the fpu_begin/end a bit higher
->>>>> and do all those 16 byte chunks in a batch without messing with
->>>>> the FPU for each chunk?
->>>>
->>>> It sort of works - see sample feature patch for aesni-intel-glue 
->>>> (taken from 3.16-wl). Older kernels (like 3.15, 3.14) need:
->>>> "crypto: allow blkcipher walks over AEAD data" [0] (and maybe more).
->>>>
->>>> The FPU save/restore overhead should be gone. Also, if the aesni
->>>> instructions can't be used, the implementation will fall back
->>>> to the original ccm(aes) code. Calculating the MAC is still much
->>>> more expensive than the payload encryption or decryption. However,
->>>> I can't see a way of making this more efficient without rewriting
->>>> and combining the parts I took from crypto/ccm.c into an several, 
->>>> dedicated assembler functions.
->>>
->>> Without encryption, I see download rate of around 400 - 420Mbps.
->>>
->>> So, your patch looks like a good improvement to me, and I'll be
->>> happy to test further patches if you happen to do those assembler
->>> optimizations you talk about above.
->>
->> Maybe, that will depend on what the results for: "wpa2, *HW*-crypt,
->> download, udp" are.
-> 
-> I'll do that test sometime soon and post the results.
+Add the missing null termination after strncpy().
 
-I ran that today, and I get about the same throughput with hw-crypt or
-sw-crypt (350-355Mbps UDP download goodput).
+This isn't actually a buffer overflow in this case since we use
+snprintf() appropriately to fill the buffer passed by the caller,
+but in the interest of not turning this into a bug down the road,
+go ahead and force termination here.
 
-I still see 400+Mbps with Open authentication.
+Found by Coverity.
 
-So, maybe the bottleneck now is elsewhere...
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/led.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index f77ef36..edc32ea 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -130,6 +130,7 @@ ath5k_register_led(struct ath5k_hw *ah, struct ath5k_led *led,
+ 
+ 	led->ah = ah;
+ 	strncpy(led->name, name, sizeof(led->name));
++	led->name[sizeof(led->name)-1] = 0;
+ 	led->led_dev.name = led->name;
+ 	led->led_dev.default_trigger = trigger;
+ 	led->led_dev.brightness_set = ath5k_led_brightness_set;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
