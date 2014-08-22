@@ -1,107 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iron100.routit.net ([89.146.30.22]:46505 "EHLO
-	iron100.routit.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416AbaHGKDz (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:62541 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752286AbaHVWzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 06:03:55 -0400
-From: Ronald Wahl <ronald.wahl@raritan.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Ronald Wahl <ronald.wahl@raritan.com>
-Subject: [PATCH v2] carl9170: fix sending URBs with wrong type when using full-speed
-Date: Thu,  7 Aug 2014 12:03:19 +0200
-Message-Id: <1407405799-5746-1-git-send-email-ronald.wahl@raritan.com> (sfid-20140807_120401_152994_0BBFACD2)
+	Fri, 22 Aug 2014 18:55:38 -0400
+Received: by mail-lb0-f169.google.com with SMTP id s7so10229112lbd.28
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 15:55:36 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Looking for non-NIC hardware-offload for wpa2 decrypt.
+Date: Sat, 23 Aug 2014 00:55:33 +0200
+Message-ID: <9037207.4PQkPrEdZH@debian64> (sfid-20140823_005541_931328_5D717F23)
+In-Reply-To: <53F50D63.2040500@candelatech.com>
+References: <5338F1B8.5040305@candelatech.com> <1478683.D306USvBEk@debian64> <53F50D63.2040500@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver assumes that endpoint 4 is always an interrupt endpoint.
-Unfortunately the type differs between high-speed and full-speed
-configurations while in the former case it is indeed an interrupt
-endpoint this is not true for the latter case - here it is a bulk
-endpoint. When sending URBs with the wrong type the kernel will
-generate a warning message including backtrace.
+On Wednesday, August 20, 2014 02:04:35 PM Ben Greear wrote:
+> On 08/20/2014 01:47 PM, Christian Lamparter wrote:
+> 
+> > I'll look into the assembler implementation of aes-ccm. But I'm
+> > afraid that this won't increase the throughput (and only decrease
+> > the load on the CPU a bit).
+> 
+> I think you are right, and probably it is not worth much effort at
+> this point, at least as far as my setup is concerned.
 
-To fix this we are now sending URBs to endpoint 4 using the type
-found in the endpoint descriptor.
+"There's a test bench tool (tcrypt) to measure the performance 
+of any cipher. It would be interesting to know what the 
+performance/throughput it can produce without the overhead
+of any application. ..."
 
-A side note: The carl9170 firmware currently specifies endpoint 4 as
-interrupt endpoint even in the full-speed configuration but this has
-no relevance because before this firmware is loaded the endpoint type
-is as described above and after the firmware is running the stick is not
-reenumerated and so the old descriptor is used.
+here it is: the module is located in crpyto/tcrypt
+
+module parameters:
+ - mode=212 (original ccm)
+ - mode=213 (ccm-aesni)
+ (sec=1 - Length in seconds of speed tests)
+
+This will test the speed of the ccm implementation at
+different block sizes for one second.
+
+BTW: any luck with figuring out, if there are any other obvious 
+bottlenecks? (Other than: btserver, checksumming, ...)?
+
+Regards
+Christian
+
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |  1 +
- drivers/net/wireless/ath/carl9170/usb.c      | 29 ++++++++++++++++++++++++----
- 2 files changed, 26 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 8596aba..237d0cd 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -256,6 +256,7 @@ struct ar9170 {
- 	atomic_t rx_work_urbs;
- 	atomic_t rx_pool_urbs;
- 	kernel_ulong_t features;
-+	bool usb_ep_cmd_is_bulk;
+diff --git a/crypto/tcrypt.c b/crypto/tcrypt.c
+index 890449e..7675a13 100644
+--- a/crypto/tcrypt.c
++++ b/crypto/tcrypt.c
+@@ -354,8 +354,10 @@ static void test_aead_speed(const char *algo, int enc, unsigned int secs,
+ 			ret = crypto_aead_setauthsize(tfm, authsize);
  
- 	/* firmware settings */
- 	struct completion fw_load_wait;
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index f35c7f3..e344d84 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -621,9 +621,14 @@ int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
- 		goto err_free;
- 	}
+ 			iv_len = crypto_aead_ivsize(tfm);
+-			if (iv_len)
+-				memset(&iv, 0xff, iv_len);
++			if (iv_len) {
++				for (j = 0; j < iv_len; j++)
++					iv[j] = j + 1;
++			}
  
--	usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
--		AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
--		carl9170_usb_cmd_complete, ar, 1);
-+	if (ar->usb_ep_cmd_is_bulk)
-+		usb_fill_bulk_urb(urb, ar->udev, usb_sndbulkpipe(ar->udev,
-+			AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-+			carl9170_usb_cmd_complete, ar);
-+	else
-+		usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
-+			AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-+			carl9170_usb_cmd_complete, ar, 1);
+ 			crypto_aead_clear_flags(tfm, ~0);
+ 			printk(KERN_INFO "test %u (%d bit key, %d byte blocks): ",
+@@ -1751,6 +1753,15 @@ static int do_test(int m)
+ 				NULL, 0, 16, 8, aead_speed_template_20);
+ 		break;
  
- 	if (free_buf)
- 		urb->transfer_flags |= URB_FREE_BUFFER;
-@@ -1032,9 +1037,10 @@ static void carl9170_usb_firmware_step2(const struct firmware *fw,
- static int carl9170_usb_probe(struct usb_interface *intf,
- 			      const struct usb_device_id *id)
- {
-+	struct usb_endpoint_descriptor *ep;
- 	struct ar9170 *ar;
- 	struct usb_device *udev;
--	int err;
-+	int i, err;
- 
- 	err = usb_reset_device(interface_to_usbdev(intf));
- 	if (err)
-@@ -1050,6 +1056,21 @@ static int carl9170_usb_probe(struct usb_interface *intf,
- 	ar->intf = intf;
- 	ar->features = id->driver_info;
- 
-+	/* We need to remember the type of endpoint 4 because it differs
-+	 * between high- and full-speed configuration. The high-speed
-+	 * configuration specifies it as interrupt and the full-speed
-+	 * configuration as bulk endpoint. This information is required
-+	 * later when sending urbs to that endpoint.
-+	 */
-+	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
-+		ep = &intf->cur_altsetting->endpoint[i].desc;
++	case 212:
++		test_aead_speed("ccm_base(ctr(aes-aesni),aes-aesni)", ENCRYPT, sec,
++				NULL, 0, 16, 8, aead_speed_template_16);
++		break;
++	case 213:
++		test_aead_speed("ccm-aes-aesni", ENCRYPT, sec,
++				NULL, 0, 16, 8, aead_speed_template_16);
++		break;
 +
-+		if (usb_endpoint_dir_out(ep) &&
-+		    usb_endpoint_num(ep) == AR9170_USB_EP_CMD)
-+			ar->usb_ep_cmd_is_bulk =
-+				usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK;
-+	}
-+
- 	usb_set_intfdata(intf, ar);
- 	SET_IEEE80211_DEV(ar->hw, &intf->dev);
+ 	case 300:
+ 		/* fall through */
  
--- 
-1.9.3
+diff --git a/crypto/tcrypt.h b/crypto/tcrypt.h
+index 6c7e21a..88f152d 100644
+--- a/crypto/tcrypt.h
++++ b/crypto/tcrypt.h
+@@ -66,6 +66,7 @@ static u8 speed_template_32_64[] = {32, 64, 0};
+  * AEAD speed tests
+  */
+ static u8 aead_speed_template_20[] = {20, 0};
++static u8 aead_speed_template_16[] = {16, 0};
+ 
+ /*
+  * Digest speed tests
+ 
 
