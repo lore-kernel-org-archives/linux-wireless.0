@@ -1,97 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:43940 "EHLO test.hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753481AbaHXVZd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2014 17:25:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org
-Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC 5/7] bcma: get IRQ numbers from dt
-Date: Sun, 24 Aug 2014 23:24:43 +0200
-Message-Id: <1408915485-8078-7-git-send-email-hauke@hauke-m.de> (sfid-20140824_232536_120387_F2E0B7C8)
-In-Reply-To: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:39511 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbaHVUiN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2014 16:38:13 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	paulmck@linux.vnet.ibm.com
+Subject: Re: [PATCH v2] carl9170: Remove redundant protection check
+Date: Fri, 22 Aug 2014 22:38:08 +0200
+Message-ID: <1679858.MgakDZE2Vr@debian64> (sfid-20140822_223842_460604_11D851D2)
+In-Reply-To: <20140822191431.GA5827@ada>
+References: <20140822191431.GA5827@ada>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+On Friday, August 22, 2014 10:14:31 PM Andreea-Cristina Bernat wrote:
+> The carl9170_op_ampdu_action() function is used only by the mac80211
+> framework. Since the mac80211 already takes care of checks and 
+> properly serializing calls to the driver's function there is no
+> need for the driver to do the same thing.
+> 
+> Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+> ---
+> Changes in v2:
+>  - Change subject line from
+>    "carl9170: Replace rcu_dereference() with rcu_access_pointer()"
+>    to
+>    "carl9170: Remove redundant protection check"
+>  - Update the commit message according to the modifications
+>  - Delete the lines of interest at the suggestion and explanations of
+>    Christian Lamparter <chunkeey@googlemail.com>
+> 
+>  drivers/net/wireless/ath/carl9170/main.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+> index 12018ff..6758b9a 100644
+> --- a/drivers/net/wireless/ath/carl9170/main.c
+> +++ b/drivers/net/wireless/ath/carl9170/main.c
+> @@ -1430,12 +1430,6 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+>  		if (!sta_info->ht_sta)
+>  			return -EOPNOTSUPP;
+>  
+> -		rcu_read_lock();
+> -		if (rcu_access_pointer(sta_info->agg[tid])) {
+> -			rcu_read_unlock();
+> -			return -EBUSY;
+> -		}
+> -
+>  		tid_info = kzalloc(sizeof(struct carl9170_sta_tid),
+>  				   GFP_ATOMIC);
+>  		if (!tid_info) {
+> 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+sparse [0] hit a bug when testing the patch:
+
+drivers/net/wireless/ath/carl9170/main.c:1440:17: 
+  warning: context imbalance in 'carl9170_op_ampdu_action' - unexpected unlock
+
+This warning is caused by the remaining, stray rcu_read protection
+in the code below (Sorry! Guess RCU needed a bit more explanation
+in the previous post. If you are looking for *pointers*, there are
+excellent resources available in Documentation/RCU/ [1]).
+
+I've attached a full patch (see below) with all changes so far and
+tested if the device/driver still behaves ;-). This patch applies 
+cleanly on top of wireless-testing.
+
+@John,
+can you please take it?
+
 ---
- drivers/bcma/main.c | 42 +++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 41 insertions(+), 1 deletion(-)
+From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 0ff8d58..3f75776 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -10,6 +10,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
+The carl9170_op_ampdu_action() function is used only by the mac80211
+framework. Since the mac80211 already takes care of checks and 
+properly serializing calls to the driver's function there is no
+need for the driver to do the same thing.
  
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -120,6 +122,38 @@ static void bcma_release_core_dev(struct device *dev)
- 	kfree(core);
- }
+Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+[chunkeey@googlemail.com: remove two stray rcu_read_unlock()]
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index f8ded84..ef5b6dc 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1430,18 +1430,10 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+ 		if (!sta_info->ht_sta)
+ 			return -EOPNOTSUPP;
  
-+static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-+						     struct bcma_device *core)
-+{
-+	struct device_node *node;
-+	u64 size;
-+	const __be32 *reg;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return NULL;
-+
-+	for_each_child_of_node(parent->dev.of_node, node) {
-+		reg = of_get_address(node, 0, &size, NULL);
-+		if (!reg)
-+			continue;
-+		if (be32_to_cpup(reg) == core->addr)
-+			return node;
-+	}
-+	return NULL;
-+}
-+
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+	struct device_node *node;
-+
-+	node = bcma_of_find_child_device(parent, core);
-+	if (!node)
-+		return;
-+	core->dev.of_node = node;
-+	core->irq = irq_of_parse_and_map(node, 0);
-+}
-+
- static int bcma_register_cores(struct bcma_bus *bus)
- {
- 	struct bcma_device *core;
-@@ -155,7 +189,13 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 			break;
- 		case BCMA_HOSTTYPE_SOC:
- 			core->dev.dma_mask = &core->dev.coherent_dma_mask;
--			core->dma_dev = &core->dev;
-+			if (bus->host_pdev) {
-+				core->dma_dev = &bus->host_pdev->dev;
-+				core->dev.parent = &bus->host_pdev->dev;
-+				bcma_of_fill_device(bus->host_pdev, core);
-+			} else {
-+				core->dma_dev = &core->dev;
-+			}
- 			break;
- 		case BCMA_HOSTTYPE_SDIO:
- 			break;
--- 
-1.9.1
+-		rcu_read_lock();
+-		if (rcu_dereference(sta_info->agg[tid])) {
+-			rcu_read_unlock();
+-			return -EBUSY;
+-		}
+-
+ 		tid_info = kzalloc(sizeof(struct carl9170_sta_tid),
+ 				   GFP_ATOMIC);
+-		if (!tid_info) {
+-			rcu_read_unlock();
++		if (!tid_info)
+ 			return -ENOMEM;
+-		}
+ 
+ 		tid_info->hsn = tid_info->bsn = tid_info->snx = (*ssn);
+ 		tid_info->state = CARL9170_TID_STATE_PROGRESS;
+@@ -1460,7 +1452,6 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+ 		list_add_tail_rcu(&tid_info->list, &ar->tx_ampdu_list);
+ 		rcu_assign_pointer(sta_info->agg[tid], tid_info);
+ 		spin_unlock_bh(&ar->tx_ampdu_list_lock);
+-		rcu_read_unlock();
+ 
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+---
+
+Regards
+Christian
+
+[0] <http://kernelnewbies.org/Sparse>
+[1] <https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt>
+
 
