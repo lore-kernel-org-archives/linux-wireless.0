@@ -1,27 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:63576 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbaH2Xmr (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:54596 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbaHVVxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 19:42:47 -0400
-Received: by mail-ie0-f170.google.com with SMTP id rl12so3619851iec.29
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 16:42:46 -0700 (PDT)
+	Fri, 22 Aug 2014 17:53:45 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Andreea-Cristina Bernat <bernat.ada@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	paulmck@linux.vnet.ibm.com
+Subject: Re: [PATCH v2] carl9170: Remove redundant protection check
+Date: Fri, 22 Aug 2014 23:53:40 +0200
+Message-ID: <1931285.KsvFbLZH2Q@debian64> (sfid-20140822_235427_368164_A25CF632)
+In-Reply-To: <1408741732.5604.23.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <20140822191431.GA5827@ada> <1679858.MgakDZE2Vr@debian64> <1408741732.5604.23.camel@edumazet-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Date: Fri, 29 Aug 2014 19:42:46 -0400
-Message-ID: <CANLxO2Ai-FFfPXmMLmnxW05wedO7uOd2dn521xBQJFvd79rObQ@mail.gmail.com> (sfid-20140830_014250_704278_489D67B3)
-Subject: Making Wil6210 card work on ubuntu
-From: Anuj Garg <anujgarg@buffalo.edu>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Friday, August 22, 2014 02:08:52 PM Eric Dumazet wrote:
+> On Fri, 2014-08-22 at 22:38 +0200, Christian Lamparter wrote:
+> [...]
+> > From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+> > 
+> > The carl9170_op_ampdu_action() function is used only by the mac80211
+> > framework. Since the mac80211 already takes care of checks and 
+> > properly serializing calls to the driver's function there is no
+> > need for the driver to do the same thing.
+> >  
+> > ---
+> > @@ -1430,18 +1430,10 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+> >  		if (!sta_info->ht_sta)
+> >  			return -EOPNOTSUPP;
+> >  
+> > -		rcu_read_lock();
+> > -		if (rcu_dereference(sta_info->agg[tid])) {
+> > -			rcu_read_unlock();
+> > -			return -EBUSY;
+> > -		}
+> > -
+> > [...]
+> > ---
+> 
+> Sorry but this patch is not complete.
+> 
+> You need to somehow return -EBUSY if sta_info->agg[tid] is set.
+The sta_info->agg[tid] check is not needed (for reference, see [0]).
+(There is already a check in mac80211 which prevents the leak of
+sta_info->agg[tid] [1]).
 
-I am new to this list. I recently got two Wil6210 cards and am trying
-to get them working on ubuntu. I used the lspci command to see the
-list of connected devices, but I can't find Wil6210 on it. Do these
-cards work with linux? Anyone experienced this problem before?
+Regards
+Christian
 
-Thanks
-Anuj
+[0] <https://lkml.org/lkml/2014/8/20/725>
+[1] <http://lxr.free-electrons.com/source/net/mac80211/agg-tx.c#L583>
+
