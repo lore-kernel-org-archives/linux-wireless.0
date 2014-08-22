@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58117 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094AbaH2SSR (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59113 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827AbaHVCZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 14:18:17 -0400
-Message-ID: <5400C3E8.9040500@broadcom.com> (sfid-20140829_201838_533047_D8DB7BC6)
-Date: Fri, 29 Aug 2014 11:18:16 -0700
-From: Franky Lin <frankyl@broadcom.com>
+	Thu, 21 Aug 2014 22:25:09 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21494.43519.504368.455733@gargle.gargle.HOWL> (sfid-20140822_042525_305421_BE72FB47)
+Date: Fri, 22 Aug 2014 07:55:03 +0530
 MIME-Version: 1.0
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-CC: <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
-References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
-In-Reply-To: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+To: Joe Perches <joe@perches.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: Add debug information
+In-Reply-To: <1408635330.23250.47.camel@joe-AO725>
+References: <1408633582-6378-1-git-send-email-sujith@msujith.org>
+	<1408635330.23250.47.camel@joe-AO725>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geert,
+Joe Perches wrote:
+> Perhaps:
+> static const char * const offchannel_state[] = {...
+> 
+> It is typically is an unsafe practice to
+> index an char * array with an enum.
+> 
+> It might be safer to use a lookup function
+> (and smaller when ath_dbg is not enabled)
+> 
+> Something like:
+> 
+> static const char *offchannel_state_string(enum ath_offchannel_state state)
+> {
+> #define case_rtn_string(val) case val: return #val
+> 	switch (state) {
+> 	case_rtn_string(ATH_OFFCHANNEL_IDLE);
+> 	case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
+> 	case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
+> 	case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
+> 	case_rtn_string(ATH_OFFCHANNEL_ROC_START);
+> 	case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
+> 	case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
+> 	default:
+> 		return "unknown";
+> 	}
+> }
 
-On 8/29/2014 9:24 AM, Geert Uytterhoeven wrote:
-> If NO_DMA=y:
->
-> drivers/built-in.o: In function `brcmf_msgbuf_release_array':
-> msgbuf.c:(.text+0x34dbbe): undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `brcmf_proto_msgbuf_detach':
-> (.text+0x34dca4): undefined reference to `dma_free_coherent'
-> drivers/built-in.o: In function `brcmf_msgbuf_get_pktid':
-> msgbuf.c:(.text+0x34dd2a): undefined reference to `dma_unmap_single'
-> drivers/built-in.o: In function `brcmf_msgbuf_alloc_pktid':
-> msgbuf.c:(.text+0x34de12): undefined reference to `dma_map_single'
-> msgbuf.c:(.text+0x34de20): undefined reference to `dma_mapping_error'
-> drivers/built-in.o: In function `brcmf_msgbuf_remove_flowring':
-> msgbuf.c:(.text+0x34e3d6): undefined reference to `dma_free_coherent'
-> drivers/built-in.o: In function `brcmf_msgbuf_flowring_create':
-> msgbuf.c:(.text+0x34e4f8): undefined reference to `dma_alloc_coherent'
-> drivers/built-in.o: In function `brcmf_proto_msgbuf_attach':
-> (.text+0x34f5fe): undefined reference to `dma_alloc_coherent'
-> drivers/built-in.o: In function `brcmf_proto_msgbuf_attach':
-> (.text+0x34f798): undefined reference to `dma_free_coherent'
->
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> ---
->   drivers/net/wireless/brcm80211/Kconfig | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-> index b8e2561ea645..2e0da8925834 100644
-> --- a/drivers/net/wireless/brcm80211/Kconfig
-> +++ b/drivers/net/wireless/brcm80211/Kconfig
-> @@ -19,7 +19,7 @@ config BRCMSMAC
->
->   config BRCMFMAC
->   	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
-> -	depends on CFG80211
-> +	depends on CFG80211A && HAS_DMA
->   	select BRCMUTIL
->   	---help---
->   	  This module adds support for embedded wireless adapters based on
+This looks better, I'll send a v2. Thanks for the review.
 
-Thanks for reporting this. All complaints are from msgbuf code. So the 
-dependency should belong to BRCMFMAC_PCIE not BRCMFMAC.
-
-Thanks,
-Franky
+Sujith
