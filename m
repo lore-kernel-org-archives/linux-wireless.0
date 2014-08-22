@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39184 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754937AbaHYIZi (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40863 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932092AbaHVPJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 04:25:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v8 0/4] ath10k: firmware crash dump
-References: <20140821124705.27159.67898.stgit@potku.adurom.net>
-Date: Mon, 25 Aug 2014 11:25:33 +0300
-In-Reply-To: <20140821124705.27159.67898.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Thu, 21 Aug 2014 15:48:50 +0300")
-Message-ID: <877g1x6kn6.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_102556_742262_A459623B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 22 Aug 2014 11:09:43 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 1/8] ath9k: Add a debug level for channel context
+Date: Fri, 22 Aug 2014 20:39:24 +0530
+Message-Id: <1408720171-9765-2-git-send-email-sujith@msujith.org> (sfid-20140822_170945_448234_EC8AA905)
+In-Reply-To: <1408720171-9765-1-git-send-email-sujith@msujith.org>
+References: <1408720171-9765-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> And yet another version of firmware crash dumps. Now I dropped all dumps except
-> firmware registers and tested all the features myself.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h        | 1 +
+ drivers/net/wireless/ath/ath9k/init.c | 2 ++
+ 2 files changed, 3 insertions(+)
 
-[...]
-
-> Ben Greear (1):
->       ath10k: provide firmware crash info via debugfs
->
-> Kalle Valo (3):
->       ath10k: add ath10k_pci_diag_* helpers
->       ath10k: rename ath10k_pci_hif_dump_area() to ath10k_pci_fw_crashed_dump()
->       ath10k: print more driver info when firmware crashes
-
-Finally applied :)
-
-I also applied the small diff to patch 2 to remove the unneeded use of
-mutex in ath10k_fw_crash_dump_open().
-
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index fd9e530..c1a4ade 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -261,6 +261,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_MCI		= 0x00008000,
+ 	ATH_DBG_DFS		= 0x00010000,
+ 	ATH_DBG_WOW		= 0x00020000,
++	ATH_DBG_CHAN_CTX	= 0x00040000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 39419ea..76771f3 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -778,6 +778,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			hw->chanctx_data_size = sizeof(void *);
+ 			hw->extra_beacon_tailroom =
+ 				sizeof(struct ieee80211_p2p_noa_attr) + 9;
++
++			ath_dbg(common, CHAN_CTX, "Use channel contexts\n");
+ 		}
+ 	}
+ 
 -- 
-Kalle Valo
+2.0.4
+
