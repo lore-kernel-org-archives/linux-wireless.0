@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:59071 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbaHEQvJ (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:64830 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753381AbaHVM1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 12:51:09 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCHv5 0/2] ath10k spectral scan support
-Date: Tue, 5 Aug 2014 18:51:06 +0200
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Kathy Giori <kgiori@qca.qualcomm.com>,
-	Sven Eckelmann <sven@narfation.org>,
-	mathias.kretschmer@fokus.fraunhofer.de
-References: <1406899034-13473-1-git-send-email-sw@simonwunderlich.de> <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
-In-Reply-To: <CAB=NE6XOquKeF3JTCDBUJhtjtUYGjPi2tG7By+1Ntyk-_Km6rg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201408051851.06457.sw@simonwunderlich.de> (sfid-20140805_185114_237401_ABBD7421)
+	Fri, 22 Aug 2014 08:27:03 -0400
+Received: by mail-lb0-f171.google.com with SMTP id l4so9383572lbv.2
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:27:01 -0700 (PDT)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] drivers: net: wireless: Add include guards
+Date: Fri, 22 Aug 2014 14:26:54 +0200
+Message-Id: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20140822_142724_177027_064DF5AD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The files ray_cs.h and rayctl.h both contain two thirds of what
+appears to be an include guard using the macro name RAYLINK_H (both
+lack the #define). Since RAYLINK_H is not defined anywhere, the
+guards using different macro names.
 
-> On Fri, Aug 1, 2014 at 6:17 AM, Simon Wunderlich <sw@simonwunderlich.de> 
-wrote:
-> > To view the samples, please have a look at the fft_eval tool [1] which
-> > now supports both ath9k and ath10k formats.
-> 
-> Can you please edit the ath9k and ath10k wiki about this tool and
-> reference to it?
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/net/wireless/ray_cs.h | 5 +++--
+ drivers/net/wireless/rayctl.h | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-Thanks for pointing that out. I've updated ath9k with some instructions how to 
-actually run the spectral scan. A link to the tool was already included. I've 
-also added an ath10k page with test instructions and description of the 
-debugfs files, including a reference to fft_eval. Feel free to 
-update/improve/edit, everyone. :)
+diff --git a/drivers/net/wireless/ray_cs.h b/drivers/net/wireless/ray_cs.h
+index e79848f..524c2f0 100644
+--- a/drivers/net/wireless/ray_cs.h
++++ b/drivers/net/wireless/ray_cs.h
+@@ -3,7 +3,8 @@
+    Written by Corey Thomas
+ */
+ 
+-#ifndef RAYLINK_H
++#ifndef _RAY_CS_H_
++#define _RAY_CS_H_
+ 
+ struct beacon_rx {
+     struct mac_header mac;
+@@ -69,4 +70,4 @@ typedef struct ray_dev_t {
+ } ray_dev_t;
+ /*****************************************************************************/
+ 
+-#endif /* RAYLINK_H */
++#endif /* _RAY_CS_H_ */
+diff --git a/drivers/net/wireless/rayctl.h b/drivers/net/wireless/rayctl.h
+index 3c3b98b..b21ed64 100644
+--- a/drivers/net/wireless/rayctl.h
++++ b/drivers/net/wireless/rayctl.h
+@@ -1,4 +1,5 @@
+-#ifndef RAYLINK_H
++#ifndef _RAYCTL_H_
++#define _RAYCTL_H_
+ 
+ typedef unsigned char UCHAR;
+ 
+@@ -729,4 +730,4 @@ typedef struct snaphdr_t
+ #define RAY_IPX_TYPE  0x8137
+ #define APPLEARP_TYPE 0x80f3
+ /*****************************************************************************/
+-#endif /* #ifndef RAYLINK_H */
++#endif /* _RAYCTL_H_ */
+-- 
+1.9.2
 
-I did not update the iw page because there is (no longer) any changes 
-neccesary in iw for running spectral - we had this only in the very first 
-version of the ath9k patch. I've updated the README/usage in fft_eval to 
-reflect that properly, though.
-
-Thanks,
-    Simon
