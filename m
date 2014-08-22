@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56057 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816AbaHKUzz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 16:55:55 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1407789645.28221.68.camel@chimera>
-Date: Mon, 11 Aug 2014 13:56:26 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org> (sfid-20140811_225620_008875_A0C63DBA)
-References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org> <1407789645.28221.68.camel@chimera>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:15907 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755663AbaHVGet convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2014 02:34:49 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>
+Date: Thu, 21 Aug 2014 23:34:39 -0700
+Subject: RE: [PATCH 1/3] mwifiex: fix left_len calculation issue
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595181989DDB7@SC-VEXCH1.marvell.com> (sfid-20140822_083452_872025_6A0B6D25)
+References: <1408451758-22463-1-git-send-email-akarwar@marvell.com>
+In-Reply-To: <1408451758-22463-1-git-send-email-akarwar@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Hi John,
 
->> isn't this dangerous to just allow writing to wiphy.perm_addr via
->> sysfs. We ran into the same issue with Bluetooth and ROM only devices
->> that have to unique address. Doing this via sysfs seems the wrong
->> approach. It is messy and full of potential race conditions. I clearly
->> opted against the sysfs solution for Bluetooth. Instead we build an
->> infrastructure that allowed doing it cleanly via the Bluetooth mgmt
->> API. Controllers that have no unique address are brought up as
->> unconfigured and userspace clearly knows that it has to take steps to
->> get an address programmed into the controller.
+> -----Original Message-----
+> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+> Sent: 19 August 2014 18:06
+> To: linux-wireless@vger.kernel.org
+> Cc: linville@tuxdriver.com; Amitkumar Karwar; Avinash Patil; Cathy Luo
+> Subject: [PATCH 1/3] mwifiex: fix left_len calculation issue
 > 
-> My inclination is to agree; however, this does not exist for WiFi and
-> implementing it would require modifying every single driver.
+> While updating 'left_len' in each iteration, we should subtract last
+> TLV length not the accumulated length of TLVs parsed till now.
+> This bug in parsing logic is exposed by newer firmware which adds two
+> TLVs in GET_HW_SPEC command response. Earlier firmwares used to add
+> only one TLV.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/cmdevt.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 
-so what? That is not a reason to just hack something into sysfs. If it means every driver needs to be modified, then that has to be done.
+Somehow I don't see these patches on the list. Should I resend them?
 
->> And I think something similar should be done for WiFi. It might be
->> better to not create the initial wlan0 netdev interface if the
->> hardware has not a single unique address available. That way the
->> supplicant can just either get one from the flash filesystem or make
->> up a proper random one before creating the netdev interface.
->> 
-> The initial wlan0 netdev interface is *not* created, but the PHY records
-> a MAC address that cannot be overriden at the level that this sysfs node
-> reads. Perhaps a compromise would be to create a single new syscall to
-> write to it?
-
-The initial wlan0 can be removed as every other netdev attached to the wiphy. It can also be as easily re-created.
-
-Since the wiphy does not have a valid MAC address, my proposal here would be to just not create the wlan0 in the first place. This means that the wiphy can be still discovered via nl80211.
-
-It also means that the wlan0 netdev needs to be created by userspace now. And a valid NL80211_ATTR_MAC be provided. Similar to what is already done for P2P devices at the moment. That should just solve the problem.
-
-We really do not want to announce a netdev when registering the wiphy device and then having to mess with its MAC address via sysfs somehow. This all needs to be properly reflected over RTNL.
-
-Regards
-
-Marcel
-
+Thanks,
+Amitkumar Karwar
