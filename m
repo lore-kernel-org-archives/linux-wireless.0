@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:41347 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbaHKXMV (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:52967 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756165AbaHVHx7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 19:12:21 -0400
-Received: by mail-pd0-f175.google.com with SMTP id r10so11514012pdi.20
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 16:12:21 -0700 (PDT)
-Message-ID: <1407798738.28221.81.camel@chimera> (sfid-20140812_011243_767256_0915D13D)
-Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Date: Mon, 11 Aug 2014 16:12:18 -0700
-In-Reply-To: <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org>
-References: <1407780269.28221.63.camel@chimera>
-	 <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org>
-	 <1407789645.28221.68.camel@chimera>
-	 <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org>
-	 <1407791075.28221.74.camel@chimera>
-	 <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Aug 2014 03:53:59 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 0/4] ath9k patches
+Date: Fri, 22 Aug 2014 13:23:55 +0530
+Message-Id: <1408694039-28927-1-git-send-email-sujith@msujith.org> (sfid-20140822_095418_385203_46B02D63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-08-11 at 15:41 -0700, Marcel Holtmann wrote:
-> what kind of hardware are you actually using here?
-> 
-It's ath9k on MIPS under OpenWrt.
-> 
-> Internally it might do that, but I do not see it exposing the
-> NL80211_ATTR_MAC when you get the attributes for wiphy.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-When wlan0 is created, it can be created with its own MAC irrespective
-of the wiphy MAC. In OpenWrt, the wlan0 MAC can be supplied and assigned
-to a netdev created on a specific wiphy identified by its MAC, and if
-that cannot be predicted, there is no wlan0.
+With the introduction of channel context support, ath9k now supports
+two types of operation, with separate paths for HW scan and SW scan.
+The paths interleave in many places with code overlap and this makes the code
+a bit hard to follow. This series begins to separate the two modes by making
+the channel context code more self-contained. There is still lots to
+be done, though.
 
-> So I am still saying that when you do NL80211_CMD_NEW_INTERFACE allow
-> providing NL80211_ATTR_MAC to set the MAC address to be used. It might
-> be useful that the wiphy exposes an attribute saying that it does not
-> have a default MAC address, but that should be it. I do not like these
-> magic 00:00:00:00:00:00 games. As I mentioned earlier, in Bluetooth we
-> just deal with allowing the driver to set a flag that it does not have
-> a valid address. And then the core takes care of dealing with it.
-> 
-An attribute saying there is no default MAC is helpful only if there is
-a way to supply a new default to the wiphy.
+Sujith Manoharan (4):
+  ath9k: Add a config option for channel context
+  ath9k: Move P2P functions to channel.c
+  ath9k: Isolate P2P powersave routines
+  ath9k: Isolate ath9k_use_chanctx module parameter
+
+ drivers/net/wireless/ath/ath9k/Kconfig   |   9 ++
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  47 +++++++++-
+ drivers/net/wireless/ath/ath9k/channel.c | 149 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c    |  72 ++++++++-------
+ drivers/net/wireless/ath/ath9k/main.c    | 119 +++---------------------
+ drivers/net/wireless/ath/ath9k/recv.c    |   6 +-
+ 6 files changed, 258 insertions(+), 144 deletions(-)
+
+-- 
+2.0.4
 
