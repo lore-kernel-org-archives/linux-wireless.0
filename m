@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.112]:39561 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751622AbaHDA1o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2014 20:27:44 -0400
-From: Hans Wennborg <hans@hanshq.net>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Hans Wennborg <hans@hanshq.net>
-Subject: [PATCH 10/19] ath6kl: fix %d confusingly prefixed with 0x in format strings
-Date: Sun,  3 Aug 2014 17:19:56 -0700
-Message-Id: <1407111596-14944-1-git-send-email-hans@hanshq.net> (sfid-20140804_022747_088928_F037FF5B)
+Received: from mail-la0-f52.google.com ([209.85.215.52]:46108 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756308AbaHVMnJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2014 08:43:09 -0400
+Received: by mail-la0-f52.google.com with SMTP id b17so10020581lan.11
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:43:08 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/5] ath10k: ignore ar_pci->started in pipe cleanup
+Date: Fri, 22 Aug 2014 14:33:16 +0200
+Message-Id: <1408710798-25198-4-git-send-email-michal.kazior@tieto.com> (sfid-20140822_144323_111751_C0B65226)
+In-Reply-To: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
+References: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hans Wennborg <hans@hanshq.net>
----
- drivers/net/wireless/ath/ath6kl/init.c | 2 +-
- drivers/net/wireless/ath/ath6kl/main.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Structures used by these functions are now
+guaranteed to remain accessible until driver is
+unregistered.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index fffd523..91af845 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1049,7 +1049,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ar->hw.reserved_ram_size = le32_to_cpup(val);
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index daa38ce..cb4049f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1143,10 +1143,6 @@ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
  
- 			ath6kl_dbg(ATH6KL_DBG_BOOT,
--				   "found reserved ram size ie 0x%d\n",
-+				   "found reserved ram size ie 0x%x\n",
- 				   ar->hw.reserved_ram_size);
- 			break;
- 		case ATH6KL_FW_IE_CAPABILITIES:
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 21516bc..933aef0 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -225,7 +225,7 @@ int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
- 	ret = ath6kl_hif_diag_write32(ar, address, value);
+ 	ar = pipe_info->hif_ce_state;
+ 	ar_pci = ath10k_pci_priv(ar);
+-
+-	if (!ar_pci->started)
+-		return;
+-
+ 	ce_hdl = pipe_info->ce_hdl;
  
- 	if (ret) {
--		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
-+		ath6kl_err("failed to write 0x%x during diagnose window to 0x%x\n",
- 			   address, value);
- 		return ret;
- 	}
+ 	while (ath10k_ce_revoke_recv_next(ce_hdl, (void **)&netbuf,
+@@ -1177,10 +1173,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 
+ 	ar = pipe_info->hif_ce_state;
+ 	ar_pci = ath10k_pci_priv(ar);
+-
+-	if (!ar_pci->started)
+-		return;
+-
+ 	ce_hdl = pipe_info->ce_hdl;
+ 
+ 	while (ath10k_ce_cancel_send_next(ce_hdl, (void **)&netbuf,
 -- 
-2.0.0.526.g5318336
+1.8.5.3
 
