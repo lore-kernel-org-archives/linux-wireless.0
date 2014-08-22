@@ -1,661 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:35402 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078AbaHJOsD (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:44794 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756102AbaHVMd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 10:48:03 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so7560028wgh.22
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 07:47:59 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Fri, 22 Aug 2014 08:33:29 -0400
+Received: by mail-lb0-f177.google.com with SMTP id s7so9536270lbd.36
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:33:27 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/9] staging: vt6655: bssdb/datarate/dpc/power/rxtx use struct vnt_private
-Date: Sun, 10 Aug 2014 15:46:59 +0100
-Message-Id: <1407682023-2865-5-git-send-email-tvboxspy@gmail.com> (sfid-20140810_164937_275194_44FB10F2)
-In-Reply-To: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
-References: <1407682023-2865-1-git-send-email-tvboxspy@gmail.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/6] ath10k: setup irq method in probe
+Date: Fri, 22 Aug 2014 14:23:31 +0200
+Message-Id: <1408710214-24894-4-git-send-email-michal.kazior@tieto.com> (sfid-20140822_143334_015487_821E0BE2)
+In-Reply-To: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
+References: <1408710214-24894-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing PSDevice.
+It doesn't make sense to re-init irqs completely
+whenever transport is started/stopped. Do it just
+once upon probing/removing.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6655/bssdb.c    | 32 +++++++++---------
- drivers/staging/vt6655/datarate.c |  4 +--
- drivers/staging/vt6655/dpc.c      | 23 +++++++------
- drivers/staging/vt6655/dpc.h      |  2 +-
- drivers/staging/vt6655/power.c    | 12 +++----
- drivers/staging/vt6655/rxtx.c     | 70 +++++++++++++++++++++------------------
- drivers/staging/vt6655/rxtx.h     | 22 +++++++-----
- 7 files changed, 88 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/staging/vt6655/bssdb.c b/drivers/staging/vt6655/bssdb.c
-index 0d6b27e..bb59b98 100644
---- a/drivers/staging/vt6655/bssdb.c
-+++ b/drivers/staging/vt6655/bssdb.c
-@@ -117,7 +117,7 @@ BSSpSearchBSSList(
- 	CARD_PHY_TYPE  ePhyType
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned char *pbyBSSID = NULL;
- 	PWLAN_IE_SSID   pSSID = NULL;
-@@ -240,7 +240,7 @@ BSSvClearBSSList(
- 	bool bKeepCurrBSSID
- )
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int ii;
+Notes:
+    v2:
+     * tweak print style [Kalle]
+     * use ce_deinit instead of ce_init
+
+ drivers/net/wireless/ath/ath10k/core.h |  1 -
+ drivers/net/wireless/ath/ath10k/pci.c  | 73 ++++++++++++++++++----------------
+ 2 files changed, 39 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8da77c7..4ef4760 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -357,7 +357,6 @@ enum ath10k_fw_features {
+ enum ath10k_dev_flags {
+ 	/* Indicates that ath10k device is during CAC phase of DFS */
+ 	ATH10K_CAC_RUNNING,
+-	ATH10K_FLAG_FIRST_BOOT_DONE,
+ 	ATH10K_FLAG_CORE_REGISTERED,
+ };
  
-@@ -280,7 +280,7 @@ BSSpAddrIsInBSSList(
- 	PWLAN_IE_SSID pSSID
- )
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	PKnownBSS       pBSSList = NULL;
- 	unsigned int ii;
-@@ -333,7 +333,7 @@ BSSbInsertToBSSList(
- 	void *pRxPacketContext
- )
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
- 	PKnownBSS       pBSSList = NULL;
-@@ -540,7 +540,7 @@ BSSbUpdateToBSSList(
- )
- {
- 	int             ii;
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
- 	long            ldBm;
-@@ -715,7 +715,7 @@ BSSDBbIsSTAInNodeDB(void *pMgmtObject, unsigned char *abyDstAddr,
- void
- BSSvCreateOneNode(void *hDeviceContext, unsigned int *puNodeIndex)
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int ii;
- 	unsigned int BigestCount = 0;
-@@ -777,7 +777,7 @@ BSSvRemoveOneNode(
- 	unsigned int uNodeIndex
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned char byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
- 	struct sk_buff  *skb;
-@@ -810,7 +810,7 @@ BSSvUpdateAPNode(
- 	PWLAN_IE_SUPP_RATES pExtSuppRates
- )
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int uRateLen = WLAN_RATES_MAXLEN;
- 
-@@ -861,7 +861,7 @@ BSSvAddMulticastNode(
- 	void *hDeviceContext
- )
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 
- 	if (!pDevice->bEnableHostWEP)
-@@ -904,7 +904,7 @@ BSSvSecondCallBack(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int ii;
- 	PWLAN_IE_SSID   pItemSSID, pCurrSSID;
-@@ -1207,7 +1207,7 @@ BSSvUpdateNodeTxCounter(
- 	unsigned int uFIFOHeaderSize
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int uNodeIndex = 0;
- 	unsigned char byTxRetry = (byTsr0 & TSR0_NCR);
-@@ -1360,7 +1360,7 @@ BSSvClearNodeDBTable(
- )
- 
- {
--	PSDevice     pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	struct sk_buff  *skb;
- 	unsigned int ii;
-@@ -1385,7 +1385,7 @@ void s_vCheckSensitivity(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PKnownBSS       pBSSList = NULL;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	int             ii;
-@@ -1435,7 +1435,7 @@ BSSvClearAnyBSSJoinRecord(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int ii;
- 
-@@ -1448,7 +1448,7 @@ void s_uCalculateLinkQual(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	unsigned long TxOkRatio, TxCnt;
- 	unsigned long RxOkRatio, RxCnt;
- 	unsigned long RssiRatio;
-@@ -1488,7 +1488,7 @@ void s_vCheckPreEDThreshold(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PKnownBSS       pBSSList = NULL;
- 	PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
- 
-diff --git a/drivers/staging/vt6655/datarate.c b/drivers/staging/vt6655/datarate.c
-index 565028c..d489fe4 100644
---- a/drivers/staging/vt6655/datarate.c
-+++ b/drivers/staging/vt6655/datarate.c
-@@ -195,7 +195,7 @@ RATEvParseMaxRate(
- 	unsigned char *pbyTopOFDMRate
- )
- {
--	PSDevice  pDevice = (PSDevice) pDeviceHandler;
-+	struct vnt_private *pDevice = pDeviceHandler;
- 	unsigned int ii;
- 	unsigned char byHighSuppRate = 0;
- 	unsigned char byRate = 0;
-@@ -295,7 +295,7 @@ RATEvTxRateFallBack(
- 	PKnownNodeDB psNodeDBTable
- )
- {
--	PSDevice        pDevice = (PSDevice) pDeviceHandler;
-+	struct vnt_private *pDevice = pDeviceHandler;
- 	unsigned short wIdxDownRate = 0;
- 	unsigned int ii;
- 	bool bAutoRate[MAX_RATE]    = {true, true, true, true, false, false, true, true, true, true, true, true};
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 4497419..d26ca96 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -79,18 +79,18 @@ s_vGetDASA(unsigned char *pbyRxBufferAddr, unsigned int *pcbHeaderSize,
- 	   PSEthernetHeader psEthHeader);
- 
- static void
--s_vProcessRxMACHeader(PSDevice pDevice, unsigned char *pbyRxBufferAddr,
-+s_vProcessRxMACHeader(struct vnt_private *pDevice, unsigned char *pbyRxBufferAddr,
- 		      unsigned int cbPacketSize, bool bIsWEP, bool bExtIV,
- 		      unsigned int *pcbHeadSize);
- 
- static bool s_bAPModeRxCtl(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	int      iSANodeIndex
- );
- 
- static bool s_bAPModeRxData(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	struct sk_buff *skb,
- 	unsigned int FrameSize,
- 	unsigned int cbHeaderOffset,
-@@ -99,7 +99,7 @@ static bool s_bAPModeRxData(
- );
- 
- static bool s_bHandleRxEncryption(
--	PSDevice     pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	unsigned int FrameSize,
- 	unsigned char *pbyRsr,
-@@ -112,7 +112,7 @@ static bool s_bHandleRxEncryption(
- 
- static bool s_bHostWepRxEncryption(
- 
--	PSDevice     pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	unsigned int FrameSize,
- 	unsigned char *pbyRsr,
-@@ -145,7 +145,8 @@ static bool s_bHostWepRxEncryption(
-  *
-  -*/
- static void
--s_vProcessRxMACHeader(PSDevice pDevice, unsigned char *pbyRxBufferAddr,
-+s_vProcessRxMACHeader(struct vnt_private *pDevice,
-+		      unsigned char *pbyRxBufferAddr,
- 		      unsigned int cbPacketSize, bool bIsWEP, bool bExtIV,
- 		      unsigned int *pcbHeadSize)
- {
-@@ -270,7 +271,7 @@ s_vGetDASA(unsigned char *pbyRxBufferAddr, unsigned int *pcbHeaderSize,
- 
- bool
- device_receive_frame(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	PSRxDesc pCurrRD
- )
- {
-@@ -871,7 +872,7 @@ device_receive_frame(
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 4a7a5fe..c3b3f62 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -306,6 +306,18 @@ static void ath10k_pci_free_early_irq(struct ath10k *ar)
+ 	free_irq(ath10k_pci_priv(ar)->pdev->irq, ar);
  }
  
- static bool s_bAPModeRxCtl(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	int      iSANodeIndex
- )
-@@ -969,7 +970,7 @@ static bool s_bAPModeRxCtl(
- }
- 
- static bool s_bHandleRxEncryption(
--	PSDevice     pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	unsigned int FrameSize,
- 	unsigned char *pbyRsr,
-@@ -1106,7 +1107,7 @@ static bool s_bHandleRxEncryption(
- }
- 
- static bool s_bHostWepRxEncryption(
--	PSDevice     pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyFrame,
- 	unsigned int FrameSize,
- 	unsigned char *pbyRsr,
-@@ -1226,7 +1227,7 @@ static bool s_bHostWepRxEncryption(
- }
- 
- static bool s_bAPModeRxData(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	struct sk_buff *skb,
- 	unsigned int FrameSize,
- 	unsigned int cbHeaderOffset,
-diff --git a/drivers/staging/vt6655/dpc.h b/drivers/staging/vt6655/dpc.h
-index 4914890..a068b84 100644
---- a/drivers/staging/vt6655/dpc.h
-+++ b/drivers/staging/vt6655/dpc.h
-@@ -35,7 +35,7 @@
- 
- bool
- device_receive_frame(
--	PSDevice pDevice,
-+	struct vnt_private *,
- 	PSRxDesc pCurrRD
- );
- 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index f08c26f..de23f2d 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -74,7 +74,7 @@ PSvEnablePowerSaving(
- 	unsigned short wListenInterval
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned short wAID = pMgmt->wCurrAID | BIT14 | BIT15;
- 
-@@ -131,7 +131,7 @@ PSvDisablePowerSaving(
- 	void *hDeviceContext
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 
- 	// disable power saving hw function
- 	MACbPSWakeup(pDevice->PortOffset);
-@@ -167,7 +167,7 @@ PSbConsiderPowerDown(
- 	bool bCheckCountToWakeUp
- )
- {
--	PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned int uIdx;
- 
-@@ -229,7 +229,7 @@ PSvSendPSPOLL(
- 	void *hDeviceContext
- )
- {
--	PSDevice            pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject        pMgmt = pDevice->pMgmt;
- 	PSTxMgmtPacket      pTxPacket = NULL;
- 
-@@ -266,7 +266,7 @@ PSbSendNullPacket(
- 	void *hDeviceContext
- )
- {
--	PSDevice            pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSTxMgmtPacket      pTxPacket = NULL;
- 	PSMgmtObject        pMgmt = pDevice->pMgmt;
- 	unsigned int uIdx;
-@@ -336,7 +336,7 @@ PSbIsNextTBTTWakeUp(
- 	void *hDeviceContext
- )
- {
--	PSDevice         pDevice = (PSDevice)hDeviceContext;
-+	struct vnt_private *pDevice = hDeviceContext;
- 	PSMgmtObject        pMgmt = pDevice->pMgmt;
- 	bool bWakeUp = false;
- 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 2270e2a..b625358 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -112,7 +112,7 @@ static const unsigned short wFB_Opt1[2][5] = {
- static
- void
- s_vFillTxKey(
--	PSDevice   pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyBuf,
- 	unsigned char *pbyIVHead,
- 	PSKeyItem  pTransmitKey,
-@@ -124,7 +124,7 @@ s_vFillTxKey(
- static
- void
- s_vFillRTSHead(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pvRTS,
- 	unsigned int	cbFrameLength,
-@@ -138,7 +138,7 @@ s_vFillRTSHead(
- static
- void
- s_vGenerateTxParameter(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pTxBufHead,
- 	void *pvRrvTime,
-@@ -152,7 +152,7 @@ s_vGenerateTxParameter(
- );
- 
- static void s_vFillFragParameter(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyBuffer,
- 	unsigned int	uTxType,
- 	void *pvtdCurr,
-@@ -161,15 +161,17 @@ static void s_vFillFragParameter(
- );
- 
- static unsigned int
--s_cbFillTxBufHead(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyTxBufferAddr,
--		  unsigned int cbFrameBodySize, unsigned int uDMAIdx, PSTxDesc pHeadTD,
--		  PSEthernetHeader psEthHeader, unsigned char *pPacket, bool bNeedEncrypt,
--		  PSKeyItem pTransmitKey, unsigned int uNodeIndex, unsigned int *puMACfragNum);
-+s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
-+		  unsigned char *pbyTxBufferAddr, unsigned int cbFrameBodySize,
-+		  unsigned int uDMAIdx, PSTxDesc pHeadTD,
-+		  PSEthernetHeader psEthHeader, unsigned char *pPacket,
-+		  bool bNeedEncrypt, PSKeyItem pTransmitKey,
-+		  unsigned int uNodeIndex, unsigned int *puMACfragNum);
- 
- static
- unsigned int
- s_uFillDataHead(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pTxDataHead,
- 	unsigned int cbFrameLength,
-@@ -187,7 +189,7 @@ s_uFillDataHead(
- static
- void
- s_vFillTxKey(
--	PSDevice   pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyBuf,
- 	unsigned char *pbyIVHead,
- 	PSKeyItem  pTransmitKey,
-@@ -300,7 +302,7 @@ s_vFillTxKey(
- static
- void
- s_vSWencryption(
--	PSDevice            pDevice,
-+	struct vnt_private *pDevice,
- 	PSKeyItem           pTransmitKey,
- 	unsigned char *pbyPayloadHead,
- 	unsigned short wPayloadSize
-@@ -346,7 +348,7 @@ s_vSWencryption(
- static
- unsigned int
- s_uGetTxRsvTime(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	unsigned int cbFrameLength,
- 	unsigned short wRate,
-@@ -371,7 +373,7 @@ s_uGetTxRsvTime(
- static
- unsigned int
- s_uGetRTSCTSRsvTime(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byRTSRsvType,
- 	unsigned char byPktType,
- 	unsigned int cbFrameLength,
-@@ -409,7 +411,7 @@ s_uGetRTSCTSRsvTime(
- static
- unsigned int
- s_uGetDataDuration(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byDurType,
- 	unsigned int cbFrameLength,
- 	unsigned char byPktType,
-@@ -568,7 +570,7 @@ s_uGetDataDuration(
- static
- unsigned int
- s_uGetRTSCTSDuration(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byDurType,
- 	unsigned int cbFrameLength,
- 	unsigned char byPktType,
-@@ -661,7 +663,7 @@ s_uGetRTSCTSDuration(
- static
- unsigned int
- s_uFillDataHead(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pTxDataHead,
- 	unsigned int cbFrameLength,
-@@ -790,7 +792,7 @@ s_uFillDataHead(
- static
- void
- s_vFillRTSHead(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pvRTS,
- 	unsigned int cbFrameLength,
-@@ -965,7 +967,7 @@ s_vFillRTSHead(
- static
- void
- s_vFillCTSHead(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned int uDMAIdx,
- 	unsigned char byPktType,
- 	void *pvCTS,
-@@ -1063,7 +1065,7 @@ s_vFillCTSHead(
- static
- void
- s_vGenerateTxParameter(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char byPktType,
- 	void *pTxBufHead,
- 	void *pvRrvTime,
-@@ -1169,7 +1171,7 @@ s_vGenerateTxParameter(
- static
- void
- s_vFillFragParameter(
--	PSDevice pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyBuffer,
- 	unsigned int uTxType,
- 	void *pvtdCurr,
-@@ -1205,10 +1207,12 @@ s_vFillFragParameter(
- }
- 
- static unsigned int
--s_cbFillTxBufHead(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyTxBufferAddr,
--		  unsigned int cbFrameBodySize, unsigned int uDMAIdx, PSTxDesc pHeadTD,
--		  PSEthernetHeader psEthHeader, unsigned char *pPacket, bool bNeedEncrypt,
--		  PSKeyItem pTransmitKey, unsigned int uNodeIndex, unsigned int *puMACfragNum)
-+s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
-+		  unsigned char *pbyTxBufferAddr, unsigned int cbFrameBodySize,
-+		  unsigned int uDMAIdx, PSTxDesc pHeadTD,
-+		  PSEthernetHeader psEthHeader, unsigned char *pPacket,
-+		  bool bNeedEncrypt, PSKeyItem pTransmitKey,
-+		  unsigned int uNodeIndex, unsigned int *puMACfragNum)
- {
- 	unsigned int cbMACHdLen;
- 	unsigned int cbFrameSize;
-@@ -1859,8 +1863,9 @@ s_cbFillTxBufHead(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyT
- }
- 
- void
--vGenerateFIFOHeader(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyTxBufferAddr,
--		    bool bNeedEncrypt, unsigned int cbPayloadSize, unsigned int uDMAIdx,
-+vGenerateFIFOHeader(struct vnt_private *pDevice, unsigned char byPktType,
-+		    unsigned char *pbyTxBufferAddr, bool bNeedEncrypt,
-+		    unsigned int cbPayloadSize, unsigned int uDMAIdx,
- 		    PSTxDesc pHeadTD, PSEthernetHeader psEthHeader, unsigned char *pPacket,
- 		    PSKeyItem pTransmitKey, unsigned int uNodeIndex, unsigned int *puMACfragNum,
- 		    unsigned int *pcbHeaderSize)
-@@ -1986,7 +1991,7 @@ vGenerateFIFOHeader(PSDevice pDevice, unsigned char byPktType, unsigned char *pb
- 
- void
- vGenerateMACHeader(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	unsigned char *pbyBufferAddr,
- 	unsigned short wDuration,
- 	PSEthernetHeader psEthHeader,
-@@ -2049,7 +2054,7 @@ vGenerateMACHeader(
- 		pMACHeader->wFrameCtl |= FC_MOREFRAG;
- }
- 
--CMD_STATUS csMgmt_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket)
-+CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
- {
- 	PSTxDesc        pFrstTD;
- 	unsigned char byPktType;
-@@ -2334,7 +2339,7 @@ CMD_STATUS csMgmt_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket)
- 	return CMD_STATUS_PENDING;
- }
- 
--CMD_STATUS csBeacon_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket)
-+CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
- {
- 	unsigned char byPktType;
- 	unsigned char *pbyBuffer = (unsigned char *)pDevice->tx_beacon_bufs;
-@@ -2408,7 +2413,7 @@ CMD_STATUS csBeacon_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket)
- 
- unsigned int
- cbGetFragCount(
--	PSDevice         pDevice,
-+	struct vnt_private *pDevice,
- 	PSKeyItem        pTransmitKey,
- 	unsigned int cbFrameBodySize,
- 	PSEthernetHeader psEthHeader
-@@ -2485,8 +2490,9 @@ cbGetFragCount(
- 	return uMACfragNum;
- }
- 
--void
--vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb, unsigned char *pbMPDU, unsigned int cbMPDULen) {
-+void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb,
-+		    unsigned char *pbMPDU, unsigned int cbMPDULen)
++static inline const char *ath10k_pci_get_irq_method(struct ath10k *ar)
 +{
- 	PSTxDesc        pFrstTD;
- 	unsigned char byPktType;
- 	unsigned char *pbyTxBufferAddr;
-diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
-index a9a8ede..26baf3b 100644
---- a/drivers/staging/vt6655/rxtx.h
-+++ b/drivers/staging/vt6655/rxtx.h
-@@ -58,7 +58,7 @@ struct vnt_mic_hdr {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	if (ar_pci->num_msi_intrs > 1)
++		return "msi-x";
++	else if (ar_pci->num_msi_intrs == 1)
++		return "msi";
++	else
++		return "legacy";
++}
++
+ /*
+  * Diagnostic read/write access is provided for startup/config/debug usage.
+  * Caller must guarantee proper alignment, when applicable, and single user
+@@ -1922,8 +1934,6 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
  
- void
- vGenerateMACHeader(
--	PSDevice         pDevice,
-+	struct vnt_private *,
- 	unsigned char *pbyBufferAddr,
- 	unsigned short wDuration,
- 	PSEthernetHeader psEthHeader,
-@@ -70,20 +70,24 @@ vGenerateMACHeader(
+ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	const char *irq_mode;
+ 	int ret;
  
- unsigned int
- cbGetFragCount(
--	PSDevice         pDevice,
-+	struct vnt_private *,
- 	PSKeyItem        pTransmitKey,
- 	unsigned int	cbFrameBodySize,
- 	PSEthernetHeader psEthHeader
- );
+ 	/*
+@@ -1952,22 +1962,10 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+ 		goto err;
+ 	}
  
- void
--vGenerateFIFOHeader(PSDevice pDevice, unsigned char byPktTyp, unsigned char *pbyTxBufferAddr,
--		    bool bNeedEncrypt, unsigned int	cbPayloadSize, unsigned int uDMAIdx, PSTxDesc pHeadTD,
--		    PSEthernetHeader psEthHeader, unsigned char *pPacket, PSKeyItem pTransmitKey,
--		    unsigned int uNodeIndex, unsigned int *puMACfragNum, unsigned int *pcbHeaderSize);
-+vGenerateFIFOHeader(struct vnt_private *, unsigned char byPktTyp,
-+		    unsigned char *pbyTxBufferAddr, bool bNeedEncrypt,
-+		    unsigned int cbPayloadSize, unsigned int uDMAIdx,
-+		    PSTxDesc pHeadTD, PSEthernetHeader psEthHeader,
-+		    unsigned char *pPacket, PSKeyItem pTransmitKey,
-+		    unsigned int uNodeIndex, unsigned int *puMACfragNum,
-+		    unsigned int *pcbHeaderSize);
+-	ret = ath10k_ce_disable_interrupts(ar);
+-	if (ret) {
+-		ath10k_err("failed to disable CE interrupts: %d\n", ret);
+-		goto err_ce;
+-	}
+-
+-	ret = ath10k_pci_init_irq(ar);
+-	if (ret) {
+-		ath10k_err("failed to init irqs: %d\n", ret);
+-		goto err_ce;
+-	}
+-
+ 	ret = ath10k_pci_request_early_irq(ar);
+ 	if (ret) {
+ 		ath10k_err("failed to request early irq: %d\n", ret);
+-		goto err_deinit_irq;
++		goto err_ce;
+ 	}
  
--void vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb, unsigned char *pbMPDU, unsigned int cbMPDULen);
--CMD_STATUS csMgmt_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket);
--CMD_STATUS csBeacon_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket);
-+void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb,
-+		    unsigned char *pbMPDU, unsigned int cbMPDULen);
-+CMD_STATUS csMgmt_xmit(struct vnt_private *, PSTxMgmtPacket pPacket);
-+CMD_STATUS csBeacon_xmit(struct vnt_private *, PSTxMgmtPacket pPacket);
+ 	ret = ath10k_pci_wait_for_target_init(ar);
+@@ -1988,24 +1986,10 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+ 		goto err_free_early_irq;
+ 	}
  
- #endif // __RXTX_H__
+-	if (ar_pci->num_msi_intrs > 1)
+-		irq_mode = "MSI-X";
+-	else if (ar_pci->num_msi_intrs == 1)
+-		irq_mode = "MSI";
+-	else
+-		irq_mode = "legacy";
+-
+-	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
+-		ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
+-			    irq_mode, ath10k_pci_irq_mode,
+-			    ath10k_pci_reset_mode);
+-
+ 	return 0;
+ 
+ err_free_early_irq:
+ 	ath10k_pci_free_early_irq(ar);
+-err_deinit_irq:
+-	ath10k_pci_deinit_irq(ar);
+ err_ce:
+ 	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_warm_reset(ar);
+@@ -2076,8 +2060,6 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 
+ 	ath10k_pci_free_early_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+-	ath10k_pci_deinit_irq(ar);
+-	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_warm_reset(ar);
+ }
+ 
+@@ -2369,8 +2351,7 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
+ 
+ 	ath10k_pci_init_irq_tasklets(ar);
+ 
+-	if (ath10k_pci_irq_mode != ATH10K_PCI_IRQ_AUTO &&
+-	    !test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
++	if (ath10k_pci_irq_mode != ATH10K_PCI_IRQ_AUTO)
+ 		ath10k_info("limiting irq mode to: %d\n", ath10k_pci_irq_mode);
+ 
+ 	/* Try MSI-X */
+@@ -2655,14 +2636,36 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_sleep;
+ 	}
+ 
++	ath10k_pci_ce_deinit(ar);
++
++	ret = ath10k_ce_disable_interrupts(ar);
++	if (ret) {
++		ath10k_err("failed to disable copy engine interrupts: %d\n",
++			   ret);
++		goto err_free_ce;
++	}
++
++	ret = ath10k_pci_init_irq(ar);
++	if (ret) {
++		ath10k_err("failed to init irqs: %d\n", ret);
++		goto err_free_ce;
++	}
++
++	ath10k_info("pci irq %s interrupts %d irq_mode %d reset_mode %d\n",
++		    ath10k_pci_get_irq_method(ar), ar_pci->num_msi_intrs,
++		    ath10k_pci_irq_mode, ath10k_pci_reset_mode);
++
+ 	ret = ath10k_core_register(ar, chip_id);
+ 	if (ret) {
+ 		ath10k_err("failed to register driver core: %d\n", ret);
+-		goto err_free_ce;
++		goto err_deinit_irq;
+ 	}
+ 
+ 	return 0;
+ 
++err_deinit_irq:
++	ath10k_pci_deinit_irq(ar);
++
+ err_free_ce:
+ 	ath10k_pci_free_ce(ar);
+ 
+@@ -2694,6 +2697,8 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 		return;
+ 
+ 	ath10k_core_unregister(ar);
++	ath10k_pci_deinit_irq(ar);
++	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_free_ce(ar);
+ 	ath10k_pci_sleep(ar);
+ 	ath10k_pci_release(ar);
 -- 
-1.9.1
+1.8.5.3
 
