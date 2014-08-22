@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56328 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750726AbaHCEGn convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:52619 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932469AbaHVRyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2014 00:06:43 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: pull request: wireless-next 2014-08-01
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20140802.193939.2179004210212543536.davem@davemloft.net>
-Date: Sat, 2 Aug 2014 21:06:49 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <C1E000CB-3DC7-458D-B249-8EE08A8072DD@holtmann.org> (sfid-20140803_060704_052449_901EE935)
-References: <20140801165738.GA26953@tuxdriver.com> <20140802.193939.2179004210212543536.davem@davemloft.net>
-To: "David S. Miller" <davem@davemloft.net>
+	Fri, 22 Aug 2014 13:54:06 -0400
+Date: Fri, 22 Aug 2014 10:54:05 -0700 (PDT)
+Message-Id: <20140822.105405.1982870131653082781.davem@davemloft.net> (sfid-20140822_195412_255507_7935DB4F)
+To: ja@ssi.bg
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, johannes.berg@intel.com
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
+	<alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Julian Anastasov <ja@ssi.bg>
+Date: Thu, 21 Aug 2014 22:51:02 +0300 (EEST)
 
->> Please pull this last(?) batch of wireless change intended for the
->> 3.17 stream...
+>>  	if (res.type == RTN_BROADCAST)
+>>  		goto brd_input;
 > 
-> When I pull this I get tons of conflicts for:
+> 	Is this place better, after checking for RTN_BROADCAST?
 > 
-> CONFLICT (content): Merge conflict in net/6lowpan/iphc.c
-> 
-> I don't feel comfortable fixing these up, where are they coming
-> from?
+> 	/* ARP link-layer broadcasts are acceptable here */
+> 	if ((skb->pkt_type == PACKET_BROADCAST ||
+> 	     skb->pkt_type == PACKET_MULTICAST) &&
+> 	    skb->protocol == htons(ETH_P_IP))
+> 		goto e_inval;
 
-they are coding style fixes to bring net/6lowpan/ in sync with net subsystem coding style. That code is still a bit outdated. I took a first stab at fixing the obvious mistakes.
-
-Regards
-
-Marcel
-
+Indeed, this would make ARP happier, but that still leaves open the
+issue of CLUSTERIP.
