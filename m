@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:41128 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:58134 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbaHUPGZ (ORCPT
+	with ESMTP id S1750827AbaHVERp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 11:06:25 -0400
+	Fri, 22 Aug 2014 00:17:45 -0400
 From: Sujith Manoharan <sujith@msujith.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Add debug information
-Date: Thu, 21 Aug 2014 20:36:22 +0530
-Message-Id: <1408633582-6378-1-git-send-email-sujith@msujith.org> (sfid-20140821_170629_052360_EC46970E)
+Subject: [PATCH v2] ath9k: Add debug information
+Date: Fri, 22 Aug 2014 09:47:48 +0530
+Message-Id: <1408681068-14633-1-git-send-email-sujith@msujith.org> (sfid-20140822_061749_401168_685F52EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -19,32 +19,41 @@ Add a few statements to debug channel context operation.
 
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 54 ++++++++++++++++++++++-
+v2: Changes based on Joe Perches' comments.
+
+ drivers/net/wireless/ath/ath9k/channel.c | 61 +++++++++++++++++++++++++-
  drivers/net/wireless/ath/ath9k/main.c    | 73 +++++++++++++++++++++++++++-----
- 2 files changed, 115 insertions(+), 12 deletions(-)
+ 2 files changed, 122 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 0ce9e40..da5b522 100644
+index 0ce9e40..2f10b0c 100644
 --- a/drivers/net/wireless/ath/ath9k/channel.c
 +++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -16,6 +16,16 @@
+@@ -16,6 +16,23 @@
  
  #include "ath9k.h"
  
-+static const char *offchannel_state[] = {
-+	"ATH_OFFCHANNEL_IDLE",
-+	"ATH_OFFCHANNEL_PROBE_SEND",
-+	"ATH_OFFCHANNEL_PROBE_WAIT",
-+	"ATH_OFFCHANNEL_SUSPEND",
-+	"ATH_OFFCHANNEL_ROC_START",
-+	"ATH_OFFCHANNEL_ROC_WAIT",
-+	"ATH_OFFCHANNEL_ROC_DONE",
-+};
++static const char *offchannel_state_string(enum ath_offchannel_state state)
++{
++#define case_rtn_string(val) case val: return #val
++
++	switch (state) {
++		case_rtn_string(ATH_OFFCHANNEL_IDLE);
++		case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
++		case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
++		case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_START);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
++	default:
++		return "unknown";
++	}
++}
 +
  /* Set/change channels.  If the channel is really being changed, it's done
   * by reseting the chip.  To accomplish this we must first cleanup any pending
   * DMA, then restart stuff.
-@@ -373,13 +383,23 @@ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+@@ -373,13 +390,23 @@ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
  	}
  
  	sc->next_chan = ctx;
@@ -69,7 +78,7 @@ index 0ce9e40..da5b522 100644
  	}
  	spin_unlock_bh(&sc->chan_lock);
  	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
-@@ -422,9 +442,12 @@ struct ath_chanctx *ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active)
+@@ -422,9 +449,12 @@ struct ath_chanctx *ath_chanctx_get_oper_chan(struct ath_softc *sc, bool active)
  void ath_chanctx_offchan_switch(struct ath_softc *sc,
  				struct ieee80211_channel *chan)
  {
@@ -82,7 +91,7 @@ index 0ce9e40..da5b522 100644
  
  	ath_chanctx_switch(sc, &sc->offchannel.chan, &chandef);
  }
-@@ -698,19 +721,30 @@ static int ath_scan_channel_duration(struct ath_softc *sc,
+@@ -698,19 +728,30 @@ static int ath_scan_channel_duration(struct ath_softc *sc,
  static void
  ath_scan_next_channel(struct ath_softc *sc)
  {
@@ -113,7 +122,7 @@ index 0ce9e40..da5b522 100644
  	ath_chanctx_offchan_switch(sc, chan);
  }
  
-@@ -751,6 +785,11 @@ void ath_scan_complete(struct ath_softc *sc, bool abort)
+@@ -751,6 +792,11 @@ void ath_scan_complete(struct ath_softc *sc, bool abort)
  {
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
  
@@ -125,7 +134,7 @@ index 0ce9e40..da5b522 100644
  	sc->offchannel.scan_req = NULL;
  	sc->offchannel.scan_vif = NULL;
  	sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
-@@ -800,6 +839,7 @@ error:
+@@ -800,6 +846,7 @@ error:
  
  static void ath_scan_channel_start(struct ath_softc *sc)
  {
@@ -133,7 +142,7 @@ index 0ce9e40..da5b522 100644
  	struct cfg80211_scan_request *req = sc->offchannel.scan_req;
  	int i;
  
-@@ -810,12 +850,20 @@ static void ath_scan_channel_start(struct ath_softc *sc)
+@@ -810,12 +857,20 @@ static void ath_scan_channel_start(struct ath_softc *sc)
  
  	}
  
@@ -149,19 +158,19 @@ index 0ce9e40..da5b522 100644
 +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
 +
 +	ath_dbg(common, CHAN_CTX, "%s: state: %s\n",
-+		__func__, offchannel_state[sc->offchannel.state]);
++		__func__, offchannel_state_string(sc->offchannel.state));
 +
  	switch (sc->offchannel.state) {
  	case ATH_OFFCHANNEL_PROBE_SEND:
  		if (!sc->offchannel.scan_req)
-@@ -854,6 +902,10 @@ void ath_offchannel_timer(unsigned long data)
+@@ -854,6 +909,10 @@ void ath_offchannel_timer(unsigned long data)
  {
  	struct ath_softc *sc = (struct ath_softc *)data;
  	struct ath_chanctx *ctx;
 +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
 +
 +	ath_dbg(common, CHAN_CTX, "%s: state: %s\n",
-+		__func__, offchannel_state[sc->offchannel.state]);
++		__func__, offchannel_state_string(sc->offchannel.state));
  
  	switch (sc->offchannel.state) {
  	case ATH_OFFCHANNEL_PROBE_WAIT:
