@@ -1,131 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51118 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963AbaHISI0 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:48320 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413AbaHVGp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:08:26 -0400
-Subject: [PATCH v6 4/8] ath10k: save firmware stack upon firmware crash
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 09 Aug 2014 21:08:21 +0300
-Message-ID: <20140809180821.29215.20198.stgit@potku.adurom.net> (sfid-20140809_200830_034128_93018556)
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
+	Fri, 22 Aug 2014 02:45:29 -0400
+Received: by mail-wi0-f174.google.com with SMTP id d1so9698964wiv.13
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 23:45:28 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: only map wrapper if its address is available
+Date: Fri, 22 Aug 2014 08:44:52 +0200
+Message-Id: <1408689892-7617-1-git-send-email-zajec5@gmail.com> (sfid-20140822_084532_746021_D7609317)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Hauke Mehrtens <hauke@hauke-m.de>
 
-Should help debug firmware crashes, and give users a way
-to provide some useful debug reports to firmware developers.
+The Chipcommon B core does not have a wrap address and it would fail here.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h  |    1 +
- drivers/net/wireless/ath/ath10k/debug.c |   11 +++++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |    1 +
- drivers/net/wireless/ath/ath10k/pci.c   |   13 +++++++++++++
- 4 files changed, 26 insertions(+)
+ drivers/bcma/host_soc.c |  4 ++++
+ drivers/bcma/scan.c     | 11 +++++++----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 77fb36d378c8..a7634adea320 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -301,6 +301,7 @@ struct ath10k_fw_crash_data {
- 	struct timespec timestamp;
- 	struct ath10k_dbglog_entry_storage dbglog_entry_data;
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
-+	u8 stack_buf[ATH10K_FW_STACK_SIZE];
- };
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 3475e60..1edd7e0 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -134,12 +134,16 @@ static void bcma_host_soc_block_write(struct bcma_device *core,
  
- struct ath10k_debug {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index d6b49a9e1585..66bec22d6bc3 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -31,10 +31,12 @@
-  * enum ath10k_fw_crash_dump_type - types of data in the dump file
-  * @ATH10K_FW_CRASH_DUMP_DBGLOG:  Recent firmware debug log entries
-  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
-+ * @ATH10K_FW_CRASH_DUMP_STACK:   Stack memory contents.
-  */
- enum ath10k_fw_crash_dump_type {
- 	ATH10K_FW_CRASH_DUMP_DBGLOG = 0,
- 	ATH10K_FW_CRASH_DUMP_REGDUMP = 1,
-+	ATH10K_FW_CRASH_DUMP_STACK = 2,
- 
- 	ATH10K_FW_CRASH_DUMP_MAX,
- };
-@@ -724,6 +726,7 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len = hdr_len;
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->reg_dump_values);
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->dbglog_entry_data);
-+	len += sizeof(*dump_tlv) + sizeof(crash_data->stack_buf);
- 
- 	sofar += hdr_len;
- 
-@@ -790,8 +793,16 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	       dump_tlv->tlv_len);
- 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
- 
-+	/* Gather firmware stack dump */
-+	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+	dump_tlv->type = ATH10K_FW_CRASH_DUMP_STACK;
-+	dump_tlv->tlv_len = sizeof(crash_data->stack_buf);
-+	memcpy(dump_tlv->tlv_data, crash_data->stack_buf, dump_tlv->tlv_len);
-+	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+
- 	spin_unlock_bh(&ar->data_lock);
- 
-+	WARN_ON(sofar != len);
- 	return dump_data;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index c391c88096ee..9c602b0d7277 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -40,6 +40,7 @@
- #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
- 
- #define REG_DUMP_COUNT_QCA988X 60
-+#define ATH10K_FW_STACK_SIZE 4096
- 
- struct ath10k_fw_ie {
- 	__le32 id;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 99e0bd0c4f4a..8fcc219cd1e9 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -867,6 +867,18 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
- }
- 
-+/* Save the main firmware stack */
-+static void ath10k_pci_dump_stack(struct ath10k *ar,
-+				  struct ath10k_fw_crash_data *crash_data)
-+{
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
-+
-+	ath10k_pci_diag_read_hi(ar, crash_data->stack_buf,
-+				hi_stack, ATH10K_FW_STACK_SIZE);
-+}
-+
- static void ath10k_pci_dump_dbglog(struct ath10k *ar,
- 				   struct ath10k_fw_crash_data *crash_data)
+ static u32 bcma_host_soc_aread32(struct bcma_device *core, u16 offset)
  {
-@@ -1010,6 +1022,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 	if (!crash_data)
- 		goto exit;
++	if (WARN_ONCE(!core->io_wrap, "Accessed core has no wrapper/agent\n"))
++		return ~0;
+ 	return readl(core->io_wrap + offset);
+ }
  
-+	ath10k_pci_dump_stack(ar, crash_data);
- 	ath10k_pci_dump_registers(ar, crash_data);
- 	ath10k_pci_dump_dbglog(ar, crash_data);
+ static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
+ 				  u32 value)
+ {
++	if (WARN_ONCE(!core->io_wrap, "Accessed core has no wrapper/agent\n"))
++		return;
+ 	writel(value, core->io_wrap + offset);
+ }
  
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index b4764c6..e9bd772 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -421,10 +421,13 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		core->io_addr = ioremap_nocache(core->addr, BCMA_CORE_SIZE);
+ 		if (!core->io_addr)
+ 			return -ENOMEM;
+-		core->io_wrap = ioremap_nocache(core->wrap, BCMA_CORE_SIZE);
+-		if (!core->io_wrap) {
+-			iounmap(core->io_addr);
+-			return -ENOMEM;
++		if (core->wrap) {
++			core->io_wrap = ioremap_nocache(core->wrap,
++							BCMA_CORE_SIZE);
++			if (!core->io_wrap) {
++				iounmap(core->io_addr);
++				return -ENOMEM;
++			}
+ 		}
+ 	}
+ 	return 0;
+-- 
+1.8.4.5
 
