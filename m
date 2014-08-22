@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:10169 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756639AbaHHQpd (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:54423 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756184AbaHVNSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 12:45:33 -0400
-Message-ID: <53E4FEA9.80803@broadcom.com> (sfid-20140808_184606_497048_EB4276B3)
-Date: Fri, 8 Aug 2014 18:45:29 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>,
-	Dave Taht <dave.taht@gmail.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: Reporting firmware stats to ethtool
-References: <53E3F65D.8080102@candelatech.com> <87wqajz6yg.fsf@kamboji.qca.qualcomm.com> <53E4EFCB.5090501@candelatech.com> <CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com> <53E4F6B8.50009@candelatech.com>
-In-Reply-To: <53E4F6B8.50009@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Fri, 22 Aug 2014 09:18:22 -0400
+Received: by mail-ig0-f172.google.com with SMTP id h15so14885959igd.5
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 06:18:22 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, mickflemm@gmail.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath5k: remove redundant null check before kfree()
+Date: Fri, 22 Aug 2014 09:18:02 -0400
+Message-Id: <1408713482-7917-3-git-send-email-me@bobcopeland.com> (sfid-20140822_151827_550114_1DC2DEA5)
+In-Reply-To: <1408713482-7917-1-git-send-email-me@bobcopeland.com>
+References: <1408713482-7917-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2014 06:11 PM, Ben Greear wrote:
-> On 08/08/2014 08:55 AM, Dave Taht wrote:
->> On Fri, Aug 8, 2014 at 8:42 AM, Ben Greear <greearb@candelatech.com> wrote:
->>> On 08/08/2014 02:06 AM, Kalle Valo wrote:
->>>> Ben Greear <greearb@candelatech.com> writes:
->>>>
->>>>> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
->>>>> as ethtool stats, somewhat similar to how ath9k does it.
->>>>>
->>>>> I notice that my user-space tool is reporting huge numbers because
->>>>> the stats are reset to zero when firmware restarts, and so my tool
->>>>> thinks the stats wrapped.
->>>>>
->>>>> I can fix my tool easily enough, but I first wanted to see if
->>>>> anyone had strong feelings about keeping the stats from resetting
->>>>> to zero by storing history and calculating diffs in the driver.
->>>>>
->>>>> I think my preference is to punt this to user-space, but if
->>>>> someone feels otherwise, please let me know sooner than later.
->>>>
->>>> I also prefer to have this in user space, but how does user space know
->>>> when the stats have been zeroed?
->>>
->>> Poll often enough that it cannot increment more than 2 billion (or other large number)
->>> between polls, and then if polled value is less than previous (and difference is > 2 billion),
->>> we know we had a reset and not a wrap.
->>
->> I do kind of prefer 64 bit counters in the general case. Nuke it from
->> orbit, it's the only way to be sure.
->
-> It's 64-bit to user-space, but that means nothing because firmware
-> uses 32-bit (or even 16 bit in some cases, probably) internally.
-> A great deal of counters are the same, so be very careful when
-> trying to keep long term counters grabbed from firmware/drivers/hardware.
->
-> And, stations come and go when you re-associate, so all sorts of wifi counters
-> reset themselves all the time...
+kfree() null-checks its argument.
+Found by smatch.
 
-Does ath driver notify mac80211 about firmware restart, ie. through 
-ieee80211_restart_hw(). If only user-space could get that info.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/attach.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Gr. AvS
-
-> Thanks,
-> Ben
->
->>
->>> User-space stats will not be perfect in the case of firmware resets, or resets
->>> after the 'large number', but nothing is going to make it perfect, and in
->>> practice, this seems good enough.
->>>
->>> Thanks,
->>> Ben
->>>
->>> --
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>>
->>> _______________________________________________
->>> ath10k mailing list
->>> ath10k@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/ath10k
->>
->>
->>
->
->
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 7106547..66b6366 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -351,8 +351,7 @@ void ath5k_hw_deinit(struct ath5k_hw *ah)
+ {
+ 	__set_bit(ATH_STAT_INVALID, ah->status);
+ 
+-	if (ah->ah_rf_banks != NULL)
+-		kfree(ah->ah_rf_banks);
++	kfree(ah->ah_rf_banks);
+ 
+ 	ath5k_eeprom_detach(ah);
+ 
+-- 
+1.7.10.4
 
