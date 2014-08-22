@@ -1,152 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55170 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbaHDIW3 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58590 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932092AbaHVPJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 04:22:29 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/14] wil6210: Optimization for Interrupt moderation threshold value
-Date: Mon, 4 Aug 2014 11:20:44 +0300
-Message-ID: <1407140454-31639-5-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102233_221817_35325E31)
-In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 22 Aug 2014 11:09:57 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 6/8] ath9k: Move P2P functions to channel.c
+Date: Fri, 22 Aug 2014 20:39:29 +0530
+Message-Id: <1408720171-9765-7-git-send-email-sujith@msujith.org> (sfid-20140822_171001_261598_90C8DFC5)
+In-Reply-To: <1408720171-9765-1-git-send-email-sujith@msujith.org>
+References: <1408720171-9765-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Default value was changed to 50000 (~3 IRQs/msec) in order to reduce
-significantly CPU usage without degradation in throughput.
-Added module parameter named "itr_trsh" that allows the user to change
-default value through insmod.
-Added entry in debugfs (itr_trsh_val) for changing interrupt moderation
-threshold in a single operation.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c   | 50 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/interrupt.c |  8 ++++-
- drivers/net/wireless/ath/wil6210/wil6210.h   |  2 +-
- 3 files changed, 57 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 86 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/main.c    | 87 --------------------------------
+ 3 files changed, 87 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index fb802bd..3990a2d 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -24,6 +24,12 @@
- #include "wil6210.h"
- #include "txrx.h"
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 17b198e..aea3979 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -601,6 +601,7 @@ void ath_update_survey_nf(struct ath_softc *sc, int channel);
+ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
+ void ath_ps_full_sleep(unsigned long data);
+ void ath9k_p2p_ps_timer(void *priv);
++void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp);
+ void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
  
-+/* Max threshold supported value by wil6210 is 5sec.
-+ * The interrupt moderation counter counts down every clock tick of 6nsec.
-+ * Therefore max value for ITR_CNT_TRSH can be 5sec/6nsec = 833333333
-+ */
-+#define WIL6210_ITR_TRSH_MAX 833333333
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2f10b0c..77bf005 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -944,3 +944,89 @@ void ath_offchannel_timer(unsigned long data)
+ 		break;
+ 	}
+ }
 +
- /* Nasty hack. Better have per device instances */
- static u32 mem_addr;
- static u32 dbg_txdesc_index;
-@@ -270,6 +276,48 @@ static struct dentry *wil_debugfs_create_ulong(const char *name, umode_t mode,
- 	return debugfs_create_file(name, mode, parent, value, &wil_fops_ulong);
++void ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	s32 tsf, target_tsf;
++
++	if (!avp || !avp->noa.has_next_tsf)
++		return;
++
++	ath9k_hw_gen_timer_stop(ah, sc->p2p_ps_timer);
++
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++
++	target_tsf = avp->noa.next_tsf;
++	if (!avp->noa.absent)
++		target_tsf -= ATH_P2P_PS_STOP_TIME;
++
++	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
++		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
++
++	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, (u32) target_tsf, 1000000);
++}
++
++void ath9k_p2p_ps_timer(void *priv)
++{
++	struct ath_softc *sc = priv;
++	struct ath_vif *avp = sc->p2p_ps_vif;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
++	struct ath_node *an;
++	u32 tsf;
++
++	del_timer_sync(&sc->sched.timer);
++	ath9k_hw_gen_timer_stop(sc->sc_ah, sc->p2p_ps_timer);
++	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_TSF_TIMER);
++
++	if (!avp || avp->chanctx != sc->cur_chan)
++		return;
++
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++	if (!avp->noa.absent)
++		tsf += ATH_P2P_PS_STOP_TIME;
++
++	if (!avp->noa.has_next_tsf ||
++	    avp->noa.next_tsf - tsf > BIT(31))
++		ieee80211_update_p2p_noa(&avp->noa, tsf);
++
++	ath9k_update_p2p_ps_timer(sc, avp);
++
++	rcu_read_lock();
++
++	vif = avp->vif;
++	sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
++	if (!sta)
++		goto out;
++
++	an = (void *) sta->drv_priv;
++	if (an->sleeping == !!avp->noa.absent)
++		goto out;
++
++	an->sleeping = avp->noa.absent;
++	if (an->sleeping)
++		ath_tx_aggr_sleep(sta, sc, an);
++	else
++		ath_tx_aggr_wakeup(sc, an);
++
++out:
++	rcu_read_unlock();
++}
++
++void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
++{
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	u32 tsf;
++
++	if (!sc->p2p_ps_timer)
++		return;
++
++	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
++		return;
++
++	sc->p2p_ps_vif = avp;
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++	ieee80211_parse_p2p_noa(&vif->bss_conf.p2p_noa_attr, &avp->noa, tsf);
++	ath9k_update_p2p_ps_timer(sc, avp);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 194895b..dd2d52e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1202,29 +1202,6 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	return 0;
  }
  
-+static int wil_debugfs_itr_trsh_set(void *data, u64 val)
-+{
-+	struct wil6210_priv *wil = data;
-+
-+	/* Check value is smaller than max val limitation
-+	 * (covers also negative values)
-+	 */
-+	if (val > WIL6210_ITR_TRSH_MAX)
-+		return -EINVAL;
-+
-+	/* Perform interrupt moderation threshold update procedure */
-+	iowrite32(0, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-+	wmb(); /* make sure write propagated to HW */
-+
-+	iowrite32((u32)val, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
-+	wmb(); /* make sure write propagated to HW */
-+
-+	iowrite32(BIT_DMA_ITR_CNT_CRL_EN,
-+		  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-+	wmb(); /* make sure write propagated to HW */
-+
-+	return 0;
-+}
-+
-+static int wil_debugfs_itr_trsh_get(void *data, u64 *val)
-+{
-+	struct wil6210_priv *wil = data;
-+	*val = ioread32(wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
-+	return 0;
-+}
-+
-+DEFINE_SIMPLE_ATTRIBUTE(fops_itr_trsh, wil_debugfs_itr_trsh_get,
-+			wil_debugfs_itr_trsh_set, "0x%08llx\n");
-+
-+static struct dentry *debugfs_create_itr_trsh(const char *name,
-+					      umode_t mode,
-+					      struct dentry *parent,
-+					      struct wil6210_priv *wil)
-+{
-+	return debugfs_create_file(name, mode, parent, wil, &fops_itr_trsh);
-+}
-+
- static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
- 				      const char *name,
- 				      struct dentry *parent, u32 off)
-@@ -1024,7 +1072,7 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 	wil_debugfs_create_iomem_x32("MAC_MTRL_COUNTER_0", S_IRUGO, dbg,
- 				     wil->csr +
- 				     HOSTADDR(RGF_MAC_MTRL_COUNTER_0));
+-static void
+-ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	s32 tsf, target_tsf;
 -
-+	debugfs_create_itr_trsh("itr_trsh_val", S_IRUGO | S_IWUSR, dbg, wil);
- 	wil_debugfs_create_iomem_x32("RGF_USER_USAGE_1", S_IRUGO, dbg,
- 				     wil->csr +
- 				     HOSTADDR(RGF_USER_USAGE_1));
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 98bfbb6..1f18e86 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -18,6 +18,12 @@
+-	if (!avp || !avp->noa.has_next_tsf)
+-		return;
+-
+-	ath9k_hw_gen_timer_stop(ah, sc->p2p_ps_timer);
+-
+-	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+-
+-	target_tsf = avp->noa.next_tsf;
+-	if (!avp->noa.absent)
+-		target_tsf -= ATH_P2P_PS_STOP_TIME;
+-
+-	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
+-		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
+-
+-	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, (u32) target_tsf, 1000000);
+-}
+-
+ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+@@ -1687,70 +1664,6 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 	return ret;
+ }
  
- #include "wil6210.h"
- #include "trace.h"
-+#include <linux/moduleparam.h>
-+
-+static unsigned int itr_trsh = WIL6210_ITR_TRSH;
-+
-+module_param(itr_trsh, uint, S_IRUGO);
-+MODULE_PARM_DESC(itr_trsh, " Interrupt moderation threshold value.");
- 
- /**
-  * Theory of operation:
-@@ -163,7 +169,7 @@ void wil6210_enable_irq(struct wil6210_priv *wil)
- 		 */
- 		iowrite32(0, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
- 	} else {
--		iowrite32(WIL6210_ITR_TRSH,
-+		iowrite32((u32)itr_trsh,
- 			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
- 		iowrite32(BIT_DMA_ITR_CNT_CRL_EN,
- 			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 0097300..47d656a 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -47,7 +47,7 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
- #define WIL6210_MAX_CID		(8) /* HW limit */
- #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
--#define WIL6210_ITR_TRSH	(10000) /* arbitrary - about 15 IRQs/msec */
-+#define WIL6210_ITR_TRSH	(50000) /* about 3 IRQs/msec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
- #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
- #define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
+-void ath9k_p2p_ps_timer(void *priv)
+-{
+-	struct ath_softc *sc = priv;
+-	struct ath_vif *avp = sc->p2p_ps_vif;
+-	struct ieee80211_vif *vif;
+-	struct ieee80211_sta *sta;
+-	struct ath_node *an;
+-	u32 tsf;
+-
+-	del_timer_sync(&sc->sched.timer);
+-	ath9k_hw_gen_timer_stop(sc->sc_ah, sc->p2p_ps_timer);
+-	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_TSF_TIMER);
+-
+-	if (!avp || avp->chanctx != sc->cur_chan)
+-		return;
+-
+-	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+-	if (!avp->noa.absent)
+-		tsf += ATH_P2P_PS_STOP_TIME;
+-
+-	if (!avp->noa.has_next_tsf ||
+-	    avp->noa.next_tsf - tsf > BIT(31))
+-		ieee80211_update_p2p_noa(&avp->noa, tsf);
+-
+-	ath9k_update_p2p_ps_timer(sc, avp);
+-
+-	rcu_read_lock();
+-
+-	vif = avp->vif;
+-	sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
+-	if (!sta)
+-		goto out;
+-
+-	an = (void *) sta->drv_priv;
+-	if (an->sleeping == !!avp->noa.absent)
+-		goto out;
+-
+-	an->sleeping = avp->noa.absent;
+-	if (an->sleeping)
+-		ath_tx_aggr_sleep(sta, sc, an);
+-	else
+-		ath_tx_aggr_wakeup(sc, an);
+-
+-out:
+-	rcu_read_unlock();
+-}
+-
+-void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
+-{
+-	struct ath_vif *avp = (void *)vif->drv_priv;
+-	u32 tsf;
+-
+-	if (!sc->p2p_ps_timer)
+-		return;
+-
+-	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
+-		return;
+-
+-	sc->p2p_ps_vif = avp;
+-	tsf = ath9k_hw_gettsf32(sc->sc_ah);
+-	ieee80211_parse_p2p_noa(&vif->bss_conf.p2p_noa_attr, &avp->noa, tsf);
+-	ath9k_update_p2p_ps_timer(sc, avp);
+-}
+-
+ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_bss_conf *bss_conf,
 -- 
-1.8.5.2
+2.0.4
 
