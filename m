@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29881 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaHDIWt (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:54393 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932092AbaHVPJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 04:22:49 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 14/14] wil6210: fix access after free in wil_pcie_remove()
-Date: Mon, 4 Aug 2014 11:20:54 +0300
-Message-ID: <1407140454-31639-15-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102907_165892_E1BADB38)
-In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 22 Aug 2014 11:09:40 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 2/8] ath9k: Handle failure to allocate HW timer
+Date: Fri, 22 Aug 2014 20:39:25 +0530
+Message-Id: <1408720171-9765-3-git-send-email-sujith@msujith.org> (sfid-20140822_170943_171541_3E622DFA)
+In-Reply-To: <1408720171-9765-1-git-send-email-sujith@msujith.org>
+References: <1408720171-9765-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-'wil'  released in wil_if_free(); save iomapped address aside to
-properly unmap it.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/init.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index cf0b219..38dcbea 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -218,12 +218,13 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- static void wil_pcie_remove(struct pci_dev *pdev)
- {
- 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-+	void __iomem *csr = wil->csr;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 76771f3..4219e7b 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -601,7 +601,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		goto err_btcoex;
  
- 	wil6210_debugfs_remove(wil);
- 	wil_if_pcie_disable(wil);
- 	wil_if_remove(wil);
- 	wil_if_free(wil);
--	pci_iounmap(pdev, wil->csr);
-+	pci_iounmap(pdev, csr);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
- }
+ 	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
+-		NULL, sc, AR_FIRST_NDP_TIMER);
++					       NULL, sc, AR_FIRST_NDP_TIMER);
++	if (!sc->p2p_ps_timer)
++		goto err_btcoex;
+ 
+ 	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_init_misc(sc);
 -- 
-1.8.5.2
+2.0.4
 
