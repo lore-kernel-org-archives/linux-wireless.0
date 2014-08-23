@@ -1,39 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58624 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751840AbaH2LNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 07:13:02 -0400
-Message-ID: <1409310778.4577.19.camel@jlt4.sipsolutions.net> (sfid-20140829_131307_375511_1A8CBE73)
-Subject: Re: [PATCH] mac80211: Parse IEEE80211_RADIOTAP_RATE on TX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Fri, 29 Aug 2014 13:12:58 +0200
-In-Reply-To: <1408953158.8665.15.camel@umadbro> (sfid-20140825_095240_526526_2294AD5F)
-References: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140710_142756_935664_A8B88F97) <1405938028.32255.17.camel@jlt4.sipsolutions.net>
-	 <1408953158.8665.15.camel@umadbro> (sfid-20140825_095240_526526_2294AD5F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.161]:61222 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbaHWTGw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Aug 2014 15:06:52 -0400
+Received: from [192.168.178.25] (p5DDE7ABD.dip0.t-ipconnect.de [93.222.122.189])
+	by smtp.strato.de (RZmta 35.8 DYNA|AUTH)
+	with ESMTPSA id 502eebq7NJ0jZ3t
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	for <linux-wireless@vger.kernel.org>;
+	Sat, 23 Aug 2014 21:00:45 +0200 (CEST)
+Message-ID: <53F8E4DC.60406@matthias-kastner.de> (sfid-20140823_210655_685657_354A08F6)
+Date: Sat, 23 Aug 2014 21:00:44 +0200
+From: Matthias Kastner <mail@matthias-kastner.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Atheros AR9001U
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-08-25 at 09:52 +0200, Rostislav Lisovy wrote:
+Hello.
+I'm having issues with my wireless usb stick. The model is supposed to 
+be supportet, but breaks communication evry 10-20 min.
+lsusb says about the stick:
+  Bus 001 Device 007: ID 057c:8401 AVM GmbH Fritz!WLAN N [Atheros AR9001U]
+The stick supports 11abgn networks. in 2.4 and 5 GHz range.
+I'm using kernel 3.13.0-34-generic.
 
-> If I am not mistaken it is not possible to say that this feature may be
-> useful as the general method for monitor-mode injection with datarate
-> until there is some user-space utility really using/needing it?
+At the time I was using the built in version of carl.
 
-Yes, this wasn't as much a comment on the patch as rather on your
-implied approach for your userspace :)
+Aug 23 20:02:43 uk-pc kernel: [ 4889.891261] usbcore: registered new 
+interface driver carl9170
+Aug 23 20:02:43 uk-pc kernel: [ 4889.895369] usb 1-4: driver   API: 
+1.9.7 2012-12-15 [1-1]
+Aug 23 20:02:43 uk-pc kernel: [ 4889.895376] usb 1-4: firmware API: 
+1.9.6 2012-07-07
 
-That said, it's tricky, be cause much hardware doesn't allow to do this.
-Maybe we should then have a feature flag or so rather than silently
-ignoring the data?
+I updated manually to carl9170-1.fw-1.9.9 (I simply renamed the old fw 
+and copyed the new one to /lib/firmware/carl9170-1.fw
 
-johannes
+The Syslog says about the crash:
+Aug 23 20:23:37 uk-pc kernel: [ 6144.616517] usb 1-4: restart device (4)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.820619] usb 1-4: firmware upload 
+failed (-110).
+Aug 23 20:23:39 uk-pc kernel: [ 6145.821320] usb 1-4: Failed to restart 
+device (-110).
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828552] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828561] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828568] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828575] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828582] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828588] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828594] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828601] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
+Aug 23 20:23:39 uk-pc kernel: [ 6145.828607] ieee80211 phy1: writing reg 
+0x1c36f0 (val 0x2400) failed (-5)
 
+Is there someone out there who can help me?
+Regards,
+Matthias
