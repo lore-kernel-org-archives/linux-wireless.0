@@ -1,65 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:37981 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbaHAQLT (ORCPT
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:41225 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbaHWNjS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2014 12:11:19 -0400
-Date: Fri, 1 Aug 2014 21:41:15 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] ath6kl: convert a driver to use module_usb_driver()
-Message-ID: <20140801161115.GA13979@himangi-Dell> (sfid-20140801_181140_326646_66DE09FF)
+	Sat, 23 Aug 2014 09:39:18 -0400
+Received: by mail-ie0-f181.google.com with SMTP id rp18so7809095iec.12
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Aug 2014 06:39:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1408789351-5803-1-git-send-email-hauke@hauke-m.de>
+References: <1408789351-5803-1-git-send-email-hauke@hauke-m.de>
+Date: Sat, 23 Aug 2014 15:39:17 +0200
+Message-ID: <CACna6ry5Nw6Z5fugawwELzv=EPBB1jKGRFSa6GrETU5gGtCCaw@mail.gmail.com> (sfid-20140823_153924_854992_43EB0F06)
+Subject: Re: [PATCH] bcma: add PCI ID for spromless BCM43227
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts a driver in drivers/net/* to use the
-module_usb_driver() macro which makes the code smaller and a
-bit simpler.
+On 23 August 2014 12:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This adds the PCI ID a BCM43227 without a sprom.
 
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/net/wireless/ath/ath6kl/usb.c | 21 +--------------------
- 1 file changed, 1 insertion(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index c443258..a6a5e40 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1229,26 +1229,7 @@ static struct usb_driver ath6kl_usb_driver = {
- 	.disable_hub_initiated_lpm = 1,
- };
- 
--static int ath6kl_usb_init(void)
--{
--	int ret;
--
--	ret = usb_register(&ath6kl_usb_driver);
--	if (ret) {
--		ath6kl_err("usb registration failed: %d\n", ret);
--		return ret;
--	}
--
--	return 0;
--}
--
--static void ath6kl_usb_exit(void)
--{
--	usb_deregister(&ath6kl_usb_driver);
--}
--
--module_init(ath6kl_usb_init);
--module_exit(ath6kl_usb_exit);
-+module_usb_driver(ath6kl_usb_driver);
- 
- MODULE_AUTHOR("Atheros Communications, Inc.");
- MODULE_DESCRIPTION("Driver support for Atheros AR600x USB devices");
--- 
-1.9.1
-
+Do you have bcma log from detecting this chip? Is this really BCM43227?
