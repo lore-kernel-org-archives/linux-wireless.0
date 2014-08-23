@@ -1,103 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:49896 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbaHRJOJ convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:33262 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbaHWH7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 05:14:09 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so4656701wgh.34
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 02:14:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHqTa-10bc+AtFbifObfqHXwzfcbrA5w9Z6LL53kUdDWeq=7ig@mail.gmail.com>
-References: <CAHqTa-10bc+AtFbifObfqHXwzfcbrA5w9Z6LL53kUdDWeq=7ig@mail.gmail.com>
-Date: Mon, 18 Aug 2014 11:14:07 +0200
-Message-ID: <CA+BoTQnY1wV2DFrs4P6F+oz2vPH+tbziSGc-Gq=QOQfsrbf6wQ@mail.gmail.com> (sfid-20140818_111414_088200_B13C350F)
-Subject: Re: Best choice of primary channels when using 40- or 80 MHz wide channels
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Avery Pennarun <apenwarr@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 23 Aug 2014 03:59:46 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 16/18] ath9k: Use ath_chanctx_check_active properly
+Date: Sat, 23 Aug 2014 13:29:21 +0530
+Message-Id: <1408780763-27974-17-git-send-email-sujith@msujith.org> (sfid-20140823_101534_137761_3C50E4E4)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 August 2014 01:42, Avery Pennarun <apenwarr@gmail.com> wrote:
-> Hi all,
->
-> I'm pretty confused about how to select the "primary" channel when
-> using wide channels with 802.11ac (and also 802.11n, really).  My
-> hostapd contains a section like this:
->
-> hw_mode=a
-> channel=149
-> country_code=US
-> ieee80211d=1
-> ieee80211h=1
-> ieee80211n=1
-> ieee80211ac=1
-> ht_capab=[HT20][HT40+][RX-STBC1]
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-There is no such thing as [HT20] in ht_capab in hostapd. You can just
-remove it. It has no effect.
+ath_chanctx_check_active() is required only when channel contexts
+are used. Make sure that it is not called in normal usage.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  7 ++-
+ drivers/net/wireless/ath/ath9k/channel.c | 90 ++++++++++++++++----------------
+ 2 files changed, 50 insertions(+), 47 deletions(-)
 
-> vht_capab=[MAX-A-MPDU-LEN-EXP4]
-> vht_oper_chwidth=1
-> vht_oper_centr_freq_seg0_idx=155
->
-> If I understand correctly, this will have the following results:
-> - at 20 MHz, it will use channel 149
-> - at 40 MHz, it will use channels 149+153 (HT40+)
-> - at 80 MHz, it will use channels 149+153+157+161 (centr_freq_seg0_idx)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5b8bc5d..8767aa7 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -417,8 +417,6 @@ ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
+ void ath_chanctx_init(struct ath_softc *sc);
+ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			     struct cfg80211_chan_def *chandef);
+-void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
+-
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ bool ath9k_is_chanctx_enabled(void);
+ void ath9k_fill_chanctx_ops(void);
+@@ -434,6 +432,7 @@ void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
+ 				struct ieee80211_vif *vif);
+ void ath9k_p2p_ps_timer(void *priv);
+ void ath9k_chanctx_wake_queues(struct ath_softc *sc);
++void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
+ 
+ void ath_chanctx_beacon_recv_ev(struct ath_softc *sc, u32 ts,
+ 				enum ath_chanctx_event ev);
+@@ -499,6 +498,10 @@ static inline void ath9k_p2p_ps_timer(struct ath_softc *sc)
+ static inline void ath9k_chanctx_wake_queues(struct ath_softc *sc)
+ {
+ }
++static inline void ath_chanctx_check_active(struct ath_softc *sc,
++					    struct ath_chanctx *ctx)
++{
++}
+ #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
+ 
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index d1ad5a2..08bb14c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -101,51 +101,6 @@ static int ath_set_channel(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
+-void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+-{
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_vif *avp;
+-	bool active = false;
+-	u8 n_active = 0;
+-
+-	if (!ctx)
+-		return;
+-
+-	list_for_each_entry(avp, &ctx->vifs, list) {
+-		struct ieee80211_vif *vif = avp->vif;
+-
+-		switch (vif->type) {
+-		case NL80211_IFTYPE_P2P_CLIENT:
+-		case NL80211_IFTYPE_STATION:
+-			if (vif->bss_conf.assoc)
+-				active = true;
+-			break;
+-		default:
+-			active = true;
+-			break;
+-		}
+-	}
+-	ctx->active = active;
+-
+-	ath_for_each_chanctx(sc, ctx) {
+-		if (!ctx->assigned || list_empty(&ctx->vifs))
+-			continue;
+-		n_active++;
+-	}
+-
+-	if (n_active <= 1) {
+-		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
+-		return;
+-	}
+-	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
+-		return;
+-
+-	if (ath9k_is_chanctx_enabled()) {
+-		ath_chanctx_event(sc, NULL,
+-				  ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL);
+-	}
+-}
+-
+ void ath_chanctx_init(struct ath_softc *sc)
+ {
+ 	struct ath_chanctx *ctx;
+@@ -209,6 +164,51 @@ static const char *offchannel_state_string(enum ath_offchannel_state state)
+ 	}
+ }
+ 
++void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp;
++	bool active = false;
++	u8 n_active = 0;
++
++	if (!ctx)
++		return;
++
++	list_for_each_entry(avp, &ctx->vifs, list) {
++		struct ieee80211_vif *vif = avp->vif;
++
++		switch (vif->type) {
++		case NL80211_IFTYPE_P2P_CLIENT:
++		case NL80211_IFTYPE_STATION:
++			if (vif->bss_conf.assoc)
++				active = true;
++			break;
++		default:
++			active = true;
++			break;
++		}
++	}
++	ctx->active = active;
++
++	ath_for_each_chanctx(sc, ctx) {
++		if (!ctx->assigned || list_empty(&ctx->vifs))
++			continue;
++		n_active++;
++	}
++
++	if (n_active <= 1) {
++		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
++		return;
++	}
++	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++		return;
++
++	if (ath9k_is_chanctx_enabled()) {
++		ath_chanctx_event(sc, NULL,
++				  ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL);
++	}
++}
++
+ static struct ath_chanctx *
+ ath_chanctx_get_next(struct ath_softc *sc, struct ath_chanctx *ctx)
+ {
+-- 
+2.0.4
 
-Basically, yes.
-
-
->
-> This is fine when I'm the only AP around.  But let's imagine I'm in a
-> crowded apartment building with lots of APs, and various clients
-> support only 20 MHz channel width (increasingly rare), or 20/40, or
-> 20/40/80.  In such a situation, we'd like to spread around the APs so
-> that clients that can only do 20 or 40 don't always fall back to
-> channel 149 or 149+153; otherwise we're just wasting tons of empty
-> space on channels 157 and 161.
->
-> The obvious way to do this would be to try a configuration like this (HT40-):
->
-> channel=153
-> ht_capab=[HT20][HT40-][RX-STBC1]
-> vht_capab=[MAX-A-MPDU-LEN-EXP4]
-> vht_oper_chwidth=1
-> vht_oper_centr_freq_seg0_idx=155
->
-> or perhaps this (40 Mhz uses upper half instead of lower half):
->
-> channel=157
-> ht_capab=[HT20][HT40+][RX-STBC1]
-> vht_capab=[MAX-A-MPDU-LEN-EXP4]
-> vht_oper_chwidth=1
-> vht_oper_centr_freq_seg0_idx=155
->
-> But when I try to do this, hostapd seems to abort and claim it can't
-> register to use the channels.  Am I doing something wrong?  Is it
-> hostapd version related?
-
-All following configs work for me:
-
-http://pastebin.com/w1LKTDGn
-http://pastebin.com/McquAcCf
-http://pastebin.com/1RNWHAAS
-http://pastebin.com/kDd2RybJ
-
-My hostapd is at 6d00ab04302df257cb3092b2b31b4eac42e77569.
-
-
->
-> Also, hostapd contains code to swap the primary/secondary 20 MHz
-> channels in the 40 MHz channel, based on what other APs are around.
-> If I read correctly, it seems to want to use the same primary channel
-> as everyone else.  Wouldn't it be better to equailze things to try to
-> get about half the APs using each sub channel?
-
-That would break 20/40 coex, wouldn't it?
-
-
-Michał
