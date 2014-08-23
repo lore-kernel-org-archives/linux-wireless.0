@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ja.ssi.bg ([178.16.129.10]:39635 "EHLO ja.home.ssi.bg"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933802AbaH0Odb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 10:33:31 -0400
-Date: Wed, 27 Aug 2014 17:31:33 +0300 (EEST)
-From: Julian Anastasov <ja@ssi.bg>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-In-Reply-To: <1409138967.2505.11.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.LFD.2.11.1408271625500.2348@ja.home.ssi.bg> (sfid-20140827_163342_001024_1C1A4A80)
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>   <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>   <20140822.105405.1982870131653082781.davem@davemloft.net>  <1409130792.2505.5.camel@jlt4.sipsolutions.net>
- <alpine.LFD.2.11.1408271255230.2348@ja.home.ssi.bg> <1409138967.2505.11.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from s72.web-hosting.com ([198.187.29.22]:52126 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537AbaHWH7a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Aug 2014 03:59:30 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 07/18] ath9k: Conditionally compile more functions
+Date: Sat, 23 Aug 2014 13:29:12 +0530
+Message-Id: <1408780763-27974-8-git-send-email-sujith@msujith.org> (sfid-20140823_095939_224034_D4401116)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-	Hello,
+Use CONFIG_ATH9K_CHANNEL_CONTEXT to exclude:
 
-On Wed, 27 Aug 2014, Johannes Berg wrote:
+ath_scan_complete()
+ath_roc_complete()
+ath_offchannel_next()
+ath_scan_next_channel()
+ath_scan_channel_duration()
 
-> On Wed, 2014-08-27 at 13:23 +0300, Julian Anastasov wrote:
-> 
-> > BTW, what kind of packets (protocol) we want to drop? UDP?
-> 
-> All IP protocols, this comes either from the IPv4 RFC (1122) or from the
-> wireless issue which affects all protocols.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 38 ++++++++++++++++----------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-	I did a grep for inet_add_protocol, in case if
-we prefer to use per-protocol checks:
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index cd8af45..8214b32 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -507,6 +507,25 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	spin_unlock_bh(&sc->chan_lock);
+ }
+ 
++#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
++
++static const char *offchannel_state_string(enum ath_offchannel_state state)
++{
++#define case_rtn_string(val) case val: return #val
++
++	switch (state) {
++		case_rtn_string(ATH_OFFCHANNEL_IDLE);
++		case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
++		case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
++		case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_START);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
++		case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
++	default:
++		return "unknown";
++	}
++}
++
+ static int ath_scan_channel_duration(struct ath_softc *sc,
+ 				     struct ieee80211_channel *chan)
+ {
+@@ -599,25 +618,6 @@ void ath_scan_complete(struct ath_softc *sc, bool abort)
+ 	ath9k_ps_restore(sc);
+ }
+ 
+-#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+-
+-static const char *offchannel_state_string(enum ath_offchannel_state state)
+-{
+-#define case_rtn_string(val) case val: return #val
+-
+-	switch (state) {
+-		case_rtn_string(ATH_OFFCHANNEL_IDLE);
+-		case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
+-		case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
+-		case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
+-		case_rtn_string(ATH_OFFCHANNEL_ROC_START);
+-		case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
+-		case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
+-	default:
+-		return "unknown";
+-	}
+-}
+-
+ static void ath_scan_send_probe(struct ath_softc *sc,
+ 				struct cfg80211_ssid *ssid)
+ {
+-- 
+2.0.4
 
-Protocols that look ok to me: TCP, SCTP, DCCP
-
-ICMP: missing check in icmp_rcv
-UDP, UDPLITE: need check in __udp4_lib_rcv
-IGMP: uses only multicast address?
-PIM: not sure if __pim_rcv() needs check, before skb_tunnel_rx()
-	changes pkt_type?
-
-More protocols are also registered with inet_add_protocol(), I don't
-see pkt_type checks there, mostly tunnels:
-- IPPROTO_GRE
-- IPPROTO_L2TP
-- IPPROTO_IPIP
-- IPPROTO_IPV6 (tunnel64_rcv)
-
-	If going to use a global check I hope there are
-no protocols that require exception to this rule.
-
-Regards
-
---
-Julian Anastasov <ja@ssi.bg>
