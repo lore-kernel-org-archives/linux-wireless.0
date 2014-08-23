@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56176 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbaHYUaK (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:21752 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751826AbaHWLY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 16:30:10 -0400
-Date: Mon, 25 Aug 2014 16:18:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hans Wennborg <hans@hanshq.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/19] iwl4965: fix %d confusingly prefixed with 0x in
- format string
-Message-ID: <20140825201801.GH1966@tuxdriver.com> (sfid-20140825_223014_189286_7EF902BA)
-References: <1407111605-15005-1-git-send-email-hans@hanshq.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1407111605-15005-1-git-send-email-hans@hanshq.net>
+	Sat, 23 Aug 2014 07:24:56 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: dri-devel@lists.freedesktop.org
+Cc: josh@joshtriplett.org, kernel-janitors@vger.kernel.org,
+	linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pwm@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-omap@vger.kernel.org,
+	rtc-linux@googlegroups.com
+Subject: [PATCH 0/9] use c99 initializers in structures
+Date: Sat, 23 Aug 2014 13:20:22 +0200
+Message-Id: <1408792831-25615-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140823_132704_331089_CA2C6EE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 03, 2014 at 05:20:05PM -0700, Hans Wennborg wrote:
-> Signed-off-by: Hans Wennborg <hans@hanshq.net>
-> ---
->  drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-> index c159c05..7d6fd59 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> @@ -4633,7 +4633,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
->  	else {
->  		ret = il_set_tx_power(il, val, false);
->  		if (ret)
-> -			IL_ERR("failed setting tx power (0x%d).\n", ret);
-> +			IL_ERR("failed setting tx power (0x%x).\n", ret);
->  		else
->  			ret = count;
->  	}
+These patches add labels in the initializations of structure fields (c99
+initializers).  The complete semantic patch thta makes this change is shown
+below.  This rule ignores cases where the initialization is just 0 or NULL,
+where some of the fields already use labels, and where there are nested
+structures.
 
-It seems like that should be "0x%08x" or similar, no?
+// <smpl>
+@ok1@
+identifier i1,i2;
+position p;
+@@
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+struct i1 i2@p = { \(0\|NULL\) };
+
+@ok2@
+identifier i1,i2,i3;
+position p;
+expression e;
+@@
+
+struct i1 i2@p = { ..., .i3 = e, ... };
+
+@ok3@
+identifier i1,i2;
+position p;
+@@
+
+struct i1 i2@p = { ..., { ... }, ... };
+
+@decl@
+identifier i1,fld;
+type T;
+field list[n] fs;
+@@
+
+struct i1 {
+ fs
+ T fld;
+ ...};
+
+@bad@
+identifier decl.i1,i2;
+expression e;
+position p != {ok1.p,ok2.p,ok3.p};
+constant nm;
+initializer list[decl.n] is;
+position fix;
+@@
+
+struct i1 i2@p = { is,
+(
+ nm(...)
+|
+ e@fix
+)
+ ,...};
+
+@@
+identifier decl.i1,i2,decl.fld;
+expression e;
+position bad.p, bad.fix;
+@@
+
+struct i1 i2@p = { ...,
++ .fld = e
+- e@fix
+ ,...};
+// </smpl>
+
