@@ -1,72 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:45792 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbaHRNHj convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49130 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588AbaHWH7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 09:07:39 -0400
-Received: by mail-wi0-f169.google.com with SMTP id n3so3656786wiv.0
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 06:07:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1407769505.9844.8.camel@jlt4.sipsolutions.net>
-References: <1406553419-16196-1-git-send-email-michal.kazior@tieto.com>
-	<1407769505.9844.8.camel@jlt4.sipsolutions.net>
-Date: Mon, 18 Aug 2014 15:07:38 +0200
-Message-ID: <CA+BoTQk-iR2aAsgioZY+CgjV3JkvQf3pakiAzsw-o65ogDYHRA@mail.gmail.com> (sfid-20140818_150744_469033_9A68A495)
-Subject: Re: [PATCH] mac80211: fix chantype recalc warning
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 23 Aug 2014 03:59:35 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 10/18] ath9k: Make ath_chanctx_switch static
+Date: Sat, 23 Aug 2014 13:29:15 +0530
+Message-Id: <1408780763-27974-11-git-send-email-sujith@msujith.org> (sfid-20140823_101533_355806_85E8784F)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 August 2014 17:05, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2014-07-28 at 15:16 +0200, Michal Kazior wrote:
->> When a device driver is unloaded local->interfaces
->> list is cleared. If there was more than 1
->> interface running and connected (bound to a
->> chanctx) then chantype recalc was called and it
->> ended up with compat being NULL causing a call
->> trace warning.
->>
->> Warn if compat becomes NULL as a result of
->> incompatible bss_conf.chandef of interfaces bound
->> to a given channel context only.
->
-> Err, this slipped my radar - where does this need to go?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-No big deal. The warning is just a small nuisance with multi-vif. You
-won't see this on a typical system.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 -
+ drivers/net/wireless/ath/ath9k/channel.c | 74 ++++++++++++++++----------------
+ 2 files changed, 37 insertions(+), 39 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0371b30..2afe790 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -417,8 +417,6 @@ ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
+ void ath_chanctx_init(struct ath_softc *sc);
+ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			     struct cfg80211_chan_def *chandef);
+-void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+-			struct cfg80211_chan_def *chandef);
+ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev);
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 1950da4..ceb3ce8 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -173,43 +173,6 @@ void ath_chanctx_init(struct ath_softc *sc)
+ 
+ }
+ 
+-void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+-			struct cfg80211_chan_def *chandef)
+-{
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-
+-	spin_lock_bh(&sc->chan_lock);
+-
+-	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
+-	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
+-		sc->sched.offchannel_pending = true;
+-		spin_unlock_bh(&sc->chan_lock);
+-		return;
+-	}
+-
+-	sc->next_chan = ctx;
+-	if (chandef) {
+-		ctx->chandef = *chandef;
+-		ath_dbg(common, CHAN_CTX,
+-			"Assigned next_chan to %d MHz\n", chandef->center_freq1);
+-	}
+-
+-	if (sc->next_chan == &sc->offchannel.chan) {
+-		sc->sched.offchannel_duration =
+-			TU_TO_USEC(sc->offchannel.duration) +
+-			sc->sched.channel_switch_time;
+-
+-		if (chandef) {
+-			ath_dbg(common, CHAN_CTX,
+-				"Offchannel duration for chan %d MHz : %u\n",
+-				chandef->center_freq1,
+-				sc->sched.offchannel_duration);
+-		}
+-	}
+-	spin_unlock_bh(&sc->chan_lock);
+-	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
+-}
+-
+ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			     struct cfg80211_chan_def *chandef)
+ {
+@@ -507,6 +470,43 @@ static int ath_scan_channel_duration(struct ath_softc *sc,
+ 	return (HZ / 16); /* ~60 ms */
+ }
+ 
++static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
++			       struct cfg80211_chan_def *chandef)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	spin_lock_bh(&sc->chan_lock);
++
++	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
++	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
++		sc->sched.offchannel_pending = true;
++		spin_unlock_bh(&sc->chan_lock);
++		return;
++	}
++
++	sc->next_chan = ctx;
++	if (chandef) {
++		ctx->chandef = *chandef;
++		ath_dbg(common, CHAN_CTX,
++			"Assigned next_chan to %d MHz\n", chandef->center_freq1);
++	}
++
++	if (sc->next_chan == &sc->offchannel.chan) {
++		sc->sched.offchannel_duration =
++			TU_TO_USEC(sc->offchannel.duration) +
++			sc->sched.channel_switch_time;
++
++		if (chandef) {
++			ath_dbg(common, CHAN_CTX,
++				"Offchannel duration for chan %d MHz : %u\n",
++				chandef->center_freq1,
++				sc->sched.offchannel_duration);
++		}
++	}
++	spin_unlock_bh(&sc->chan_lock);
++	ieee80211_queue_work(sc->hw, &sc->chanctx_work);
++}
++
+ static void ath_chanctx_offchan_switch(struct ath_softc *sc,
+ 				       struct ieee80211_channel *chan)
+ {
+-- 
+2.0.4
 
->
-> Also - is this really the right thing? Why does this happen in this
-> situation? Shouldn't they all be not connected or not have a chanctx or
-> be compatible?
-
-If you eject, e.g. plug a usb wifi device out, its driver will call
-ieee80211_unregister_hw() which calls ieee80211_remove_interfaces().
-If there are still running interfaces that have a netdev (probably to
-avoid a deadlock on iflist_mtx?) each interface is *moved* to a
-temporary list for a later call to unregister_netdevice_many(). While
-unregister_netdevice_many() executes the local->interfaces is empty.
-ieee80211_recalc_chanctx_chantype() is called whenever a chanctx is
-unassigned from a vif as long as there are still references to that
-chanctx. If there is just 1 interface when device is ejected, then
-ieee80211_recalc_chanctx_chantype() is not called. If there is more
-than 1 running interfaces then the removal of each but the last one
-calls to ieee80211_recalc_chanctx_chantype(). Since local->interfaces
-is empty compat pointer stays NULL and this triggers WARN_ON_ONCE (but
-only the first one effectively dumps a trace).
-
-Another way to fix this would probably be to change
-ieee80211_remove_interfaces() to remove all interfaces one-by-one
-(instead of in bulk). It seems iflist_mtx can be temporarily released
-while iterating over interfaces for the sake of calling
-unregister_netdevice() for each one because RTNL is held all the time
-guaranteeing no new interfaces are added in the meantime. I'm not sure
-if it's perfectly safe to replace unregister_netdevice_many() just
-like that though. I can look more into it.
-
-
-Michał
