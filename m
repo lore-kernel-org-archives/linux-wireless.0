@@ -1,50 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:43261 "EHLO test.hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438AbaHWP6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 11:58:21 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] bcma: add PCI ID for spromless BCM43217
-Date: Sat, 23 Aug 2014 17:58:11 +0200
-Message-Id: <1408809491-14081-1-git-send-email-hauke@hauke-m.de> (sfid-20140823_175824_233329_23B1CCF9)
+Received: from s72.web-hosting.com ([198.187.29.22]:44747 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752480AbaHWH7X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Aug 2014 03:59:23 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 04/18] ath9k: Cleanup mgd_prepare_tx callback
+Date: Sat, 23 Aug 2014 13:29:09 +0530
+Message-Id: <1408780763-27974-5-git-send-email-sujith@msujith.org> (sfid-20140823_095937_431056_35CEF203)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the PCI ID a BCM43217 without a sprom.
-This devices was found on a Netgear R6250 attached to a BCM4708 ARM SoC.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-bcma: bus1: Found chip with id 0xA8D1, rev 0x00 and package 0x08
-bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x27, class 0x0)
-bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1E, class 0x0)
-bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x14, class 0x0)
+Rename the callback from ath9k_chanctx_force_active()
+to ath9k_mgd_prepare_tx(). Also, move it to main.c and
+group it with the other callbacks.
 
-b43-phy0: Broadcom 43217 WLAN found (core revision 30)
-b43-phy0: Found PHY: Analog 9, Type 4 (N), Revision 17
-b43-phy0: Found Radio: Manuf 0x17F, ID 0x2057, Revision 14, Version 1
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-v2:
- - change comment: this is actually a BCM43217 and add some logs
- - add comment with pci id in hex
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  4 ++--
+ drivers/net/wireless/ath/ath9k/channel.c | 32 +-------------------------------
+ drivers/net/wireless/ath/ath9k/main.c    | 32 +++++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 34 deletions(-)
 
- drivers/bcma/host_pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 294a7dd..f032ed6 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -282,6 +282,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xA8DB */
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, bcma_pci_bridge_tbl);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f3455ce..f9863e6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -408,8 +408,6 @@ struct ath_offchannel {
+ 	     ctx <= &sc->chanctx[ARRAY_SIZE(sc->chanctx) - 1];      \
+ 	     ctx++)
+ 
+-void ath9k_chanctx_force_active(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif);
+ static inline struct ath_chanctx *
+ ath_chanctx_get(struct ieee80211_chanctx_conf *ctx)
+ {
+@@ -446,6 +444,8 @@ void ath9k_p2p_beacon_sync(struct ath_softc *sc);
+ void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
+ 				struct ieee80211_vif *vif);
+ void ath9k_p2p_ps_timer(void *priv);
++
++void ath_chanctx_set_next(struct ath_softc *sc, bool force);
+ #else
+ static inline bool ath9k_is_chanctx_enabled(void)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 0b84917..4525fc0 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -243,7 +243,7 @@ static bool ath_chanctx_defer_switch(struct ath_softc *sc)
+ 	return true;
+ }
+ 
+-static void ath_chanctx_set_next(struct ath_softc *sc, bool force)
++void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ {
+ 	struct timespec ts;
+ 	bool measure_time = false;
+@@ -336,36 +336,6 @@ void ath_chanctx_init(struct ath_softc *sc)
+ 
+ }
+ 
+-void ath9k_chanctx_force_active(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif)
+-{
+-	struct ath_softc *sc = hw->priv;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
+-	bool changed = false;
+-
+-	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
+-		return;
+-
+-	if (!avp->chanctx)
+-		return;
+-
+-	mutex_lock(&sc->mutex);
+-
+-	spin_lock_bh(&sc->chan_lock);
+-	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
+-		sc->next_chan = avp->chanctx;
+-		changed = true;
+-	}
+-	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
+-	spin_unlock_bh(&sc->chan_lock);
+-
+-	if (changed)
+-		ath_chanctx_set_next(sc, true);
+-
+-	mutex_unlock(&sc->mutex);
+-}
+-
+ void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 			struct cfg80211_chan_def *chandef)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e5c523a..4659168 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2340,6 +2340,36 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
++static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
++	bool changed = false;
++
++	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++		return;
++
++	if (!avp->chanctx)
++		return;
++
++	mutex_lock(&sc->mutex);
++
++	spin_lock_bh(&sc->chan_lock);
++	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
++		sc->next_chan = avp->chanctx;
++		changed = true;
++	}
++	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
++	spin_unlock_bh(&sc->chan_lock);
++
++	if (changed)
++		ath_chanctx_set_next(sc, true);
++
++	mutex_unlock(&sc->mutex);
++}
++
+ void ath9k_fill_chanctx_ops(void)
+ {
+ 	if (!ath9k_is_chanctx_enabled())
+@@ -2354,7 +2384,7 @@ void ath9k_fill_chanctx_ops(void)
+ 	ath9k_ops.change_chanctx           = ath9k_change_chanctx;
+ 	ath9k_ops.assign_vif_chanctx       = ath9k_assign_vif_chanctx;
+ 	ath9k_ops.unassign_vif_chanctx     = ath9k_unassign_vif_chanctx;
+-	ath9k_ops.mgd_prepare_tx           = ath9k_chanctx_force_active;
++	ath9k_ops.mgd_prepare_tx           = ath9k_mgd_prepare_tx;
+ }
+ 
+ #endif
 -- 
-1.9.1
+2.0.4
 
