@@ -1,52 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36723 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755099AbaHFHcp (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59491 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbaHWH7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:45 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 13/13] wil6210: fix access after free in wil_pcie_remove()
-Date: Wed, 6 Aug 2014 10:32:01 +0300
-Message-ID: <1407310322-22568-14-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095908_438532_DCC33B56)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 23 Aug 2014 03:59:40 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 13/18] ath9k: Add wrappers for beacon events
+Date: Sat, 23 Aug 2014 13:29:18 +0530
+Message-Id: <1408780763-27974-14-git-send-email-sujith@msujith.org> (sfid-20140823_101533_231729_B07A07EE)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-'wil'  released in wil_if_free(); save iomapped address aside to
-properly unmap it.
+Using these wrappers allows us to move the 'sched'
+variable in ath_softc inside CONFIG_ATH9K_CHANNEL_CONTEXT.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 14 +++++++++++++-
+ drivers/net/wireless/ath/ath9k/beacon.c  |  5 ++---
+ drivers/net/wireless/ath/ath9k/channel.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c    |  8 +++-----
+ 4 files changed, 32 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index cf0b219..38dcbea 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -218,12 +218,13 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- static void wil_pcie_remove(struct pci_dev *pdev)
- {
- 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-+	void __iomem *csr = wil->csr;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8cf8e4f..352c5da 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -433,6 +433,10 @@ void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
+ 				struct ieee80211_vif *vif);
+ void ath9k_p2p_ps_timer(void *priv);
  
- 	wil6210_debugfs_remove(wil);
- 	wil_if_pcie_disable(wil);
- 	wil_if_remove(wil);
- 	wil_if_free(wil);
--	pci_iounmap(pdev, wil->csr);
-+	pci_iounmap(pdev, csr);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
++void ath_chanctx_beacon_recv_ev(struct ath_softc *sc, u32 ts,
++				enum ath_chanctx_event ev);
++void ath_chanctx_beacon_sent_ev(struct ath_softc *sc,
++				enum ath_chanctx_event ev);
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev);
+ void ath_chanctx_set_next(struct ath_softc *sc, bool force);
+@@ -453,6 +457,14 @@ static inline void ath9k_init_channel_context(struct ath_softc *sc)
+ static inline void ath9k_deinit_channel_context(struct ath_softc *sc)
+ {
  }
++static inline void ath_chanctx_beacon_recv_ev(struct ath_softc *sc, u32 ts,
++					      enum ath_chanctx_event ev)
++{
++}
++static inline void ath_chanctx_beacon_sent_ev(struct ath_softc *sc,
++					      enum ath_chanctx_event ev)
++{
++}
+ static inline void ath_chanctx_event(struct ath_softc *sc,
+ 				     struct ieee80211_vif *vif,
+ 				     enum ath_chanctx_event ev)
+@@ -901,6 +913,7 @@ struct ath_softc {
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 	struct ath_gen_timer *p2p_ps_timer;
+ 	struct ath_vif *p2p_ps_vif;
++	struct ath_chanctx_sched sched;
+ #endif
+ 
+ 	unsigned long driver_data;
+@@ -925,7 +938,6 @@ struct ath_softc {
+ 	struct ath_chanctx *next_chan;
+ 	spinlock_t chan_lock;
+ 	struct ath_offchannel offchannel;
+-	struct ath_chanctx_sched sched;
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+ 	bool led_registered;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 68c95d4..dc68d11 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -428,9 +428,8 @@ void ath9k_beacon_tasklet(unsigned long data)
+ 	/* EDMA devices check that in the tx completion function. */
+ 	if (!edma) {
+ 		if (ath9k_is_chanctx_enabled()) {
+-			if (sc->sched.beacon_pending)
+-				ath_chanctx_event(sc, NULL,
+-						  ATH_CHANCTX_EVENT_BEACON_SENT);
++			ath_chanctx_beacon_sent_ev(sc,
++					  ATH_CHANCTX_EVENT_BEACON_SENT);
+ 		}
+ 
+ 		if (ath9k_csa_is_finished(sc, vif))
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index ae0b3f9..39df24c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -463,6 +463,20 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	spin_unlock_bh(&sc->chan_lock);
+ }
+ 
++void ath_chanctx_beacon_sent_ev(struct ath_softc *sc,
++				enum ath_chanctx_event ev)
++{
++	if (sc->sched.beacon_pending)
++		ath_chanctx_event(sc, NULL, ev);
++}
++
++void ath_chanctx_beacon_recv_ev(struct ath_softc *sc, u32 ts,
++				enum ath_chanctx_event ev)
++{
++	sc->sched.next_tbtt = ts;
++	ath_chanctx_event(sc, NULL, ev);
++}
++
+ static int ath_scan_channel_duration(struct ath_softc *sc,
+ 				     struct ieee80211_channel *chan)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index cc91749..2aaf233 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -893,11 +893,9 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	}
+ 
+ 	if (ath9k_is_chanctx_enabled()) {
+-		if (rx_stats->is_mybeacon) {
+-			sc->sched.next_tbtt = rx_stats->rs_tstamp;
+-			ath_chanctx_event(sc, NULL,
+-					  ATH_CHANCTX_EVENT_BEACON_RECEIVED);
+-		}
++		if (rx_stats->is_mybeacon)
++			ath_chanctx_beacon_recv_ev(sc, rx_stats->rs_tstamp,
++					   ATH_CHANCTX_EVENT_BEACON_RECEIVED);
+ 	}
+ 
+ 	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
 -- 
-1.8.5.2
+2.0.4
 
