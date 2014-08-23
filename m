@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:53699 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509AbaHNIwV (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:56252 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbaHWH7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 04:52:21 -0400
-Received: by mail-pd0-f173.google.com with SMTP id w10so1222240pde.4
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2014 01:52:20 -0700 (PDT)
-MIME-Version: 1.0
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Thu, 14 Aug 2014 10:52:00 +0200
-Message-ID: <CAGm1_ks4kzRaPXHpMRui0wo5jOmXx5PtBZo5EMjQ2fwcZXBofw@mail.gmail.com> (sfid-20140814_105233_004250_188A47E9)
-Subject: wl12xx: latest firmware/utils
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: eyalr@ti.com
-Content-Type: text/plain; charset=UTF-8
+	Sat, 23 Aug 2014 03:59:50 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 18/18] ath9k: Fix 'offchannel' in ath_softc
+Date: Sat, 23 Aug 2014 13:29:23 +0530
+Message-Id: <1408780763-27974-19-git-send-email-sujith@msujith.org> (sfid-20140823_101534_018486_B0520A8F)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless wiki (http://wireless.kernel.org/en/users/Drivers/wl12xx/calibrator)
-recommends to use following repo to get the latest ti-utils:
-https://github.com/gxk/ti-utils
-This repo was once forked and got some updates:
-https://github.com/idor/ti-utils, then there occurred another fork
-(https://github.com/TI-OpenLink/ti-utils) with even more changes.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Yesterday I've sent a patch to the TI-OpenLink/ti-utils
-(https://github.com/TI-OpenLink/ti-utils/pull/4) and got an answer,
-that this repo won't be supported anymore. So where is the upstream
-version then?
+Finally move the 'offchannel' instance in ath_softc
+inside a CONFIG_ATH9K_CHANNEL_CONTEXT cage. The offchannel
+usage in ath9k_calculate_iter_data() is closed off with
+an ifdef for now, since the state/opmode calculation is
+common for both the channel context mode and the normal mode.
 
-TI-OpenLink/ti-utils also provides wl127x firmware version
-6.3.10.0.137, but the latest official fw
-(https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/ti-connectivity)
-has version 6.3.10.0.133. Is the firmware version 6.3.10.0.137 ready
-for upstreaming?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c  | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Regards,
-Yegor
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8767aa7..02664b3 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -925,6 +925,7 @@ struct ath_softc {
+ 	struct ath_gen_timer *p2p_ps_timer;
+ 	struct ath_vif *p2p_ps_vif;
+ 	struct ath_chanctx_sched sched;
++	struct ath_offchannel offchannel;
+ #endif
+ 
+ 	unsigned long driver_data;
+@@ -948,7 +949,6 @@ struct ath_softc {
+ 	struct ath_chanctx *cur_chan;
+ 	struct ath_chanctx *next_chan;
+ 	spinlock_t chan_lock;
+-	struct ath_offchannel offchannel;
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+ 	bool led_registered;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index bc7a780..da63487 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -958,6 +958,7 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
+ 	list_for_each_entry(avp, &ctx->vifs, list)
+ 		ath9k_vif_iter(iter_data, avp->vif->addr, avp->vif);
+ 
++#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 	if (ctx == &sc->offchannel.chan) {
+ 		struct ieee80211_vif *vif;
+ 
+@@ -970,6 +971,7 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
+ 			ath9k_vif_iter(iter_data, vif->addr, vif);
+ 		iter_data->beacons = false;
+ 	}
++#endif
+ }
+ 
+ static void ath9k_set_assoc_state(struct ath_softc *sc,
+-- 
+2.0.4
+
