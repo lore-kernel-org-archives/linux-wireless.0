@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata.ens-lyon.org ([140.77.166.68]:44516 "EHLO
-	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755221AbaHYXez (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35368 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbaHWNmR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 19:34:55 -0400
-Date: Tue, 26 Aug 2014 01:34:43 +0200
-From: Samuel Thibault <samuel.thibault@ens-lyon.org>
-To: Hugh Dickins <hughd@google.com>
-Cc: Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 3.17-rc1: leds blink workqueue causes sleeping BUGs
-Message-ID: <20140825233443.GB13130@type.youpi.perso.aquilenet.fr> (sfid-20140826_013548_003225_2314D36B)
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
- <10857.1408467967@turing-police.cc.vt.edu>
- <20140825211340.GA22168@kria>
- <20140825212324.GC3070@type.youpi.perso.aquilenet.fr>
- <20140825213752.GD3070@type.youpi.perso.aquilenet.fr>
- <alpine.LSU.2.11.1408251454570.26438@eggly.anvils>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <alpine.LSU.2.11.1408251454570.26438@eggly.anvils>
+	Sat, 23 Aug 2014 09:42:17 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/4] ath9k: Remove redundant ifdef
+Date: Sat, 23 Aug 2014 19:12:14 +0530
+Message-Id: <1408801336-7626-3-git-send-email-sujith@msujith.org> (sfid-20140823_154229_641965_9B5D3269)
+In-Reply-To: <1408801336-7626-1-git-send-email-sujith@msujith.org>
+References: <1408801336-7626-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hugh Dickins, le Mon 25 Aug 2014 15:00:44 -0700, a écrit :
-> On Mon, 25 Aug 2014, Samuel Thibault wrote:
-> > Samuel Thibault, le Mon 25 Aug 2014 23:23:24 +0200, a écrit :
-> > > We could indeed have a loop if the user was making the VT::* leds use
-> > > the vt-* trigger,
-> > 
-> > Actually, while there can be a loop, it wouldn't be possible to inject
-> > events in it: a VT::* led only makes the corresponding vt-* trigger if
-> > it got an event from its trigger, etc. So it's really a false positive,
-> > the lock detector just can not know that it can not happen.
-> 
-> I'm not suffering from this lockdep warning myself; but, false positive
-> or not, it does need to be fixed (or annotated).  Because once lockdep
-> reports one issue, it turns itself off.  So any developer who hits this
-> warning is then unable test their own changes with lockdep afterwards.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Ew. I'll have a look.
+This was introduced in an earlier patch to handle
+a compilation warning, but since the channel context
+code has been mostly isolated, this is not required now.
 
-Samuel
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 08bb14c..7aa9535 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -257,9 +257,7 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+-#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, tsf_time, 1000000);
+-#endif
+ 	tsf_time -= ath9k_hw_gettsf32(ah);
+ 	tsf_time = msecs_to_jiffies(tsf_time / 1000) + 1;
+ 	mod_timer(&sc->sched.timer, tsf_time);
+-- 
+2.0.4
+
