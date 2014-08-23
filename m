@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52243 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbaHWH7j (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53086 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751096AbaHWTZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 03:59:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 12/18] ath9k: Fix function declarations
-Date: Sat, 23 Aug 2014 13:29:17 +0530
-Message-Id: <1408780763-27974-13-git-send-email-sujith@msujith.org> (sfid-20140823_095943_800939_A681305B)
-In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
-References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+	Sat, 23 Aug 2014 15:25:03 -0400
+Message-ID: <1408821895.4672.110.camel@deadeye.wl.decadent.org.uk> (sfid-20140823_212507_551272_8DF313F8)
+Subject: [PATCH] Do not run ldconfig if DESTDIR is set
+From: Ben Hutchings <ben@decadent.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 23 Aug 2014 12:24:55 -0700
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-vEE7Bzg3D0wNd+ZxTZEC"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-These routines are required only when
-CONFIG_ATH9K_CHANNEL_CONTEXT is enabled.
+--=-vEE7Bzg3D0wNd+ZxTZEC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ldconfig should only be run for a local installation, and will fail when
+building as an unprivileged user.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+--- a/Makefile
++++ b/Makefile
+@@ -132,7 +132,9 @@ install-libreg:
+ 	$(NQ) '  INSTALL  libreg'
+ 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
+ 	$(Q)cp $(LIBREG) $(DESTDIR)/$(LIBDIR)/
++ifndef DESTDIR
+ 	$(Q)ldconfig
++endif
+=20
+ %.o: %.c regdb.h $(LIBREG)
+ 	$(NQ) '  CC  ' $@
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5220f2f..8cf8e4f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -418,9 +418,6 @@ void ath_chanctx_init(struct ath_softc *sc);
- void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
- 			     struct cfg80211_chan_def *chandef);
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
--void ath_offchannel_next(struct ath_softc *sc);
--void ath_scan_complete(struct ath_softc *sc, bool abort);
--void ath_roc_complete(struct ath_softc *sc, bool abort);
- 
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- bool ath9k_is_chanctx_enabled(void);
-@@ -439,6 +436,9 @@ void ath9k_p2p_ps_timer(void *priv);
- void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		       enum ath_chanctx_event ev);
- void ath_chanctx_set_next(struct ath_softc *sc, bool force);
-+void ath_offchannel_next(struct ath_softc *sc);
-+void ath_scan_complete(struct ath_softc *sc, bool abort);
-+void ath_roc_complete(struct ath_softc *sc, bool abort);
- #else
- static inline bool ath9k_is_chanctx_enabled(void)
- {
--- 
-2.0.4
+--=20
+Ben Hutchings
+One of the nice things about standards is that there are so many of them.
 
+--=-vEE7Bzg3D0wNd+ZxTZEC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAU/jqh+e/yOyVhhEJAQqFyRAAnmhZ+nY+OU1jpqNucuPBKE7TXXawupBQ
+bMaX8bOsMwflCCwryp2+U2rNdt7LXTtpOTFO+j4VOvDppteTsdwGC6rMA1CTjtv+
+kJ1P5wMPqq5byHRBWQbV1tELTcAnUjX40zCVzXNi6yS0Empr2vq9NLXJvCuAJK44
+ifczrnAl0us8nTr3TcWL1OPoFioGAWn+GpJx8kHBVRsjEsqvUtOqQHKD5kcU8mn9
+gHL/QEJwdGZZ6rcrsneU/4She9H1dlUetqHHH/ngfzuq4NX9waMCfr6SBWKcrU97
+pKCkiRc4JbRgmFdiYISp8GG8Vp35j7+D9O3YJAuM5AkWjhsF6Ux/U91iKWxAFPh+
+e7ptNkY0KbKkLN9UexvfdDWr1KDOhqLv8FC3TTFPgoPXU3XTbJEZquHqQ/LF3KRZ
+XZvtWKTMyWayJtncNE0h8PJ7LG4xQMpItDCqHcmxtwdYt10lZXGuaQB/uOUBMOPN
+QxrQH2uKg6cw0YirMu0ajeLQgNYGc8rx2OpZj62UgkJpPEiFUnALey5y5y442+Sj
+w9r9gnIqz3YZ5ZT0hjAkIM8fbDmjczLS4zSGx8M74IzvVwYQbYP2lhNVzv6jtJZr
+j4joqM7URKEXnbytdHalhro3Br1CHjzaN8j2UNrxhjjD0e7QFBqb+5lrNbpdWB5f
+eQVhRM9QULE=
+=fDsP
+-----END PGP SIGNATURE-----
+
+--=-vEE7Bzg3D0wNd+ZxTZEC--
