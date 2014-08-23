@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:38034 "EHLO posteo.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932277AbaHGRVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 13:21:39 -0400
-From: Andreas Schlick <ninox@posteo.net>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Andreas Schlick <ninox@posteo.net>
-Subject: [PATCH 2/2] staging: rtl8723au: Remove unnecessary bit masking.
-Date: Thu,  7 Aug 2014 19:20:50 +0200
-Message-Id: <1407432050-5624-3-git-send-email-ninox@posteo.net> (sfid-20140807_192216_471347_17861FAF)
-In-Reply-To: <1407432050-5624-1-git-send-email-ninox@posteo.net>
-References: <1407432050-5624-1-git-send-email-ninox@posteo.net>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53093 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751546AbaHWT1m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Aug 2014 15:27:42 -0400
+Message-ID: <1408822054.4672.113.camel@deadeye.wl.decadent.org.uk> (sfid-20140823_212745_096867_C0797711)
+Subject: [PATCH v2 crda] crda: Do not run ldconfig if DESTDIR is set
+From: Ben Hutchings <ben@decadent.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 23 Aug 2014 12:27:34 -0700
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-oIt5nDFhfgUdmlI1Mavn"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andreas Schlick <ninox@posteo.net>
+
+--=-oIt5nDFhfgUdmlI1Mavn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+ldconfig should only be run for a local installation, and will fail when
+building as an unprivileged user.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/staging/rtl8723au/core/rtw_efuse.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+v2: Add 'crda:' prefix to subject
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
-index 0bec131..abc5d3c 100644
---- a/drivers/staging/rtl8723au/core/rtw_efuse.c
-+++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
-@@ -156,8 +156,7 @@ ReadEFuseByte23a(struct rtw_adapter *Adapter, u16 _offset, u8 *pbuf)
- 	/* Check bit 32 read-ready */
- 	retry = 0;
- 	value32 = rtl8723au_read32(Adapter, EFUSE_CTRL);
--	/* while(!(((value32 >> 24) & 0xff) & 0x80)  && (retry<10)) */
--	while (!(((value32 >> 24) & 0xff) & 0x80) && (retry<10000)) {
-+	while (!((value32 >> 24) & 0x80) && retry < 10000) {
- 		value32 = rtl8723au_read32(Adapter, EFUSE_CTRL);
- 		retry++;
- 	}
--- 
-2.0.4
+--- a/Makefile
++++ b/Makefile
+@@ -132,7 +132,9 @@ install-libreg:
+ 	$(NQ) '  INSTALL  libreg'
+ 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
+ 	$(Q)cp $(LIBREG) $(DESTDIR)/$(LIBDIR)/
++ifndef DESTDIR
+ 	$(Q)ldconfig
++endif
+=20
+ %.o: %.c regdb.h $(LIBREG)
+ 	$(NQ) '  CC  ' $@
 
+
+--=20
+Ben Hutchings
+One of the nice things about standards is that there are so many of them.
+
+--=-oIt5nDFhfgUdmlI1Mavn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAU/jrJ+e/yOyVhhEJAQqKjA/+MRkkfGe3wg9/wXFyHRxVT69GsyTll6mX
+GnAFEV7etoVYVEbzYQ/9N8no+J8DrAuF2h+rw2XbDnlTRBD8yi3I9KgVd90FOAE2
+oFeNmFfNJEpSbl19wngp6oRzQpgNTQc39I+7JK7X/SL4jDs0GexnCzosviNPzk2F
+tyCcSTMv+W6qHwmNrQ7tO5ydalNxPAr8LM0nYf6oUfy8IbJm+/JnPAOqFMXu/PmC
+Ov6tuOBdojWgdpDVlBKtQ2FqT/m4+mp7lP+I/PxPTZZLztdl9MBqK4f2QFjvpnAC
+XNV8C0cAbVRR1GGyU1MbYiL8E6wLUjpAiCxN/8iHJ+hk2UupRB0E/kHTtqDeeMeI
+Qv0agyj3U64Rs7Hvx773YPGAuN3a5MhKhX/BTq6AOAnRRAD/QAkYhurIINUjq/3t
+P7J7uKqORvxqrJCKQPgVMExOMIGwV0G5+dX0i23Ii6NHRCYru/sFotopcuVpjZBC
+UFAE/pwyKoKXLowjmey/kZwA5Jh3Hj2gLRQCFXmRDFlVy9NJik3ZaKXvk1ITl9qz
+/DyZV/3S12ko83FCvbaFXNCnY/kgbk6r6ITJbVYm54c2Uhr5iY8bi/gPOvN/ATCv
+NVCoYKRlXg7BPoJZf6yXm+W9TJt5dUy4pNMEXeYhaTJpVNZX/EZlLW+CZuw1Eeks
+pZJOVBErCuQ=
+=XNrv
+-----END PGP SIGNATURE-----
+
+--=-oIt5nDFhfgUdmlI1Mavn--
