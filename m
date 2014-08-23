@@ -1,168 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:61794 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbaHNOuN (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:59120 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170AbaHWV2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 10:50:13 -0400
-Date: Thu, 14 Aug 2014 17:50:00 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-08-14
-Message-ID: <20140814145000.GA14226@t440s.P-661HNU-F1> (sfid-20140814_165037_536885_A081CDD9)
+	Sat, 23 Aug 2014 17:28:33 -0400
+Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
+	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XLIrL-0000gd-Ge
+	for linux-wireless@vger.kernel.org; Sat, 23 Aug 2014 23:28:28 +0200
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XLIrL-00046K-5v
+	for linux-wireless@vger.kernel.org; Sat, 23 Aug 2014 23:28:27 +0200
+Date: Sat, 23 Aug 2014 23:28:27 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] Support Cisco DTPC IE to reduce transmit power
+Message-ID: <20140823212827.GB15466@sesse.net> (sfid-20140823_233225_303466_F926181D)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
+Content-Type: multipart/mixed; boundary="B4IIlcmfBL/1gGOG"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---BOKacYhQ+x31HxR3
-Content-Type: text/plain; charset=us-ascii
+--B4IIlcmfBL/1gGOG
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 
-Hi John,
+Hi,
 
-Here's our first bluetooth-next pull request for the 3.18 kernel. Our
-tree is based on net-next so you'd need to pull from there first before
-pulling from our tree.
+I noticed the other day that Linux and Cisco don't always seem to speak the
+same language when it comes to reducing the client transmit power. I've
+written a quick patch to try to remedy it; please consider applying to
+the wireless tree.
 
-The changes consists of:
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
 
-	- Coding style fixes to HCI drivers
-	- Corrupted ack value fix for the H5 HCI driver
-	- A couple of Enhanced L2CAP fixes
-	- Conversion of SMP code to use common L2CAP channel API
-	- Page scan optimizations when using the kernel-side whitelist
-	- Various mac802154 and and ieee802154 6lowpan cleanups
-	- One new Atheros USB ID
+--B4IIlcmfBL/1gGOG
+Content-Type: text/x-diff; charset=utf-8
+Content-Disposition: attachment; filename="0001-Support-DTPC-IE-from-Cisco-Client-eXtensions.patch"
 
-Please let me know if there are any issues pulling. Thanks.
+>From d8fc81539016ae8663b0f479ad95cc42f286ec0b Mon Sep 17 00:00:00 2001
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Date: Sat, 23 Aug 2014 23:22:08 +0200
+Subject: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
 
-Johan
+Linux already supports 802.11h, where the access point can tell the
+client to reduce its transmission power. However, 802.11h is only
+defined for 5 GHz, where the need for this is much smaller than on
+2.4 GHz.
 
+Cisco has their own solution, called DTPC (Dynamic Transmit Power
+Control).  Cisco APs on a controller sometimes but not always send
+802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
+for parsing and honoring the DTPC IE if there is no 802.11h element;
+the format is not documented, but very simple.
+
+Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
+1142 joined to a Cisco 2504 WLC, by setting various transmit power
+levels for the given access points and observing the results.
+The Wireshark 802.11 dissector agrees with the interpretation of the
+element, except for negative numbers, which we guard against to be
+conservative.
+
+Signed-Off-By: Steinar H. Gunderson <sgunderson@bigfoot.com>
 ---
-The following changes since commit f0094b28f3038936c1985be64dbe83f0e950b671:
+ include/linux/ieee80211.h  |    3 ++-
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   27 +++++++++++++++++++++++++++
+ net/mac80211/util.c        |   19 +++++++++++++++++++
+ 4 files changed, 49 insertions(+), 1 deletion(-)
 
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2014-08-13 18:27:40 -0600)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 63ab3873..d0ec287 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1806,7 +1806,8 @@ enum ieee80211_eid {
+ 	WLAN_EID_DMG_TSPEC = 146,
+ 	WLAN_EID_DMG_AT = 147,
+ 	WLAN_EID_DMG_CAP = 148,
+-	/* 149-150 reserved for Cisco */
++	/* 149 reserved for Cisco */
++	WLAN_EID_CISCO_VENDOR_SPECIFIC = 150,
+ 	WLAN_EID_DMG_OPERATION = 151,
+ 	WLAN_EID_DMG_BSS_PARAM_CHANGE = 152,
+ 	WLAN_EID_DMG_BEAM_REFINEMENT = 153,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ef7a089..e995556 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1367,6 +1367,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
+ 	const u8 *country_elem;
+ 	const u8 *pwr_constr_elem;
++	const u8 *cisco_dtpc_elem;
+ 	const struct ieee80211_timeout_interval_ie *timeout_int;
+ 	const u8 *opmode_notif;
+ 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 31a8afa..1c8c0a3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1227,6 +1227,30 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++static u32 ieee80211_handle_cisco_dtpc(struct ieee80211_sub_if_data *sdata,
++				       struct ieee80211_channel *channel,
++				       const u8 *cisco_dtpc_elem)
++{
++	/* From practical testing, the two data bytes of the DTPC element
++	 * seem to contain the requested dBm level in little-endian.
++	 * It never seems to go negative even if -1 dBm is requested
++	 * (capped at zero), but just to be sure, we do it ourselves.
++	 */
++	__s16 new_ap_level = (__s16) le16_to_cpup((__le16 *)(cisco_dtpc_elem + 4));
++	new_ap_level = max_t(__s16, 0, new_ap_level);
++
++	if (sdata->ap_power_level == new_ap_level)
++		return 0;
++
++	sdata_info(sdata,
++		   "Limiting TX power to %d dBm as advertised by %pM\n",
++		   new_ap_level, sdata->u.mgd.bssid);
++	sdata->ap_power_level = new_ap_level;
++	if (__ieee80211_recalc_txpower(sdata))
++		return BSS_CHANGED_TXPOWER;
++	return 0;
++}
++
+ /* powersave */
+ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata)
+@@ -3197,6 +3221,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 						       elems.country_elem,
+ 						       elems.country_elem_len,
+ 						       elems.pwr_constr_elem);
++	else if (elems.cisco_dtpc_elem) 
++		changed |= ieee80211_handle_cisco_dtpc(sdata, chan,
++						       elems.cisco_dtpc_elem);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 725af7a..a253487 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1014,6 +1014,25 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			}
+ 			elems->pwr_constr_elem = pos;
+ 			break;
++		case WLAN_EID_CISCO_VENDOR_SPECIFIC:
++			/* Lots of different options exist, but we only care about the
++			 * Dynamic Transmit Power Control element. First check
++			 * for the Cisco OUI, then for the DTPC tag (0x00).
++			 */
++			if (elen < 4) {
++				elem_parse_failed = true;
++				break;
++			}
++			if (pos[0] != 0x00 || pos[1] != 0x40 ||
++			    pos[2] != 0x96 || pos[3] != 0x00) {
++				break;
++			}
++			if (elen != 6) {
++				elem_parse_failed = true;
++				break;
++			}
++			elems->cisco_dtpc_elem = pos;
++			break;
+ 		case WLAN_EID_TIMEOUT_INTERVAL:
+ 			if (elen >= sizeof(struct ieee80211_timeout_interval_ie))
+ 				elems->timeout_int = (void *)pos;
+-- 
+1.7.10.4
 
-are available in the git repository at:
 
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to 13cac15296afe7e42088ecfcd0f1d4b658248c46:
-
-  Bluetooth: Fix ERTM L2CAP resend packet (2014-08-14 09:47:02 +0200)
-
-----------------------------------------------------------------
-Alexander Aring (1):
-      ieee802154: 6lowpan: remove unused function
-
-Himangi Saraogi (4):
-      Bluetooth: Remove typedef bluecard_info_t
-      Bluetooth: Remove typedef btuart_info_t
-      Bluetooth: Remove typedefs nsh_t and dtl1_info_t
-      Bluetooth: Remove typedef bt3c_info_t
-
-Johan Hedberg (35):
-      Bluetooth: Add convenience function to check for pending power off
-      Bluetooth: Create unified helper function for updating page scan
-      Bluetooth: Disable page scan if all whitelisted devices are connected
-      Bluetooth: Remove redundant check for remote_key_dist
-      Bluetooth: Fix confusion between parent and child channel for 6lowpan
-      Bluetooth: Fix reference counting of global L2CAP channels
-      Bluetooth: Fix __l2cap_no_conn_pending() usage with all channels
-      Bluetooth: Resume BT_CONNECTED state after LE security elevation
-      Bluetooth: Remove special handling of ATT in l2cap_security_cfm()
-      Bluetooth: Refactor l2cap_connect_cfm
-      Bluetooth: Move L2CAP fixed channel creation into l2cap_conn_cfm
-      Bluetooth: Improve fixed channel lookup based on link type
-      Bluetooth: Remove special ATT data channel handling
-      Bluetooth: Move parts of fixed channel initialization to l2cap_add_scid
-      Bluetooth: Call L2CAP teardown callback before clearing chan->conn
-      Bluetooth: Call l2cap_le_conn_ready after notifying channels
-      Bluetooth: Fix using HCI_CONN_LE_SMP_PEND to check for SMP context
-      Bluetooth: Fix hci_update_random_address() error return for no crypto
-      Bluetooth: Fix IRK lookup when tfm_aes is not available
-      Bluetooth: Refactor SMP (de)initialization into separate functions
-      Bluetooth: Move SMP initialization after HCI init
-      Bluetooth: Move SMP (de)initialization to smp.c
-      Bluetooth: Add more L2CAP convenience callbacks
-      Bluetooth: Add SMP L2CAP channel skeleton
-      Bluetooth: Make AES crypto context private to SMP
-      Bluetooth: Convert SMP to use l2cap_chan infrastructure
-      Bluetooth: Use L2CAP resume callback to call smp_distribute_keys
-      Bluetooth: Add public l2cap_conn_shutdown() API to request disconnection
-      Bluetooth: Call l2cap_conn_shutdown() when SMP recv callback fails
-      Bluetooth: Fix double free of SMP data skb
-      Bluetooth: Add SMP-internal timeout callback
-      Bluetooth: Remove unused l2cap_conn->security_timer
-      Bluetooth: Move canceling security_timer into smp_chan_destroy()
-      Bluetooth: Always call smp_distribute_keys() from a workqueue
-      Bluetooth: Make smp_chan_destroy() private to smp.c
-
-Loic Poulain (1):
-      Bluetooth: Fix HCI H5 corrupted ack value
-
-Lukasz Rymanowski (2):
-      Bluetooth: Improve data packing in SAR mode
-      Bluetooth: Fix ERTM L2CAP resend packet
-
-Varka Bhadram (4):
-      MAINTAINERS: update maintainers info
-      mac802154: cleanup in rx path
-      mac802154: common error path
-      mac802154: common tx error path
-
-Vincent Zwanenburg (1):
-      Add a new PID/VID 0227/0930 for AR3012.
-
- MAINTAINERS                      |   9 +-
- drivers/bluetooth/ath3k.c        |   2 +
- drivers/bluetooth/bluecard_cs.c  |  35 +-
- drivers/bluetooth/bt3c_cs.c      |  27 +-
- drivers/bluetooth/btuart_cs.c    |  27 +-
- drivers/bluetooth/btusb.c        |   1 +
- drivers/bluetooth/dtl1_cs.c      |  36 +-
- drivers/bluetooth/hci_h5.c       |   2 +-
- include/net/bluetooth/hci_core.h |   8 +-
- include/net/bluetooth/l2cap.h    |  33 +-
- net/bluetooth/6lowpan.c          |  10 +-
- net/bluetooth/hci_core.c         |  71 +++-
- net/bluetooth/hci_event.c        |  11 +-
- net/bluetooth/l2cap_core.c       | 309 +++++++--------
- net/bluetooth/l2cap_sock.c       |  15 +-
- net/bluetooth/mgmt.c             | 124 ++----
- net/bluetooth/smp.c              | 726 +++++++++++++++++++++++------------
- net/bluetooth/smp.h              |  10 +-
- net/ieee802154/6lowpan_rtnl.c    |   8 -
- net/mac802154/rx.c               |   5 +-
- net/mac802154/tx.c               |  15 +-
- net/mac802154/wpan.c             |  10 +-
- 22 files changed, 877 insertions(+), 617 deletions(-)
-
-
---BOKacYhQ+x31HxR3
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJT7MyYAAoJECQj9vv5qNQSMSYP/3SVBPoV3hkWmnfRY9l/C64h
-NsK1dnztqqvq8Z+wpZ0JmhkfmYnGz7QHXlhBdx7IKXqwYF/Xsz0MLvCj6n//kGRC
-mC+sPuBJSgZ0yqRSDa7CYh5VlhSled+cn09ffnwS1po+tgvLOs4saGts8NN7annN
-2gF5wRZysRZh7nCF/A11nttiL26RhHMDvRb70Fo66Gr4GE+O7ps8GXLOq6e1VuFn
-1X3nC1a8lzxFctdoqXmiKAd0Emv7D7HSagERWZtdnw9ugAX7bzh1HXvAfeUQNNcC
-Xj/MYErYkiOJKEncWIpwNDoXzLoL9j25S04khWrGB8s+yGR3SsH1ITzDPvo9Tv3U
-2MfkrdmXdIOZct8suwi/o4WMR1u05KmuKi80ntMyDtxkVPBovFQ0s+2vj/D2XkmV
-r54GbeqdG/iwJ2zvwakFSpSH9ERZQ4ryty66FcbR0yRU9Q+UFc9fUhSQBFa45esd
-DdRadC48iCUcOmyf7rF7L6diZMVQK+STk+MUJ/xgID7/V6weImBuvBt/+pgIXRey
-U4DliilN4Zr5v4aLw4V6v1HPExPrR98oEYVeyfGHD0MQFvrzCc1FhDztdYZivljv
-4L7pwfWaddMkMOeAuFNppOdJOx9A2feaTlZxgRMs5VEAyNB3Ix9MTssypWH5DvKn
-YKGjm77oiZfj14zevxB9
-=Jbds
------END PGP SIGNATURE-----
-
---BOKacYhQ+x31HxR3--
+--B4IIlcmfBL/1gGOG--
