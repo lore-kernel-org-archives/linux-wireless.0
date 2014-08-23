@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24863 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755883AbaHHJjD (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53080 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751825AbaHWTVm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 05:39:03 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>
-Subject: Re: [RFC 0/3] ath10k: ce fixes 2014-08-08
-References: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 8 Aug 2014 12:38:54 +0300
-In-Reply-To: <1407489735-28091-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 8 Aug 2014 11:22:12 +0200")
-Message-ID: <87ppgbz5g1.fsf@kamboji.qca.qualcomm.com> (sfid-20140808_113907_793371_A3068177)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 23 Aug 2014 15:21:42 -0400
+Message-ID: <1408821688.4672.108.camel@deadeye.wl.decadent.org.uk> (sfid-20140823_212145_662666_C8694E7D)
+Subject: reglib bugs
+From: Ben Hutchings <ben@decadent.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 23 Aug 2014 12:21:28 -0700
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-IUTbH2K3oTDVZ7EutxMQ"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
-> This removes implicit endianess in some places.
-> I'd love to get rid of it from
-> ath10k_pci_diag_access* as well but let's fix
-> ath10k_pci_diag_mem_* first.
->
-> @Kalle, @Ben: As far as I understand this
-> conflicts with fw dumping you work on so I'm
-> tentatively posting this as an RFC first.
+--=-IUTbH2K3oTDVZ7EutxMQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, and I have done some ath10k_pci_diag_ changes in Ben's patches. It
-would be easier if you could rebase your patches on top of ben's
-firmware crash patches, which I should be able to submit today for first
-review.
+Some simple bugs I found by inspection:
 
--- 
-Kalle Valo
+- reglib_parse_country_dfs() always overflows the alpha2[] array by one
+byte as sscanf() will write a terminating null byte.
+
+- reglib_parse_country_dfs() can overflow the dfs_region_alpha[] array,
+given invalid input.  If the input is always trusted then this may not
+matter.
+
+- reglib_deduce_band() can never return 60 (GHz) as the 5 GHz condition
+will have been matched already.
+
+- reg_rule_optimize_rd() has a bounds check on rule_idx but it's
+off-by-one.
+
+Ben.
+
+--=20
+Ben Hutchings
+One of the nice things about standards is that there are so many of them.
+
+--=-IUTbH2K3oTDVZ7EutxMQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAU/jpvee/yOyVhhEJAQoQJA/+KhoIHMDcEPZQ4cHEeWONRQEO4QK8aqQu
+vuvaZj9awiHc5p2dbxXuTalVIE3SLwzxxU69waZiu+pL/UG6wONCj1827rgQN9bu
+iRD3wfj2Z+gU/rYEUB9XvC3nW5NKrB7t+EXvvkuCEr5yTWwB5FvzRXPnJLiIlEaH
+MMCHZv0rH6Kwo2A/f7MVsCHyyjLGE81jwE5/DGMbOw9lIRF/wbIm631XWY8gZLU2
+XWGDYlS4+LQ9IGuuWQwm633agADmzFETktL6+48DkTxmdW9G0J7wa2zAewLz9x/C
+h6jZHtLgl48/W51RuiqM359HdtdwjTz5uAkZ77tgRXsJk+D90tHAz4DrzXWUMGd7
+Lzwk8x+sHEuN4411JFwDONbIXDs8dE24z7UdjXJgFcJHpMJ7YugFTQ2JeBFPhSaY
++ARoAypwm92sjFNEh3MVwn6RrGrjBrNvMbU7OEQ6CovRwhrAqPsvLEZP719Ut1v6
+obHqwS4GQfUsah6CZhbSPCTQIqweVGoCl6P7CGzE2gr1Y1fomwEbQm/dbGsfGIoQ
+gcm53OnD16afhL6NjuBrqe07Qs06kXattafSJf9BOBU7stwIYCWdSMN4VUdYFVNR
+ACMOUei0kW3R2zoyxPDA1EFsfRo0xbD33+E8TV+ZY34Ql7Flz443hqDkDZDfht9J
+cb9z7nXDPCs=
+=BFhR
+-----END PGP SIGNATURE-----
+
+--=-IUTbH2K3oTDVZ7EutxMQ--
