@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53705 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:33057 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752004AbaH2GGl (ORCPT
+	with ESMTP id S1752606AbaHWH7s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 02:06:41 -0400
+	Sat, 23 Aug 2014 03:59:48 -0400
 From: Sujith Manoharan <sujith@msujith.org>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Fix beacons for managed mode
-Date: Fri, 29 Aug 2014 11:36:54 +0530
-Message-Id: <1409292414-3308-1-git-send-email-sujith@msujith.org> (sfid-20140829_080644_484036_4EF3AC34)
+Subject: [PATCH 17/18] ath9k: Fix function argument type
+Date: Sat, 23 Aug 2014 13:29:22 +0530
+Message-Id: <1408780763-27974-18-git-send-email-sujith@msujith.org> (sfid-20140823_101533_610324_3A2F4B0B)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-If the current opmode is managed, the ATH_OP_BEACONS flag
-needs to be set only when there is a primary station interface
-and it is associated/active.
+ath9k_vif_iter() was earlier used as an iterator
+routine when calling a mac80211 utility. This is no
+longer the case and hence we can mention the argument
+type explicitly.
 
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d9be831..0b3d4d8 100644
+index e31f130..bc7a780 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1067,8 +1067,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	if (ah->opmode == NL80211_IFTYPE_STATION) {
- 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
+@@ -893,9 +893,9 @@ static bool ath9k_uses_beacons(int type)
+ 	}
+ }
  
--		iter_data.beacons = true;
- 		if (iter_data.primary_sta) {
-+			iter_data.beacons = true;
- 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
- 					      changed);
- 			if (!ctx->primary_sta ||
+-static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
++			   u8 *mac, struct ieee80211_vif *vif)
+ {
+-	struct ath9k_vif_iter_data *iter_data = data;
+ 	int i;
+ 
+ 	if (iter_data->has_hw_macaddr) {
 -- 
-2.1.0
+2.0.4
 
