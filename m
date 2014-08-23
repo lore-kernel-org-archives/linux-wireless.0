@@ -1,244 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:47531 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151AbaHTVcE (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49705 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbaHWH7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 17:32:04 -0400
-Received: by mail-wi0-f182.google.com with SMTP id d1so7560455wiv.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2014 14:32:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/6] staging: vt6655: card.c change BBvCalculateParameter to vnt_get_phy_field
-Date: Wed, 20 Aug 2014 22:30:30 +0100
-Message-Id: <1408570231-10320-5-git-send-email-tvboxspy@gmail.com> (sfid-20140820_233208_894417_6C00281F)
-In-Reply-To: <1408570231-10320-1-git-send-email-tvboxspy@gmail.com>
-References: <1408570231-10320-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 23 Aug 2014 03:59:44 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 15/18] ath9k: Add ath9k_offchannel_init
+Date: Sat, 23 Aug 2014 13:29:20 +0530
+Message-Id: <1408780763-27974-16-git-send-email-sujith@msujith.org> (sfid-20140823_101533_730123_058E7F07)
+In-Reply-To: <1408780763-27974-1-git-send-email-sujith@msujith.org>
+References: <1408780763-27974-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using vnt_get_phy_field means the values are not in the
-correct write order the lower word and the upper word need
-to be swapped over for an u32 write out.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Rather create another data variable to manipulate this structure.
-Create a new union vnt_phy_field_swap with struct vnt_phy_field,
-the u16 word swap and the u32 write out.
+This patch adds a routine to setup the offchannel
+instance in ath_softc.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/staging/vt6655/card.c | 154 +++++++++++++++++++-----------------------
- drivers/staging/vt6655/desc.h |   6 ++
- 2 files changed, 76 insertions(+), 84 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  4 ++++
+ drivers/net/wireless/ath/ath9k/channel.c | 33 ++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/init.c    |  1 +
+ 3 files changed, 30 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 9807374..c4ed8d5 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -225,57 +225,51 @@ void
- s_vSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 	     void *pvSupportRateIEs, void *pvExtSupportRateIEs)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 892ca4a..5b8bc5d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -423,6 +423,7 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
+ bool ath9k_is_chanctx_enabled(void);
+ void ath9k_fill_chanctx_ops(void);
+ void ath9k_init_channel_context(struct ath_softc *sc);
++void ath9k_offchannel_init(struct ath_softc *sc);
+ void ath9k_deinit_channel_context(struct ath_softc *sc);
+ int ath9k_init_p2p(struct ath_softc *sc);
+ void ath9k_deinit_p2p(struct ath_softc *sc);
+@@ -455,6 +456,9 @@ static inline void ath9k_fill_chanctx_ops(void)
+ static inline void ath9k_init_channel_context(struct ath_softc *sc)
  {
--	unsigned char byServ = 0, bySignal = 0; // For CCK
--	unsigned short wLen = 0;
-+	union vnt_phy_field_swap phy;
- 	unsigned char byTxRate = 0, byRsvTime = 0;    // For OFDM
- 
- 	//Set to Page1
- 	MACvSelectPage1(pDevice->PortOffset);
- 
--	//RSPINF_b_1
--	BBvCalculateParameter(pDevice,
--			      14,
--			      VNTWIFIbyGetACKTxRate(RATE_1M, pvSupportRateIEs, pvExtSupportRateIEs),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	/* RSPINF_b_1 */
-+	vnt_get_phy_field(pDevice,
-+			  14,
-+			  VNTWIFIbyGetACKTxRate(RATE_1M, pvSupportRateIEs, pvExtSupportRateIEs),
-+			  PK_TYPE_11B,
-+			  &phy.field_read);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	///RSPINF_b_2
--	BBvCalculateParameter(pDevice,
--			      14,
--			      VNTWIFIbyGetACKTxRate(RATE_2M, pvSupportRateIEs, pvExtSupportRateIEs),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	 /* swap over to get correct write order */
-+	swap(phy.swap[0], phy.swap[1]);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	//RSPINF_b_5
--	BBvCalculateParameter(pDevice,
--			      14,
--			      VNTWIFIbyGetACKTxRate(RATE_5M, pvSupportRateIEs, pvExtSupportRateIEs),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, phy.field_write);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	//RSPINF_b_11
--	BBvCalculateParameter(pDevice,
--			      14,
--			      VNTWIFIbyGetACKTxRate(RATE_11M, pvSupportRateIEs, pvExtSupportRateIEs),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	/* RSPINF_b_2 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  VNTWIFIbyGetACKTxRate(RATE_2M, pvSupportRateIEs, pvExtSupportRateIEs),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, phy.field_write);
-+
-+	/* RSPINF_b_5 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  VNTWIFIbyGetACKTxRate(RATE_5M, pvSupportRateIEs, pvExtSupportRateIEs),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, phy.field_write);
-+
-+	/* RSPINF_b_11 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  VNTWIFIbyGetACKTxRate(RATE_11M, pvSupportRateIEs, pvExtSupportRateIEs),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, phy.field_write);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
- 	//RSPINF_a_6
- 	s_vCalculateOFDMRParameter(RATE_6M,
- 				   ePHYType,
-@@ -1592,57 +1586,49 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
-  */
- void CARDvSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType)
+ }
++static inline void ath9k_offchannel_init(struct ath_softc *sc)
++{
++}
+ static inline void ath9k_deinit_channel_context(struct ath_softc *sc)
  {
--	unsigned char byServ = 0x00, bySignal = 0x00; //For CCK
--	unsigned short wLen = 0x0000;
-+	union vnt_phy_field_swap phy;
- 	unsigned char byTxRate, byRsvTime;             //For OFDM
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index f719c36..d1ad5a2 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -167,14 +167,6 @@ void ath_chanctx_init(struct ath_softc *sc)
+ 		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
+ 			INIT_LIST_HEAD(&ctx->acq[j]);
+ 	}
+-	ctx = &sc->offchannel.chan;
+-	cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
+-	INIT_LIST_HEAD(&ctx->vifs);
+-	ctx->txpower = ATH_TXPOWER_MAX;
+-	for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
+-		INIT_LIST_HEAD(&ctx->acq[j]);
+-	sc->offchannel.chan.offchannel = true;
+-
+ }
  
- 	//Set to Page1
- 	MACvSelectPage1(pDevice->PortOffset);
+ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+@@ -942,6 +934,31 @@ static void ath_chanctx_work(struct work_struct *work)
+ 	mutex_unlock(&sc->mutex);
+ }
  
--	//RSPINF_b_1
--	BBvCalculateParameter(pDevice,
--			      14,
--			      CARDwGetCCKControlRate((void *)pDevice, RATE_1M),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	/* RSPINF_b_1 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  CARDwGetCCKControlRate(pDevice, RATE_1M),
-+			  PK_TYPE_11B, &phy.field_read);
++void ath9k_offchannel_init(struct ath_softc *sc)
++{
++	struct ath_chanctx *ctx;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *chan;
++	int i;
++
++	sband = &common->sbands[IEEE80211_BAND_2GHZ];
++	if (!sband->n_channels)
++		sband = &common->sbands[IEEE80211_BAND_5GHZ];
++
++	chan = &sband->channels[0];
++
++	ctx = &sc->offchannel.chan;
++	INIT_LIST_HEAD(&ctx->vifs);
++	ctx->txpower = ATH_TXPOWER_MAX;
++	cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
++
++	for (i = 0; i < ARRAY_SIZE(ctx->acq); i++)
++		INIT_LIST_HEAD(&ctx->acq[i]);
++
++	sc->offchannel.chan.offchannel = true;
++}
++
+ void ath9k_init_channel_context(struct ath_softc *sc)
+ {
+ 	INIT_WORK(&sc->chanctx_work, ath_chanctx_work);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index fe0311a..5887499 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -610,6 +610,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	ath9k_init_misc(sc);
+ 	ath_fill_led_pin(sc);
+ 	ath_chanctx_init(sc);
++	ath9k_offchannel_init(sc);
  
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	///RSPINF_b_2
--	BBvCalculateParameter(pDevice,
--			      14,
--			      CARDwGetCCKControlRate((void *)pDevice, RATE_2M),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	 /* swap over to get correct write order */
-+	swap(phy.swap[0], phy.swap[1]);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	//RSPINF_b_5
--	BBvCalculateParameter(pDevice,
--			      14,
--			      CARDwGetCCKControlRate((void *)pDevice, RATE_5M),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, phy.field_write);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
--	//RSPINF_b_11
--	BBvCalculateParameter(pDevice,
--			      14,
--			      CARDwGetCCKControlRate((void *)pDevice, RATE_11M),
--			      PK_TYPE_11B,
--			      &wLen,
--			      &byServ,
--			      &bySignal
--);
-+	/* RSPINF_b_2 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  CARDwGetCCKControlRate(pDevice, RATE_2M),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, phy.field_write);
-+
-+	/* RSPINF_b_5 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  CARDwGetCCKControlRate(pDevice, RATE_5M),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, phy.field_write);
-+
-+	/* RSPINF_b_11 */
-+	vnt_get_phy_field(pDevice, 14,
-+			  CARDwGetCCKControlRate(pDevice, RATE_11M),
-+			  PK_TYPE_11B, &phy.field_read);
-+
-+	swap(phy.swap[0], phy.swap[1]);
-+
-+	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, phy.field_write);
- 
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, MAKEDWORD(wLen, MAKEWORD(bySignal, byServ)));
- 	//RSPINF_a_6
- 	s_vCalculateOFDMRParameter(RATE_6M,
- 				   ePHYType,
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 1dd38f7..1842723 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -384,6 +384,12 @@ struct vnt_phy_field {
- 	__le16 len;
- } __packed;
- 
-+union vnt_phy_field_swap {
-+	struct vnt_phy_field field_read;
-+	u16 swap[2];
-+	u32 field_write;
-+};
-+
- typedef struct tagSRTS_g {
- 	struct vnt_phy_field b;
- 	struct vnt_phy_field a;
+ 	if (common->bus_ops->aspm_init)
+ 		common->bus_ops->aspm_init(common);
 -- 
-1.9.1
+2.0.4
 
