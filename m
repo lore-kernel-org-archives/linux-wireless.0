@@ -1,116 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:38812 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963AbaHISIC (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:42648 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbaHXVpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:08:02 -0400
-Subject: [PATCH v6 1/8] ath10k: add ath10k_pci_diag_* helpers
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 09 Aug 2014 21:07:57 +0300
-Message-ID: <20140809180757.29215.67657.stgit@potku.adurom.net> (sfid-20140809_200806_710441_0FDE7EED)
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
+	Sun, 24 Aug 2014 17:45:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1408915485-8078-4-git-send-email-hauke@hauke-m.de>
+References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
+	<1408915485-8078-4-git-send-email-hauke@hauke-m.de>
+Date: Sun, 24 Aug 2014 21:45:38 +0000
+Message-ID: <CACna6rx_V46wAAkRFA+XnZNX80tAdWkaYrTUV5VHxLwbC6GvfQ@mail.gmail.com> (sfid-20140824_234552_122558_8277092E)
+Subject: Re: [RFC 2/7] bcm47xx-nvram: add new broadcom nvram driver with dt support
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k_pci_diag_read32() is for reading u32 from a device and ath10k_pci_diag_read_hi()
-is a helper for reading data using "host interest" table.
+On 24 August 2014 21:24, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This was copied from arch/mips/bcm47xx/nvram.c and modified to interact
+> with device tree. My plan is to make the MIPS bcm47xx also use this new
+> driver some time later.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   55 +++++++++++++++++++++++----------
- 1 file changed, 38 insertions(+), 17 deletions(-)
+I don't like this.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 2d340cc522e3..96ce359349cb 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -466,13 +466,46 @@ done:
- 	return ret;
- }
- 
-+static int ath10k_pci_diag_read32(struct ath10k *ar, u32 address, u32 *value)
-+{
-+	return ath10k_pci_diag_read_mem(ar, address, value, sizeof(u32));
-+}
-+
-+static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
-+				     u32 src, u32 len)
-+{
-+	u32 host_addr, addr;
-+	int ret;
-+
-+	host_addr = host_interest_item_address(src);
-+
-+	ret = ath10k_pci_diag_read32(ar, host_addr, &addr);
-+	if (ret != 0) {
-+		ath10k_warn("failed to get memcpy hi address for firmware address %d: %d\n",
-+			    src, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_pci_diag_read_mem(ar, addr, dest, len);
-+	if (ret != 0) {
-+		ath10k_warn("failed to memcpy firmware memory from %d (%d B): %d\n",
-+			    addr, len, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+#define ath10k_pci_diag_read_hi(ar, dest, src, len)		\
-+	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len);
-+
- /* Read 4-byte aligned data from Target memory or register */
- static int ath10k_pci_diag_read_access(struct ath10k *ar, u32 address,
- 				       u32 *data)
- {
- 	/* Assume range doesn't cross this boundary */
- 	if (address >= DRAM_BASE_ADDRESS)
--		return ath10k_pci_diag_read_mem(ar, address, data, sizeof(u32));
-+		return ath10k_pci_diag_read32(ar, address, data);
- 
- 	ath10k_pci_wake(ar);
- 	*data = ath10k_pci_read32(ar, address);
-@@ -836,9 +869,7 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- 
- static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- {
--	u32 reg_dump_area = 0;
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X] = {};
--	u32 host_addr;
- 	int ret;
- 	u32 i;
- 
-@@ -847,21 +878,11 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 		   ar->hw_params.name, ar->target_version);
- 	ath10k_err("firmware version: %s\n", ar->hw->wiphy->fw_version);
- 
--	host_addr = host_interest_item_address(HI_ITEM(hi_failure_state));
--	ret = ath10k_pci_diag_read_mem(ar, host_addr,
--				       &reg_dump_area, sizeof(u32));
-+	ret = ath10k_pci_diag_read_hi(ar, &reg_dump_values[0],
-+				      hi_failure_state,
-+				      REG_DUMP_COUNT_QCA988X * sizeof(u32));
- 	if (ret) {
--		ath10k_err("failed to read FW dump area address: %d\n", ret);
--		return;
--	}
--
--	ath10k_err("target register Dump Location: 0x%08X\n", reg_dump_area);
--
--	ret = ath10k_pci_diag_read_mem(ar, reg_dump_area,
--				       &reg_dump_values[0],
--				       REG_DUMP_COUNT_QCA988X * sizeof(u32));
--	if (ret != 0) {
--		ath10k_err("failed to read FW dump area: %d\n", ret);
-+		ath10k_err("failed to read firmware dump area: %d\n", ret);
- 		return;
- 	}
- 
+First, you change API (_getenv call), without explanation why/if we
+really need this. We decided we're very unlikely to ever find devices
+with multiple (separated) NVRAMs. So what's the point of having nvram
+per device?
 
+Secondly, don't duplicate the code. If you're going to switch bcm47xx
+to this new code, handle it smarter. Modify bcm47xx mode, move it to
+the "misc" and re-use in bcm53xx.
