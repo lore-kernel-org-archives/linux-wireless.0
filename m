@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38986 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756013AbaHVMnF (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48885 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbaHXPqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:43:05 -0400
-Received: by mail-lb0-f174.google.com with SMTP id c11so9366970lbj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:43:04 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/5] ath10k: fixes 2014-08-07, part 3
-Date: Fri, 22 Aug 2014 14:33:13 +0200
-Message-Id: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com> (sfid-20140822_144310_432083_56515FCE)
+	Sun, 24 Aug 2014 11:46:13 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/4] ath9k: Fix interface limits
+Date: Sun, 24 Aug 2014 21:16:12 +0530
+Message-Id: <1408895173-3732-4-git-send-email-sujith@msujith.org> (sfid-20140824_174617_099517_4C71720D)
+In-Reply-To: <1408895173-3732-1-git-send-email-sujith@msujith.org>
+References: <1408895173-3732-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This is part 3 (of 3) of my patches. Split for
-your reviewing pleasure.
+There is no reason why managed/p2p interfaces have to
+be limited to one. IBSS is the only type that needs
+a restriction.
 
-This is related to start/restart sequences.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-This is based on:
-  [PATCH v2 0/6] ath10k: fixes 2014-08-07, part 2
-
-v2:
- * patch [2/5] replaced
- * fixes, see notes
-
-
-Michal Kazior (5):
-  ath10k: rework posting pci rx buffers
-  ath10k: update comment regarding warm reset
-  ath10k: ignore ar_pci->started in pipe cleanup
-  ath10k: remove ar_pci->started
-  ath10k: flush hif buffers before recovery
-
- drivers/net/wireless/ath/ath10k/ce.c   |  71 +++++----
- drivers/net/wireless/ath/ath10k/ce.h   |  16 +-
- drivers/net/wireless/ath/ath10k/core.c |   1 +
- drivers/net/wireless/ath/ath10k/pci.c  | 259 +++++++++++++++------------------
- drivers/net/wireless/ath/ath10k/pci.h  |   4 +-
- 5 files changed, 165 insertions(+), 186 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 5887499..ca10a8b 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -679,9 +679,11 @@ static const struct ieee80211_iface_limit wds_limits[] = {
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 
+ static const struct ieee80211_iface_limit if_limits_multi[] = {
+-	{ .max = 1,	.types = BIT(NL80211_IFTYPE_STATION) },
+-	{ .max = 1,	.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
++	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 				 BIT(NL80211_IFTYPE_P2P_GO) },
++	{ .max = 1,	.types = BIT(NL80211_IFTYPE_ADHOC) },
+ };
+ 
+ static const struct ieee80211_iface_combination if_comb_multi[] = {
 -- 
-1.8.5.3
+2.0.4
 
