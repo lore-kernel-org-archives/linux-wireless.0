@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:57174 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbaHWBg1 (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:59323 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752422AbaHXKhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 21:36:27 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Andreea-Cristina Bernat <bernat.ada@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	paulmck@linux.vnet.ibm.com, j@w1.fi
-Subject: Re: [PATCH v2] carl9170: Remove redundant protection check
-Date: Sat, 23 Aug 2014 03:36:21 +0200
-Message-ID: <1605815.Y77AiltE7C@debian64> (sfid-20140823_033650_066183_C1EE666D)
-In-Reply-To: <1408749799.5604.38.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <20140822191431.GA5827@ada> <1931285.KsvFbLZH2Q@debian64> <1408749799.5604.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	Sun, 24 Aug 2014 06:37:32 -0400
+Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
+	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XLVAu-0003bt-Mk
+	for linux-wireless@vger.kernel.org; Sun, 24 Aug 2014 12:37:29 +0200
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XLVAu-00010E-E6
+	for linux-wireless@vger.kernel.org; Sun, 24 Aug 2014 12:37:28 +0200
+Date: Sun, 24 Aug 2014 12:37:28 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Support Cisco DTPC IE to reduce transmit power
+Message-ID: <20140824103728.GA2938@sesse.net> (sfid-20140824_123812_196637_F3B11F20)
+References: <20140823212827.GB15466@sesse.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140823212827.GB15466@sesse.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, August 22, 2014 04:23:19 PM Eric Dumazet wrote:
-> On Fri, 2014-08-22 at 23:53 +0200, Christian Lamparter wrote:
-> 
-> > The sta_info->agg[tid] check is not needed (for reference, see [0]).
-> > (There is already a check in mac80211 which prevents the leak of
-> > sta_info->agg[tid] [1]).
-> > 
-> > Regards
-> > Christian
-> > 
-> > [0] <https://lkml.org/lkml/2014/8/20/725>
-> > [1] <http://lxr.free-electrons.com/source/net/mac80211/agg-tx.c#L583>
-> > 
-> 
-> Hmpfff... this code is quite confusing. 
-That's true. Furthermore, parts of the logic are also embedded in
-the mac80211-stack and above. So, it's very hard to see the whole
-big picture, just by looking at the driver code.
+On Sat, Aug 23, 2014 at 11:28:27PM +0200, Steinar H. Gunderson wrote:
+> I noticed the other day that Linux and Cisco don't always seem to speak the
+> same language when it comes to reducing the client transmit power. I've
+> written a quick patch to try to remedy it; please consider applying to
+> the wireless tree.
 
-> RCU is used both in tricky way (carl9170_ampdu_gc() is an example)
-> and a talisman (the part you remove)
-I know that game ;-). But fair enough: if you have concerns about
-the complexity of the code in question: I'm willing to help you
-and explain the quirks in detail if necessary. I think this is a
-valuable addition, since "external consultants" are hard to come
-by.
+I looked in the CLI as well, and it pretty clearly indicates that the range
+here is -127 to 127 dBm, which means I've changed my mind; this is not a
+two-byte value. Updated patch attached.
 
-> Why is rcu_assign_pointer(sta_info->agg[tid], tid_info);
-> done inside the spinlock protected region, I don't know.
-The pointer in sta_info->agg[tid] is used exclusively by 
-the tx.c code... It is queried only if an outgoing frame
-has the IEEE80211_TX_CTL_AMPDU flag set. 
-
-But for this flag to be set, the aggregation session has
-to be operational. This requires two calls to ampdu_action [0].
-(first with: IEEE80211_AMPDU_TX_START and later with:
-IEEE80211_AMPDU_TX_OPERATIONAL).
-
-=> If you want to make a patch to move this rcu_assign_pointer(...)
-after the spin_unlock_bh() - Then: Yes, GO FOR IT!
- 
-> If this code relies on external protection, a comment would help its
-> comprehension for sure.
-> 
-> For example, you could add a 
-> BUG_ON(rcu_access_pointer(sta_info->agg[tid]));
-> so that we are sure requirements are not changed
-> in the callers one day.
-Maybe, but then: Is a "specific driver" the right place for this?
-Other drivers may also depend on ampdu_action not changing.
-As for the logic: The AMPDU handshake itself is part of the 802.11
-spec. If you are interested you can get 802.11-2012 [1] and look 
-into Section 9.21 "Block Acknowledgment". It contains a message
-sequence chart and details about the setup and tear down procedures
-for aggregation session [which is at the heart of the ampdu_action
-callback issue].
-
-Note: mac80211 has a "software simulator" mac80211_hwsim [2].
-It can be (and is) used to test most of the mac80211 functionality.
-So what do you think?
-
-Regards
-Christian 
-
-[0] <https://www.kernel.org/doc/htmldocs/80211/aggregation.html>
-[1] <http://standards.ieee.org/findstds/standard/802.11-2012.html>
-[2] <http://wireless.kernel.org/en/users/Drivers/mac80211_hwsim>
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
