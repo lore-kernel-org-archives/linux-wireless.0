@@ -1,142 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:53767 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752852AbaHMRKb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55691 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbaHYTpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 13:10:31 -0400
-Date: Wed, 13 Aug 2014 22:40:24 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: Simon Kelley <simon@thekelleys.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.or
-Cc: Julia Lawall <julia.lawall@lip6.fr>, Kalle Valo <kvalo@adurom.com>
-Subject: [PATCH v2] atmel_cs: Remove typedef local_info_t
-Message-ID: <20140813171024.GA16596@himangi-Dell> (sfid-20140813_191043_193933_48D3A541)
+	Mon, 25 Aug 2014 15:45:12 -0400
+Date: Mon, 25 Aug 2014 15:35:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: alex.aring@gmail.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2014-08-20
+Message-ID: <20140825193545.GE1966@tuxdriver.com> (sfid-20140825_214536_234842_6349E511)
+References: <20140820191438.GA16364@t440s.P-661HNU-F1>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140820191438.GA16364@t440s.P-661HNU-F1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linux kernel coding style guidelines suggest not using typedefs
-for structure types. This patch gets rid of the typedef for
-local_info_t. Also, the name of the struct is changed to drop the _t,
-to make the name look less typedef-like.
+On Wed, Aug 20, 2014 at 10:14:38PM +0300, Johan Hedberg wrote:
+> Hi John,
+> 
+> Here's a set of patches for the 3.17-rc series.
+> 
+> It contains a connection reference counting fix for LE where a
+> connection might stay up even though it should get disconnected.
+> 
+> The other 802.15.4 6LoWPAN related patches were sent to the bluetooth
+> tree by Alexander Aring and described as follows by him:
+> 
+> "
+> these patches contains patches for the bluetooth branch.
+> 
+> This series includes memory leak fixes and an errno value fix.
+> Also there are two patches for sending and receiving 1280 6LoWPAN
+> packets, which makes the IEEE 802.15.4 6LoWPAN stack more RFC
+> compliant.
+> "
+> 
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit 77b2f2865956b7573f9b040db7a9f808b434acd1:
+> 
+>   iwlwifi: mvm: disable scheduled scan to prevent firmware crash (2014-08-14 19:47:41 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+> 
+> for you to fetch changes up to f161dd4122ffa73e4e12000309dca65bec80d416:
+> 
+>   Bluetooth: Fix hci_conn reference counting for auto-connections (2014-08-20 21:57:39 +0300)
 
-The following Coccinelle semantic patch detects the case:
+Pulling now...
 
-@tn@
-identifier i;
-type td;
-@@
-
--typedef
- struct i { ... }
--td
- ;
-
-@@
-type tn.td;
-identifier tn.i;
-@@
-
--td
-+ struct i
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
-v2: correct prefix.
-Not compile tested.
- drivers/net/wireless/atmel_cs.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel_cs.c
-index 4cfb4d9..7afc9c5 100644
---- a/drivers/net/wireless/atmel_cs.c
-+++ b/drivers/net/wireless/atmel_cs.c
-@@ -66,18 +66,18 @@ static void atmel_release(struct pcmcia_device *link);
- 
- static void atmel_detach(struct pcmcia_device *p_dev);
- 
--typedef struct local_info_t {
-+struct local_info {
- 	struct net_device *eth_dev;
--} local_info_t;
-+};
- 
- static int atmel_probe(struct pcmcia_device *p_dev)
- {
--	local_info_t *local;
-+	struct local_info *local;
- 
- 	dev_dbg(&p_dev->dev, "atmel_attach()\n");
- 
- 	/* Allocate space for private device-specific data */
--	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
-+	local = kzalloc(sizeof(*local), GFP_KERNEL);
- 	if (!local)
- 		return -ENOMEM;
- 
-@@ -117,7 +117,7 @@ static int atmel_config_check(struct pcmcia_device *p_dev, void *priv_data)
- 
- static int atmel_config(struct pcmcia_device *link)
- {
--	local_info_t *dev;
-+	struct local_info *dev;
- 	int ret;
- 	const struct pcmcia_device_id *did;
- 
-@@ -141,14 +141,14 @@ static int atmel_config(struct pcmcia_device *link)
- 	if (ret)
- 		goto failed;
- 
--	((local_info_t*)link->priv)->eth_dev =
-+	((struct local_info *)link->priv)->eth_dev =
- 		init_atmel_card(link->irq,
- 				link->resource[0]->start,
- 				did ? did->driver_info : ATMEL_FW_TYPE_NONE,
- 				&link->dev,
- 				card_present,
- 				link);
--	if (!((local_info_t*)link->priv)->eth_dev)
-+	if (!((struct local_info *)link->priv)->eth_dev)
- 			goto failed;
- 
- 
-@@ -161,20 +161,20 @@ static int atmel_config(struct pcmcia_device *link)
- 
- static void atmel_release(struct pcmcia_device *link)
- {
--	struct net_device *dev = ((local_info_t*)link->priv)->eth_dev;
-+	struct net_device *dev = ((struct local_info *)link->priv)->eth_dev;
- 
- 	dev_dbg(&link->dev, "atmel_release\n");
- 
- 	if (dev)
- 		stop_atmel_card(dev);
--	((local_info_t*)link->priv)->eth_dev = NULL;
-+	((struct local_info *)link->priv)->eth_dev = NULL;
- 
- 	pcmcia_disable_device(link);
- }
- 
- static int atmel_suspend(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	netif_device_detach(local->eth_dev);
- 
-@@ -183,7 +183,7 @@ static int atmel_suspend(struct pcmcia_device *link)
- 
- static int atmel_resume(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	atmel_open(local->eth_dev);
- 	netif_device_attach(local->eth_dev);
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
