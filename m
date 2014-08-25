@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:59422 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbaHZQmv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 12:42:51 -0400
-Received: by mail-ig0-f173.google.com with SMTP id h18so4809596igc.12
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2014 09:42:51 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 26 Aug 2014 18:42:51 +0200
-Message-ID: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> (sfid-20140826_184255_535176_7368A069)
-Subject: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:46674 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751745AbaHYUJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 16:09:35 -0400
+Message-ID: <1408997366.17421.5.camel@dubbel> (sfid-20140825_220939_454544_F5D886E3)
+From: Luca Coelho <luca@coelho.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+	emmanuel.grumbach@intel.com, johannes.berg@intel.com
+Date: Mon, 25 Aug 2014 23:09:26 +0300
+In-Reply-To: <6715079.xd2j4mnUMo@debian64>
+References: <6715079.xd2j4mnUMo@debian64>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Iwlwifi 3160 AC (firmware?) clashes with
+ CONFIG_IWLWIFI_BCAST_FILTERING
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[cross-list: linux-mips@ and linux-wireless@]
+Hi Christian,
 
-We're working on another Broadcom platform, SoC with an ARM CPU,
-platform called bcm53xx. It shares many things with the older (MIPS
-based) bcm47xx, so we need to figure out how to modify some of the
-drivers.
+I'm not the best person to talk about the iwlwifi firmwares (that would
+be Emmanuel, but he is not available now), but I'll try.
 
-Hauke recently proposed sharing code for NVRAM support as a separated
-driver. In his RFC patch it was added as a new platform driver. I
-liked this idea (I'd simply prefer to modify existing code instead of
-duplicating it), so I played with it a bit today.
+On Sat, 2014-08-23 at 00:01 +0200, Christian Lamparter wrote:
+> Hello,
+> 
+> I got new hardware. Among the new stuff, there was one
+> Intel® Dual Band Wireless-AC 3160. When I tried to connect
+> to one (in fact any) of my networks, I was getting the
+> following errors:
+> 
+> [ 1021.092378] iwlwifi 0000:01:00.0: Microcode SW error detected.  Restarting 0x82000000.
+> [...]
+> [ 1021.093935] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+> [ 1021.093939] iwlwifi 0000:01:00.0: Status: 0x00000000, count: 6
+> [ 1021.093942] iwlwifi 0000:01:00.0: Loaded firmware version: 25.223.9.0
+> [ 1021.093947] iwlwifi 0000:01:00.0: 0x00000038 | BAD_COMMAND <---                
+> [ 1021.093951] iwlwifi 0000:01:00.0: 0x00A00220 | uPc
 
-My plan was to modify bcm47xx code to make nvram.c a separated driver
-and update bcm47xx/bcma to use it. Well, it didn't work out. The
-problem is that we need access to the NVRAM pretty early. Please take
-a look at my description of bcm47xx booting process (it's simply a
-summary of start_kernel and bcm47xx code):
-
-1) prom_init / plat_mem_setup
-These two functions are called in pretty much the same phase from the
-setup_arch (arch/mips/kernel/setup.c).
-Task: detect & register memory
-Requires: CPU type, maybe Broadcom chip ID (highmem support)
-Available: CPU type
-Not available: kmalloc, device_add (kobject)
-
-2) arch_init_irq
-Called from the arch specific init_IRQ (arch/mips/kernel/irq.c)
-Task: setup bcma's MIPS core
-Requires: bcma bus MIPS core
-Available: kmalloc
-Not available: device_add (kobject)
-
-3) plat_time_init
-Called from the arch specific time_init (arch/mips/kernel/time.c)
-Task: set frequency
-Requires: bcma bus ChipCommon core, nvram
-Available: kmalloc
-Not available: device_add (kobject)
-
-4) At some point we need to register bcma devices, device_initcall can
-be used for that
-
-As you can see, we need access to the NVRAM quite early (step 3,
-plat_time_init, or even earlier), but device_add (platform
-devices/drivers) is not available then yet. So I'm afraid we won't be
-able to use this common way to write NVRAM driver.
+Where did you get this firmware version? AFAICT the last version
+Emmanuel sent to linux-firmware.git is 23.214.9.0 (the one you also
+mentioned below).
 
 
-So there I want to present my plan for the NVRAM improvements. If you
-don't agree with any part of it, or you can see any better solution,
-please speak up!
+> [...]
+> [ 1021.094192] Call Trace:
+> [ 1021.094205]  [<ffffffff813ce9bd>] ? dump_stack+0x41/0x51
+> [ 1021.094217]  [<ffffffffa0b9cd8b>] ? iwl_trans_pcie_send_hcmd+0x367/0x438 [iwlwifi]
+> [ 1021.094226]  [<ffffffffa0b9b52c>] ? iwl_pcie_enqueue_hcmd+0x5e3/0x5fe [iwlwifi]
+> [ 1021.094235]  [<ffffffff8105fd4c>] ? finish_wait+0x5d/0x5d
+> [ 1021.094250]  [<ffffffffa0d50106>] ? iwl_mvm_send_cmd+0xd/0x22 [iwlmvm]
+> [ 1021.094262]  [<ffffffffa0d50160>] ? iwl_mvm_send_cmd_pdu+0x45/0x52 [iwlmvm]
+> [ 1021.094273]  [<ffffffffa0d4c5fb>] ? iwl_mvm_configure_bcast_filter.isra.14.part.15+0x36/0x3f [iwlmvm]
+> 
+> (Full log attached below)
+> 
+> What cough my eye was the "BAD_COMMAND" in the error log. I disabled
+> "CONFIG_IWLWIFI_BCAST_FILTERING" option and the 3160 is now working.
+> 
+> As far as I can tell, there is already a firmware feature flag:
+> "IWL_UCODE_TLV_FLAGS_BCAST_FILTERING" which can be used to
+> distinguish whenever the feature is supported or not. But it
+> seems to be "stuck on" for the 3160.
 
-1) I won't make nvram.c a platform driver. Instead I would like to
-make it less bcm47xx specific. I don't want to touch bcm47xx_bus in
-this file. Instead I want to add a generic function that will accept
-address and size of memory where NVRAM should be found. Then I'd like
-to move this file out of "mips" arch (drivers/misc/?
-drivers/bcma/nvram/?) and allow using it for bcm53xx.
+Weird, but it's possible that they set the flag mistakenly for the 3160
+firmware.  I'll check this with the firmware team.
 
-2) I was also thinking about cleaning bcm47xx init. Right now we do a
-lot of hacks in plat_mem_setup & bcma to register the bus and scan its
-cores. It's so early (before mm_init) that we can't alloc memory!
-Doing all this stuff slightly later (e.g. arch_init_irq) would allow
-us to simply use "kmalloc" and drop all current hacks in bcma.
 
-3) Above change (point 2) would require some small change in bcma. We
-would need 2-stages init: detecting (with kmalloc!) bus cores,
-registering cores. This is required, because we can't register cores
-too early, device_add (and the underlying kobject) would oops/WARN in
-kobject_get.
+> Regards
+> Christian
+> 
+> BTW: I also tried the older "23.214.9.0" firmware too.
+> => Same result [Doesn't work with BCAST_FILTERING enabled].
 
--- 
-Rafał
+Thanks a lot for your report! Broadcast filtering is not set by default,
+so I haven't seen that bug before.
+
+--
+Cheers,
+Luca.
+
