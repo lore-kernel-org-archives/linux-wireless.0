@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33052 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbaH1VGz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56176 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbaHYUaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 17:06:55 -0400
-Date: Thu, 28 Aug 2014 14:06:54 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v3 00/11] lib: introduce string_escape_mem and %*pE
- specifier
-Message-Id: <20140828140654.d5599d2252386df98a57db64@linux-foundation.org> (sfid-20140828_230720_789153_BCFCF271)
-In-Reply-To: <CAHp75Vdi6jaexNOFV0mLn=sFOSqmLPNKoGwniSnE0oMim0hjTA@mail.gmail.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<20140828183330.GM13758@tuxdriver.com>
-	<20140828120851.07dbd1c52ec287ca169acee4@linux-foundation.org>
-	<CAHp75Vdi6jaexNOFV0mLn=sFOSqmLPNKoGwniSnE0oMim0hjTA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 25 Aug 2014 16:30:10 -0400
+Date: Mon, 25 Aug 2014 16:18:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hans Wennborg <hans@hanshq.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/19] iwl4965: fix %d confusingly prefixed with 0x in
+ format string
+Message-ID: <20140825201801.GH1966@tuxdriver.com> (sfid-20140825_223014_189286_7EF902BA)
+References: <1407111605-15005-1-git-send-email-hans@hanshq.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1407111605-15005-1-git-send-email-hans@hanshq.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 28 Aug 2014 23:58:45 +0300 Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
-
-> On Thu, Aug 28, 2014 at 10:08 PM, Andrew Morton
-> <akpm@linux-foundation.org> wrote:
-> > On Thu, 28 Aug 2014 14:33:30 -0400 "John W. Linville" <linville@tuxdriver.com> wrote:
-> >
-> >> On Wed, Aug 20, 2014 at 12:42:41PM +0300, Andy Shevchenko wrote:
-> >> > The introduced function is a kind of opposite to string_unescape. We have
-> >> > several users of such functionality each of them created custom implementation.
-> >> > The series contains clean up of test suite, adding new call, and switching few
-> >> > users to use it via %*pE specifier.
-> >>
-> >> Any objections?  Do you (Andy) want me to merge this through the
-> >> wireless tree?
-> >>
-> >
-> > Who is this top-poster and what have you done with John?
-> >
-> > I was going to apply them yesterday but in [4/11] Andy said he plans on
-> > sending out a v5. (v4 actually?)
+On Sun, Aug 03, 2014 at 05:20:05PM -0700, Hans Wennborg wrote:
+> Signed-off-by: Hans Wennborg <hans@hanshq.net>
+> ---
+>  drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> For now (so far no more comments) it is only couple of trivia fixes
-> (removing useless comments). Would you like to resend whole series or
-> just fixup would be enough?
+> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+> index c159c05..7d6fd59 100644
+> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
+> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+> @@ -4633,7 +4633,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
+>  	else {
+>  		ret = il_set_tx_power(il, val, false);
+>  		if (ret)
+> -			IL_ERR("failed setting tx power (0x%d).\n", ret);
+> +			IL_ERR("failed setting tx power (0x%x).\n", ret);
+>  		else
+>  			ret = count;
+>  	}
 
-I fixed up the one Joe commented on.
+It seems like that should be "0x%08x" or similar, no?
 
---- a/lib/vsprintf.c~lib-vsprintf-add-%pe-format-specifier-fix
-+++ a/lib/vsprintf.c
-@@ -1111,12 +1111,11 @@ char *escaped_string(char *buf, char *en
- 	int len;
- 
- 	if (spec.field_width == 0)
--		/* nothing to print */
--		return buf;
-+		return buf;				/* nothing to print */
- 
- 	if (ZERO_OR_NULL_PTR(addr))
--		/* NULL pointer */
--		return string(buf, end, NULL, spec);
-+		return string(buf, end, NULL, spec);	/* NULL pointer */
-+
- 
- 	do {
- 		switch (fmt[count++]) {
-_
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
