@@ -1,100 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37021 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752129AbaHTJnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 05:43:03 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 08/11] lib80211: remove unused print_ssid()
-Date: Wed, 20 Aug 2014 12:42:49 +0300
-Message-Id: <1408527772-27224-9-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20140820_114432_018361_1DB50784)
-In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mail-la0-f50.google.com ([209.85.215.50]:35921 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752023AbaHYK3N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 06:29:13 -0400
+Received: by mail-la0-f50.google.com with SMTP id pi18so12461629lab.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 03:29:11 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: dont duplicate service-pipe mapping
+Date: Mon, 25 Aug 2014 12:19:22 +0200
+Message-Id: <1408961963-3682-3-git-send-email-michal.kazior@tieto.com> (sfid-20140825_122916_302142_55E3D56E)
+In-Reply-To: <1408961963-3682-1-git-send-email-michal.kazior@tieto.com>
+References: <1408961963-3682-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel we have %*pE specifier to print an escaped buffer. All users now
-switched to that approach.
+The mapping is already defined in a structure. It
+makes little sense to duplicate information stored
+in it within a function.
 
-This fixes a bug as well. The current implementation wrongly prints octal
-numbers: only two first digits are used in case when 3 are required and the
-rest of the string ends up cut off.
-
-Additionally by default the \f, \v, \a, and \e are escaped to their alphabetic
-representation. It's safe to do since it is currently used for messaging only.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/lib80211.h  |  5 -----
- net/wireless/lib80211.c | 32 --------------------------------
- 2 files changed, 37 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 77 +++++++++++++++--------------------
+ 1 file changed, 33 insertions(+), 44 deletions(-)
 
-diff --git a/include/net/lib80211.h b/include/net/lib80211.h
-index be95b92..aab0f42 100644
---- a/include/net/lib80211.h
-+++ b/include/net/lib80211.h
-@@ -32,11 +32,6 @@
- #include <linux/timer.h>
- #include <linux/seq_file.h>
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 71ac018..fa0e245 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1094,68 +1094,57 @@ static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ 	del_timer_sync(&ar_pci->rx_post_retry);
+ }
  
--/* print_ssid() is intended to be used in debug (and possibly error)
-- * messages. It should never be used for passing ssid to user space. */
--const char *print_ssid(char *buf, const char *ssid, u8 ssid_len);
--#define DECLARE_SSID_BUF(var) char var[IEEE80211_MAX_SSID_LEN * 4 + 1] __maybe_unused
--
- #define NUM_WEP_KEYS	4
- 
- enum {
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index a55c27b..4596115 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -46,38 +46,6 @@ static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
- static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
- static void lib80211_crypt_deinit_handler(unsigned long data);
- 
--const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
--{
--	const char *s = ssid;
--	char *d = buf;
--
--	ssid_len = min_t(u8, ssid_len, IEEE80211_MAX_SSID_LEN);
--	while (ssid_len--) {
--		if (isprint(*s)) {
--			*d++ = *s++;
--			continue;
--		}
--
--		*d++ = '\\';
--		if (*s == '\0')
--			*d++ = '0';
--		else if (*s == '\n')
--			*d++ = 'n';
--		else if (*s == '\r')
--			*d++ = 'r';
--		else if (*s == '\t')
--			*d++ = 't';
--		else if (*s == '\\')
--			*d++ = '\\';
--		else
--			d += snprintf(d, 3, "%03o", *s);
--		s++;
--	}
--	*d = '\0';
--	return buf;
--}
--EXPORT_SYMBOL(print_ssid);
--
- int lib80211_crypt_info_init(struct lib80211_crypt_info *info, char *name,
- 				spinlock_t *lock)
+-/* TODO - temporary mapping while we have too few CE's */
+ static int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar,
+ 					      u16 service_id, u8 *ul_pipe,
+ 					      u8 *dl_pipe, int *ul_is_polled,
+ 					      int *dl_is_polled)
  {
+-	int ret = 0;
++	const struct service_to_pipe *entry;
++	bool ul_set = false, dl_set = false;
++	int i;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI, "pci hif map service\n");
+ 
+ 	/* polling for received messages not supported */
+ 	*dl_is_polled = 0;
+ 
+-	switch (service_id) {
+-	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
+-		/*
+-		 * Host->target HTT gets its own pipe, so it can be polled
+-		 * while other pipes are interrupt driven.
+-		 */
+-		*ul_pipe = 4;
+-		/*
+-		 * Use the same target->host pipe for HTC ctrl, HTC raw
+-		 * streams, and HTT.
+-		 */
+-		*dl_pipe = 1;
+-		break;
+-
+-	case ATH10K_HTC_SVC_ID_RSVD_CTRL:
+-	case ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS:
+-		/*
+-		 * Note: HTC_RAW_STREAMS_SVC is currently unused, and
+-		 * HTC_CTRL_RSVD_SVC could share the same pipe as the
+-		 * WMI services.  So, if another CE is needed, change
+-		 * this to *ul_pipe = 3, which frees up CE 0.
+-		 */
+-		/* *ul_pipe = 3; */
+-		*ul_pipe = 0;
+-		*dl_pipe = 1;
+-		break;
++	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
++		entry = &target_service_to_ce_map_wlan[i];
+ 
+-	case ATH10K_HTC_SVC_ID_WMI_DATA_BK:
+-	case ATH10K_HTC_SVC_ID_WMI_DATA_BE:
+-	case ATH10K_HTC_SVC_ID_WMI_DATA_VI:
+-	case ATH10K_HTC_SVC_ID_WMI_DATA_VO:
++		if (entry->service_id != service_id)
++			continue;
+ 
+-	case ATH10K_HTC_SVC_ID_WMI_CONTROL:
+-		*ul_pipe = 3;
+-		*dl_pipe = 2;
+-		break;
++		switch (entry->pipedir) {
++		case PIPEDIR_NONE:
++			break;
++		case PIPEDIR_IN:
++			WARN_ON(dl_set);
++			*dl_pipe = entry->pipenum;
++			dl_set = true;
++			break;
++		case PIPEDIR_OUT:
++			WARN_ON(ul_set);
++			*ul_pipe = entry->pipenum;
++			ul_set = true;
++			break;
++		case PIPEDIR_INOUT:
++			WARN_ON(dl_set);
++			WARN_ON(ul_set);
++			*dl_pipe = entry->pipenum;
++			*ul_pipe = entry->pipenum;
++			dl_set = true;
++			ul_set = true;
++			break;
++		}
++	}
+ 
+-		/* pipe 5 unused   */
+-		/* pipe 6 reserved */
+-		/* pipe 7 reserved */
++	if (WARN_ON(!ul_set || !dl_set))
++		return -ENOENT;
+ 
+-	default:
+-		ret = -1;
+-		break;
+-	}
+ 	*ul_is_polled =
+ 		(host_ce_config_wlan[*ul_pipe].flags & CE_ATTR_DIS_INTR) != 0;
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static void ath10k_pci_hif_get_default_pipe(struct ath10k *ar,
 -- 
-2.1.0
+1.8.5.3
 
