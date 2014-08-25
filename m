@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:38399 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbaHVTOl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 15:14:41 -0400
-Date: Fri, 22 Aug 2014 22:14:31 +0300
-From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-To: chunkeey@googlemail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: paulmck@linux.vnet.ibm.com
-Subject: [PATCH v2] carl9170: Remove redundant protection check
-Message-ID: <20140822191431.GA5827@ada> (sfid-20140822_211502_843900_E8E1E60B)
+Received: from arrakis.dune.hu ([78.24.191.176]:38692 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754652AbaHYPCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 11:02:16 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8344390.rjnOcYBCET@wuerfel>
+References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
+ <1408915485-8078-5-git-send-email-hauke@hauke-m.de> <8344390.rjnOcYBCET@wuerfel>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Mon, 25 Aug 2014 17:01:27 +0200
+Message-ID: <CAOiHx=kcnZqkUxTc64oWWnyet2wXZe+3A1Lt2C5kvjgVjgwcVw@mail.gmail.com> (sfid-20140825_170221_058550_F9E75CD6)
+Subject: Re: [RFC 3/7] bcm47xx-sprom: add Broadcom sprom parser driver
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	MIPS Mailing List <linux-mips@linux-mips.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The carl9170_op_ampdu_action() function is used only by the mac80211
-framework.
-Since the mac80211 already takes care of checks and properly serializing
-calls to the driver's function there is no need for the driver to do the same
-thing.
+On Mon, Aug 25, 2014 at 9:52 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sunday 24 August 2014 23:24:41 Hauke Mehrtens wrote:
+>> This driver needs an nvram driver and fetches the sprom values from the
+>> nvram and provides it to any other driver. The calibration data for the
+>> wifi chip the mac address and some more board description data is
+>> stores in the sprom.
+>>
+>> This is based on a copy of arch/mips/bcm47xx/sprom.c and my plan is to
+>> make the bcm47xx MIPS SoCs also use this driver some time later.
+>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  .../devicetree/bindings/misc/bcm47xx-sprom.txt     |  16 +
+>
+> I'd prefer not to list the binding in a 'misc' category. Maybe we can
+> have a new category and move the misc/sram.txt into the same?
+>
+>>  drivers/misc/Kconfig                               |  14 +
+>>  drivers/misc/Makefile                              |   1 +
+>>  drivers/misc/bcm47xx-sprom.c                       | 690 +++++++++++++++++++++
+>
+> On a similar note, putting the driver into drivers/misc seems
+> suboptimal: misc drivers should by definition be something that
+> is for some odd hardware with no external dependencies on it,
+> whereas your driver seems to be used by multiple other drivers.
+>
+> Would it make sense to put it into drivers/bcma when that is the
+> only bus it is used on?
 
-Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
----
-Changes in v2:
- - Change subject line from
-   "carl9170: Replace rcu_dereference() with rcu_access_pointer()"
-   to
-   "carl9170: Remove redundant protection check"
- - Update the commit message according to the modifications
- - Delete the lines of interest at the suggestion and explanations of
-   Christian Lamparter <chunkeey@googlemail.com>
+If the driver will be used for bcm47xx/mips, it will be used for two
+busses, bcma and ssb, so it will need to be at a common
+location.
 
- drivers/net/wireless/ath/carl9170/main.c | 6 ------
- 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 12018ff..6758b9a 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1430,12 +1430,6 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
- 		if (!sta_info->ht_sta)
- 			return -EOPNOTSUPP;
- 
--		rcu_read_lock();
--		if (rcu_access_pointer(sta_info->agg[tid])) {
--			rcu_read_unlock();
--			return -EBUSY;
--		}
--
- 		tid_info = kzalloc(sizeof(struct carl9170_sta_tid),
- 				   GFP_ATOMIC);
- 		if (!tid_info) {
--- 
-1.9.1
-
+Jonas
