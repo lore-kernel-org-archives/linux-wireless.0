@@ -1,111 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37007 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932071AbaHGP2j (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:38098 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbaHYG2y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 11:28:39 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so4278411wgh.27
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 08:28:38 -0700 (PDT)
+	Mon, 25 Aug 2014 02:28:54 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v8 2/4] ath10k: provide firmware crash info via debugfs
+References: <20140821124705.27159.67898.stgit@potku.adurom.net>
+	<20140821124907.27159.64620.stgit@potku.adurom.net>
+	<CA+BoTQk6wvXMEWnfFvASJwzj2AC0VB=Zby+zLO-tJ3NN_eA2mg@mail.gmail.com>
+Date: Mon, 25 Aug 2014 09:28:48 +0300
+In-Reply-To: <CA+BoTQk6wvXMEWnfFvASJwzj2AC0VB=Zby+zLO-tJ3NN_eA2mg@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 22 Aug 2014 08:49:35 +0200")
+Message-ID: <878umd84m7.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_082857_560140_3335CE2A)
 MIME-Version: 1.0
-Date: Thu, 7 Aug 2014 11:28:38 -0400
-Message-ID: <CAMKDnrkHOsLqXz5p8ZjLRL26N14ZByyM5XQ9b=6a0cB5pPmfqw@mail.gmail.com> (sfid-20140807_172843_023079_8AD2B6F4)
-Subject: Carl9170fw loading error
-From: Chris C <chris.a.cremer@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I am working on a project where I need to be able to modify a wireless
-adapter's firmware. I'm trying to use the Netgear WN111v2 with the
-carl9170 driver and firmware. Depending on the configurations I set
-when building the firmware, I get one of two errors when I try using
-the device: 1)failed to parse or 2)tainted. See below.
+> On 21 August 2014 14:49, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>
+>> +static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+>> +{
+>> +       struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
+>> +       struct ath10k_dump_file_data *dump_data;
+>> +       struct ath10k_tlv_dump_data *dump_tlv;
+>> +       int hdr_len = sizeof(*dump_data);
+>> +       unsigned int len, sofar = 0;
+>> +       unsigned char *buf;
+>> +
+>> +       lockdep_assert_held(&ar->conf_mutex);
+> [...]
+>> +static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
+>> +{
+>> +       struct ath10k *ar = inode->i_private;
+>> +       struct ath10k_dump_file_data *dump;
+>> +       int ret;
+>> +
+>> +       mutex_lock(&ar->conf_mutex);
+>
+> I don't think we need conf_mutex here at all, do we?
 
-What I did:
-I made the toolchain and got the tools and libs. Then ran ./autogen.sh
-and selected some configurations. Then copied the new carl9170.fw file
-to /lib/firmware and changed its name to carl9170-1.fw. (Followed the
-README https://github.com/chunkeey/carl9170fw)
+You are right, I removed that (diff below).
 
-Here are the errors:
+> I'm sorry, I should've spotted this earlier. Feel free to just ignore
+> me :-)
 
-1) If I select 'no' to all options during the autogen configuration,
-this is the error I get when inserting the device:
+Hehe, no worries. It's difficult to spot all problems in the first
+review and I do that all the time :)
 
-[505796.463525] usb 1-1.4: new high-speed USB device number 15 using ehci_hcd
-[505796.679353] usb 1-1.4: reset high-speed USB device number 15 using ehci_hcd
-[505796.810127] usb 1-1.4: driver   API: 1.9.4 2011-08-15 [1-1]
-[505796.810132] usb 1-1.4: firmware API: 1.9.9 2013-10-25
-[505796.810135] usb 1-1.4: Unprotected firmware image.
-[505796.810138] usb 1-1.4: firmware does support mandatory features.
-[505796.810141] usb 1-1.4: failed to parse firmware (-125).
+> Other than that this looks fine.
 
+Great, thanks for good review!
 
-2) If I select 'yes' to all options except the experimental
-extensions, this is the error I get when inserting the device:
-
-[504006.523276] ------------[ cut here ]------------
-[504006.523286] WARNING: at
-/build/buildd/linux-3.2.0/net/wireless/core.c:436
-wiphy_verify_combinations+0x213/0x240 [cfg80211]()
-[504006.523289] Hardware name: OptiPlex 790
-[504006.523291] Modules linked in: arc4 dm_crypt snd_hda_codec_hdmi
-snd_hda_codec_realtek carl9170(O) mac80211 ath cfg80211 snd_hda_intel
-snd_hda_codec snd_hwdep snd_pcm dcdbas parport_pc snd_seq_midi
-snd_rawmidi ppdev snd_seq_midi_event snd_seq joydev snd_timer
-snd_seq_device psmouse snd serio_raw soundcore snd_page_alloc mac_hid
-mei(C) rfcomm bnep bluetooth lp parport nfsd nfs lockd fscache
-auth_rpcgss nfs_acl sunrpc binfmt_misc usbhid hid e1000e radeon ttm
-i915 drm_kms_helper drm i2c_algo_bit video
-[504006.523338] Pid: 30107, comm: firmware/carl91 Tainted: G        WC
-O 3.2.0-67-generic #101-Ubuntu
-[504006.523341] Call Trace:
-[504006.523349]  [<ffffffff810683af>] warn_slowpath_common+0x7f/0xc0
-[504006.523354]  [<ffffffff8106840a>] warn_slowpath_null+0x1a/0x20
-[504006.523361]  [<ffffffffa049e233>]
-wiphy_verify_combinations+0x213/0x240 [cfg80211]
-[504006.523368]  [<ffffffffa049f395>] wiphy_register+0xc5/0x3f0 [cfg80211]
-[504006.523380]  [<ffffffffa04d2235>] ?
-ieee80211_register_hw+0xb5/0x650 [mac80211]
-[504006.523390]  [<ffffffffa04d2449>]
-ieee80211_register_hw+0x2c9/0x650 [mac80211]
-[504006.523396]  [<ffffffffa0552044>] carl9170_register+0x294/0x5c0 [carl9170]
-[504006.523402]  [<ffffffff81408720>] ? _request_firmware+0x270/0x270
-[504006.523407]  [<ffffffffa0553d48>]
-carl9170_usb_firmware_step2+0x68/0xe0 [carl9170]
-[504006.523412]  [<ffffffff81408761>] request_firmware_work_func+0x41/0x80
-[504006.523417]  [<ffffffff8108b8cc>] kthread+0x8c/0xa0
-[504006.523422]  [<ffffffff8166deb4>] kernel_thread_helper+0x4/0x10
-[504006.523427]  [<ffffffff8108b840>] ? flush_kthread_worker+0xa0/0xa0
-[504006.523431]  [<ffffffff8166deb0>] ? gs_change+0x13/0x13
-[504006.523434] ---[ end trace df0f0cb5a9397534 ]---
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index bf08f026b202..442fe93d18be 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -712,8 +712,6 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	unsigned int len, sofar = 0;
+ 	unsigned char *buf;
+ 
+-	lockdep_assert_held(&ar->conf_mutex);
+-
+ 	len = hdr_len;
+ 	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+ 
+@@ -785,22 +783,14 @@ static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
+ {
+ 	struct ath10k *ar = inode->i_private;
+ 	struct ath10k_dump_file_data *dump;
+-	int ret;
+-
+-	mutex_lock(&ar->conf_mutex);
+ 
+ 	dump = ath10k_build_dump_file(ar);
+-	if (!dump) {
+-		ret = -ENODATA;
+-		goto out;
+-	}
++	if (!dump)
++		return -ENODATA;
+ 
+ 	file->private_data = dump;
+-	ret = 0;
+ 
+-out:
+-	mutex_unlock(&ar->conf_mutex);
+-	return ret;
++	return 0;
+ }
+ 
+ static ssize_t ath10k_fw_crash_dump_read(struct file *file,
 
 
-Also, the adapter works when I use the firmware from here:
-http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary
-And this is what it shows when it works:
-
-[506279.791495] usb 1-1.4: new high-speed USB device number 16 using ehci_hcd
-[506280.007316] usb 1-1.4: reset high-speed USB device number 16 using ehci_hcd
-[506280.137921] usb 1-1.4: driver   API: 1.9.4 2011-08-15 [1-1]
-[506280.137926] usb 1-1.4: firmware API: 1.9.9 2013-10-25
-[506280.137957] usb 1-1.4: driver does not support all firmware features.
-[506280.491337] ath: EEPROM regdomain: 0x0
-[506280.491341] ath: EEPROM indicates default country code should be used
-[506280.491343] ath: doing EEPROM country->regdmn map search
-[506280.491346] ath: country maps to regdmn code: 0x3a
-[506280.491348] ath: Country alpha2 being used: US
-[506280.491350] ath: Regpair used: 0x3a
-
-More info:
-uname -a:
-Linux mims 3.2.0-67-generic #101-Ubuntu SMP Tue Jul 15 17:46:11 UTC
-2014 x86_64 x86_64 x86_64 GNU/Linux
-
-Please let me know if there is more useful information I should post.
-
-Best regards,
-Chris
+-- 
+Kalle Valo
