@@ -1,93 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:48495 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753351AbaHUUKh (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38605 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752334AbaHYGLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 16:10:37 -0400
-Date: Thu, 21 Aug 2014 23:10:26 +0300
-From: Andreea Bernat <bernat.ada@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	paulmck@linux.vnet.ibm.com
-Subject: Re: [PATCH] carl9170: Replace rcu_dereference() with
- rcu_access_pointer()
-Message-ID: <20140821201026.GA26428@ada> (sfid-20140821_221059_696877_86CB5E5C)
-References: <20140817104806.GA14533@ada>
- <3029076.uaUkTd8nru@debian64>
- <20140820173210.GA18892@ada>
- <3042528.E5hT1D5bWz@debian64>
+	Mon, 25 Aug 2014 02:11:41 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Andreas Fenkart <afenkart@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sun, 24 Aug 2014 23:11:34 -0700
+Subject: RE: mwifiex: switching from adhoc to 5GHz managed fails
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC47817B120E@SC-VEXCH2.marvell.com> (sfid-20140825_081145_086387_BEEB6711)
+References: <CALtMJEDfVr1UxExOsiGK4G54BHB54wLt8co_98yZpFzH7NY9VA@mail.gmail.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC4781147BD9@SC-VEXCH2.marvell.com>
+	<CALtMJECey7bykvHp03-r1N=d774bOUyUagJqZAbZEeHwDPstew@mail.gmail.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC4781147C18@SC-VEXCH2.marvell.com>
+ <CALtMJECdC5bJOe1mBdMaZovO57x=aCoRK+JpyUv8YnpphssjEQ@mail.gmail.com>
+In-Reply-To: <CALtMJECdC5bJOe1mBdMaZovO57x=aCoRK+JpyUv8YnpphssjEQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3042528.E5hT1D5bWz@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 20, 2014 at 01:20:02PM -0700, Christian Lamparter wrote:
-> On Wednesday, August 20, 2014 08:32:11 PM Andreea Bernat wrote:
-> > On Mon, Aug 18, 2014 at 09:29:36PM +0200, Christian Lamparter wrote:
-> > > On Sunday, August 17, 2014 01:48:07 PM Andreea-Cristina Bernat wrote:
-> > > > The rcu_dereference() call is used directly in a condition.
-> > > > Since its return value is never dereferenced it is recommended to use
-> > > > "rcu_access_pointer()" instead of "rcu_dereference()".
-> > > > Therefore, this patch makes the replacement.
-> > > > [...]
-> > > > Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-> > > > ---
-> > > >  drivers/net/wireless/ath/carl9170/main.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> > > > index f8ded84..12018ff 100644
-> > > > --- a/drivers/net/wireless/ath/carl9170/main.c
-> > > > +++ b/drivers/net/wireless/ath/carl9170/main.c
-> > > > @@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
-> > > >  			return -EOPNOTSUPP;
-> > > >  
-> > > >  		rcu_read_lock();
-> > > > -		if (rcu_dereference(sta_info->agg[tid])) {
-> > > > +		if (rcu_access_pointer(sta_info->agg[tid])) {
-> > > >  			rcu_read_unlock();
-> > > >  			return -EBUSY;
-> > > >  		}
-> > > 
-> > > There's more. The check does not do a whole lot. I think *it* [the check] and the
-> > > rcu_read_[un]lock [and the return -EBUSY] can be removed completely from the
-> > > IEEE80211_AMPDU_TX_START code-path in carl9170_op_ampdu_action.
-> > > 
-> > > It would be awesome, if you could you make a patch which removes this 
-> > > unneeded cosmic-ray-protection check :-) .
-> > 
-> > Could you tell me why you think that those lines have to be removed?
-> The carl9170_op_ampdu_action callback is used exclusively by the mac80211
-> framework to notify the driver about setup and tear down of TX and RX 
-> aggregation sessions. Hence, mac80211 takes great care of performing
-> sanity checks and properly serializing calls to the driver's ampdu_action
-> callback.
-> 
-> Specifically mac80211 already prevents the START of an TX aggregation session,
-> if the aggregation session is already active [0]. Therefore the driver doesn't
-> need to perform a similar check as well. This is why:
->  - the expression (rcu_dereference(sta_info->agg[tid])) never evaluates to true
->  -> the -EBUSY exit path is "dead code"
-> 
-> And without the rcu_dereference(...) the rcu_read protection is not needed
-> either. So it can be removed for this case as well.
-> 
-> > I would like to fully understand this before I remove them.
-> Let me know if the explanation above answers sufficient :).
-> If not, I need some *pointers* to what needs further 
-> explanation.
-
-Your explanation is clear. I will send a version two of the patch with
-those lines removed.
-
-Thank you,
-Andreea
-
-> 
-> Regards
-> Christian
-> 
-> [0] <http://lxr.free-electrons.com/source/net/mac80211/agg-tx.c#L583>
-> 
+SGkgQW5kcmVhcywNCg0KUGF0Y2ggaGFzIGFscmVhZHkgYmVlbiBzdWJtaXR0ZWQgdG8gbGludXgt
+d2lyZWxlc3MuDQoNCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtd2lyZWxlc3Mv
+bXNnMTI1ODE1Lmh0bWwNCg0KVGhhbmtzLA0KQXZpbmFzaC4NCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IEFuZHJlYXMgRmVua2FydCBbbWFpbHRvOmFmZW5rYXJ0QGdtYWlsLmNv
+bV0gDQpTZW50OiBGcmlkYXksIEF1Z3VzdCAyMiwgMjAxNCA4OjQzIFBNDQpUbzogQXZpbmFzaCBQ
+YXRpbA0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IG13
+aWZpZXg6IHN3aXRjaGluZyBmcm9tIGFkaG9jIHRvIDVHSHogbWFuYWdlZCBmYWlscw0KDQpIaSBB
+dmluYXNoLA0KDQoyMDE0LTA4LTE0IDEwOjIzIEdNVCswMjowMCBBdmluYXNoIFBhdGlsIDxwYXRp
+bGFAbWFydmVsbC5jb20+Og0KPiBIaSBBbmRyZWFzLA0KPg0KPiBQbGVhc2UgY2hlY2sgaWYgdGhp
+cyBkaWZmIGZpbGUgaGVscHMgdG8gcmVzb2x2ZSBpYnNzIGlzc3VlLg0KdGhhdCBmaXhlcyB0aGUg
+cHJvYmxlbSwgd2lsbCB5b3UgbWFrZSB0aGlzIGEgcGF0Y2g/DQoNClRoYW5rcywNCkFuZHJlYXMN
+Cg==
