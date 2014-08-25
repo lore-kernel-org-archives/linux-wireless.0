@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37601 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaHISIv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:08:51 -0400
-Subject: [PATCH v6 7/8] ath10k: rename ath10k_pci_hif_dump_area() to
- ath10k_pci_firmware_crashed()
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 09 Aug 2014 21:08:46 +0300
-Message-ID: <20140809180846.29215.34726.stgit@potku.adurom.net> (sfid-20140809_200853_535335_8164E1DF)
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga03.intel.com ([143.182.124.21]:23272 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753843AbaHYIPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 04:15:51 -0400
+Message-ID: <1408954526.30155.2.camel@linux.intel.com> (sfid-20140825_101617_368718_84C49657)
+Subject: Re: [PATCH v3 04/11] lib/vsprintf: add %*pE[achnops] format
+ specifier
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Mon, 25 Aug 2014 11:15:26 +0300
+In-Reply-To: <1408546008.23250.23.camel@joe-AO725>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1408527772-27224-5-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1408546008.23250.23.camel@joe-AO725>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Better to have a clear name for the function. While at it, clear up the title
-for the register dump.
+On Wed, 2014-08-20 at 07:46 -0700, Joe Perches wrote:
+> On Wed, 2014-08-20 at 12:42 +0300, Andy Shevchenko wrote:
+> > This allows user to print a given buffer as an escaped string. The rules are
+> > applied according to an optional mix of flags provided by additional format
+> > letters.
+> 
+> Thanks Andy.  Looks good to me.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Can I imply your Reviewed-by?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index deebd30aa182..7fc2f02f53c4 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1040,7 +1040,7 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
- 
- 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
- 
--	ath10k_err("target Register Dump\n");
-+	ath10k_err("firmware register dump:\n");
- 	for (i = 0; i < REG_DUMP_COUNT_QCA988X; i += 4)
- 		ath10k_err("[%02d]: 0x%08X 0x%08X 0x%08X 0x%08X\n",
- 			   i,
-@@ -1053,7 +1053,7 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
- 	       sizeof(crash_data->reg_dump_values));
- }
- 
--static void ath10k_pci_hif_dump_area(struct ath10k *ar)
-+static void ath10k_pci_firmware_crashed(struct ath10k *ar)
- {
- 	struct ath10k_fw_crash_data *crash_data;
- 	char uuid[50];
-@@ -2007,7 +2007,7 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
- 				   fw_indicator & ~FW_IND_EVENT_PENDING);
- 
- 		if (ar_pci->started) {
--			ath10k_pci_hif_dump_area(ar);
-+			ath10k_pci_firmware_crashed(ar);
- 		} else {
- 			/*
- 			 * Probable Target failure before we're prepared
-@@ -2458,7 +2458,7 @@ static void ath10k_pci_early_irq_tasklet(unsigned long data)
- 	if (fw_ind & FW_IND_EVENT_PENDING) {
- 		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
- 				   fw_ind & ~FW_IND_EVENT_PENDING);
--		ath10k_pci_hif_dump_area(ar);
-+		ath10k_pci_firmware_crashed(ar);
- 	}
- 
- 	ath10k_pci_sleep(ar);
-@@ -2737,7 +2737,7 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- 		ath10k_warn("device has crashed during init\n");
- 		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
- 				   val & ~FW_IND_EVENT_PENDING);
--		ath10k_pci_hif_dump_area(ar);
-+		ath10k_pci_firmware_crashed(ar);
- 		ret = -ECOMM;
- 		goto out;
- 	}
+
+> Very trivial note:
+
+Fixed locally. Waiting for few days for more comments and will send v5
+then.
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
 
