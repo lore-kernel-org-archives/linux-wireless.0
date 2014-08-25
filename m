@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:49457 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864AbaH2ITH (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:61058 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754660AbaHYHwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 04:19:07 -0400
-Date: Fri, 29 Aug 2014 10:19:02 +0200
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+	Mon, 25 Aug 2014 03:52:41 -0400
+Message-ID: <1408953158.8665.15.camel@umadbro> (sfid-20140825_095304_884999_A6F84487)
+Subject: Re: [PATCH] mac80211: Parse IEEE80211_RADIOTAP_RATE on TX
+From: Rostislav Lisovy <lisovy@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
-Message-ID: <20140829081902.GB21763@sesse.net> (sfid-20140829_101912_845564_EFF9C44E)
-References: <20140824103728.GA2938@sesse.net>
- <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
- <1409211818.2505.12.camel@jlt4.sipsolutions.net>
- <20140828083738.GA19530@sesse.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140828083738.GA19530@sesse.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Mon, 25 Aug 2014 09:52:38 +0200
+In-Reply-To: <1405938028.32255.17.camel@jlt4.sipsolutions.net>
+References: <1404995261-6626-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140710_142756_935664_A8B88F97) <1405938028.32255.17.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2014 at 10:37:38AM +0200, Steinar H. Gunderson wrote:
-> We should honor its request, just as we honor it when it comes through
-> 802.11h or 802.11d.
+On Mon, 2014-07-21 at 12:20 +0200, Johannes Berg wrote:
+> On Thu, 2014-07-10 at 14:27 +0200, Rostislav Lisovy wrote:
+> > Add support for parsing radiotap field IEEE80211_RADIOTAP_RATE
+> > for transmitted frames. Use the provided datarate value in
+> > info->control.rates[] array so it will be used for transmission.
+> > 
+> > Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+> > ---
+> > This feature is essential for Transmit Datarate Control (TDC)
+> > in future implementation of IEEE 802.11-2012 "Wireless Access
+> > for the Vehicular Environment" support.
+> 
+> It seems like an extremely bad idea to base your implementation of WAVE
+> on monitor mode with injection.
+> 
+> Why can't you add a proper datapath?
+> 
 
-I've been running with this a few days now, and I've noticed that while the
-patch works fine, it is not entirely complete.
+You are right. I was overthinking the per-packet datarate setting a
+little bit.
+If I am not mistaken it is not possible to say that this feature may be
+useful as the general method for monitor-mode injection with datarate
+until there is some user-space utility really using/needing it?
 
-The problem is that sometimes the AP can send _both_ 802.11h and the DTPC IE;
-the 802.11h IE seemingly because there's some kind of regulatory pressure
-(ie., “something detected on your channel, you have to go down”), and the
-DTPC IE due to the configured lower transmit power. In this case, 802.11h
-says 21 (24 - 3) dBm and DTPC 7 dBm, and we pick the former.
+Best regards;
+Rostislav
 
-In this situation, my current patch lets 802.11h override (on the grounds that
-it's an official standard, and that it's required for regulatory compliance),
-but it should probably do a min() of the two advertised power levels instead.
-Does this sound reasonable? I'll be sending a patch later today.
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
