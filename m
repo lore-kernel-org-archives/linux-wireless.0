@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59113 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827AbaHVCZJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55861 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933017AbaHYUAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 22:25:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <21494.43519.504368.455733@gargle.gargle.HOWL> (sfid-20140822_042525_305421_BE72FB47)
-Date: Fri, 22 Aug 2014 07:55:03 +0530
+	Mon, 25 Aug 2014 16:00:12 -0400
+Date: Mon, 25 Aug 2014 15:59:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-08-14
+Message-ID: <20140825195906.GF1966@tuxdriver.com> (sfid-20140825_220035_552818_C4B4C93A)
+References: <20140814145000.GA14226@t440s.P-661HNU-F1>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-To: Joe Perches <joe@perches.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: Add debug information
-In-Reply-To: <1408635330.23250.47.camel@joe-AO725>
-References: <1408633582-6378-1-git-send-email-sujith@msujith.org>
-	<1408635330.23250.47.camel@joe-AO725>
+In-Reply-To: <20140814145000.GA14226@t440s.P-661HNU-F1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches wrote:
-> Perhaps:
-> static const char * const offchannel_state[] = {...
+On Thu, Aug 14, 2014 at 05:50:00PM +0300, Johan Hedberg wrote:
+> Hi John,
 > 
-> It is typically is an unsafe practice to
-> index an char * array with an enum.
+> Here's our first bluetooth-next pull request for the 3.18 kernel. Our
+> tree is based on net-next so you'd need to pull from there first before
+> pulling from our tree.
 > 
-> It might be safer to use a lookup function
-> (and smaller when ath_dbg is not enabled)
+> The changes consists of:
 > 
-> Something like:
+> 	- Coding style fixes to HCI drivers
+> 	- Corrupted ack value fix for the H5 HCI driver
+> 	- A couple of Enhanced L2CAP fixes
+> 	- Conversion of SMP code to use common L2CAP channel API
+> 	- Page scan optimizations when using the kernel-side whitelist
+> 	- Various mac802154 and and ieee802154 6lowpan cleanups
+> 	- One new Atheros USB ID
 > 
-> static const char *offchannel_state_string(enum ath_offchannel_state state)
-> {
-> #define case_rtn_string(val) case val: return #val
-> 	switch (state) {
-> 	case_rtn_string(ATH_OFFCHANNEL_IDLE);
-> 	case_rtn_string(ATH_OFFCHANNEL_PROBE_SEND);
-> 	case_rtn_string(ATH_OFFCHANNEL_PROBE_WAIT);
-> 	case_rtn_string(ATH_OFFCHANNEL_SUSPEND);
-> 	case_rtn_string(ATH_OFFCHANNEL_ROC_START);
-> 	case_rtn_string(ATH_OFFCHANNEL_ROC_WAIT);
-> 	case_rtn_string(ATH_OFFCHANNEL_ROC_DONE);
-> 	default:
-> 		return "unknown";
-> 	}
-> }
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit f0094b28f3038936c1985be64dbe83f0e950b671:
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2014-08-13 18:27:40 -0600)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to 13cac15296afe7e42088ecfcd0f1d4b658248c46:
+> 
+>   Bluetooth: Fix ERTM L2CAP resend packet (2014-08-14 09:47:02 +0200)
 
-This looks better, I'll send a v2. Thanks for the review.
+Pulling now...
 
-Sujith
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
