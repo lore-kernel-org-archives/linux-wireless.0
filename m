@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8776 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754760AbaHNMjB (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:47998 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199AbaHYIY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 08:39:01 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Hans Wennborg <hans@hanshq.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH 10/19] ath6kl: fix %d confusingly prefixed with 0x in format strings
-References: <1407111596-14944-1-git-send-email-hans@hanshq.net>
-Date: Thu, 14 Aug 2014 15:38:54 +0300
-In-Reply-To: <1407111596-14944-1-git-send-email-hans@hanshq.net> (Hans
-	Wennborg's message of "Sun, 3 Aug 2014 17:19:56 -0700")
-Message-ID: <8738czmejl.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_143906_806703_07A21CF3)
+	Mon, 25 Aug 2014 04:24:59 -0400
+Received: by mail-we0-f172.google.com with SMTP id x48so12932247wes.17
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 01:24:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CABPxzYL3d0GPTeR1omxFi7XXUm2-Zq92AzgZnoLvLL1k1Cs8zQ@mail.gmail.com>
+References: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
+ <20140822091409.GA3263@w1.fi> <CABPxzYL3d0GPTeR1omxFi7XXUm2-Zq92AzgZnoLvLL1k1Cs8zQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 25 Aug 2014 13:54:38 +0530
+Message-ID: <CABPxzYJB5iXDNaFdW6j4GbN3hhGSC6grhHyb3JWJdWUnDjXtsQ@mail.gmail.com> (sfid-20140825_102504_067043_66DB18B4)
+Subject: Re: [mac80211] Enforce protected check for unicast robust management frames.
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hans Wennborg <hans@hanshq.net> writes:
-
-> Signed-off-by: Hans Wennborg <hans@hanshq.net>
-> ---
->  drivers/net/wireless/ath/ath6kl/init.c | 2 +-
->  drivers/net/wireless/ath/ath6kl/main.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+On Sat, Aug 23, 2014 at 9:02 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Fri, Aug 22, 2014 at 2:44 PM, Jouni Malinen <j@w1.fi> wrote:
+>>
+>> On Tue, Aug 12, 2014 at 12:21:54AM +0530, chaitanya.mgit@gmail.com wrote:
+>> > Enforce the check for protected field for all unicast
+>> > robust management frames.
+>>
+>> Why? This function is supposed to indicate whether the frame is a robust
+>> action frame and as such, has to have Protected bit set to one. If the
+>> sender (attacker) tries to send the frame unprotected, it will still
+>> need to be caught here.
+>>
+>> Rather than enforcing anything, this would add a significant security
+>> vulnerability by breaking PMF more or less completely.
 >
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-> index fffd523..91af845 100644
-> --- a/drivers/net/wireless/ath/ath6kl/init.c
-> +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> @@ -1049,7 +1049,7 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
->  			ar->hw.reserved_ram_size = le32_to_cpup(val);
->  
->  			ath6kl_dbg(ATH6KL_DBG_BOOT,
-> -				   "found reserved ram size ie 0x%d\n",
-> +				   "found reserved ram size ie 0x%x\n",
->  				   ar->hw.reserved_ram_size);
+> I agree jouni, we were using this API to figure out the length of the
+> crypto header (IV) to pass it to the HW crypto, so even for
+> unencrypted frames during the initial connection we were treating as
+> robust mgmt frames causing us trouble.
+>>
+>>
+>> > This removed the dependency on the driver to check for protected
+>> > bit, especially for those drivers who believed the API :-).
+>>
+>> Huh.. What is this driver referring to or what do you think the API is
+>> supposed to be doing? ieee80211_is_unicast_robust_mgmt_frame() is a
+>> static function within net/mac80211/rx.c and has only a single caller,
+>> so it cannot really be used by any driver..
+>
+> Sorry, i overlooked the static in git, we have a custom kernel without
+> the static.
+>
+>>
+>> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> > @@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
+>> >       if (is_multicast_ether_addr(hdr->addr1))
+>> >               return 0;
+>> >
+>> > +     if (!ieee80211_has_protected(hdr->frame_control))
+>> > +             return 0;
+>> > +
+>> >       return ieee80211_is_robust_mgmt_frame(skb);
+>>
+>> This looks very incorrect. This would completely break
+>> ieee80211_drop_unencrypted_mgmt() and allow unprotected robust
+>> management frames to be processed.
+>
+> Ok i see it. robust mgmt and protected robust mgmt checks are
+> independently handled, but as the name suggested unicast robust mgmt
+> isn't it better to club those 2 checks together?
+>
+Johannes,
 
-Actually the original intent here was to use %d.
+Please drop this patch, i did not see that the function is static.
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-> index 21516bc..933aef0 100644
-> --- a/drivers/net/wireless/ath/ath6kl/main.c
-> +++ b/drivers/net/wireless/ath/ath6kl/main.c
-> @@ -225,7 +225,7 @@ int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
->  	ret = ath6kl_hif_diag_write32(ar, address, value);
->  
->  	if (ret) {
-> -		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
-> +		ath6kl_err("failed to write 0x%x during diagnose window to 0x%x\n",
->  			   address, value);
-
-This is ok.
-
--- 
-Kalle Valo
+Thanks.
