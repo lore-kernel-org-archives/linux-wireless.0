@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:52706 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933830AbaH0Snl convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28843 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222AbaHYJnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 14:43:41 -0400
+	Mon, 25 Aug 2014 05:43:25 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath10k: improve logging to include dev id
+References: <1408952456-3121-1-git-send-email-michal.kazior@tieto.com>
+	<87tx5153lw.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnJYK0Sf6jy+tXHrTM06gXCjTxv_JKdK=01+jz5RgZ+tQ@mail.gmail.com>
+Date: Mon, 25 Aug 2014 12:43:20 +0300
+In-Reply-To: <CA+BoTQnJYK0Sf6jy+tXHrTM06gXCjTxv_JKdK=01+jz5RgZ+tQ@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 25 Aug 2014 11:26:33 +0200")
+Message-ID: <87mwas6h1j.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_114328_968318_EED50196)
 MIME-Version: 1.0
-In-Reply-To: <53FE217B.7000401@gmail.com>
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de>
-	<1408915485-8078-4-git-send-email-hauke@hauke-m.de>
-	<CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com>
-	<53FE217B.7000401@gmail.com>
-Date: Wed, 27 Aug 2014 20:43:40 +0200
-Message-ID: <CACna6ryXtFwJxBhEoJe+2mZWut24egtgXzzybxQ=rtPn9+X+2g@mail.gmail.com> (sfid-20140827_204345_210944_DF57029B)
-Subject: Re: [RFC 2/7] bcm47xx-nvram: add new broadcom nvram driver with dt support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 August 2014 20:20, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> On 08/26/2014 10:54 PM, Rafał Miłecki wrote:
->> Could we avoid that? Type of flash can easily be checked in the code.
->> All we need to do is to read BCMA_IOST register of BCMA_CORE_NS_ROM
->> core.
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> On 25 August 2014 11:18, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This makes it a lot easier to log and debug
+>>> messages if there's more than 1 ath10k device on a
+>>> system.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> Did only a quick review and test but looks good to me except one problem
+>> in pci.c, see below. But there are some conflicts now, can you rebase
+>> please? I hope it's not too much work to fix them.
 >
-> So there is a boot status register you can read to tell what type of
-> flash you booted from, but does that also give you the resource ranges
-> for these type of flashes? Presumably they will be mapped into different
-> addresses (at least bcm63xx is like that), that information needs to be
-> listed somewhere.
+> I've rebased this in my internal tree already.
 
-Take a look at find_nvram in nvram_rw.c. It scans the whole region
-which is up to 0x02000000 (SI_FLASH2_SZ) size.
+Nice :)
 
-In case of NAND limit is slightly different (nfl_boot_size function):
-1) On ARM it's 0x800000 or 0x2600000
-2) On MIPS it's 0x200000
+>> I'll also summarise the "meat" of the changes so that it's easier for
+>> others to review:
+>>
+> [...]
+>>> @@ -2566,12 +2576,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+>>>       struct ath10k_pci *ar_pci;
+>>>       u32 chip_id;
+>>>
+>>> -     ath10k_dbg(ATH10K_DBG_PCI, "pci probe\n");
+>>> +     dev_printk(KERN_DEBUG, &pdev->dev, "pci probe\n");
+>>
+>> But this doesn't look right. A leftover from testing, perhaps?
+>
+> At this point there's no "ar" yet. The "ar" is allocated a few lines
+> below. If the allocation fails then there's no "ar" so dev_err() is
+> used explicitly in the failpath.
+
+Ah, of course.
+
+> I think these are just 2 exceptions we can't do differently, can we?
+
+Using dev_err() is okay, but this debug print has the problem that it's
+now always printed. I see few options:
+
+1) we create __ath10k_dbg(dev, mask, fmt, ...)
+
+2) we move the debug print after ar is created
+
+3) we remove the debug print entirely
+
+I vote for 2)
 
 -- 
-Rafał
+Kalle Valo
