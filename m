@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51798 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751093AbaH1Hnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 03:43:47 -0400
-Message-ID: <1409211818.2505.12.camel@jlt4.sipsolutions.net> (sfid-20140828_094353_045901_0C42215E)
-Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 28 Aug 2014 09:43:38 +0200
-In-Reply-To: <E1XLZxt-0002h9-Um@pannekake.samfundet.no> (sfid-20140824_174436_455216_80D556D9)
-References: <20140824103728.GA2938@sesse.net>
-	 <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
-	 (sfid-20140824_174436_455216_80D556D9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5084 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbaHYIez (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 04:34:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ath10k: fixes 2014-08-07, part 3
+References: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 25 Aug 2014 11:34:50 +0300
+In-Reply-To: <1408710798-25198-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 22 Aug 2014 14:33:13 +0200")
+Message-ID: <87y4ud55n9.fsf@kamboji.qca.qualcomm.com> (sfid-20140825_103459_094009_BE57F11D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-08-24 at 12:08 +0200, Steinar H. Gunderson wrote:
-> Linux already supports 802.11h, where the access point can tell the
-> client to reduce its transmission power. However, 802.11h is only
-> defined for 5 GHz, where the need for this is much smaller than on
-> 2.4 GHz.
-> 
-> Cisco has their own solution, called DTPC (Dynamic Transmit Power
-> Control).  Cisco APs on a controller sometimes but not always send
-> 802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
-> for parsing and honoring the DTPC IE if there is no 802.11h element;
-> the format is not documented, but very simple.
-> 
-> Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
-> 1142 joined to a Cisco 2504 WLC, by setting various transmit power
-> levels for the given access points and observing the results.
-> The Wireshark 802.11 dissector agrees with the interpretation of the
-> element, except for negative numbers, which seem to never happen
-> anyway.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Can you say *why* we want this? Does it yield better behaviour on a
-Cisco deployment?
+> This is part 3 (of 3) of my patches. Split for
+> your reviewing pleasure.
+>
+> This is related to start/restart sequences.
+>
+> This is based on:
+>   [PATCH v2 0/6] ath10k: fixes 2014-08-07, part 2
+>
+> v2:
+>  * patch [2/5] replaced
+>  * fixes, see notes
+>
+>
+> Michal Kazior (5):
+>   ath10k: rework posting pci rx buffers
+>   ath10k: update comment regarding warm reset
+>   ath10k: ignore ar_pci->started in pipe cleanup
+>   ath10k: remove ar_pci->started
+>   ath10k: flush hif buffers before recovery
 
-johannes
+Thanks, all five patches applied.
 
+-- 
+Kalle Valo
