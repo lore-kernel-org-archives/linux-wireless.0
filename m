@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32737 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754240AbaHNMFR (ORCPT
+Received: from toccata.ens-lyon.fr ([140.77.166.68]:43593 "EHLO
+	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933466AbaHYViO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 08:05:17 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/5] ath10k: rework posting pci rx buffers
-References: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com>
-	<1407402308-29899-2-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 14 Aug 2014 15:05:07 +0300
-In-Reply-To: <1407402308-29899-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:05:04 +0200")
-Message-ID: <87oavnmg3w.fsf@kamboji.qca.qualcomm.com> (sfid-20140814_140521_847910_53D3E747)
+	Mon, 25 Aug 2014 17:38:14 -0400
+Date: Mon, 25 Aug 2014 23:37:52 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Hugh Dickins <hughd@google.com>,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 3.17-rc1: leds blink workqueue causes sleeping BUGs
+Message-ID: <20140825213752.GD3070@type.youpi.perso.aquilenet.fr> (sfid-20140825_233818_206317_4D8B842A)
+References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
+ <10857.1408467967@turing-police.cc.vt.edu>
+ <20140825211340.GA22168@kria>
+ <20140825212324.GC3070@type.youpi.perso.aquilenet.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20140825212324.GC3070@type.youpi.perso.aquilenet.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Samuel Thibault, le Mon 25 Aug 2014 23:23:24 +0200, a écrit :
+> We could indeed have a loop if the user was making the VT::* leds use
+> the vt-* trigger,
 
-> It was possible on a host system running low on
-> memory to end up with no rx buffers on pci pipes.
->
-> This also cleans up the code a bit and, as a side
-> effect, makes it possible to call
-> ath10k_hif_start() more than once.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Actually, while there can be a loop, it wouldn't be possible to inject
+events in it: a VT::* led only makes the corresponding vt-* trigger if
+it got an event from its trigger, etc. So it's really a false positive,
+the lock detector just can not know that it can not happen.
 
-The rework is relatively big so it would be good to have a short
-overview how you change it.
-
-> +static void ath10k_pci_rx_replenish(struct ath10k_pci_pipe *pipe)
-> +{
-> +	struct ath10k *ar = pipe->hif_ce_state;
-> +	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-> +	int ret;
-> +
-> +	spin_lock_bh(&ar_pci->ce_lock);
-> +	ret = __ath10k_pci_rx_post_pipe(pipe);
-> +	spin_unlock_bh(&ar_pci->ce_lock);
-> +
-> +	if (ret) {
-> +		ath10k_warn("failed to replenish pci rx pipe %d: %d, arming retry timer\n",
-> +			    pipe->pipe_num, ret);
-> +		mod_timer(&ar_pci->rx_replenish_retry,
-> +			  ATH10K_PCI_RX_REPLENISH_RETRY_MS);
-> +	}
-> +}
-
-Buildbot sent a warning about this one which I think is valid:
-
-drivers/net/wireless/ath/ath10k/pci.c:380 ath10k_pci_rx_replenish() warn: mod_timer() takes an absolute \
-time not an offset.
-
--- 
-Kalle Valo
+Samuel
