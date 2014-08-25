@@ -1,114 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:45874 "EHLO test.hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601AbaHZUcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 16:32:13 -0400
-Message-ID: <53FCEECA.8090308@hauke-m.de> (sfid-20140826_223218_109044_4E10BA85)
-Date: Tue, 26 Aug 2014 22:32:10 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mout.kundenserver.de ([212.227.17.10]:65313 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889AbaHYIEg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 04:04:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-mips@linux-mips.org,
+	zajec5@gmail.com
+Subject: Re: [RFC 6/7] bcma: get sprom from devicetree
+Date: Mon, 25 Aug 2014 10:04:33 +0200
+Message-ID: <4882662.VtlSfZ0rSN@wuerfel> (sfid-20140825_100442_523789_6CD4158B)
+In-Reply-To: <1408915485-8078-8-git-send-email-hauke@hauke-m.de>
+References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de> <1408915485-8078-8-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
-In-Reply-To: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/2014 06:42 PM, Rafał Miłecki wrote:
-> [cross-list: linux-mips@ and linux-wireless@]
-> 
-> We're working on another Broadcom platform, SoC with an ARM CPU,
-> platform called bcm53xx. It shares many things with the older (MIPS
-> based) bcm47xx, so we need to figure out how to modify some of the
-> drivers.
-> 
-> Hauke recently proposed sharing code for NVRAM support as a separated
-> driver. In his RFC patch it was added as a new platform driver. I
-> liked this idea (I'd simply prefer to modify existing code instead of
-> duplicating it), so I played with it a bit today.
+On Sunday 24 August 2014 23:24:44 Hauke Mehrtens wrote:
+> +#ifdef CONFIG_OF
+> +static int bcma_fill_sprom_with_dt(struct bcma_bus *bus,
+> +                                  struct ssb_sprom *out)
+> +{
+> +       const __be32 *handle;
+> +       struct device_node *sprom_node;
+> +       struct platform_device *sprom_dev;
+> +       struct ssb_sprom *sprom;
+> +
+> +       if (!bus->host_pdev || !bus->host_pdev->dev.of_node)
+> +               return -ENOENT;
 
-I will also make mips bcm47xx uses that code in the next version of the
-patch. (move the code from mips)
+You can remove the #ifdef above if you change this into
 
-> 
-> My plan was to modify bcm47xx code to make nvram.c a separated driver
-> and update bcm47xx/bcma to use it. Well, it didn't work out. The
-> problem is that we need access to the NVRAM pretty early. Please take
-> a look at my description of bcm47xx booting process (it's simply a
-> summary of start_kernel and bcm47xx code):
-> 
-> 1) prom_init / plat_mem_setup
-> These two functions are called in pretty much the same phase from the
-> setup_arch (arch/mips/kernel/setup.c).
-> Task: detect & register memory
-> Requires: CPU type, maybe Broadcom chip ID (highmem support)
-> Available: CPU type
-> Not available: kmalloc, device_add (kobject)
-> 
-> 2) arch_init_irq
-> Called from the arch specific init_IRQ (arch/mips/kernel/irq.c)
-> Task: setup bcma's MIPS core
-> Requires: bcma bus MIPS core
-> Available: kmalloc
-> Not available: device_add (kobject)
-> 
-> 3) plat_time_init
-> Called from the arch specific time_init (arch/mips/kernel/time.c)
-> Task: set frequency
-> Requires: bcma bus ChipCommon core, nvram
-> Available: kmalloc
-> Not available: device_add (kobject)
-> 
-> 4) At some point we need to register bcma devices, device_initcall can
-> be used for that
-> 
-> As you can see, we need access to the NVRAM quite early (step 3,
-> plat_time_init, or even earlier), but device_add (platform
-> devices/drivers) is not available then yet. So I'm afraid we won't be
-> able to use this common way to write NVRAM driver.
-> 
-> 
-> So there I want to present my plan for the NVRAM improvements. If you
-> don't agree with any part of it, or you can see any better solution,
-> please speak up!
-> 
-> 1) I won't make nvram.c a platform driver. Instead I would like to
-> make it less bcm47xx specific. I don't want to touch bcm47xx_bus in
-> this file. Instead I want to add a generic function that will accept
-> address and size of memory where NVRAM should be found. Then I'd like
-> to move this file out of "mips" arch (drivers/misc/?
-> drivers/bcma/nvram/?) and allow using it for bcm53xx.
+	if (!IS_ENABLED(CONFIG_OF) || !bus->host_pdev ||
+	    !bus->host_pdev->dev.of_node)
+		return -ENOENT;
 
-I would make this nvram.c a platform driver in addition so it can get
-registered to device tree. this part would only get activated when
-CONFIG_OF is set which is not on MIPS bcm47xx.
+> +       handle = of_get_property(bus->host_pdev->dev.of_node, "sprom", NULL);
+> +       if (!handle)
+> +               return -ENOENT;
+> +
+> +       sprom_node = of_find_node_by_phandle(be32_to_cpup(handle));
+> +       if (!sprom_node)
+> +               return -ENOENT;
+> +
+> +       sprom_dev = of_find_device_by_node(sprom_node);
+> +       if (!sprom_dev)
+> +               return -ENOENT;
+> +
+> +       sprom = platform_get_drvdata(sprom_dev);
+> +       if (!sprom)
+> +               return -ENOENT;
+> +
+> +       memcpy(out, sprom, sizeof(*out));
+> +
+> +       return 0;
+> +}
 
-> 2) I was also thinking about cleaning bcm47xx init. Right now we do a
-> lot of hacks in plat_mem_setup & bcma to register the bus and scan its
-> cores. It's so early (before mm_init) that we can't alloc memory!
-> Doing all this stuff slightly later (e.g. arch_init_irq) would allow
-> us to simply use "kmalloc" and drop all current hacks in bcma.
-> 
-> 3) Above change (point 2) would require some small change in bcma. We
-> would need 2-stages init: detecting (with kmalloc!) bus cores,
-> registering cores. This is required, because we can't register cores
-> too early, device_add (and the underlying kobject) would oops/WARN in
-> kobject_get.
-> 
+missing of_node_put().
 
-This sound good to me, but I still have some questions.
-
-Do you also want to change ssb registration?
-Is it worth the effort? I think MIPS bcm47xx will be EOL and replaced by
-the ARM versions completely in the next years. (I do not have any
-private information about Broadcom product politics)
-
-I think this will be reduce the number of hacks a little bit, but you
-still need a 2 stage init of bcma for mips SoCs, and I do not know how
-to prevent this.
-
-Hauke
+	Arnd
