@@ -1,75 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4507 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755064AbaHNP4w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 11:56:52 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: RE: Intel wireless microcode problem..
-Date: Thu, 14 Aug 2014 15:56:13 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B266E67@hasmsx107.ger.corp.intel.com> (sfid-20140814_175700_434055_708BEC19)
-References: <CA+55aFxdt-9e9X0EYCu2Ku8sSTspUGPk5qKa72XH63zrkdPthw@mail.gmail.com>
-	<53ECD8D0.4050709@lwfinger.net>
- <CA+55aFw1LWO+zxePYtUBi9YOWHPX+98xbM2h3j4pcN+6V0G1zA@mail.gmail.com>
-In-Reply-To: <CA+55aFw1LWO+zxePYtUBi9YOWHPX+98xbM2h3j4pcN+6V0G1zA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56046 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933212AbaHYUPJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 16:15:09 -0400
+Date: Mon, 25 Aug 2014 16:12:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hans Wennborg <hans@hanshq.net>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/19] rtlwifi: fix %d confusingly prefixed with 0x in
+ format strings
+Message-ID: <20140825201255.GG1966@tuxdriver.com> (sfid-20140825_221533_592887_41891B3C)
+References: <1407111616-15051-1-git-send-email-hans@hanshq.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1407111616-15051-1-git-send-email-hans@hanshq.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+DQo+ID4gVGhlcmUgaXMgYSBuZXcgZmlybXdhcmUgdGhhdCBzZWVtcyB0byBoZWxwIHRoZSBw
-cm9ibGVtLiBZb3UgY2FuIGdldCBpdA0KPiA+IGZyb20gRW1tYW51ZWwncyBnaXQgY2xvbmUuIEFz
-IGhlIHdyb3RlIGVhcmxpZXINCj4gDQo+IFNvIHF1aXRlIGZyYW5rbHksIHRoaXMgaXMgKm5vdCog
-YWNjZXB0YWJsZS4gV2UgaGF2ZSByZWdyZXNzaW9uIHBvbGljaWVzIGZvciB0aGUNCj4ga2VybmVs
-LCBhbmQgdGhpcyBzZWVtcyB0byBiZSBhIGtlcm5lbCByZWdyZXNzaW9uIHdpdGggdGhlIGN1cnJl
-bnRseSByZWxlYXNlZA0KPiBmaXJtd2FyZS4gQW5kIEknbSBub3QgZG93bmxvYWRpbmcgZXhwZXJp
-bWVudGFsIGZpcm13YXJlIHdoaWxlIHRyYXZlbGluZw0KPiB3aXRoIHRoaXMgbGFwdG9wIGJlaW5n
-IG15IG9ubHkgd2F5IHRvIHdvcmsuDQo+IA0KPiBUaGUgd2FybmluZ3MgY2F1c2UgKnNvKiBtdWNo
-IG1lc3NhZ2UgbG9nIHNwYW0gdGhhdCB0aGUgbWFjaGluZSBpcw0KPiBvY2Nhc2lvbmFsbHkgc3Bl
-bmRpbmcgNSUgb2YgQ1BVIHRpbWUgb24gc3lzdGVtZCBqb3VybmFsaW5nLCBhbmQNCj4gcHJlc3Vt
-YWJseSBmaWxsaW5nIHVwIGRpc2sgc3BhY2UgdG9vLg0KPiANCj4gQW5kIHRoZSBzYW1lIHdheSB3
-ZSBkb24ndCB0ZWxsIHBlb3BsZSAidXBkYXRlIHlvdXIgYnVnZ3kgdXNlciBzcGFjZSINCj4gd2hl
-biB3ZSBpbnRyb2R1Y2Uga2VybmVsIHJlZ3Jlc3Npb25zLCB3ZSBkb24ndCB0ZWxsIHBlb3BsZSAi
-dHJ5IGEgbmV3DQo+IGZpcm13YXJlIi4NCj4gDQo+IFBlb3BsZSB3aG8gaGF2ZSBvbGQgc3lzdGVt
-cyAob2xkIGRpc3RyaWJ1dGlvbnMsIG9sZCBmaXJtd2FyZSwgb2xkIGhhcmR3YXJlLA0KPiBvbGQg
-KmFueXRoaW5nKikgdGhhdCB3b3JrcyB3aXRoIHRoZWlyIHByZXZpb3VzIGtlcm5lbCwgYXJlIHN1
-cHBvc2VkIHRvIGJlDQo+IGFibGUgdG8gdXBncmFkZSB0aGVpciBrZXJuZWwgd2l0aCBubyByZWdy
-ZXNzaW9ucy4NCj4gVGhhdCdzIHRoZSBydWxlcyBmb3IgdGhlIGtlcm5lbCwgYW5kIHRoYXQncyB3
-aGF0IHRoZSBydWxlcyBoYXZlIGJlZW4gZm9yIGEgbG9uZw0KPiB0aW1lLiBLZXJuZWwgZGV2ZWxv
-cGVycyAtIGluY2x1ZGluZyB3aXJlbGVzcyBkcml2ZXIgd3JpdGVycw0KPiAtIGhhZCBiZXR0ZXIg
-dW5kZXJzdGFuZCB0aGF0IHJ1bGUuIEl0J3MgdGhlIGFic29sdXRlICMxIHJ1bGUgd2hlbiBpdCBj
-b21lcyB0bw0KPiBrZXJuZWwgZGV2ZWxvcG1lbnQuIFRoaXMgaXMgbm90IHNvbWV0aGluZyBuZXcg
-YW5kIHN1cnByb3NpbmcuDQo+IA0KPiBUaGUgaW5zYW5lIGFtb3VudCBvZiBsb2dnaW5nIG5lZWRz
-IHRvIGJlIGZpeGVkLiBUaGUgd2lyZWxlc3MgKndvcmtzKiwgYnV0DQo+IHRoZSBsb2dnaW5nIGlz
-IHRvbyB2ZXJib3NlLg0KPiANCj4gTm93LCBtYXliZSB0aGlzIGlzbid0IGFjdHVhbGx5IGEga2Vy
-bmVsIHJlZ3Jlc3Npb24gYXQgYWxsIC0gbWF5YmUgdHJpZ2dlcmVkIGJ5DQo+IHRoZSBob3JyaWQg
-aW50ZXJuZXQgSSBoYXZlIHdoaWxlIHRyYXZlbGluZyAtIGJ1dCBJIHRyaWVkIHR3aWNlLCBhbmQg
-d2hlbiBJDQo+IGJvb3RlZCBpbnRvIHRoZSByZWd1bGFyIEZlZG9yYSBrZXJuZWwgZm9yIHRlc3Rp
-bmcgKG9oLCBqdXN0IG5vdGljZWQgdGhhdCBpdCdzDQo+IDMuMTUuOCwgbm90IDMuMTYtYmFzZWQp
-LCBJIGRpZG4ndCBzZWUgdGhpcyBraW5kIG9mIGxvZyBzcGFtbWluZy4gU28gaXQgbG9va3MgbGlr
-ZQ0KPiBhIHJlZ3Jlc3Npb24gdG8gbWUsIGFuZCB3ZSBoYXZlIHJ1bGVzIGFib3V0IHJlZ3Jlc3Np
-b25zLiBBbmQgdGhleSBhcmUganVzdA0KPiBhYm91dCB0aGUgT05MWSBoYXJkIHJ1bGVzIHdlIGhh
-dmUuIEJ1dCB0aGF0IHJlZ3Jlc3Npb24gcnVsZSByZWFsbHkgaXMgdmVyeQ0KPiB2ZXJ5IGltcG9y
-dGFudCBpbmRlZWQuDQo+IA0KPiBUaGUgd2lyZWxlc3MgKndvcmtzKiB3aXRoIHRoZSBjdXJyZW50
-IGZpcm13YXJlLCBzbyBhbGwgdGhhdCBpcyByZXF1aXJlZCBpcyB0bw0KPiBtYWtlIHN1cmUgdGhh
-dCB0aGUga2VybmVsIHN0b3BzIHNwYW1taW5nIHRoZSBsb2dzIHNvIGhlYXZpbHkuIEl0IHdvdWxk
-DQo+IG9idmlvdXNseSBiZSBiZXR0ZXIgdG8gdHJ5IHRvIGZpZ3VyZSBvdXQgKndoeSogdGhlIG1p
-Y3JvY29kZSBlcnJvciBoYXBwZW5zLA0KPiBhbmQgd2hhdCBjaGFuZ2VkIGluIHRoZSBrZXJuZWwg
-dG8gdHJpZ2dlciBpdCwgYnV0IHRoZSAiZG9uJ3QgbWFrZSB0aGUNCj4gbWFjaGluZSBoYXZlIHRy
-b3VibGUgd2l0aCB0aGUgaW5zYW5lIGFtb3VudCBvZiBsb2dzIiBpcyBhdCBsZWFzdCBhbg0KPiBh
-Y2NlcHRhYmxlIHdvcmthcm91bmQuDQo+IA0KPiBPaz8NCj4gDQpBcyBJIHNhaWQsIEkgYW0gdHly
-aW5nIHRvIHJlcHJvIHJpZ2h0IG5vdyAtIHlvdSBhcmUgMTAwJSByaWdodCB3ZSBhcmUgZnVsbHkg
-Y29tbWl0dGVkIHRvIG1ha2UgdGhlIGN1cnJlbnQgZmlybXdhcmUgd29yay4gVGhlICJleHBlcmlt
-ZW50YWwiIGZpcm13YXJlIGlzIGp1c3QgYSBmaXJtd2FyZSB3aXRoIGEgdmVyc2lvbiBwcm9ibGVt
-IC0gdGhpcyBpcyB3aHkgSSBkaWRuJ3QgcmVsZWFzZSBpdCBmb3JtYWxseS4gWW91IGNhbiBzYWZl
-bHkgdXNlIGl0IHVudGlsIHdlIGZpeCB0aGUgcHJvYmxlbS4NCkFuZCB3ZSB3aWxsIGZpeCBpdC4N
-CkFuZCBubyAtIGl0IGlzIG5vdCByZWxhdGVkIHRvIHRoZSBpbnRlcm5ldCAtIHRoaXMgaXMgc3Vy
-ZWx5IGEgYnVnIGluIG91ciBkcml2ZXIgLyBmaXJtd2FyZSBpbnRlcmZhY2UuIEkgYW0gY3VycmVu
-dGx5IHRyeWluZyB0byBzZWUgaG93IEkgY2FuIGZpeCBpdCAtIGJ1dCBJIGFtIGFsc28gdHJhdmVs
-bGluZy4uLg0K
+  CC      drivers/net/wireless/rtlwifi/rtl8192de/phy.o
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c: In function ‘_rtl92d_store_pwrindex_diffrate_offset’:
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c:679:2: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 7 has type ‘u32’ [-Wformat=]
+  RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+  ^
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c: In function ‘_rtl92d_phy_reload_lck_setting’:
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c:2533:3: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 2 has type ‘u32’ [-Wformat=]
+   RTPRINT(rtlpriv, FINIT, INIT_IQK,
+   ^
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c:2552:3: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 2 has type ‘u32’ [-Wformat=]
+   RTPRINT(rtlpriv, FINIT, INIT_IQK,
+   ^
+drivers/net/wireless/rtlwifi/rtl8192de/phy.c:2564:3: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 2 has type ‘u32’ [-Wformat=]
+   RTPRINT(rtlpriv, FINIT, INIT_IQK,
+   ^
+
+On Sun, Aug 03, 2014 at 05:20:16PM -0700, Hans Wennborg wrote:
+> Signed-off-by: Hans Wennborg <hans@hanshq.net>
+> ---
+>  drivers/net/wireless/rtlwifi/pci.c           | 6 +++---
+>  drivers/net/wireless/rtlwifi/rtl8192de/phy.c | 8 ++++----
+>  2 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 67d1ee6..74a8ba4 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -646,7 +646,7 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
+>  				== 2) {
+>  
+>  			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+> -				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%d\n",
+> +				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%x\n",
+>  				 prio, ring->idx,
+>  				 skb_queue_len(&ring->queue));
+>  
+> @@ -1469,7 +1469,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
+>  
+>  		if ((own == 1) && (hw_queue != BEACON_QUEUE)) {
+>  			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+> -				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
+> +				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
+>  				 hw_queue, ring->idx, idx,
+>  				 skb_queue_len(&ring->queue));
+>  
+> @@ -1511,7 +1511,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
+>  	if ((ring->entries - skb_queue_len(&ring->queue)) < 2 &&
+>  	    hw_queue != BEACON_QUEUE) {
+>  		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+> -			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
+> +			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
+>  			 hw_queue, ring->idx, idx,
+>  			 skb_queue_len(&ring->queue));
+>  
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> index 592125a..7cfdfc9 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> @@ -677,7 +677,7 @@ static void _rtl92d_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
+>  
+>  	rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index] = data;
+>  	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+> -		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%ulx\n",
+> +		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%lx\n",
+>  		 rtlphy->pwrgroup_cnt, index,
+>  		 rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index]);
+>  	if (index == 13)
+> @@ -2531,7 +2531,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+>  	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G) {/* Path-A for 5G */
+>  		u4tmp = curveindex_5g[channel-1];
+>  		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+> -			"ver 1 set RF-A, 5G,	0x28 = 0x%ulx !!\n", u4tmp);
+> +			"ver 1 set RF-A, 5G,	0x28 = 0x%lx !!\n", u4tmp);
+>  		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
+>  			rtlpriv->rtlhal.interfaceindex == 1) {
+>  			bneed_powerdown_radio =
+> @@ -2550,7 +2550,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+>  	} else if (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) {
+>  		u4tmp = curveindex_2g[channel-1];
+>  		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+> -			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n", u4tmp);
+> +			"ver 3 set RF-B, 2G, 0x28 = 0x%lx !!\n", u4tmp);
+>  		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
+>  			rtlpriv->rtlhal.interfaceindex == 0) {
+>  			bneed_powerdown_radio =
+> @@ -2562,7 +2562,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
+>  		}
+>  		rtl_set_rfreg(hw, erfpath, RF_SYN_G4, 0x3f800, u4tmp);
+>  		RTPRINT(rtlpriv, FINIT, INIT_IQK,
+> -			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n",
+> +			"ver 3 set RF-B, 2G, 0x28 = 0x%lx !!\n",
+>  			rtl_get_rfreg(hw,  erfpath, RF_SYN_G4, 0x3f800));
+>  		if (bneed_powerdown_radio)
+>  			_rtl92d_phy_restore_rf_env(hw, erfpath, &u4regvalue);
+> -- 
+> 2.0.0.526.g5318336
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
