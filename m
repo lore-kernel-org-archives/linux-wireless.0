@@ -1,56 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35527 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528AbaHKX4Y convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:39788 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbaHYUZE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 19:56:24 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] allow setting wiphy.perm_addr after driver probe
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1407798738.28221.81.camel@chimera>
-Date: Mon, 11 Aug 2014 16:56:55 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <52896C9C-8560-4CE4-A1FB-C896D766EC87@holtmann.org> (sfid-20140812_015647_888876_36701145)
-References: <1407780269.28221.63.camel@chimera> <54DF22CF-59D7-4633-A625-896F58C26A64@holtmann.org> <1407789645.28221.68.camel@chimera> <37210DB5-2911-4FA3-9299-7701C5003945@holtmann.org> <1407791075.28221.74.camel@chimera> <28066DB2-9EA9-4748-9C89-D3FBD3EC51F5@holtmann.org> <1407798738.28221.81.camel@chimera>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+	Mon, 25 Aug 2014 16:25:04 -0400
+Received: by mail-lb0-f182.google.com with SMTP id n15so262451lbi.13
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 13:25:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P28E+ubMrzAK45mqs672JFEo7ci=GuBWSm7i3G=WrUfeQ@mail.gmail.com>
+References: <6715079.xd2j4mnUMo@debian64>
+	<1408997366.17421.5.camel@dubbel>
+	<CANUX_P28E+ubMrzAK45mqs672JFEo7ci=GuBWSm7i3G=WrUfeQ@mail.gmail.com>
+Date: Mon, 25 Aug 2014 23:25:02 +0300
+Message-ID: <CANUX_P0i7jUJ58ZT8pGfT6zMHphjUuF6iENyK=XPrfjgUXUc_Q@mail.gmail.com> (sfid-20140825_222509_523771_C25D6DC1)
+Subject: Re: Iwlwifi 3160 AC (firmware?) clashes with CONFIG_IWLWIFI_BCAST_FILTERING
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Mon, Aug 25, 2014 at 11:20 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> Hi Christian,
+>>
+>> I'm not the best person to talk about the iwlwifi firmwares (that would
+>> be Emmanuel, but he is not available now), but I'll try.
+>
+> Here I am - thanks Luca for stepping in.
+>
+>>
+>> On Sat, 2014-08-23 at 00:01 +0200, Christian Lamparter wrote:
+>>> Hello,
+>>>
+>>> I got new hardware. Among the new stuff, there was one
+>>> Intel® Dual Band Wireless-AC 3160. When I tried to connect
+>>> to one (in fact any) of my networks, I was getting the
+>>> following errors:
+>>>
+>>> [ 1021.092378] iwlwifi 0000:01:00.0: Microcode SW error detected.  Restarting 0x82000000.
+>>> [...]
+>>> [ 1021.093935] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+>>> [ 1021.093939] iwlwifi 0000:01:00.0: Status: 0x00000000, count: 6
+>>> [ 1021.093942] iwlwifi 0000:01:00.0: Loaded firmware version: 25.223.9.0
+>>> [ 1021.093947] iwlwifi 0000:01:00.0: 0x00000038 | BAD_COMMAND <---
+>>> [ 1021.093951] iwlwifi 0000:01:00.0: 0x00A00220 | uPc
+>>
+>> Where did you get this firmware version? AFAICT the last version
+>> Emmanuel sent to linux-firmware.git is 23.214.9.0 (the one you also
+>> mentioned below).
+>>
+>
+> That's the Core6 FW that I "published" in a side branch in my
+> linux-firmware clone.
+>
+>>
+>>> [...]
+>>> [ 1021.094192] Call Trace:
+>>> [ 1021.094205]  [<ffffffff813ce9bd>] ? dump_stack+0x41/0x51
+>>> [ 1021.094217]  [<ffffffffa0b9cd8b>] ? iwl_trans_pcie_send_hcmd+0x367/0x438 [iwlwifi]
+>>> [ 1021.094226]  [<ffffffffa0b9b52c>] ? iwl_pcie_enqueue_hcmd+0x5e3/0x5fe [iwlwifi]
+>>> [ 1021.094235]  [<ffffffff8105fd4c>] ? finish_wait+0x5d/0x5d
+>>> [ 1021.094250]  [<ffffffffa0d50106>] ? iwl_mvm_send_cmd+0xd/0x22 [iwlmvm]
+>>> [ 1021.094262]  [<ffffffffa0d50160>] ? iwl_mvm_send_cmd_pdu+0x45/0x52 [iwlmvm]
+>>> [ 1021.094273]  [<ffffffffa0d4c5fb>] ? iwl_mvm_configure_bcast_filter.isra.14.part.15+0x36/0x3f [iwlmvm]
+>>>
+>>> (Full log attached below)
+>>>
+>>> What cough my eye was the "BAD_COMMAND" in the error log. I disabled
+>>> "CONFIG_IWLWIFI_BCAST_FILTERING" option and the 3160 is now working.
+>>>
+>>> As far as I can tell, there is already a firmware feature flag:
+>>> "IWL_UCODE_TLV_FLAGS_BCAST_FILTERING" which can be used to
+>>> distinguish whenever the feature is supported or not. But it
+>>> seems to be "stuck on" for the 3160.
+>>
+>> Weird, but it's possible that they set the flag mistakenly for the 3160
+>> firmware.  I'll check this with the firmware team.
+>>
+>
+> Right - we need to check with the firmware team (I already asked - but
+> things take time).
+> I'd say that the firmware mistakenly advertises support for this
+> feature. I bet that 3160 doesn't support it, but that's yet to be
+> checked.
+> Actually, we do have an internal ticket with this issue - but I don't
+> know if it was on 3160 or on 7260. Your report explicitly says that
+> you saw this on 3160, so I am only now connecting between the dots. I
+> can't check the internal bug since I am on vacation right now. Note
+> that 3160 is much less common than 7260 - so this kind of stupid bugs
+> can stay unseen for a fairly long time...
+>
+>
+>>
+>>> Regards
+>>> Christian
+>>>
+>>> BTW: I also tried the older "23.214.9.0" firmware too.
+>>> => Same result [Doesn't work with BCAST_FILTERING enabled].
+>>
+>> Thanks a lot for your report! Broadcast filtering is not set by default,
+>> so I haven't seen that bug before.
 
->> Internally it might do that, but I do not see it exposing the
->> NL80211_ATTR_MAC when you get the attributes for wiphy.
-> 
-> When wlan0 is created, it can be created with its own MAC irrespective
-> of the wiphy MAC. In OpenWrt, the wlan0 MAC can be supplied and assigned
-> to a netdev created on a specific wiphy identified by its MAC, and if
-> that cannot be predicted, there is no wlan0.
+One more thing - Chrisian, please open a bug on bug as described here:
+http://wireless.kernel.org/en/users/Drivers/iwlwifi#Bugzilla
 
-the way I read the nl80211 code is that the NL80211_CMD_NEW_INTERFACE requires a wiphy device to be specified. And that is actually just a number. So I have no idea what the MAC has to here.
-
->> So I am still saying that when you do NL80211_CMD_NEW_INTERFACE allow
->> providing NL80211_ATTR_MAC to set the MAC address to be used. It might
->> be useful that the wiphy exposes an attribute saying that it does not
->> have a default MAC address, but that should be it. I do not like these
->> magic 00:00:00:00:00:00 games. As I mentioned earlier, in Bluetooth we
->> just deal with allowing the driver to set a flag that it does not have
->> a valid address. And then the core takes care of dealing with it.
->> 
-> An attribute saying there is no default MAC is helpful only if there is
-> a way to supply a new default to the wiphy.
-
-Why does the wiphy need to know the MAC if it is always specified from userspace when actually creating the new netdev interface. Works for P2P devices, so why wouldn't it work for access point and station mode?
-
-Regards
-
-Marcel
-
-
-
+This can help to track things. Thanks.
