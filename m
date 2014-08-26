@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21415 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbaHIG1j (ORCPT
+Received: from toccata.ens-lyon.org ([140.77.166.68]:49053 "EHLO
+	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934092AbaHZJNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 02:27:39 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Reporting firmware stats to ethtool
-References: <53E3F65D.8080102@candelatech.com>
-	<87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
-	<53E4EFCB.5090501@candelatech.com>
-Date: Sat, 9 Aug 2014 09:27:31 +0300
-In-Reply-To: <53E4EFCB.5090501@candelatech.com> (Ben Greear's message of "Fri,
-	8 Aug 2014 08:42:03 -0700")
-Message-ID: <87zjfeuqi4.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_082744_056399_00409FCE)
+	Tue, 26 Aug 2014 05:13:08 -0400
+Date: Tue, 26 Aug 2014 11:13:01 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][input-led] Defer input led work to workqueue
+Message-ID: <20140826091301.GE5235@type.youpi.perso.aquilenet.fr> (sfid-20140826_111326_832399_1639804C)
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+ <1409040095.2489.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1409040095.2489.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Johannes Berg, le Tue 26 Aug 2014 10:01:35 +0200, a écrit :
+> On Tue, 2014-08-26 at 03:54 +0200, Samuel Thibault wrote:
+> 
+> > +	vt_led_wq = alloc_workqueue("input_leds", WQ_UNBOUND, 0);
+> > +	if (!vt_led_wq)
+> > +		return -ENOMEM;
+> 
+> Does this really need a separate workqueue rather than just using
+> schedule_work()? There doesn't seem to be much point in having its own
+> workqueue really, to me.
 
-> On 08/08/2014 02:06 AM, Kalle Valo wrote:
->> Ben Greear <greearb@candelatech.com> writes:
->> 
->>> I'm working on a patch to report the stats seen in debugfs/...ath10k/fw_stats
->>> as ethtool stats, somewhat similar to how ath9k does it.
->>>
->>> I notice that my user-space tool is reporting huge numbers because
->>> the stats are reset to zero when firmware restarts, and so my tool
->>> thinks the stats wrapped.
->>>
->>> I can fix my tool easily enough, but I first wanted to see if
->>> anyone had strong feelings about keeping the stats from resetting
->>> to zero by storing history and calculating diffs in the driver.
->>>
->>> I think my preference is to punt this to user-space, but if
->>> someone feels otherwise, please let me know sooner than later.
->> 
->> I also prefer to have this in user space, but how does user space know
->> when the stats have been zeroed?
->
-> Poll often enough that it cannot increment more than 2 billion (or
-> other large number) between polls, and then if polled value is less
-> than previous (and difference is > 2 billion), we know we had a reset
-> and not a wrap.
+Ah, yes, probably.  I'm not up to date with this kind of thing (last
+time I used those, they were called tasklets and bottom halves, you
+know... ;) ), so I just followed Documentation/workqueue.txt, which does
+not talk about schedule_work.
 
-That's not very reliable as "less than previous" assumption is not
-always true.
-
-> User-space stats will not be perfect in the case of firmware resets, or resets
-> after the 'large number', but nothing is going to make it perfect, and in
-> practice, this seems good enough.
-
-Yeah, and we can always fix this later if there's a sudden need to get
-reliable numbers.
-
--- 
-Kalle Valo
+Samuel
