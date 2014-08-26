@@ -1,107 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:38278 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204AbaH3V0e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2014 17:26:34 -0400
-Received: by mail-wg0-f52.google.com with SMTP id m15so3619073wgh.23
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:33 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/23] staging: vt6655: rxtx.c create function to return __le16 wTimeStampOff
-Date: Sat, 30 Aug 2014 22:25:33 +0100
-Message-Id: <1409433949-5468-7-git-send-email-tvboxspy@gmail.com> (sfid-20140830_232645_107633_FC5C86F9)
-In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
-References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+Received: from omr1.cc.vt.edu ([198.82.141.52]:53834 "EHLO omr1.cc.vt.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754810AbaHZUmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 16:42:05 -0400
+To: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2][input-led] Defer input led work to workqueue
+In-Reply-To: Your message of "Tue, 26 Aug 2014 11:17:25 +0200."
+             <20140826091725.GA23293@type.youpi.perso.aquilenet.fr>
+From: Valdis.Kletnieks@vt.edu
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+            <20140826091725.GA23293@type.youpi.perso.aquilenet.fr>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1409085709_3249P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Tue, 26 Aug 2014 16:41:49 -0400
+Message-ID: <3469.1409085709@turing-police.cc.vt.edu> (sfid-20140826_224226_893171_5255F077)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wTimeStampOff always needs to be endian corrected.
+--==_Exmh_1409085709_3249P
+Content-Type: text/plain; charset=us-ascii
 
-Create vnt_time_stamp_off to return this value.
+On Tue, 26 Aug 2014 11:17:25 +0200, you said:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+>
+> Difference with v1: uses schedule_work instead of its own workqueue.
+>
+> --- a/drivers/input/leds.c
+> +++ b/drivers/input/leds.c
+> @@ -100,13 +100,24 @@ static unsigned long vt_led_registered[B
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index afdf3ab..9617701 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -337,6 +337,12 @@ s_vSWencryption(
- 	}
- }
- 
-+static __le16 vnt_time_stamp_off(struct vnt_private *priv, u16 rate)
-+{
-+	return cpu_to_le16(wTimeStampOff[priv->byPreambleType % 2]
-+							[rate % MAX_RATE]);
-+}
-+
- /*byPktType : PK_TYPE_11A     0
-   PK_TYPE_11B     1
-   PK_TYPE_11GB    2
-@@ -706,8 +712,8 @@ s_uFillDataHead(
- 											   bNeedAck, uFragIdx, cbLastFragmentSize,
- 											   uMACfragNum, byFBOption)); //1: 2.4
- 
--			pBuf->wTimeStampOff_a = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
--			pBuf->wTimeStampOff_b = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE]);
-+			pBuf->wTimeStampOff_a = vnt_time_stamp_off(pDevice, wCurrentRate);
-+			pBuf->wTimeStampOff_b = vnt_time_stamp_off(pDevice, pDevice->byTopCCKBasicRate);
- 
- 			return pBuf->wDuration_a;
- 		} else {
-@@ -730,8 +736,8 @@ s_uFillDataHead(
- 			pBuf->wDuration_a_f1 = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
- 											      wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //1: 2.4GHz
- 
--			pBuf->wTimeStampOff_a = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
--			pBuf->wTimeStampOff_b = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][pDevice->byTopCCKBasicRate%MAX_RATE]);
-+			pBuf->wTimeStampOff_a = vnt_time_stamp_off(pDevice, wCurrentRate);
-+			pBuf->wTimeStampOff_b = vnt_time_stamp_off(pDevice, pDevice->byTopCCKBasicRate);
- 
- 			return pBuf->wDuration_a;
- 		} //if (byFBOption == AUTO_FB_NONE)
-@@ -751,7 +757,7 @@ s_uFillDataHead(
- 											    wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //0: 5GHz
- 			pBuf->wDuration_f1 = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
- 											    wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //0: 5GHz
--			pBuf->wTimeStampOff = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
-+			pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
- 			return pBuf->wDuration;
- 		} else {
- 			PSTxDataHead_ab pBuf = (PSTxDataHead_ab)pTxDataHead;
-@@ -765,7 +771,7 @@ s_uFillDataHead(
- 											 cbLastFragmentSize, uMACfragNum,
- 											 byFBOption));
- 
--			pBuf->wTimeStampOff = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
-+			pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
- 			return pBuf->wDuration;
- 		}
- 	} else {
-@@ -778,7 +784,7 @@ s_uFillDataHead(
- 										 wCurrentRate, bNeedAck, uFragIdx,
- 										 cbLastFragmentSize, uMACfragNum,
- 										 byFBOption));
--		pBuf->wTimeStampOff = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
-+		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
- 		return pBuf->wDuration;
- 	}
- 	return 0;
-@@ -2370,7 +2376,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
- 			  wCurrentRate, byPktType, &short_head->ab);
- 
- 	/* Get TimeStampOff */
--	short_head->time_stamp_off = cpu_to_le16(wTimeStampOff[pDevice->byPreambleType%2][wCurrentRate%MAX_RATE]);
-+	short_head->time_stamp_off = vnt_time_stamp_off(pDevice, wCurrentRate);
- 	cbHeaderSize = sizeof(struct vnt_tx_short_buf_head);
- 
- 	//Generate Beacon Header
--- 
-1.9.1
+Same thing for B2 - next-20140826 complains, and no complaints with this patch
+on top.
 
+Tested-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+
+--==_Exmh_1409085709_3249P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBU/zxDQdmEQWDXROgAQJ3cg/9Hvx/H5aJwYevd+dj6U81mBSm07bO6RJC
++XhtvhhBEUSFPKmArBlxBY2PyICbnpmtJldvG9E+I2+S1zqPczoIEatQgwR6ttfa
+8BiLhoOxsq3O6IEUFsWpgHHcT9EXUSc5tqEnv5xVxBDkNp4pB+2Uca+5f3IsXuFX
+DNnfh6o9/pCoRVIlWDykUC7cenDagwCR/i5KHQQRSL+b5/YiGFH1Qt/YCGml+WWK
+8McdfW+xbG8Oc28HcIhUw2aoUwsb0wE5TwH/mwuzfl+Ad62XuKZXcuW77VjejzX0
+dF4YPhkQ2YkSto1OrOgpaSPgaKcYXsO1hWylEOntzltwovxhn2dDkt2kSwYCGcTc
+d1A+e+3YpLi4HB4hyJ8rXlYeuMq0w0u6BKA3MymVDsFJiqO3tjFOaj8sNLwZjaXC
+k8AdL2ILirwA4Iovq7FW6YLt3gbwmiBDkAn5O9p3Mk5YMQEZW+cGltLbwUcfgI7e
+BZHZ9PCDjwo2omcoSaiiMzSDd5ggv502AlrSUcPBZVposHVq4ZshHjCldRzRHinf
+FQCjdJm9SWcTLn9E0/2d79Zy9A7zSZsfM500hOKOYBSoK9WKxwvJe+H8akb6/1sX
+/Q+xKnJgFcY6PPXd6atsjMdUFDfK7QZhxrJQCKfXganugNmZhfU9vqt4ouLtdc65
+4T4q0W7Icxg=
+=d9AD
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1409085709_3249P--
