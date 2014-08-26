@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:47941 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbaHTRcU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 13:32:20 -0400
-Date: Wed, 20 Aug 2014 20:32:11 +0300
-From: Andreea Bernat <bernat.ada@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	paulmck@linux.vnet.ibm.com
-Subject: Re: [PATCH] carl9170: Replace rcu_dereference() with
- rcu_access_pointer()
-Message-ID: <20140820173210.GA18892@ada> (sfid-20140820_193240_556204_BC2F4BA5)
-References: <20140817104806.GA14533@ada>
- <3029076.uaUkTd8nru@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3029076.uaUkTd8nru@debian64>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40401 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757639AbaHZNWw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 09:22:52 -0400
+Message-ID: <1409059327.22232.0.camel@jlt4.sipsolutions.net> (sfid-20140826_152312_557533_25007BEF)
+Subject: Re: [PATCHv2][input-led] Defer input led work to workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Tue, 26 Aug 2014 15:22:07 +0200
+In-Reply-To: <20140826091725.GA23293@type.youpi.perso.aquilenet.fr> (sfid-20140826_111735_723896_6D594EC0)
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+	 <20140826091725.GA23293@type.youpi.perso.aquilenet.fr>
+	 (sfid-20140826_111735_723896_6D594EC0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 18, 2014 at 09:29:36PM +0200, Christian Lamparter wrote:
-> On Sunday, August 17, 2014 01:48:07 PM Andreea-Cristina Bernat wrote:
-> > The rcu_dereference() call is used directly in a condition.
-> > Since its return value is never dereferenced it is recommended to use
-> > "rcu_access_pointer()" instead of "rcu_dereference()".
-> > Therefore, this patch makes the replacement.
-> > [...]
-> > Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-> > ---
-> >  drivers/net/wireless/ath/carl9170/main.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> > index f8ded84..12018ff 100644
-> > --- a/drivers/net/wireless/ath/carl9170/main.c
-> > +++ b/drivers/net/wireless/ath/carl9170/main.c
-> > @@ -1431,7 +1431,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
-> >  			return -EOPNOTSUPP;
-> >  
-> >  		rcu_read_lock();
-> > -		if (rcu_dereference(sta_info->agg[tid])) {
-> > +		if (rcu_access_pointer(sta_info->agg[tid])) {
-> >  			rcu_read_unlock();
-> >  			return -EBUSY;
-> >  		}
-> 
-> There's more. The check does not do a whole lot. I think *it* [the check] and the
-> rcu_read_[un]lock [and the return -EBUSY] can be removed completely from the
-> IEEE80211_AMPDU_TX_START code-path in carl9170_op_ampdu_action.
-> 
-> It would be awesome, if you could you make a patch which removes this 
-> unneeded cosmic-ray-protection check :-) .
+On Tue, 2014-08-26 at 11:17 +0200, Samuel Thibault wrote:
 
-Could you tell me why you think that those lines have to be removed?
-I would like to fully understand this before I remove them.
+> -	led_trigger_event(&vt_led_triggers[led], !!brightness);
+> +	vt_led_state[led] = !!brightness;
+> +	schedule_work(&vt_led_work[led]);
 
-Thank you,
-Andreea
 
-> 
-> Thanks
-> Christian
+> +static int __init input_led_init(void)
+> +{
+> +	unsigned i;
+> +
+> +	for (i = 0; i < LED_CNT; i++)
+> +		INIT_WORK(&vt_led_work[i], vt_led_cb);
+> +
+> +	return 0;
+> +}
+> +
+> +static void __exit input_led_exit(void)
+> +{
+> +}
+
+Come to think of it - don't you need to cancel_work_sync() in exit so
+the work struct can't be queued while the module is being unloaded?
+
+johannes
+
