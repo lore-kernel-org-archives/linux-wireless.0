@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:43768 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbaHWO6p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 10:58:45 -0400
-Received: by mail-ob0-f181.google.com with SMTP id va2so9522604obc.12
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Aug 2014 07:58:44 -0700 (PDT)
-Message-ID: <53F8AA88.4070907@lwfinger.net> (sfid-20140823_165849_032107_A5221BB4)
-Date: Sat, 23 Aug 2014 09:51:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from smtp4-g21.free.fr ([212.27.42.4]:54842 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753435AbaHZUCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 16:02:19 -0400
+Date: Tue, 26 Aug 2014 22:02:08 +0200
+From: Sabrina Dubroca <sd@queasysnail.net>
+To: Valdis.Kletnieks@vt.edu
+Cc: Samuel Thibault <samuel.thibault@ens-lyon.org>,
+	Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][input-led] Defer input led work to workqueue
+Message-ID: <20140826200208.GA11247@kria> (sfid-20140826_220238_497505_2AA58670)
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+ <3942.1409078958@turing-police.cc.vt.edu>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] bcma: add PCI ID for spromless BCM43227
-References: <1408789351-5803-1-git-send-email-hauke@hauke-m.de> <CACna6ry5Nw6Z5fugawwELzv=EPBB1jKGRFSa6GrETU5gGtCCaw@mail.gmail.com>
-In-Reply-To: <CACna6ry5Nw6Z5fugawwELzv=EPBB1jKGRFSa6GrETU5gGtCCaw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3942.1409078958@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2014 08:39 AM, Rafał Miłecki wrote:
-> On 23 August 2014 12:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> This adds the PCI ID a BCM43227 without a sprom.
+2014-08-26, 14:49:18 -0400, Valdis.Kletnieks@vt.edu wrote:
+> On Tue, 26 Aug 2014 03:54:53 +0200, Samuel Thibault said:
+> > This changeset defers the second led_trigger_event call into a
+> > workqueue, which avoids the nested locking altogether.  This does
+> > not prevent the user from shooting himself in the foot by creating a
+> > vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
+> > threads eating some CPU until the user breaks the loop, which is not too
+> > bad.
+> >
+> > Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+> >
+> > --- a/drivers/input/leds.c
+> > +++ b/drivers/input/leds.c
+> > @@ -100,13 +100,25 @@ static unsigned long vt_led_registered[B
 > 
-> Do you have bcma log from detecting this chip? Is this really BCM43227?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I admit having zero understanding of the code, but I can confirm that
+> next-20140825 still throws the lockdep whine I was seeing, but the same
+> tree with this patch on top of it boots without warning. Soo...
+> 
+> Tested-By: Valdis Kletnieks <valdis.kletnieks@vt.edu>
 
-When you resubmit, could you also add the Product ID in hex in a comment? If it
-were ever necessary to find the driver from the PCI ID given by 'lspci -nn',
-having that ID in the code would be useful.
+Same for me.
 
-Larry
+Tested-by: Sabrina Dubroca <sd@queasysnail.net>
 
 
+Thanks,
+
+-- 
+Sabrina
