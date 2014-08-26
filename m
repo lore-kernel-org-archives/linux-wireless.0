@@ -1,135 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:34404 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbaHIQq3 (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:59422 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbaHZQmv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 12:46:29 -0400
-Date: Sat, 9 Aug 2014 22:16:23 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] airo_cs: Remove typedef local_info_t
-Message-ID: <20140809164623.GA21522@himangi-Dell> (sfid-20140809_184633_902796_0BB5A116)
+	Tue, 26 Aug 2014 12:42:51 -0400
+Received: by mail-ig0-f173.google.com with SMTP id h18so4809596igc.12
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2014 09:42:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Tue, 26 Aug 2014 18:42:51 +0200
+Message-ID: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> (sfid-20140826_184255_535176_7368A069)
+Subject: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linux kernel coding style guidelines suggest not using typedefs
-for structure types. This patch gets rid of the typedef for
-local_info_t. Also, the name of the struct is changed to drop the _t,
-to make the name look less typedef-like.
+[cross-list: linux-mips@ and linux-wireless@]
 
-The following Coccinelle semantic patch detects the case:
+We're working on another Broadcom platform, SoC with an ARM CPU,
+platform called bcm53xx. It shares many things with the older (MIPS
+based) bcm47xx, so we need to figure out how to modify some of the
+drivers.
 
-@tn@
-identifier i;
-type td;
-@@
+Hauke recently proposed sharing code for NVRAM support as a separated
+driver. In his RFC patch it was added as a new platform driver. I
+liked this idea (I'd simply prefer to modify existing code instead of
+duplicating it), so I played with it a bit today.
 
--typedef
- struct i { ... }
--td
- ;
+My plan was to modify bcm47xx code to make nvram.c a separated driver
+and update bcm47xx/bcma to use it. Well, it didn't work out. The
+problem is that we need access to the NVRAM pretty early. Please take
+a look at my description of bcm47xx booting process (it's simply a
+summary of start_kernel and bcm47xx code):
 
-@@
-type tn.td;
-identifier tn.i;
-@@
+1) prom_init / plat_mem_setup
+These two functions are called in pretty much the same phase from the
+setup_arch (arch/mips/kernel/setup.c).
+Task: detect & register memory
+Requires: CPU type, maybe Broadcom chip ID (highmem support)
+Available: CPU type
+Not available: kmalloc, device_add (kobject)
 
--td
-+ struct i
+2) arch_init_irq
+Called from the arch specific init_IRQ (arch/mips/kernel/irq.c)
+Task: setup bcma's MIPS core
+Requires: bcma bus MIPS core
+Available: kmalloc
+Not available: device_add (kobject)
 
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/net/wireless/airo_cs.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+3) plat_time_init
+Called from the arch specific time_init (arch/mips/kernel/time.c)
+Task: set frequency
+Requires: bcma bus ChipCommon core, nvram
+Available: kmalloc
+Not available: device_add (kobject)
 
-diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
-index 7e9ede6..d9ed22b 100644
---- a/drivers/net/wireless/airo_cs.c
-+++ b/drivers/net/wireless/airo_cs.c
-@@ -56,18 +56,18 @@ static void airo_release(struct pcmcia_device *link);
- 
- static void airo_detach(struct pcmcia_device *p_dev);
- 
--typedef struct local_info_t {
-+struct local_info {
- 	struct net_device *eth_dev;
--} local_info_t;
-+};
- 
- static int airo_probe(struct pcmcia_device *p_dev)
- {
--	local_info_t *local;
-+	struct local_info *local;
- 
- 	dev_dbg(&p_dev->dev, "airo_attach()\n");
- 
- 	/* Allocate space for private device-specific data */
--	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
-+	local = kzalloc(sizeof(*local), GFP_KERNEL);
- 	if (!local)
- 		return -ENOMEM;
- 
-@@ -82,10 +82,11 @@ static void airo_detach(struct pcmcia_device *link)
- 
- 	airo_release(link);
- 
--	if (((local_info_t *)link->priv)->eth_dev) {
--		stop_airo_card(((local_info_t *)link->priv)->eth_dev, 0);
-+	if (((struct local_info *)link->priv)->eth_dev) {
-+		stop_airo_card(((struct local_info *)link->priv)->eth_dev,
-+			       0);
- 	}
--	((local_info_t *)link->priv)->eth_dev = NULL;
-+	((struct local_info *)link->priv)->eth_dev = NULL;
- 
- 	kfree(link->priv);
- } /* airo_detach */
-@@ -101,7 +102,7 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev, void *priv_data)
- 
- static int airo_config(struct pcmcia_device *link)
- {
--	local_info_t *dev;
-+	struct local_info *dev;
- 	int ret;
- 
- 	dev = link->priv;
-@@ -121,10 +122,10 @@ static int airo_config(struct pcmcia_device *link)
- 	ret = pcmcia_enable_device(link);
- 	if (ret)
- 		goto failed;
--	((local_info_t *)link->priv)->eth_dev =
-+	((struct local_info *)link->priv)->eth_dev =
- 		init_airo_card(link->irq,
- 			       link->resource[0]->start, 1, &link->dev);
--	if (!((local_info_t *)link->priv)->eth_dev)
-+	if (!((struct local_info *)link->priv)->eth_dev)
- 		goto failed;
- 
- 	return 0;
-@@ -142,7 +143,7 @@ static void airo_release(struct pcmcia_device *link)
- 
- static int airo_suspend(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	netif_device_detach(local->eth_dev);
- 
-@@ -151,7 +152,7 @@ static int airo_suspend(struct pcmcia_device *link)
- 
- static int airo_resume(struct pcmcia_device *link)
- {
--	local_info_t *local = link->priv;
-+	struct local_info *local = link->priv;
- 
- 	if (link->open) {
- 		reset_airo_card(local->eth_dev);
+4) At some point we need to register bcma devices, device_initcall can
+be used for that
+
+As you can see, we need access to the NVRAM quite early (step 3,
+plat_time_init, or even earlier), but device_add (platform
+devices/drivers) is not available then yet. So I'm afraid we won't be
+able to use this common way to write NVRAM driver.
+
+
+So there I want to present my plan for the NVRAM improvements. If you
+don't agree with any part of it, or you can see any better solution,
+please speak up!
+
+1) I won't make nvram.c a platform driver. Instead I would like to
+make it less bcm47xx specific. I don't want to touch bcm47xx_bus in
+this file. Instead I want to add a generic function that will accept
+address and size of memory where NVRAM should be found. Then I'd like
+to move this file out of "mips" arch (drivers/misc/?
+drivers/bcma/nvram/?) and allow using it for bcm53xx.
+
+2) I was also thinking about cleaning bcm47xx init. Right now we do a
+lot of hacks in plat_mem_setup & bcma to register the bus and scan its
+cores. It's so early (before mm_init) that we can't alloc memory!
+Doing all this stuff slightly later (e.g. arch_init_irq) would allow
+us to simply use "kmalloc" and drop all current hacks in bcma.
+
+3) Above change (point 2) would require some small change in bcma. We
+would need 2-stages init: detecting (with kmalloc!) bus cores,
+registering cores. This is required, because we can't register cores
+too early, device_add (and the underlying kobject) would oops/WARN in
+kobject_get.
+
 -- 
-1.9.1
-
+Rafał
