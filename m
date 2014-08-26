@@ -1,281 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:32844 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964AbaHSIXb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 04:23:31 -0400
-Subject: [PATCH v7 6/8] ath10k: save firmware RAM and ROM BSS sections on crash
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 19 Aug 2014 11:23:25 +0300
-Message-ID: <20140819082325.16842.18721.stgit@potku.adurom.net> (sfid-20140819_102405_527574_3C434587)
-In-Reply-To: <20140819082038.16842.46876.stgit@potku.adurom.net>
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>
+Received: from test.hauke-m.de ([5.39.93.123]:45874 "EHLO test.hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753601AbaHZUcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 16:32:13 -0400
+Message-ID: <53FCEECA.8090308@hauke-m.de> (sfid-20140826_223218_109044_4E10BA85)
+Date: Tue, 26 Aug 2014 22:32:10 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+In-Reply-To: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 08/26/2014 06:42 PM, Rafał Miłecki wrote:
+> [cross-list: linux-mips@ and linux-wireless@]
+> 
+> We're working on another Broadcom platform, SoC with an ARM CPU,
+> platform called bcm53xx. It shares many things with the older (MIPS
+> based) bcm47xx, so we need to figure out how to modify some of the
+> drivers.
+> 
+> Hauke recently proposed sharing code for NVRAM support as a separated
+> driver. In his RFC patch it was added as a new platform driver. I
+> liked this idea (I'd simply prefer to modify existing code instead of
+> duplicating it), so I played with it a bit today.
 
-This can be used to get a useful back trace out of a firmware
-crash that involves an interrupt handler.  For instance, a
-null-pointer-exception would be this kind of trace.  A user-space
-tool can read the debugfs file and decode things as wished.
+I will also make mips bcm47xx uses that code in the next version of the
+patch. (move the code from mips)
 
-This requires a packaged firmware with a new IE to describe the
-BSS section starts and length.
+> 
+> My plan was to modify bcm47xx code to make nvram.c a separated driver
+> and update bcm47xx/bcma to use it. Well, it didn't work out. The
+> problem is that we need access to the NVRAM pretty early. Please take
+> a look at my description of bcm47xx booting process (it's simply a
+> summary of start_kernel and bcm47xx code):
+> 
+> 1) prom_init / plat_mem_setup
+> These two functions are called in pretty much the same phase from the
+> setup_arch (arch/mips/kernel/setup.c).
+> Task: detect & register memory
+> Requires: CPU type, maybe Broadcom chip ID (highmem support)
+> Available: CPU type
+> Not available: kmalloc, device_add (kobject)
+> 
+> 2) arch_init_irq
+> Called from the arch specific init_IRQ (arch/mips/kernel/irq.c)
+> Task: setup bcma's MIPS core
+> Requires: bcma bus MIPS core
+> Available: kmalloc
+> Not available: device_add (kobject)
+> 
+> 3) plat_time_init
+> Called from the arch specific time_init (arch/mips/kernel/time.c)
+> Task: set frequency
+> Requires: bcma bus ChipCommon core, nvram
+> Available: kmalloc
+> Not available: device_add (kobject)
+> 
+> 4) At some point we need to register bcma devices, device_initcall can
+> be used for that
+> 
+> As you can see, we need access to the NVRAM quite early (step 3,
+> plat_time_init, or even earlier), but device_add (platform
+> devices/drivers) is not available then yet. So I'm afraid we won't be
+> able to use this common way to write NVRAM driver.
+> 
+> 
+> So there I want to present my plan for the NVRAM improvements. If you
+> don't agree with any part of it, or you can see any better solution,
+> please speak up!
+> 
+> 1) I won't make nvram.c a platform driver. Instead I would like to
+> make it less bcm47xx specific. I don't want to touch bcm47xx_bus in
+> this file. Instead I want to add a generic function that will accept
+> address and size of memory where NVRAM should be found. Then I'd like
+> to move this file out of "mips" arch (drivers/misc/?
+> drivers/bcma/nvram/?) and allow using it for bcm53xx.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c  |   54 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h  |   16 +++++++++
- drivers/net/wireless/ath/ath10k/debug.c |   28 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |    4 ++
- drivers/net/wireless/ath/ath10k/pci.c   |   43 +++++++++++++++++++++++++
- 5 files changed, 145 insertions(+)
+I would make this nvram.c a platform driver in addition so it can get
+registered to device tree. this part would only get activated when
+CONFIG_OF is set which is not on MIPS bcm47xx.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index ba2e87ab19bd..1472c0a767e2 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -479,6 +479,60 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 			ar->otp_len = ie_len;
- 
- 			break;
-+		case ATH10K_FW_IE_RAM_BSS_ADDR:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.ram_bss_addr = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found RAM BSS address 0x%x\n",
-+				   ar->fw.ram_bss_addr);
-+			break;
-+		case ATH10K_FW_IE_RAM_BSS_LEN:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.ram_bss_len = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found RAM BSS length 0x%x\n",
-+				   ar->fw.ram_bss_len);
-+
-+			if (ar->fw.ram_bss_len > ATH10K_RAM_BSS_BUF_LEN) {
-+				ath10k_warn("too long firmware RAM BSS length: %d\n",
-+					    ar->fw.ram_bss_len);
-+				ar->fw.ram_bss_len = 0;
-+			}
-+
-+			break;
-+		case ATH10K_FW_IE_ROM_BSS_ADDR:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.rom_bss_addr = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found ROM BSS address 0x%x\n",
-+				   ar->fw.rom_bss_addr);
-+			break;
-+		case ATH10K_FW_IE_ROM_BSS_LEN:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.rom_bss_len = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found ROM BSS length 0x%x\n",
-+				   ar->fw.rom_bss_len);
-+
-+			if (ar->fw.ram_bss_len > ATH10K_RAM_BSS_BUF_LEN) {
-+				ath10k_warn("too long firmware RAM BSS length: %d\n",
-+					    ar->fw.ram_bss_len);
-+				ar->fw.rom_bss_len = 0;
-+			}
-+
-+			break;
- 		default:
- 			ath10k_warn("Unknown FW IE: %u\n",
- 				    le32_to_cpu(hdr->id));
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 34d6d255cca7..31bf18c588c7 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -293,6 +293,10 @@ struct ath10k_dbglog_entry_storage {
- 	u8 data[ATH10K_DBGLOG_DATA_LEN];
- };
- 
-+/* estimated values, hopefully these are enough */
-+#define ATH10K_ROM_BSS_BUF_LEN 10000
-+#define ATH10K_RAM_BSS_BUF_LEN 30000
-+
- /* used for crash-dump storage, protected by data-lock */
- struct ath10k_fw_crash_data {
- 	bool crashed_since_read;
-@@ -303,6 +307,9 @@ struct ath10k_fw_crash_data {
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
- 	u8 stack_buf[ATH10K_FW_STACK_SIZE];
- 	u8 exc_stack_buf[ATH10K_FW_STACK_SIZE];
-+
-+	u8 rom_bss_buf[ATH10K_ROM_BSS_BUF_LEN];
-+	u8 ram_bss_buf[ATH10K_RAM_BSS_BUF_LEN];
- };
- 
- struct ath10k_debug {
-@@ -450,6 +457,15 @@ struct ath10k {
- 		} fw;
- 	} hw_params;
- 
-+	/* These are written to only during first firmware load from user
-+	 * space so no need for any locking. */
-+	struct {
-+		u32 ram_bss_addr;
-+		u32 ram_bss_len;
-+		u32 rom_bss_addr;
-+		u32 rom_bss_len;
-+	} fw;
-+
- 	const struct firmware *board;
- 	const void *board_data;
- 	size_t board_len;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 3a24b4fec6ce..67bb53c64ead 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -35,12 +35,16 @@
-  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
-  * @ATH10K_FW_CRASH_DUMP_STACK:   Stack memory contents.
-  * @ATH10K_FW_CRASH_DUMP_EXC_STACK:  Exception stack contents
-+ * @ATH10K_FW_CRASH_DUMP_RAM_BSS:  BSS area for RAM code
-+ * @ATH10K_FW_CRASH_DUMP_ROM_BSS:  BSS area for ROM code
-  */
- enum ath10k_fw_crash_dump_type {
- 	ATH10K_FW_CRASH_DUMP_DBGLOG = 0,
- 	ATH10K_FW_CRASH_DUMP_REGDUMP = 1,
- 	ATH10K_FW_CRASH_DUMP_STACK = 2,
- 	ATH10K_FW_CRASH_DUMP_EXC_STACK = 3,
-+	ATH10K_FW_CRASH_DUMP_RAM_BSS = 4,
-+	ATH10K_FW_CRASH_DUMP_ROM_BSS = 5,
- 
- 	ATH10K_FW_CRASH_DUMP_MAX,
- };
-@@ -728,6 +732,12 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->stack_buf);
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->exc_stack_buf);
- 
-+	if (ar->fw.ram_bss_addr && ar->fw.ram_bss_len)
-+		len += sizeof(*dump_tlv) + ar->fw.ram_bss_len;
-+
-+	if (ar->fw.rom_bss_addr && ar->fw.rom_bss_len)
-+		len += sizeof(*dump_tlv) + ar->fw.rom_bss_len;
-+
- 	sofar += hdr_len;
- 
- 	/* This is going to get big when we start dumping FW RAM and such,
-@@ -809,6 +819,24 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	       sizeof(crash_data->exc_stack_buf));
- 	sofar += sizeof(*dump_tlv) + sizeof(crash_data->exc_stack_buf);
- 
-+	if (ar->fw.ram_bss_addr && ar->fw.ram_bss_len) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_RAM_BSS);
-+		dump_tlv->tlv_len = cpu_to_le32(ar->fw.ram_bss_len);
-+		memcpy(dump_tlv->tlv_data, crash_data->ram_bss_buf,
-+		       ar->fw.ram_bss_len);
-+		sofar += sizeof(*dump_tlv) + ar->fw.ram_bss_len;
-+	}
-+
-+	if (ar->fw.rom_bss_addr && ar->fw.rom_bss_len) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_ROM_BSS);
-+		dump_tlv->tlv_len = cpu_to_le32(ar->fw.rom_bss_len);
-+		memcpy(dump_tlv->tlv_data, crash_data->rom_bss_buf,
-+		       ar->fw.rom_bss_len);
-+		sofar += sizeof(*dump_tlv) + ar->fw.rom_bss_len;
-+	}
-+
- 	ar->debug.fw_crash_data->crashed_since_read = false;
- 
- 	spin_unlock_bh(&ar->data_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index db52a55e5bd1..90fa4b0f56a4 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -54,6 +54,10 @@ enum ath10k_fw_ie_type {
- 	ATH10K_FW_IE_FEATURES = 2,
- 	ATH10K_FW_IE_FW_IMAGE = 3,
- 	ATH10K_FW_IE_OTP_IMAGE = 4,
-+	ATH10K_FW_IE_RAM_BSS_ADDR = 5,
-+	ATH10K_FW_IE_RAM_BSS_LEN = 6,
-+	ATH10K_FW_IE_ROM_BSS_ADDR = 7,
-+	ATH10K_FW_IE_ROM_BSS_LEN = 8,
- };
- 
- /* Known pecularities:
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8266cc94f718..4825cef69c6e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -856,6 +856,47 @@ static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
- 				hi_err_stack, ATH10K_FW_STACK_SIZE);
- }
- 
-+static void ath10k_pci_dump_bss_ram(struct ath10k *ar,
-+				    struct ath10k_fw_crash_data *crash_data) {
-+	int ret;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	if (!ar->fw.ram_bss_addr)
-+		return;
-+
-+	if (!ar->fw.ram_bss_len)
-+		return;
-+
-+	ret = ath10k_pci_diag_read_mem(ar, ar->fw.ram_bss_addr,
-+				       crash_data->ram_bss_buf,
-+				       ar->fw.ram_bss_len);
-+	if (ret)
-+		ath10k_warn("failed to read firmware RAM BSS memory from %d (%d B): %d\n",
-+			    ar->fw.ram_bss_addr, ar->fw.ram_bss_len, ret);
-+}
-+
-+static void ath10k_pci_dump_bss_rom(struct ath10k *ar,
-+				    struct ath10k_fw_crash_data *crash_data)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	if (!ar->fw.rom_bss_addr)
-+		return;
-+
-+	if (!ar->fw.rom_bss_len)
-+		return;
-+
-+	ret = ath10k_pci_diag_read_mem(ar, ar->fw.rom_bss_addr,
-+				       crash_data->rom_bss_buf,
-+				       ar->fw.rom_bss_len);
-+	if (ret)
-+		ath10k_warn("failed to read firmware ROM BSS memory from %d (%d B): %d\n",
-+			    ar->fw.rom_bss_addr, ar->fw.rom_bss_len, ret);
-+}
-+
- static void ath10k_pci_dump_dbglog(struct ath10k *ar,
- 				   struct ath10k_fw_crash_data *crash_data)
- {
-@@ -1001,6 +1042,8 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 
- 	ath10k_pci_dump_stack(ar, crash_data);
- 	ath10k_pci_dump_exc_stack(ar, crash_data);
-+	ath10k_pci_dump_bss_ram(ar, crash_data);
-+	ath10k_pci_dump_bss_rom(ar, crash_data);
- 	ath10k_pci_dump_registers(ar, crash_data);
- 	ath10k_pci_dump_dbglog(ar, crash_data);
- 
+> 2) I was also thinking about cleaning bcm47xx init. Right now we do a
+> lot of hacks in plat_mem_setup & bcma to register the bus and scan its
+> cores. It's so early (before mm_init) that we can't alloc memory!
+> Doing all this stuff slightly later (e.g. arch_init_irq) would allow
+> us to simply use "kmalloc" and drop all current hacks in bcma.
+> 
+> 3) Above change (point 2) would require some small change in bcma. We
+> would need 2-stages init: detecting (with kmalloc!) bus cores,
+> registering cores. This is required, because we can't register cores
+> too early, device_add (and the underlying kobject) would oops/WARN in
+> kobject_get.
+> 
 
+This sound good to me, but I still have some questions.
+
+Do you also want to change ssb registration?
+Is it worth the effort? I think MIPS bcm47xx will be EOL and replaced by
+the ARM versions completely in the next years. (I do not have any
+private information about Broadcom product politics)
+
+I think this will be reduce the number of hacks a little bit, but you
+still need a 2 stage init of bcma for mips SoCs, and I do not know how
+to prevent this.
+
+Hauke
