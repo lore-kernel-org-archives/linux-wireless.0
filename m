@@ -1,42 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:36187 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868AbaHMCas (ORCPT
+Received: from mail1.bemta12.messagelabs.com ([216.82.251.5]:38970 "EHLO
+	mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757359AbaHZHfD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 22:30:48 -0400
-Received: by mail-vc0-f179.google.com with SMTP id hq11so14096837vcb.24
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2014 19:30:47 -0700 (PDT)
-From: Raphael Silva <rapphil@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
-	Raphael Silva <rapphil@gmail.com>
-Subject: [PATCH] rtl8723au:type casting corrections
-Date: Tue, 12 Aug 2014 23:30:34 -0300
-Message-Id: <1407897034-28134-1-git-send-email-rapphil@gmail.com> (sfid-20140813_043114_448368_C22F5FAA)
+	Tue, 26 Aug 2014 03:35:03 -0400
+Message-ID: <53FC3870.6050206@netcommwireless.com> (sfid-20140826_093536_979929_F2854A2D)
+Date: Tue, 26 Aug 2014 17:34:08 +1000
+From: Sourav <sourav.chakraborty@netcommwireless.com>
+MIME-Version: 1.0
+To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Type casting corrections in order to solve warnings of the sparce static analyser.
+subscribe linux-wireless
 
-Signed-off-by: Raphael Silva <rapphil@gmail.com>
----
- drivers/staging/rtl8723au/hal/usb_halinit.c       | 4 ++--
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+-- 
+Warm Regards,
+Sourav
 
-diff --git a/drivers/staging/rtl8723au/hal/usb_halinit.c b/drivers/staging/rtl8723au/hal/usb_halinit.c
-index b49bf33..969e4f3 100644
---- a/drivers/staging/rtl8723au/hal/usb_halinit.c
-+++ b/drivers/staging/rtl8723au/hal/usb_halinit.c
-@@ -1228,9 +1228,9 @@ static void Hal_EfuseParsePIDVID_8723AU(struct rtw_adapter *pAdapter,
- 	} else {
- 		/*  VID, PID */
- 		pHalData->EEPROMVID =
--			le16_to_cpu(*(u16 *)&hwinfo[EEPROM_VID_8723AU]);
-+			le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID_8723AU]);
- 		pHalData->EEPROMPID =
--			le16_to_cpu(*(u16 *)&hwinfo[EEPROM_PID_8723AU]);
-+			le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_PID_8723AU]);
- 	}
- 
- 	MSG_8723A("EEPROM VID = 0x%4x\n", pHalData->EEPROMVID);
+
+______________________________________________________________________
+This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
+______________________________________________________________________
