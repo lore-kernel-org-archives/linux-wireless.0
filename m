@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:53878 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735AbaH1MjH convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:13062 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934147AbaHZIvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 08:39:07 -0400
-Received: by mail-ig0-f174.google.com with SMTP id c1so7935455igq.7
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 05:39:06 -0700 (PDT)
+	Tue, 26 Aug 2014 04:51:07 -0400
+Message-ID: <53FC4A78.2040407@broadcom.com> (sfid-20140826_105113_726049_D53C9674)
+Date: Tue, 26 Aug 2014 10:51:04 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <53FF21AA.5040406@telenet.be>
-References: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com>
-	<CACna6rx+EkoCPQ06qDTbaDFEJ1hrn_CYSbrPmosF0ikhkqDxpA@mail.gmail.com>
-	<53FF21AA.5040406@telenet.be>
-Date: Thu, 28 Aug 2014 14:39:06 +0200
-Message-ID: <CACna6rwde+H8K42FgsHH=FT2tW_3o_NwVbk0ZyM_L3fVtfwAsA@mail.gmail.com> (sfid-20140828_143911_204213_4E98AE9F)
-Subject: Re: Looking for someone with BCM43227 and (maybe) compilation skill ; )
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ruben De Smet <ruben.de.smet@telenet.be>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
+To: Brain WrecK <bloften80@gmail.com>
+CC: brcm80211 development <brcm80211-dev-list@broadcom.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Broadcom 43241b4-sdio NVRAM help request
+References: <CAA1t8Su1N6vCCnFgJ3hgWXptFC0arSWqE67REWsnWtO9LcrrrQ@mail.gmail.com>
+In-Reply-To: <CAA1t8Su1N6vCCnFgJ3hgWXptFC0arSWqE67REWsnWtO9LcrrrQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 August 2014 14:33, Ruben De Smet <ruben.de.smet@telenet.be> wrote:
-> On 07/03/2014 02:50 PM, Rafał Miłecki wrote:
->> On 3 July 2014 14:32, Rafał Miłecki <zajec5@gmail.com> wrote:
->>> I want to add support for BCM43227 in b43, however I need help of some
->>> BCM43227 owner. Well, I could buy one by myself (less than 10$ on
->>> eBay), but I don't want to wait a month to receive it.
->>>
->>> So I need someone with:
->>> 1) BCM43227 ;)
->>> 2) Kernel with CONFIG_MMIOTRACE=y*
->>> 3) Broadcom Linux STA driver 6.30.223.141
->>>
->>> So? Is there anyone around with BCM43227 willing to help?
->>
->> I'd need someone to:
->> 1) Disable NetworkManager & blacklist wl
->> 2) Make a cold boot (power off for 3 seconds)
->> 3) Run attached script
->> 4) Provide me /tmp/dump.txt (preferably compressed)
->>
+On 08/24/14 10:06, Brain WrecK wrote:
+> Hello Sir
 >
-> Still needed? I have
-> 03:00.0 Network controller: Broadcom Corporation BCM43228 802.11a/b/g/n
-> That is one iteration higher.
+> I am writing this request to ask for your aid, we have been tryng to get
+> ubuntu 14.10 to run on an ASUS T100TA tablet and we are having wifi issues
+>
+> I am appealing to you and to ask for your help as i have been trying for
+> weeks to get this wifi working stable, i have been trying to modify the
+> NVRAM file to get a stable connection so we can have decent working
+> internet on this tablet to enjoy the Linux experience. right now
+> currently we can download in the range of 600 bytes/sec to maybe 10kb/sec
+>
+> We are unable to connect with the current NVRAM file provided from the
+> NVRAM file unless we put our current MAC address for our wifi card in
+> the brcmfmac43241b4-sdio.txt
+>
+> and once we do that we are able to connect but we get frequent
+> disconnects and very very slow download rates...
+>
+> I have pulled the NVRAM from the efivars in sys/firmware/efivars and
+> have attached it for you is there perhaps an updated file that will
+> work, or would you be able to help us and create a new or provide a
+> current NVRAM File?
+>
+> Also the firmware that is provided for us is dated july 17th 2013 is
+> there an updated linux firmware that we can use for this device that
+> perhaps would have an updated NVRAM file to go with it?
+>
+> I have attached the firmware that is provided for us as well for your
+> reference
+>
+> I am sure you are a busy person and we in the linux community would love
+> to be rid of windows and enjoy the linux experience, could you, would
+> you lend us your aid?
 
-It has appeared that BCM43227 and BCM43228 are pretty much identical
-from programming POV. You can try 3.17-rc1 (or newer) to see if it
-supports your wireless card :)
+Hi Brian,
 
--- 
-Rafał
+Sure I can try to be somewhat helpful. I am currently on vacation and 
+rain is pouring down in buckets.
+
+The nvram that is in EFI should be the perfect fit for the device. Maybe 
+you can provide some more background info. Are you using stock ubuntu 
+kernel. What kernel version is running? Can you boot the kernel with 
+'debug ignore_loglevel' parameters, load the brcmfmac driver with 
+'debug=0xd416', and send me the full kernel log.
+
+Regards,
+Arend
