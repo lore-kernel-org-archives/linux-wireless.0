@@ -1,72 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48720 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbaHJLWv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 07:22:51 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so2969229wiv.7
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:48 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/7] staging: vt6655: CARDqGetNextTBTT calculate qwTSF using do_div
-Date: Sun, 10 Aug 2014 12:21:59 +0100
-Message-Id: <1407669722-2682-4-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132256_761280_0E56F93D)
-In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
-References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+Received: from mout.perfora.net ([74.208.4.196]:57780 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754305AbaHZLmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 07:42:07 -0400
+Date: Tue, 26 Aug 2014 07:41:23 -0400
+From: Jim Rees <rees@umich.edu>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Subject: Re: iwlwifi 35% loss rate after v3.16-rc5
+Message-ID: <20140826114123.GA2737@umich.edu> (sfid-20140826_134212_537665_84A9550C)
+References: <20140826020721.GA1490@umich.edu>
+ <1409032360.32368.2.camel@dubbel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409032360.32368.2.camel@dubbel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use do_div to compute equation as shown replacing existing code.
+Luca Coelho wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c | 29 ++++++++++-------------------
- 1 file changed, 10 insertions(+), 19 deletions(-)
+  This is probably the commit that is to blame:
+  
+  43d826c iwlwifi: dvm: don't enable CTS to self
+  
+  Could you try again without just that one? If it's confirmed we can
+  revert that patch.
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 5295463..a5da3d2 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -1995,27 +1995,18 @@ bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF)
-  */
- u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval)
- {
--	unsigned int uLowNextTBTT;
--	unsigned int uHighRemain, uLowRemain;
--	unsigned int uBeaconInterval;
-+	u32 beacon_int;
- 
--	uBeaconInterval = wBeaconInterval * 1024;
--	// Next TBTT = ((local_current_TSF / beacon_interval) + 1) * beacon_interval
--	uLowNextTBTT = ((qwTSF & 0xffffffffULL) >> 10) << 10;
--	// low dword (mod) bcn
--	uLowRemain = (uLowNextTBTT) % uBeaconInterval;
--	// high dword (mod) bcn
--	uHighRemain = (((0xffffffff % uBeaconInterval) + 1) * (u32)(qwTSF >> 32))
--		% uBeaconInterval;
--	uLowRemain = (uHighRemain + uLowRemain) % uBeaconInterval;
--	uLowRemain = uBeaconInterval - uLowRemain;
-+	beacon_int = wBeaconInterval * 1024;
- 
--	// check if carry when add one beacon interval
--	if ((~uLowNextTBTT) < uLowRemain)
--		qwTSF = ((qwTSF >> 32) + 1) << 32;
--
--	qwTSF = (qwTSF & 0xffffffff00000000ULL) |
--		(u64)(uLowNextTBTT + uLowRemain);
-+	/* Next TBTT =
-+	*	((local_current_TSF / beacon_interval) + 1) * beacon_interval
-+	*/
-+	if (beacon_int) {
-+		do_div(qwTSF, beacon_int);
-+		qwTSF += 1;
-+		qwTSF *= beacon_int;
-+	}
- 
- 	return qwTSF;
- }
--- 
-1.9.1
+Yes, reverting that one commit fixes it.
+  
+  Also, any chance you can get sniffer logs of the problem?
 
+I would be happy to if you can give me a hint how to do it. Do you just mean
+a pcap, or something else?
