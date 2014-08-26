@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:64830 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753381AbaHVM1D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:27:03 -0400
-Received: by mail-lb0-f171.google.com with SMTP id l4so9383572lbv.2
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2014 05:27:01 -0700 (PDT)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH] drivers: net: wireless: Add include guards
-Date: Fri, 22 Aug 2014 14:26:54 +0200
-Message-Id: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20140822_142724_177027_064DF5AD)
+Received: from s3.sipsolutions.net ([5.9.151.49]:38645 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933860AbaHZHqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 03:46:54 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.17] Revert "mac80211: disable uAPSD if all ACs are under ACM"
+Date: Tue, 26 Aug 2014 09:46:09 +0200
+Message-Id: <1409039169-9112-1-git-send-email-johannes@sipsolutions.net> (sfid-20140826_094659_974342_FA0B437B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The files ray_cs.h and rayctl.h both contain two thirds of what
-appears to be an include guard using the macro name RAYLINK_H (both
-lack the #define). Since RAYLINK_H is not defined anywhere, the
-guards using different macro names.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+This reverts commit 24aa11ab8ae03292d38ec0dbd9bc2ac49fe8a6dd.
+
+That commit was wrong since it uses data that hasn't even been set
+up yet, but might be a hold-over from a previous connection.
+
+Additionally, it seems like a driver-specific workaround that
+shouldn't have been in mac80211 to start with.
+
+Cc: stable@vger.kernel.org
+Fixes: 24aa11ab8ae0 ("mac80211: disable uAPSD if all ACs are under ACM")
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ray_cs.h | 5 +++--
- drivers/net/wireless/rayctl.h | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ray_cs.h b/drivers/net/wireless/ray_cs.h
-index e79848f..524c2f0 100644
---- a/drivers/net/wireless/ray_cs.h
-+++ b/drivers/net/wireless/ray_cs.h
-@@ -3,7 +3,8 @@
-    Written by Corey Thomas
- */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 31a8afaf7332..b82a12a9f0f1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4376,8 +4376,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
  
--#ifndef RAYLINK_H
-+#ifndef _RAY_CS_H_
-+#define _RAY_CS_H_
- 
- struct beacon_rx {
-     struct mac_header mac;
-@@ -69,4 +70,4 @@ typedef struct ray_dev_t {
- } ray_dev_t;
- /*****************************************************************************/
- 
--#endif /* RAYLINK_H */
-+#endif /* _RAY_CS_H_ */
-diff --git a/drivers/net/wireless/rayctl.h b/drivers/net/wireless/rayctl.h
-index 3c3b98b..b21ed64 100644
---- a/drivers/net/wireless/rayctl.h
-+++ b/drivers/net/wireless/rayctl.h
-@@ -1,4 +1,5 @@
--#ifndef RAYLINK_H
-+#ifndef _RAYCTL_H_
-+#define _RAYCTL_H_
- 
- typedef unsigned char UCHAR;
- 
-@@ -729,4 +730,4 @@ typedef struct snaphdr_t
- #define RAY_IPX_TYPE  0x8137
- #define APPLEARP_TYPE 0x80f3
- /*****************************************************************************/
--#endif /* #ifndef RAYLINK_H */
-+#endif /* _RAYCTL_H_ */
+ 	if (bss->wmm_used && bss->uapsd_supported &&
+-	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD) &&
+-	    sdata->wmm_acm != 0xff) {
++	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
+ 		assoc_data->uapsd = true;
+ 		ifmgd->flags |= IEEE80211_STA_UAPSD_ENABLED;
+ 	} else {
 -- 
-1.9.2
+2.0.0
 
