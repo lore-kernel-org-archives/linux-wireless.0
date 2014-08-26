@@ -1,95 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:57386 "EHLO mail.zonque.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751202AbaHTNlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2014 09:41:51 -0400
-Message-ID: <53F4A59C.60403@zonque.org> (sfid-20140820_154155_692490_2F1985F2)
-Date: Wed, 20 Aug 2014 15:41:48 +0200
-From: Daniel Mack <daniel@zonque.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7675 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755AbaHZVhd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 17:37:33 -0400
+Message-ID: <53FCFE1A.3060508@broadcom.com> (sfid-20140826_233742_552885_5F28F5EE)
+Date: Tue, 26 Aug 2014 23:37:30 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes.berg@intel.com>,
-	libertas-dev@lists.infradead.org,
-	Linux MMC List <linux-mmc@vger.kernel.org>,
-	James Cameron <quozl@laptop.org>
-Subject: libertas_sdio and pxamci suspend issue
-Content-Type: text/plain; charset=utf-8
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: <brcm80211-dev-list@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru>
+In-Reply-To: <53FCB2A3.1050605@msgid.tls.msk.ru>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 08/26/14 18:15, Michael Tokarev wrote:
+> 26.08.2014 18:56, Arend van Spriel wrote:
+>> On 08/26/14 07:13, Michael Tokarev wrote:
+> []
+>>> So, I'm curious -- why this driver is found in regular section of kernel?
+>>> It looks like it should be in staging at least, or better yet, in a new section
+>>> titled "toy drivers" or something like this.  Does it work for any device at
+>>> all?
+>>
+>> Hi Michael,
+>>
+>> Thanks for your encouraging suggestions.
+>
+> You might be a good politician :)  These are blames, quite strong...
+>
+> Seriously. As you revisited this thread, I had quite some issues and
+> money loss after all this, -- after initially especially choosing a
+> model with a supported wifi card which turned out to be non-working,
+> which I tried to fix by buying a new wifi NIC (which didn't work
+> thanks to Lenovo), and which I finally broke due to usb wifi dongle
+> I used.
+>
+> But that's all "poetry", the main source of my blames is you reaction -
+> your first reply was really ecoraging, I hoped we can have some solution
+> together (I have strong programming background, just not as good with
+> kernel and drivers as you).  But after your single reply, you never
+> spoke again until now.  That's 8 months.  _That_ is where my frustration
+> comes from.
 
-I'm currently updating the kernel of a PXA3xx platform that used to be
-bases on 3.0. On that, a libertas is connected to the PXA mci controller
-via SDIO.
+Well, sorry about that. I did see the other messages fly by and noticed 
+you were using the wl driver so assumed you were fine with that. 
+Admittedly the brcmsmac got very little attention as all our resources 
+were put on brcmfmac.
 
-The card itself works fine on both the old version and 3.16, but on
-3.16, I see the following error when trying to put the system to suspend:
+> And the actual facts are true - by now I have had 2 entirely different
+> devices (my original laptop which is now thrown away and another, given
+> by me by a friend because I needed something) - I dunno if that's
+> exactly the same wifi card or not (lspci output looks similar, and
+> this one is also bt/wifi combo), but they both doesn't work in a
+> quite similar way.  So, the driver doesn't work with 2 out of 2 devices
+> which I've seen.  Not a good statistics generally, but that's 100%
+> "hit" ratio for me.  So I really am curious if this driver works at
+> all.
+>
+>>     I revisited the threads you referred to. In the boardflags it shows you
+>> have a bt+wifi card. It could be that is an issue. The brcmsmac supports other
+>> devices, ie. bcm43224/5 and the bcm4313 comes in a number of varieties.
+>>  From what you tell here it seems you have trouble in rx path so I will look
+>> into that area if there is any specifically done for your variant of the bcm4313.
+>
+> I tested this "new" laptop with 3.16 kernel just briefly.  I may try more
+> complete analysis.  I can participate with the debugging/dumping (I already
+> mentioned my strong programming background - but I'm really not into drivers
+> and hardware internals).  So, basically, I'm all yours ;)  Not that I really
+> need this driver anymore (since I will avoid these cards like a plague, for
+> obvious reasons :), but I want to have some good outcome out of all this
+> story :)
 
-[   13.459502] mmc0: new SDIO card at address 0001
-[   15.103333] libertas_sdio: Libertas SDIO driver
-[   15.107864] libertas_sdio: Copyright Pierre Ossman
-[   15.660291] libertas_sdio mmc0:0001:1 (unregistered net_device):
-00:19:88:21:f6:22, fw 9.70.20p0, cap 0x00000303
-[   15.675960] libertas_sdio mmc0:0001:1 wlan0: Marvell WLAN 802.11 adapter
-[   15.684075] cfg80211: Calling CRDA to update world regulatory domain
+Ok. Let's put frustration aside and make an effort. So could you make a 
+trace using trace-cmd utility. The log can get quite big. The brcmsmac 
+driver needs to be built with CONFIG_BRCM_TRACING enabled. Please 
+execute the following commands (assuming you use ubuntu with 
+network-manager):
 
-# echo mem >/sys/power/state
-[   18.617456] PM: Syncing filesystems ... done.
-[   18.634231] Freezing user space processes ... (elapsed 0.000 seconds)
-done.
-[   18.641312] Freezing remaining freezable tasks ... (elapsed 0.007
-seconds) done.
-[   18.658322] dpm_run_callback(): pm_generic_suspend+0x0/0x38 returns -38
-[   18.665136] PM: Device mmc0:0001:1 failed to suspend: error -38
-[   18.671035] PM: Some devices failed to suspend, or early wake event
-detected
+$ sudo stop network-manager
+$ sudo insmod brcmfmac.ko
+$ sudo trace-cmd record -e brcmsmac:*
 
+In another terminal:
 
-The problem is caused by libertas' if_sdio_suspend() returning -ENOSYS here:
+$ sudo start network-manager
 
-       /* If we're powered off anyway, just let the mmc layer remove the
-         * card. */
-        if (!lbs_iface_active(card->priv))
-                return -ENOSYS;
+The trace-cmd must be stopped using ctrl-c.
 
-
-According to the comment, the code assumes the function is called from
-the mmc layer, which isn't the case - the stack trace leading to this
-function looks like this:
-
-[   15.767603] [<bf019048>] (if_sdio_suspend [libertas_sdio]) from
-[<c0285980>] (pm_generic_suspend+0x2c/0x38)
-[   15.779843] [<c0285980>] (pm_generic_suspend) from [<c0286c1c>]
-(dpm_run_callback.isra.21+0x18/0x44)
-[   15.790863] [<c0286c1c>] (dpm_run_callback.isra.21) from [<c0287cdc>]
-(__device_suspend+0x148/0x220)
-[   15.800039] [<c0287cdc>] (__device_suspend) from [<c0288478>]
-(dpm_suspend+0xa8/0x204)
-[   15.808464] [<c0288478>] (dpm_suspend) from [<c00410c8>]
-(suspend_devices_and_enter+0x3c/0x300)
-[   15.817858] [<c00410c8>] (suspend_devices_and_enter) from
-[<c0041458>] (pm_suspend+0xcc/0x1b0)
-[   15.827037] [<c0041458>] (pm_suspend) from [<c0040360>]
-(state_store+0xb8/0xdc)
-[   15.834678] [<c0040360>] (state_store) from [<c022891c>]
-(kobj_attr_store+0x14/0x20)
-[   15.842664] [<c022891c>] (kobj_attr_store) from [<c00ebcc0>]
-(sysfs_kf_write+0x3c/0x48)
-[   15.851209] [<c00ebcc0>] (sysfs_kf_write) from [<c00eaed8>]
-(kernfs_fop_write+0x100/0x158)
-[   15.860039] [<c00eaed8>] (kernfs_fop_write) from [<c009766c>]
-(vfs_write+0xb4/0x188)
-[   15.868335] [<c009766c>] (vfs_write) from [<c0097bec>]
-(SyS_write+0x3c/0x7c)
-[   15.875949] [<c0097bec>] (SyS_write) from [<c00092e0>]
-(ret_fast_syscall+0x0/0x2c)
-
-
-Bisecting is tricky due to other details unfortunately.
-
-Any ideas?
-
-
-Thanks,
-Daniel
+Regards,
+Arend
