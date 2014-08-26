@@ -1,143 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:40741 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608AbaH3Nd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2014 09:33:27 -0400
-Message-ID: <5401D2A4.7070402@hauke-m.de> (sfid-20140830_153338_291364_CE1B42FF)
-Date: Sat, 30 Aug 2014 15:33:24 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:46524 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbaHZRfa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 13:35:30 -0400
+Received: by mail-we0-f181.google.com with SMTP id k48so15125150wev.12
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2014 10:35:29 -0700 (PDT)
+Message-ID: <53FCC55B.90705@gmail.com> (sfid-20140826_193534_347375_3448E2EC)
+Date: Tue, 26 Aug 2014 19:35:23 +0200
+From: poma <pomidorabelisima@gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <53FF9D9B.30106@hauke-m.de> <CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com> <5882203.GXbhhcHqjK@wuerfel>
-In-Reply-To: <5882203.GXbhhcHqjK@wuerfel>
-Content-Type: text/plain; charset=utf-8
+To: GSS_MTK_WCN_ACS@mediatek.com
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Meng Zhang <meng.zhang@mediatek.com>,
+	Paul Lin <paul_lin@ralinktech.com>, sharon.lo@mediatek.com,
+	andrea.tsai@mediatek.com, mz.lee@mediatek.com,
+	jc.yang@mediatek.com, chichen.lee@mediatek.com,
+	zoran.zvonar@mediatek.com, shu-rung.ye@mediatek.com,
+	shawmin.lei@mediatek.com, mingto.yu@mediatek.com,
+	careers.usa@mediatek.com, maria.crockett@mediatek.com,
+	xun.guo@mediatek.com, daisy.wu@mediatek.com, ling.sun@mediatek.com,
+	noida.jobs@mediatek.com, hr.mbj@mediatek.com,
+	yongzhen.chen@mediatek.com, eric.yeh@mediatek.com,
+	kelvin.chou@mediatek.com, xianlai.zhong@mediatek.com,
+	paul-ph.huang@mediatek.com, mk.tsai@mediatek.com,
+	gaosen.zhang@mediatek.com, sophia.liang@mediatek.com,
+	weihua.ma@mediatek.com, jl.lin@mediatek.com, fan.chen@mediatek.com,
+	priya.s@mediatek.com, dyas.wu@mediatek.com,
+	kuanghua.wen@mediatek.com, in.oh@mediatek.com,
+	recruit.sg@mediatek.com, msz_dh3_all_manager@mediatek.com,
+	arun.gupta@mediatek.com, muyi.chen@mediatek.com,
+	suyan.zhang@mediatek.com, tony.pereira@mediatek.com,
+	christian.kermarrec@mediatek.com
+Subject: MediaTek Inc. MT7601U Wireless Adapter
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2014 10:04 PM, Arnd Bergmann wrote:
-> On Friday 29 August 2014 17:21:18 Rafał Miłecki wrote:
->> On 28 August 2014 23:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> On 08/28/2014 01:56 PM, Arnd Bergmann wrote:
->>>> On Thursday 28 August 2014 13:39:55 Rafał Miłecki wrote:
->>>>> Well, that depends. Hauke was planning to put info about flash in DT.
->>>>>> I think it would make sense to have a common driver that has both
->>>>>> an 'early' init part used by MIPS and a regular init part used by
->>>>>> ARM and potentially also on MIPS if we want. Most of the code can
->>>>>> still be shared.
->>>>>
->>>>> OK, now it's clear what you meant.
->>>>> The thing is that we may want to call probe function from
->>>>> drivers/bcma/main.c. I think we never meant to call it directly from
->>>>> arch code. This code in drivers/bcma/main.c is used on both: MIPS and
->>>>> ARM. So I wonder if there is much sense in doing it like
->>>>> #ifdev MIPS
->>>>> bcm47xx_nvram_init(nvram_address);
->>>>> #endif
->>>>> #ifdef ARM
->>>>> nvram_device.resource[0].start = nvram_address;
->>>>> platform_device_register(nvram_device);
->>>>> #endif
->>>>>
->>>>> What do you think about this?
->>>>
->>>> I definitely don't want to see any manual platform_device_register()
->>>> calls on ARM, any device should be either a platform_device probed
->>>> from DT, or a bcma_device that comes from the bcma bus.
->>>>
->>>> I suspect I'm still missing part of the story here. How is the
->>>> nvram chip actually connected?
->>>
->>> I think we have to provide an own device tree for every board, like it
->>> is done for other arm boards. If we do so I do not see a problem to
->>> specify the nvram address space in device tree.
->>
->> Alright, I think we should try to answer one main question at this
->> point: how much data we want to put in DTS? It's still not clear to
->> me.
 
-I think we need a separate device tree description for every board
-anyway (to specify the GPIO configuration) and then I do not see a big
-problem specifying if this board boots from serial or nand flash.
+Say, hi fi to everybody!
 
->>
->> What about this flash memory mapping? You added this in your RFC:
->> reg = <0x1c000000 0x01000000>;
->>
->> As I described, the first part (address 0x1c000000) could be extracted
->> on runtime. For that you need my patch:
->> [PATCH] bcma: get & store info about flash type SoC booted from
->> http://www.spinics.net/lists/linux-wireless/msg126163.html
->>
->> And then add some simple "swtich" like:
->> switch (boot_device) {
->> case BCMA_BOOT_DEV_NAND:
->>     nvram_address = 0x1c000000;
->>     break;
->> case BCMA_BOOT_DEV_SERIAL:
->>     nvram_address = 0x1e000000;
->>     break;
->> }
-> 
-> At the very least, those addresses should come from DT in some form.
-> We should never hardcode register locations in kernel code, since those
-> tend to change when a new hardware version comes out. Even if you are
-> sure that wouldn't happen with bcm53xx, it's still bad style and I
-> want to avoid having other developers copy code like that into a new
-> platform or driver.
-> 
->> So... should we handle it on runtime? Or do we really want this in DTS?
->> I was thinking about doing this on runtime. This would limit amount of
->> DTS entries and this is what makes more sense to me. The same way
->> don't hardcode many other hardware details. For example we don't store
->> flash size, block size, erase size in DTS. We simply use JEDEC and
->> mtd's spi-nor framework database.
-> 
-> I think the main difference is that for the example of the flash
-> chip, we can find out that information by looking at the device itself:
-> The DT describes how to find the device and from there we can do
-> proper hardware probing.
-> 
-> For the case of the nvram, I don't see how that would be done, since
-> the presence of the device itself is something your code above tries
-> to derive from something that from an unrelated setting, so I'd rather
-> see it done explicit in DT.
-> 
-> You mentioned that the 'boot_device' variable in your code snippet
-> comes from a hardware register that can be accessed easily, right?
-> A possible way to handle it would then be to have two DT entries
-> like
-> 
-> 	nvram@1c000000 {
-> 		compatible = "bcm,bcm4710-nvram";
-> 		reg = <0x1c000000 0x1000000>;
-> 		bcm,boot-device = BCMA_BOOT_DEV_NAND;
-> 	};	
-> 
-> 	nvram@1c000000 {
-> 		compatible = "bcm,bcm4710-nvram";
-> 		reg = <0x1e000000 0x1000000>;
-> 		bcm,boot-device = BCMA_BOOT_DEV_SERIAL;
-> 	};
-> 
-> We would then have two platform device instances and get the
-> driver's probe function to reject any device whose bcm,boot-device
-> property doesn't match the contents of the register.
-> 
-> That would correctly describe the hardware while still allowing
-> automatic probing of the device, but I don't see a value in
-> the extra complexity compared to just marking one of the two
-> as status="disabled".
+Driver "mt7601Usta"(DPO_MT7601U_LinuxSTA_3.0.0.4_20130913.tar.bz2) for the MediaTek MT7601U based wireless adapters - on a sale worldwide, is broken and obsolete.
+MediaTek folks, 
+please consider the release of an upgraded version of the driver for the current stable Linux kernel, and the upcoming.
+Thanks.
 
-This looks interesting.
+These are the results of tests starting with: 
+$ modinfo mt7601Usta
+filename:       /lib/modules/2.6.32-431.23.3.el6.x86_64/updates/mt7601Usta.ko
+version:        3.0.0.3
+description:    RT2870 Wireless Lan Linux Driver
+author:         Paul Lin <paul_lin@ralinktech.com>
+license:        GPL
+srcversion:     E3EE381863883B309D682BB
+alias:          usb:v148Fp7601d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v148Fp6370d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v148Fp7650d*dc*dsc*dp*ic*isc*ip*
+depends:        
+vermagic:       2.6.32-431.23.3.el6.x86_64 SMP mod_unload modversions 
+parm:           mac:rt28xx: wireless mac addr (charp)
 
-But when we have an own device tree description for every board I do not
-see many advantages over using status="disabled". Anyway we can share
-all the common device tree description parts and  we can add the device
-tree description after building the kernel, we are doing both for now.
+and the ending with: 
+$ modinfo mt7601Usta 
+filename:       /lib/modules/3.16.0-1.fc21.x86_64/updates/mt7601Usta.ko
+version:        3.0.0.3
+description:    RT2870 Wireless Lan Linux Driver
+author:         Paul Lin <paul_lin@ralinktech.com>
+license:        GPL
+srcversion:     DB56E18D38EF6269211CFA0
+alias:          usb:v148Fp7601d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp6370d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp7650d*dc*dsc*dp*ic*isc*ip*in*
+depends:        
+vermagic:       3.16.0-1.fc21.x86_64 SMP mod_unload 
+parm:           mac:rt28xx: wireless mac addr (charp)
 
-Hauke
+
+WORKING:
+2.6.32-431.23.3.el6.x86_64
+2.6.43.8-2.fc15.x86_64
+
+WORKING - WITH REDUCED THROUGHPUT AND DISCONNECTIONS
+3.0.0-1.fc16.x86_64
+3.1.0-1.fc16.x86_64
+3.2.0-2.fc17.x86_64
+3.3.0-1.fc17.x86_64
+3.3.8-1.fc16.x86_64
+
+BROKEN - OPERATING SYSTEM CRASHES:
+3.4.0-1.fc18.x86_64
+3.4.2-4.fc17.x86_64
+
+BROKEN - CANNOT COMPILE - WITH UNOFFICIAL PATCHES OPERATING SYSTEM CRASHES:
+3.10.0-123.6.3.el7.x86_64
+3.12.10-300.fc20.x86_64
+3.15.10-200.fc20.x86_64
+3.16.0-1.fc21.x86_64
+
+
+poma
+
+
+Ref.
+http://forum.ubuntu.org.cn/viewtopic.php?f=116&t=456228
+http://www.mediatek.com/en/downloads/
+http://www.mediatek.com/en/downloads/mt7610u-usb/
+DPO_MT7601U_LinuxSTA_3.0.0.4_20130913.tar.bz2
 
