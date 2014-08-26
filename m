@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33298 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbaHSJhM convert rfc822-to-8bit (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:23089
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754695AbaHZNYN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:37:12 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so6250729wgg.16
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2014 02:37:11 -0700 (PDT)
+	Tue, 26 Aug 2014 09:24:13 -0400
+Date: Tue, 26 Aug 2014 15:24:10 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2][input-led] Defer input led work to workqueue
+Message-ID: <20140826132410.GD3186@type.bordeaux.inria.fr> (sfid-20140826_152416_595169_6C9BF317)
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+ <20140826091725.GA23293@type.youpi.perso.aquilenet.fr>
+ <1409059327.22232.0.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20140819082307.16842.21519.stgit@potku.adurom.net>
-References: <20140819082038.16842.46876.stgit@potku.adurom.net>
-	<20140819082307.16842.21519.stgit@potku.adurom.net>
-Date: Tue, 19 Aug 2014 11:37:10 +0200
-Message-ID: <CA+BoTQmgu_bGP6MKV8rV83jWCNONZS+eiE7PDVNy++MvHQX9RA@mail.gmail.com> (sfid-20140819_113718_232408_F7438EFC)
-Subject: Re: [PATCH v7 4/8] ath10k: save firmware stack upon firmware crash
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1409059327.22232.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 August 2014 10:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Should help debug firmware crashes, and give users a way
-> to provide some useful debug reports to firmware developers.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
-[...]
-> +/* Save the main firmware stack */
-> +static void ath10k_pci_dump_stack(struct ath10k *ar,
-> +                                 struct ath10k_fw_crash_data *crash_data)
-> +{
-> +       lockdep_assert_held(&ar->data_lock);
-> +
-> +       BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
-> +
-> +       ath10k_pci_diag_read_hi(ar, crash_data->stack_buf,
-> +                               hi_stack, ATH10K_FW_STACK_SIZE);
+Johannes Berg, le Tue 26 Aug 2014 15:22:07 +0200, a Ècrit :
+> On Tue, 2014-08-26 at 11:17 +0200, Samuel Thibault wrote:
+> 
+> > -	led_trigger_event(&vt_led_triggers[led], !!brightness);
+> > +	vt_led_state[led] = !!brightness;
+> > +	schedule_work(&vt_led_work[led]);
+> 
+> 
+> > +static int __init input_led_init(void)
+> > +{
+> > +	unsigned i;
+> > +
+> > +	for (i = 0; i < LED_CNT; i++)
+> > +		INIT_WORK(&vt_led_work[i], vt_led_cb);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static void __exit input_led_exit(void)
+> > +{
+> > +}
+> 
+> Come to think of it - don't you need to cancel_work_sync() in exit so
+> the work struct can't be queued while the module is being unloaded?
 
-Current master tree performs an implicit byte swap so the stack read
-from target will be in host endianess. IOW on big-endian host you'll
-messed up data and there's no indication of endianess anymore.
+Well, this is never built as a module ATM, so it's not a problem.
 
-
-Micha≈Ç
+Samuel
