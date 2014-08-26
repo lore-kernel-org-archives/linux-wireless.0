@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33120 "EHLO purkki.adurom.net"
+Received: from omr1.cc.vt.edu ([198.82.141.52]:40815 "EHLO omr1.cc.vt.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302AbaHXMBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2014 08:01:25 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: net: wireless: Add include guards
-References: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk>
-Date: Sun, 24 Aug 2014 15:01:22 +0300
-In-Reply-To: <1408710414-13810-1-git-send-email-linux@rasmusvillemoes.dk>
-	(Rasmus Villemoes's message of "Fri, 22 Aug 2014 14:26:54 +0200")
-Message-ID: <87ppfq85bh.fsf@purkki.adurom.net> (sfid-20140824_140206_759400_A6C0D228)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753365AbaHZSti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 14:49:38 -0400
+To: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Cc: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][input-led] Defer input led work to workqueue
+In-Reply-To: Your message of "Tue, 26 Aug 2014 03:54:53 +0200."
+             <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+From: Valdis.Kletnieks@vt.edu
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1409078958_3277P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Tue, 26 Aug 2014 14:49:18 -0400
+Message-ID: <3942.1409078958@turing-police.cc.vt.edu> (sfid-20140826_204955_775577_190180C7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
+--==_Exmh_1409078958_3277P
+Content-Type: text/plain; charset=us-ascii
 
-> The files ray_cs.h and rayctl.h both contain two thirds of what
-> appears to be an include guard using the macro name RAYLINK_H (both
-> lack the #define). Since RAYLINK_H is not defined anywhere, the
-> guards using different macro names.
+On Tue, 26 Aug 2014 03:54:53 +0200, Samuel Thibault said:
+> This changeset defers the second led_trigger_event call into a
+> workqueue, which avoids the nested locking altogether.  This does
+> not prevent the user from shooting himself in the foot by creating a
+> vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
+> threads eating some CPU until the user breaks the loop, which is not too
+> bad.
 >
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->  drivers/net/wireless/ray_cs.h | 5 +++--
->  drivers/net/wireless/rayctl.h | 5 +++--
+> Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+>
+> --- a/drivers/input/leds.c
+> +++ b/drivers/input/leds.c
+> @@ -100,13 +100,25 @@ static unsigned long vt_led_registered[B
 
-As this a change to ray_cs driver, please use prefix "ray_cs:" and drop
-that "drivers: net: wireless:".
+I admit having zero understanding of the code, but I can confirm that
+next-20140825 still throws the lockdep whine I was seeing, but the same
+tree with this patch on top of it boots without warning. Soo...
 
--- 
-Kalle Valo
+Tested-By: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+
+--==_Exmh_1409078958_3277P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBU/zWrgdmEQWDXROgAQLgbA/9EPe/Gp1GWhNacssYXTeeUxyM0wOLBVYm
+6Eeh1VwOOXc4b/P9rEMzGYeF+dPhRCZy2rWUyRy8ZCyG3tV3xtL4t+mvplxWLerD
+A7CIw8BBdl4BTGDqEcCLmXV85wonkOcp/SOAhAZFRMH0ZOpZFm1nF28Lk+pdLe64
+EDYUrbT/W1BlrmEmclpFe+iOwT+0hoZoamu12MgnF17dli41Jurk0ML4izoAIGHC
+a9fu+NmA/OylPe4fc/Q6GKbXpcJ16hSv9RD0e+RPm0VHAChhuqxFSebrcOJI+Cwf
+q0BgdMk1KHWfxPMYFWlc+2mcvvNyQdR/UAFz/H1qbbVqkGBfY5D59WcwaIfkktiz
+ZebpVRQ60MSf8oSUAkGpJNsaw1Q7nxc1gfPZwJZJOOKlZwiXGQsfuwLj1Bzdlp/g
+gud/Awzf1eEOQi6GuPl/fTV7fdLZJCSXL3Nte9HySYTGpBQkB4CqFEh0sHNRMUlm
+kmvia7yBJuJx98YsL1KFwHCq43HyKfRVW/9RY5E+e3FIApy7W+FlDDhIk/wXFw/r
+yK8+r8O/6l85UvdVaHL56an6Y651EWD3YOkRpXAyY5fJauGIXTs/9dzu5xzN8Nbd
+EV6vO0aowTjL8mlTrxXH4FZs2bxitGnU2yi+0aZ3LF6rlPyTDFGEEgrrdByAlJ5q
+fyRkNux2CJw=
+=A81B
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1409078958_3277P--
