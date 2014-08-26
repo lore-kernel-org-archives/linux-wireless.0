@@ -1,57 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:51215 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbaHSGjg convert rfc822-to-8bit (ORCPT
+Received: from toccata.ens-lyon.fr ([140.77.166.68]:49134 "EHLO
+	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933975AbaHZJRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 02:39:36 -0400
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>,
-	"dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-Date: Tue, 19 Aug 2014 06:39:29 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com> (sfid-20140819_083957_833442_DEE44B0A)
-References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
-In-Reply-To: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 26 Aug 2014 05:17:31 -0400
+Date: Tue, 26 Aug 2014 11:17:25 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCHv2][input-led] Defer input led work to workqueue
+Message-ID: <20140826091725.GA23293@type.youpi.perso.aquilenet.fr> (sfid-20140826_111735_723896_6D594EC0)
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping for review the patch.
+When the kbd changes its led state (e.g. caps lock), this triggers
+(led_trigger_event) the kbd-capsl trigger, which is by default
+used by the vt::capsl LED, which triggers (led_trigger_event) the
+vt-capsl trigger. These two nested led_trigger_event calls take a
+trig->leddev_list_lock lock and thus lockdep complains.
 
-thanks,
+Actually the user can make the vt::capsl LED use its own vt-capsl
+trigger and thus build a loop.  This produces an immediate oops.
 
-Sanjeev Sharma
------Original Message-----
-From: Sanjeev Sharma [mailto:sanjeev_sharma@mentor.com] 
-Sent: Tuesday, August 12, 2014 12:36 PM
-To: dsd@gentoo.org; kune@deine-taler.de
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; Sharma, Sanjeev; Sharma, Sanjeev
-Subject: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+This changeset defers the second led_trigger_event call into a
+workqueue, which avoids the nested locking altogether.  This does
+not prevent the user from shooting himself in the foot by creating a
+vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
+threads eating some CPU until the user breaks the loop, which is not too
+bad.
 
-on some architecture spin_is_locked() always return false in uniprocessor configuration and therefore it would be advise to replace with lockdep_assert_held().
+Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
 
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index e7af261..72c0bc2 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -235,7 +235,7 @@ void zd_mac_clear(struct zd_mac *mac)  {
- 	flush_workqueue(zd_workqueue);
- 	zd_chip_clear(&mac->chip);
--	ZD_ASSERT(!spin_is_locked(&mac->lock));
-+	lockdep_assert_held(!spin_is_locked(&mac->lock));
- 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));  }
+Difference with v1: uses schedule_work instead of its own workqueue.
+
+--- a/drivers/input/leds.c
++++ b/drivers/input/leds.c
+@@ -100,13 +100,24 @@ static unsigned long vt_led_registered[B
+ /* Number of input devices having each LED */
+ static int vt_led_references[LED_CNT];
  
---
-1.7.11.7
-
++static int vt_led_state[LED_CNT];
++static struct work_struct vt_led_work[LED_CNT];
++
++static void vt_led_cb(struct work_struct *work)
++{
++	int led = work - vt_led_work;
++
++	led_trigger_event(&vt_led_triggers[led], vt_led_state[led]);
++}
++
+ /* VT LED state change, tell the VT trigger.  */
+ static void vt_led_set(struct led_classdev *cdev,
+ 			  enum led_brightness brightness)
+ {
+ 	int led = cdev - vt_leds;
+ 
+-	led_trigger_event(&vt_led_triggers[led], !!brightness);
++	vt_led_state[led] = !!brightness;
++	schedule_work(&vt_led_work[led]);
+ }
+ 
+ /* LED state change for some keyboard, notify that keyboard.  */
+@@ -244,6 +255,22 @@ void input_led_disconnect(struct input_d
+ 	mutex_unlock(&vt_led_registered_lock);
+ }
+ 
++static int __init input_led_init(void)
++{
++	unsigned i;
++
++	for (i = 0; i < LED_CNT; i++)
++		INIT_WORK(&vt_led_work[i], vt_led_cb);
++
++	return 0;
++}
++
++static void __exit input_led_exit(void)
++{
++}
++
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("User LED support for input layer");
+ MODULE_AUTHOR("Samuel Thibault <samuel.thibault@ens-lyon.org>");
++module_init(input_led_init);
++module_exit(input_led_exit);
