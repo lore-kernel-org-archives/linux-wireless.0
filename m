@@ -1,64 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30026 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751844AbaHBJzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2014 05:55:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Miguel Oliveira <cmroliv@gmail.com>, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix static symbol sparse warning
-References: <1406898387-13987-1-git-send-email-cmroliv@gmail.com>
-	<53DBA840.6050804@lwfinger.net>
-Date: Sat, 02 Aug 2014 11:55:02 +0200
-In-Reply-To: <53DBA840.6050804@lwfinger.net> (Larry Finger's message of "Fri,
-	01 Aug 2014 09:46:24 -0500")
-Message-ID: <wrfjwqarfc7d.fsf@ultrasam.lan.trained-monkey.org> (sfid-20140802_115518_560295_2A913D63)
+Received: from toccata.ens-lyon.fr ([140.77.166.68]:45511 "EHLO
+	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181AbaHZCCf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2014 22:02:35 -0400
+Date: Tue, 26 Aug 2014 03:54:53 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org
+Cc: Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH][input-led] Defer input led work to workqueue
+Message-ID: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr> (sfid-20140826_040254_816162_A52F1B31)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 08/01/2014 08:06 AM, Miguel Oliveira wrote:
->> Fix sparse warning:
->> drivers/staging/rtl8723au/core/rtw_efuse.c:579:5: warning: symbol
->> efuse_GetCurrentSize23a' was not declared. Should it be static?
->> 
->> Signed-off-by: Miguel Oliveira <cmroliv@gmail.com>
->> ---
->>  drivers/staging/rtl8723au/include/rtw_efuse.h |    1 +
->>  1 file changed, 1 insertion(+)
->> 
->> diff --git a/drivers/staging/rtl8723au/include/rtw_efuse.h
->> b/drivers/staging/rtl8723au/include/rtw_efuse.h
->> index 07bdc34..304cc71 100644
->> --- a/drivers/staging/rtl8723au/include/rtw_efuse.h
->> +++ b/drivers/staging/rtl8723au/include/rtw_efuse.h
->> @@ -82,6 +82,7 @@ struct pg_pkt_struct {
->>  /*------------------------Export global
->> variable----------------------------*/
->>  
->>  u16	efuse_GetMaxSize23a(struct rtw_adapter *padapter);
->> +int	efuse_GetCurrentSize23a(struct rtw_adapter *padapter, u16 *size);
->>  int rtw_efuse_access23a(struct rtw_adapter *padapter, u8 bRead, u16
->> start_addr, u16 cnts, u8 *data);
->>  int rtw_efuse_map_read23a(struct rtw_adapter *padapter, u16 addr,
->> u16 cnts, u8 *data);
->>  u8 rtw_efuse_map_write(struct rtw_adapter *padapter, u16 addr, u16
->> cnts, u8 *data);
->
-> NACK. Whenever Sparse issues this warning, you should first check to see if it
-> can be made static. Adding it to a header to make the Sparse warning go away is
-> not correct unless some other routine needs it to be globally known. In this
-> case, no other routine needs it.
->
-> Of course, making it static will lead to the compilation warning that the
-> routine is not used. The correct patch is to delete the entire routine as it is
-> never called.
+When the kbd changes its led state (e.g. caps lock), this triggers
+(led_trigger_event) the kbd-capsl trigger, which is by default
+used by the vt::capsl LED, which triggers (led_trigger_event) the
+vt-capsl trigger. These two nested led_trigger_event calls take a
+trig->leddev_list_lock lock and thus lockdep complains.
 
-Yep, fix it correctly, or don't bother!
+Actually the user can make the vt::capsl LED use its own vt-capsl
+trigger and thus build a loop.  This produces an immediate oops.
 
-Cheers,
-Jes
+This changeset defers the second led_trigger_event call into a
+workqueue, which avoids the nested locking altogether.  This does
+not prevent the user from shooting himself in the foot by creating a
+vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
+threads eating some CPU until the user breaks the loop, which is not too
+bad.
+
+Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+--- a/drivers/input/leds.c
++++ b/drivers/input/leds.c
+@@ -100,13 +100,25 @@ static unsigned long vt_led_registered[B
+ /* Number of input devices having each LED */
+ static int vt_led_references[LED_CNT];
+ 
++static int vt_led_state[LED_CNT];
++static struct workqueue_struct *vt_led_wq;
++static struct work_struct vt_led_work[LED_CNT];
++
++static void vt_led_cb(struct work_struct *work)
++{
++	int led = work - vt_led_work;
++
++	led_trigger_event(&vt_led_triggers[led], vt_led_state[led]);
++}
++
+ /* VT LED state change, tell the VT trigger.  */
+ static void vt_led_set(struct led_classdev *cdev,
+ 			  enum led_brightness brightness)
+ {
+ 	int led = cdev - vt_leds;
+ 
+-	led_trigger_event(&vt_led_triggers[led], !!brightness);
++	vt_led_state[led] = !!brightness;
++	queue_work(vt_led_wq, &vt_led_work[led]);
+ }
+ 
+ /* LED state change for some keyboard, notify that keyboard.  */
+@@ -244,6 +256,26 @@ void input_led_disconnect(struct input_d
+ 	mutex_unlock(&vt_led_registered_lock);
+ }
+ 
++static int __init input_led_init(void)
++{
++	unsigned i;
++
++	vt_led_wq = alloc_workqueue("input_leds", WQ_UNBOUND, 0);
++	if (!vt_led_wq)
++		return -ENOMEM;
++	for (i = 0; i < LED_CNT; i++)
++		INIT_WORK(&vt_led_work[i], vt_led_cb);
++
++	return 0;
++}
++
++static void __exit input_led_exit(void)
++{
++	destroy_workqueue(vt_led_wq);
++}
++
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("User LED support for input layer");
+ MODULE_AUTHOR("Samuel Thibault <samuel.thibault@ens-lyon.org>");
++module_init(input_led_init);
++module_exit(input_led_exit);
