@@ -1,167 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f181.google.com ([209.85.220.181]:49607 "EHLO
-	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbaHREBd (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:63830 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756939AbaHZBIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 00:01:33 -0400
+	Mon, 25 Aug 2014 21:08:15 -0400
+Received: by mail-ie0-f172.google.com with SMTP id lx4so10725469iec.31
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2014 18:08:14 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 18 Aug 2014 00:01:30 -0400
-Message-ID: <CA+55aFwTGDFgRuPS5DaQ9-XMLgbZ0y6ZtvXLsZhFkM6P_kXQHw@mail.gmail.com> (sfid-20140818_060304_421402_1A263B81)
-Subject: More wireless problems..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e013cba22088d2b0500df6d2a
+Date: Mon, 25 Aug 2014 18:08:14 -0700
+Message-ID: <CALoNvyuUxX7Wv+nRnPDW_PdO3BsJbTfrF-MU7uoNuUbAXrbZnA@mail.gmail.com> (sfid-20140826_030822_443070_6AFA23A4)
+Subject: rtl8192su driver compatibility with a rtl8188su device
+From: David Madsen <david.madsen@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---089e013cba22088d2b0500df6d2a
-Content-Type: text/plain; charset=UTF-8
+Hello all,
 
-So there's still something seriously wrong with the wireless changes
-in the current merge window. Maybe it's not new, and is triggered by
-something with the hotel wireless here at the kernel summit, but I
-just got a NULL pointer dereference:
+I came across the in-development rtl8192su source tree on github while
+looking for a driver for a small Trendnet 802.11bgn device I have.
+The chipset in use is an rtl8188su with usbid 0bda:8171.  I was able
+to compile and load the driver against a standard 3.16.1 kernel with
+what looks to be a reasonably accurate capability listing for the
+wireless phy along with a standard dev instance.
 
-  BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
-  IP: ieee80211_vif_use_reserved_switch+0x71c/0xb00 [mac80211]
+Whenever I attempt to enable the dev interface with an 'ifconfig wlan0
+up' I get an error back indicating no such device (it does pause for a
+second or two however before the error returns).  I enabled the
+RT_TRACE messages in the module compile as well as setting the debug
+module parameter to 5 to enable all the tracing and it looks like
+there are some problems happening when the driver attempts to load the
+firmware into the device.
 
-this may not be iwl-specific at all, but the second oops (which is
-likely just a result of the first one) does end up having iwl-related
-functions on the stack , so I'm cc'ing both generic wireless people
-and intel wireless people. It's the same machine that showed the intel
-wireless scanning microcode problem, but the oops looks very
-different.
+The firmware is found correctly (I created a link from the
+rtl8712u.bin to rtl8192sufw.bin).  This firmware is identical to the
+rtl8712u-oldest-but-good.bin firmware located in the git tree.  Here's
+a snippet of what looks to be start of the troubles during the module
+initialization.
 
-The end result is a dead machine (when kworkers die, things tend to go
-downhill fast), so it would be good to have people give this a good
-look.
+Aug 24 19:43:02 [kernel] rtl8192s_common: Chip version 0x3
+Aug 24 19:43:02 [kernel] rtl_usb: rx_max_size 9100, rx_urb_num 8, in_ep 3
+Aug 24 19:43:02 [kernel] rtl8192su: Power Save off (module option)
+Aug 24 19:43:02 [kernel] rtl8192su: FW Power Save off (module option)
+Aug 24 19:43:02 [kernel] rtl8192su: Driver for Realtek RTL8192SU/RTL8191SU
+Aug 24 19:43:02 [kernel] Loading firmware rtlwifi/rtl8192sufw.bin
+Aug 24 19:43:02 [kernel] usbcore: registered new interface driver rtl8192su
+Aug 24 19:43:02 [kernel] rtl8192su:rtl92su_fw_cb():<0-0> Firmware
+callback routine entered!
+Aug 24 19:43:02 [kernel] rtlwifi:rtl_reg_notifier():<0-0>
+Aug 24 19:43:02 [kernel] ieee80211 phy0: Selected rate control
+algorithm 'rtl_rc'
+Aug 24 19:43:33 [kernel]
+rtl8192su:_rtl92su_macconfig_before_fwdownload():<0-0> Polling
+TXDMA_INIT_VALUE timeout!! Current TCR(0x0)
+Aug 24 19:43:33 [kernel] rtl8192s_common:rtl92s_download_fw():<0-0>
+signature:8712, version:11ec, size:30, imemsize:e808, sram size:f550
+Aug 24 19:43:33 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> LoadStaus(1)
+Aug 24 19:43:33 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0>
+FW_STATUS_LOAD_IMEM FAIL CPU, Status=0
+Aug 24 19:43:33 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> loadfw_status(1),
+rtstatus(1)
+Aug 24 19:43:33 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> LoadStaus(2)
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0>
+FW_STATUS_LOAD_EMEM FAIL CPU, Status=0
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> loadfw_status(2),
+rtstatus(1)
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> LoadStaus(3)
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> Polling DMEM code
+done fail ! cpustatus(0x0)
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:_rtl92s_firmware_checkready():<0-0> loadfw_status(3),
+rtstatus(1)
+Aug 24 19:43:34 [kernel]
+rtl8192su:_rtl92su_macconfig_after_fwdownload():<0-0> OK
 
-Attached is the more complete oops details. I don't know what
-triggered it, the machine was largely idle.
+...
 
-Ideas?
+The trace then goes on to do a bunch of register writes to continue
+initializing the device and then ends as follows:
 
-               Linus
+...
 
---089e013cba22088d2b0500df6d2a
-Content-Type: application/octet-stream; name=oops
-Content-Disposition: attachment; filename=oops
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hyz9xl9r0
+Aug 24 19:43:34 [kernel] rtl8192s_common:rtl92s_phy_set_bb_reg():<0-0>
+regaddr(0xc78), bitmask(0xffffffff), data(0x721f001e)
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:rtl92s_phy_query_bb_reg():<0-0> BBR MASK=0x200
+Addr[0x824]=0x0
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:rtl92s_phy_query_bb_reg():<0-0> BBR MASK=0xf
+Addr[0x804]=0x0
+Aug 24 19:43:34 [kernel]
+rtl8192s_common:rtl92s_phy_query_bb_reg():<0-0> BBR MASK=0xf
+Addr[0xc04]=0x0
+Aug 24 19:43:34 [kernel] rtl8192s_common:rtl92s_phy_bb_config():<0-0>
+RF_Type(0) does not match RF_Num(0)!!
+Aug 24 19:43:34 [kernel] rtl8192s_common:rtl92s_phy_bb_config():<0-0>
+path1 0x0, path2 0x0, pathmap 0x0
+Aug 24 19:43:34 [kernel] rtl8192su:rtl92su_hw_init():<0-0> BB Config failed
 
-CiAgQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2Ug
-YXQgMDAwMDAwMDAwMDAwMDAyMAogIElQOiBbPGZmZmZmZmZmYzAzZmU5N2M+XSBpZWVlODAyMTFf
-dmlmX3VzZV9yZXNlcnZlZF9zd2l0Y2grMHg3MWMvMHhiMDAgW21hYzgwMjExXQogIFBHRCAwIAog
-IE9vcHM6IDAwMDAgWyMxXSBTTVAgCiAgTW9kdWxlcyBsaW5rZWQgaW46IGZ0ZGlfc2lvIHJmY29t
-bSBmdXNlIGlwNnRfcnBmaWx0ZXIgaXA2dF9SRUpFQ1QgeHRfY29ubnRyYWNrIGVidGFibGVfbmF0
-IGVidGFibGVfYnJvdXRlIGJyaWRnZSBzdHAgbGxjIGVidGFibGVfZmlsdGVyIGVidGFibGVzIGlw
-NnRhYmxlX25hdCBuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiBuZl9uYXRfaXB2NiBp
-cDZ0YWJsZV9tYW5nbGUgaXA2dGFibGVfc2VjdXJpdHkgaXA2dGFibGVfcmF3IGlwNnRhYmxlX2Zp
-bHRlciBpcDZfdGFibGVzIGlwdGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19p
-cHY0IG5mX25hdF9pcHY0IG5mX25hdCBuZl9jb25udHJhY2sgaXB0YWJsZV9tYW5nbGUgaXB0YWJs
-ZV9zZWN1cml0eSBpcHRhYmxlX3JhdyBibmVwIG1tY19ibG9jayBhcmM0IHZmYXQgZmF0IHBuNTQ0
-X21laSBtZWlfcGh5IHBuNTQ0IGhjaSBzbmRfaGRhX2NvZGVjX3JlYWx0ZWsgbmZjIHJ0c3hfcGNp
-X3NkbW1jIHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRfaGRhX2NvZGVjX2hkbWkgbW1jX2NvcmUg
-aVRDT193ZHQgaVRDT192ZW5kb3Jfc3VwcG9ydCBzbmRfaGRhX2ludGVsIGl3bG12bSBzbmRfaGRh
-X2NvbnRyb2xsZXIgdXZjdmlkZW8gc25kX2hkYV9jb2RlYyBtYWM4MDIxMSB4ODZfcGtnX3RlbXBf
-dGhlcm1hbCBzbmRfaHdkZXAgY29yZXRlbXAgdmlkZW9idWYyX3ZtYWxsb2Mgc25kX3NlcSB2aWRl
-b2J1ZjJfbWVtb3BzIHZpZGVvYnVmMl9jb3JlIHNuZF9zZXFfZGV2aWNlIHY0bDJfY29tbW9uIHZp
-ZGVvZGV2IHNuZF9wY20gbWljcm9jb2RlCiAgIGl3bHdpZmkgam95ZGV2IG1lZGlhIGhpZF9tdWx0
-aXRvdWNoIHJ0c3hfcGNpIGNmZzgwMjExIGJ0dXNiIGxwY19pY2ggc2VyaW9fcmF3IGJsdWV0b290
-aCBzbmRfdGltZXIgc25kIHNocGNocCBtZWlfbWUgc291bmRjb3JlIGkyY19pODAxIG1mZF9jb3Jl
-IHNvbnlfbGFwdG9wIG1laSByZmtpbGwgZG1fY3J5cHQgY3JjdDEwZGlmX3BjbG11bCBjcmMzMl9w
-Y2xtdWwgaTkxNSBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCBpMmNfYWxnb19iaXQg
-ZHJtX2ttc19oZWxwZXIgZHJtIHZpZGVvCiAgQ1BVOiAyIFBJRDogMTI5MzYgQ29tbToga3dvcmtl
-ci91ODowIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgICAzLjE2LjAtMTEzODMtZ2M5ZDI2NDIzZTU2
-YyAjNQogIEhhcmR3YXJlIG5hbWU6IFNvbnkgQ29ycG9yYXRpb24gU1ZQMTEyMTNDWEIvVkFJTywg
-QklPUyBSMDI3MFY3IDA1LzE3LzIwMTMKICBXb3JrcXVldWU6IHBoeTAgaWVlZTgwMjExX2Noc3dp
-dGNoX3dvcmsgW21hYzgwMjExXQogIHRhc2s6IGZmZmY4ODAwYmE1MWQwNzAgdGk6IGZmZmY4ODAw
-MGJjNTgwMDAgdGFzay50aTogZmZmZjg4MDAwYmM1ODAwMAogIFJJUDogMDAxMDpbPGZmZmZmZmZm
-YzAzZmU5N2M+XSAgWzxmZmZmZmZmZmMwM2ZlOTdjPl0gaWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2
-ZWRfc3dpdGNoKzB4NzFjLzB4YjAwIFttYWM4MDIxMV0KICBSU1A6IDAwMTg6ZmZmZjg4MDAwYmM1
-YmQ4MCAgRUZMQUdTOiAwMDAxMDI0NgogIFJBWDogZmZmZjg4MDBkMjE3NmUwOCBSQlg6IGZmZmY4
-ODAwOThlMGM5YzAgUkNYOiAwMDAwMDAwMDAwMDAwMDIwCiAgUkRYOiBmZmZmODgwMDFlZTI4N2Ew
-IFJTSTogMDAwMDAwMDAwMDAwMDAwMCBSREk6IGZmZmY4ODAwZDIxNzY4ODAKICBSQlA6IGZmZmY4
-ODAwOThlMGM5ZjAgUjA4OiBmZmZmODgwMDBiYzU4MDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMAog
-IFIxMDogMDAwMDAwMDAwMDAwMDAwNCBSMTE6IDAwMDAwMDAwMDAwMDAwMDUgUjEyOiAwMDAwMDAw
-MDAwMDAwMDAwCiAgUjEzOiBmZmZmODgwMDk4ZTBjNDU4IFIxNDogZmZmZjg4MDBkMzY4MTc1OCBS
-MTU6IGZmZmY4ODAwZDM2ODA2NjAKICBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZm
-Zjg4MDExZmIwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCiAgQ1M6ICAwMDEwIERT
-OiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwogIENSMjogMDAwMDAwMDAwMDAw
-MDAyMCBDUjM6IDAwMDAwMDAwMDFhMTEwMDAgQ1I0OiAwMDAwMDAwMDAwMTQwN2UwCiAgQ2FsbCBU
-cmFjZToKICAgIGllZWU4MDIxMV92aWZfdXNlX3Jlc2VydmVkX2NvbnRleHQrMHg4OC8weDExMCBb
-bWFjODAyMTFdCiAgICBpZWVlODAyMTFfY2hzd2l0Y2hfd29yaysweGI4LzB4MTgwIFttYWM4MDIx
-MV0KICAgIHByb2Nlc3Nfb25lX3dvcmsrMHgxNjAvMHgzNzAKICAgIHdvcmtlcl90aHJlYWQrMHgx
-MTQvMHg0NzAKICAgIHJlc2N1ZXJfdGhyZWFkKzB4MmEwLzB4MmEwCiAgICBrdGhyZWFkKzB4Yjgv
-MHhkMAogICAga3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDE3MC8weDE3MAogICAgcmV0X2Zyb21f
-Zm9yaysweDdjLzB4YjAKICAgIGt0aHJlYWRfY3JlYXRlX29uX25vZGUrMHgxNzAvMHgxNzAKICBD
-b2RlOiA0OCBiOCAwMCAwMiAyMCAwMCAwMCAwMCBhZCBkZSA0OCA4YiA5NyA5MCAwNSAwMCAwMCA0
-OCA4OSA4NyBhMCAwNSAwMCAwMCA0OCA4ZCA4NyA4OCAwNSAwMCAwMCA0OCA4OSA1MSAwOCA0OCA4
-OSAwYSA0OCA4YiA0YyAyNCAwOCA8NDg+IDhiIDU2IDIwIDQ4IDg5IDQyIDA4IDQ4IDg5IDk3IDg4
-IDA1IDAwIDAwIDQ4IDg5IDhmIDkwIDA1IDAwIAogIFJJUCAgWzxmZmZmZmZmZmMwM2ZlOTdjPl0g
-aWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2ZWRfc3dpdGNoKzB4NzFjLzB4YjAwIFttYWM4MDIxMV0K
-ICAgUlNQIDxmZmZmODgwMDBiYzViZDgwPgogIENSMjogMDAwMDAwMDAwMDAwMDAyMAogIC0tLVsg
-ZW5kIHRyYWNlIDExODQ5ZmFjMTRhOWMxMjkgXS0tLQoKICBCVUc6IHVuYWJsZSB0byBoYW5kbGUg
-a2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IGZmZmZmZmZmZmZmZmZmZDgKICBJUDogWzxmZmZmZmZm
-ZjgxMDdlYmY3Pl0ga3RocmVhZF9kYXRhKzB4Ny8weDEwCiAgUEdEIDFhMTIwNjcgUFVEIDFhMTQw
-NjcgUE1EIDAgCiAgT29wczogMDAwMCBbIzJdIFNNUCAKICBNb2R1bGVzIGxpbmtlZCBpbjogZnRk
-aV9zaW8gcmZjb21tIGZ1c2UgaXA2dF9ycGZpbHRlciBpcDZ0X1JFSkVDVCB4dF9jb25udHJhY2sg
-ZWJ0YWJsZV9uYXQgZWJ0YWJsZV9icm91dGUgYnJpZGdlIHN0cCBsbGMgZWJ0YWJsZV9maWx0ZXIg
-ZWJ0YWJsZXMgaXA2dGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY2IG5mX2RlZnJhZ19pcHY2IG5m
-X25hdF9pcHY2IGlwNnRhYmxlX21hbmdsZSBpcDZ0YWJsZV9zZWN1cml0eSBpcDZ0YWJsZV9yYXcg
-aXA2dGFibGVfZmlsdGVyIGlwNl90YWJsZXMgaXB0YWJsZV9uYXQgbmZfY29ubnRyYWNrX2lwdjQg
-bmZfZGVmcmFnX2lwdjQgbmZfbmF0X2lwdjQgbmZfbmF0IG5mX2Nvbm50cmFjayBpcHRhYmxlX21h
-bmdsZSBpcHRhYmxlX3NlY3VyaXR5IGlwdGFibGVfcmF3IGJuZXAgbW1jX2Jsb2NrIGFyYzQgdmZh
-dCBmYXQgcG41NDRfbWVpIG1laV9waHkgcG41NDQgaGNpIHNuZF9oZGFfY29kZWNfcmVhbHRlayBu
-ZmMgcnRzeF9wY2lfc2RtbWMgc25kX2hkYV9jb2RlY19nZW5lcmljIHNuZF9oZGFfY29kZWNfaGRt
-aSBtbWNfY29yZSBpVENPX3dkdCBpVENPX3ZlbmRvcl9zdXBwb3J0IHNuZF9oZGFfaW50ZWwgaXds
-bXZtIHNuZF9oZGFfY29udHJvbGxlciB1dmN2aWRlbyBzbmRfaGRhX2NvZGVjIG1hYzgwMjExIHg4
-Nl9wa2dfdGVtcF90aGVybWFsIHNuZF9od2RlcCBjb3JldGVtcCB2aWRlb2J1ZjJfdm1hbGxvYyBz
-bmRfc2VxIHZpZGVvYnVmMl9tZW1vcHMgdmlkZW9idWYyX2NvcmUgc25kX3NlcV9kZXZpY2UgdjRs
-Ml9jb21tb24gdmlkZW9kZXYgc25kX3BjbSBtaWNyb2NvZGUKICAgaXdsd2lmaSBqb3lkZXYgbWVk
-aWEgaGlkX211bHRpdG91Y2ggcnRzeF9wY2kgY2ZnODAyMTEgYnR1c2IgbHBjX2ljaCBzZXJpb19y
-YXcgYmx1ZXRvb3RoIHNuZF90aW1lciBzbmQgc2hwY2hwIG1laV9tZSBzb3VuZGNvcmUgaTJjX2k4
-MDEgbWZkX2NvcmUgc29ueV9sYXB0b3AgbWVpIHJma2lsbCBkbV9jcnlwdCBjcmN0MTBkaWZfcGNs
-bXVsIGNyYzMyX3BjbG11bCBpOTE1IGNyYzMyY19pbnRlbCBnaGFzaF9jbG11bG5pX2ludGVsIGky
-Y19hbGdvX2JpdCBkcm1fa21zX2hlbHBlciBkcm0gdmlkZW8KICBDUFU6IDIgUElEOiAxMjkzNiBD
-b21tOiBrd29ya2VyL3U4OjAgVGFpbnRlZDogRyAgICAgIEQgVyAgICAgIDMuMTYuMC0xMTM4My1n
-YzlkMjY0MjNlNTZjICM1CiAgSGFyZHdhcmUgbmFtZTogU29ueSBDb3Jwb3JhdGlvbiBTVlAxMTIx
-M0NYQi9WQUlPLCBCSU9TIFIwMjcwVjcgMDUvMTcvMjAxMwogIHRhc2s6IGZmZmY4ODAwYmE1MWQw
-NzAgdGk6IGZmZmY4ODAwMGJjNTgwMDAgdGFzay50aTogZmZmZjg4MDAwYmM1ODAwMAogIFJJUDog
-MDAxMDpbPGZmZmZmZmZmODEwN2ViZjc+XSAgWzxmZmZmZmZmZjgxMDdlYmY3Pl0ga3RocmVhZF9k
-YXRhKzB4Ny8weDEwCiAgUlNQOiAwMDE4OmZmZmY4ODAwMGJjNWJhOTggIEVGTEFHUzogMDAwMTAw
-MDIKICBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiAwMDAwMDAwMDAwMDAwMDAyIFJDWDogMDAw
-MDAwMDAwMDAwMDAwNgogIFJEWDogMDAwMDAwMDAwMDAwMDAwMSBSU0k6IDAwMDAwMDAwMDAwMDAw
-MDIgUkRJOiBmZmZmODgwMGJhNTFkMDcwCiAgUkJQOiBmZmZmODgwMGJhNTFkMDcwIFIwODogZmZm
-Zjg4MDExZmIwMDAwMCBSMDk6IDAwMDAwMDAxODAyYTAwMTMKICBSMTA6IGZmZmZmZmZmODEwNjg1
-ZTUgUjExOiBmZmZmZWEwMDAyNjE5MzAwIFIxMjogZmZmZjg4MDBiYTUxZDRhMAogIFIxMzogMDAw
-MDAwMDAwMDAwMDAwMiBSMTQ6IDAwMDAwMDAwMDAwMDAwMDAgUjE1OiBmZmZmODgwMGJhNTFkMDcw
-CiAgRlM6ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAxMWZiMDAwMDAoMDAwMCkg
-a25sR1M6MDAwMDAwMDAwMDAwMDAwMAogIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6
-IDAwMDAwMDAwODAwNTAwMzMKICBDUjI6IDAwMDAwMDAwMDAwMDAwMjggQ1IzOiAwMDAwMDAwMDAx
-YTExMDAwIENSNDogMDAwMDAwMDAwMDE0MDdlMAogIENhbGwgVHJhY2U6CiAgICB3cV93b3JrZXJf
-c2xlZXBpbmcrMHg4LzB4OTAKICAgIF9fc2NoZWR1bGUrMHgzZDMvMHg2YjAKICAgIGRvX2V4aXQr
-MHg2YzIvMHhhMjAKICAgIG9vcHNfZW5kKzB4NjMvMHg5MAogICAgbm9fY29udGV4dCsweDJkMS8w
-eDMyZQogICAgX19kb19wYWdlX2ZhdWx0KzB4NzIvMHg0NDAKICAgIHByZXBhcmVfdG9fd2FpdF9l
-dmVudCsweGYwLzB4ZjAKICAgIGl3bF9tdm1fc2VuZF9jbWQrMHgzOC8weGIwIFtpd2xtdm1dCiAg
-ICBpd2xfbXZtX3NlbmRfY21kX3BkdSsweDNjLzB4NTAgW2l3bG12bV0KICAgIHBhZ2VfZmF1bHQr
-MHgyMi8weDMwCiAgICBpZWVlODAyMTFfdmlmX3VzZV9yZXNlcnZlZF9zd2l0Y2grMHg3MWMvMHhi
-MDAgW21hYzgwMjExXQogICAgaWVlZTgwMjExX3ZpZl91c2VfcmVzZXJ2ZWRfY29udGV4dCsweDg4
-LzB4MTEwIFttYWM4MDIxMV0KICAgIGllZWU4MDIxMV9jaHN3aXRjaF93b3JrKzB4YjgvMHgxODAg
-W21hYzgwMjExXQogICAgcHJvY2Vzc19vbmVfd29yaysweDE2MC8weDM3MAogICAgd29ya2VyX3Ro
-cmVhZCsweDExNC8weDQ3MAogICAgcmVzY3Vlcl90aHJlYWQrMHgyYTAvMHgyYTAKICAgIGt0aHJl
-YWQrMHhiOC8weGQwCiAgICBrdGhyZWFkX2NyZWF0ZV9vbl9ub2RlKzB4MTcwLzB4MTcwCiAgICBy
-ZXRfZnJvbV9mb3JrKzB4N2MvMHhiMAogICAga3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDE3MC8w
-eDE3MAogIENvZGU6IDAwIDAwIDAwIDAwIDY1IDQ4IDhiIDA0IDI1IGMwIGI4IDAwIDAwIDQ4IDhi
-IDgwIGQ4IDAzIDAwIDAwIDQ4IDhiIDQwIGM4IDQ4IGMxIGU4IDAyIDgzIGUwIDAxIGMzIDBmIDFm
-IDQwIDAwIDQ4IDhiIDg3IGQ4IDAzIDAwIDAwIDw0OD4gOGIgNDAgZDggYzMgMGYgMWYgNDAgMDAg
-NDggODMgZWMgMDggYmEgMDggMDAgMDAgMDAgNDggOGIgYjcgCiAgUklQICBbPGZmZmZmZmZmODEw
-N2ViZjc+XSBrdGhyZWFkX2RhdGErMHg3LzB4MTAKICAgUlNQIDxmZmZmODgwMDBiYzViYTk4Pgog
-IENSMjogZmZmZmZmZmZmZmZmZmZkOAogIC0tLVsgZW5kIHRyYWNlIDExODQ5ZmFjMTRhOWMxMmEg
-XS0tLQo=
---089e013cba22088d2b0500df6d2a--
+
+It appears that the firmware writes into the device are timing out or
+failing in some fashion which leaves the device uninitialized, and
+eventually returns the error.  Is the rtl8188su expected to work with
+the driver currently or is support there still a work in progress?
+
+I was able to use the existing rtl8712 driver from the staging tree to
+get the device working, but it uses the old wireless extensions and
+doesn't appear to support a monitor mode, which was the initial goal
+of getting this device working.
+
+In summary I've got a few questions.  Is this chipset expected to be
+functional with the driver at this time?  If so, is there anything I
+can do/provide to debug further?   If not I would be interested in
+helping out with porting/testing/debugging to aid in getting the
+chipset functional.  Lastly, is monitor mode expected to work with the
+driver/chipset or are there lower layer filters in place that would
+keep the driver and upper layers from seeing all the frames from the
+phy?
+
+--
+David Madsen
