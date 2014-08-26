@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:43190 "EHLO test.hauke-m.de"
+Received: from omr1.cc.vt.edu ([198.82.141.52]:41012 "EHLO omr1.cc.vt.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbaHWNmW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 09:42:22 -0400
-Message-ID: <53F89A3B.3000201@hauke-m.de> (sfid-20140823_154227_839281_67C09A4E)
-Date: Sat, 23 Aug 2014 15:42:19 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] bcma: add PCI ID for spromless BCM43227
-References: <1408789351-5803-1-git-send-email-hauke@hauke-m.de> <CACna6ry5Nw6Z5fugawwELzv=EPBB1jKGRFSa6GrETU5gGtCCaw@mail.gmail.com>
-In-Reply-To: <CACna6ry5Nw6Z5fugawwELzv=EPBB1jKGRFSa6GrETU5gGtCCaw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	id S1752371AbaHZSv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 14:51:28 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Samuel Thibault <samuel.thibault@ens-lyon.org>,
+	Hugh Dickins <hughd@google.com>, akpm@linux-foundation.org,
+	Sabrina Dubroca <sd@queasysnail.net>,
+	Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][input-led] Defer input led work to workqueue
+In-Reply-To: Your message of "Tue, 26 Aug 2014 10:01:35 +0200."
+             <1409040095.2489.3.camel@jlt4.sipsolutions.net>
+From: Valdis.Kletnieks@vt.edu
+References: <20140826015453.GA5235@type.youpi.perso.aquilenet.fr> (sfid-20140826_040254_816162_A52F1B31)
+            <1409040095.2489.3.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1409079070_3277P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Tue, 26 Aug 2014 14:51:10 -0400
+Message-ID: <4017.1409079070@turing-police.cc.vt.edu> (sfid-20140826_205131_556643_999A8A1A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2014 03:39 PM, Rafał Miłecki wrote:
-> On 23 August 2014 12:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> This adds the PCI ID a BCM43227 without a sprom.
-> 
-> Do you have bcma log from detecting this chip? Is this really BCM43227?
-> 
-Sorry it is a BCM43217
+--==_Exmh_1409079070_3277P
+Content-Type: text/plain; charset=us-ascii
 
-[    2.457832] bcma: bus1: Found chip with id 0xA8D1, rev 0x00 and
-package 0x08
-[    2.464899] bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id
-0x800, rev 0x27, class 0x0)
-[    2.473421] bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
-0x812, rev 0x1E, class 0x0)
-[    2.482046] bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
-rev 0x14, class 0x0)
-...
-[    8.435380] b43-phy0: Broadcom 43217 WLAN found (core revision 30)
-[    8.441623] bcma: bus1: Switched to core: 0x812
-[    8.450226] b43-phy0: Found PHY: Analog 9, Type 4 (N), Revision 17
-[    8.456393] b43-phy0: Found Radio: Manuf 0x17F, ID 0x2057, Revision
-14, Version 1
+On Tue, 26 Aug 2014 10:01:35 +0200, Johannes Berg said:
+> On Tue, 2014-08-26 at 03:54 +0200, Samuel Thibault wrote:
+>
+> > +	vt_led_wq = alloc_workqueue("input_leds", WQ_UNBOUND, 0);
+> > +	if (!vt_led_wq)
+> > +		return -ENOMEM;
+>
+> Does this really need a separate workqueue rather than just using
+> schedule_work()? There doesn't seem to be much point in having its own
+> workqueue really, to me.
 
-Hauke
+As I noted in another email, the patch works. Whether it's *correct* I can't
+tell. :)
+
+--==_Exmh_1409079070_3277P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBU/zXHQdmEQWDXROgAQINFQ//dWiwOqohKLs4RbmF9EHitZl7R3T3K5e1
+Mt2fmsqi923zNt7AsIZPOZ6d5H3u4LIjs0U27zb9Wv2FJ2hJ4/6JZGBr12xsq5WG
+opOBLwOzYmWxo+ADJiNp5r05Y2NlCY8Ab6x9ba855TjUGp4wOO4PjAON33bY3H8e
+qL7HrQb77fQXFauRbY9Wl3ZeIo7xmYwDg9PsXynRrJw1RsatvjpRU01+3uL8KZzc
+VaVEiAGgFJ7kM4/8qgLs6y/h3MHtw60zDG8SGNAKgqfvShbYoryJcUnuhABPj4wC
+4e0Ch4gGg3WL6MpU+Q8/ErDNbyB14YFeEtgyzKOMhhzvAvE8wcEgCzdITtCmpqH3
+PhdgADNgBht3uw0Uau+M7PZveopYUX+LcP8HKPu0mgEWLHyqJRX6IMOfcLENGPQd
+I1oBBoQPoC0WyVw+/FjTavm05VXSXqZ2GMgI2/EN+7j17nMYrSaIU4NZG3/mzXlc
+8AsCrcn/y8Js9nOcySRiiaZM9CaL0I5uTRZsS1H2Lt2sPDLnP/83Nn0A0vNtovI2
+ByQ1a2Rup8f4GRdlYd1X7sWFWGL4E7J36LOrwEYcas0MHbe7ZbBJDilFK9AisX6y
+7tcGhtNCWKvGo1fmt63TbIuSrJQiwtew27JuAQsttwSi4e96BedsW+JPt+Zh5Rz1
+rhB9FxDFwWU=
+=F1N7
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1409079070_3277P--
