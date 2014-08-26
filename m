@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59017 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbaHWNmS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2014 09:42:18 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 1/4] ath9k: Fix channel context variables in ath_softc
-Date: Sat, 23 Aug 2014 19:12:13 +0530
-Message-Id: <1408801336-7626-2-git-send-email-sujith@msujith.org> (sfid-20140823_154225_419907_88C3DD40)
-In-Reply-To: <1408801336-7626-1-git-send-email-sujith@msujith.org>
-References: <1408801336-7626-1-git-send-email-sujith@msujith.org>
+Received: from isrv.corpit.ru ([86.62.121.231]:37617 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751204AbaHZQPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2014 12:15:34 -0400
+Message-ID: <53FCB2A3.1050605@msgid.tls.msk.ru> (sfid-20140826_181542_514355_62D2B3B5)
+Date: Tue, 26 Aug 2014 20:15:31 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com>
+In-Reply-To: <53FCA001.6090404@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+26.08.2014 18:56, Arend van Spriel wrote:
+> On 08/26/14 07:13, Michael Tokarev wrote:
+[]
+>> So, I'm curious -- why this driver is found in regular section of kernel?
+>> It looks like it should be in staging at least, or better yet, in a new section
+>> titled "toy drivers" or something like this.  Does it work for any device at
+>> all?
+> 
+> Hi Michael,
+> 
+> Thanks for your encouraging suggestions.
 
-chanctx_work and next_chan are required only when
-CONFIG_ATH9K_CHANNEL_CONTEXT is enabled.
+You might be a good politician :)  These are blames, quite strong...
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Seriously. As you revisited this thread, I had quite some issues and
+money loss after all this, -- after initially especially choosing a
+model with a supported wifi card which turned out to be non-working,
+which I tried to fix by buying a new wifi NIC (which didn't work
+thanks to Lenovo), and which I finally broke due to usb wifi dongle
+I used.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 02664b3..a2f4fa7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -324,6 +324,10 @@ struct ath_rx {
- 	u32 ampdu_ref;
- };
- 
-+/*******************/
-+/* Channel Context */
-+/*******************/
-+
- struct ath_chanctx {
- 	struct cfg80211_chan_def chandef;
- 	struct list_head vifs;
-@@ -917,15 +921,16 @@ struct ath_softc {
- 	struct mutex mutex;
- 	struct work_struct paprd_work;
- 	struct work_struct hw_reset_work;
--	struct work_struct chanctx_work;
- 	struct completion paprd_complete;
- 	wait_queue_head_t tx_wait;
- 
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
-+	struct work_struct chanctx_work;
- 	struct ath_gen_timer *p2p_ps_timer;
- 	struct ath_vif *p2p_ps_vif;
- 	struct ath_chanctx_sched sched;
- 	struct ath_offchannel offchannel;
-+	struct ath_chanctx *next_chan;
- #endif
- 
- 	unsigned long driver_data;
-@@ -947,7 +952,6 @@ struct ath_softc {
- 	struct cfg80211_chan_def cur_chandef;
- 	struct ath_chanctx chanctx[ATH9K_NUM_CHANCTX];
- 	struct ath_chanctx *cur_chan;
--	struct ath_chanctx *next_chan;
- 	spinlock_t chan_lock;
- 
- #ifdef CONFIG_MAC80211_LEDS
--- 
-2.0.4
+But that's all "poetry", the main source of my blames is you reaction -
+your first reply was really ecoraging, I hoped we can have some solution
+together (I have strong programming background, just not as good with
+kernel and drivers as you).  But after your single reply, you never
+spoke again until now.  That's 8 months.  _That_ is where my frustration
+comes from.
 
+And the actual facts are true - by now I have had 2 entirely different
+devices (my original laptop which is now thrown away and another, given
+by me by a friend because I needed something) - I dunno if that's
+exactly the same wifi card or not (lspci output looks similar, and
+this one is also bt/wifi combo), but they both doesn't work in a
+quite similar way.  So, the driver doesn't work with 2 out of 2 devices
+which I've seen.  Not a good statistics generally, but that's 100%
+"hit" ratio for me.  So I really am curious if this driver works at
+all.
+
+>    I revisited the threads you referred to. In the boardflags it shows you
+> have a bt+wifi card. It could be that is an issue. The brcmsmac supports other
+> devices, ie. bcm43224/5 and the bcm4313 comes in a number of varieties.
+> From what you tell here it seems you have trouble in rx path so I will look
+> into that area if there is any specifically done for your variant of the bcm4313.
+
+I tested this "new" laptop with 3.16 kernel just briefly.  I may try more
+complete analysis.  I can participate with the debugging/dumping (I already
+mentioned my strong programming background - but I'm really not into drivers
+and hardware internals).  So, basically, I'm all yours ;)  Not that I really
+need this driver anymore (since I will avoid these cards like a plague, for
+obvious reasons :), but I want to have some good outcome out of all this
+story :)
+
+Thanks,
+
+/mjt
