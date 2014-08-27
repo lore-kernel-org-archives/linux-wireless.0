@@ -1,73 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:54930 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752838AbaH2OuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 10:50:13 -0400
-Date: Fri, 29 Aug 2014 16:50:02 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Nate Carlson <linux-wireless@natecarlson.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Borislav Boev <borislavboev@hotmail.com>, ilw@linux.intel.com
-Subject: Re: Poor wifi performance on Intel 7260 Dual-Band AC Wifi card
-Message-ID: <20140829145002.GA28486@sig21.net> (sfid-20140829_165017_853121_544B5EA5)
-References: <BAY178-W38CA42DFDD4031D453FB48CFF80@phx.gbl>
- <53D7AEF5.5040907@lwfinger.net>
- <alpine.DEB.2.02.1407290946100.1431@admin.chi.technicality.org>
- <20140730110829.GA3563@sig21.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54175 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933802AbaH0OA1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 10:00:27 -0400
+Date: Wed, 27 Aug 2014 09:55:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: poma <pomidorabelisima@gmail.com>, ling.sun@mediatek.com,
+	xun.guo@mediatek.com, recruit.sg@mediatek.com,
+	GSS_MTK_WCN_ACS@mediatek.com, Meng Zhang <meng.zhang@mediatek.com>,
+	zoran.zvonar@mediatek.com, maria.crockett@mediatek.com,
+	jc.yang@mediatek.com, mingto.yu@mediatek.com,
+	chichen.lee@mediatek.com, paul-ph.huang@mediatek.com,
+	christian.kermarrec@mediatek.com, arun.gupta@mediatek.com,
+	daisy.wu@mediatek.com, gaosen.zhang@mediatek.com,
+	eric.yeh@mediatek.com, hr.mbj@mediatek.com,
+	andrea.tsai@mediatek.com, Paul Lin <paul_lin@ralinktech.com>,
+	shu-rung.ye@mediatek.com, msz_dh3_all_manager@mediatek.com,
+	mk.tsai@mediatek.com, muyi.chen@mediatek.com,
+	weihua.ma@mediatek.com, shawmin.lei@mediatek.com,
+	yongzhen.chen@mediatek.com, tony.pereira@mediatek.com,
+	sophia.liang@mediatek.com, dyas.wu@mediatek.com,
+	careers.usa@mediatek.com, kelvin.chou@mediatek.com,
+	fan.chen@mediatek.com, mz.lee@mediatek.com,
+	xianlai.zhong@mediatek.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, priya.s@mediatek.com,
+	sharon.lo@mediatek.com, jl.lin@mediatek.com,
+	suyan.zhang@mediatek.com, in.oh@mediatek.com,
+	kuanghua.wen@mediatek.com, noida.jobs@mediatek.com
+Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
+Message-ID: <20140827135550.GD15173@tuxdriver.com> (sfid-20140827_160030_595540_F877C2EC)
+References: <53FCC55B.90705@gmail.com>
+ <20140826182849.GE30445@tuxdriver.com>
+ <53FD7BFA.1040304@maya.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140730110829.GA3563@sig21.net>
+In-Reply-To: <53FD7BFA.1040304@maya.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 30, 2014 at 01:08:30PM +0200, Johannes Stezenbach wrote:
-> The question is how to go about testing.  ISTR the Windows 8 driver
-> didn't have any issue and gave decent speed, but I don't have the
-> time to restore the Windows image for testing now.  If Windows
-> and Linux use the same firmware I guess a comparison would
-> reveal if it's a driver of firmware issue.
+On Wed, Aug 27, 2014 at 08:34:34AM +0200, Andreas Hartmann wrote:
+> John W. Linville wrote:
+> > On Tue, Aug 26, 2014 at 07:35:23PM +0200, poma wrote:
+> >>
+> >> Say, hi fi to everybody!
+> >>
+> >> Driver "mt7601Usta"(DPO_MT7601U_LinuxSTA_3.0.0.4_20130913.tar.bz2) for the MediaTek MT7601U based wireless adapters - on a sale worldwide, is broken and obsolete.
+> >> MediaTek folks, 
+> >> please consider the release of an upgraded version of the driver for the current stable Linux kernel, and the upcoming.
+> >> Thanks.
+> > 
+> > It would be much better if the MediaTek folks would just send us
+> > patches for the drivers already in the kernel...
+> 
+> 
+> No. Sorry. The existing rt2800-driver is mostly broken and unusable
+> compared with the original Ralink drivers. Especially the usb drivers
+> are extremely bad. There are huge differences between the ralink usb
+> drivers (rt5572sta e.g.) and the rt2800usb driver. The ralink drivers
+> are working fine with a few additional patches even with kernel 3.15 and
+> with 64bit(!!).
+> 
+> @MediaTek
+> Please provide own drivers as before as the existing rt2800 drivers
+> should be reworked completely - but from my point of view they are dead
+> since long time now.
+> It is much better to have one basically good working driver (which must
+> be patched manually to work with newer kernels because newer kernels
+> often aren't downwardly compatible - if they would be, there wouldn't be
+> any problem even with older drivers. But this is a huge problem of Linux
+> at all).
+> 
+> 
+> Regards and thanks to Ralink / Mediatek for providing own drivers!
 
-I had some spare time today to restore the Windows 8 image
-and test (praise Clonezilla!).  The test is with an AP which
-(sometimes) sends broken beacons, so the result might not be viewed
-as valid by some, but I'm just comparing performance of
-different hardware and software under the same conditions.
-https://bugzilla.kernel.org/show_bug.cgi?id=78101
+No.  Sorry.  They are doing the wrong thing.  If Ralink/MediaTek
+would cooperate with the community and work through the normal kernel
+process like everyone else, their hardware would be fully supported
+out of the box just like hardware from other vendors.  Then no one
+would have to bother with figuring-out how to get the driver "working
+fine with a few additional patches", whatever that means.
 
-Earlier today I could connect with Linux and the
-Dual Band Wireless-AC 7260 gave me <50KB/s download
-speed (fetching kernel tarball from PC connected via
-1G ethernet to the AP).  An rt2800 usb dongle on the
-same machine gave me ~2.5MB/s.  Currently Linux
-cannot connect at all (see bug 78101) due to the
-broken beacon.
+By apologizing for them and degrading the rt2800 driver you are only
+making things worse.  You should demand better behavior from MediaTek.
 
-With Windows 8 (Driver Version 16.10.0.5, Driver Date 1/28/2014)
-I had no problems to connect, and got ~400KB/s download speed.
-(I confirmed via capture on the PC that the beacons
-were broken in the way described in bug 78101 during this test.)
-The rt2800 usb dongle gave me 2.4MB/s in Windows.
-
-I couldn't reboot the AP today to see if and how much
-the performance improves when the beacons are not broken.
-I'll do that when I have time.  In the past, rebooting
-the AP did fix the connection issue (good beacon for some time),
-but did not turn the AC 7260 into a speed demon with the
-Linux driver.
-
-The AP only supports 2.4Ghz band 802.11n.
-
-> Otherwise I'm hoping Intel guys could provide some guidance for
-> testing so we could find the root cause.
-
-So far Intel did not show much interest in the issue, but
-a laptop user often has no control on the AP (travelling,
-hotels, conferences, etc.).  IMHO Intel would their users
-a big favor if they spent some time optimizing for bad
-network conditions.  The broken AP on my side will be
-replaced soon, but that's not the point of my complaint.
-
-
-Thanks,
-Johannes
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
