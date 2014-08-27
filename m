@@ -1,38 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:59220 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754791AbaHNMwd (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:48320 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932179AbaH0N1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 08:52:33 -0400
-Message-ID: <53ECB10E.6040908@create-net.org> (sfid-20140814_145239_939374_9664BC85)
-Date: Thu, 14 Aug 2014 14:52:30 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
+	Wed, 27 Aug 2014 09:27:45 -0400
+Date: Wed, 27 Aug 2014 16:27:30 +0300
+From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+To: chunkeey@googlemail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: paulmck@linux.vnet.ibm.com
+Subject: [PATCH] carl9170: tx: Replace rcu_assign_pointer() with
+ RCU_INIT_POINTER()
+Message-ID: <20140827132730.GA31650@ada> (sfid-20140827_152810_212904_D152F98C)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: About the TSFT field
-References: <53EB355E.6090508@create-net.org>		 (sfid-20140813_120259_727542_9924FF23) <1407924311.21220.28.camel@jlt4.sipsolutions.net>	 <53EBA16F.9070305@create-net.org> <1407954545.21220.40.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1407954545.21220.40.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/08/14 20:29, Johannes Berg wrote:
-> On Wed, 2014-08-13 at 19:33 +0200, Roberto Riggio wrote:
-> That behaviour is implemented, but it's not guaranteed that the TSF will
-> be used for the radiotap timestamp field. In fact radiotap isn't really
-> specified to be used while operating, so it seems to me that any
-> free-running clock with the right frequency (TUs) would be acceptable.
+According to RCU_INIT_POINTER()'s block comment 3.a, it can be used if
+"3.   The referenced data structure has already been exposed to readers either
+at compile time or via rcu_assign_pointer() -and-
+ a.   You have not made -any- reader-visible changes to this structure since
+then".
 
-Do you (or somebody else on this ML) happen to know if TSF is used for the
-radiotap TS for the ath9k driver?
+This case fulfills the conditions above because between the rcu_dereference()
+call (cvif = rcu_dereference(ar->beacon_iter);) and the rcu_assign_pointer()
+call there is no update of the "cvif" variable.
+Therefore, this patch makes the replacement.
 
-> In that sense, the only real use for the timestamp field (barring
-> external information, like knowing what your driver does) would be for
-> relative time inside a single capture file.
+The following Coccinelle semantic patch was used:
+@@
+identifier v;
+@@
 
-Like above, does anybody know if the ath9k driver synchronizes with other
-devices in ad hoc mode in the network.
+v = rcu_dereference(...);
+... when != rcu_dereference(...);
+    when != v = ...;
+    when != (<+...v...+>)++;
+    when != \(memcpy\|memset\)(...);
+(
+- rcu_assign_pointer
++ RCU_INIT_POINTER
+  (..., v);
+|
+ if(...) {
+... when != v = ...;
+- rcu_assign_pointer
++ RCU_INIT_POINTER
+  (..., v);
+... when any
+ }
+)
 
-> johannes
-r.
+Because there are cases where between a “rcu_dereference()” call and a
+“rcu_assign_pointer()” call might be updates of the value that interests us,
+the Coccinelle semantic patch ignores them and replaces with
+"RCU_INIT_POINTER()" only when the update is not happening.
+
+Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+---
+ drivers/net/wireless/ath/carl9170/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 4cadfd4..ae86a600 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1557,7 +1557,7 @@ static struct carl9170_vif_info *carl9170_pick_beaconing_vif(struct ar9170 *ar)
+ 	}
+ 
+ out:
+-	rcu_assign_pointer(ar->beacon_iter, cvif);
++	RCU_INIT_POINTER(ar->beacon_iter, cvif);
+ 	return cvif;
+ }
+ 
+-- 
+1.9.1
+
