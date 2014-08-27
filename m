@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35248 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbaHOQcL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2014 12:32:11 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: pull request: bluetooth-next 2014-08-14
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20140815144545.GL4953@tuxdriver.com>
-Date: Fri, 15 Aug 2014 09:32:54 -0700
-Cc: "linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	BlueZ development <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <3B8964A2-1F51-4C62-969A-41F68B5294FA@holtmann.org> (sfid-20140815_183304_568259_098DF6B1)
-References: <20140814145000.GA14226@t440s.P-661HNU-F1> <20140815144545.GL4953@tuxdriver.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from ja.ssi.bg ([178.16.129.10]:39635 "EHLO ja.home.ssi.bg"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933802AbaH0Odb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 10:33:31 -0400
+Date: Wed, 27 Aug 2014 17:31:33 +0300 (EEST)
+From: Julian Anastasov <ja@ssi.bg>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+In-Reply-To: <1409138967.2505.11.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1408271625500.2348@ja.home.ssi.bg> (sfid-20140827_163342_001024_1C1A4A80)
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>   <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>   <20140822.105405.1982870131653082781.davem@davemloft.net>  <1409130792.2505.5.camel@jlt4.sipsolutions.net>
+ <alpine.LFD.2.11.1408271255230.2348@ja.home.ssi.bg> <1409138967.2505.11.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
->> Here's our first bluetooth-next pull request for the 3.18 kernel. Our
->> tree is based on net-next so you'd need to pull from there first before
->> pulling from our tree.
+	Hello,
+
+On Wed, 27 Aug 2014, Johannes Berg wrote:
+
+> On Wed, 2014-08-27 at 13:23 +0300, Julian Anastasov wrote:
 > 
-> What did you need from net-next that made you base on that instead
-> of wireless-next?  I generally like to decide for myself what level
-> of net-next needs to be the base of wireless-next...
+> > BTW, what kind of packets (protocol) we want to drop? UDP?
+> 
+> All IP protocols, this comes either from the IPv4 RFC (1122) or from the
+> wireless issue which affects all protocols.
 
-mainly the merge conflict resolution for 6lowpan and all the ieee802154 patches before we ended up taking this through bluetooth-next. It just made sense to start out with a clean base tree in this case.
+	I did a grep for inet_add_protocol, in case if
+we prefer to use per-protocol checks:
 
-If you prefer, then we can just do that against a new wireless-next tree once you have that ready. I honestly just assumed you are going to pull net-next anyway. So my apologizes for that.
+Protocols that look ok to me: TCP, SCTP, DCCP
+
+ICMP: missing check in icmp_rcv
+UDP, UDPLITE: need check in __udp4_lib_rcv
+IGMP: uses only multicast address?
+PIM: not sure if __pim_rcv() needs check, before skb_tunnel_rx()
+	changes pkt_type?
+
+More protocols are also registered with inet_add_protocol(), I don't
+see pkt_type checks there, mostly tunnels:
+- IPPROTO_GRE
+- IPPROTO_L2TP
+- IPPROTO_IPIP
+- IPPROTO_IPV6 (tunnel64_rcv)
+
+	If going to use a global check I hope there are
+no protocols that require exception to this rule.
 
 Regards
 
-Marcel
-
+--
+Julian Anastasov <ja@ssi.bg>
