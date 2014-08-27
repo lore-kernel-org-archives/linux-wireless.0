@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:48327 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954AbaHKSwJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 14:52:09 -0400
-Received: by mail-we0-f176.google.com with SMTP id q58so8963339wes.7
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 11:52:08 -0700 (PDT)
-From: chaitanya.mgit@gmail.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [mac80211] Enforce protected check for unicast robust management frames.
-Date: Tue, 12 Aug 2014 00:21:54 +0530
-Message-Id: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140811_205215_652447_3F2B8A2B)
+Received: from s3.sipsolutions.net ([5.9.151.49]:44803 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755288AbaH0KOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 06:14:35 -0400
+Message-ID: <1409134463.2505.6.camel@jlt4.sipsolutions.net> (sfid-20140827_121538_837873_E1043FFB)
+Subject: Re: [PATCH] mac80211: Replace rcu_dereference() with
+ rcu_access_pointer()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, paulmck@linux.vnet.ibm.com
+Date: Wed, 27 Aug 2014 12:14:23 +0200
+In-Reply-To: <20140817131801.GA24286@ada> (sfid-20140817_151809_334504_0D1A926E)
+References: <20140817131801.GA24286@ada>
+	 (sfid-20140817_151809_334504_0D1A926E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
+On Sun, 2014-08-17 at 16:18 +0300, Andreea-Cristina Bernat wrote:
+> The "rcu_dereference()" calls are used directly in conditions.
+> Since their return values are never dereferenced it is recommended to
+> use "rcu_access_pointer()" instead of "rcu_dereference()".
+> Therefore, this patch makes the replacements.
 
-Enforce the check for protected field for all unicast 
-robust management frames. 
+Applied, thanks.
 
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
+johannes
 
-This removed the dependency on the driver to check for protected
-bit, especially for those drivers who believed the API :-).
-
----
-
- net/mac80211/rx.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a8d862f..63e8f3d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
- 	if (is_multicast_ether_addr(hdr->addr1))
- 		return 0;
- 
-+	if (!ieee80211_has_protected(hdr->frame_control))
-+		return 0;
-+
- 	return ieee80211_is_robust_mgmt_frame(skb);
- }
- 
