@@ -1,117 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:33813 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbaHQTnK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2014 15:43:10 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/5] staging: vt6655: main_usb.c remove undefined PLICE_DEBUG code.
-Date: Sun, 17 Aug 2014 20:42:26 +0100
-Message-Id: <1408304549-22363-2-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214357_680466_F39E0C08)
-In-Reply-To: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
-References: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
+Received: from isrv.corpit.ru ([86.62.121.231]:60849 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755288AbaH0KDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 06:03:00 -0400
+Message-ID: <53FDACD1.8090805@msgid.tls.msk.ru> (sfid-20140827_120315_366753_5BADCB14)
+Date: Wed, 27 Aug 2014 14:02:57 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com>
+In-Reply-To: <53FCFE1A.3060508@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PLICE_DEBUG is not defined in any header for this file.
+27.08.2014 01:37, Arend van Spriel wrote:
+> On 08/26/14 18:15, Michael Tokarev wrote:
+[]
+> Well, sorry about that. I did see the other messages fly by and noticed you were using the wl driver so assumed you were fine with that.
 
-Remove code, references and directives.
+That's past already.  I had several issues with wl driver,
+and current issue is that even the latest (Aug-2014) version
+of wl driver doesn't work with current kernel.  So I can't
+really even compare wl and brcmsmac, -- in kernels < 3.16
+brcmsmac does not work, but wl can't be compiled for 3.16,
+and using different kernels for comparison is a bit wrong
+because there may be differences in other areas.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 40 ------------------------------------
- 1 file changed, 40 deletions(-)
+>    Admittedly the brcmsmac got very little attention as all our resources were put on brcmfmac.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 95460d4..3a2fd29 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -389,10 +389,7 @@ device_set_options(struct vnt_private *pDevice)
- 		pDevice->bFixRate = true;
- 	pDevice->byBBType = pDevice->sOpts.bbp_type;
- 	pDevice->byPacketType = pDevice->byBBType;
--
--//PLICE_DEBUG->
- 	pDevice->byAutoFBCtrl = AUTO_FB_0;
--//PLICE_DEBUG<-
- 	pDevice->bUpdateBBVGA = true;
- 	pDevice->byFOETuning = 0;
- 	pDevice->wCTSDuration = 0;
-@@ -933,15 +930,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	}
- 
- 	dev->base_addr = pDevice->ioaddr;
--#ifdef	PLICE_DEBUG
--	unsigned char value;
--
--	VNSvInPortB(pDevice->PortOffset+0x4F, &value);
--	pr_debug("Before write: value is %x\n", value);
--	VNSvOutPortB(pDevice->PortOffset, value);
--	VNSvInPortB(pDevice->PortOffset+0x4F, &value);
--	pr_debug("After write: value is %x\n", value);
--#endif
- 	// do reset
- 	if (!MACbSoftwareReset(pDevice->PortOffset)) {
- 		pr_err(DEVICE_NAME ": Failed to access MAC hardware..\n");
-@@ -1021,14 +1009,6 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
- 	u16 pci_cmd;
- 	u8  b;
- 	unsigned int cis_addr;
--#ifdef	PLICE_DEBUG
--	unsigned char pci_config[256];
--	unsigned char value = 0x00;
--	int		ii, j;
--	u16	max_lat = 0x0000;
--
--	memset(pci_config, 0x00, 256);
--#endif
- 
- 	pci_read_config_byte(pcid, PCI_REVISION_ID, &pDevice->byRevId);
- 	pci_read_config_word(pcid, PCI_SUBSYSTEM_ID, &pDevice->SubSystemID);
-@@ -1047,20 +1027,6 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
- 	pci_read_config_byte(pcid, PCI_COMMAND, &b);
- 	pci_write_config_byte(pcid, PCI_COMMAND, (b|PCI_COMMAND_MASTER));
- 
--#ifdef	PLICE_DEBUG
--	for (ii = 0; ii < 0xFF; ii++) {
--		pci_read_config_byte(pcid, ii, &value);
--		pci_config[ii] = value;
--	}
--	for (ii = 0, j = 1; ii < 0x100; ii++, j++) {
--		if (j % 16 == 0) {
--			pr_debug("%x:", pci_config[ii]);
--			pr_debug("\n");
--		} else {
--			pr_debug("%x:", pci_config[ii]);
--		}
--	}
--#endif
- 	return true;
- }
- 
-@@ -1720,8 +1686,6 @@ static int  device_close(struct net_device *dev)
- {
- 	struct vnt_private *pDevice = netdev_priv(dev);
- 	PSMgmtObject     pMgmt = pDevice->pMgmt;
--	//PLICE_DEBUG->
--//PLICE_DEBUG<-
- //2007-1121-02<Add>by EinsnLiu
- 	if (pDevice->bLinkPass) {
- 		bScheduleCommand((void *)pDevice, WLAN_CMD_DISASSOCIATE, NULL);
-@@ -2111,10 +2075,6 @@ static int  device_xmit(struct sk_buff *skb, struct net_device *dev) {
- 	byPktType = (unsigned char)pDevice->byPacketType;
- 
- 	if (pDevice->bFixRate) {
--#ifdef	PLICE_DEBUG
--		pr_debug("Fix Rate: PhyType is %d,ConnectionRate is %d\n", pDevice->eCurrentPHYType, pDevice->uConnectionRate);
--#endif
--
- 		if (pDevice->eCurrentPHYType == PHY_TYPE_11B) {
- 			if (pDevice->uConnectionRate >= RATE_11M)
- 				pDevice->wCurrentRate = RATE_11M;
--- 
-1.9.1
+That happens. :)
 
+[]
+> Ok. Let's put frustration aside and make an effort. So could you make a trace using trace-cmd utility. The log can get quite big. The brcmsmac driver needs to be built with CONFIG_BRCM_TRACING enabled. Please execute the following commands (assuming you use ubuntu with network-manager):
+> 
+> $ sudo stop network-manager
+> $ sudo insmod brcmfmac.ko
+> $ sudo trace-cmd record -e brcmsmac:*
+> 
+> In another terminal:
+> 
+> $ sudo start network-manager
+> 
+> The trace-cmd must be stopped using ctrl-c.
+
+Okay.  This turned out to be not so simple.
+
+My initial attempt indicated that brcmsmac in 3.16 does
+not work at all.  This isn't actually true - subsequent
+attempts shows that it works.  I was ready to conclude
+the problem is fixed (after transferring several gigs
+of data over wifi, with tracing enabled or disabled,
+after fresh boot or after reboot from wl-enabled kernel,
+etc - it all worked.
+
+Until I hit the same stall as I described initially, the
+same which happened numerous times with kernel 3.12 ($subj).
+
+After several mins of transferring it stalled.  But this
+time (unlike with 3.12), it continued after about 30 secs.
+
+So, while my initial test of 3.16 indicated the prob is still
+here, at the same (or even worse) state, I can't really
+reproduce it, at least in a reliable way.  There's something
+wrong still, but at least current version is significantly
+more useful than before (in a hope it wont stall at the
+very wrong moment exactly ;).
+
+There's one more difference between brcmsmac and wl -- with
+wl, I see significantly better speed, -- it is about 5MB/sec,
+while with brcmsmac it jumps between 2.0..4.5MB/sec (with
+58..65Mbps connection rate in both cases).  Here's a typical
+iwconfig output for brcmsmac version:
+
+wlan0     IEEE 802.11bgn  ESSID:"mjt"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: 64:70:02:29:D9:30
+          Bit Rate=65 Mb/s   Tx-Power=19 dBm
+          Retry short limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=58/70  Signal level=-61 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:56355  Invalid misc:472   Missed beacon:0
+
+I'll keep trying/testing various cases, in attempt to
+understand what's going on.  For now, I can't provide the
+requested traces (it wont be very useful, I guess).
+
+BTW, are there other things not implemented in brcmsmac?
+I see the module reminds about power management, what
+does it mean?  Anything else missing?
+
+Thank you!
+
+/mjt
