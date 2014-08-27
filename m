@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:62345 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387AbaHJLWw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2014 07:22:52 -0400
-Received: by mail-we0-f176.google.com with SMTP id q58so7358477wes.21
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2014 04:22:51 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/7] staging: vt6655: upc.h: Remove unused macros
-Date: Sun, 10 Aug 2014 12:22:01 +0100
-Message-Id: <1407669722-2682-6-git-send-email-tvboxspy@gmail.com> (sfid-20140810_132300_314314_303FE2F6)
-In-Reply-To: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
-References: <1407669722-2682-1-git-send-email-tvboxspy@gmail.com>
+Received: from ja.ssi.bg ([178.16.129.10]:37224 "EHLO ja.home.ssi.bg"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933512AbaH0KZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 06:25:26 -0400
+Date: Wed, 27 Aug 2014 13:23:17 +0300 (EEST)
+From: Julian Anastasov <ja@ssi.bg>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+In-Reply-To: <1409130792.2505.5.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1408271255230.2348@ja.home.ssi.bg> (sfid-20140827_122537_027369_078B676F)
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>  <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>  <20140822.105405.1982870131653082781.davem@davemloft.net> <1409130792.2505.5.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCBv* are not used
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/upc.h | 27 ---------------------------
- 1 file changed, 27 deletions(-)
+	Hello,
 
-diff --git a/drivers/staging/vt6655/upc.h b/drivers/staging/vt6655/upc.h
-index e262f1b0..00e5a00 100644
---- a/drivers/staging/vt6655/upc.h
-+++ b/drivers/staging/vt6655/upc.h
-@@ -68,33 +68,6 @@ do {									\
- 	writel((unsigned long)dwData, dwIOAddress);			\
- } while (0)
- 
--//
--// ALWAYS IO-Mapped IO when in 16-bit/32-bit environment
--//
--#define PCBvInPortB(dwIOAddress, pbyData)	\
--do {						\
--	*(pbyData) = inb(dwIOAddress);		\
--} while (0)
--
--#define PCBvInPortW(dwIOAddress, pwData)	\
--do {						\
--	*(pwData) = inw(dwIOAddress);		\
--} while (0)
--
--#define PCBvInPortD(dwIOAddress, pdwData)	\
--do {						\
--	*(pdwData) = inl(dwIOAddress);		\
--} while (0)
--
--#define PCBvOutPortB(dwIOAddress, byData)	\
--	outb(byData, dwIOAddress)
--
--#define PCBvOutPortW(dwIOAddress, wData)	\
--	outw(wData, dwIOAddress)
--
--#define PCBvOutPortD(dwIOAddress, dwData)	\
--	outl(dwData, dwIOAddress)
--
- #define PCAvDelayByIO(uDelayUnit)				\
- do {								\
- 	unsigned char byData;					\
--- 
-1.9.1
+On Wed, 27 Aug 2014, Johannes Berg wrote:
 
+> On Fri, 2014-08-22 at 10:54 -0700, David Miller wrote:
+> 
+> > > 	Is this place better, after checking for RTN_BROADCAST?
+> > > 
+> > > 	/* ARP link-layer broadcasts are acceptable here */
+> > > 	if ((skb->pkt_type == PACKET_BROADCAST ||
+> > > 	     skb->pkt_type == PACKET_MULTICAST) &&
+> > > 	    skb->protocol == htons(ETH_P_IP))
+> > > 		goto e_inval;
+> > 
+> > Indeed, this would make ARP happier, but that still leaves open the
+> > issue of CLUSTERIP.
+> 
+> Unfortunately, I have no idea how to determine that CLUSTERIP is active
+> here? Do we need to tag frames, or would a sysctl work?
+> 
+> Or should we go back to the drawing board and not make this change in
+> the IP stack at all? But parsing all the IP layer in the wireless stack
+> is really quite ugly as well.
+
+	CLUSTERIP works in LOCAL_IN. My preference is to
+add checks in every protocol where it is missing but if
+you prefer a global check, ip_local_deliver_finish() is
+a good place: CLUSTERIP already changed pkt_type to
+PACKET_HOST. For example:
+
+	if (!(skb_rtable(skb)->rt_flags &
+	      (RTCF_BROADCAST | RTCF_MULTICAST)) &&
+	    (skb->pkt_type == PACKET_BROADCAST ||
+	     skb->pkt_type == PACKET_MULTICAST)) {
+		kfree_skb(skb);
+		return;
+	}
+
+	By this way we protect the local stack globally.
+BTW, what kind of packets (protocol) we want to drop? UDP?
+
+	As for ip_forward(), there is already check for
+PACKET_HOST.
+
+	Not sure, may be a MIB counter for such drops
+would be useful.
+
+Regards
+
+--
+Julian Anastasov <ja@ssi.bg>
