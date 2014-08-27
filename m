@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58309 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754747AbaHKTUg (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:34239 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932723AbaH0GhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 15:20:36 -0400
-Date: Mon, 11 Aug 2014 12:20:35 -0700 (PDT)
-Message-Id: <20140811.122035.470900770848969335.davem@davemloft.net> (sfid-20140811_212118_578804_F997BEEB)
-To: himangi774@gmail.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	julia.lawall@lip6.fr
-Subject: Re: [PATCH] airo_cs: Remove typedef local_info_t
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140809164623.GA21522@himangi-Dell>
-References: <20140809164623.GA21522@himangi-Dell>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 27 Aug 2014 02:37:18 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/4] ath9k: Disable fastcc for channel context mode
+Date: Wed, 27 Aug 2014 12:07:23 +0530
+Message-Id: <1409121445-11484-3-git-send-email-sujith@msujith.org> (sfid-20140827_083755_996212_B818D1CA)
+In-Reply-To: <1409121445-11484-1-git-send-email-sujith@msujith.org>
+References: <1409121445-11484-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Himangi Saraogi <himangi774@gmail.com>
-Date: Sat, 9 Aug 2014 22:16:23 +0530
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> The Linux kernel coding style guidelines suggest not using typedefs
-> for structure types. This patch gets rid of the typedef for
-> local_info_t. Also, the name of the struct is changed to drop the _t,
-> to make the name look less typedef-like.
-> 
-> The following Coccinelle semantic patch detects the case:
- ...
-> Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-> Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Applied.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2fcafa6..b823b5a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -303,6 +303,9 @@ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	if (!ath_prepare_reset(sc))
+ 		fastcc = false;
+ 
++	if (ath9k_is_chanctx_enabled())
++		fastcc = false;
++
+ 	spin_lock_bh(&sc->chan_lock);
+ 	sc->cur_chandef = sc->cur_chan->chandef;
+ 	spin_unlock_bh(&sc->chan_lock);
+-- 
+2.1.0
+
