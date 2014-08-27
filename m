@@ -1,60 +1,396 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:54726 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208AbaH2QYZ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56104 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbaH0SMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2014 12:24:25 -0400
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Brett Rudley <brudley@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
-Date: Fri, 29 Aug 2014 18:24:23 +0200
-Message-Id: <1409329464-768-1-git-send-email-geert@linux-m68k.org> (sfid-20140829_182449_754137_CBD7702A)
+	Wed, 27 Aug 2014 14:12:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] ath10k:  save firmware debug log messages.
+Date: Wed, 27 Aug 2014 11:12:02 -0700
+Message-Id: <1409163122-8337-1-git-send-email-greearb@candelatech.com> (sfid-20140827_201214_077716_97AA8DDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If NO_DMA=y:
+From: Ben Greear <greearb@candelatech.com>
 
-drivers/built-in.o: In function `brcmf_msgbuf_release_array':
-msgbuf.c:(.text+0x34dbbe): undefined reference to `dma_unmap_single'
-drivers/built-in.o: In function `brcmf_proto_msgbuf_detach':
-(.text+0x34dca4): undefined reference to `dma_free_coherent'
-drivers/built-in.o: In function `brcmf_msgbuf_get_pktid':
-msgbuf.c:(.text+0x34dd2a): undefined reference to `dma_unmap_single'
-drivers/built-in.o: In function `brcmf_msgbuf_alloc_pktid':
-msgbuf.c:(.text+0x34de12): undefined reference to `dma_map_single'
-msgbuf.c:(.text+0x34de20): undefined reference to `dma_mapping_error'
-drivers/built-in.o: In function `brcmf_msgbuf_remove_flowring':
-msgbuf.c:(.text+0x34e3d6): undefined reference to `dma_free_coherent'
-drivers/built-in.o: In function `brcmf_msgbuf_flowring_create':
-msgbuf.c:(.text+0x34e4f8): undefined reference to `dma_alloc_coherent'
-drivers/built-in.o: In function `brcmf_proto_msgbuf_attach':
-(.text+0x34f5fe): undefined reference to `dma_alloc_coherent'
-drivers/built-in.o: In function `brcmf_proto_msgbuf_attach':
-(.text+0x34f798): undefined reference to `dma_free_coherent'
+They may be dumped through the firmware dump debugfs
+file.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/brcm80211/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b8e2561ea645..2e0da8925834 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -19,7 +19,7 @@ config BRCMSMAC
+v2:  Remove some #ifdefs
+     rebase:  Fix logging, deal with byte-order differences
+       when reading firmware memory.
+     Tested on x86-64.
+
+ drivers/net/wireless/ath/ath10k/core.h  | 18 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c | 87 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h |  5 ++
+ drivers/net/wireless/ath/ath10k/hw.h    | 21 +++++++
+ drivers/net/wireless/ath/ath10k/pci.c   | 97 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c   |  9 +++
+ 6 files changed, 235 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4ef4760..9cf9bff 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -280,6 +280,22 @@ struct ath10k_vif_iter {
+ 	struct ath10k_vif *arvif;
+ };
  
- config BRCMFMAC
- 	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
--	depends on CFG80211
-+	depends on CFG80211A && HAS_DMA
- 	select BRCMUTIL
- 	---help---
- 	  This module adds support for embedded wireless adapters based on
++/* This will store at least the last 128 entries.  Each dbglog message
++ * is a max of 7 32-bit integers in length, but the length can be less
++ * than that as well.
++ */
++#define ATH10K_DBGLOG_DATA_LEN (128 * 7)
++struct ath10k_dbglog_entry_storage {
++	u32 next_idx; /* Where to write next chunk of data */
++	u32 first_idx; /* Index of first msg */
++	u32 data[ATH10K_DBGLOG_DATA_LEN];
++};
++
++/* Just enough info to decode firmware debug-log argument length */
++#define DBGLOG_NUM_ARGS_OFFSET           26
++#define DBGLOG_NUM_ARGS_MASK             0xFC000000 /* Bit 26-31 */
++#define DBGLOG_NUM_ARGS_MAX              5 /* firmware tool chain limit */
++
+ /* used for crash-dump storage, protected by data-lock */
+ struct ath10k_fw_crash_data {
+ 	bool crashed_since_read;
+@@ -307,6 +323,8 @@ struct ath10k_debug {
+ 	u8 htt_max_amsdu;
+ 	u8 htt_max_ampdu;
+ 
++	struct ath10k_dbglog_entry_storage dbglog_entry_data;
++
+ 	struct ath10k_fw_crash_data *fw_crash_data;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f3f0a80..ce5fc77 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -32,10 +32,11 @@
+ /**
+  * enum ath10k_fw_cra sh_dump_type - types of data in the dump file
+  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
++ * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
+  */
+ enum ath10k_fw_crash_dump_type {
+ 	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
+-
++	ATH10K_FW_CRASH_DUMP_DBGLOG = 1,
+ 	ATH10K_FW_CRASH_DUMP_MAX,
+ };
+ 
+@@ -673,7 +674,6 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->data_lock);
+ 
+-	crash_data->crashed_since_read = true;
+ 	uuid_le_gen(&crash_data->uuid);
+ 	getnstimeofday(&crash_data->timestamp);
+ 
+@@ -681,6 +681,69 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_debug_get_new_fw_crash_data);
+ 
++static void ath10k_dbg_drop_dbg_buffer(struct ath10k *ar)
++{
++	/* Find next message boundary */
++	u32 lg_hdr;
++	int acnt;
++	int first_idx = ar->debug.dbglog_entry_data.first_idx;
++	int h_idx = (first_idx + 1) % ATH10K_DBGLOG_DATA_LEN;
++
++	/* Log header is second 32-bit word */
++	lg_hdr = ar->debug.dbglog_entry_data.data[h_idx];
++
++	acnt = (lg_hdr & DBGLOG_NUM_ARGS_MASK) >> DBGLOG_NUM_ARGS_OFFSET;
++
++	if (acnt > DBGLOG_NUM_ARGS_MAX) {
++		/* Some sort of corruption it seems, recover as best we can. */
++		ath10k_err(ar, "Invalid dbglog arg-count: %i %i %i\n",
++			   acnt, ar->debug.dbglog_entry_data.first_idx,
++			   ar->debug.dbglog_entry_data.next_idx);
++		ar->debug.dbglog_entry_data.first_idx =
++			ar->debug.dbglog_entry_data.next_idx;
++		return;
++	}
++
++	/* Move forward over the args and the two header fields */
++	ar->debug.dbglog_entry_data.first_idx =
++		(first_idx + acnt + 2) % ATH10K_DBGLOG_DATA_LEN;
++}
++
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, u32 *buffer, int len)
++{
++	int i;
++	int z;
++
++	lockdep_assert_held(&ar->data_lock);
++
++	z = ar->debug.dbglog_entry_data.next_idx;
++
++	/* Don't save any new logs until user-space reads this. */
++	if (ar->debug.fw_crash_data &&
++	    ar->debug.fw_crash_data->crashed_since_read) {
++		ath10k_warn(ar, "Dropping dbg buffer due to crash since read.\n");
++		return;
++	}
++
++	for (i = 0; i < len; i++) {
++		ar->debug.dbglog_entry_data.data[z] = buffer[i];
++		z++;
++		if (z >= ATH10K_DBGLOG_DATA_LEN)
++			z = 0;
++
++		/* If we are about to over-write an old message, move the
++		 * first_idx to the next message.  If idx's are same, we
++		 * are empty.
++		 */
++		if (z == ar->debug.dbglog_entry_data.first_idx)
++			ath10k_dbg_drop_dbg_buffer(ar);
++
++		ar->debug.dbglog_entry_data.next_idx = z;
++	}
++}
++EXPORT_SYMBOL(ath10k_dbg_save_fw_dbg_buffer);
++
++
+ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
+@@ -689,9 +752,14 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	int hdr_len = sizeof(*dump_data);
+ 	unsigned int len, sofar = 0;
+ 	unsigned char *buf;
++	int i;
++	u32 *u32_buf;
++	__le32 *le32_buf;
++	int tmp, tmp2;
+ 
+ 	len = hdr_len;
+ 	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
++	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
+ 
+ 	sofar += hdr_len;
+ 
+@@ -750,8 +818,23 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	       sizeof(crash_data->registers));
+ 	sofar += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+ 
++	/* Gather dbg-log */
++	tmp = sizeof(ar->debug.dbglog_entry_data);
++	tmp2 = tmp/sizeof(u32);
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_DBGLOG);
++	dump_tlv->tlv_len = cpu_to_le32(tmp);
++	le32_buf = (__le32 *)(dump_tlv->tlv_data);
++	u32_buf = (u32 *)(&ar->debug.dbglog_entry_data);
++	/* Convert entire struct to le32 */
++	for (i = 0; i < tmp2; i++)
++		le32_buf[i] = cpu_to_le32(u32_buf[i]);
++
++	sofar += sizeof(*dump_tlv) + tmp;
++
+ 	ar->debug.fw_crash_data->crashed_since_read = false;
+ 
++	WARN_ON(sofar != len);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return dump_data;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 5674653..299c6e8 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -114,6 +114,7 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 		     enum ath10k_debug_mask mask,
+ 		     const char *msg, const char *prefix,
+ 		     const void *buf, size_t len);
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, __le32 *buffer, int len);
+ #else /* CONFIG_ATH10K_DEBUG */
+ 
+ static inline int ath10k_dbg(struct ath10k *ar,
+@@ -129,5 +130,9 @@ static inline void ath10k_dbg_dump(struct ath10k *ar,
+ 				   const void *buf, size_t len)
+ {
+ }
++static inline void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar,
++						 u32 *buffer, int len)
++{
++}
+ #endif /* CONFIG_ATH10K_DEBUG */
+ #endif /* _DEBUG_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 13568b0..828b4cd 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -364,4 +364,25 @@ enum ath10k_mcast2ucast_mode {
+ 
+ #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
+ 
++/* Target debug log related defines and structs */
++
++/* Target is 32-bit CPU, so we just use u32 for
++ * the pointers.  The memory space is relative to the
++ * target, not the host.  Values are converted to host
++ * byte order when reading from firmware.
++ */
++struct ath10k_fw_dbglog_buf {
++	u32 next; /* pointer to dblog_buf_s. */
++	u32 buffer; /* pointer to u8 buffer */
++	u32 bufsize;
++	u32 length;
++	u32 count;
++	u32 free;
++} __packed;
++
++struct ath10k_fw_dbglog_hdr {
++	u32 dbuf; /* pointer to dbglog_buf_s */
++	u32 dropped;
++} __packed;
++
+ #endif /* _HW_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1ff2f34..6afe420 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1024,6 +1024,100 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 		crash_data->registers[i] = reg_dump_values[i];
+ }
+ 
++static void ath10k_pci_dump_dbglog(struct ath10k *ar)
++{
++	struct ath10k_fw_dbglog_hdr dbg_hdr;
++	u32 dbufp; /* pointer in target memory space */
++	struct ath10k_fw_dbglog_buf dbuf;
++	u8 *buffer;
++	int ret;
++	int i, z;
++	u32 *u32_ptr;
++
++	/* Dump the debug logs on the target */
++	ret = ath10k_pci_diag_read_hi(ar, &dbg_hdr, hi_dbglog_hdr,
++				      sizeof(dbg_hdr));
++	if (ret != 0) {
++		ath10k_err(ar, "failed to dump debug log area: %d\n", ret);
++		return;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_PCI,
++		   "Debug Log Header, dbuf: 0x%x  dropped: %i\n",
++		   dbg_hdr.dbuf, dbg_hdr.dropped);
++	dbufp = dbg_hdr.dbuf;
++
++	/* i is for logging purposes and sanity check in case firmware buffers
++	 * are corrupted and will not properly terminate the list.
++	 * In standard firmware, it appears there are no more than 2
++	 * buffers, so 10 should be safe upper limit even if firmware
++	 * changes quite a bit.
++	 */
++	i = 0;
++	while (dbufp && i < 10) {
++		ret = ath10k_pci_diag_read_mem(ar, dbufp, &dbuf, sizeof(dbuf));
++		if (ret != 0) {
++			ath10k_err(ar, "failed to read debug log area: %d (addr 0x%x)\n",
++				   ret, dbufp);
++			return;
++		}
++
++		dbuf.length = le32_to_cpu(dbuf.length);
++
++		/* We have a buffer of data */
++		ath10k_dbg(ar, ATH10K_DBG_PCI,
++			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
++			   i, dbuf.next, dbuf.buffer, dbuf.bufsize, dbuf.length,
++			   dbuf.count, dbuf.free);
++		if (dbuf.buffer == 0 || dbuf.length == 0)
++			goto next;
++
++		/* Pick arbitrary upper bound in case firmware is corrupted for
++		 * whatever reason.
++		 */
++		if (dbuf.length > 4096) {
++			ath10k_err(ar, "debuglog buf length is out of bounds: %d\n",
++				   dbuf.length);
++			/* Do not trust the next pointer either... */
++			return;
++		}
++
++		buffer = kmalloc(dbuf.length, GFP_ATOMIC);
++
++		if (!buffer)
++			goto next;
++
++		ret = ath10k_pci_diag_read_mem(ar, dbuf.buffer, buffer,
++					       dbuf.length);
++		if (ret != 0) {
++			ath10k_err(ar, "failed to read debug log buffer: %d (addr 0x%x)\n",
++				   ret, dbuf.buffer);
++			kfree(buffer);
++			return;
++		}
++
++		WARN_ON(dbuf.length & 0x3);
++
++		/* Change this to CPU byte order */
++		u32_ptr = (u32 *)buffer;
++		for (z = 0; z < (dbuf.length >> 2); z++)
++			u32_ptr[z] = le32_to_cpu(u32_ptr[z]);
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, u32_ptr, dbuf.length >> 2);
++		kfree(buffer);
++
++next:
++		dbufp = dbuf.next;
++		if (dbufp == dbg_hdr.dbuf) {
++			/* It is a circular buffer it seems, bail if next
++			 * is head
++			 */
++			break;
++		}
++		i++;
++	} /* While we have a debug buffer to read */
++}
++
+ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data;
+@@ -1042,6 +1136,9 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 	ath10k_print_driver_info(ar);
+ 	ath10k_pci_dump_registers(ar, crash_data);
+ 
++	ath10k_pci_dump_dbglog(ar);
++	crash_data->crashed_since_read = true;
++
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	queue_work(ar->workqueue, &ar->restart_work);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index e500a3c..156e937 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1290,6 +1290,15 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_dbglog(skb->data, skb->len);
+ 
++	spin_lock_bh(&ar->data_lock);
++	/* First 4 bytes are a messages-dropped-due-to-overflow counter,
++	 * and should not be recorded in the dbglog buffer, so we skip
++	 * them.
++	 */
++	ath10k_dbg_save_fw_dbg_buffer(ar, (u32 *)(skb->data + 4),
++				      (skb->len - 4)/sizeof(u32));
++	spin_unlock_bh(&ar->data_lock);
++
+ 	return 0;
+ }
+ 
 -- 
-1.9.1
+1.7.11.7
 
