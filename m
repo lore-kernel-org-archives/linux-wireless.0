@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44595 "EHLO sipsolutions.net"
+Received: from arrakis.dune.hu ([78.24.191.176]:46317 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754967AbaH0JNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2014 05:13:20 -0400
-Message-ID: <1409130792.2505.5.camel@jlt4.sipsolutions.net> (sfid-20140827_111359_461195_F305C9D7)
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: ja@ssi.bg, linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 27 Aug 2014 11:13:12 +0200
-In-Reply-To: <20140822.105405.1982870131653082781.davem@davemloft.net>
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
-	 <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>
-	 <20140822.105405.1982870131653082781.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752872AbaH0Iio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2014 04:38:44 -0400
+Message-ID: <53FD990F.8050606@openwrt.org> (sfid-20140827_103849_337883_F2A7420E)
+Date: Wed, 27 Aug 2014 10:38:39 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 1/4] ath9k: Fix channel context transition
+References: <1409121445-11484-1-git-send-email-sujith@msujith.org> <1409121445-11484-2-git-send-email-sujith@msujith.org>
+In-Reply-To: <1409121445-11484-2-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-08-22 at 10:54 -0700, David Miller wrote:
-
-> > 	Is this place better, after checking for RTN_BROADCAST?
-> > 
-> > 	/* ARP link-layer broadcasts are acceptable here */
-> > 	if ((skb->pkt_type == PACKET_BROADCAST ||
-> > 	     skb->pkt_type == PACKET_MULTICAST) &&
-> > 	    skb->protocol == htons(ETH_P_IP))
-> > 		goto e_inval;
+On 2014-08-27 08:37, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > 
-> Indeed, this would make ARP happier, but that still leaves open the
-> issue of CLUSTERIP.
+> In channel context mode, a nullfunc is sent with
+> the PM bit enabled when we switch to a new channel
+> context from the current one. But, when the scheduler
+> switches back to the old context, sending a nullfunc
+> with PM bit cleared has to be done only if there is
+> buffered traffic at the AP.
+> 
+> Currently, this is not done and a nullfunc is sent
+> for every transition. Fix this by parsing the TIM IE
+> for a received beacon and checking if there is buffered
+> traffic.
+That does not make much sense to me. Why would you not inform the AP and
+instead let it start buffering until the next beacon period?
 
-Unfortunately, I have no idea how to determine that CLUSTERIP is active
-here? Do we need to tag frames, or would a sysctl work?
-
-Or should we go back to the drawing board and not make this change in
-the IP stack at all? But parsing all the IP layer in the wireless stack
-is really quite ugly as well.
-
-johannes
-
+- Felix
