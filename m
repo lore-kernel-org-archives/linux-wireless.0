@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51112 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963AbaHISIS (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:59297 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935477AbaH0S3g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:08:18 -0400
-Subject: [PATCH v6 3/8] ath10k: save firmware debug log messages
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 09 Aug 2014 21:08:13 +0300
-Message-ID: <20140809180813.29215.64948.stgit@potku.adurom.net> (sfid-20140809_200820_617212_57CD80AE)
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
+	Wed, 27 Aug 2014 14:29:36 -0400
+Message-ID: <53FE217B.7000401@gmail.com> (sfid-20140827_202939_724255_03248168)
+Date: Wed, 27 Aug 2014 11:20:43 -0700
+From: Florian Fainelli <f.fainelli@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: devicetree@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Subject: Re: [RFC 2/7] bcm47xx-nvram: add new broadcom nvram driver with dt
+ support
+References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de> <1408915485-8078-4-git-send-email-hauke@hauke-m.de> <CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com>
+In-Reply-To: <CACna6rwJBDpg9VS4h5hfP4wtGRVwAdRUq5mELeA0OFWWzH9jsA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 08/26/2014 10:54 PM, Rafał Miłecki wrote:
+> On 24 August 2014 23:24, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> +On NorthStar ARM SoCs the NAND flash is available at 0x1c000000 and the
+>> +NOR flash is at 0x1e000000
+>> +
+>> +Example:
+>> +
+>> +nvram0: nvram@0 {
+>> +       compatible = "brcm,bcm47xx-nvram";
+>> +       reg = <0x1c000000 0x01000000>;
+>> +};
+> 
+> Could we avoid that? Type of flash can easily be checked in the code.
+> All we need to do is to read BCMA_IOST register of BCMA_CORE_NS_ROM
+> core.
 
-They may be dumped through the firmware dump debugfs
-file.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index fffb15b1b50b..914be80d12f4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1210,6 +1210,16 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
- 
- 	trace_ath10k_wmi_dbglog(skb->data, skb->len);
- 
-+	spin_lock_bh(&ar->data_lock);
-+
-+	/* First 4 bytes are a messages-dropped-due-to-overflow counter,
-+	 * and should not be recorded in the dbglog buffer, so we skip
-+	 * them.
-+	 */
-+	ath10k_debug_dbglog_add(ar, skb->data + 4, skb->len - 4);
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
- 	return 0;
- }
- 
+So there is a boot status register you can read to tell what type of
+flash you booted from, but does that also give you the resource ranges
+for these type of flashes? Presumably they will be mapped into different
+addresses (at least bcm63xx is like that), that information needs to be
+listed somewhere.
+--
+Florian
 
