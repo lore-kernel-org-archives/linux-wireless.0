@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54393 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932092AbaHVPJk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48139 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbaH1TaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 11:09:40 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 2/8] ath9k: Handle failure to allocate HW timer
-Date: Fri, 22 Aug 2014 20:39:25 +0530
-Message-Id: <1408720171-9765-3-git-send-email-sujith@msujith.org> (sfid-20140822_170943_171541_3E622DFA)
-In-Reply-To: <1408720171-9765-1-git-send-email-sujith@msujith.org>
-References: <1408720171-9765-1-git-send-email-sujith@msujith.org>
+	Thu, 28 Aug 2014 15:30:14 -0400
+Date: Thu, 28 Aug 2014 15:16:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v3 00/11] lib: introduce string_escape_mem and %*pE
+ specifier
+Message-ID: <20140828191637.GQ13758@tuxdriver.com> (sfid-20140828_213115_324475_03773B31)
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <20140828183330.GM13758@tuxdriver.com>
+ <20140828120851.07dbd1c52ec287ca169acee4@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140828120851.07dbd1c52ec287ca169acee4@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, Aug 28, 2014 at 12:08:51PM -0700, Andrew Morton wrote:
+> On Thu, 28 Aug 2014 14:33:30 -0400 "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > On Wed, Aug 20, 2014 at 12:42:41PM +0300, Andy Shevchenko wrote:
+> > > The introduced function is a kind of opposite to string_unescape. We have
+> > > several users of such functionality each of them created custom implementation.
+> > > The series contains clean up of test suite, adding new call, and switching few
+> > > users to use it via %*pE specifier.
+> >
+> > Any objections?  Do you (Andy) want me to merge this through the
+> > wireless tree?
+> > 
+> 
+> Who is this top-poster and what have you done with John?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+:-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 76771f3..4219e7b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -601,7 +601,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 		goto err_btcoex;
- 
- 	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
--		NULL, sc, AR_FIRST_NDP_TIMER);
-+					       NULL, sc, AR_FIRST_NDP_TIMER);
-+	if (!sc->p2p_ps_timer)
-+		goto err_btcoex;
- 
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
+> I was going to apply them yesterday but in [4/11] Andy said he plans on
+> sending out a v5. (v4 actually?)
+
+OK, I'll not worry any more about it.
+
 -- 
-2.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
