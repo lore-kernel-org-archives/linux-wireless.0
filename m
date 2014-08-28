@@ -1,282 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46419 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaHISIm (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:50477 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbaH1Pcn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 14:08:42 -0400
-Subject: [PATCH v6 6/8] ath10k: save firmware RAM and ROM BSS sections on crash
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 09 Aug 2014 21:08:37 +0300
-Message-ID: <20140809180837.29215.53025.stgit@potku.adurom.net> (sfid-20140809_200845_899729_988B7221)
-In-Reply-To: <20140809180552.29215.58612.stgit@potku.adurom.net>
-References: <20140809180552.29215.58612.stgit@potku.adurom.net>
+	Thu, 28 Aug 2014 11:32:43 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+Date: Thu, 28 Aug 2014 17:32:38 +0200
+Message-ID: <6633831.1CSHMPPLH1@wuerfel> (sfid-20140828_173246_691901_0A57C640)
+In-Reply-To: <CACna6rx0E_s76wLLkDjj90sXH=Q3yzBemQM5Qrp96QiWCWr0qg@mail.gmail.com>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <2859425.94ptgpItD3@wuerfel> <CACna6rx0E_s76wLLkDjj90sXH=Q3yzBemQM5Qrp96QiWCWr0qg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thursday 28 August 2014 14:37:54 Rafał Miłecki wrote:
+> On 28 August 2014 13:56, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Thursday 28 August 2014 13:39:55 Rafał Miłecki wrote:
+> >> switch (boot_device) {
+> >> case BCMA_BOOT_DEV_NAND:
+> >>     nvram_address = 0x1000dead;
+> >>     break;
+> >> case BCMA_BOOT_DEV_SERIAL:
+> >>     nvram_address = 0x1000c0de;
+> >>     break;
+> >> }
+> >>
+> >
+> > I don't understand. Why does the nvram address depend on the boot
+> > device?
+> 
+> NVRAM is basically just a partition on flash, however there are few
+> tricks applying to it.
 
-This can be used to get a useful back trace out of a firmware
-crash that involves an interrupt handler.  For instance, a
-null-pointer-exception would be this kind of trace.  A user-space
-tool can read the debugfs file and decode things as wished.
+Ah, that explains a lot! I was thinking of hardware nvram, which I assume
+it was on some early hardware.
 
-This requires a packaged firmware with a new IE to describe the
-BSS section starts and length.
+> To make booting possible, flash content is mapped to the memory. We're
+> talking about read only access. This mapping allows CPU to get code
+> (bootloader) and execute it as well as it allows CFE to get NVRAM
+> content easily. You don't need flash driver (with erasing & writing
+> support) to read NVRAM.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c  |   54 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h  |   16 +++++++++
- drivers/net/wireless/ath/ath10k/debug.c |   28 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |    5 +++
- drivers/net/wireless/ath/ath10k/pci.c   |   43 +++++++++++++++++++++++++
- 5 files changed, 146 insertions(+)
+Ok. Just out of curiosity, how does the system manage to map NAND
+flash into physical address space? Is this a feature of the SoC
+of the flash chip?
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 440c3ff03aec..39b7383b395c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -479,6 +479,60 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 			ar->otp_len = ie_len;
- 
- 			break;
-+		case ATH10K_FW_IE_RAM_BSS_ADDR:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.ram_bss_addr = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found RAM BSS address 0x%x\n",
-+				   ar->fw.ram_bss_addr);
-+			break;
-+		case ATH10K_FW_IE_RAM_BSS_LEN:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.ram_bss_len = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found RAM BSS length 0x%x\n",
-+				   ar->fw.ram_bss_len);
-+
-+			if (ar->fw.ram_bss_len > ATH10K_RAM_BSS_BUF_LEN) {
-+				ath10k_warn("too long firmware RAM BSS length: %d\n",
-+					    ar->fw.ram_bss_len);
-+				ar->fw.ram_bss_len = 0;
-+			}
-+
-+			break;
-+		case ATH10K_FW_IE_ROM_BSS_ADDR:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.rom_bss_addr = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found ROM BSS address 0x%x\n",
-+				   ar->fw.rom_bss_addr);
-+			break;
-+		case ATH10K_FW_IE_ROM_BSS_LEN:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			ar->fw.rom_bss_len = le32_to_cpup((__le32 *)data);
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found ROM BSS length 0x%x\n",
-+				   ar->fw.rom_bss_len);
-+
-+			if (ar->fw.ram_bss_len > ATH10K_RAM_BSS_BUF_LEN) {
-+				ath10k_warn("too long firmware RAM BSS length: %d\n",
-+					    ar->fw.ram_bss_len);
-+				ar->fw.rom_bss_len = 0;
-+			}
-+
-+			break;
- 		default:
- 			ath10k_warn("Unknown FW IE: %u\n",
- 				    le32_to_cpu(hdr->id));
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ffee2b5cdf78..0d457b9c38d1 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -293,6 +293,10 @@ struct ath10k_dbglog_entry_storage {
- 	u8 data[ATH10K_DBGLOG_DATA_LEN];
- };
- 
-+/* estimated values, hopefully these are enough */
-+#define ATH10K_ROM_BSS_BUF_LEN 10000
-+#define ATH10K_RAM_BSS_BUF_LEN 30000
-+
- /* used for crash-dump storage, protected by data-lock */
- struct ath10k_fw_crash_data {
- 	bool crashed_since_read;
-@@ -303,6 +307,9 @@ struct ath10k_fw_crash_data {
- 	u32 reg_dump_values[REG_DUMP_COUNT_QCA988X];
- 	u8 stack_buf[ATH10K_FW_STACK_SIZE];
- 	u8 exc_stack_buf[ATH10K_FW_STACK_SIZE];
-+
-+	u8 rom_bss_buf[ATH10K_ROM_BSS_BUF_LEN];
-+	u8 ram_bss_buf[ATH10K_RAM_BSS_BUF_LEN];
- };
- 
- struct ath10k_debug {
-@@ -428,6 +435,15 @@ struct ath10k {
- 		} fw;
- 	} hw_params;
- 
-+	/* These are written to only during first firmware load from user
-+	 * space so no need for any locking. */
-+	struct {
-+		u32 ram_bss_addr;
-+		u32 ram_bss_len;
-+		u32 rom_bss_addr;
-+		u32 rom_bss_len;
-+	} fw;
-+
- 	const struct firmware *board;
- 	const void *board_data;
- 	size_t board_len;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 06e72e799883..a335d29f3528 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -33,12 +33,16 @@
-  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
-  * @ATH10K_FW_CRASH_DUMP_STACK:   Stack memory contents.
-  * @ATH10K_FW_CRASH_DUMP_EXC_STACK:  Exception stack contents
-+ * @ATH10K_FW_CRASH_DUMP_RAM_BSS:  BSS area for RAM code
-+ * @ATH10K_FW_CRASH_DUMP_ROM_BSS:  BSS area for ROM code
-  */
- enum ath10k_fw_crash_dump_type {
- 	ATH10K_FW_CRASH_DUMP_DBGLOG = 0,
- 	ATH10K_FW_CRASH_DUMP_REGDUMP = 1,
- 	ATH10K_FW_CRASH_DUMP_STACK = 2,
- 	ATH10K_FW_CRASH_DUMP_EXC_STACK = 3,
-+	ATH10K_FW_CRASH_DUMP_RAM_BSS = 4,
-+	ATH10K_FW_CRASH_DUMP_ROM_BSS = 5,
- 
- 	ATH10K_FW_CRASH_DUMP_MAX,
- };
-@@ -731,6 +735,12 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->stack_buf);
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->exc_stack_buf);
- 
-+	if (ar->fw.ram_bss_addr && ar->fw.ram_bss_len)
-+		len += sizeof(*dump_tlv) + ar->fw.ram_bss_len;
-+
-+	if (ar->fw.rom_bss_addr && ar->fw.rom_bss_len)
-+		len += sizeof(*dump_tlv) + ar->fw.rom_bss_len;
-+
- 	sofar += hdr_len;
- 
- 	/* This is going to get big when we start dumping FW RAM and such,
-@@ -811,6 +821,24 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	       dump_tlv->tlv_len);
- 	sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
- 
-+	if (ar->fw.ram_bss_addr && ar->fw.ram_bss_len) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = ATH10K_FW_CRASH_DUMP_RAM_BSS;
-+		dump_tlv->tlv_len = ar->fw.ram_bss_len;
-+		memcpy(dump_tlv->tlv_data, crash_data->ram_bss_buf,
-+		       dump_tlv->tlv_len);
-+		sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+	}
-+
-+	if (ar->fw.rom_bss_addr && ar->fw.rom_bss_len) {
-+		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+		dump_tlv->type = ATH10K_FW_CRASH_DUMP_ROM_BSS;
-+		dump_tlv->tlv_len = ar->fw.rom_bss_len;
-+		memcpy(dump_tlv->tlv_data, crash_data->rom_bss_buf,
-+		       dump_tlv->tlv_len);
-+		sofar += sizeof(*dump_tlv) + dump_tlv->tlv_len;
-+	}
-+
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	WARN_ON(sofar != len);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 9c602b0d7277..6c275638ddaa 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -54,6 +54,11 @@ enum ath10k_fw_ie_type {
- 	ATH10K_FW_IE_FEATURES = 2,
- 	ATH10K_FW_IE_FW_IMAGE = 3,
- 	ATH10K_FW_IE_OTP_IMAGE = 4,
-+	ATH10K_FW_IE_RAM_BSS_ADDR = 5,
-+	ATH10K_FW_IE_RAM_BSS_LEN = 6,
-+	ATH10K_FW_IE_ROM_BSS_ADDR = 7,
-+	ATH10K_FW_IE_ROM_BSS_LEN = 8,
-+
- };
- 
- /* Known pecularities:
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 7ffa2ebffc94..deebd30aa182 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -891,6 +891,47 @@ static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
- 				hi_err_stack, ATH10K_FW_STACK_SIZE);
- }
- 
-+static void ath10k_pci_dump_bss_ram(struct ath10k *ar,
-+				    struct ath10k_fw_crash_data *crash_data) {
-+	int ret;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	if (!ar->fw.ram_bss_addr)
-+		return;
-+
-+	if (!ar->fw.ram_bss_len)
-+		return;
-+
-+	ret = ath10k_pci_diag_read_mem(ar, ar->fw.ram_bss_addr,
-+				       crash_data->ram_bss_buf,
-+				       ar->fw.ram_bss_len);
-+	if (ret)
-+		ath10k_warn("failed to read firmware RAM BSS memory from %d (%d B): %d\n",
-+			    ar->fw.ram_bss_addr, ar->fw.ram_bss_len, ret);
-+}
-+
-+static void ath10k_pci_dump_bss_rom(struct ath10k *ar,
-+				    struct ath10k_fw_crash_data *crash_data)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	if (!ar->fw.rom_bss_addr)
-+		return;
-+
-+	if (!ar->fw.rom_bss_len)
-+		return;
-+
-+	ret = ath10k_pci_diag_read_mem(ar, ar->fw.rom_bss_addr,
-+				       crash_data->rom_bss_buf,
-+				       ar->fw.rom_bss_len);
-+	if (ret)
-+		ath10k_warn("failed to read firmware ROM BSS memory from %d (%d B): %d\n",
-+			    ar->fw.rom_bss_addr, ar->fw.rom_bss_len, ret);
-+}
-+
- static void ath10k_pci_dump_dbglog(struct ath10k *ar,
- 				   struct ath10k_fw_crash_data *crash_data)
- {
-@@ -1036,6 +1077,8 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
- 
- 	ath10k_pci_dump_stack(ar, crash_data);
- 	ath10k_pci_dump_exc_stack(ar, crash_data);
-+	ath10k_pci_dump_bss_ram(ar, crash_data);
-+	ath10k_pci_dump_bss_rom(ar, crash_data);
- 	ath10k_pci_dump_registers(ar, crash_data);
- 	ath10k_pci_dump_dbglog(ar, crash_data);
- 
+I guess for writing you'd still use the full MTD driver, right?
 
+> Depending on the boot flash device, content of flash is mapped at
+> different offsets:
+> 1) MIPS serial flash: SI_FLASH2 (0x1c000000)
+> 2) MIPS NAND flash: SI_FLASH1 (0x1fc00000)
+> 3) ARM serial flash: SI_NS_NORFLASH (0x1e000000)
+> 4) ARM NAND flash: SI_NS_NANDFLASH (0x1c000000)
+> 
+> So on my ARM device with serial flash (connected over SPI) I was able
+> to get NVRAM header this way:
+> 
+> void __iomem *iobase = ioremap_nocache(0x1e000000, 0x1000000);
+> u8 *buf;
+> 
+> buf = (u8 *)(iobase + 0xff0000);
+> pr_info("[NVRAM] %02X %02X %02X %02X\n", buf[0], buf[1], buf[2], buf[3]);
+> 
+> This resulted in:
+> [NVRAM] 46 4C 53 48
+> 
+> (I hardcoded 0xff0000 above, normally you would need to try 0x10000,
+> 0x20000, 0x30000 and so on...).
+
+Does that mean the entire 0x1e000000-0x1f000000 area is mapped to
+the flash and you are looking for the nvram in it, or that you don't
+know where it is?
+
+	Arnd
