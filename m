@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48078 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbaHMOJu (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:37949 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936487AbaH1LIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 10:09:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/5] ath10k: remove early irq handling
-References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
-	<1407402260-29854-4-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 13 Aug 2014 17:09:45 +0300
-In-Reply-To: <1407402260-29854-4-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 7 Aug 2014 11:04:18 +0200")
-Message-ID: <878umspjkm.fsf@kamboji.qca.qualcomm.com> (sfid-20140813_161004_454301_2D8A3925)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 28 Aug 2014 07:08:36 -0400
+Received: by mail-la0-f44.google.com with SMTP id hz20so712720lab.31
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 04:08:35 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] ath10k: stop monitor vdev for sta assoc
+Date: Thu, 28 Aug 2014 12:58:17 +0200
+Message-Id: <1409223497-19946-3-git-send-email-michal.kazior@tieto.com> (sfid-20140828_130841_202755_2554D1BA)
+In-Reply-To: <1409223497-19946-1-git-send-email-michal.kazior@tieto.com>
+References: <1409223497-19946-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This prevents some fw revisions from crashing in
+many cases when user is trying to run a
+promiscuous station interface (e.g. sniffing,
+4addr bridge).
 
-> It's not really necessary to have a dedicated irq
-> handler just for the sake of catching early fw
-> crashes. It is now safe to use one handler even
-> during early stages of device boot up.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Nice, this really needs to be cleaned up.
-
->  drivers/net/wireless/ath/ath10k/pci.c | 160 ++++++++--------------------------
->  1 file changed, 36 insertions(+), 124 deletions(-)
-
-Shouldn't you also remove early_irq_tasklet from struct ath10k_pci?
-
-> -static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
-> +static bool ath10k_pci_fw_crashed(struct ath10k *ar)
->  {
-> -	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-> -	u32 fw_indicator;
-> -
-> -	fw_indicator = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
-> -
-> -	if (fw_indicator & FW_IND_EVENT_PENDING) {
-> -		/* ACK: clear Target-side pending event */
-> -		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
-> -				   fw_indicator & ~FW_IND_EVENT_PENDING);
-> +	return ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS) &
-> +	       FW_IND_EVENT_PENDING;
-> +}
-
-Hehe, in Ben's firmware crash dump patches I renamed
-ath10k_pci_hif_dump_area() to ath10k_pci_firmware_crashed(). So we now
-have two very similarly named functions doing very different :)
-
-I propose that you rename this function to ath10k_pci_is_fw_crashed() or
-ath10k_pci_has_fw_crashed() and I rename ath10k_pci_hif_dump_area() to
-ath10k_pci_fw_crashed_dump(). I think that we have pretty consistent
-naming, no?
-
-> +static void ath10k_pci_fw_crashed_clear(struct ath10k *ar)
-> +{
-> +	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
-> +			   (ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS) &
-> +			    ~FW_IND_EVENT_PENDING));
-
-Please don't embed calls like this, with a temporary variable you get it
-more readable and the resulting code should be the same anyway.
-
-> @@ -2412,14 +2322,6 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
->  		return -EIO;
->  	}
->  
-> -	if (val & FW_IND_EVENT_PENDING) {
-> -		ath10k_warn("device has crashed during init\n");
-> -		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
-> -				   val & ~FW_IND_EVENT_PENDING);
-> -		ath10k_pci_hif_dump_area(ar);
-> -		return -ECOMM;
-> -	}
-
-I'm a bit worried about this. Are you relying now that the target will
-always trigger an interrupt or what? If yes, how can we sure it will
-happen on all possible cases? I would prefer to have some kind of safety
-net anyway, even if it's just a simple warning.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 19562a7..bf8a402 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3169,8 +3169,16 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ASSOC) {
+-		if (info->assoc)
++		if (info->assoc) {
++			/* Workaround: Make sure monitor vdev is not running
++			 * when associating to prevent some firmware revisions
++			 * (e.g. 10.1 and 10.2) from crashing.
++			 */
++			if (ar->monitor_started)
++				ath10k_monitor_stop(ar);
+ 			ath10k_bss_assoc(hw, vif, info);
++			ath10k_monitor_recalc(ar);
++		}
+ 	}
+ 
+ exit:
 -- 
-Kalle Valo
+1.8.5.3
+
