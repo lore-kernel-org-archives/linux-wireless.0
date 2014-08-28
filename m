@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:56567 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbaHMLWM (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:53921 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932445AbaH1Iho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2014 07:22:12 -0400
-Received: by mail-wi0-f175.google.com with SMTP id ho1so7226022wib.14
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2014 04:22:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
-References: <1407783114-5469-1-git-send-email-chaitanya.mgit@gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 13 Aug 2014 16:51:51 +0530
-Message-ID: <CABPxzYK9s=YQZwKEhSiL2st9NPUiPH7i4HhpHXQc8TapONtz9A@mail.gmail.com> (sfid-20140813_132217_202012_A1C07ED5)
-Subject: Re: [mac80211] Enforce protected check for unicast robust management frames.
+	Thu, 28 Aug 2014 04:37:44 -0400
+Date: Thu, 28 Aug 2014 10:37:38 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chaitanya T K <chaitanya.mgit@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
+Message-ID: <20140828083738.GA19530@sesse.net> (sfid-20140828_103748_631824_582930F7)
+References: <20140824103728.GA2938@sesse.net>
+ <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
+ <1409211818.2505.12.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1409211818.2505.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 12, 2014 at 12:21 AM,  <chaitanya.mgit@gmail.com> wrote:
-> From: Chaitanya T K <chaitanya.mgit@gmail.com>
->
-> Enforce the check for protected field for all unicast
-> robust management frames.
->
-> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> ---
->
-> This removed the dependency on the driver to check for protected
-> bit, especially for those drivers who believed the API :-).
->
-> ---
->
->  net/mac80211/rx.c |    3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a8d862f..63e8f3d 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -569,6 +569,9 @@ static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
->         if (is_multicast_ether_addr(hdr->addr1))
->                 return 0;
->
-> +       if (!ieee80211_has_protected(hdr->frame_control))
-> +               return 0;
-> +
->         return ieee80211_is_robust_mgmt_frame(skb);
->  }
->
+On Thu, Aug 28, 2014 at 09:43:38AM +0200, Johannes Berg wrote:
+> Can you say *why* we want this? Does it yield better behaviour on a
+> Cisco deployment?
 
-Johannes,
+Yes. The basic idea is: When your density goes up (many clients, many access
+points), the 2.4 GHz band becomes very crowded and you get interference
+across cells. The controller observes this (by seeing that the APs see each
+other too strongly), and reduces the transmit power to reduce the cell size.
+(This might be counterintuitive, because people's initial idea for better
+Wi-Fi usually involves turning power _up_, but that only makes the problem
+here worse, since the problem is interference, not range.)
 
-Subject is wrong it should be [PATCH] mac8021:, so should i resend it again?
+It then also asks the clients to do the same (through DTPC), because the
+clients' traffic of course also contributes to the interference. We should
+honor its request, just as we honor it when it comes through 802.11h or
+802.11d. If the controller detects that this creates coverage holes, it will
+turn the power back up and just live with the interference.
+
+Like the subject says, this is part of CCX (Cisco's set of wireless
+extensions), so as far as I know, any CCX-certified driver, e.g. Intel
+drivers on Windows, already support this.
+
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
