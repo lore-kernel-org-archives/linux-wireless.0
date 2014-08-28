@@ -1,41 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36578 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751046AbaHDQs0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46785 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbaH1SpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 12:48:26 -0400
-Date: Mon, 4 Aug 2014 17:47:58 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
-	mcgrof@do-not-panic.com, antonio@open-mesh.com,
-	johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with
-	scanning and connecting
-Message-ID: <20140804164758.GF30282@n2100.arm.linux.org.uk> (sfid-20140804_184858_446651_5EF4FC44)
-References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com>
+	Thu, 28 Aug 2014 14:45:16 -0400
+Date: Thu, 28 Aug 2014 14:33:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v3 00/11] lib: introduce string_escape_mem and %*pE
+ specifier
+Message-ID: <20140828183330.GM13758@tuxdriver.com> (sfid-20140828_204547_666157_B466BC2F)
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53A311E4.301@broadcom.com>
+In-Reply-To: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 06:37:56PM +0200, Arend van Spriel wrote:
-> On 19-06-14 18:28, Fu, Zhonghui wrote:
->> I have tried brcmfmac driver with "CONFIG_PM_RUNTIME is not set", and scanning and connecting  always succeeded. This means that CONFIG_PM_RUNTIME should not be set if we use SDIO WiFi device driven by brcmfmac driver, right?
->
-> Depends which kernel you are using. In 3.16-rc1 the sdio interrupt issue  
-> has been fixed so you should be fine to use CONFIG_PM_RUNTIME. Here is  
-> the commit
+Any objections?  Do you (Andy) want me to merge this through the
+wireless tree?
 
-I have to say that scanning with the 4329 device seems utterly useless,
-whereas 4330 works fine.  Apart from the broadcom chip, the rest of the
-hardware is identical.
+John
+
+On Wed, Aug 20, 2014 at 12:42:41PM +0300, Andy Shevchenko wrote:
+> The introduced function is a kind of opposite to string_unescape. We have
+> several users of such functionality each of them created custom implementation.
+> The series contains clean up of test suite, adding new call, and switching few
+> users to use it via %*pE specifier.
+> 
+> Test suite covers all of existing and most of potential use cases.
+> 
+> Changelog v3:
+> - address Joe's comments (typos and styling of documentation / commit messages)
+> - add patch 7/11
+> - rebase on top of recent linux-next
+> 
+> Changelog v2:
+> - addressed Joe's comments:
+>  - added patch 4/10
+>  - moving patches 5/10-10/10 to %*pE instead of direct string_escape_mem call,
+>    as a result the series and code looks cleaner 
+> - address few of Andrew's comments:
+>  - added patch 1/10
+>  - kernel documentation moved to c-file
+>  - when test case fails the necessary messages are printed on KERN_WARNING
+>    level
+> 
+> Andy Shevchenko (11):
+>   lib / string_helpers: move documentation to c-file
+>   lib / string_helpers: refactoring the test suite
+>   lib / string_helpers: introduce string_escape_mem()
+>   lib/vsprintf: add %*pE[achnops] format specifier
+>   wireless: libertas: print esaped string via %*pE
+>   wireless: ipw2x00: print SSID via %*pE
+>   wireless: hostap: proc: print properly escaped SSID
+>   lib80211: remove unused print_ssid()
+>   staging: wlan-ng: use %*pEhp to print SN
+>   staging: rtl8192e: use %*pEn to escape buffer
+>   staging: rtl8192u: use %*pEn to escape buffer
+> 
+>  Documentation/printk-formats.txt               |  32 +++
+>  drivers/net/wireless/hostap/hostap_proc.c      |   4 +-
+>  drivers/net/wireless/ipw2x00/ipw2100.c         |  22 +-
+>  drivers/net/wireless/ipw2x00/ipw2200.c         | 270 +++++++--------------
+>  drivers/net/wireless/ipw2x00/libipw_rx.c       |  65 +++---
+>  drivers/net/wireless/ipw2x00/libipw_wx.c       |  16 +-
+>  drivers/net/wireless/libertas/cfg.c            |   8 +-
+>  drivers/net/wireless/libertas/mesh.c           |   7 +-
+>  drivers/staging/rtl8192e/rtllib.h              |  14 +-
+>  drivers/staging/rtl8192u/ieee80211/ieee80211.h |  14 +-
+>  drivers/staging/wlan-ng/prism2sta.c            |  28 +--
+>  include/linux/string_helpers.h                 |  65 +++---
+>  include/net/lib80211.h                         |   5 -
+>  lib/string_helpers.c                           | 312 +++++++++++++++++++++++++
+>  lib/test-string_helpers.c                      | 250 +++++++++++++++++++-
+>  lib/vsprintf.c                                 |  72 ++++++
+>  net/wireless/lib80211.c                        |  32 ---
+>  17 files changed, 822 insertions(+), 394 deletions(-)
+> 
+> -- 
+> 2.1.0
+> 
+> 
 
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
