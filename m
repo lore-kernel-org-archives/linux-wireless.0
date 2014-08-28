@@ -1,118 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35394 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbaH3V0n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2014 17:26:43 -0400
-Received: by mail-wi0-f177.google.com with SMTP id cc10so4199756wib.4
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:42 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/23] staging: vt6655: Fix *Duration s_uFillDataHead to return to __le16
-Date: Sat, 30 Aug 2014 22:25:38 +0100
-Message-Id: <1409433949-5468-12-git-send-email-tvboxspy@gmail.com> (sfid-20140830_234534_371294_A2E9FABD)
-In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
-References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51798 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751093AbaH1Hnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2014 03:43:47 -0400
+Message-ID: <1409211818.2505.12.camel@jlt4.sipsolutions.net> (sfid-20140828_094353_045901_0C42215E)
+Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 28 Aug 2014 09:43:38 +0200
+In-Reply-To: <E1XLZxt-0002h9-Um@pannekake.samfundet.no> (sfid-20140824_174436_455216_80D556D9)
+References: <20140824103728.GA2938@sesse.net>
+	 <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
+	 (sfid-20140824_174436_455216_80D556D9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All callers should be __le16.
+On Sun, 2014-08-24 at 12:08 +0200, Steinar H. Gunderson wrote:
+> Linux already supports 802.11h, where the access point can tell the
+> client to reduce its transmission power. However, 802.11h is only
+> defined for 5 GHz, where the need for this is much smaller than on
+> 2.4 GHz.
+> 
+> Cisco has their own solution, called DTPC (Dynamic Transmit Power
+> Control).  Cisco APs on a controller sometimes but not always send
+> 802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
+> for parsing and honoring the DTPC IE if there is no 802.11h element;
+> the format is not documented, but very simple.
+> 
+> Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
+> 1142 joined to a Cisco 2504 WLC, by setting various transmit power
+> levels for the given access points and observing the results.
+> The Wireshark 802.11 dissector agrees with the interpretation of the
+> element, except for negative numbers, which seem to never happen
+> anyway.
 
-Fix vGenerateMACHeader duration to __le16 and reverse the endian
-conversion.
+Can you say *why* we want this? Does it yield better behaviour on a
+Cisco deployment?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index bd0e339..0171f64 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -166,7 +166,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 		  unsigned int uNodeIndex, unsigned int *puMACfragNum);
- 
- static
--unsigned int
-+__le16
- s_uFillDataHead(
- 	struct vnt_private *pDevice,
- 	unsigned char byPktType,
-@@ -671,7 +671,7 @@ s_uGetRTSCTSDuration(
- }
- 
- static
--unsigned int
-+__le16
- s_uFillDataHead(
- 	struct vnt_private *pDevice,
- 	unsigned char byPktType,
-@@ -1202,7 +1202,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 	unsigned char *pbyIVHead;
- 	unsigned char *pbyMacHdr;
- 	unsigned short wFragType; //00:Non-Frag, 01:Start, 10:Mid, 11:Last
--	unsigned int uDuration;
-+	__le16 uDuration;
- 	unsigned char *pbyBuffer;
- 	unsigned int cbIVlen = 0;
- 	unsigned int cbICVlen = 0;
-@@ -1448,7 +1448,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 				uDuration = s_uFillDataHead(pDevice, byPktType, pvTxDataHd, cbFragmentSize, uDMAIdx, bNeedACK,
- 							    uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption, pDevice->wCurrentRate);
- 				// Generate TX MAC Header
--				vGenerateMACHeader(pDevice, pbyMacHdr, (unsigned short)uDuration, psEthHeader, bNeedEncrypt,
-+				vGenerateMACHeader(pDevice, pbyMacHdr, uDuration, psEthHeader, bNeedEncrypt,
- 						   wFragType, uDMAIdx, uFragIdx);
- 
- 				if (bNeedEncrypt == true) {
-@@ -1539,7 +1539,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 							    uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption, pDevice->wCurrentRate);
- 
- 				// Generate TX MAC Header
--				vGenerateMACHeader(pDevice, pbyMacHdr, (unsigned short)uDuration, psEthHeader, bNeedEncrypt,
-+				vGenerateMACHeader(pDevice, pbyMacHdr, uDuration, psEthHeader, bNeedEncrypt,
- 						   wFragType, uDMAIdx, uFragIdx);
- 
- 				if (bNeedEncrypt == true) {
-@@ -1657,7 +1657,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 							    uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption, pDevice->wCurrentRate);
- 
- 				// Generate TX MAC Header
--				vGenerateMACHeader(pDevice, pbyMacHdr, (unsigned short)uDuration, psEthHeader, bNeedEncrypt,
-+				vGenerateMACHeader(pDevice, pbyMacHdr, uDuration, psEthHeader, bNeedEncrypt,
- 						   wFragType, uDMAIdx, uFragIdx);
- 
- 				if (bNeedEncrypt == true) {
-@@ -1765,7 +1765,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 					    0, 0, uMACfragNum, byFBOption, pDevice->wCurrentRate);
- 
- 		// Generate TX MAC Header
--		vGenerateMACHeader(pDevice, pbyMacHdr, (unsigned short)uDuration, psEthHeader, bNeedEncrypt,
-+		vGenerateMACHeader(pDevice, pbyMacHdr, uDuration, psEthHeader, bNeedEncrypt,
- 				   wFragType, uDMAIdx, 0);
- 
- 		if (bNeedEncrypt == true) {
-@@ -1989,7 +1989,7 @@ void
- vGenerateMACHeader(
- 	struct vnt_private *pDevice,
- 	unsigned char *pbyBufferAddr,
--	unsigned short wDuration,
-+	__le16 wDuration,
- 	PSEthernetHeader psEthHeader,
- 	bool bNeedEncrypt,
- 	unsigned short wFragType,
-@@ -2027,7 +2027,7 @@ vGenerateMACHeader(
- 	if (bNeedEncrypt)
- 		pMACHeader->wFrameCtl |= cpu_to_le16((unsigned short)WLAN_SET_FC_ISWEP(1));
- 
--	pMACHeader->wDurationID = cpu_to_le16(wDuration);
-+	pMACHeader->wDurationID = le16_to_cpu(wDuration);
- 
- 	if (pDevice->bLongHeader) {
- 		PWLAN_80211HDR_A4 pMACA4Header  = (PWLAN_80211HDR_A4) pbyBufferAddr;
--- 
-1.9.1
+johannes
 
