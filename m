@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29395 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaHDIWp (ORCPT
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:51705 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbaH1VIq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 04:22:45 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 12/14] wil6210: fix free'd memory access in wil_if_free()
-Date: Mon, 4 Aug 2014 11:20:52 +0300
-Message-ID: <1407140454-31639-13-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102907_327393_DC065A0D)
-In-Reply-To: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com>
+	Thu, 28 Aug 2014 17:08:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140828140654.d5599d2252386df98a57db64@linux-foundation.org>
+References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<20140828183330.GM13758@tuxdriver.com>
+	<20140828120851.07dbd1c52ec287ca169acee4@linux-foundation.org>
+	<CAHp75Vdi6jaexNOFV0mLn=sFOSqmLPNKoGwniSnE0oMim0hjTA@mail.gmail.com>
+	<20140828140654.d5599d2252386df98a57db64@linux-foundation.org>
+Date: Fri, 29 Aug 2014 00:08:45 +0300
+Message-ID: <CAHp75VekWtwrPiu76y+Kq9VUQtrGRceL6VHZ+d+LJoCZG+gYWQ@mail.gmail.com> (sfid-20140828_230902_251934_FEFB25D7)
+Subject: Re: [PATCH v3 00/11] lib: introduce string_escape_mem and %*pE specifier
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+On Fri, Aug 29, 2014 at 12:06 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Thu, 28 Aug 2014 23:58:45 +0300 Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
 
-In the wil_priv_deinit(), wdev->netdev is accessed, so free_netdev()
-should not be called before mentioned call.
+[]
 
-Set wdev->netdev to NULL Make sure no more attempts to use it.
-It is used for debug printk if not NULL.
+>> For now (so far no more comments) it is only couple of trivia fixes
+>> (removing useless comments). Would you like to resend whole series or
+>> just fixup would be enough?
+>
+> I fixed up the one Joe commented on.
+>
+> --- a/lib/vsprintf.c~lib-vsprintf-add-%pe-format-specifier-fix
+> +++ a/lib/vsprintf.c
+> @@ -1111,12 +1111,11 @@ char *escaped_string(char *buf, char *en
+>         int len;
+>
+>         if (spec.field_width == 0)
+> -               /* nothing to print */
+> -               return buf;
+> +               return buf;                             /* nothing to print */
+>
+>         if (ZERO_OR_NULL_PTR(addr))
+> -               /* NULL pointer */
+> -               return string(buf, end, NULL, spec);
+> +               return string(buf, end, NULL, spec);    /* NULL pointer */
+> +
+>
+>         do {
+>                 switch (fmt[count++]) {
 
-This fix kernel panic on module unload and in case error on probe;
-if memory allocation debugging enabled.
+Thanks! I'm fine with this fix.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/netdev.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 8ee0862..59fd550 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -168,11 +168,15 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
- void wil_if_free(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
-+
- 	if (!ndev)
- 		return;
- 
--	free_netdev(ndev);
- 	wil_priv_deinit(wil);
-+
-+	wil_to_ndev(wil) = NULL;
-+	free_netdev(ndev);
-+
- 	wil_wdev_free(wil);
- }
- 
 -- 
-1.8.5.2
-
+With Best Regards,
+Andy Shevchenko
