@@ -1,68 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:38396 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbaHKSEd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46788 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752293AbaH1SpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 14:04:33 -0400
-Received: by mail-pa0-f46.google.com with SMTP id lj1so11587965pab.33
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2014 11:04:33 -0700 (PDT)
-Message-ID: <1407780269.28221.63.camel@chimera> (sfid-20140811_200453_768025_71525205)
-Subject: [PATCH] allow setting wiphy.perm_addr after driver probe
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 11 Aug 2014 11:04:29 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Aug 2014 14:45:17 -0400
+Date: Thu, 28 Aug 2014 14:41:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 2/4] mwifiex: rework internal scan for association
+Message-ID: <20140828184143.GP13758@tuxdriver.com> (sfid-20140828_204549_696134_A01B76C0)
+References: <CBACCFA0AEB13A41977475BCF3E896FC4781147C22@SC-VEXCH2.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC4781147C22@SC-VEXCH2.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On embedded devices, often the BSSID of an access point must be set from
-userspace during the boot process. This provides a relatively clean way
-of doing that without major side effects.
+This one either, nor the rest in the series.
 
-Signed-off-by: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
---- 
---- a/net/wireless/sysfs.c	2014-04-19 08:36:52.048511623 -0700
-+++ b/net/wireless/sysfs.c	2014-04-19 08:38:09.196894176 -0700
-@@ -24,18 +24,30 @@
- 	return container_of(dev, struct cfg80211_registered_device, wiphy.dev);
- }
- 
--#define SHOW_FMT(name, fmt, member)					\
-+#define SHOW_FMT(name, fmt, member, perm)				\
- static ssize_t name ## _show(struct device *dev,			\
- 			      struct device_attribute *attr,		\
- 			      char *buf)				\
- {									\
- 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
- }									\
--static DEVICE_ATTR_RO(name)
-+static DEVICE_ATTR_ ## perm(name)
- 
--SHOW_FMT(index, "%d", wiphy_idx);
--SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
--SHOW_FMT(address_mask, "%pM", wiphy.addr_mask);
-+static ssize_t macaddress_store(struct device *dev,
-+			      struct device_attribute *attr,
-+			      const char *buf, size_t count)
-+{
-+	u8 temp[ETH_ALEN];
-+
-+	if (sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", temp, temp + 1,
-+			temp + 2, temp + 3, temp + 4, temp + 5) == ETH_ALEN)
-+		memcpy(dev_to_rdev(dev)->wiphy.perm_addr, temp, ETH_ALEN);
-+	return count;
-+}
-+
-+SHOW_FMT(index, "%d", wiphy_idx, RO);
-+SHOW_FMT(macaddress, "%pM", wiphy.perm_addr, RW);
-+SHOW_FMT(address_mask, "%pM", wiphy.addr_mask, RO);
- 
- static ssize_t name_show(struct device *dev,
- 			 struct device_attribute *attr,
+Please rebase as necessary and repost the series.  I'm dropping
+these patches.
 
+John
 
+On Mon, Aug 18, 2014 at 02:12:50AM -0700, Avinash Patil wrote:
+> There was an issue with internal scan during association wherein
+> we would complete internal scan on first scan command response.
+> This would cause association failure if AP is not found in first scan
+> response e.g. APs from A band.
+> This patch fixes this issue by completing internal scan only when all
+> scan commands from scan pending queue and command pending queue are
+> sent to FW and response to last scan command is received.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Tested-by: Xinmin Hu <huxm@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/scan.c | 27 ++++++++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index dee717a..bec48cc 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -1970,9 +1970,34 @@ int mwifiex_cmd_802_11_scan_ext(struct mwifiex_private *priv,
+>  /* This function handles the command response of extended scan */
+>  int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv)
+>  {
+> +       struct mwifiex_adapter *adapter = priv->adapter;
+> +       struct host_cmd_ds_command *cmd_ptr;
+> +       struct cmd_ctrl_node *cmd_node;
+> +       unsigned long cmd_flags, scan_flags;
+> +       bool complete_scan = false;
+> +
+>         dev_dbg(priv->adapter->dev, "info: EXT scan returns successfully\n");
+> 
+> -       mwifiex_complete_scan(priv);
+> +       spin_lock_irqsave(&adapter->cmd_pending_q_lock, cmd_flags);
+> +       spin_lock_irqsave(&adapter->scan_pending_q_lock, scan_flags);
+> +       if (list_empty(&adapter->scan_pending_q)) {
+> +               complete_scan = true;
+> +               list_for_each_entry(cmd_node, &adapter->cmd_pending_q, list) {
+> +                       cmd_ptr = (void *)cmd_node->cmd_skb->data;
+> +                       if (le16_to_cpu(cmd_ptr->command) ==
+> +                           HostCmd_CMD_802_11_SCAN_EXT) {
+> +                               dev_dbg(priv->adapter->dev,
+> +                                       "Scan pending in command pending list");
+> +                               complete_scan = false;
+> +                               break;
+> +                       }
+> +               }
+> +       }
+> +       spin_unlock_irqrestore(&adapter->scan_pending_q_lock, scan_flags);
+> +       spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, cmd_flags);
+> +
+> +       if (complete_scan)
+> +               mwifiex_complete_scan(priv);
+> 
+>         return 0;
+>  }
+> -- 
+> 1.8.1.4
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
