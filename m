@@ -1,43 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:38862 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbaHHLRY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1800 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936301AbaH1ICb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2014 07:17:24 -0400
-Received: by mail-qa0-f46.google.com with SMTP id v10so5342736qac.5
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2014 04:17:23 -0700 (PDT)
+	Thu, 28 Aug 2014 04:02:31 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add testmode
+References: <20140828072642.14691.44313.stgit@potku.adurom.net>
+	<20140828073041.14691.15099.stgit@potku.adurom.net>
+Date: Thu, 28 Aug 2014 11:02:26 +0300
+In-Reply-To: <20140828073041.14691.15099.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Thu, 28 Aug 2014 10:30:41 +0300")
+Message-ID: <878um9ujn1.fsf@kamboji.qca.qualcomm.com> (sfid-20140828_100434_874543_174B64CC)
 MIME-Version: 1.0
-Date: Fri, 8 Aug 2014 13:17:23 +0200
-Message-ID: <CALtMJEDfVr1UxExOsiGK4G54BHB54wLt8co_98yZpFzH7NY9VA@mail.gmail.com> (sfid-20140808_131727_761258_D10AC230)
-Subject: mwifiex: switching from adhoc to 5GHz managed fails
-From: Andreas Fenkart <afenkart@gmail.com>
-To: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I start an adhoc network tear it down, then try to connect to
-managed 5GHz networks
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-starting adhoc:
-iw wlan0 set type ibss
-ip link set wlan0 up
-iw wlan0 ibss join "adhoc" 2432
+> Add testmode interface for starting and using UTF firmware which is used to run
+> factory tests. This is implemented by adding new state ATH10K_STATE_UTF and user
+> space can enable this state with ATH10K_TM_CMD_UTF_START command. To go back to
+> normal mode user space can send ATH10K_TM_CMD_UTF_STOP.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-connecting to 5GHz network fails with:
+[...]
 
-mwifiex_sdio mmc0:0001:1: ASSOC_RESP: failed, status code=2 err=0xfffc
-a_id=0xffff
+> +/* "API" level of the ath10k testmode interface. Bump it after every
+> + * incompatible interface change. */
+> +#define ATH10K_TESTMODE_VERSION_MAJOR 1
+> +
+> +/* Bump this after every _compatible_ interface change, for example
+> + * addition of a new command or an attribute. */
+> +#define ATH10K_TESTMODE_VERSION_MINOR 0
+> +
+> +#define ATH10K_TM_DATA_MAX_LEN		5000
+> +
+> +enum ath10k_tm_attr {
+> +	__ATH10K_TM_ATTR_INVALID	= 0,
+> +	ATH10K_TM_ATTR_CMD		= 1,
+> +	ATH10K_TM_ATTR_DATA		= 2,
+> +	ATH10K_TM_ATTR_WMI_CMDID	= 3,
+> +	ATH10K_TM_ATTR_VERSION_MAJOR	= 4,
+> +	ATH10K_TM_ATTR_VERSION_MINOR	= 5,
+> +
+> +	/* keep last */
+> +	__ATH10K_TM_ATTR_AFTER_LAST,
+> +	ATH10K_TM_ATTR_MAX		= __ATH10K_TM_ATTR_AFTER_LAST - 1,
+> +};
+> +
+> +/* All ath10k testmode interface commands specified in
+> + * ATH10K_TM_ATTR_CMD */
+> +enum ath10k_tm_cmd {
+> +	/* Returns the supported ath10k testmode interface version in
+> +	 * ATH10K_TM_ATTR_VERSION. Always guaranteed to work. User space
+> +	 * uses this to verify it's using the correct version of the
+> +	 * testmode interface */
+> +	ATH10K_TM_CMD_GET_VERSION = 0,
+> +
+> +	/* Boots the UTF firmware, the netdev interface must be down at the
+> +	 * time. */
+> +	ATH10K_TM_CMD_UTF_START = 1,
+> +
+> +	/* Shuts down the UTF firmware and puts the driver back into OFF
+> +	 * state. */
+> +	ATH10K_TM_CMD_UTF_STOP = 2,
+> +
+> +	/* The command used to transmit a WMI command to the firmware and
+> +	 * the event to receive WMI events from the firmware. Without
+> +	 * struct wmi_cmd_hdr header, only the WMI payload. Command id is
+> +	 * provided with ATH10K_TM_ATTR_WMI_CMDID and payload in
+> +	 * ATH10K_TM_ATTR_DATA.*/
+> +	ATH10K_TM_CMD_WMI = 3,
+> +};
 
-interesting that connecting to 2.4GHz works, and so does connectinug to 5GHz
-afterwards. The opposite connecting to 5GHz first, which fails, and then
-trying to connect 2.4GHz fails with above error
+Johannes suggested to put this to a separate file as that way it's
+easier for the user space. In v3 I'm planning to create testmode_uapi.h
+for this.
 
-adhoc -works-> 2.4GHz -works->   5GHz
-adhoc -fails->   5GHZ -fails-> 2.4GHZ
-
-unloading/reloading the driver fixes the problem, so fw is not downloaded
-again, so seems to be a pure driver issue.
-
-where might the problem might be located?
+-- 
+Kalle Valo
