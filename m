@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58225 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbaHDIWB (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:53332 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934322AbaH1Hac (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 04:22:01 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 00/14] wil6210 misc updates
-Date: Mon, 4 Aug 2014 11:20:40 +0300
-Message-ID: <1407140454-31639-1-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140804_102207_496797_9463C9B5)
+	Thu, 28 Aug 2014 03:30:32 -0400
+Subject: [PATCH v2 0/2] ath10k: testmode support
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 28 Aug 2014 10:30:28 +0300
+Message-ID: <20140828072642.14691.44313.stgit@potku.adurom.net> (sfid-20140828_093035_452044_2CDE8BDA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some updates and bug fixes for wil6210 driver.
+Hi,
 
-Dedy Lansky (2):
-  wil6210: Optimization for Interrupt moderation threshold value
-  wil6210: Limit max number of associated stations
+here's v2 of my ath10k testmode patches. I sent v1 back in May, here's the link
+to the archives:
 
-Vladimir Kondratiev (12):
-  wil6210: map MAC timer for packet lifetime into debugfs
-  wil6210: fix race in reset
-  wil6210: update copyright year 2014
-  wil6210: check error in wil_target_reset()
-  wil6210: wait longer for hardware reset completion
-  wil6210: Workaround for Sparrow with bad device id
-  wil6210: convert debugfs to the table mode
-  wil6210: fix beamforming data reporting
-  wil6210: fix false "scan timeout"
-  wil6210: fix free'd memory access in wil_if_free()
-  wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
-  wil6210: fix access after free in wil_pcie_remove()
+http://lists.infradead.org/pipermail/ath10k/2014-May/002254.html
 
- drivers/net/wireless/ath/wil6210/cfg80211.c   |   6 +-
- drivers/net/wireless/ath/wil6210/debugfs.c    | 372 ++++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/interrupt.c  |  10 +-
- drivers/net/wireless/ath/wil6210/main.c       |  30 ++-
- drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |   7 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |  16 ++
- drivers/net/wireless/ath/wil6210/txrx.c       |   3 +-
- drivers/net/wireless/ath/wil6210/txrx.h       |   2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  19 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |  47 ++--
- drivers/net/wireless/ath/wil6210/wmi.h        |   4 +-
- 12 files changed, 376 insertions(+), 148 deletions(-)
+I hope I have addressed all the review comments now.
 
--- 
-1.8.5.2
+v2:
+
+* check error from ath10k_wmi_alloc_skb() (Michal)
+
+* int err -> int ret (Michal)
+
+* fix conflicts in core.c
+
+* add ar->testmode.utf_monitor to check if ath10k_tm_event_wmi()
+  should deliver WMI events or not
+
+* print mode in ath10k_download_fw() log messages
+
+* set ar->testmode.utf to NULL after it's released (Michal)
+
+* release ar->testmode.utf also in ath10k_tm_cmd_utf_stop()
+
+* rename ath10k_testmode_unregister() to ath10k_testmode_destroy()
+
+* call ath10k_core_stop() in ath10k_testmode_destroy() (Michal)
+
+* document wmi packet format in testmode commands (Michal)
+
+* consume WMI packets so that mac80211 calls are not made in UTF mode (Michal)
+
+* force to use 10x WMI interface with UTF firmware
+
+* API change: remove ATH10K_TM_CMD_EVENT_WMI, use ATH10K_TM_CMD_WMI also for events
+
+* API change: add major and minor version numbers to
+  ATH10K_TM_CMD_GET_VERSION for the user space more easily to detect
+  interface changes
+
+* use conf_mutex in ath10k_tm_cmd_wmi()
+
+* print "UTF firmware started" and "UTF firmware stopped"
+
+* print "testmode %d" in ath10k_print_driver_info()
+
+* don't call ath10k_wait_for_suspend() in UTF mode
+
+---
+
+Kalle Valo (2):
+      ath10k: make ath10k_wmi_cmd_send() public
+      ath10k: add testmode
+
+
+ drivers/net/wireless/ath/ath10k/Makefile   |    1 
+ drivers/net/wireless/ath/ath10k/core.c     |   88 ++++--
+ drivers/net/wireless/ath/ath10k/core.h     |   22 +-
+ drivers/net/wireless/ath/ath10k/debug.c    |    5 
+ drivers/net/wireless/ath/ath10k/debug.h    |    1 
+ drivers/net/wireless/ath/ath10k/hw.h       |    2 
+ drivers/net/wireless/ath/ath10k/mac.c      |   10 +
+ drivers/net/wireless/ath/ath10k/testmode.c |  404 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/testmode.h |   46 +++
+ drivers/net/wireless/ath/ath10k/wmi.c      |   22 +-
+ drivers/net/wireless/ath/ath10k/wmi.h      |    4 
+ 11 files changed, 572 insertions(+), 33 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/testmode.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/testmode.h
 
