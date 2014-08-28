@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:64785 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbaHLGwm (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:63824 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbaH1QDj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2014 02:52:42 -0400
-From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-To: <dsd@gentoo.org>, <kune@deine-taler.de>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-Subject: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-Date: Tue, 12 Aug 2014 12:35:33 +0530
-Message-ID: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20140812_085325_305254_E642EA42)
+	Thu, 28 Aug 2014 12:03:39 -0400
+Received: by mail-ig0-f170.google.com with SMTP id h3so750072igd.3
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 09:03:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rwKheOAogaeeDd5pLNaRo=Zq0euURTT87BY-S1MdOWwVQ@mail.gmail.com>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+	<2859425.94ptgpItD3@wuerfel>
+	<CACna6rx0E_s76wLLkDjj90sXH=Q3yzBemQM5Qrp96QiWCWr0qg@mail.gmail.com>
+	<6633831.1CSHMPPLH1@wuerfel>
+	<CACna6rwKheOAogaeeDd5pLNaRo=Zq0euURTT87BY-S1MdOWwVQ@mail.gmail.com>
+Date: Thu, 28 Aug 2014 18:03:38 +0200
+Message-ID: <CACna6ryEp0oFXy0ZOEU0yve8r74qg7cC1GDdFSbarr2qjz5-YA@mail.gmail.com> (sfid-20140828_180341_829888_052C9FAB)
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-on some architecture spin_is_locked() always return false in
-uniprocessor configuration and therefore it would be advise
-to replace with lockdep_assert_held().
+On 28 August 2014 18:00, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 28 August 2014 17:32, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Thursday 28 August 2014 14:37:54 Rafał Miłecki wrote:
+>>> To make booting possible, flash content is mapped to the memory. We're
+>>> talking about read only access. This mapping allows CPU to get code
+>>> (bootloader) and execute it as well as it allows CFE to get NVRAM
+>>> content easily. You don't need flash driver (with erasing & writing
+>>> support) to read NVRAM.
+>>
+>> Ok. Just out of curiosity, how does the system manage to map NAND
+>> flash into physical address space? Is this a feature of the SoC
+>> of the flash chip?
+>
+> I don't know exactly. Many (all?) device with BCM4706 SoC have two
+> flashes. Serial flash (~2 MiB) with bootloader + nvram and NAND flash
+> with the firmware. However Netgear WNR3500Lv2 (based on BCM47186B0)
+> has only a NAND flash.
 
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
----
- drivers/net/wireless/zd1211rw/zd_mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index e7af261..72c0bc2 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -235,7 +235,7 @@ void zd_mac_clear(struct zd_mac *mac)
- {
- 	flush_workqueue(zd_workqueue);
- 	zd_chip_clear(&mac->chip);
--	ZD_ASSERT(!spin_is_locked(&mac->lock));
-+	lockdep_assert_held(!spin_is_locked(&mac->lock));
- 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));
- }
- 
--- 
-1.7.11.7
-
+Btw. since NAND flashes tend to be huhe, they can't be fully mapped
+into memory. This is where Broadcom's "nfl_boot_size" comes in. This
+is a function saying how much of NAND content it mapped into memory.
+It returns NFL_BOOT_SIZE (0x200000) or NFL_BIG_BOOT_SIZE (0x800000)
+depending on the block size.
