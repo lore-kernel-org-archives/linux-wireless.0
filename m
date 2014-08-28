@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.112]:39059 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751622AbaHDA1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2014 20:27:37 -0400
-From: Hans Wennborg <hans@hanshq.net>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Hans Wennborg <hans@hanshq.net>
-Subject: [PATCH 11/19] iwl4965: fix %d confusingly prefixed with 0x in format string
-Date: Sun,  3 Aug 2014 17:20:05 -0700
-Message-Id: <1407111605-15005-1-git-send-email-hans@hanshq.net> (sfid-20140804_022740_445467_B974E2D3)
+Received: from aserp1040.oracle.com ([141.146.126.69]:45552 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbaH1NZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2014 09:25:21 -0400
+Date: Thu, 28 Aug 2014 16:23:53 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: patila@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mwifiex: parse TDLS action frames during RX
+Message-ID: <20140828132352.GD24477@mwanda> (sfid-20140828_152525_090311_79A452B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hans Wennborg <hans@hanshq.net>
----
- drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hello Avinash Patil,
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index c159c05..7d6fd59 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -4633,7 +4633,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
- 	else {
- 		ret = il_set_tx_power(il, val, false);
- 		if (ret)
--			IL_ERR("failed setting tx power (0x%d).\n", ret);
-+			IL_ERR("failed setting tx power (0x%x).\n", ret);
- 		else
- 			ret = count;
- 	}
--- 
-2.0.0.526.g5318336
+The patch 5f2caaf32bc6: "mwifiex: parse TDLS action frames during RX"
+from Feb 7, 2014, leads to the following static checker warning:
 
+	drivers/net/wireless/mwifiex/tdls.c:873 mwifiex_process_tdls_action_frame()
+	error: '2 + pos[1]' from user is not capped properly
+
+drivers/net/wireless/mwifiex/tdls.c
+   868                          memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+   869                                 sizeof(struct ieee_types_header) +
+   870                                 min_t(u8, pos[1], 8));
+   871                          break;
+   872                  case WLAN_EID_RSN:
+   873                          memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+   874                                 sizeof(struct ieee_types_header) + pos[1]);
+
+The ->rsn_ie buffer is 256 bytes large.
+sizeof(struct ieee_types_header) is 2.
+pos[1] is a number between 0-255.
+This can write 1 byte beyond the end.
+
+   875                          break;
+   876                  case WLAN_EID_QOS_CAPA:
+   877                          sta_ptr->tdls_cap.qos_info = pos[2];
+   878                          break;
+
+regards,
+dan carpenter
