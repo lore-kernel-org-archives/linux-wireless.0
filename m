@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:44333 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965592AbaH1IJ2 (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:53878 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbaH1MjH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 04:09:28 -0400
-Received: by mail-lb0-f181.google.com with SMTP id n15so452313lbi.26
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 01:09:27 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix num_legacy_stations tracking
-Date: Thu, 28 Aug 2014 09:59:39 +0200
-Message-Id: <1409212779-5212-1-git-send-email-michal.kazior@tieto.com> (sfid-20140828_100955_029754_869F98CA)
+	Thu, 28 Aug 2014 08:39:07 -0400
+Received: by mail-ig0-f174.google.com with SMTP id c1so7935455igq.7
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2014 05:39:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53FF21AA.5040406@telenet.be>
+References: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com>
+	<CACna6rx+EkoCPQ06qDTbaDFEJ1hrn_CYSbrPmosF0ikhkqDxpA@mail.gmail.com>
+	<53FF21AA.5040406@telenet.be>
+Date: Thu, 28 Aug 2014 14:39:06 +0200
+Message-ID: <CACna6rwde+H8K42FgsHH=FT2tW_3o_NwVbk0ZyM_L3fVtfwAsA@mail.gmail.com> (sfid-20140828_143911_204213_4E98AE9F)
+Subject: Re: Looking for someone with BCM43227 and (maybe) compilation skill ; )
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Ruben De Smet <ruben.de.smet@telenet.be>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a station was reassociated, i.e. due to change
-of supported rates update via sta_rc_update() the
-num_legacy_stations would be (incorrectly) bumped
-up leading to unbalanced usage of the var. This in
-turn could lock rtscts protection up as enabled.
+On 28 August 2014 14:33, Ruben De Smet <ruben.de.smet@telenet.be> wrote:
+> On 07/03/2014 02:50 PM, Rafał Miłecki wrote:
+>> On 3 July 2014 14:32, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>> I want to add support for BCM43227 in b43, however I need help of some
+>>> BCM43227 owner. Well, I could buy one by myself (less than 10$ on
+>>> eBay), but I don't want to wait a month to receive it.
+>>>
+>>> So I need someone with:
+>>> 1) BCM43227 ;)
+>>> 2) Kernel with CONFIG_MMIOTRACE=y*
+>>> 3) Broadcom Linux STA driver 6.30.223.141
+>>>
+>>> So? Is there anyone around with BCM43227 willing to help?
+>>
+>> I'd need someone to:
+>> 1) Disable NetworkManager & blacklist wl
+>> 2) Make a cold boot (power off for 3 seconds)
+>> 3) Run attached script
+>> 4) Provide me /tmp/dump.txt (preferably compressed)
+>>
+>
+> Still needed? I have
+> 03:00.0 Network controller: Broadcom Corporation BCM43228 802.11a/b/g/n
+> That is one iteration higher.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It has appeared that BCM43227 and BCM43228 are pretty much identical
+from programming POV. You can try 3.17-rc1 (or newer) to see if it
+supports your wireless card :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b858c82..4e30e57 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1615,7 +1615,7 @@ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
- 		return ret;
- 	}
- 
--	if (!sta->wme) {
-+	if (!sta->wme && !reassoc) {
- 		arvif->num_legacy_stations++;
- 		ret  = ath10k_recalc_rtscts_prot(arvif);
- 		if (ret) {
 -- 
-1.8.5.3
-
+Rafał
