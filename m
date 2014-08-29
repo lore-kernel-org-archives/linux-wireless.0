@@ -1,68 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbaHNJYC (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:55730 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbaH2GHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2014 05:24:02 -0400
-Message-ID: <53EC802F.3020805@broadcom.com> (sfid-20140814_112407_233502_D3546987)
-Date: Thu, 14 Aug 2014 11:23:59 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-CC: <kvalo@adurom.com>, Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/2] cfg80211: allow passing frame type to cfg80211_inform_bss()
-References: <1407870219-1720-1-git-send-email-johannes@sipsolutions.net> <1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1407870219-1720-2-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 29 Aug 2014 02:07:38 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] athk: Fix panic when adding an AP interface
+Date: Fri, 29 Aug 2014 11:37:41 +0530
+Message-Id: <1409292461-3594-1-git-send-email-sujith@msujith.org> (sfid-20140829_080740_937584_F6D42227)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2014 09:03 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When using the cfg80211_inform_bss[_width]() functions drivers
-> cannot currently indicate whether the data was received in a
-> beacon or probe response. Fix that by passing a new enum that
-> indicates such (or unknown).
->
-> For good measure, use it in ath6kl.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->   drivers/net/wireless/ath/ath6kl/cfg80211.c         |  1 +
->   drivers/net/wireless/ath/ath6kl/wmi.c              | 43 +++++-----------------
->   drivers/net/wireless/ath/wil6210/wmi.c             |  2 +-
->   .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 18 ++++++---
->   drivers/net/wireless/libertas/cfg.c                |  2 +
->   drivers/net/wireless/mwifiex/cfg80211.c            |  1 +
->   drivers/net/wireless/mwifiex/scan.c                |  3 +-
->   drivers/net/wireless/orinoco/scan.c                | 14 ++++---
->   drivers/net/wireless/rndis_wlan.c                  | 14 ++++---
->   drivers/staging/wlan-ng/cfg80211.c                 |  1 +
->   include/net/cfg80211.h                             | 20 +++++++++-
->   net/wireless/scan.c                                | 21 ++++++++---
->   12 files changed, 78 insertions(+), 62 deletions(-)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-[...]
+If a station interface is already assigned to a context
+and is active and a second interface of type AP is added,
+then beaconing on the new interface has to be begin only
+after the BSS_CHANGED_BEACON_ENABLED flag is sent by mac80211
+to the driver.
 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index d8fa276e368b..9a45ef064dd9 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -2429,9 +2429,13 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
->   	brcmf_dbg(CONN, "Beacon interval: %d\n", notify_interval);
->   	brcmf_dbg(CONN, "Signal: %d\n", notify_signal);
->
-> -	bss = cfg80211_inform_bss(wiphy, notify_channel, (const u8 *)bi->BSSID,
-> -		0, notify_capability, notify_interval, notify_ie,
-> -		notify_ielen, notify_signal, GFP_KERNEL);
-> +	bss = cfg80211_inform_bss(wiphy, notify_channel,
-> +				  CFG80211_BSS_FTYPE_UNKNOWN,
+But, since we issue ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL as soon
+as a new channel context is added, a switch occurs almost immediately
+before BSS_CHANGED_BEACON_ENABLED is received. When a HW reset
+is done for the new context, beacons are enabled for the
+interface since "enable_beacon" in the BSS config maintained
+in mac80211 is true - but the driver hasn't been notified yet.
+This causes a panic, since the beacon interval is zero for this
+interface and ath9k_cmn_beacon_config_ap() doesn't have a safety check.
 
-Checked the firmware API and it does not provide this info.
+Fix this panic by checking if the beacon params has been cached
+for this context and use the "enable_beacon" flag maintained
+locally in the driver. Also, recalculate the summary data
+after the beacon params have been cached when BSS_CHANGED_BEACON_ENABLED
+is received.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0b3d4d8..2333776 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -916,8 +916,6 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
+ 		iter_data->naps++;
+-		if (vif->bss_conf.enable_beacon)
+-			iter_data->beacons = true;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		iter_data->nstations++;
+@@ -1021,6 +1019,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_vif_iter_data iter_data;
++	struct ath_beacon_config *cur_conf;
+ 
+ 	ath_chanctx_check_active(sc, ctx);
+ 
+@@ -1037,8 +1036,11 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	ath_hw_setbssidmask(common);
+ 
+ 	if (iter_data.naps > 0) {
++		cur_conf = &ctx->beacon;
+ 		ath9k_hw_set_tsfadjust(ah, true);
+ 		ah->opmode = NL80211_IFTYPE_AP;
++		if (cur_conf->enable_beacon)
++			iter_data.beacons = true;
+ 	} else {
+ 		ath9k_hw_set_tsfadjust(ah, false);
+ 
+@@ -1695,9 +1697,9 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
+ 	    (changed & BSS_CHANGED_BEACON_INT) ||
+ 	    (changed & BSS_CHANGED_BEACON_INFO)) {
++		ath9k_beacon_config(sc, vif, changed);
+ 		if (changed & BSS_CHANGED_BEACON_ENABLED)
+ 			ath9k_calculate_summary_state(sc, avp->chanctx);
+-		ath9k_beacon_config(sc, vif, changed);
+ 	}
+ 
+ 	if ((avp->chanctx == sc->cur_chan) &&
+-- 
+2.1.0
+
