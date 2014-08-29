@@ -1,54 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:58192 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754269AbaHGJjR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:39:17 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so10258999wiv.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:39:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8738d84pgg.fsf@kamboji.qca.qualcomm.com>
-References: <1407402308-29899-1-git-send-email-michal.kazior@tieto.com>
-	<1407402308-29899-6-git-send-email-michal.kazior@tieto.com>
-	<8738d84pgg.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 7 Aug 2014 11:39:16 +0200
-Message-ID: <CA+BoTQnCHA5cKFTTF+v1GHqb65JyFxFUXcJt6_AFBtS7jWHKJQ@mail.gmail.com> (sfid-20140807_113925_478790_0480B792)
-Subject: Re: [PATCH 5/5] ath10k: flush hif buffers before recovery
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:59433 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751476AbaH2OZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2014 10:25:34 -0400
+Message-ID: <1409322323.4577.25.camel@jlt4.sipsolutions.net> (sfid-20140829_162538_055738_4F584E4C)
+Subject: pull-request: mac80211-next 2014-08-29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 29 Aug 2014 16:25:23 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 August 2014 11:30, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Transport buffers weren't flushed and processed
->> before queueing hw recovery request to mac80211.
->>
->> This could in theory result in an unwanted htt/wmi
->> rx events being processed while mac80211 recovers
->> the device and possibly interfere or even crash
->> the system.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> This one had a conflict in ath-next-test, I changed the patch to this:
->
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -666,6 +666,7 @@ static void ath10k_core_restart(struct work_struct *work)
->         case ATH10K_STATE_ON:
->                 ar->state = ATH10K_STATE_RESTARTING;
->                 ath10k_scan_finish(ar);
-> +               ath10k_hif_stop(ar);
->                 ieee80211_restart_hw(ar->hw);
+John,
 
-Oops. I've accidentally posted an old version of this single patch.
-The hif_stop() should be _before_ scan_finish/reset(). I'll wait for
-more comments before posting a v2 though.
+And another pull request, for mac80211-next. Hope this works for you.
+
+johannes
+
+The following changes since commit c9d26423e56ce1ab4d786f92aebecf859d419293:
+
+  Merge tag 'pm+acpi-3.17-rc1-2' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm (2014-08-14 18:13:46 -0600)
+
+are available in the git repository at:
 
 
-Michał
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-john-2014-08-29
+
+for you to fetch changes up to d0616613d9cf17919fbd46fa0274db4b0084ad62:
+
+  net: rfkill: gpio: Add more Broadcom bluetooth ACPI IDs (2014-08-29 13:10:44 +0200)
+
+----------------------------------------------------------------
+Not that much content this time. Some RCU cleanups, crypto
+performance improvements, and various patches all over,
+rather than listing them one might as well look into the
+git log instead.
+
+----------------------------------------------------------------
+Andreea-Cristina Bernat (2):
+      mac80211: scan: Replace rcu_assign_pointer() with RCU_INIT_POINTER()
+      mac80211: Replace rcu_dereference() with rcu_access_pointer()
+
+Andrei Otcheretianski (1):
+      ieee80211: Support parsing TPC report element in action frames
+
+Bob Copeland (1):
+      mac80211: mesh_plink: use get_unaligned_le16 instead of memcpy
+
+Eliad Peller (1):
+      mac80211: disable 40MHz support in case of 20MHz AP
+
+Ido Yariv (2):
+      mac80211: Fix accounting of the tailroom-needed counter
+      mac80211: don't resize skbs needlessly
+
+Johannes Berg (4):
+      mac80211: don't duplicate station QoS capability data
+      mac80211: make ieee80211_vif_use_reserved_switch static
+      cfg80211: clarify BSS probe response vs. beacon data
+      cfg80211: allow passing frame type to cfg80211_inform_bss()
+
+Michal Kazior (2):
+      cfg80211: re-enable CSA for drivers that support it
+      mac80211: fix chantype recalc warning
+
+Mika Westerberg (1):
+      net: rfkill: gpio: Add more Broadcom bluetooth ACPI IDs
+
+Vladimir Kondratiev (1):
+      cfg80211: remove @gfp parameter from cfg80211_rx_mgmt()
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |   1 +
+ drivers/net/wireless/ath/ath6kl/wmi.c              |  48 ++----
+ drivers/net/wireless/ath/wil6210/wmi.c             |   4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   6 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  18 +-
+ drivers/net/wireless/libertas/cfg.c                |   2 +
+ drivers/net/wireless/mwifiex/cfg80211.c            |   1 +
+ drivers/net/wireless/mwifiex/scan.c                |   3 +-
+ drivers/net/wireless/mwifiex/util.c                |   2 +-
+ drivers/net/wireless/orinoco/scan.c                |  14 +-
+ drivers/net/wireless/rndis_wlan.c                  |  14 +-
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c      |   2 +-
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c  |   5 +-
+ drivers/staging/wlan-ng/cfg80211.c                 |   1 +
+ include/linux/ieee80211.h                          |  65 +++++++
+ include/net/cfg80211.h                             |  25 ++-
+ include/net/mac80211.h                             |  14 +-
+ include/uapi/linux/nl80211.h                       |  16 +-
+ net/mac80211/cfg.c                                 |  13 +-
+ net/mac80211/chan.c                                | 191 ++++++++++-----------
+ net/mac80211/debugfs_sta.c                         |   3 +-
+ net/mac80211/ibss.c                                |   2 +-
+ net/mac80211/ieee80211_i.h                         |   1 -
+ net/mac80211/key.c                                 |  12 +-
+ net/mac80211/mesh_pathtbl.c                        |   4 +-
+ net/mac80211/mesh_plink.c                          |  14 +-
+ net/mac80211/mlme.c                                |  33 ++--
+ net/mac80211/rx.c                                  |   2 +-
+ net/mac80211/scan.c                                |   2 +-
+ net/mac80211/sta_info.c                            |   4 +-
+ net/mac80211/sta_info.h                            |   2 -
+ net/mac80211/tdls.c                                |   3 +-
+ net/mac80211/tx.c                                  |  11 +-
+ net/mac80211/wme.c                                 |   4 +-
+ net/rfkill/rfkill-gpio.c                           |   1 +
+ net/wireless/core.c                                |   6 -
+ net/wireless/mlme.c                                |   4 +-
+ net/wireless/nl80211.c                             |  16 +-
+ net/wireless/scan.c                                |  21 ++-
+ 39 files changed, 344 insertions(+), 246 deletions(-)
+
+
