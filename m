@@ -1,261 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:57353 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754040AbaIPV4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 17:56:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 1/2] bcma: register bcma as device tree driver
-Date: Tue, 16 Sep 2014 23:56:21 +0200
-Message-Id: <1410904582-6519-1-git-send-email-hauke@hauke-m.de> (sfid-20140916_235638_951273_96A9CE10)
+Received: from cassarossa.samfundet.no ([193.35.52.29]:47332 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbaIAItw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 04:49:52 -0400
+In-Reply-To: <20140830184516.GA31497@sesse.net>
+References: <20140830184516.GA31497@sesse.net>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Date: Fri, 29 Aug 2014 19:27:53 +0200
+Subject: [PATCH v5 1/2] mac80211: split 802.11h parsing from transmit power
+ policy
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <E1XONJ6-0005Kl-Nz@pannekake.samfundet.no> (sfid-20140901_104956_330419_87FE5F12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-give the address of the chipcommon core in device tree and bcma will
-search for all the other cores.
+Decouple the logic of parsing the 802.11d and 802.11h IEs from the
+part of deciding what to do about the data (messaging, clamping to
+0 dBm, doing the actual setting). This paves the way for the next
+patch, which introduces more data sources for transmit power limitation.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
 ---
- Documentation/devicetree/bindings/bus/bcma.txt | 40 +++++++++++++
- drivers/bcma/bcma_private.h                    | 16 +++++
- drivers/bcma/host_soc.c                        | 82 ++++++++++++++++++++++++++
- drivers/bcma/main.c                            | 10 ++++
- include/linux/bcma/bcma.h                      |  2 +
- 5 files changed, 150 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
+ net/mac80211/mlme.c |   61 +++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 42 insertions(+), 19 deletions(-)
 
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-v1:
- - renamed aix to axi
-RFC:
- - reworded the irq description
- - improved the example
- - hocked into bcma_modeinit() and bcma_modexit()
-
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-new file mode 100644
-index 0000000..f06f5c3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -0,0 +1,40 @@
-+Driver for ARM AXI Bus with Broadcom Plugins (bcma)
-+
-+Required properties:
-+
-+- compatible : brcm,bus-axi
-+
-+- reg : iomem address range of chipcommon core
-+
-+The cores on the AXI bus are auto detected by bcma. bcma automatically 
-+detects the cores and the memory ranges they are using and they get 
-+registered afterwards. Automatic detection of the IRQ number is not 
-+possible on BCM47xx/BCM53xx ARM and MIPS SoCs. To assign IRQ number to 
-+the cores, provide them manually through device tree. The IRQ number 
-+and the device tree child entry will get assigned to the core with the 
-+matching reg address.
-+
-+Example:
-+
-+	axi@18000000 {
-+		compatible = "brcm,bus-axi";
-+		reg = <0x18000000 0x1000>;
-+		ranges = <0x00000000 0x18000000 0x00100000>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+
-+		ethernet@18024000 {
-+			reg = <0x18024000 0x1000>;
-+			interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		ethernet@18025000 {
-+			reg = <0x18025000 0x1000>;
-+			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@18012000 {
-+			reg = <0x18012000 0x1000>;
-+			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+	};
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index b40be43..b8728f0 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -88,6 +88,22 @@ extern int __init bcma_host_pci_init(void);
- extern void __exit bcma_host_pci_exit(void);
- #endif /* CONFIG_BCMA_HOST_PCI */
- 
-+#ifdef CONFIG_BCMA_HOST_SOC
-+/* host_pci.c */
-+#ifdef CONFIG_OF
-+extern int __init bcma_host_soc_register_driver(void);
-+extern void __exit bcma_host_soc_unregister_driver(void);
-+#else
-+static inline int __init bcma_host_soc_register_driver(void)
-+{
-+	return 0;
-+}
-+static inline void __exit bcma_host_soc_unregister_driver(void)
-+{
-+}
-+#endif /* CONFIG_OF */
-+#endif /* CONFIG_BCMA_HOST_SOC */
-+
- /* driver_pci.c */
- u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
- 
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 718e054..cfbf3b3 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -7,6 +7,9 @@
- 
- #include "bcma_private.h"
- #include "scan.h"
-+#include <linux/slab.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
- #include <linux/bcma/bcma.h>
- #include <linux/bcma/bcma_soc.h>
- 
-@@ -176,6 +179,7 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
- 	/* Host specific */
- 	bus->hosttype = BCMA_HOSTTYPE_SOC;
- 	bus->ops = &bcma_host_soc_ops;
-+	bus->host_pdev = NULL;
- 
- 	/* Initialize struct, detect chip */
- 	bcma_init_bus(bus);
-@@ -195,3 +199,81 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
- 
- 	return err;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b82a12a..524c7cc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1157,19 +1157,22 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME(csa_ie.count * cbss->beacon_interval));
  }
-+
-+#ifdef CONFIG_OF
-+static int bcma_host_soc_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct bcma_bus *bus;
-+	int err;
-+
-+	/* Alloc */
-+	bus = devm_kzalloc(dev, sizeof(*bus), GFP_KERNEL);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+	/* Map MMIO */
-+	bus->mmio = of_iomap(np, 0);
-+	if (!bus->mmio)
-+		return -ENOMEM;
-+
-+	/* Host specific */
-+	bus->hosttype = BCMA_HOSTTYPE_SOC;
-+	bus->ops = &bcma_host_soc_ops;
-+	bus->host_pdev = pdev;
-+
-+	/* Initialize struct, detect chip */
-+	bcma_init_bus(bus);
-+
-+	/* Register */
-+	err = bcma_bus_register(bus);
-+	if (err)
-+		goto err_unmap_mmio;
-+
-+	platform_set_drvdata(pdev, bus);
-+
-+	return err;
-+
-+err_unmap_mmio:
-+	iounmap(bus->mmio);
-+	return err;
-+}
-+
-+static int bcma_host_soc_remove(struct platform_device *pdev)
-+{
-+	struct bcma_bus *bus = platform_get_drvdata(pdev);
-+
-+	bcma_bus_unregister(bus);
-+	iounmap(bus->mmio);
-+	platform_set_drvdata(pdev, NULL);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id bcma_host_soc_of_match[] = {
-+	{ .compatible = "brcm,bus-axi", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
-+
-+static struct platform_driver bcma_host_soc_driver = {
-+	.driver = {
-+		.name = "bcma-host-soc",
-+		.owner = THIS_MODULE,
-+		.of_match_table = bcma_host_soc_of_match,
-+	},
-+	.probe		= bcma_host_soc_probe,
-+	.remove		= bcma_host_soc_remove,
-+};
-+
-+int __init bcma_host_soc_register_driver(void)
-+{
-+	return platform_driver_register(&bcma_host_soc_driver);
-+}
-+
-+void __exit bcma_host_soc_unregister_driver(void)
-+{
-+	platform_driver_unregister(&bcma_host_soc_driver);
-+}
-+#endif /* CONFIG_OF */
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index c421403..e5d578c 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -528,6 +528,13 @@ static int __init bcma_modinit(void)
- 	if (err)
- 		return err;
  
-+#ifdef CONFIG_BCMA_HOST_SOC
-+	err = bcma_host_soc_register_driver();
-+	if (err) {
-+		pr_err("SoC host initialization failed\n");
-+		err = 0;
+-static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+-				       struct ieee80211_channel *channel,
+-				       const u8 *country_ie, u8 country_ie_len,
+-				       const u8 *pwr_constr_elem)
++static bool ieee80211_find_80211h_pwr_constr(
++	struct ieee80211_sub_if_data *sdata,
++	struct ieee80211_channel *channel,
++	const u8 *country_ie, u8 country_ie_len,
++	const u8 *pwr_constr_elem,
++	int *chan_pwr,
++	int *pwr_reduction)
+ {
+ 	struct ieee80211_country_ie_triplet *triplet;
+ 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
+-	int i, chan_pwr, chan_increment, new_ap_level;
++	int i, chan_increment;
+ 	bool have_chan_pwr = false;
+ 
+ 	/* Invalid IE */
+ 	if (country_ie_len % 2 || country_ie_len < IEEE80211_COUNTRY_IE_MIN_LEN)
+-		return 0;
++		return false;
+ 
+ 	triplet = (void *)(country_ie + 3);
+ 	country_ie_len -= 3;
+@@ -1197,7 +1200,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		for (i = 0; i < triplet->chans.num_channels; i++) {
+ 			if (first_channel + i * chan_increment == chan) {
+ 				have_chan_pwr = true;
+-				chan_pwr = triplet->chans.max_power;
++				*chan_pwr = triplet->chans.max_power;
+ 				break;
+ 			}
+ 		}
+@@ -1209,18 +1212,41 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		country_ie_len -= 3;
+ 	}
+ 
+-	if (!have_chan_pwr)
+-		return 0;
++	if (have_chan_pwr)
++		*pwr_reduction = *pwr_constr_elem;
++	return have_chan_pwr;
++}
+ 
+-	new_ap_level = max_t(int, 0, chan_pwr - *pwr_constr_elem);
++static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_channel *channel,
++					struct ieee80211_mgmt *mgmt,
++					const u8 *country_ie, u8 country_ie_len,
++					const u8 *pwr_constr_ie)
++{
++	bool has_80211h_pwr = false;
++	int chan_pwr, pwr_reduction_80211h;
++	int new_ap_level;
+ 
+-	if (sdata->ap_power_level == new_ap_level)
++	if (country_ie && pwr_constr_ie &&
++	    mgmt->u.probe_resp.capab_info &
++		cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT)) {
++		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
++			sdata, channel, country_ie, country_ie_len,
++			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
++		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
 +	}
-+#endif
- #ifdef CONFIG_BCMA_HOST_PCI
- 	err = bcma_host_pci_init();
- 	if (err) {
-@@ -545,6 +552,9 @@ static void __exit bcma_modexit(void)
- #ifdef CONFIG_BCMA_HOST_PCI
- 	bcma_host_pci_exit();
- #endif
-+#ifdef CONFIG_BCMA_HOST_SOC
-+	bcma_host_soc_unregister_driver();
-+#endif
- 	bus_unregister(&bcma_bus_type);
- }
- module_exit(bcma_modexit)
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 6345979..729f48e 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -323,6 +323,8 @@ struct bcma_bus {
- 		struct pci_dev *host_pci;
- 		/* Pointer to the SDIO device (only for BCMA_HOSTTYPE_SDIO) */
- 		struct sdio_func *host_sdio;
-+		/* Pointer to platform device (only for BCMA_HOSTTYPE_SOC) */
-+		struct platform_device *host_pdev;
- 	};
++
++	if (!has_80211h_pwr)
+ 		return 0;
  
- 	struct bcma_chipinfo chipinfo;
+ 	sdata_info(sdata,
+ 		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+-		   new_ap_level, chan_pwr, *pwr_constr_elem,
++		   new_ap_level, chan_pwr, pwr_reduction_80211h,
+ 		   sdata->u.mgd.bssid);
++
++	if (sdata->ap_power_level == new_ap_level)
++		return 0;
++
+ 	sdata->ap_power_level = new_ap_level;
+ 	if (__ieee80211_recalc_txpower(sdata))
+ 		return BSS_CHANGED_TXPOWER;
+@@ -3190,13 +3216,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 					    rx_status->band, true);
+ 	mutex_unlock(&local->sta_mtx);
+ 
+-	if (elems.country_elem && elems.pwr_constr_elem &&
+-	    mgmt->u.probe_resp.capab_info &
+-				cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT))
+-		changed |= ieee80211_handle_pwr_constr(sdata, chan,
+-						       elems.country_elem,
+-						       elems.country_elem_len,
+-						       elems.pwr_constr_elem);
++	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
++					       elems.country_elem,
++					       elems.country_elem_len,
++					       elems.pwr_constr_elem);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
 -- 
-1.9.1
+1.7.10.4
 
