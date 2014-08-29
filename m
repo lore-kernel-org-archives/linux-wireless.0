@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:52960 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389AbaHBLVd (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:49457 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864AbaH2ITH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2014 07:21:33 -0400
-Date: Sat, 2 Aug 2014 16:51:30 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
-Subject: [PATCH] net: wireless: wl1251: Remove unnecessary free_irq
-Message-ID: <20140802112130.GA3193@himangi-Dell> (sfid-20140802_132203_203760_CE007B41)
+	Fri, 29 Aug 2014 04:19:07 -0400
+Date: Fri, 29 Aug 2014 10:19:02 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
+Message-ID: <20140829081902.GB21763@sesse.net> (sfid-20140829_101912_845564_EFF9C44E)
+References: <20140824103728.GA2938@sesse.net>
+ <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
+ <1409211818.2505.12.camel@jlt4.sipsolutions.net>
+ <20140828083738.GA19530@sesse.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140828083738.GA19530@sesse.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch does away with free_irq in the remove function as the irq is
-allocated with a devm_request_irq.
+On Thu, Aug 28, 2014 at 10:37:38AM +0200, Steinar H. Gunderson wrote:
+> We should honor its request, just as we honor it when it comes through
+> 802.11h or 802.11d.
 
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
----
-I'm not sure that devm_request_irq should be used in
-the first place, as it will move the stopping of the interrupt over
-wl1251_free_hw. Should I use request_irq?
- drivers/net/wireless/ti/wl1251/spi.c | 1 -
- 1 file changed, 1 deletion(-)
+I've been running with this a few days now, and I've noticed that while the
+patch works fine, it is not entirely complete.
 
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index a0aa8fa..735be53 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -345,7 +345,6 @@ static int wl1251_spi_remove(struct spi_device *spi)
- {
- 	struct wl1251 *wl = spi_get_drvdata(spi);
- 
--	free_irq(wl->irq, wl);
- 	wl1251_free_hw(wl);
- 	regulator_disable(wl->vio);
- 
+The problem is that sometimes the AP can send _both_ 802.11h and the DTPC IE;
+the 802.11h IE seemingly because there's some kind of regulatory pressure
+(ie., “something detected on your channel, you have to go down”), and the
+DTPC IE due to the configured lower transmit power. In this case, 802.11h
+says 21 (24 - 3) dBm and DTPC 7 dBm, and we pick the former.
+
+In this situation, my current patch lets 802.11h override (on the grounds that
+it's an official standard, and that it's required for regulatory compliance),
+but it should probably do a min() of the two advertised power levels instead.
+Does this sound reasonable? I'll be sending a patch later today.
+
+/* Steinar */
 -- 
-1.9.1
-
+Homepage: http://www.sesse.net/
