@@ -1,101 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:62742 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757391AbaHGKvz (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:44903 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796AbaH2PVT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 06:51:55 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so4744798wiw.12
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 03:51:53 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ronald Wahl <ronald.wahl@raritan.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] carl9170: fix sending URBs with wrong type when using full-speed
-Date: Thu, 07 Aug 2014 12:51:39 +0200
-Message-ID: <9263316.qJ7UgtQDIG@blech> (sfid-20140807_125158_611177_8991CB54)
-In-Reply-To: <53E347D2.6050108@raritan.com>
-References: <1407403442-27268-1-git-send-email-ronald.wahl@raritan.com> <53E347D2.6050108@raritan.com>
+	Fri, 29 Aug 2014 11:21:19 -0400
+Received: by mail-ie0-f179.google.com with SMTP id tr6so2936672ieb.38
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 08:21:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <53FF9D9B.30106@hauke-m.de>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+	<3921668.sgOLRYjGUr@wuerfel>
+	<CACna6rwnz0TGZ8QgW39o4MPfXTp1a1h8naDJqEGVV4UqtkgaWw@mail.gmail.com>
+	<2859425.94ptgpItD3@wuerfel>
+	<53FF9D9B.30106@hauke-m.de>
+Date: Fri, 29 Aug 2014 17:21:18 +0200
+Message-ID: <CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com> (sfid-20140829_172122_818611_2754A01B)
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 28 August 2014 23:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 08/28/2014 01:56 PM, Arnd Bergmann wrote:
+>> On Thursday 28 August 2014 13:39:55 Rafał Miłecki wrote:
+>>> Well, that depends. Hauke was planning to put info about flash in DT.
+>>>> I think it would make sense to have a common driver that has both
+>>>> an 'early' init part used by MIPS and a regular init part used by
+>>>> ARM and potentially also on MIPS if we want. Most of the code can
+>>>> still be shared.
+>>>
+>>> OK, now it's clear what you meant.
+>>> The thing is that we may want to call probe function from
+>>> drivers/bcma/main.c. I think we never meant to call it directly from
+>>> arch code. This code in drivers/bcma/main.c is used on both: MIPS and
+>>> ARM. So I wonder if there is much sense in doing it like
+>>> #ifdev MIPS
+>>> bcm47xx_nvram_init(nvram_address);
+>>> #endif
+>>> #ifdef ARM
+>>> nvram_device.resource[0].start = nvram_address;
+>>> platform_device_register(nvram_device);
+>>> #endif
+>>>
+>>> What do you think about this?
+>>
+>> I definitely don't want to see any manual platform_device_register()
+>> calls on ARM, any device should be either a platform_device probed
+>> from DT, or a bcma_device that comes from the bcma bus.
+>>
+>> I suspect I'm still missing part of the story here. How is the
+>> nvram chip actually connected?
+>
+> I think we have to provide an own device tree for every board, like it
+> is done for other arm boards. If we do so I do not see a problem to
+> specify the nvram address space in device tree.
 
-On Thursday, August 07, 2014 11:33:06 AM Ronald Wahl wrote:
-> On 07.08.2014 11:24, Ronald Wahl wrote:
-> > +	/* We need to remember the type of endpoint 4 because it differs
-> > +	 * between high- and full-speed configuration. The high-speed
-> > +	 * configuration specifies it as interrupt and the full-speed
-> > +	 * configuration as bulk endpoint. This information is required
-> > +	 * later when sending urbs to that endpoint.
-> > +	 */
-> > +	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
-> > +		ep = &intf->cur_altsetting->endpoint[i].desc;
-> > +
-> > +		if (usb_endpoint_dir_out(ep) && usb_endpoint_num(ep) == 4)
-> > +			ar->usb_ep4_is_bulk = true;
-> > +	}
-> 
-> just after sending out that patch I have seen that I should better use 
-> AR9170_USB_EP_CMD instead of 4 when checking for the endpoint and maybe 
-> rename the flag into usb_ep_cmd_is_bulk. But before creating v2 of the 
-> patch I want to hear your comments.
+Alright, I think we should try to answer one main question at this
+point: how much data we want to put in DTS? It's still not clear to
+me.
 
-Good catch! Also: thanks for the patch! 
+What about this flash memory mapping? You added this in your RFC:
+reg = <0x1c000000 0x01000000>;
 
-my comments:
- - Patch needs a "signed-off-by: <Your Name> <Your Mail> tag"
-   (see Section 12 - Sign your work [0]) for details.
+As I described, the first part (address 0x1c000000) could be extracted
+on runtime. For that you need my patch:
+[PATCH] bcma: get & store info about flash type SoC booted from
+http://www.spinics.net/lists/linux-wireless/msg126163.html
 
- - Do you see any improvement on a fullspeed port now? 
-   (If so, this should be a stable- patch)
+And then add some simple "swtich" like:
+switch (boot_device) {
+case BCMA_BOOT_DEV_NAND:
+    nvram_address = 0x1c000000;
+    break;
+case BCMA_BOOT_DEV_SERIAL:
+    nvram_address = 0x1e000000;
+    break;
+}
 
- - CC' "John W. Linville" <linville@tuxdriver.com>
+So... should we handle it on runtime? Or do we really want this in DTS?
+I was thinking about doing this on runtime. This would limit amount of
+DTS entries and this is what makes more sense to me. The same way
+don't hardcode many other hardware details. For example we don't store
+flash size, block size, erase size in DTS. We simply use JEDEC and
+mtd's spi-nor framework database.
 
- - checkpatch.pl [0] mutters about:
-
-CHECK: Alignment should match open parenthesis
-#97: FILE: drivers/net/wireless/ath/carl9170/usb.c:626:
-+               usb_fill_bulk_urb(urb, ar->udev, usb_sndbulkpipe(ar->udev,
-+                       AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-
-CHECK: Alignment should match open parenthesis
-#101: FILE: drivers/net/wireless/ath/carl9170/usb.c:630:
-+               usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
-+                       AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-
- - code
->@@ -1050,6 +1056,21 @@ static int carl9170_usb_probe(struct usb_interface *intf,
->        ar->intf = intf;
->        ar->features = id->driver_info;
-> 
->+       /* We need to remember the type of endpoint 4 because it differs
->+        * between high- and full-speed configuration. The high-speed
->+        * configuration specifies it as interrupt and the full-speed
->+        * configuration as bulk endpoint. This information is required
->+        * later when sending urbs to that endpoint.
->+        */
->+       for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; ++i) {
->+               ep = &intf->cur_altsetting->endpoint[i].desc;
->+
->+               if (usb_endpoint_dir_out(ep) &&
->+                   usb_endpoint_num(ep) == AR9170_USB_EP_CMD)
->+                       ar->usb_ep_cmd_is_bulk =
->+                               usb_endpoint_type(ep) == USB_ENDPOINT_XFER_BULK;
-What about this:
-
-               if (usb_endpoint_num(ep) == AR9170_USB_EP_CMD &&
-                   usb_endpoint_is_bulk_out(ep))
-                       ar->usb_ep_cmd_is_bulk = true;
-(the driver context "ar" is zero'd out - It is not necessary to set 
-usb_ep_cmd_is_bulk to false.)
-
-BTW: I'll make a patch to carl9170 firmware too. 
-
-Regards
-
-Christian
-
-[0] https://www.kernel.org/doc/Documentation/SubmittingPatches
-
-
+-- 
+Rafał
