@@ -1,106 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:59682 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbaH3V0a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2014 17:26:30 -0400
-Received: by mail-wi0-f180.google.com with SMTP id ex7so4192280wid.13
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:28 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/23] staging: vt6655: create vnt_rxtx_rsvtime_le16 to return s_uGetTxRsvTime endian corrected.
-Date: Sat, 30 Aug 2014 22:25:30 +0100
-Message-Id: <1409433949-5468-4-git-send-email-tvboxspy@gmail.com> (sfid-20140830_232634_757236_8E1AC7DB)
-In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
-References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+Received: from bar.sig21.net ([80.81.252.164]:54930 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752838AbaH2OuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2014 10:50:13 -0400
+Date: Fri, 29 Aug 2014 16:50:02 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Nate Carlson <linux-wireless@natecarlson.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Borislav Boev <borislavboev@hotmail.com>, ilw@linux.intel.com
+Subject: Re: Poor wifi performance on Intel 7260 Dual-Band AC Wifi card
+Message-ID: <20140829145002.GA28486@sig21.net> (sfid-20140829_165017_853121_544B5EA5)
+References: <BAY178-W38CA42DFDD4031D453FB48CFF80@phx.gbl>
+ <53D7AEF5.5040907@lwfinger.net>
+ <alpine.DEB.2.02.1407290946100.1431@admin.chi.technicality.org>
+ <20140730110829.GA3563@sig21.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140730110829.GA3563@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace s_uGetTxRsvTime where endian correction is needed.
+On Wed, Jul 30, 2014 at 01:08:30PM +0200, Johannes Stezenbach wrote:
+> The question is how to go about testing.  ISTR the Windows 8 driver
+> didn't have any issue and gave decent speed, but I don't have the
+> time to restore the Windows image for testing now.  If Windows
+> and Linux use the same firmware I guess a comparison would
+> reveal if it's a driver of firmware issue.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+I had some spare time today to restore the Windows 8 image
+and test (praise Clonezilla!).  The test is with an AP which
+(sometimes) sends broken beacons, so the result might not be viewed
+as valid by some, but I'm just comparing performance of
+different hardware and software under the same conditions.
+https://bugzilla.kernel.org/show_bug.cgi?id=78101
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index a0b8384..627bfbd 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -366,6 +366,13 @@ s_uGetTxRsvTime(
- 		return uDataTime;
- }
- 
-+static __le16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
-+				    u32 frame_length, u16 rate, bool need_ack)
-+{
-+	return cpu_to_le16((u16)s_uGetTxRsvTime(priv, pkt_type,
-+						frame_length, rate, need_ack));
-+}
-+
- //byFreqType: 0=>5GHZ 1=>2.4GHZ
- static
- unsigned int
-@@ -1086,8 +1093,8 @@ s_vGenerateTxParameter(
- 				buf->rts_rrv_time_aa = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 2, byPktType, cbFrameSize, wCurrentRate));
- 				buf->rts_rrv_time_ba = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 1, byPktType, cbFrameSize, wCurrentRate));
- 				buf->rts_rrv_time_bb = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 0, byPktType, cbFrameSize, wCurrentRate));
--				buf->rrv_time_a = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));
--				buf->rrv_time_b = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));
-+				buf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK);
-+				buf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK);
- 			}
- 			//Fill RTS
- 			s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -1097,8 +1104,8 @@ s_vGenerateTxParameter(
- 			if (pvRrvTime) {
- 				struct vnt_rrv_time_cts *buf = pvRrvTime;
- 
--				buf->rrv_time_a = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));
--				buf->rrv_time_b = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK));
-+				buf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK);
-+				buf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate, bNeedACK);
- 				buf->cts_rrv_time_ba = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 3, byPktType, cbFrameSize, wCurrentRate));
- 			}
- 
-@@ -1112,7 +1119,7 @@ s_vGenerateTxParameter(
- 				struct vnt_rrv_time_ab *buf = pvRrvTime;
- 
- 				buf->rts_rrv_time = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 2, byPktType, cbFrameSize, wCurrentRate));
--				buf->rrv_time = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK));
-+				buf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice, byPktType, cbFrameSize, wCurrentRate, bNeedACK);
- 			}
- 			//Fill RTS
- 			s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -1121,7 +1128,7 @@ s_vGenerateTxParameter(
- 			if (pvRrvTime) {
- 				struct vnt_rrv_time_ab *buf = pvRrvTime;
- 
--				buf->rrv_time = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11A, cbFrameSize, wCurrentRate, bNeedACK));
-+				buf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11A, cbFrameSize, wCurrentRate, bNeedACK);
- 			}
- 		}
- 	} else if (byPktType == PK_TYPE_11B) {
-@@ -1131,7 +1138,7 @@ s_vGenerateTxParameter(
- 				struct vnt_rrv_time_ab *buf = pvRrvTime;
- 
- 				buf->rts_rrv_time = cpu_to_le16((u16)s_uGetRTSCTSRsvTime(pDevice, 0, byPktType, cbFrameSize, wCurrentRate));
--				buf->rrv_time = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK));
-+				buf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK);
- 			}
- 			//Fill RTS
- 			s_vFillRTSHead(pDevice, byPktType, pvRTS, cbFrameSize, bNeedACK, bDisCRC, psEthHeader, wCurrentRate, byFBOption);
-@@ -1140,7 +1147,7 @@ s_vGenerateTxParameter(
- 			if (pvRrvTime) {
- 				struct vnt_rrv_time_ab *buf = pvRrvTime;
- 
--				buf->rrv_time = cpu_to_le16((u16)s_uGetTxRsvTime(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK));
-+				buf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B, cbFrameSize, wCurrentRate, bNeedACK);
- 			}
- 		}
- 	}
--- 
-1.9.1
+Earlier today I could connect with Linux and the
+Dual Band Wireless-AC 7260 gave me <50KB/s download
+speed (fetching kernel tarball from PC connected via
+1G ethernet to the AP).  An rt2800 usb dongle on the
+same machine gave me ~2.5MB/s.  Currently Linux
+cannot connect at all (see bug 78101) due to the
+broken beacon.
 
+With Windows 8 (Driver Version 16.10.0.5, Driver Date 1/28/2014)
+I had no problems to connect, and got ~400KB/s download speed.
+(I confirmed via capture on the PC that the beacons
+were broken in the way described in bug 78101 during this test.)
+The rt2800 usb dongle gave me 2.4MB/s in Windows.
+
+I couldn't reboot the AP today to see if and how much
+the performance improves when the beacons are not broken.
+I'll do that when I have time.  In the past, rebooting
+the AP did fix the connection issue (good beacon for some time),
+but did not turn the AC 7260 into a speed demon with the
+Linux driver.
+
+The AP only supports 2.4Ghz band 802.11n.
+
+> Otherwise I'm hoping Intel guys could provide some guidance for
+> testing so we could find the root cause.
+
+So far Intel did not show much interest in the issue, but
+a laptop user often has no control on the AP (travelling,
+hotels, conferences, etc.).  IMHO Intel would their users
+a big favor if they spent some time optimizing for bad
+network conditions.  The broken AP on my side will be
+replaced soon, but that's not the point of my complaint.
+
+
+Thanks,
+Johannes
