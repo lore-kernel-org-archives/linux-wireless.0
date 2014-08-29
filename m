@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta12.messagelabs.com ([216.82.251.3]:22432 "EHLO
-	mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934238AbaH1I2z (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:36078 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753030AbaH2TXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2014 04:28:55 -0400
-Message-ID: <53FEE812.2090402@netcommwireless.com> (sfid-20140828_102859_934015_629BF065)
-Date: Thu, 28 Aug 2014 18:28:02 +1000
-From: Sourav <sourav.chakraborty@netcommwireless.com>
+	Fri, 29 Aug 2014 15:23:50 -0400
 MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-Subject: performance difference
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <5400C3E8.9040500@broadcom.com>
+References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
+	<5400C3E8.9040500@broadcom.com>
+Date: Fri, 29 Aug 2014 21:23:48 +0200
+Message-ID: <CAMuHMdXahUGQ1-4SvkCnt=BrAn6_Xge7RzieR2K8gDmj_pC-kw@mail.gmail.com> (sfid-20140829_212411_223188_E0241148)
+Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-We are using Ralink chip 3070 (using rt2800usb drivers rt2800usb.c), 
-mac80211, and hostapd in our routers. When we are measuring performance 
-using iperf, we see ~10Mbps which is around half of when we use rt3070 
-drivers(rt3070.c). Please suggest a reason as to why we are seeing this 
-performance difference.
+Hi Franky,
 
-Are there any mechanisms to tune performance using open source 
-modules(hostapd and mac80211)?
+On Fri, Aug 29, 2014 at 8:18 PM, Franky Lin <frankyl@broadcom.com> wrote:
+>>   config BRCMFMAC
+>>         tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
+>> -       depends on CFG80211
+>> +       depends on CFG80211A && HAS_DMA
+>>         select BRCMUTIL
+>>         ---help---
+>>           This module adds support for embedded wireless adapters based on
+>
+> Thanks for reporting this. All complaints are from msgbuf code. So the
+> dependency should belong to BRCMFMAC_PCIE not BRCMFMAC.
 
--- 
-Warm Regards,
-Sourav
+I have PCI=n, hence BRCMFMAC_PCIE=n.
 
+IIRC, I did try adding the HAS_DMA dependencies to the suboptions,
+but then it still failed to link. Hence I restored to the main BRCMFMAC.
 
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
+Besides, msgbuf.o is part of the core.
+I've just tried moving it to brcmfmac-$(CONFIG_BRCMFMAC_PCIE),
+but that doesn't help. Other parts use msgbuf, too.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
