@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2641 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbaHIGda (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:45885 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaH2KDP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2014 02:33:30 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: Reporting firmware stats to ethtool
-References: <53E3F65D.8080102@candelatech.com>
-	<87wqajz6yg.fsf@kamboji.qca.qualcomm.com>
-	<53E4EFCB.5090501@candelatech.com>
-	<CAA93jw429GCjwiD0FQNFudZ0RDEKShZh4iiuOP+g+PpRjFNT7Q@mail.gmail.com>
-	<53E4F6B8.50009@candelatech.com> <53E4FEA9.80803@broadcom.com>
-	<53E507EB.7030703@candelatech.com>
-Date: Sat, 9 Aug 2014 09:32:56 +0300
-In-Reply-To: <53E507EB.7030703@candelatech.com> (Ben Greear's message of "Fri,
-	8 Aug 2014 10:24:59 -0700")
-Message-ID: <87r40quq93.fsf@kamboji.qca.qualcomm.com> (sfid-20140809_083333_293580_B3B94B3D)
+	Fri, 29 Aug 2014 06:03:15 -0400
+Received: by mail-we0-f182.google.com with SMTP id w62so1960649wes.13
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2014 03:03:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1409256330.2505.13.camel@jlt4.sipsolutions.net>
+References: <1409225636-23923-1-git-send-email-michal.kazior@tieto.com>
+	<1409256330.2505.13.camel@jlt4.sipsolutions.net>
+Date: Fri, 29 Aug 2014 12:03:13 +0200
+Message-ID: <CA+BoTQ=W7Aokeg3XGTxbr5dRZxu5bNYht_xbSVpaKLfwKcH+0Q@mail.gmail.com> (sfid-20140829_120318_658812_EE474231)
+Subject: Re: [PATCH] mac80211: fix offloaded BA session traffic after hw restart
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
-
->> Does ath driver notify mac80211 about firmware restart, ie. through
->> ieee80211_restart_hw(). If only user-space could get that info.
+On 28 August 2014 22:05, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-08-28 at 13:33 +0200, Michal Kazior wrote:
 >
-> We should soon have a udev event on firmware crash
+>> Instead of last_seq pick seqno of a first Rxed
+>> frame of a given BA session.
+>
+> Any way to do this without touching the RX path? It's kinda a hotpath :)
 
-Who should send the event, the driver or mac80211? I'm not very familiar
-with udev stuff, what kind of rules there are for udev events?
+Perhaps we could push this to the driver, i.e. export
+ieee80211_set_rx_ba_session_ssn() so a driver can update the
+ssn/head_seq_num on its own. It would then first request an offloaded
+BA and when it sees first frame for that BA it would update the ssn
+before calling ieee80211_rx(). This way other drivers won't be
+bothered with cruft on the Rx path. The function would have to be
+called within a softirq/tasklet/timer unless reorder_lock locking goes
+_bh.
 
-> A simple restart (w/out crash) might not be so interesting?
+I'm worried how a driver would map Rxed frames to a vifs though. I
+could probably do it in ath10k indirectly via peer ids mapping but
+that would involve more resources than the current approach does.
 
-Yeah, we should not report that. ath10k stops the firmware on interface
-down and starts it again on interface up which is business as usual.
+Is putting an extra if() in the Rx path really worth the concern? I'd
+expect branch prediction to take care of this nicely. I guess I could
+add an unlikely() too.
 
-> Might be nice to have a fw restart and fw crash counter in ethtool
-> stats in case something wants to poll that instead of dealing with
-> uevents. I will add those counters.
 
-Yeah, those would be great to have.
-
--- 
-Kalle Valo
+Michał
