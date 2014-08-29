@@ -1,53 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward11.mail.yandex.net ([95.108.130.93]:38764 "EHLO
-	forward11.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbaHDLFE (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:29634 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642AbaH2GyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 07:05:04 -0400
-From: =?koi8-r?B?4c7E0sXF1yDzxdLHxco=?= <flat343@yandex.ru>
-To: Larry Finger <larry.finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <53DE6036.1000903@lwfinger.net>
-References: <6570401407065155@web18g.yandex.ru> <53DE6036.1000903@lwfinger.net>
-Subject: Re: Problem with wpasupplicant using nl80211 driver for wi-fi stick with REALTEK 8188 chipset
+	Fri, 29 Aug 2014 02:54:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add testmode
+References: <20140828072642.14691.44313.stgit@potku.adurom.net>
+	<20140828073041.14691.15099.stgit@potku.adurom.net>
+	<CA+BoTQk40V_t6M8MEwk77cUtmHpEXR3FKBgonb0T+yDX59B+gw@mail.gmail.com>
+Date: Fri, 29 Aug 2014 09:54:03 +0300
+In-Reply-To: <CA+BoTQk40V_t6M8MEwk77cUtmHpEXR3FKBgonb0T+yDX59B+gw@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 28 Aug 2014 12:35:50 +0200")
+Message-ID: <87sikfss50.fsf@kamboji.qca.qualcomm.com> (sfid-20140829_085413_682450_8D2D307A)
 MIME-Version: 1.0
-Message-Id: <9590711407149913@web26j.yandex.ru> (sfid-20140804_130508_676843_4EBBD2BF)
-Date: Mon, 04 Aug 2014 14:58:33 +0400
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good day to all, 
-Thank you Larry, 
-lsusb gives the following output:
-Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter. 
-There is some problem with wpa_supplicant using nl80211 with this wi-fi dongle. Folks say that WEXT dirver works fine but I can not figure out how to remove usage on nl80211 completely...
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-03.08.2014, 20:15, "Larry Finger" <Larry.Finger@lwfinger.net>:
-> On 08/03/2014 06:25 AM, áÎÄÒÅÅ× óÅÒÇÅÊ wrote:
->> šHello,
->> šA lot of folks experience problems with wpa_supplicant using nl80211 driver - tha does not work.
->> šThe particular problem is experienced on raspberry pi with wi-fi adapter on Realtek 8188 chipset.
->> šThe syslog shows the following lines:
->> ššwpa_supplicant[1118]: nl80211: 'nl80211' generic netlink not found
->> ššraspbmc wpa_supplicant[1118]: Failed to initialize driver 'nl80211'
->> ššraspbmc wpa_supplicant[1118]: rfkill: Cannot open RFKILL control device
->>
->> šI have tired to modify /etc/wpa_suppicant/functions.sh and remove nl80211 completely from code and leave only wext driver but that does not work.
->> šWould appreciate any ideas what the problem could be.
->>
->> šOS version: raspbian 3.12.21
->>
->> šWPA supplicant version: 1.0-3
+> On 28 August 2014 09:30, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> @@ -2483,8 +2484,12 @@ static int ath10k_start(struct ieee80211_hw *hw)
+>>         case ATH10K_STATE_RESTARTED:
+>>         case ATH10K_STATE_WEDGED:
+>>                 WARN_ON(1);
+>> +               /* fall through */
 >
-> What exactly do you mean by an 8188 chip? There are RTL8188EE, RTL8188CE, and
-> RTL8188EU chips? You likely mean the last one, as the first two PCI chips have
-> mac80211 drivers.
+> Fall through? I see there's a goto ahead..
+>>                 ret = -EINVAL;
+>>                 goto err;
+
+Fixed.
+
+>> +/* "API" level of the ath10k testmode interface. Bump it after every
+>> + * incompatible interface change. */
 >
-> If you want to use nl80211/cfg80211 commands with driver r8188eu, you will need
-> to add the necessary code for that driver to support that API. Modifying the
-> supplicant is probably not the way to go.
+> I recall we reached a conclusion to use the following multiline
+> comment style in ath10k:
 >
-> On my x86_64 system, the standard supplicant works with NetworkManager and r8188eu.
+> /* Foo
+>  * Bar
+>  */
 >
-> Larry
+> Ah, here it is: http://www.spinics.net/lists/linux-wireless/msg123419.html
+>
+> But this isn't really important.
+
+I fixed all the multiline comments now.
+
+And I did remember that we agreed about this but I just forgot how it's
+supposed to look :) To be able to reasily refresh my memory I documented
+this to the wiki:
+
+http://wireless.kernel.org/en/users/Drivers/ath10k/CodingStyle#Comments
+
+>> +       if (ar->testmode.utf != NULL)
+>> +               /* utf image is already downloaded */
+>> +               goto power_up;
+>> +
+>> +
+>
+> 2 empty newlines.
+
+Fixed.
+
+>> +       snprintf(filename, sizeof(filename), "%s/%s",
+>> +                ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
+>> +
+>> +       /* load utf image now and release only when the device is removed */
+>> +       ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
+>> +       if (ret) {
+>> +               ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
+>> +                           filename, ret);
+>> +               goto out;
+>> +       }
+>> +
+>> +       BUILD_BUG_ON(sizeof(ar->fw_features) !=
+>> +                    sizeof(ar->testmode.orig_fw_features));
+>> +
+>
+>> +       memcpy(ar->testmode.orig_fw_features, ar->fw_features,
+>> +              sizeof(ar->fw_features));
+>> +
+>> +       /* force to use correct version of WMI interface */
+>> +       memset(ar->fw_features, 0, sizeof(ar->fw_features));
+>> +       __set_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features);
+>
+> I'm a little worried about this.
+
+Yeah, this is an ugly hack. But at the same time I don't see much point
+of changing the rest of driver just because of testmode.
+
+> First of all the comment doesn't really explain why this is done, i.e.
+> utf.bin isn't FW IE encapsulated and as such fw_features are unknown.
+
+I'll add that.
+
+> And then what about utf binaries which use 10.2 WMI? Or non-10.x WMI?
+
+Right now I don't see any use of that. Think of this like FW API 1 where
+we don't have any IE support.
+
+>> +power_up:
+>> +       spin_lock_bh(&ar->data_lock);
+>> +
+>> +       ar->testmode.utf_monitor = true;
+>> +
+>> +       spin_unlock_bh(&ar->data_lock);
+>> +
+>> +       ret = ath10k_hif_power_up(ar);
+>> +       if (ret) {
+>> +               ath10k_err(ar, "failed to power up hif (testmode): %d\n", ret);
+>> +               ar->state = ATH10K_STATE_OFF;
+>> +               goto out;
+>> +       }
+>> +
+>> +       ret = ath10k_core_start(ar, ATH10K_FIRMWARE_MODE_UTF);
+>> +       if (ret) {
+>> +               ath10k_err(ar, "failed to start core (testmode): %d\n", ret);
+>> +               ath10k_hif_power_down(ar);
+>> +               ar->state = ATH10K_STATE_OFF;
+>> +               goto out;
+>> +       }
+>
+> You don't seem to be freeing firmware on failure here. I'm aware
+> ath10k_testmode_destroy() takes care of it but if you happen to use a
+> defect fw (or hit some kind of a fw-hw combination bug) each
+> subsequent utf start will re-use the firmware binary - it won't
+> re-read the binary (giving you a chance to replace utf binary with a
+> different one) unless you reload the whole module or re-bind the
+> device<->driver via sysfs or physically.
+
+That's a clear bug, will fix.
+
+>> +static int ath10k_tm_cmd_wmi(struct ath10k *ar, struct nlattr *tb[])
+>> +{
+>> +       struct sk_buff *skb;
+>> +       int ret, buf_len;
+>> +       u32 cmd_id;
+>> +       void *buf;
+>> +
+>> +       mutex_lock(&ar->conf_mutex);
+>> +
+>> +       if (ar->state != ATH10K_STATE_UTF) {
+>> +               ret = EHOSTDOWN;
+>
+> Shouldn't this be a negative number?
+
+Fixed.
+
+> Also ath10k_tm_cmd_utf_stop() uses -ENETDOWN for this case.
+
+I changed this to -ENETDOWN also.
+
+-- 
+Kalle Valo
