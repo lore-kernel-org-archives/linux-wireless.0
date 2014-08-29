@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:56642 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487AbaHCPCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2014 11:02:31 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1XDxIr-0007lU-9V
-	for linux-wireless@vger.kernel.org; Sun, 03 Aug 2014 17:02:29 +0200
-Received: from p5dd56dbd.dip0.t-ipconnect.de ([93.213.109.189])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 17:02:29 +0200
-Received: from Manuel.Spam by p5dd56dbd.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2014 17:02:29 +0200
-To: linux-wireless@vger.kernel.org
-From: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Subject: Re: Problems with rtl8192cu driver (disassociated from ... (Reason:
- 2))
-Date: Sun, 03 Aug 2014 17:02:18 +0200
-Message-ID: <lrlitq$9na$1@ger.gmane.org> (sfid-20140803_170254_145525_8D1694ED)
-References: <lrjs9d$s51$1@ger.gmane.org> <1407068037.29448.12.camel@w7>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-In-Reply-To: <1407068037.29448.12.camel@w7>
+Received: from s72.web-hosting.com ([198.187.29.22]:53705 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbaH2GGl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2014 02:06:41 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k: Fix beacons for managed mode
+Date: Fri, 29 Aug 2014 11:36:54 +0530
+Message-Id: <1409292414-3308-1-git-send-email-sujith@msujith.org> (sfid-20140829_080644_484036_4EF3AC34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/03/2014 02:13 PM, Steve Brown wrote:
-> I had a similar problem with this driver.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Thank you very much for this feedback.
+If the current opmode is managed, the ATH_OP_BEACONS flag
+needs to be set only when there is a primary station interface
+and it is associated/active.
 
-Searching for 'rtl8192cu "Reason 2"' on the net reveals more cases for 
-such problems. For example:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://dev.openwrt.org/ticket/15342
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220007
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=661860
-
-So in other words: Seems like rtl8192cu driver is broken.
-
-And as I am unable to fix it, I'll have to try to find a WLAN interface 
-with better Linux support.
-
-> After a while, the aggregation
-> session seems to hang. If I connect as b/g, no problem. If I disable
-> aggregation by patching the driver, again the problem goes away.
-
-What exactly is "b/g"?
-
-Greetings,
-
-Manuel
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d9be831..0b3d4d8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1067,8 +1067,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	if (ah->opmode == NL80211_IFTYPE_STATION) {
+ 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
+ 
+-		iter_data.beacons = true;
+ 		if (iter_data.primary_sta) {
++			iter_data.beacons = true;
+ 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
+ 					      changed);
+ 			if (!ctx->primary_sta ||
+-- 
+2.1.0
 
