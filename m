@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata.ens-lyon.fr ([140.77.166.68]:43593 "EHLO
-	toccata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933466AbaHYViO (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:40506 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbaH2MTY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2014 17:38:14 -0400
-Date: Mon, 25 Aug 2014 23:37:52 +0200
-From: Samuel Thibault <samuel.thibault@ens-lyon.org>
-To: Sabrina Dubroca <sd@queasysnail.net>, Valdis.Kletnieks@vt.edu,
-	Hugh Dickins <hughd@google.com>,
-	Vincent Donnefort <vdonnefort@gmail.com>,
-	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 3.17-rc1: leds blink workqueue causes sleeping BUGs
-Message-ID: <20140825213752.GD3070@type.youpi.perso.aquilenet.fr> (sfid-20140825_233818_206317_4D8B842A)
-References: <alpine.LSU.2.11.1408161946450.1064@eggly.anvils>
- <10857.1408467967@turing-police.cc.vt.edu>
- <20140825211340.GA22168@kria>
- <20140825212324.GC3070@type.youpi.perso.aquilenet.fr>
+	Fri, 29 Aug 2014 08:19:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add device/driver strings to tracepoints
+References: <1409231135-16233-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 29 Aug 2014 15:19:18 +0300
+In-Reply-To: <1409231135-16233-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 28 Aug 2014 15:05:35 +0200")
+Message-ID: <877g1rsd2x.fsf@kamboji.qca.qualcomm.com> (sfid-20140829_141928_686466_1B60C9C7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20140825212324.GC3070@type.youpi.perso.aquilenet.fr>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Samuel Thibault, le Mon 25 Aug 2014 23:23:24 +0200, a écrit :
-> We could indeed have a loop if the user was making the VT::* leds use
-> the vt-* trigger,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Actually, while there can be a loop, it wouldn't be possible to inject
-events in it: a VT::* led only makes the corresponding vt-* trigger if
-it got an event from its trigger, etc. So it's really a false positive,
-the lock detector just can not know that it can not happen.
+> This makes it easier to log and debug via tracing
+> with more than 1 ath10k device on a system.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> Not sure if pulling core.h in trace.h and using ar
+> pointer is the best approach here. Alternative is
+> to not pull core.h and pass ar->dev directly to
+> trace functions. Thoughts?
 
-Samuel
+I can't really say, I'm not that familiar with the tracing stuff. To
+this approach looks good but let's see what others say (if anything).
+
+-- 
+Kalle Valo
