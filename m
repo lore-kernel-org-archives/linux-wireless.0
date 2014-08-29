@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48722 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754750AbaHKULG (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28810 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbaH2Oh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2014 16:11:06 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: [PATCH 1/2] iwlwifi: Remove module build requirement for Intel Wireless WiFi DVM
-Date: Mon, 11 Aug 2014 22:11:35 +0200
-Message-Id: <1407787896-52455-1-git-send-email-marcel@holtmann.org> (sfid-20140811_221110_509815_D2F2B8E2)
+	Fri, 29 Aug 2014 10:37:57 -0400
+Message-ID: <54009042.6070309@broadcom.com> (sfid-20140829_163800_570655_6846F742)
+Date: Fri, 29 Aug 2014 16:37:54 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add testmode
+References: <20140828072642.14691.44313.stgit@potku.adurom.net>	<20140828073041.14691.15099.stgit@potku.adurom.net>	<878um9ujn1.fsf@kamboji.qca.qualcomm.com>	<53FEFEDE.5030505@broadcom.com> <87y4u7suhu.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87y4u7suhu.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CONFIG_IWLDVM currently has a "depends on m" as its requirement
-forcing it to be build as module. This is not needed and thus just
-remove it.
+On 08/29/14 08:03, Kalle Valo wrote:
+> Arend van Spriel<arend@broadcom.com>  writes:
+>
+>> On 08/28/14 10:02, Kalle Valo wrote:
+>>> Kalle Valo<kvalo@qca.qualcomm.com>   writes:
+>>
+>>> Johannes suggested to put this to a separate file as that way it's
+>>> easier for the user space. In v3 I'm planning to create testmode_uapi.h
+>>> for this.
+>>
+>> I suppose that file will/should end up in include/uapi/...
+>
+> I was thinking not to put this to the include directory. This is just a
+> testmode interface used only by few people, not a proper driver
+> interface.
 
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
----
- drivers/net/wireless/iwlwifi/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+I see. In that case I would avoid the term 'uapi'. I think it will 
+impose certain expectations.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 6451d2b6abcf..9cc33e13690b 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -51,7 +51,6 @@ config IWLWIFI_LEDS
- 
- config IWLDVM
- 	tristate "Intel Wireless WiFi DVM Firmware support"
--	depends on m
- 	default IWLWIFI
- 	help
- 	  This is the driver that supports the DVM firmware which is
--- 
-1.9.3
+>> so wouldn't it be better to call it ath10k_testmode.h?
+>
+> We already have testmode.h so having ath10k_testmode.h in the same
+> directory would be confusing. Would testmode_i.h be any better?
 
+What does it contain? Looks like command and attribute definitions for 
+your testmode support. Maybe testmode_defs.h? As long as it is not uapi.
+
+Regards,
+Arend
