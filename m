@@ -1,53 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:41125 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbaHENFz (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:48949 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbaH3Spo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2014 09:05:55 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so6869800wib.4
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2014 06:05:53 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 0/2] ath10k: scan fixes 2014-07-21
-Date: Tue,  5 Aug 2014 14:54:42 +0200
-Message-Id: <1407243284-19803-1-git-send-email-michal.kazior@tieto.com> (sfid-20140805_150559_043177_F5560425)
+	Sat, 30 Aug 2014 14:45:44 -0400
+Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
+	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XNneh-0001kS-5o
+	for linux-wireless@vger.kernel.org; Sat, 30 Aug 2014 20:45:43 +0200
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XNneg-0008UP-Uj
+	for linux-wireless@vger.kernel.org; Sat, 30 Aug 2014 20:45:42 +0200
+In-Reply-To: <20140830184516.GA31497@sesse.net>
+References: <20140830184516.GA31497@sesse.net>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Date: Fri, 29 Aug 2014 19:27:53 +0200
+Subject: [PATCH 1/2] mac80211: split 802.11h parsing from transmit power
+ policy
+To: linux-wireless@vger.kernel.org
+Message-Id: <E1XNneg-0008UP-Uj@pannekake.samfundet.no> (sfid-20140830_204547_436269_21F687A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This addresses an issue found by Janusz with
-current spectral scan patches from Simon.
+Decouple the logic of parsing the 802.11d and 802.11h IEs from the
+part of deciding what to do about the data (messaging, clamping to
+0 dBm, doing the actual setting). This paves the way for the next
+patch, which introduces more data sources for transmit power limitation.
 
-This goes along patch `ath10k: prevent endless pci rx
-loop` I've posted a few days ago.
+Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
+---
+ net/mac80211/mlme.c |   61 +++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 42 insertions(+), 19 deletions(-)
 
-There seems to be a condition in firmware which
-causes some WMI events to be not delivered by
-firmware to host most likely due to CE/PCI pipe
-being full (that's a guess judging by the huge
-amount of phyerrs reported and their behaviour
-while spectral scan is enabled). This also
-suggests some SWBA events may be dropped by
-firmware when spectral scan is running (same goes
-for management rx).
-
-v2:
- * addressed some comments from Kalle
- * fixed a few more issues
-
-
-Michal Kazior (2):
-  ath10k: simplify scan debug prints
-  ath10k: introduce a stricter scan state machine
-
- drivers/net/wireless/ath/ath10k/core.c |   5 +-
- drivers/net/wireless/ath/ath10k/core.h |  27 +++-
- drivers/net/wireless/ath/ath10k/mac.c  | 238 ++++++++++++++++++++-------------
- drivers/net/wireless/ath/ath10k/mac.h  |   4 +-
- drivers/net/wireless/ath/ath10k/wmi.c  | 208 +++++++++++++++++++---------
- 5 files changed, 317 insertions(+), 165 deletions(-)
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b82a12a..524c7cc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1157,19 +1157,22 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME(csa_ie.count * cbss->beacon_interval));
+ }
+ 
+-static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+-				       struct ieee80211_channel *channel,
+-				       const u8 *country_ie, u8 country_ie_len,
+-				       const u8 *pwr_constr_elem)
++static bool ieee80211_find_80211h_pwr_constr(
++	struct ieee80211_sub_if_data *sdata,
++	struct ieee80211_channel *channel,
++	const u8 *country_ie, u8 country_ie_len,
++	const u8 *pwr_constr_elem,
++	int *chan_pwr,
++	int *pwr_reduction)
+ {
+ 	struct ieee80211_country_ie_triplet *triplet;
+ 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
+-	int i, chan_pwr, chan_increment, new_ap_level;
++	int i, chan_increment;
+ 	bool have_chan_pwr = false;
+ 
+ 	/* Invalid IE */
+ 	if (country_ie_len % 2 || country_ie_len < IEEE80211_COUNTRY_IE_MIN_LEN)
+-		return 0;
++		return false;
+ 
+ 	triplet = (void *)(country_ie + 3);
+ 	country_ie_len -= 3;
+@@ -1197,7 +1200,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		for (i = 0; i < triplet->chans.num_channels; i++) {
+ 			if (first_channel + i * chan_increment == chan) {
+ 				have_chan_pwr = true;
+-				chan_pwr = triplet->chans.max_power;
++				*chan_pwr = triplet->chans.max_power;
+ 				break;
+ 			}
+ 		}
+@@ -1209,18 +1212,41 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		country_ie_len -= 3;
+ 	}
+ 
+-	if (!have_chan_pwr)
+-		return 0;
++	if (have_chan_pwr)
++		*pwr_reduction = *pwr_constr_elem;
++	return have_chan_pwr;
++}
+ 
+-	new_ap_level = max_t(int, 0, chan_pwr - *pwr_constr_elem);
++static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_channel *channel,
++					struct ieee80211_mgmt *mgmt,
++					const u8 *country_ie, u8 country_ie_len,
++					const u8 *pwr_constr_ie)
++{
++	bool has_80211h_pwr = false;
++	int chan_pwr, pwr_reduction_80211h;
++	int new_ap_level;
+ 
+-	if (sdata->ap_power_level == new_ap_level)
++	if (country_ie && pwr_constr_ie &&
++	    mgmt->u.probe_resp.capab_info &
++		cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT)) {
++		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
++			sdata, channel, country_ie, country_ie_len,
++			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
++		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
++	}
++
++	if (!has_80211h_pwr)
+ 		return 0;
+ 
+ 	sdata_info(sdata,
+ 		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+-		   new_ap_level, chan_pwr, *pwr_constr_elem,
++		   new_ap_level, chan_pwr, pwr_reduction_80211h,
+ 		   sdata->u.mgd.bssid);
++
++	if (sdata->ap_power_level == new_ap_level)
++		return 0;
++
+ 	sdata->ap_power_level = new_ap_level;
+ 	if (__ieee80211_recalc_txpower(sdata))
+ 		return BSS_CHANGED_TXPOWER;
+@@ -3190,13 +3216,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 					    rx_status->band, true);
+ 	mutex_unlock(&local->sta_mtx);
+ 
+-	if (elems.country_elem && elems.pwr_constr_elem &&
+-	    mgmt->u.probe_resp.capab_info &
+-				cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT))
+-		changed |= ieee80211_handle_pwr_constr(sdata, chan,
+-						       elems.country_elem,
+-						       elems.country_elem_len,
+-						       elems.pwr_constr_elem);
++	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
++					       elems.country_elem,
++					       elems.country_elem_len,
++					       elems.pwr_constr_elem);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
 -- 
-1.8.5.3
+1.7.10.4
 
