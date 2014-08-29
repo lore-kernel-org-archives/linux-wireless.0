@@ -1,164 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from test.hauke-m.de ([5.39.93.123]:45946 "EHLO test.hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754560AbaHZVcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2014 17:32:35 -0400
-Message-ID: <53FCFCF0.2010704@hauke-m.de> (sfid-20140826_233239_433434_D541FF97)
-Date: Tue, 26 Aug 2014 23:32:32 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mout.kundenserver.de ([212.227.17.13]:62949 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892AbaH2HMm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2014 03:12:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+Date: Fri, 29 Aug 2014 09:12:37 +0200
+Message-ID: <2928362.8a0siS8rnK@wuerfel> (sfid-20140829_091245_613740_1C93BBA1)
+In-Reply-To: <53FF9D9B.30106@hauke-m.de>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <2859425.94ptgpItD3@wuerfel> <53FF9D9B.30106@hauke-m.de>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-CC: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-mips@linux-mips.org, zajec5@gmail.com
-Subject: Re: [RFC 3/7] bcm47xx-sprom: add Broadcom sprom parser driver
-References: <1408915485-8078-1-git-send-email-hauke@hauke-m.de> <1408915485-8078-5-git-send-email-hauke@hauke-m.de> <8344390.rjnOcYBCET@wuerfel>
-In-Reply-To: <8344390.rjnOcYBCET@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2014 09:52 AM, Arnd Bergmann wrote:
-> On Sunday 24 August 2014 23:24:41 Hauke Mehrtens wrote:
->> This driver needs an nvram driver and fetches the sprom values from the
->> nvram and provides it to any other driver. The calibration data for the
->> wifi chip the mac address and some more board description data is
->> stores in the sprom.
->>
->> This is based on a copy of arch/mips/bcm47xx/sprom.c and my plan is to
->> make the bcm47xx MIPS SoCs also use this driver some time later.
+On Thursday 28 August 2014 23:22:35 Hauke Mehrtens wrote:
 > 
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  .../devicetree/bindings/misc/bcm47xx-sprom.txt     |  16 +
-> 
-> I'd prefer not to list the binding in a 'misc' category. Maybe we can
-> have a new category and move the misc/sram.txt into the same?
-> 
->>  drivers/misc/Kconfig                               |  14 +
->>  drivers/misc/Makefile                              |   1 +
->>  drivers/misc/bcm47xx-sprom.c                       | 690 +++++++++++++++++++++
-> 
-> On a similar note, putting the driver into drivers/misc seems
-> suboptimal: misc drivers should by definition be something that
-> is for some odd hardware with no external dependencies on it,
-> whereas your driver seems to be used by multiple other drivers.
-> 
-> Would it make sense to put it into drivers/bcma when that is the
-> only bus it is used on?
+> I think we have to provide an own device tree for every board, like it
+> is done for other arm boards. If we do so I do not see a problem to
+> specify the nvram address space in device tree.  I do not think the arm
+> guys do like some board files containing the gpio numbers of the leds
+> and buttons found on the board.
 
-As Jonas already said this code should be used for the bcm53xx ARM code
-and the bcm47xx MIPS code and it is needed for drivers/bcma/ and
-drivers/ssb/ (ssb only for old mips devices). Do you have any better
-idea than putting this to drivers/misc/ ? For the mips SoC we need the
-code very early and will not use the driver interface but probably
-directly call the function name.
-> 
->>  4 files changed, 721 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/misc/bcm47xx-sprom.txt
->>  create mode 100644 drivers/misc/bcm47xx-sprom.c
->>
->> diff --git a/Documentation/devicetree/bindings/misc/bcm47xx-sprom.txt b/Documentation/devicetree/bindings/misc/bcm47xx-sprom.txt
->> new file mode 100644
->> index 0000000..eed2a4a
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/misc/bcm47xx-sprom.txt
->> @@ -0,0 +1,16 @@
->> +Broadcom bcm47xx/bcm53xx sprom converter
->> +
->> +This driver provbides an sprom based on a given nvram.
->> +
->> +Required properties:
->> +
->> +- compatible : brcm,bcm47xx-sprom
-> 
-> Please use a specific SoC here as the compatible string, not something
-> with 'x' in it as a wildcard.
+Ok. The part I'm not sure about is how to best represent the nvram
+in a way that matches the actual hardware.
 
-I will change that.
+If the two physical address ranges are just used for the purpose
+of showing nvram, that would be fairly straightforward, and we
+can jut put both of them in DT, mark them as 'status="disabled"'
+by default and let the board specific file enable the one it needs.
 
-> 
->> +#define NVRAM_READ_VAL(type)						\
->> +static void nvram_read_ ## type (const struct bcm47xx_sprom_fill *fill,	\
->> +				 const char *postfix, const char *name, \
->> +				 type *val, type allset)		\
->> +{									\
->> +	char buf[100];							\
->> +	int err;							\
->> +	type var;							\
->> +									\
->> +	err = get_nvram_var(fill, postfix, name, buf, sizeof(buf));	\
->> +	if (err < 0)							\
->> +		return;							\
->> +	err = kstrto ## type(strim(buf), 0, &var);			\
->> +	if (err) {							\
->> +		pr_warn("can not parse nvram name %s%s%s with value %s got %i\n",	\
->> +			fill->prefix, name, postfix, buf, err);		\
->> +		return;							\
->> +	}								\
->> +	if (allset && var == allset)					\
->> +		return;							\
->> +	*val = var;							\
->> +}
->> +
->> +NVRAM_READ_VAL(u8)
->> +NVRAM_READ_VAL(s8)
->> +NVRAM_READ_VAL(u16)
->> +NVRAM_READ_VAL(u32)
->> +
->> +#undef NVRAM_READ_VAL
-> 
-> Hmm, multiline macros are ugly. How about using one function to read
-> into an s64 internally using kstrtoll, and simple inline wrappers around
-> that for the smaller types, doing the appropriate range check?
+However, if these registers really belong into the address range
+that is owned by the flash controller device and that is behind
+the bcma bus logic, things get a little tricky and we have to decide
+whether we want to intentionally put a simplified (and incorrect)
+description into the DT to make it easier to use, or to make
+the description more correct at the expense of complicating the
+code to detect it (thereby negating the intention of this hardware,
+which is built to make it easier to boot).
 
-Yes that should work I will try it.
+> For the MIPS version of BCM47xx we are able to automatically detect
+> mostly everything, just for the gpio configuration we try to guess the
+> board name based on nvram content and then configure the gpios.
 
->> +static void bcm47xx_sprom_fill_r1234589(struct ssb_sprom *sprom,
->> +					const struct bcm47xx_sprom_fill *fill)
->> +{
->> +	nvram_read_u16(fill, NULL, "devid", &sprom->dev_id, 0);
->> +	nvram_read_u8(fill, NULL, "ledbh0", &sprom->gpio0, 0xff);
->> +	nvram_read_u8(fill, NULL, "ledbh1", &sprom->gpio1, 0xff);
->> +	nvram_read_u8(fill, NULL, "ledbh2", &sprom->gpio2, 0xff);
->> +	nvram_read_u8(fill, NULL, "ledbh3", &sprom->gpio3, 0xff);
->> +	nvram_read_u8(fill, NULL, "aa2g", &sprom->ant_available_bg, 0);
->> +	nvram_read_u8(fill, NULL, "aa5g", &sprom->ant_available_a, 0);
->> +	nvram_read_s8(fill, NULL, "ag0", &sprom->antenna_gain.a0, 0);
->> +	nvram_read_s8(fill, NULL, "ag1", &sprom->antenna_gain.a1, 0);
->> +	nvram_read_alpha2(fill, "ccode", sprom->alpha2);
->> +}
-> 
-> Rather than calling the same set of functions multiple times, can you
-> do this using a table driven approach for smaller code size and
-> improved readability?
+We could still do something like this with a boot wrapper that fills
+the fields in the dtb from nvram data. We are pretty flexible in
+the kernel when it comes to how that dtb is created, and there is no
+requirement to have each board's dts file be part of the kernel sources
+if there is some pre-kernel environment (firmware, boot loader,
+wrapper, ...) that can generate it for us.
 
-I will try to change that.
+> The ARM BCM47xx contains a standard ARM with GIC and other standard arm
+> things just the flash, Ethernet, PCIe, USB controller and their
+> interconnection are Braodcom specific.
 
->> +static int bcm47xx_sprom_probe(struct platform_device *pdev)
->> +{
->> +	struct device *dev = &pdev->dev;
->> +	struct device_node *np = dev->of_node;
->> +	struct ssb_sprom *sprom;
->> +	const __be32 *handle;
->> +	struct device_node *nvram_node;
->> +	struct platform_device *nvram_dev;
->> +	struct bcm47xx_sprom_fill fill;
->> +
->> +	/* Alloc */
->> +	sprom = devm_kzalloc(dev, sizeof(*sprom), GFP_KERNEL);
->> +	if (!sprom)
->> +		return -ENOMEM;
->> +
->> +	handle = of_get_property(np, "nvram", NULL);
->> +	if (!handle)
->> +		return -ENOMEM;
->> +
->> +	nvram_node = of_find_node_by_phandle(be32_to_cpup(handle));
-> 
-> You can avoid the explicit be32_to_cpup here if you use
-> of_property_read_u32 above.
+Ok.
 
-Thanks for the hint.
+> My plan was to provide a nvram and sprom driver which registers as a
+> normal platform device and supports device tree, like the one I posted
+> and it would also be possible to call the function with the address of
+> the flash directly, this function would be used for MIPS, this way we
+> can share the code and do not have to change the mips stuff so much.
 
-Hauke
+Yes, and none of that should interfere with the cleanup plans for MIPS
+that Rafał talked about, right?
 
+> For ARM BCM47xx we do not need bcma at all to boot the device, so it
+> should also work when bcma is build as a module, this is different to
+> MIPS. The ARM BCM47xx code currently in mainline Linux boots for me into
+> user space with an initramfs, it just misses many parts like Ethernet,
+> flash PCIe, ...
+
+Ah, good. So to confirm: all the essential devices including irqchip,
+clocksource, uart and nvram can be accessed without using the bcma bus,
+right?
+Does that mean they are actually connected to another bus, or are they
+actually bcma bus devices for which you provide an additional probe
+method using dt/platform_device?
+
+> The address of the console is already hard coded in device tree. It
+> would also be possible to automatically detect their address based on
+> some description in the AIX bus (bcma), but I think hard coding the
+> address in device tree is easier.
+
+Right. Importantly for the console, there are patches to allow a very
+early output by having some minimal dt parsing done before start
+accessing any other hardware. I think this is valuable even if it
+means we compromise on the accurate DT description. We do the same
+thing for consoles on other buses (ISAPnP, PCI, of_platform, ...)
+and a lot of serial drivers have a way to retroactively connect that
+early console setup to the actual device once it is probed normally.
+
+	Arnd
