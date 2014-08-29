@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41531 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:27368 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751844AbaHVLbn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2014 07:31:43 -0400
-Message-ID: <1408707084.4349.0.camel@jlt4.sipsolutions.net> (sfid-20140822_133203_606996_4AC7C049)
-Subject: Re: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: "dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Fri, 22 Aug 2014 13:31:24 +0200
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com> (sfid-20140819_083957_833442_DEE44B0A)
-References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
-	 <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com>
-	 (sfid-20140819_083957_833442_DEE44B0A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752824AbaH2L27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2014 07:28:59 -0400
+Message-ID: <540063F8.30200@linux.intel.com> (sfid-20140829_132902_651134_0787F228)
+Date: Fri, 29 Aug 2014 14:28:56 +0300
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] cfg80211: Reorder wiphy_register/unregister() notifications
+ relevantly
+References: <1408440957-3870-1-git-send-email-tomasz.bursztyka@linux.intel.com> <1409310627.4577.17.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1409310627.4577.17.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-08-19 at 06:39 +0000, Sharma, Sanjeev wrote:
-> Ping for review the patch.
+Hi Johannes,
 
-Make sure it compiles ...
+>> >+	cfg80211_debugfs_rdev_add(rdev);
+>> >+	rtnl_unlock();
+> I'm not convinced that it's safe to drop the rtnl here, when we only
+> later set wiphy.registered = true.
+>
+> As is, the wiphy would end up on the list, but not registered - yet in
+> this period it would be reachable for example for nl80211 commands in
+> the unregistered state. This seems wrong.
 
+Ok, I counted on the fact the device is not yet advertized as being 
+ready (the NEW_WIPHY below).
+Will see how to avoid this early unlock.
 
+> Additionally, maybe add a brief note regarding the second part of the
+> patch (checking registered in unregister) to the commit log?
 
+Sure.
+
+Tomasz
