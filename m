@@ -1,68 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24113 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbaHFHcn (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:65155 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752297AbaH3V0m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2014 03:32:43 -0400
-From: Dedy Lansky <qca_dlansky@qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 12/13] wil6210: cfg80211_rx_mgmt to use GFP_ATOMIC
-Date: Wed, 6 Aug 2014 10:32:00 +0300
-Message-ID: <1407310322-22568-13-git-send-email-qca_dlansky@qca.qualcomm.com> (sfid-20140806_095908_261612_6B05BF9A)
-In-Reply-To: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-References: <1407310322-22568-1-git-send-email-qca_dlansky@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 30 Aug 2014 17:26:42 -0400
+Received: by mail-wg0-f42.google.com with SMTP id b13so3605591wgh.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:40 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/23] staging: vt6655: replace -typedef struct tagSTxDataHead_a_FB with struct vnt_tx_datahead_a_fb
+Date: Sat, 30 Aug 2014 22:25:37 +0100
+Message-Id: <1409433949-5468-11-git-send-email-tvboxspy@gmail.com> (sfid-20140830_234534_524718_2466A76E)
+In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Replace members
+a, wDuration, wTimeStampOff, wDuration_f0, and wDuration_f1;
+with
+a, duration, time_stamp_off, duration_f0, duration_f1
 
-Internally, cfg80211_rx_mgmt() takes lock:
-spin_lock_bh(&wdev->mgmt_registrations_lock);
+All unsigned short members should be  __le16
 
-and therefore one can't use it with GFP_KERNEL allocation flags.
-When called with GFP_KERNEL, "sleep while atomic" warning triggered:
+Creating the new structure in rxtx.h.
 
-<3>[242645.446224] BUG: sleeping function called from invalid context at kernel/mm/slub.c:926
-<3>[242645.455516] in_atomic(): 1, irqs_disabled(): 0, pid: 18881, name: kworker/u16:0
-<6>[242645.462868] CPU: 0 PID: 18881 Comm: kworker/u16:0 Tainted: G           O 3.10.40-g619a884-00001-g357fa9c #2
-<6>[242645.463044] Workqueue: wil6210_wmi wmi_event_worker [wil6210]
-<6>[242645.463087] Call trace:
-<6>[242645.463157] [<ffffffc000087390>] dump_backtrace+0x0/0x144
-<6>[242645.463205] [<ffffffc0000874e4>] show_stack+0x10/0x1c
-<6>[242645.463259] [<ffffffc0009abc04>] dump_stack+0x1c/0x28
-<6>[242645.463313] [<ffffffc0000c10c0>] __might_sleep+0xe0/0xf0
-<6>[242645.463365] [<ffffffc00015a514>] kmem_cache_alloc+0x48/0x1e4
-<6>[242645.463414] [<ffffffc00080d468>] __alloc_skb+0x48/0x164
-<6>[242645.463466] [<ffffffc00097f2c4>] nl80211_send_mgmt+0x4c/0x1dc
-<6>[242645.463511] [<ffffffc000980268>] cfg80211_rx_mgmt+0x1bc/0x25c
-<6>[242645.463647] [<ffffffbffc005d64>] wmi_evt_rx_mgmt+0x21c/0x23c [wil6210]
-<6>[242645.463783] [<ffffffbffc0073b8>] wmi_event_worker+0x230/0x2f8 [wil6210]
-<6>[242645.463838] [<ffffffc0000afffc>] process_one_work+0x258/0x3d0
-<6>[242645.463887] [<ffffffc0000b0fe0>] worker_thread+0x1f0/0x310
-<6>[242645.463946] [<ffffffc0000b642c>] kthread+0xac/0xb8
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6655/desc.h | 13 -------------
+ drivers/staging/vt6655/rxtx.c | 35 ++++++++++++++++++-----------------
+ drivers/staging/vt6655/rxtx.h |  8 ++++++++
+ 3 files changed, 26 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 596d6c1..1b64823 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -355,7 +355,7 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 		}
- 	} else {
- 		cfg80211_rx_mgmt(wil->wdev, freq, signal,
--				 (void *)rx_mgmt_frame, d_len, 0, GFP_KERNEL);
-+				 (void *)rx_mgmt_frame, d_len, 0, GFP_ATOMIC);
- 	}
- }
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index ed5052a..0da860e 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -456,19 +456,6 @@ typedef struct tagSTxBufHead {
+ STxBufHead, *PSTxBufHead;
+ typedef const STxBufHead *PCSTxBufHead;
  
+-//
+-// Tx data header
+-//
+-typedef struct tagSTxDataHead_a_FB {
+-	struct vnt_phy_field a;
+-	unsigned short wDuration;
+-	unsigned short wTimeStampOff;
+-	unsigned short wDuration_f0;
+-	unsigned short wDuration_f1;
+-} __attribute__ ((__packed__))
+-STxDataHead_a_FB, *PSTxDataHead_a_FB;
+-typedef const STxDataHead_a_FB *PCSTxDataHead_a_FB;
+-
+ typedef struct tagSBEACONCtl {
+ 	u32 BufReady:1;
+ 	u32 TSF:15;
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 627cacb..bd0e339 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -743,22 +743,21 @@ s_uFillDataHead(
+ 		} //if (byFBOption == AUTO_FB_NONE)
+ 	} else if (byPktType == PK_TYPE_11A) {
+ 		if ((byFBOption != AUTO_FB_NONE)) {
+-			// Auto Fallback
+-			PSTxDataHead_a_FB pBuf = (PSTxDataHead_a_FB)pTxDataHead;
++			/* Auto Fallback */
++			struct vnt_tx_datahead_a_fb *buf = pTxDataHead;
+ 			/* Get SignalField, ServiceField & Length */
+ 			vnt_get_phy_field(pDevice, cbFrameLength, wCurrentRate,
+-					  byPktType, &pBuf->a);
+-
+-			//Get Duration and TimeStampOff
++					  byPktType, &buf->a);
+ 
+-			pBuf->wDuration = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
+-											 wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //0: 5GHz
+-			pBuf->wDuration_f0 = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A_F0, cbFrameLength, byPktType,
+-											    wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //0: 5GHz
+-			pBuf->wDuration_f1 = cpu_to_le16((unsigned short)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
+-											    wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption)); //0: 5GHz
+-			pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice, wCurrentRate);
+-			return pBuf->wDuration;
++			/* Get Duration and TimeStampOff */
++			buf->duration = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
++									    wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption));
++			buf->duration_f0 = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A_F0, cbFrameLength, byPktType,
++									       wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption));
++			buf->duration_f1 = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A_F1, cbFrameLength, byPktType,
++										wCurrentRate, bNeedAck, uFragIdx, cbLastFragmentSize, uMACfragNum, byFBOption));
++			buf->time_stamp_off = vnt_time_stamp_off(pDevice, wCurrentRate);
++			return buf->duration;
+ 		} else {
+ 			struct vnt_tx_datahead_ab *buf = pTxDataHead;
+ 			/* Get SignalField, ServiceField & Length */
+@@ -1376,15 +1375,17 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+ 				pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab));
+ 				pvRTS = (PSRTS_a_FB) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+ 				pvCTS = NULL;
+-				pvTxDataHd = (PSTxDataHead_a_FB) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(SRTS_a_FB));
+-				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(SRTS_a_FB) + sizeof(STxDataHead_a_FB);
++				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(SRTS_a_FB));
++				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
++					cbMICHDR + sizeof(SRTS_a_FB) + sizeof(struct vnt_tx_datahead_a_fb);
+ 			} else { //RTS_needless
+ 				pvRrvTime = (void *)(pbyTxBufferAddr + wTxBufSize);
+ 				pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab));
+ 				pvRTS = NULL;
+ 				pvCTS = NULL;
+-				pvTxDataHd = (PSTxDataHead_a_FB) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+-				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(STxDataHead_a_FB);
++				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
++				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
++					cbMICHDR + sizeof(struct vnt_tx_datahead_a_fb);
+ 			}
+ 		} // Auto Fall Back
+ 	}
+diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
+index 4899f6e..21bbc7e 100644
+--- a/drivers/staging/vt6655/rxtx.h
++++ b/drivers/staging/vt6655/rxtx.h
+@@ -105,6 +105,14 @@ struct vnt_tx_datahead_ab {
+ 	__le16 time_stamp_off;
+ } __packed;
+ 
++struct vnt_tx_datahead_a_fb {
++	struct vnt_phy_field a;
++	__le16 duration;
++	__le16 time_stamp_off;
++	__le16 duration_f0;
++	__le16 duration_f1;
++} __packed;
++
+ struct vnt_tx_short_buf_head {
+ 	__le16 fifo_ctl;
+ 	u16 time_stamp;
 -- 
-1.8.5.2
+1.9.1
 
