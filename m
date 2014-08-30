@@ -1,93 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:65417 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753562AbaHUUlu (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:52133 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752415AbaH3V07 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2014 16:41:50 -0400
-Received: by mail-wg0-f48.google.com with SMTP id x13so9625040wgg.31
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2014 13:41:49 -0700 (PDT)
+	Sat, 30 Aug 2014 17:26:59 -0400
+Received: by mail-wg0-f42.google.com with SMTP id b13so3594780wgh.13
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:58 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/3] staging: vt6655: dead code remove device_nics variable
-Date: Thu, 21 Aug 2014 21:40:50 +0100
-Message-Id: <1408653650-9049-3-git-send-email-tvboxspy@gmail.com> (sfid-20140821_224154_488377_68516A97)
-In-Reply-To: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
-References: <1408653650-9049-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 21/23] stgaing: vt6655: remove unused variable wCTSDuration
+Date: Sat, 30 Aug 2014 22:25:47 +0100
+Message-Id: <1409433949-5468-21-git-send-email-tvboxspy@gmail.com> (sfid-20140830_234533_145086_6BEB89AD)
+In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The module can not load more than once.
-
-Remove device_nics, MAX_UINTS and OPTION_DEFAULT
-
-Remove dead index variable from device_get_options
+wCTSDuration is always set to 0.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device_cfg.h  |  3 ---
- drivers/staging/vt6655/device_main.c | 12 ++----------
- 2 files changed, 2 insertions(+), 13 deletions(-)
+ drivers/staging/vt6655/device.h      | 1 -
+ drivers/staging/vt6655/device_main.c | 1 -
+ drivers/staging/vt6655/rxtx.c        | 7 +------
+ 3 files changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_cfg.h b/drivers/staging/vt6655/device_cfg.h
-index 8e50e53..7221824 100644
---- a/drivers/staging/vt6655/device_cfg.h
-+++ b/drivers/staging/vt6655/device_cfg.h
-@@ -67,9 +67,6 @@ struct _version {
- 
- #define PKT_BUF_SZ          2390
- 
--#define MAX_UINTS           8
--#define OPTION_DEFAULT      { [0 ... MAX_UINTS-1] = -1}
--
- typedef enum  _chip_type {
- 	VT3253 = 1
- } CHIP_TYPE, *PCHIP_TYPE;
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 8ac7901..15303d9 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -476,7 +476,6 @@ struct vnt_private {
+ 	unsigned short wMaxTransmitMSDULifetime;
+ 	unsigned char abyBSSID[ETH_ALEN];
+ 	unsigned char abyDesireBSSID[ETH_ALEN];
+-	unsigned short wCTSDuration;       // update while speed change
+ 	unsigned short wACKDuration;       // update while speed change
+ 	unsigned short wRTSTransmitLen;    // update while speed change
+ 	unsigned char byRTSServiceField;  // update while speed change
 diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index ffbe64f..34a70b0 100644
+index 34a70b0..0473702 100644
 --- a/drivers/staging/vt6655/device_main.c
 +++ b/drivers/staging/vt6655/device_main.c
-@@ -245,9 +245,6 @@ DEVICE_PARAM(bDiversityANTEnable, "ANT diversity mode");
- //
- // Static vars definitions
- //
+@@ -387,7 +387,6 @@ device_set_options(struct vnt_private *pDevice)
+ 	pDevice->byAutoFBCtrl = AUTO_FB_0;
+ 	pDevice->bUpdateBBVGA = true;
+ 	pDevice->byFOETuning = 0;
+-	pDevice->wCTSDuration = 0;
+ 	pDevice->byPreambleType = 0;
+ 
+ 	pr_debug(" uChannel= %d\n", (int)pDevice->uChannel);
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 6b22f09..3c8c499 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1051,22 +1051,17 @@ s_vFillCTSHead(
+ 
+ 			buf->duration_ba = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength,
+ 								     byPktType, wCurrentRate, bNeedAck, byFBOption);
+-			buf->duration_ba += pDevice->wCTSDuration;
 -
--static int          device_nics             = 0;
+ 			buf->duration_ba = cpu_to_le16(buf->duration_ba);
+ 			/* Get CTSDuration_ba_f0 */
+ 			buf->cts_duration_ba_f0 = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA_F0, cbFrameLength,
+ 									    byPktType, wCurrentRate,
+ 									    bNeedAck, byFBOption);
+ 
+-			buf->cts_duration_ba_f0 += pDevice->wCTSDuration;
 -
- static CHIP_INFO chip_info_table[] = {
- 	{ VT3253,       "VIA Networking Solomon-A/B/G Wireless LAN Adapter ",
- 	  256, 1,     DEVICE_FLAGS_IP_ALIGN|DEVICE_FLAGS_TX_ALIGN },
-@@ -336,7 +333,7 @@ static void vt6655_remove(struct pci_dev *pcid)
- }
+ 			buf->cts_duration_ba_f0 = cpu_to_le16(buf->cts_duration_ba_f0);
+ 			//Get CTSDuration_ba_f1
+ 			buf->cts_duration_ba_f1 = (u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA_F1, cbFrameLength,
+ 									    byPktType, wCurrentRate,
+ 									    bNeedAck, byFBOption);
+-			buf->cts_duration_ba_f1 += pDevice->wCTSDuration;
  
- static void device_get_options(struct vnt_private *pDevice,
--			       int index, char *devname)
-+			       char *devname)
- {
- 	POPTIONS pOpts = &(pDevice->sOpts);
+ 			buf->cts_duration_ba_f1 = cpu_to_le16(buf->cts_duration_ba_f1);
+ 			/* Get CTS Frame body */
+@@ -1091,7 +1086,7 @@ s_vFillCTSHead(
+ 				cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength,
+ 								      byPktType, wCurrentRate, bNeedAck,
+ 								      byFBOption));
+-			buf->duration_ba += pDevice->wCTSDuration;
++
+ 			buf->duration_ba = cpu_to_le16(buf->duration_ba);
  
-@@ -825,11 +822,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	struct vnt_private *pDevice;
- 	int         rc;
- 
--	if (device_nics++ >= MAX_UINTS) {
--		pr_notice(DEVICE_NAME ": already found %d NICs\n", device_nics);
--		return -ENODEV;
--	}
--
- 	dev = alloc_etherdev(sizeof(*pDevice));
- 
- 	pDevice = netdev_priv(dev);
-@@ -934,7 +926,7 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	MACvInitialize(pDevice->PortOffset);
- 	MACvReadEtherAddress(pDevice->PortOffset, dev->dev_addr);
- 
--	device_get_options(pDevice, device_nics-1, dev->name);
-+	device_get_options(pDevice, dev->name);
- 	device_set_options(pDevice);
- 	//Mask out the options cannot be set to the chip
- 	pDevice->sOpts.flags &= pChip_info->flags;
+ 			/* Get CTS Frame body */
 -- 
 1.9.1
 
