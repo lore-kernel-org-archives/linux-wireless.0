@@ -1,108 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:62636 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807AbaHRNvl convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:36076 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752384AbaH3V04 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2014 09:51:41 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so3749972wiv.11
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2014 06:51:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <878umspjkm.fsf@kamboji.qca.qualcomm.com>
-References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
-	<1407402260-29854-4-git-send-email-michal.kazior@tieto.com>
-	<878umspjkm.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 18 Aug 2014 15:51:40 +0200
-Message-ID: <CA+BoTQnFCnixx1P8Q-F-xgiNr8W05fv8h8jiCBFfmV7aQmXKjA@mail.gmail.com> (sfid-20140818_155145_566158_0CFEFAA4)
-Subject: Re: [PATCH 3/5] ath10k: remove early irq handling
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 30 Aug 2014 17:26:56 -0400
+Received: by mail-we0-f178.google.com with SMTP id u57so3658360wes.23
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:55 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 19/23] staging: vt6655: replace typedef struct tagSCTS with struct vnt_cts
+Date: Sat, 30 Aug 2014 22:25:45 +0100
+Message-Id: <1409433949-5468-19-git-send-email-tvboxspy@gmail.com> (sfid-20140830_234535_059002_87B68619)
+In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 August 2014 16:09, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> It's not really necessary to have a dedicated irq
->> handler just for the sake of catching early fw
->> crashes. It is now safe to use one handler even
->> during early stages of device boot up.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Nice, this really needs to be cleaned up.
->
->>  drivers/net/wireless/ath/ath10k/pci.c | 160 ++++++++--------------------------
->>  1 file changed, 36 insertions(+), 124 deletions(-)
->
-> Shouldn't you also remove early_irq_tasklet from struct ath10k_pci?
+Replacing members
+b, wDuration_ba, wReserved, data and reserved2
+with
+b, duration_ba, reserved, data and reserved2
 
-Oops. Good catch.
+unsigned short is replaced with u16 or __le16 where necessary.
 
+cast void pointer to pvCTS
 
->> -static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
->> +static bool ath10k_pci_fw_crashed(struct ath10k *ar)
->>  {
->> -     struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
->> -     u32 fw_indicator;
->> -
->> -     fw_indicator = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
->> -
->> -     if (fw_indicator & FW_IND_EVENT_PENDING) {
->> -             /* ACK: clear Target-side pending event */
->> -             ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
->> -                                fw_indicator & ~FW_IND_EVENT_PENDING);
->> +     return ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS) &
->> +            FW_IND_EVENT_PENDING;
->> +}
->
-> Hehe, in Ben's firmware crash dump patches I renamed
-> ath10k_pci_hif_dump_area() to ath10k_pci_firmware_crashed(). So we now
-> have two very similarly named functions doing very different :)
->
-> I propose that you rename this function to ath10k_pci_is_fw_crashed() or
-> ath10k_pci_has_fw_crashed() and I rename ath10k_pci_hif_dump_area() to
-> ath10k_pci_fw_crashed_dump(). I think that we have pretty consistent
-> naming, no?
+Creating the new structure in rxtx.h
 
-I'm okay with that. WIll fix.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/desc.h | 10 ----------
+ drivers/staging/vt6655/rxtx.c | 46 +++++++++++++++++++++++--------------------
+ drivers/staging/vt6655/rxtx.h |  9 +++++++++
+ 3 files changed, 34 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index f0a31a8..4d9027e 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -355,16 +355,6 @@ union vnt_phy_field_swap {
+ //
+ // CTS buffer header
+ //
+-typedef struct tagSCTS {
+-	struct vnt_phy_field b;
+-	unsigned short wDuration_ba;
+-	unsigned short wReserved;
+-	struct ieee80211_cts data;
+-	u16 reserved2;
+-} __attribute__ ((__packed__))
+-SCTS, *PSCTS;
+-typedef const SCTS *PCSCTS;
+-
+ typedef struct tagSCTS_FB {
+ 	struct vnt_phy_field b;
+ 	unsigned short wDuration_ba;
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 0721fbb..d3de73c 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1071,26 +1071,29 @@ s_vFillCTSHead(
+ 			memcpy(&pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+ 
+ 		} else { //if (byFBOption != AUTO_FB_NONE && uDMAIdx != TYPE_ATIMDMA && uDMAIdx != TYPE_BEACONDMA)
+-			PSCTS pBuf = (PSCTS)pvCTS;
++			struct vnt_cts *buf = pvCTS;
+ 			/* Get SignalField, ServiceField & Length */
+ 			vnt_get_phy_field(pDevice, uCTSFrameLen,
+ 					  pDevice->byTopCCKBasicRate,
+-					  PK_TYPE_11B, &pBuf->b);
++					  PK_TYPE_11B, &buf->b);
+ 
+-			//Get CTSDuration_ba
+-			pBuf->wDuration_ba = cpu_to_le16((unsigned short)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //3:CTSDuration_ba, 1:2.4G, 2,3:2.4G OFDM Data
+-			pBuf->wDuration_ba += pDevice->wCTSDuration;
+-			pBuf->wDuration_ba = cpu_to_le16(pBuf->wDuration_ba);
++			/* Get CTSDuration_ba */
++			buf->duration_ba =
++				cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, CTSDUR_BA, cbFrameLength,
++								      byPktType, wCurrentRate, bNeedAck,
++								      byFBOption));
++			buf->duration_ba += pDevice->wCTSDuration;
++			buf->duration_ba = cpu_to_le16(buf->duration_ba);
+ 
+-			//Get CTS Frame body
+-			pBuf->data.duration = pBuf->wDuration_ba;
++			/* Get CTS Frame body */
++			buf->data.duration = buf->duration_ba;
+ 
+-			pBuf->data.frame_control =
++			buf->data.frame_control =
+ 				cpu_to_le16(IEEE80211_FTYPE_CTL |
+ 					    IEEE80211_STYPE_CTS);
+ 
+-			pBuf->reserved2 = 0x0;
+-			memcpy(&pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
++			buf->reserved2 = 0x0;
++			memcpy(&buf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
+ 		}
+ 	}
+ }
+@@ -1390,10 +1393,11 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+ 				pvRrvTime = (void *)(pbyTxBufferAddr + wTxBufSize);
+ 				pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_cts));
+ 				pvRTS = NULL;
+-				pvCTS = (PSCTS) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
+-				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_cts) + cbMICHDR + sizeof(SCTS));
++				pvCTS = (void *) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
++				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize +
++						sizeof(struct vnt_rrv_time_cts) + cbMICHDR + sizeof(struct vnt_cts));
+ 				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-							cbMICHDR + sizeof(SCTS) + sizeof(struct vnt_tx_datahead_g);
++							cbMICHDR + sizeof(struct vnt_cts) + sizeof(struct vnt_tx_datahead_g);
+ 			}
+ 		} else {
+ 			// Auto Fall Back
+@@ -2126,7 +2130,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
+ 	unsigned char byPktType;
+ 	unsigned char *pbyTxBufferAddr;
+ 	void *pvRTS;
+-	PSCTS           pCTS;
++	struct vnt_cts *pCTS;
+ 	void *pvTxDataHd;
+ 	unsigned int uDuration;
+ 	unsigned int cbReqCount;
+@@ -2264,12 +2268,12 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
+ 		pvRrvTime = (void *) (pbyTxBufferAddr + wTxBufSize);
+ 		pMICHDR = NULL;
+ 		pvRTS = NULL;
+-		pCTS = (PSCTS) (pbyTxBufferAddr + wTxBufSize +
++		pCTS = (struct vnt_cts *)(pbyTxBufferAddr + wTxBufSize +
+ 					sizeof(struct vnt_rrv_time_cts));
+ 		pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize +
+-				sizeof(struct vnt_rrv_time_cts) + sizeof(SCTS));
++				sizeof(struct vnt_rrv_time_cts) + sizeof(struct vnt_cts));
+ 		cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-					sizeof(SCTS) + sizeof(struct vnt_tx_datahead_g);
++				sizeof(struct vnt_cts) + sizeof(struct vnt_tx_datahead_g);
+ 	} else { // 802.11a/b packet
+ 		pvRrvTime = (void *)(pbyTxBufferAddr + wTxBufSize);
+ 		pMICHDR = NULL;
+@@ -2754,12 +2758,12 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb,
+ 		pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize +
+ 					sizeof(struct vnt_rrv_time_cts));
+ 		pvRTS = NULL;
+-		pvCTS = (PSCTS) (pbyTxBufferAddr + wTxBufSize +
++		pvCTS = (struct vnt_cts *)(pbyTxBufferAddr + wTxBufSize +
+ 				sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
+ 		pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize +
+-			sizeof(struct vnt_rrv_time_cts) + cbMICHDR + sizeof(SCTS));
++			sizeof(struct vnt_rrv_time_cts) + cbMICHDR + sizeof(struct vnt_cts));
+ 		cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
+-				cbMICHDR + sizeof(SCTS) + sizeof(struct vnt_tx_datahead_g);
++				cbMICHDR + sizeof(struct vnt_cts) + sizeof(struct vnt_tx_datahead_g);
+ 
+ 	} else {//802.11a/b packet
+ 
+diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
+index bac2214..2c09c11 100644
+--- a/drivers/staging/vt6655/rxtx.h
++++ b/drivers/staging/vt6655/rxtx.h
+@@ -154,6 +154,15 @@ struct vnt_rts_a_fb {
+ 	struct ieee80211_rts data;
+ } __packed;
+ 
++/* CTS buffer header */
++struct vnt_cts {
++	struct vnt_phy_field b;
++	__le16 duration_ba;
++	u16 reserved;
++	struct ieee80211_cts data;
++	u16 reserved2;
++} __packed;
++
+ struct vnt_tx_short_buf_head {
+ 	__le16 fifo_ctl;
+ 	u16 time_stamp;
+-- 
+1.9.1
 
->> +static void ath10k_pci_fw_crashed_clear(struct ath10k *ar)
->> +{
->> +     ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
->> +                        (ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS) &
->> +                         ~FW_IND_EVENT_PENDING));
->
-> Please don't embed calls like this, with a temporary variable you get it
-> more readable and the resulting code should be the same anyway.
-
-Will fix.
-
-
->
->> @@ -2412,14 +2322,6 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
->>               return -EIO;
->>       }
->>
->> -     if (val & FW_IND_EVENT_PENDING) {
->> -             ath10k_warn("device has crashed during init\n");
->> -             ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
->> -                                val & ~FW_IND_EVENT_PENDING);
->> -             ath10k_pci_hif_dump_area(ar);
->> -             return -ECOMM;
->> -     }
->
-> I'm a bit worried about this. Are you relying now that the target will
-> always trigger an interrupt or what? If yes, how can we sure it will
-> happen on all possible cases? I would prefer to have some kind of safety
-> net anyway, even if it's just a simple warning.
-
-Hmm, I'll keep it. I just remembered it's possible for a device to
-fail to fully setup pci link/config and crash without asserting an
-interrupt while still providing a trace in the host interest area.
-
-
-Michał
